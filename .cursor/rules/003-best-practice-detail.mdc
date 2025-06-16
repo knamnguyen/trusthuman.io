@@ -75,6 +75,49 @@ When working with Tailwind v4 in a monorepo:
     - ctx for contexts
     - req, res, next for middleware function parameters
 
+### Script Management in Monorepo
+
+#### Package.json Script Patterns
+
+When creating package scripts that need environment variables:
+
+1. **Environment Loading Setup**:
+   ```json
+   "devDependencies": {
+     "dotenv-cli": "^8.0.0"
+   },
+   "scripts": {
+     "with-env": "dotenv -e ../../.env --"
+   }
+   ```
+
+2. **Script Naming Conventions**:
+   - Use descriptive, action-oriented names: `process-videos`, `test-download`, `sync-data`
+   - Create variants with modifiers: `process-videos:dry`, `test-download:verbose`
+   - Prefix environment-dependent scripts with `pnpm with-env`
+
+3. **Script Categories**:
+   ```json
+   "scripts": {
+     // Environment-dependent scripts
+     "process-data": "pnpm with-env bun scripts/process-data.ts",
+     "sync-db": "pnpm with-env scripts/sync-database.ts",
+     
+     // Simple utility scripts (no env needed)
+     "clean": "git clean -xdf .cache .turbo dist node_modules",
+     "format": "prettier --check . --ignore-path ../../.gitignore",
+     
+     // Development variants
+     "process-data:dry": "pnpm with-env scripts/process-data.ts --dry-run",
+     "sync-db:test": "pnpm with-env scripts/sync-database.ts --env test"
+   }
+   ```
+
+4. **Script Documentation**:
+   - Add comprehensive header comments to all script files
+   - Document required environment variables and parameters
+   - Include usage examples for both package.json and direct execution
+
 ### Functions
 
 - In this context, what is understood as a function will also apply to a method.

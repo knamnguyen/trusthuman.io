@@ -13,9 +13,10 @@
         "format": "prettier --check . --ignore-path ../../.gitignore",
         "lint": "eslint",
         "typecheck": "tsc --noEmit --emitDeclarationOnly false",
-        "test-download": "bun scripts/test-download.ts",
-        "process-videos": "bun scripts/process-videos.ts",
-        "process-videos:dry": "bun scripts/process-videos.ts --dry-run"
+        "with-env": "dotenv -e ../../.env --",
+        "tiktok-download": "pnpm with-env bun scripts/tiktok-download.ts",
+        "process-videos": "pnpm with-env bun scripts/process-videos.ts",
+        "process-videos:dry": "pnpm with-env bun scripts/process-videos.ts --dry-run"
     },
     "dependencies": {
         "@sassy/db": "workspace:*",
@@ -26,6 +27,7 @@
         "@sassy/eslint-config": "workspace:*",
         "@sassy/prettier-config": "workspace:*",
         "@sassy/tsconfig": "workspace:*",
+        "dotenv-cli": "^8.0.0",
         "@types/node": "^22.10.10",
         "eslint": "catalog:",
         "typescript": "catalog:"

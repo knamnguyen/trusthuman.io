@@ -27,6 +27,7 @@ alwaysApply: true
 - **Monorepo Structure**: Place reusable code in packages under `packages/` and applications under `apps/`.
 - **Package Naming**: Name all packages under the `@sassy/` scope (e.g., `@sassy/utils`, `@sassy/ui`).
 - **File/Directory Naming**: Use `kebab-case` for all file and directory names (e.g., `src/lib/utils.ts`, `src/components/user-profile`).
+- **Environment Variables in Monorepo**: Packages cannot directly access root `.env` files due to working directory isolation. Always add `dotenv-cli` as devDependency and create `"with-env": "dotenv -e ../../.env --"` script. Prefix package scripts needing environment variables with `pnpm with-env` to load root environment variables. This prevents runtime errors for DATABASE_URL, AWS credentials, or other root-level environment variables.
 - **TypeScript Usage**: All new code MUST be written in TypeScript (`.ts` or `.tsx`).
 - **Constant Definitions**: Use `UPPER_SNAKE_CASE` along with `as const` for defining read-only object literals or arrays that represent fixed collections or configurations.
 - **Function Style**: Prefer fat arrow functions (`=>`) over the `function` keyword for consistency, especially for callbacks and inline functions. Named exports or React components may use the `function` keyword where appropriate.

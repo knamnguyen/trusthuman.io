@@ -22,7 +22,8 @@
     "remotion:sites:create": "pnpm with-env remotion lambda sites create src/Root.tsx --site-name=viralcut-demo",
     "remotion:sites:list": "pnpm with-env remotion lambda sites ls",
     "remotion:render": "pnpm with-env remotion lambda render",
-    "remotion:debug": "bun scripts/debug-render.ts",
+    "remotion:debug": "bun scripts/debug-speed-adjust.ts",
+    "remotion:debug-stitch": "bun scripts/debug-video-stitch.ts",
     "test:metadata": "bun scripts/test-metadata.ts"
   },
   "dependencies": {

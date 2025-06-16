@@ -8,7 +8,6 @@
     "./utils": "./src/utils.ts",
     "./components/*": "./src/components/*.tsx",
     "./hooks/*": "./src/hooks/*.ts",
-    "./hooks/use-video-adjust-speed": "./src/hooks/use-video-adjust-speed.ts",
     "./schema-validators": "./src/schema-validators.ts",
     "./theme": "./src/ui/theme.tsx"
   },

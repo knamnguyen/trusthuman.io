@@ -51,70 +51,36 @@ enum AccessType {
 
 // User model to link with Clerk users
 model User {
-  id                   String                 @id // This is the Clerk ID
+  id                   String     @id // This is the Clerk ID
   firstName            String?
   lastName             String?
-  username             String?                @unique
-  primaryEmailAddress  String?                @unique
+  username             String?    @unique
+  primaryEmailAddress  String?    @unique
   imageUrl             String?
   clerkUserProperties  Json? // Made optional to preserve existing data
-  stripeCustomerId     String?                @unique
-  accessType           AccessType             @default(FREE)
+  stripeCustomerId     String?    @unique
+  accessType           AccessType @default(FREE)
   stripeUserProperties Json?
-  entries              FounderLogEntry[]
-  reflections          FounderLogReflection[]
-  createdAt            DateTime               @default(now())
-  updatedAt            DateTime               @updatedAt
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
 }
 
-// Tags for categorizing founder log entries
-model FounderLogTag {
-  id        String               @id @default(cuid())
-  name      String               @unique
-  entries   FounderLogEntryTag[]
-  createdAt DateTime             @default(now())
-  updatedAt DateTime             @updatedAt
-}
+// Sample videos from TikTok for training/reference data
+model SampleVideo {
+  id              String   @id @default(cuid())
+  webpageUrl      String   @unique // TikTok video URL - used to check for duplicates
+  s3Url           String // S3 URL where the video is stored
+  hookCutUrl      String?
+  title           String // Video title from TikTok
+  description     String? // Video description/caption
+  views           Int      @default(0) // View count
+  comments        Int      @default(0) // Comment count  
+  likes           Int      @default(0) // Like count
+  durationSeconds Int // Video duration in seconds
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-// Main founder log entry model
-model FounderLogEntry {
-  id          String               @id @default(cuid())
-  userId      String
-  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  content     String
-  upvoteCount Int                  @default(0)
-  tags        FounderLogEntryTag[]
-  createdAt   DateTime             @default(now())
-  updatedAt   DateTime             @updatedAt
-
-  @@index([userId])
-}
-
-// Join table for many-to-many relationship between entries and tags
-model FounderLogEntryTag {
-  id        String          @id @default(cuid())
-  entryId   String
-  entry     FounderLogEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
-  tagId     String
-  tag       FounderLogTag   @relation(fields: [tagId], references: [id], onDelete: Cascade)
-  createdAt DateTime        @default(now())
-
-  @@unique([entryId, tagId])
-  @@index([entryId])
-  @@index([tagId])
-}
-
-// Morning/evening reflections
-model FounderLogReflection {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type      String // "morning" or "evening"
-  content   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId])
+  @@index([webpageUrl])
 }
 
 //User and and Stripe subscribers info is stored in the Clerk User object so it is not defined in this schema here

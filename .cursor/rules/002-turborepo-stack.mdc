@@ -146,6 +146,55 @@ The project uses Tailwind CSS v4 with the following setup:
 4. UI components should be added to `packages/ui/src/components`
 5. Shared validation logic belongs in `packages/validators/src`
 
+## Environment Variable Management
+
+### Turborepo Monorepo Pattern
+
+In Turborepo monorepos, packages operate in isolation and cannot directly access root `.env` files due to working directory context. This is a critical pattern that prevents runtime failures when packages need environment variables like `DATABASE_URL`, AWS credentials, or other configuration.
+
+### Required Setup for New Packages
+
+When creating packages that need environment variables:
+
+1. **Add dotenv-cli dependency**:
+   ```json
+   "devDependencies": {
+     "dotenv-cli": "^8.0.0"
+   }
+   ```
+
+2. **Create with-env script**:
+   ```json
+   "scripts": {
+     "with-env": "dotenv -e ../../.env --"
+   }
+   ```
+
+3. **Prefix scripts that need environment variables**:
+   ```json
+   "scripts": {
+     "my-script": "pnpm with-env bun scripts/my-script.ts",
+     "process-data": "pnpm with-env scripts/process-data.ts --options"
+   }
+   ```
+
+### Why This Pattern is Necessary
+
+- **Working Directory Isolation**: Scripts run from `/packages/package-name/` but `.env` is in `/project-root/`
+- **Bun Limitation**: Even though Bun has built-in `.env` loading, it looks in current directory, not monorepo root
+- **Workspace Context**: Turborepo workspaces don't automatically propagate environment variables from root
+- **Runtime Error Prevention**: Without this pattern, scripts fail with "Environment variable not found" errors
+
+### Usage Examples
+
+```bash
+# ✅ Correct - loads root .env
+pnpm my-script --param value
+
+# ❌ Incorrect - won't find root .env
+bun scripts/my-script.ts --param value
+```
+
 ## Future Extensions
 
 1. React Native with Expo will be added to the `/apps` directory

@@ -1,5 +1,34 @@
 #!/usr/bin/env bun
 
+/**
+ * TikTok Download Test Script
+ * 
+ * Purpose: Download TikTok videos from a specific user for testing purposes
+ * 
+ * Package.json Usage:
+ *   "tiktok-download": "bun scripts/tiktok-download.ts"
+ * 
+ * Command Line Usage:
+ *   pnpm tiktok-download --username <username> [--max-videos <number>]
+ *   bun scripts/tiktok-download.ts --username <username> [--max-videos <number>]
+ * 
+ * Parameters:
+ *   --username, -u    (REQUIRED) TikTok username (with or without @)
+ *   --max-videos, -m  (OPTIONAL) Maximum number of videos to download
+ *                     If not provided, downloads ALL available videos
+ * 
+ * Behavior:
+ *   - Downloads videos to ./downloads/ folder within the package
+ *   - Creates .mp4 video files, .info.json metadata, and .description files
+ *   - When max-videos is omitted, downloads the user's entire video library
+ *   - Requires yt-dlp to be installed on the system
+ * 
+ * Examples:
+ *   pnpm tiktok-download --username myuser                    # Download all videos
+ *   pnpm tiktok-download -u @myuser --max-videos 5           # Download max 5 videos
+ *   bun scripts/tiktok-download.ts -u myuser -m 3            # Download max 3 videos
+ */
+
 import { join } from "path";
 import { TikTokDownloadService } from "../src/index";
 
@@ -38,14 +67,14 @@ function parseArgs(): TestDownloadArgs {
 function printUsage(): void {
   console.log("\n🎵 TikTok Download Service Test\n");
   console.log("Usage:");
-  console.log("  pnpm test-download --username <username> [--max-videos <number>]\n");
+  console.log("  pnpm tiktok-download --username <username> [--max-videos <number>]\n");
   console.log("Options:");
   console.log("  --username, -u    TikTok username (with or without @)");
   console.log("  --max-videos, -m  Maximum number of videos to download (optional)\n");
   console.log("Examples:");
-  console.log("  pnpm test-download --username myuser");
-  console.log("  pnpm test-download -u @myuser --max-videos 5");
-  console.log("  pnpm test-download -u myuser -m 3\n");
+  console.log("  pnpm tiktok-download --username myuser");
+  console.log("  pnpm tiktok-download -u @myuser --max-videos 5");
+  console.log("  pnpm tiktok-download -u myuser -m 3\n");
 }
 
 async function main(): Promise<void> {

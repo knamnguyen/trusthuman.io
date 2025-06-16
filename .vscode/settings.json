@@ -26,5 +26,8 @@
     "next/dist/client/router.d.ts"
   ],
   "typescript.tsdk": "node_modules/typescript/lib",
-  "workbench.colorTheme": "Cursor Dark"
+  "workbench.colorTheme": "Cursor Dark",
+  "[json]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  }
 }

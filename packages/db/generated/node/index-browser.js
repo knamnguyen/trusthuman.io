@@ -143,34 +143,17 @@ exports.Prisma.UserScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
-exports.Prisma.FounderLogTagScalarFieldEnum = {
+exports.Prisma.SampleVideoScalarFieldEnum = {
   id: 'id',
-  name: 'name',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-};
-
-exports.Prisma.FounderLogEntryScalarFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  content: 'content',
-  upvoteCount: 'upvoteCount',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-};
-
-exports.Prisma.FounderLogEntryTagScalarFieldEnum = {
-  id: 'id',
-  entryId: 'entryId',
-  tagId: 'tagId',
-  createdAt: 'createdAt'
-};
-
-exports.Prisma.FounderLogReflectionScalarFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  type: 'type',
-  content: 'content',
+  webpageUrl: 'webpageUrl',
+  s3Url: 's3Url',
+  hookCutUrl: 'hookCutUrl',
+  title: 'title',
+  description: 'description',
+  views: 'views',
+  comments: 'comments',
+  likes: 'likes',
+  durationSeconds: 'durationSeconds',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -211,10 +194,7 @@ exports.AccessType = exports.$Enums.AccessType = {
 exports.Prisma.ModelName = {
   Post: 'Post',
   User: 'User',
-  FounderLogTag: 'FounderLogTag',
-  FounderLogEntry: 'FounderLogEntry',
-  FounderLogEntryTag: 'FounderLogEntryTag',
-  FounderLogReflection: 'FounderLogReflection'
+  SampleVideo: 'SampleVideo'
 };
 
 /**

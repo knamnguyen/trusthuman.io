@@ -58,13 +58,13 @@ console.log(`Downloaded ${result.totalDownloaded} videos`);
 
 ```bash
 # Basic download with username
-pnpm test-download --username myuser
+pnpm tiktok-download --username myuser
 
 # Download with username and limit
-pnpm test-download --username @myuser --max-videos 5
+pnpm tiktok-download --username @myuser --max-videos 5
 
 # Short form flags
-pnpm test-download -u myuser -m 3
+pnpm tiktok-download -u myuser -m 3
 ```
 
 ### Available Options

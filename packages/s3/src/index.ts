@@ -24,6 +24,7 @@ import { S3Config, S3UploadResult, MultipartUploadInitResponse, MultipartUploadP
 export class S3BucketService {
   private s3Client: S3Client;
   private bucket: string;
+  private region: string;
 
   constructor(config: S3Config) {
     const s3Config: S3ClientConfig = {
@@ -36,6 +37,7 @@ export class S3BucketService {
 
     this.s3Client = new S3Client(s3Config);
     this.bucket = config.bucket;
+    this.region = config.region;
   }
 
   /**
@@ -77,12 +79,83 @@ export class S3BucketService {
       return {
         key,
         bucket: this.bucket,
-        location: `https://${this.bucket}.s3.${this.s3Client.config.region}.amazonaws.com/${key}`,
+        location: `https://${this.bucket}.s3.${this.region}.amazonaws.com/${key}`,
         etag: result.ETag?.replace(/"/g, ""), // Remove quotes from ETag
       };
     } catch (error) {
       console.error("Error uploading file to S3:", error);
       throw new Error(`Failed to upload file: ${error instanceof Error ? error.message : "Unknown error"}`);
+    }
+  }
+
+  /**
+   * Server-side multipart upload with automatic optimization and progress tracking
+   * 
+   * Use this method for:
+   * - Server-side uploads (Node.js/Bun environments)
+   * - Large files that benefit from multipart upload
+   * - When you want automatic progress tracking
+   * 
+   * For client-side uploads with presigned URLs, use:
+   * - initializeMultipartUpload()
+   * - getPresignedUploadPartUrls() 
+   * - completeMultipartUpload()
+   * 
+   * @param file - The file to upload (Buffer)
+   * @param key - The key to save the file under (including folder prefix)
+   * @param contentType - The content type of the file
+   * @param metadata - Additional metadata to store with the file
+   * @param multipartThreshold - Size threshold in bytes to use multipart upload (default: 100MB)
+   * @returns The upload result with key, bucket, and location
+   */
+  async multipartUploadServer(
+    file: Buffer,
+    key: string,
+    contentType?: string,
+    metadata?: Record<string, string>,
+    multipartThreshold = 100 * 1024 * 1024, // 100MB
+  ): Promise<S3UploadResult> {
+    try {
+      // Use regular upload for smaller files
+      if (file.length < multipartThreshold) {
+        return await this.uploadFile(file, key, contentType, metadata);
+      }
+
+      console.log(`📦 Using multipart upload for large file (${(file.length / 1024 / 1024).toFixed(2)}MB)`);
+
+      const upload = new Upload({
+        client: this.s3Client,
+        params: {
+          Bucket: this.bucket,
+          Key: key,
+          Body: file,
+          ContentType: contentType,
+          Metadata: metadata,
+        },
+        // Configure multipart upload settings
+        partSize: 10 * 1024 * 1024, // 10MB parts
+        queueSize: 4, // Upload 4 parts in parallel
+      });
+
+      // Track upload progress
+      upload.on("httpUploadProgress", (progress) => {
+        if (progress.total) {
+          const percent = ((progress.loaded || 0) / progress.total * 100).toFixed(1);
+          console.log(`📈 Upload progress: ${percent}% (${(progress.loaded || 0) / 1024 / 1024} MB / ${progress.total / 1024 / 1024} MB)`);
+        }
+      });
+
+      const result = await upload.done();
+
+      return {
+        key,
+        bucket: this.bucket,
+        location: `https://${this.bucket}.s3.${this.region}.amazonaws.com/${key}`,
+        etag: result.ETag?.replace(/"/g, ""), // Remove quotes from ETag
+      };
+    } catch (error) {
+      console.error("Error uploading file via server multipart:", error);
+      throw new Error(`Failed to upload file via server multipart: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
   }
 
@@ -166,7 +239,15 @@ export class S3BucketService {
   }
 
   /**
-   * Initialize a multipart upload
+   * Initialize a multipart upload for client-side presigned URL workflow
+   * 
+   * Use this approach for:
+   * - Client-side uploads (browser/frontend)
+   * - Presigned URL workflows for security
+   * - Custom multipart upload implementations
+   * 
+   * For simple server-side uploads, use multipartUploadServer() instead.
+   * 
    * @param key - The key to save the file under (including folder prefix)
    * @param contentType - The content type of the file
    * @returns Upload ID and initial data needed for multipart upload
@@ -201,7 +282,13 @@ export class S3BucketService {
   }
 
   /**
-   * Get presigned URLs for uploading multiple parts
+   * Get presigned URLs for uploading multiple parts (client-side workflow)
+   * 
+   * Part of the client-side multipart upload workflow:
+   * 1. initializeMultipartUpload()
+   * 2. getPresignedUploadPartUrls() ← You are here
+   * 3. completeMultipartUpload()
+   * 
    * @param key - The key of the file
    * @param uploadId - The upload ID from initialization
    * @param partNumbers - Array of part numbers (1-based)
@@ -239,7 +326,13 @@ export class S3BucketService {
   }
 
   /**
-   * Complete a multipart upload
+   * Complete a multipart upload (client-side workflow)
+   * 
+   * Final step of the client-side multipart upload workflow:
+   * 1. initializeMultipartUpload()
+   * 2. getPresignedUploadPartUrls()
+   * 3. completeMultipartUpload() ← You are here
+   * 
    * @param key - The key of the file
    * @param uploadId - The upload ID from initialization
    * @param parts - Array of completed parts with ETags
@@ -268,7 +361,7 @@ export class S3BucketService {
       return {
         key,
         bucket: this.bucket,
-        location: response.Location || `https://${this.bucket}.s3.${this.s3Client.config.region}.amazonaws.com/${key}`,
+        location: response.Location || `https://${this.bucket}.s3.${this.region}.amazonaws.com/${key}`,
         etag: response.ETag?.replace(/"/g, ""),
       };
     } catch (error) {
@@ -278,7 +371,11 @@ export class S3BucketService {
   }
 
   /**
-   * Abort a multipart upload (cleanup)
+   * Abort a multipart upload (cleanup for client-side workflow)
+   * 
+   * Use this to clean up failed multipart uploads from the client-side workflow.
+   * Call this if any step in the multipart upload process fails.
+   * 
    * @param key - The key of the file
    * @param uploadId - The upload ID from initialization
    * @returns True if successfully aborted

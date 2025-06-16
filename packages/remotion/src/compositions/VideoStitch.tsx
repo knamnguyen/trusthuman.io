@@ -44,38 +44,43 @@ export const VideoStitch: React.FC<VideoStitchProps> = ({
                 delayRenderRetries={3}
               />
 
-              {/* Caption Overlay */}
+              {/* Caption Overlay - TikTok Style */}
               {clip.caption && (
                 <div
-                  // Absolute positioning at 80% from top and horizontal center
+                  // Absolute positioning at 60% from top and horizontal center
                   className="
                     absolute
                     left-1/2
-                    top-[80%]
+                    top-[60%]
                     -translate-x-1/2
                     -translate-y-1/2
                     flex
                     justify-center
                     w-full
+                    px-8
                   "
                 >
                   <div
                     className="
-                      bg-black/80
+                      bg-black/90
                       text-white
-                      px-6
-                      py-4
-                      rounded-lg
-                      font-semibold
+                      px-8
+                      py-6
+                      rounded-2xl
+                      font-black
                       text-center
-                      max-w-[80%]
-                      shadow-lg
-                      border
-                      border-white/10
-                      text-[max(1.5rem,min(2.5vw,3rem))]
+                      max-w-[85%]
+                      shadow-2xl
+                      border-2
+                      border-white/20
+                      backdrop-blur-sm
                     "
                     style={{
                       fontFamily: 'SF Pro Display, system-ui, sans-serif',
+                      fontSize: `${Math.max(width * 0.06, 48)}px`,
+                      lineHeight: '1.2',
+                      textShadow: '2px 2px 4px rgba(0,0,0,0.8), 0 0 8px rgba(0,0,0,0.5)',
+                      letterSpacing: '0.02em',
                     }}
                   >
                     {clip.caption}

@@ -115,34 +115,17 @@ exports.Prisma.UserScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
-exports.Prisma.FounderLogTagScalarFieldEnum = {
+exports.Prisma.SampleVideoScalarFieldEnum = {
   id: 'id',
-  name: 'name',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-};
-
-exports.Prisma.FounderLogEntryScalarFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  content: 'content',
-  upvoteCount: 'upvoteCount',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-};
-
-exports.Prisma.FounderLogEntryTagScalarFieldEnum = {
-  id: 'id',
-  entryId: 'entryId',
-  tagId: 'tagId',
-  createdAt: 'createdAt'
-};
-
-exports.Prisma.FounderLogReflectionScalarFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  type: 'type',
-  content: 'content',
+  webpageUrl: 'webpageUrl',
+  s3Url: 's3Url',
+  hookCutUrl: 'hookCutUrl',
+  title: 'title',
+  description: 'description',
+  views: 'views',
+  comments: 'comments',
+  likes: 'likes',
+  durationSeconds: 'durationSeconds',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -183,10 +166,7 @@ exports.AccessType = exports.$Enums.AccessType = {
 exports.Prisma.ModelName = {
   Post: 'Post',
   User: 'User',
-  FounderLogTag: 'FounderLogTag',
-  FounderLogEntry: 'FounderLogEntry',
-  FounderLogEntryTag: 'FounderLogEntryTag',
-  FounderLogReflection: 'FounderLogReflection'
+  SampleVideo: 'SampleVideo'
 };
 /**
  * Create the Client
@@ -237,13 +217,13 @@ const config = {
       }
     }
   },
-  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\n//binaryTargets to handle the client for production environment on vercel\n//specify output locations so that path resolve work with turbo repo\ngenerator client {\n  provider      = \"prisma-client-js\"\n  output        = \"../generated/node\"\n  binaryTargets = [\"native\", \"rhel-openssl-3.0.x\", \"linux-arm64-openssl-3.0.x\", \"linux-musl-arm64-openssl-3.0.x\"]\n}\n\n// Dedicated edge client for Cloudflare Workers\ngenerator edge {\n  provider        = \"prisma-client-js\"\n  output          = \"../generated/edge\"\n  binaryTargets   = [\"native\"]\n  previewFeatures = [\"driverAdapters\"]\n}\n\ngenerator zod {\n  provider = \"zod-prisma-types\"\n  output   = \"../generated/zod-prisma-validators\"\n}\n\ndatasource db {\n  provider  = \"postgresql\"\n  url       = env(\"DATABASE_URL\")\n  directUrl = env(\"DIRECT_URL\")\n}\n\n//note that post current does not connect to a user\n//you would want to connect it to a user later\nmodel Post {\n  id        String   @id @default(uuid())\n  title     String   @db.VarChar(256)\n  content   String\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n}\n\nenum AccessType {\n  TRIAL\n  FREE\n  LIFETIME\n  MONTHLY\n  YEARLY\n}\n\n// User model to link with Clerk users\nmodel User {\n  id                   String                 @id // This is the Clerk ID\n  firstName            String?\n  lastName             String?\n  username             String?                @unique\n  primaryEmailAddress  String?                @unique\n  imageUrl             String?\n  clerkUserProperties  Json? // Made optional to preserve existing data\n  stripeCustomerId     String?                @unique\n  accessType           AccessType             @default(FREE)\n  stripeUserProperties Json?\n  entries              FounderLogEntry[]\n  reflections          FounderLogReflection[]\n  createdAt            DateTime               @default(now())\n  updatedAt            DateTime               @updatedAt\n}\n\n// Tags for categorizing founder log entries\nmodel FounderLogTag {\n  id        String               @id @default(cuid())\n  name      String               @unique\n  entries   FounderLogEntryTag[]\n  createdAt DateTime             @default(now())\n  updatedAt DateTime             @updatedAt\n}\n\n// Main founder log entry model\nmodel FounderLogEntry {\n  id          String               @id @default(cuid())\n  userId      String\n  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)\n  content     String\n  upvoteCount Int                  @default(0)\n  tags        FounderLogEntryTag[]\n  createdAt   DateTime             @default(now())\n  updatedAt   DateTime             @updatedAt\n\n  @@index([userId])\n}\n\n// Join table for many-to-many relationship between entries and tags\nmodel FounderLogEntryTag {\n  id        String          @id @default(cuid())\n  entryId   String\n  entry     FounderLogEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)\n  tagId     String\n  tag       FounderLogTag   @relation(fields: [tagId], references: [id], onDelete: Cascade)\n  createdAt DateTime        @default(now())\n\n  @@unique([entryId, tagId])\n  @@index([entryId])\n  @@index([tagId])\n}\n\n// Morning/evening reflections\nmodel FounderLogReflection {\n  id        String   @id @default(cuid())\n  userId    String\n  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)\n  type      String // \"morning\" or \"evening\"\n  content   String\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n\n  @@index([userId])\n}\n\n//User and and Stripe subscribers info is stored in the Clerk User object so it is not defined in this schema here\n",
-  "inlineSchemaHash": "d7f095534b9f40f03591795f272bc4724e4e1520b2c3522f30552153273ac02b",
+  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\n//binaryTargets to handle the client for production environment on vercel\n//specify output locations so that path resolve work with turbo repo\ngenerator client {\n  provider      = \"prisma-client-js\"\n  output        = \"../generated/node\"\n  binaryTargets = [\"native\", \"rhel-openssl-3.0.x\", \"linux-arm64-openssl-3.0.x\", \"linux-musl-arm64-openssl-3.0.x\"]\n}\n\n// Dedicated edge client for Cloudflare Workers\ngenerator edge {\n  provider        = \"prisma-client-js\"\n  output          = \"../generated/edge\"\n  binaryTargets   = [\"native\"]\n  previewFeatures = [\"driverAdapters\"]\n}\n\ngenerator zod {\n  provider = \"zod-prisma-types\"\n  output   = \"../generated/zod-prisma-validators\"\n}\n\ndatasource db {\n  provider  = \"postgresql\"\n  url       = env(\"DATABASE_URL\")\n  directUrl = env(\"DIRECT_URL\")\n}\n\n//note that post current does not connect to a user\n//you would want to connect it to a user later\nmodel Post {\n  id        String   @id @default(uuid())\n  title     String   @db.VarChar(256)\n  content   String\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n}\n\nenum AccessType {\n  TRIAL\n  FREE\n  LIFETIME\n  MONTHLY\n  YEARLY\n}\n\n// User model to link with Clerk users\nmodel User {\n  id                   String     @id // This is the Clerk ID\n  firstName            String?\n  lastName             String?\n  username             String?    @unique\n  primaryEmailAddress  String?    @unique\n  imageUrl             String?\n  clerkUserProperties  Json? // Made optional to preserve existing data\n  stripeCustomerId     String?    @unique\n  accessType           AccessType @default(FREE)\n  stripeUserProperties Json?\n  createdAt            DateTime   @default(now())\n  updatedAt            DateTime   @updatedAt\n}\n\n// Sample videos from TikTok for training/reference data\nmodel SampleVideo {\n  id              String   @id @default(cuid())\n  webpageUrl      String   @unique // TikTok video URL - used to check for duplicates\n  s3Url           String // S3 URL where the video is stored\n  hookCutUrl      String?\n  title           String // Video title from TikTok\n  description     String? // Video description/caption\n  views           Int      @default(0) // View count\n  comments        Int      @default(0) // Comment count  \n  likes           Int      @default(0) // Like count\n  durationSeconds Int // Video duration in seconds\n  createdAt       DateTime @default(now())\n  updatedAt       DateTime @updatedAt\n\n  @@index([webpageUrl])\n}\n\n//User and and Stripe subscribers info is stored in the Clerk User object so it is not defined in this schema here\n",
+  "inlineSchemaHash": "818850e189470be5f32097efe9c681d9d96ba1f71914b425dfa2bd49a8b936c6",
   "copyEngine": true
 }
 config.dirname = '/'
 
-config.runtimeDataModel = JSON.parse("{\"models\":{\"Post\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"title\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"content\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"User\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"firstName\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"lastName\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"username\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"primaryEmailAddress\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"imageUrl\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"clerkUserProperties\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"stripeCustomerId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"accessType\",\"kind\":\"enum\",\"type\":\"AccessType\"},{\"name\":\"stripeUserProperties\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"entries\",\"kind\":\"object\",\"type\":\"FounderLogEntry\",\"relationName\":\"FounderLogEntryToUser\"},{\"name\":\"reflections\",\"kind\":\"object\",\"type\":\"FounderLogReflection\",\"relationName\":\"FounderLogReflectionToUser\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"FounderLogTag\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"entries\",\"kind\":\"object\",\"type\":\"FounderLogEntryTag\",\"relationName\":\"FounderLogEntryTagToFounderLogTag\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"FounderLogEntry\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"FounderLogEntryToUser\"},{\"name\":\"content\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"upvoteCount\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"tags\",\"kind\":\"object\",\"type\":\"FounderLogEntryTag\",\"relationName\":\"FounderLogEntryToFounderLogEntryTag\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"FounderLogEntryTag\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"entryId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"entry\",\"kind\":\"object\",\"type\":\"FounderLogEntry\",\"relationName\":\"FounderLogEntryToFounderLogEntryTag\"},{\"name\":\"tagId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"tag\",\"kind\":\"object\",\"type\":\"FounderLogTag\",\"relationName\":\"FounderLogEntryTagToFounderLogTag\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"FounderLogReflection\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"FounderLogReflectionToUser\"},{\"name\":\"type\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"content\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
+config.runtimeDataModel = JSON.parse("{\"models\":{\"Post\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"title\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"content\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"User\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"firstName\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"lastName\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"username\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"primaryEmailAddress\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"imageUrl\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"clerkUserProperties\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"stripeCustomerId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"accessType\",\"kind\":\"enum\",\"type\":\"AccessType\"},{\"name\":\"stripeUserProperties\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"SampleVideo\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"webpageUrl\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"s3Url\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"hookCutUrl\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"title\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"description\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"views\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"comments\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"likes\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"durationSeconds\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
 defineDmmfProperty(exports.Prisma, config.runtimeDataModel)
 config.engineWasm = {
   getRuntime: async () => require('./query_engine_bg.js'),

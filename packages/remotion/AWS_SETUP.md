@@ -14,8 +14,8 @@ This document provides step-by-step instructions for setting up AWS IAM permissi
 
 **Resource Names Used:**
 - IAM User: `viralcut-user`
-- S3 Bucket: `remotionlambda-viralcut` (auto-created)
-- Lambda Function: `remotion-render-viralcut`
+- S3 Bucket: `remotionlambda` (auto-created)
+- Lambda Function: `remotion-render`
 - IAM Role: `remotion-lambda-role` (auto-created)
 
 ## Legacy Separate Setup (For Reference Only)
@@ -36,8 +36,12 @@ This document provides step-by-step instructions for setting up AWS IAM permissi
     {
       "Sid": "0",
       "Effect": "Allow",
-      "Action": ["s3:ListAllMyBuckets"],
-      "Resource": ["*"]
+      "Action": [
+        "s3:ListAllMyBuckets"
+      ],
+      "Resource": [
+        "*"
+      ]
     },
     {
       "Sid": "1",
@@ -52,26 +56,39 @@ This document provides step-by-step instructions for setting up AWS IAM permissi
         "s3:PutObject",
         "s3:GetBucketLocation"
       ],
-      "Resource": ["arn:aws:s3:::remotionlambda-viralcut"]
+      "Resource": [
+        "arn:aws:s3:::remotionlambda-*"
+      ]
     },
     {
       "Sid": "2",
       "Effect": "Allow",
-      "Action": ["lambda:InvokeFunction"],
-      "Resource": ["arn:aws:lambda:*:*:function:remotion-render-viralcut"]
+      "Action": [
+        "lambda:InvokeFunction"
+      ],
+      "Resource": [
+        "arn:aws:lambda:*:*:function:remotion-render-*"
+      ]
     },
     {
       "Sid": "3",
       "Effect": "Allow",
-      "Action": ["logs:CreateLogGroup"],
-      "Resource": ["arn:aws:logs:*:*:log-group:/aws/lambda-insights"]
+      "Action": [
+        "logs:CreateLogGroup"
+      ],
+      "Resource": [
+        "arn:aws:logs:*:*:log-group:/aws/lambda-insights"
+      ]
     },
     {
       "Sid": "4",
       "Effect": "Allow",
-      "Action": ["logs:CreateLogStream", "logs:PutLogEvents"],
+      "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
       "Resource": [
-        "arn:aws:logs:*:*:log-group:/aws/lambda/remotion-render-viralcut",
+        "arn:aws:logs:*:*:log-group:/aws/lambda/remotion-render-*",
         "arn:aws:logs:*:*:log-group:/aws/lambda-insights:*"
       ]
     }
@@ -149,7 +166,7 @@ This document provides step-by-step instructions for setting up AWS IAM permissi
         "s3:PutBucketPublicAccessBlock",
         "s3:PutLifecycleConfiguration"
       ],
-      "Resource": ["arn:aws:s3:::remotionlambda-viralcut"]
+      "Resource": ["arn:aws:s3:::remotionlambda"]
     },
     {
       "Sid": "BucketListing",
@@ -175,13 +192,13 @@ This document provides step-by-step instructions for setting up AWS IAM permissi
         "lambda:PutRuntimeManagementConfig",
         "lambda:TagResource"
       ],
-      "Resource": ["arn:aws:lambda:*:*:function:remotion-render-viralcut"]
+      "Resource": ["arn:aws:lambda:*:*:function:remotion-render"]
     },
     {
       "Sid": "LogsRetention",
       "Effect": "Allow",
       "Action": ["logs:CreateLogGroup", "logs:PutRetentionPolicy"],
-      "Resource": ["arn:aws:logs:*:*:log-group:/aws/lambda/remotion-render-viralcut"]
+      "Resource": ["arn:aws:logs:*:*:log-group:/aws/lambda/remotion-render"]
     },
     {
       "Sid": "FetchBinaries",
@@ -216,7 +233,7 @@ pnpm with-env remotion lambda policies validate
 After completing the IAM setup, deploy the Lambda function and site with viralcut-specific naming:
 
 ```bash
-# Deploy Lambda function (will create remotion-render-viralcut)
+# Deploy Lambda function (will create remotion-render)
 cd packages/remotion
 pnpm remotion:functions:deploy
 
@@ -235,7 +252,7 @@ AWS_ACCESS_KEY_ID=AKIA... # Your viralcut-user credentials
 AWS_SECRET_ACCESS_KEY=... # Your viralcut-user credentials
 
 # Optional: Override default function name
-REMOTION_LAMBDA_FUNCTION_NAME=remotion-render-viralcut
+REMOTION_LAMBDA_FUNCTION_NAME=remotion-render
 ```
 
 ## Troubleshooting

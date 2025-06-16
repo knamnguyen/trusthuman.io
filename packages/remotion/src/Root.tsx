@@ -7,6 +7,7 @@ import { VideoSpeedAdjust } from "./compositions/VideoSpeedAdjust";
 import { VideoStitch } from "./compositions/VideoStitch";
 import { calculateTotalClipDuration, validateTimeRanges } from "./utils/time-parsing";
 import type { VideoStitchInput } from "./schema-validators";
+import { parseMedia } from "@remotion/media-parser";
 
 export const RemotionRoot: React.FC = () => {
   return (
@@ -39,8 +40,8 @@ export const RemotionRoot: React.FC = () => {
             return {
               durationInFrames: 300,
               fps: 30,
-              width: 1920,
-              height: 1080,
+              width: 1080,
+              height: 1920,
             };
           }
 
@@ -76,8 +77,8 @@ export const RemotionRoot: React.FC = () => {
             return {
               durationInFrames: adjustedDurationInFrames,
               fps,
-              width: 1920,
-              height: 1080,
+              width: 1080,
+              height: 1920,
             };
           } catch (error) {
             console.warn('Failed to parse video metadata, using default:', error);
@@ -85,19 +86,19 @@ export const RemotionRoot: React.FC = () => {
             return {
               durationInFrames: 18000, // 10 minutes at 30fps as fallback
               fps: 30,
-              width: 1920,
-              height: 1080,
+              width: 1080,
+              height: 1920,
             };
           }
         }}
       />
-      {/* <Composition
+      <Composition
         id="VideoStitch"
         component={VideoStitch as any}
         durationInFrames={300} // Default fallback
         fps={30}
-        width={1920}
-        height={1080}
+        width={1080}
+        height={1920}
         defaultProps={{
           videoUrl: "https://example.com/video.mp4",
           clips: [
@@ -119,13 +120,10 @@ export const RemotionRoot: React.FC = () => {
             return {
               durationInFrames: 300,
               fps: 30,
-              width: 1920,
-              height: 1080,
+              width: 1080,
+              height: 1920,
             };
           }
-
-          // Use parseMedia() which works in Node.js/server environments
-          const { parseMedia } = await import('@remotion/media-parser');
           
           try {
             console.log('Parsing video metadata for VideoStitch...');
@@ -164,8 +162,8 @@ export const RemotionRoot: React.FC = () => {
             return {
               durationInFrames: totalDurationInFrames,
               fps,
-              width: 1920,
-              height: 1080,
+              width: 1080,
+              height: 1920,
             };
           } catch (error) {
             console.warn('Failed to parse video metadata for VideoStitch, using default:', error);
@@ -173,96 +171,8 @@ export const RemotionRoot: React.FC = () => {
             return {
               durationInFrames: 900, // 30 seconds at 30fps as fallback
               fps: 30,
-              width: 1920,
-              height: 1080,
-            };
-          }
-        }}
-      /> */}
-            <Composition
-        id="VideoStitch"
-        component={VideoStitch as any}
-        durationInFrames={300} // Default fallback
-        fps={30}
-        width={1920}
-        height={1080}
-        defaultProps={{
-          videoUrl: "https://example.com/video.mp4",
-          clips: [
-            {
-              range: "00:05-00:15",
-              caption: "This is a great clip!"
-            },
-            {
-              range: "00:30-00:45", 
-              caption: "Another amazing moment!"
-            }
-          ],
-        }}
-        calculateMetadata={async ({ props }) => {
-          const typedProps = props as VideoStitchInput;
-          
-          if (!typedProps.videoUrl || typedProps.videoUrl === "https://example.com/video.mp4") {
-            // Use default for placeholder video
-            return {
-              durationInFrames: 300,
-              fps: 30,
-              width: 1920,
-              height: 1080,
-            };
-          }
-
-          // Use parseMedia() which works in Node.js/server environments
-          const { parseMedia } = await import('@remotion/media-parser');
-          
-          try {
-            console.log('Parsing video metadata for VideoStitch...');
-            const { durationInSeconds } = await parseMedia({
-              src: typedProps.videoUrl,
-              fields: {
-                durationInSeconds: true,
-              },
-              acknowledgeRemotionLicense: true,
-            });
-            
-            if (durationInSeconds === null) {
-              throw new Error('Could not determine video duration');
-            }
-            
-            // Validate clip ranges are within video bounds and meet requirements
-            const clipRanges = typedProps.clips.map(clip => clip.range);
-            const validation = validateTimeRanges(clipRanges, durationInSeconds);
-            
-            if (!validation.isValid) {
-              throw new Error(`Invalid clips: ${validation.errors.join(', ')}`);
-            }
-            
-            // Calculate total duration from all clips
-            const totalClipDurationSeconds = calculateTotalClipDuration(clipRanges);
-            const fps = 30;
-            const totalDurationInFrames = Math.ceil(totalClipDurationSeconds * fps);
-            
-            console.log('VideoStitch metadata calculated successfully:', {
-              originalVideoDuration: durationInSeconds,
-              totalClipDuration: totalClipDurationSeconds,
-              totalFrames: totalDurationInFrames,
-              clipCount: typedProps.clips.length,
-            });
-            
-            return {
-              durationInFrames: totalDurationInFrames,
-              fps,
-              width: 1920,
-              height: 1080,
-            };
-          } catch (error) {
-            console.warn('Failed to parse video metadata for VideoStitch, using default:', error);
-            // Fallback to a reasonable default
-            return {
-              durationInFrames: 900, // 30 seconds at 30fps as fallback
-              fps: 30,
-              width: 1920,
-              height: 1080,
+              width: 1080,
+              height: 1920,
             };
           }
         }}

@@ -24,25 +24,10 @@ export type Post = $Result.DefaultSelection<Prisma.$PostPayload>
  */
 export type User = $Result.DefaultSelection<Prisma.$UserPayload>
 /**
- * Model FounderLogTag
+ * Model SampleVideo
  * 
  */
-export type FounderLogTag = $Result.DefaultSelection<Prisma.$FounderLogTagPayload>
-/**
- * Model FounderLogEntry
- * 
- */
-export type FounderLogEntry = $Result.DefaultSelection<Prisma.$FounderLogEntryPayload>
-/**
- * Model FounderLogEntryTag
- * 
- */
-export type FounderLogEntryTag = $Result.DefaultSelection<Prisma.$FounderLogEntryTagPayload>
-/**
- * Model FounderLogReflection
- * 
- */
-export type FounderLogReflection = $Result.DefaultSelection<Prisma.$FounderLogReflectionPayload>
+export type SampleVideo = $Result.DefaultSelection<Prisma.$SampleVideoPayload>
 
 /**
  * Enums
@@ -210,44 +195,14 @@ export class PrismaClient<
   get user(): Prisma.UserDelegate<ExtArgs, ClientOptions>;
 
   /**
-   * `prisma.founderLogTag`: Exposes CRUD operations for the **FounderLogTag** model.
+   * `prisma.sampleVideo`: Exposes CRUD operations for the **SampleVideo** model.
     * Example usage:
     * ```ts
-    * // Fetch zero or more FounderLogTags
-    * const founderLogTags = await prisma.founderLogTag.findMany()
+    * // Fetch zero or more SampleVideos
+    * const sampleVideos = await prisma.sampleVideo.findMany()
     * ```
     */
-  get founderLogTag(): Prisma.FounderLogTagDelegate<ExtArgs, ClientOptions>;
-
-  /**
-   * `prisma.founderLogEntry`: Exposes CRUD operations for the **FounderLogEntry** model.
-    * Example usage:
-    * ```ts
-    * // Fetch zero or more FounderLogEntries
-    * const founderLogEntries = await prisma.founderLogEntry.findMany()
-    * ```
-    */
-  get founderLogEntry(): Prisma.FounderLogEntryDelegate<ExtArgs, ClientOptions>;
-
-  /**
-   * `prisma.founderLogEntryTag`: Exposes CRUD operations for the **FounderLogEntryTag** model.
-    * Example usage:
-    * ```ts
-    * // Fetch zero or more FounderLogEntryTags
-    * const founderLogEntryTags = await prisma.founderLogEntryTag.findMany()
-    * ```
-    */
-  get founderLogEntryTag(): Prisma.FounderLogEntryTagDelegate<ExtArgs, ClientOptions>;
-
-  /**
-   * `prisma.founderLogReflection`: Exposes CRUD operations for the **FounderLogReflection** model.
-    * Example usage:
-    * ```ts
-    * // Fetch zero or more FounderLogReflections
-    * const founderLogReflections = await prisma.founderLogReflection.findMany()
-    * ```
-    */
-  get founderLogReflection(): Prisma.FounderLogReflectionDelegate<ExtArgs, ClientOptions>;
+  get sampleVideo(): Prisma.SampleVideoDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -690,10 +645,7 @@ export namespace Prisma {
   export const ModelName: {
     Post: 'Post',
     User: 'User',
-    FounderLogTag: 'FounderLogTag',
-    FounderLogEntry: 'FounderLogEntry',
-    FounderLogEntryTag: 'FounderLogEntryTag',
-    FounderLogReflection: 'FounderLogReflection'
+    SampleVideo: 'SampleVideo'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -712,7 +664,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "post" | "user" | "founderLogTag" | "founderLogEntry" | "founderLogEntryTag" | "founderLogReflection"
+      modelProps: "post" | "user" | "sampleVideo"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -864,299 +816,77 @@ export namespace Prisma {
           }
         }
       }
-      FounderLogTag: {
-        payload: Prisma.$FounderLogTagPayload<ExtArgs>
-        fields: Prisma.FounderLogTagFieldRefs
+      SampleVideo: {
+        payload: Prisma.$SampleVideoPayload<ExtArgs>
+        fields: Prisma.SampleVideoFieldRefs
         operations: {
           findUnique: {
-            args: Prisma.FounderLogTagFindUniqueArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogTagPayload> | null
+            args: Prisma.SampleVideoFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SampleVideoPayload> | null
           }
           findUniqueOrThrow: {
-            args: Prisma.FounderLogTagFindUniqueOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogTagPayload>
+            args: Prisma.SampleVideoFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SampleVideoPayload>
           }
           findFirst: {
-            args: Prisma.FounderLogTagFindFirstArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogTagPayload> | null
+            args: Prisma.SampleVideoFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SampleVideoPayload> | null
           }
           findFirstOrThrow: {
-            args: Prisma.FounderLogTagFindFirstOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogTagPayload>
+            args: Prisma.SampleVideoFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SampleVideoPayload>
           }
           findMany: {
-            args: Prisma.FounderLogTagFindManyArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogTagPayload>[]
+            args: Prisma.SampleVideoFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SampleVideoPayload>[]
           }
           create: {
-            args: Prisma.FounderLogTagCreateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogTagPayload>
+            args: Prisma.SampleVideoCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SampleVideoPayload>
           }
           createMany: {
-            args: Prisma.FounderLogTagCreateManyArgs<ExtArgs>
+            args: Prisma.SampleVideoCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
           createManyAndReturn: {
-            args: Prisma.FounderLogTagCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogTagPayload>[]
+            args: Prisma.SampleVideoCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SampleVideoPayload>[]
           }
           delete: {
-            args: Prisma.FounderLogTagDeleteArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogTagPayload>
+            args: Prisma.SampleVideoDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SampleVideoPayload>
           }
           update: {
-            args: Prisma.FounderLogTagUpdateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogTagPayload>
+            args: Prisma.SampleVideoUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SampleVideoPayload>
           }
           deleteMany: {
-            args: Prisma.FounderLogTagDeleteManyArgs<ExtArgs>
+            args: Prisma.SampleVideoDeleteManyArgs<ExtArgs>
             result: BatchPayload
           }
           updateMany: {
-            args: Prisma.FounderLogTagUpdateManyArgs<ExtArgs>
+            args: Prisma.SampleVideoUpdateManyArgs<ExtArgs>
             result: BatchPayload
           }
           updateManyAndReturn: {
-            args: Prisma.FounderLogTagUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogTagPayload>[]
+            args: Prisma.SampleVideoUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SampleVideoPayload>[]
           }
           upsert: {
-            args: Prisma.FounderLogTagUpsertArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogTagPayload>
+            args: Prisma.SampleVideoUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SampleVideoPayload>
           }
           aggregate: {
-            args: Prisma.FounderLogTagAggregateArgs<ExtArgs>
-            result: $Utils.Optional<AggregateFounderLogTag>
+            args: Prisma.SampleVideoAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateSampleVideo>
           }
           groupBy: {
-            args: Prisma.FounderLogTagGroupByArgs<ExtArgs>
-            result: $Utils.Optional<FounderLogTagGroupByOutputType>[]
+            args: Prisma.SampleVideoGroupByArgs<ExtArgs>
+            result: $Utils.Optional<SampleVideoGroupByOutputType>[]
           }
           count: {
-            args: Prisma.FounderLogTagCountArgs<ExtArgs>
-            result: $Utils.Optional<FounderLogTagCountAggregateOutputType> | number
-          }
-        }
-      }
-      FounderLogEntry: {
-        payload: Prisma.$FounderLogEntryPayload<ExtArgs>
-        fields: Prisma.FounderLogEntryFieldRefs
-        operations: {
-          findUnique: {
-            args: Prisma.FounderLogEntryFindUniqueArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogEntryPayload> | null
-          }
-          findUniqueOrThrow: {
-            args: Prisma.FounderLogEntryFindUniqueOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogEntryPayload>
-          }
-          findFirst: {
-            args: Prisma.FounderLogEntryFindFirstArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogEntryPayload> | null
-          }
-          findFirstOrThrow: {
-            args: Prisma.FounderLogEntryFindFirstOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogEntryPayload>
-          }
-          findMany: {
-            args: Prisma.FounderLogEntryFindManyArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogEntryPayload>[]
-          }
-          create: {
-            args: Prisma.FounderLogEntryCreateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogEntryPayload>
-          }
-          createMany: {
-            args: Prisma.FounderLogEntryCreateManyArgs<ExtArgs>
-            result: BatchPayload
-          }
-          createManyAndReturn: {
-            args: Prisma.FounderLogEntryCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogEntryPayload>[]
-          }
-          delete: {
-            args: Prisma.FounderLogEntryDeleteArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogEntryPayload>
-          }
-          update: {
-            args: Prisma.FounderLogEntryUpdateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogEntryPayload>
-          }
-          deleteMany: {
-            args: Prisma.FounderLogEntryDeleteManyArgs<ExtArgs>
-            result: BatchPayload
-          }
-          updateMany: {
-            args: Prisma.FounderLogEntryUpdateManyArgs<ExtArgs>
-            result: BatchPayload
-          }
-          updateManyAndReturn: {
-            args: Prisma.FounderLogEntryUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogEntryPayload>[]
-          }
-          upsert: {
-            args: Prisma.FounderLogEntryUpsertArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogEntryPayload>
-          }
-          aggregate: {
-            args: Prisma.FounderLogEntryAggregateArgs<ExtArgs>
-            result: $Utils.Optional<AggregateFounderLogEntry>
-          }
-          groupBy: {
-            args: Prisma.FounderLogEntryGroupByArgs<ExtArgs>
-            result: $Utils.Optional<FounderLogEntryGroupByOutputType>[]
-          }
-          count: {
-            args: Prisma.FounderLogEntryCountArgs<ExtArgs>
-            result: $Utils.Optional<FounderLogEntryCountAggregateOutputType> | number
-          }
-        }
-      }
-      FounderLogEntryTag: {
-        payload: Prisma.$FounderLogEntryTagPayload<ExtArgs>
-        fields: Prisma.FounderLogEntryTagFieldRefs
-        operations: {
-          findUnique: {
-            args: Prisma.FounderLogEntryTagFindUniqueArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogEntryTagPayload> | null
-          }
-          findUniqueOrThrow: {
-            args: Prisma.FounderLogEntryTagFindUniqueOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogEntryTagPayload>
-          }
-          findFirst: {
-            args: Prisma.FounderLogEntryTagFindFirstArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogEntryTagPayload> | null
-          }
-          findFirstOrThrow: {
-            args: Prisma.FounderLogEntryTagFindFirstOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogEntryTagPayload>
-          }
-          findMany: {
-            args: Prisma.FounderLogEntryTagFindManyArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogEntryTagPayload>[]
-          }
-          create: {
-            args: Prisma.FounderLogEntryTagCreateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogEntryTagPayload>
-          }
-          createMany: {
-            args: Prisma.FounderLogEntryTagCreateManyArgs<ExtArgs>
-            result: BatchPayload
-          }
-          createManyAndReturn: {
-            args: Prisma.FounderLogEntryTagCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogEntryTagPayload>[]
-          }
-          delete: {
-            args: Prisma.FounderLogEntryTagDeleteArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogEntryTagPayload>
-          }
-          update: {
-            args: Prisma.FounderLogEntryTagUpdateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogEntryTagPayload>
-          }
-          deleteMany: {
-            args: Prisma.FounderLogEntryTagDeleteManyArgs<ExtArgs>
-            result: BatchPayload
-          }
-          updateMany: {
-            args: Prisma.FounderLogEntryTagUpdateManyArgs<ExtArgs>
-            result: BatchPayload
-          }
-          updateManyAndReturn: {
-            args: Prisma.FounderLogEntryTagUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogEntryTagPayload>[]
-          }
-          upsert: {
-            args: Prisma.FounderLogEntryTagUpsertArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogEntryTagPayload>
-          }
-          aggregate: {
-            args: Prisma.FounderLogEntryTagAggregateArgs<ExtArgs>
-            result: $Utils.Optional<AggregateFounderLogEntryTag>
-          }
-          groupBy: {
-            args: Prisma.FounderLogEntryTagGroupByArgs<ExtArgs>
-            result: $Utils.Optional<FounderLogEntryTagGroupByOutputType>[]
-          }
-          count: {
-            args: Prisma.FounderLogEntryTagCountArgs<ExtArgs>
-            result: $Utils.Optional<FounderLogEntryTagCountAggregateOutputType> | number
-          }
-        }
-      }
-      FounderLogReflection: {
-        payload: Prisma.$FounderLogReflectionPayload<ExtArgs>
-        fields: Prisma.FounderLogReflectionFieldRefs
-        operations: {
-          findUnique: {
-            args: Prisma.FounderLogReflectionFindUniqueArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogReflectionPayload> | null
-          }
-          findUniqueOrThrow: {
-            args: Prisma.FounderLogReflectionFindUniqueOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogReflectionPayload>
-          }
-          findFirst: {
-            args: Prisma.FounderLogReflectionFindFirstArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogReflectionPayload> | null
-          }
-          findFirstOrThrow: {
-            args: Prisma.FounderLogReflectionFindFirstOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogReflectionPayload>
-          }
-          findMany: {
-            args: Prisma.FounderLogReflectionFindManyArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogReflectionPayload>[]
-          }
-          create: {
-            args: Prisma.FounderLogReflectionCreateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogReflectionPayload>
-          }
-          createMany: {
-            args: Prisma.FounderLogReflectionCreateManyArgs<ExtArgs>
-            result: BatchPayload
-          }
-          createManyAndReturn: {
-            args: Prisma.FounderLogReflectionCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogReflectionPayload>[]
-          }
-          delete: {
-            args: Prisma.FounderLogReflectionDeleteArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogReflectionPayload>
-          }
-          update: {
-            args: Prisma.FounderLogReflectionUpdateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogReflectionPayload>
-          }
-          deleteMany: {
-            args: Prisma.FounderLogReflectionDeleteManyArgs<ExtArgs>
-            result: BatchPayload
-          }
-          updateMany: {
-            args: Prisma.FounderLogReflectionUpdateManyArgs<ExtArgs>
-            result: BatchPayload
-          }
-          updateManyAndReturn: {
-            args: Prisma.FounderLogReflectionUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogReflectionPayload>[]
-          }
-          upsert: {
-            args: Prisma.FounderLogReflectionUpsertArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$FounderLogReflectionPayload>
-          }
-          aggregate: {
-            args: Prisma.FounderLogReflectionAggregateArgs<ExtArgs>
-            result: $Utils.Optional<AggregateFounderLogReflection>
-          }
-          groupBy: {
-            args: Prisma.FounderLogReflectionGroupByArgs<ExtArgs>
-            result: $Utils.Optional<FounderLogReflectionGroupByOutputType>[]
-          }
-          count: {
-            args: Prisma.FounderLogReflectionCountArgs<ExtArgs>
-            result: $Utils.Optional<FounderLogReflectionCountAggregateOutputType> | number
+            args: Prisma.SampleVideoCountArgs<ExtArgs>
+            result: $Utils.Optional<SampleVideoCountAggregateOutputType> | number
           }
         }
       }
@@ -1250,10 +980,7 @@ export namespace Prisma {
   export type GlobalOmitConfig = {
     post?: PostOmit
     user?: UserOmit
-    founderLogTag?: FounderLogTagOmit
-    founderLogEntry?: FounderLogEntryOmit
-    founderLogEntryTag?: FounderLogEntryTagOmit
-    founderLogReflection?: FounderLogReflectionOmit
+    sampleVideo?: SampleVideoOmit
   }
 
   /* Types for Logging */
@@ -1342,107 +1069,6 @@ export namespace Prisma {
    * Count Types
    */
 
-
-  /**
-   * Count Type UserCountOutputType
-   */
-
-  export type UserCountOutputType = {
-    entries: number
-    reflections: number
-  }
-
-  export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    entries?: boolean | UserCountOutputTypeCountEntriesArgs
-    reflections?: boolean | UserCountOutputTypeCountReflectionsArgs
-  }
-
-  // Custom InputTypes
-  /**
-   * UserCountOutputType without action
-   */
-  export type UserCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the UserCountOutputType
-     */
-    select?: UserCountOutputTypeSelect<ExtArgs> | null
-  }
-
-  /**
-   * UserCountOutputType without action
-   */
-  export type UserCountOutputTypeCountEntriesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: FounderLogEntryWhereInput
-  }
-
-  /**
-   * UserCountOutputType without action
-   */
-  export type UserCountOutputTypeCountReflectionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: FounderLogReflectionWhereInput
-  }
-
-
-  /**
-   * Count Type FounderLogTagCountOutputType
-   */
-
-  export type FounderLogTagCountOutputType = {
-    entries: number
-  }
-
-  export type FounderLogTagCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    entries?: boolean | FounderLogTagCountOutputTypeCountEntriesArgs
-  }
-
-  // Custom InputTypes
-  /**
-   * FounderLogTagCountOutputType without action
-   */
-  export type FounderLogTagCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogTagCountOutputType
-     */
-    select?: FounderLogTagCountOutputTypeSelect<ExtArgs> | null
-  }
-
-  /**
-   * FounderLogTagCountOutputType without action
-   */
-  export type FounderLogTagCountOutputTypeCountEntriesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: FounderLogEntryTagWhereInput
-  }
-
-
-  /**
-   * Count Type FounderLogEntryCountOutputType
-   */
-
-  export type FounderLogEntryCountOutputType = {
-    tags: number
-  }
-
-  export type FounderLogEntryCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    tags?: boolean | FounderLogEntryCountOutputTypeCountTagsArgs
-  }
-
-  // Custom InputTypes
-  /**
-   * FounderLogEntryCountOutputType without action
-   */
-  export type FounderLogEntryCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogEntryCountOutputType
-     */
-    select?: FounderLogEntryCountOutputTypeSelect<ExtArgs> | null
-  }
-
-  /**
-   * FounderLogEntryCountOutputType without action
-   */
-  export type FounderLogEntryCountOutputTypeCountTagsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: FounderLogEntryTagWhereInput
-  }
 
 
   /**
@@ -2656,9 +2282,6 @@ export namespace Prisma {
     stripeUserProperties?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    entries?: boolean | User$entriesArgs<ExtArgs>
-    reflections?: boolean | User$reflectionsArgs<ExtArgs>
-    _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -2707,20 +2330,10 @@ export namespace Prisma {
   }
 
   export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "firstName" | "lastName" | "username" | "primaryEmailAddress" | "imageUrl" | "clerkUserProperties" | "stripeCustomerId" | "accessType" | "stripeUserProperties" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
-  export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    entries?: boolean | User$entriesArgs<ExtArgs>
-    reflections?: boolean | User$reflectionsArgs<ExtArgs>
-    _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
-  }
-  export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
-  export type UserIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
 
   export type $UserPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "User"
-    objects: {
-      entries: Prisma.$FounderLogEntryPayload<ExtArgs>[]
-      reflections: Prisma.$FounderLogReflectionPayload<ExtArgs>[]
-    }
+    objects: {}
     scalars: $Extensions.GetPayloadResult<{
       id: string
       firstName: string | null
@@ -3128,8 +2741,6 @@ export namespace Prisma {
    */
   export interface Prisma__UserClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    entries<T extends User$entriesArgs<ExtArgs> = {}>(args?: Subset<T, User$entriesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FounderLogEntryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    reflections<T extends User$reflectionsArgs<ExtArgs> = {}>(args?: Subset<T, User$reflectionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FounderLogReflectionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -3188,10 +2799,6 @@ export namespace Prisma {
      */
     omit?: UserOmit<ExtArgs> | null
     /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: UserInclude<ExtArgs> | null
-    /**
      * Filter, which User to fetch.
      */
     where: UserWhereUniqueInput
@@ -3210,10 +2817,6 @@ export namespace Prisma {
      */
     omit?: UserOmit<ExtArgs> | null
     /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: UserInclude<ExtArgs> | null
-    /**
      * Filter, which User to fetch.
      */
     where: UserWhereUniqueInput
@@ -3231,10 +2834,6 @@ export namespace Prisma {
      * Omit specific fields from the User
      */
     omit?: UserOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: UserInclude<ExtArgs> | null
     /**
      * Filter, which User to fetch.
      */
@@ -3284,10 +2883,6 @@ export namespace Prisma {
      */
     omit?: UserOmit<ExtArgs> | null
     /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: UserInclude<ExtArgs> | null
-    /**
      * Filter, which User to fetch.
      */
     where?: UserWhereInput
@@ -3336,10 +2931,6 @@ export namespace Prisma {
      */
     omit?: UserOmit<ExtArgs> | null
     /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: UserInclude<ExtArgs> | null
-    /**
      * Filter, which Users to fetch.
      */
     where?: UserWhereInput
@@ -3382,10 +2973,6 @@ export namespace Prisma {
      * Omit specific fields from the User
      */
     omit?: UserOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: UserInclude<ExtArgs> | null
     /**
      * The data needed to create a User.
      */
@@ -3434,10 +3021,6 @@ export namespace Prisma {
      * Omit specific fields from the User
      */
     omit?: UserOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: UserInclude<ExtArgs> | null
     /**
      * The data needed to update a User.
      */
@@ -3505,10 +3088,6 @@ export namespace Prisma {
      */
     omit?: UserOmit<ExtArgs> | null
     /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: UserInclude<ExtArgs> | null
-    /**
      * The filter to search for the User to update in case it exists.
      */
     where: UserWhereUniqueInput
@@ -3535,10 +3114,6 @@ export namespace Prisma {
      */
     omit?: UserOmit<ExtArgs> | null
     /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: UserInclude<ExtArgs> | null
-    /**
      * Filter which User to delete.
      */
     where: UserWhereUniqueInput
@@ -3559,54 +3134,6 @@ export namespace Prisma {
   }
 
   /**
-   * User.entries
-   */
-  export type User$entriesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogEntry
-     */
-    select?: FounderLogEntrySelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the FounderLogEntry
-     */
-    omit?: FounderLogEntryOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogEntryInclude<ExtArgs> | null
-    where?: FounderLogEntryWhereInput
-    orderBy?: FounderLogEntryOrderByWithRelationInput | FounderLogEntryOrderByWithRelationInput[]
-    cursor?: FounderLogEntryWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: FounderLogEntryScalarFieldEnum | FounderLogEntryScalarFieldEnum[]
-  }
-
-  /**
-   * User.reflections
-   */
-  export type User$reflectionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogReflection
-     */
-    select?: FounderLogReflectionSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the FounderLogReflection
-     */
-    omit?: FounderLogReflectionOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogReflectionInclude<ExtArgs> | null
-    where?: FounderLogReflectionWhereInput
-    orderBy?: FounderLogReflectionOrderByWithRelationInput | FounderLogReflectionOrderByWithRelationInput[]
-    cursor?: FounderLogReflectionWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: FounderLogReflectionScalarFieldEnum | FounderLogReflectionScalarFieldEnum[]
-  }
-
-  /**
    * User without action
    */
   export type UserDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -3618,1466 +3145,470 @@ export namespace Prisma {
      * Omit specific fields from the User
      */
     omit?: UserOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: UserInclude<ExtArgs> | null
   }
 
 
   /**
-   * Model FounderLogTag
+   * Model SampleVideo
    */
 
-  export type AggregateFounderLogTag = {
-    _count: FounderLogTagCountAggregateOutputType | null
-    _min: FounderLogTagMinAggregateOutputType | null
-    _max: FounderLogTagMaxAggregateOutputType | null
+  export type AggregateSampleVideo = {
+    _count: SampleVideoCountAggregateOutputType | null
+    _avg: SampleVideoAvgAggregateOutputType | null
+    _sum: SampleVideoSumAggregateOutputType | null
+    _min: SampleVideoMinAggregateOutputType | null
+    _max: SampleVideoMaxAggregateOutputType | null
   }
 
-  export type FounderLogTagMinAggregateOutputType = {
+  export type SampleVideoAvgAggregateOutputType = {
+    views: number | null
+    comments: number | null
+    likes: number | null
+    durationSeconds: number | null
+  }
+
+  export type SampleVideoSumAggregateOutputType = {
+    views: number | null
+    comments: number | null
+    likes: number | null
+    durationSeconds: number | null
+  }
+
+  export type SampleVideoMinAggregateOutputType = {
     id: string | null
-    name: string | null
+    webpageUrl: string | null
+    s3Url: string | null
+    hookCutUrl: string | null
+    title: string | null
+    description: string | null
+    views: number | null
+    comments: number | null
+    likes: number | null
+    durationSeconds: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
 
-  export type FounderLogTagMaxAggregateOutputType = {
+  export type SampleVideoMaxAggregateOutputType = {
     id: string | null
-    name: string | null
+    webpageUrl: string | null
+    s3Url: string | null
+    hookCutUrl: string | null
+    title: string | null
+    description: string | null
+    views: number | null
+    comments: number | null
+    likes: number | null
+    durationSeconds: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
 
-  export type FounderLogTagCountAggregateOutputType = {
+  export type SampleVideoCountAggregateOutputType = {
     id: number
-    name: number
+    webpageUrl: number
+    s3Url: number
+    hookCutUrl: number
+    title: number
+    description: number
+    views: number
+    comments: number
+    likes: number
+    durationSeconds: number
     createdAt: number
     updatedAt: number
     _all: number
   }
 
 
-  export type FounderLogTagMinAggregateInputType = {
+  export type SampleVideoAvgAggregateInputType = {
+    views?: true
+    comments?: true
+    likes?: true
+    durationSeconds?: true
+  }
+
+  export type SampleVideoSumAggregateInputType = {
+    views?: true
+    comments?: true
+    likes?: true
+    durationSeconds?: true
+  }
+
+  export type SampleVideoMinAggregateInputType = {
     id?: true
-    name?: true
+    webpageUrl?: true
+    s3Url?: true
+    hookCutUrl?: true
+    title?: true
+    description?: true
+    views?: true
+    comments?: true
+    likes?: true
+    durationSeconds?: true
     createdAt?: true
     updatedAt?: true
   }
 
-  export type FounderLogTagMaxAggregateInputType = {
+  export type SampleVideoMaxAggregateInputType = {
     id?: true
-    name?: true
+    webpageUrl?: true
+    s3Url?: true
+    hookCutUrl?: true
+    title?: true
+    description?: true
+    views?: true
+    comments?: true
+    likes?: true
+    durationSeconds?: true
     createdAt?: true
     updatedAt?: true
   }
 
-  export type FounderLogTagCountAggregateInputType = {
+  export type SampleVideoCountAggregateInputType = {
     id?: true
-    name?: true
-    createdAt?: true
-    updatedAt?: true
-    _all?: true
-  }
-
-  export type FounderLogTagAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Filter which FounderLogTag to aggregate.
-     */
-    where?: FounderLogTagWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of FounderLogTags to fetch.
-     */
-    orderBy?: FounderLogTagOrderByWithRelationInput | FounderLogTagOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the start position
-     */
-    cursor?: FounderLogTagWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` FounderLogTags from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` FounderLogTags.
-     */
-    skip?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Count returned FounderLogTags
-    **/
-    _count?: true | FounderLogTagCountAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to find the minimum value
-    **/
-    _min?: FounderLogTagMinAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to find the maximum value
-    **/
-    _max?: FounderLogTagMaxAggregateInputType
-  }
-
-  export type GetFounderLogTagAggregateType<T extends FounderLogTagAggregateArgs> = {
-        [P in keyof T & keyof AggregateFounderLogTag]: P extends '_count' | 'count'
-      ? T[P] extends true
-        ? number
-        : GetScalarType<T[P], AggregateFounderLogTag[P]>
-      : GetScalarType<T[P], AggregateFounderLogTag[P]>
-  }
-
-
-
-
-  export type FounderLogTagGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: FounderLogTagWhereInput
-    orderBy?: FounderLogTagOrderByWithAggregationInput | FounderLogTagOrderByWithAggregationInput[]
-    by: FounderLogTagScalarFieldEnum[] | FounderLogTagScalarFieldEnum
-    having?: FounderLogTagScalarWhereWithAggregatesInput
-    take?: number
-    skip?: number
-    _count?: FounderLogTagCountAggregateInputType | true
-    _min?: FounderLogTagMinAggregateInputType
-    _max?: FounderLogTagMaxAggregateInputType
-  }
-
-  export type FounderLogTagGroupByOutputType = {
-    id: string
-    name: string
-    createdAt: Date
-    updatedAt: Date
-    _count: FounderLogTagCountAggregateOutputType | null
-    _min: FounderLogTagMinAggregateOutputType | null
-    _max: FounderLogTagMaxAggregateOutputType | null
-  }
-
-  type GetFounderLogTagGroupByPayload<T extends FounderLogTagGroupByArgs> = Prisma.PrismaPromise<
-    Array<
-      PickEnumerable<FounderLogTagGroupByOutputType, T['by']> &
-        {
-          [P in ((keyof T) & (keyof FounderLogTagGroupByOutputType))]: P extends '_count'
-            ? T[P] extends boolean
-              ? number
-              : GetScalarType<T[P], FounderLogTagGroupByOutputType[P]>
-            : GetScalarType<T[P], FounderLogTagGroupByOutputType[P]>
-        }
-      >
-    >
-
-
-  export type FounderLogTagSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    name?: boolean
-    createdAt?: boolean
-    updatedAt?: boolean
-    entries?: boolean | FounderLogTag$entriesArgs<ExtArgs>
-    _count?: boolean | FounderLogTagCountOutputTypeDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["founderLogTag"]>
-
-  export type FounderLogTagSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    name?: boolean
-    createdAt?: boolean
-    updatedAt?: boolean
-  }, ExtArgs["result"]["founderLogTag"]>
-
-  export type FounderLogTagSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    name?: boolean
-    createdAt?: boolean
-    updatedAt?: boolean
-  }, ExtArgs["result"]["founderLogTag"]>
-
-  export type FounderLogTagSelectScalar = {
-    id?: boolean
-    name?: boolean
-    createdAt?: boolean
-    updatedAt?: boolean
-  }
-
-  export type FounderLogTagOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "createdAt" | "updatedAt", ExtArgs["result"]["founderLogTag"]>
-  export type FounderLogTagInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    entries?: boolean | FounderLogTag$entriesArgs<ExtArgs>
-    _count?: boolean | FounderLogTagCountOutputTypeDefaultArgs<ExtArgs>
-  }
-  export type FounderLogTagIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
-  export type FounderLogTagIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
-
-  export type $FounderLogTagPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    name: "FounderLogTag"
-    objects: {
-      entries: Prisma.$FounderLogEntryTagPayload<ExtArgs>[]
-    }
-    scalars: $Extensions.GetPayloadResult<{
-      id: string
-      name: string
-      createdAt: Date
-      updatedAt: Date
-    }, ExtArgs["result"]["founderLogTag"]>
-    composites: {}
-  }
-
-  type FounderLogTagGetPayload<S extends boolean | null | undefined | FounderLogTagDefaultArgs> = $Result.GetResult<Prisma.$FounderLogTagPayload, S>
-
-  type FounderLogTagCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
-    Omit<FounderLogTagFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
-      select?: FounderLogTagCountAggregateInputType | true
-    }
-
-  export interface FounderLogTagDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
-    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['FounderLogTag'], meta: { name: 'FounderLogTag' } }
-    /**
-     * Find zero or one FounderLogTag that matches the filter.
-     * @param {FounderLogTagFindUniqueArgs} args - Arguments to find a FounderLogTag
-     * @example
-     * // Get one FounderLogTag
-     * const founderLogTag = await prisma.founderLogTag.findUnique({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findUnique<T extends FounderLogTagFindUniqueArgs>(args: SelectSubset<T, FounderLogTagFindUniqueArgs<ExtArgs>>): Prisma__FounderLogTagClient<$Result.GetResult<Prisma.$FounderLogTagPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find one FounderLogTag that matches the filter or throw an error with `error.code='P2025'`
-     * if no matches were found.
-     * @param {FounderLogTagFindUniqueOrThrowArgs} args - Arguments to find a FounderLogTag
-     * @example
-     * // Get one FounderLogTag
-     * const founderLogTag = await prisma.founderLogTag.findUniqueOrThrow({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findUniqueOrThrow<T extends FounderLogTagFindUniqueOrThrowArgs>(args: SelectSubset<T, FounderLogTagFindUniqueOrThrowArgs<ExtArgs>>): Prisma__FounderLogTagClient<$Result.GetResult<Prisma.$FounderLogTagPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find the first FounderLogTag that matches the filter.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {FounderLogTagFindFirstArgs} args - Arguments to find a FounderLogTag
-     * @example
-     * // Get one FounderLogTag
-     * const founderLogTag = await prisma.founderLogTag.findFirst({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findFirst<T extends FounderLogTagFindFirstArgs>(args?: SelectSubset<T, FounderLogTagFindFirstArgs<ExtArgs>>): Prisma__FounderLogTagClient<$Result.GetResult<Prisma.$FounderLogTagPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find the first FounderLogTag that matches the filter or
-     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {FounderLogTagFindFirstOrThrowArgs} args - Arguments to find a FounderLogTag
-     * @example
-     * // Get one FounderLogTag
-     * const founderLogTag = await prisma.founderLogTag.findFirstOrThrow({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findFirstOrThrow<T extends FounderLogTagFindFirstOrThrowArgs>(args?: SelectSubset<T, FounderLogTagFindFirstOrThrowArgs<ExtArgs>>): Prisma__FounderLogTagClient<$Result.GetResult<Prisma.$FounderLogTagPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find zero or more FounderLogTags that matches the filter.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {FounderLogTagFindManyArgs} args - Arguments to filter and select certain fields only.
-     * @example
-     * // Get all FounderLogTags
-     * const founderLogTags = await prisma.founderLogTag.findMany()
-     * 
-     * // Get first 10 FounderLogTags
-     * const founderLogTags = await prisma.founderLogTag.findMany({ take: 10 })
-     * 
-     * // Only select the `id`
-     * const founderLogTagWithIdOnly = await prisma.founderLogTag.findMany({ select: { id: true } })
-     * 
-     */
-    findMany<T extends FounderLogTagFindManyArgs>(args?: SelectSubset<T, FounderLogTagFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FounderLogTagPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
-
-    /**
-     * Create a FounderLogTag.
-     * @param {FounderLogTagCreateArgs} args - Arguments to create a FounderLogTag.
-     * @example
-     * // Create one FounderLogTag
-     * const FounderLogTag = await prisma.founderLogTag.create({
-     *   data: {
-     *     // ... data to create a FounderLogTag
-     *   }
-     * })
-     * 
-     */
-    create<T extends FounderLogTagCreateArgs>(args: SelectSubset<T, FounderLogTagCreateArgs<ExtArgs>>): Prisma__FounderLogTagClient<$Result.GetResult<Prisma.$FounderLogTagPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Create many FounderLogTags.
-     * @param {FounderLogTagCreateManyArgs} args - Arguments to create many FounderLogTags.
-     * @example
-     * // Create many FounderLogTags
-     * const founderLogTag = await prisma.founderLogTag.createMany({
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     *     
-     */
-    createMany<T extends FounderLogTagCreateManyArgs>(args?: SelectSubset<T, FounderLogTagCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Create many FounderLogTags and returns the data saved in the database.
-     * @param {FounderLogTagCreateManyAndReturnArgs} args - Arguments to create many FounderLogTags.
-     * @example
-     * // Create many FounderLogTags
-     * const founderLogTag = await prisma.founderLogTag.createManyAndReturn({
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Create many FounderLogTags and only return the `id`
-     * const founderLogTagWithIdOnly = await prisma.founderLogTag.createManyAndReturn({
-     *   select: { id: true },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    createManyAndReturn<T extends FounderLogTagCreateManyAndReturnArgs>(args?: SelectSubset<T, FounderLogTagCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FounderLogTagPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
-
-    /**
-     * Delete a FounderLogTag.
-     * @param {FounderLogTagDeleteArgs} args - Arguments to delete one FounderLogTag.
-     * @example
-     * // Delete one FounderLogTag
-     * const FounderLogTag = await prisma.founderLogTag.delete({
-     *   where: {
-     *     // ... filter to delete one FounderLogTag
-     *   }
-     * })
-     * 
-     */
-    delete<T extends FounderLogTagDeleteArgs>(args: SelectSubset<T, FounderLogTagDeleteArgs<ExtArgs>>): Prisma__FounderLogTagClient<$Result.GetResult<Prisma.$FounderLogTagPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Update one FounderLogTag.
-     * @param {FounderLogTagUpdateArgs} args - Arguments to update one FounderLogTag.
-     * @example
-     * // Update one FounderLogTag
-     * const founderLogTag = await prisma.founderLogTag.update({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: {
-     *     // ... provide data here
-     *   }
-     * })
-     * 
-     */
-    update<T extends FounderLogTagUpdateArgs>(args: SelectSubset<T, FounderLogTagUpdateArgs<ExtArgs>>): Prisma__FounderLogTagClient<$Result.GetResult<Prisma.$FounderLogTagPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Delete zero or more FounderLogTags.
-     * @param {FounderLogTagDeleteManyArgs} args - Arguments to filter FounderLogTags to delete.
-     * @example
-     * // Delete a few FounderLogTags
-     * const { count } = await prisma.founderLogTag.deleteMany({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     * 
-     */
-    deleteMany<T extends FounderLogTagDeleteManyArgs>(args?: SelectSubset<T, FounderLogTagDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more FounderLogTags.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {FounderLogTagUpdateManyArgs} args - Arguments to update one or more rows.
-     * @example
-     * // Update many FounderLogTags
-     * const founderLogTag = await prisma.founderLogTag.updateMany({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: {
-     *     // ... provide data here
-     *   }
-     * })
-     * 
-     */
-    updateMany<T extends FounderLogTagUpdateManyArgs>(args: SelectSubset<T, FounderLogTagUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more FounderLogTags and returns the data updated in the database.
-     * @param {FounderLogTagUpdateManyAndReturnArgs} args - Arguments to update many FounderLogTags.
-     * @example
-     * // Update many FounderLogTags
-     * const founderLogTag = await prisma.founderLogTag.updateManyAndReturn({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Update zero or more FounderLogTags and only return the `id`
-     * const founderLogTagWithIdOnly = await prisma.founderLogTag.updateManyAndReturn({
-     *   select: { id: true },
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    updateManyAndReturn<T extends FounderLogTagUpdateManyAndReturnArgs>(args: SelectSubset<T, FounderLogTagUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FounderLogTagPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
-
-    /**
-     * Create or update one FounderLogTag.
-     * @param {FounderLogTagUpsertArgs} args - Arguments to update or create a FounderLogTag.
-     * @example
-     * // Update or create a FounderLogTag
-     * const founderLogTag = await prisma.founderLogTag.upsert({
-     *   create: {
-     *     // ... data to create a FounderLogTag
-     *   },
-     *   update: {
-     *     // ... in case it already exists, update
-     *   },
-     *   where: {
-     *     // ... the filter for the FounderLogTag we want to update
-     *   }
-     * })
-     */
-    upsert<T extends FounderLogTagUpsertArgs>(args: SelectSubset<T, FounderLogTagUpsertArgs<ExtArgs>>): Prisma__FounderLogTagClient<$Result.GetResult<Prisma.$FounderLogTagPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-
-    /**
-     * Count the number of FounderLogTags.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {FounderLogTagCountArgs} args - Arguments to filter FounderLogTags to count.
-     * @example
-     * // Count the number of FounderLogTags
-     * const count = await prisma.founderLogTag.count({
-     *   where: {
-     *     // ... the filter for the FounderLogTags we want to count
-     *   }
-     * })
-    **/
-    count<T extends FounderLogTagCountArgs>(
-      args?: Subset<T, FounderLogTagCountArgs>,
-    ): Prisma.PrismaPromise<
-      T extends $Utils.Record<'select', any>
-        ? T['select'] extends true
-          ? number
-          : GetScalarType<T['select'], FounderLogTagCountAggregateOutputType>
-        : number
-    >
-
-    /**
-     * Allows you to perform aggregations operations on a FounderLogTag.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {FounderLogTagAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
-     * @example
-     * // Ordered by age ascending
-     * // Where email contains prisma.io
-     * // Limited to the 10 users
-     * const aggregations = await prisma.user.aggregate({
-     *   _avg: {
-     *     age: true,
-     *   },
-     *   where: {
-     *     email: {
-     *       contains: "prisma.io",
-     *     },
-     *   },
-     *   orderBy: {
-     *     age: "asc",
-     *   },
-     *   take: 10,
-     * })
-    **/
-    aggregate<T extends FounderLogTagAggregateArgs>(args: Subset<T, FounderLogTagAggregateArgs>): Prisma.PrismaPromise<GetFounderLogTagAggregateType<T>>
-
-    /**
-     * Group by FounderLogTag.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {FounderLogTagGroupByArgs} args - Group by arguments.
-     * @example
-     * // Group by city, order by createdAt, get count
-     * const result = await prisma.user.groupBy({
-     *   by: ['city', 'createdAt'],
-     *   orderBy: {
-     *     createdAt: true
-     *   },
-     *   _count: {
-     *     _all: true
-     *   },
-     * })
-     * 
-    **/
-    groupBy<
-      T extends FounderLogTagGroupByArgs,
-      HasSelectOrTake extends Or<
-        Extends<'skip', Keys<T>>,
-        Extends<'take', Keys<T>>
-      >,
-      OrderByArg extends True extends HasSelectOrTake
-        ? { orderBy: FounderLogTagGroupByArgs['orderBy'] }
-        : { orderBy?: FounderLogTagGroupByArgs['orderBy'] },
-      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
-      ByFields extends MaybeTupleToUnion<T['by']>,
-      ByValid extends Has<ByFields, OrderFields>,
-      HavingFields extends GetHavingFields<T['having']>,
-      HavingValid extends Has<ByFields, HavingFields>,
-      ByEmpty extends T['by'] extends never[] ? True : False,
-      InputErrors extends ByEmpty extends True
-      ? `Error: "by" must not be empty.`
-      : HavingValid extends False
-      ? {
-          [P in HavingFields]: P extends ByFields
-            ? never
-            : P extends string
-            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
-            : [
-                Error,
-                'Field ',
-                P,
-                ` in "having" needs to be provided in "by"`,
-              ]
-        }[HavingFields]
-      : 'take' extends Keys<T>
-      ? 'orderBy' extends Keys<T>
-        ? ByValid extends True
-          ? {}
-          : {
-              [P in OrderFields]: P extends ByFields
-                ? never
-                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
-            }[OrderFields]
-        : 'Error: If you provide "take", you also need to provide "orderBy"'
-      : 'skip' extends Keys<T>
-      ? 'orderBy' extends Keys<T>
-        ? ByValid extends True
-          ? {}
-          : {
-              [P in OrderFields]: P extends ByFields
-                ? never
-                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
-            }[OrderFields]
-        : 'Error: If you provide "skip", you also need to provide "orderBy"'
-      : ByValid extends True
-      ? {}
-      : {
-          [P in OrderFields]: P extends ByFields
-            ? never
-            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
-        }[OrderFields]
-    >(args: SubsetIntersection<T, FounderLogTagGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetFounderLogTagGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
-  /**
-   * Fields of the FounderLogTag model
-   */
-  readonly fields: FounderLogTagFieldRefs;
-  }
-
-  /**
-   * The delegate class that acts as a "Promise-like" for FounderLogTag.
-   * Why is this prefixed with `Prisma__`?
-   * Because we want to prevent naming conflicts as mentioned in
-   * https://github.com/prisma/prisma-client-js/issues/707
-   */
-  export interface Prisma__FounderLogTagClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
-    readonly [Symbol.toStringTag]: "PrismaPromise"
-    entries<T extends FounderLogTag$entriesArgs<ExtArgs> = {}>(args?: Subset<T, FounderLogTag$entriesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FounderLogEntryTagPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    /**
-     * Attaches callbacks for the resolution and/or rejection of the Promise.
-     * @param onfulfilled The callback to execute when the Promise is resolved.
-     * @param onrejected The callback to execute when the Promise is rejected.
-     * @returns A Promise for the completion of which ever callback is executed.
-     */
-    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
-    /**
-     * Attaches a callback for only the rejection of the Promise.
-     * @param onrejected The callback to execute when the Promise is rejected.
-     * @returns A Promise for the completion of the callback.
-     */
-    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
-    /**
-     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
-     * resolved value cannot be modified from the callback.
-     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
-     * @returns A Promise for the completion of the callback.
-     */
-    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
-  }
-
-
-
-
-  /**
-   * Fields of the FounderLogTag model
-   */
-  interface FounderLogTagFieldRefs {
-    readonly id: FieldRef<"FounderLogTag", 'String'>
-    readonly name: FieldRef<"FounderLogTag", 'String'>
-    readonly createdAt: FieldRef<"FounderLogTag", 'DateTime'>
-    readonly updatedAt: FieldRef<"FounderLogTag", 'DateTime'>
-  }
-    
-
-  // Custom InputTypes
-  /**
-   * FounderLogTag findUnique
-   */
-  export type FounderLogTagFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogTag
-     */
-    select?: FounderLogTagSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the FounderLogTag
-     */
-    omit?: FounderLogTagOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogTagInclude<ExtArgs> | null
-    /**
-     * Filter, which FounderLogTag to fetch.
-     */
-    where: FounderLogTagWhereUniqueInput
-  }
-
-  /**
-   * FounderLogTag findUniqueOrThrow
-   */
-  export type FounderLogTagFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogTag
-     */
-    select?: FounderLogTagSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the FounderLogTag
-     */
-    omit?: FounderLogTagOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogTagInclude<ExtArgs> | null
-    /**
-     * Filter, which FounderLogTag to fetch.
-     */
-    where: FounderLogTagWhereUniqueInput
-  }
-
-  /**
-   * FounderLogTag findFirst
-   */
-  export type FounderLogTagFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogTag
-     */
-    select?: FounderLogTagSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the FounderLogTag
-     */
-    omit?: FounderLogTagOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogTagInclude<ExtArgs> | null
-    /**
-     * Filter, which FounderLogTag to fetch.
-     */
-    where?: FounderLogTagWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of FounderLogTags to fetch.
-     */
-    orderBy?: FounderLogTagOrderByWithRelationInput | FounderLogTagOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the position for searching for FounderLogTags.
-     */
-    cursor?: FounderLogTagWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` FounderLogTags from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` FounderLogTags.
-     */
-    skip?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     * 
-     * Filter by unique combinations of FounderLogTags.
-     */
-    distinct?: FounderLogTagScalarFieldEnum | FounderLogTagScalarFieldEnum[]
-  }
-
-  /**
-   * FounderLogTag findFirstOrThrow
-   */
-  export type FounderLogTagFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogTag
-     */
-    select?: FounderLogTagSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the FounderLogTag
-     */
-    omit?: FounderLogTagOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogTagInclude<ExtArgs> | null
-    /**
-     * Filter, which FounderLogTag to fetch.
-     */
-    where?: FounderLogTagWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of FounderLogTags to fetch.
-     */
-    orderBy?: FounderLogTagOrderByWithRelationInput | FounderLogTagOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the position for searching for FounderLogTags.
-     */
-    cursor?: FounderLogTagWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` FounderLogTags from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` FounderLogTags.
-     */
-    skip?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     * 
-     * Filter by unique combinations of FounderLogTags.
-     */
-    distinct?: FounderLogTagScalarFieldEnum | FounderLogTagScalarFieldEnum[]
-  }
-
-  /**
-   * FounderLogTag findMany
-   */
-  export type FounderLogTagFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogTag
-     */
-    select?: FounderLogTagSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the FounderLogTag
-     */
-    omit?: FounderLogTagOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogTagInclude<ExtArgs> | null
-    /**
-     * Filter, which FounderLogTags to fetch.
-     */
-    where?: FounderLogTagWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of FounderLogTags to fetch.
-     */
-    orderBy?: FounderLogTagOrderByWithRelationInput | FounderLogTagOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the position for listing FounderLogTags.
-     */
-    cursor?: FounderLogTagWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` FounderLogTags from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` FounderLogTags.
-     */
-    skip?: number
-    distinct?: FounderLogTagScalarFieldEnum | FounderLogTagScalarFieldEnum[]
-  }
-
-  /**
-   * FounderLogTag create
-   */
-  export type FounderLogTagCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogTag
-     */
-    select?: FounderLogTagSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the FounderLogTag
-     */
-    omit?: FounderLogTagOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogTagInclude<ExtArgs> | null
-    /**
-     * The data needed to create a FounderLogTag.
-     */
-    data: XOR<FounderLogTagCreateInput, FounderLogTagUncheckedCreateInput>
-  }
-
-  /**
-   * FounderLogTag createMany
-   */
-  export type FounderLogTagCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * The data used to create many FounderLogTags.
-     */
-    data: FounderLogTagCreateManyInput | FounderLogTagCreateManyInput[]
-    skipDuplicates?: boolean
-  }
-
-  /**
-   * FounderLogTag createManyAndReturn
-   */
-  export type FounderLogTagCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogTag
-     */
-    select?: FounderLogTagSelectCreateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the FounderLogTag
-     */
-    omit?: FounderLogTagOmit<ExtArgs> | null
-    /**
-     * The data used to create many FounderLogTags.
-     */
-    data: FounderLogTagCreateManyInput | FounderLogTagCreateManyInput[]
-    skipDuplicates?: boolean
-  }
-
-  /**
-   * FounderLogTag update
-   */
-  export type FounderLogTagUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogTag
-     */
-    select?: FounderLogTagSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the FounderLogTag
-     */
-    omit?: FounderLogTagOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogTagInclude<ExtArgs> | null
-    /**
-     * The data needed to update a FounderLogTag.
-     */
-    data: XOR<FounderLogTagUpdateInput, FounderLogTagUncheckedUpdateInput>
-    /**
-     * Choose, which FounderLogTag to update.
-     */
-    where: FounderLogTagWhereUniqueInput
-  }
-
-  /**
-   * FounderLogTag updateMany
-   */
-  export type FounderLogTagUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * The data used to update FounderLogTags.
-     */
-    data: XOR<FounderLogTagUpdateManyMutationInput, FounderLogTagUncheckedUpdateManyInput>
-    /**
-     * Filter which FounderLogTags to update
-     */
-    where?: FounderLogTagWhereInput
-    /**
-     * Limit how many FounderLogTags to update.
-     */
-    limit?: number
-  }
-
-  /**
-   * FounderLogTag updateManyAndReturn
-   */
-  export type FounderLogTagUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogTag
-     */
-    select?: FounderLogTagSelectUpdateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the FounderLogTag
-     */
-    omit?: FounderLogTagOmit<ExtArgs> | null
-    /**
-     * The data used to update FounderLogTags.
-     */
-    data: XOR<FounderLogTagUpdateManyMutationInput, FounderLogTagUncheckedUpdateManyInput>
-    /**
-     * Filter which FounderLogTags to update
-     */
-    where?: FounderLogTagWhereInput
-    /**
-     * Limit how many FounderLogTags to update.
-     */
-    limit?: number
-  }
-
-  /**
-   * FounderLogTag upsert
-   */
-  export type FounderLogTagUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogTag
-     */
-    select?: FounderLogTagSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the FounderLogTag
-     */
-    omit?: FounderLogTagOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogTagInclude<ExtArgs> | null
-    /**
-     * The filter to search for the FounderLogTag to update in case it exists.
-     */
-    where: FounderLogTagWhereUniqueInput
-    /**
-     * In case the FounderLogTag found by the `where` argument doesn't exist, create a new FounderLogTag with this data.
-     */
-    create: XOR<FounderLogTagCreateInput, FounderLogTagUncheckedCreateInput>
-    /**
-     * In case the FounderLogTag was found with the provided `where` argument, update it with this data.
-     */
-    update: XOR<FounderLogTagUpdateInput, FounderLogTagUncheckedUpdateInput>
-  }
-
-  /**
-   * FounderLogTag delete
-   */
-  export type FounderLogTagDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogTag
-     */
-    select?: FounderLogTagSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the FounderLogTag
-     */
-    omit?: FounderLogTagOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogTagInclude<ExtArgs> | null
-    /**
-     * Filter which FounderLogTag to delete.
-     */
-    where: FounderLogTagWhereUniqueInput
-  }
-
-  /**
-   * FounderLogTag deleteMany
-   */
-  export type FounderLogTagDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Filter which FounderLogTags to delete
-     */
-    where?: FounderLogTagWhereInput
-    /**
-     * Limit how many FounderLogTags to delete.
-     */
-    limit?: number
-  }
-
-  /**
-   * FounderLogTag.entries
-   */
-  export type FounderLogTag$entriesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogEntryTag
-     */
-    select?: FounderLogEntryTagSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the FounderLogEntryTag
-     */
-    omit?: FounderLogEntryTagOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogEntryTagInclude<ExtArgs> | null
-    where?: FounderLogEntryTagWhereInput
-    orderBy?: FounderLogEntryTagOrderByWithRelationInput | FounderLogEntryTagOrderByWithRelationInput[]
-    cursor?: FounderLogEntryTagWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: FounderLogEntryTagScalarFieldEnum | FounderLogEntryTagScalarFieldEnum[]
-  }
-
-  /**
-   * FounderLogTag without action
-   */
-  export type FounderLogTagDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogTag
-     */
-    select?: FounderLogTagSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the FounderLogTag
-     */
-    omit?: FounderLogTagOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogTagInclude<ExtArgs> | null
-  }
-
-
-  /**
-   * Model FounderLogEntry
-   */
-
-  export type AggregateFounderLogEntry = {
-    _count: FounderLogEntryCountAggregateOutputType | null
-    _avg: FounderLogEntryAvgAggregateOutputType | null
-    _sum: FounderLogEntrySumAggregateOutputType | null
-    _min: FounderLogEntryMinAggregateOutputType | null
-    _max: FounderLogEntryMaxAggregateOutputType | null
-  }
-
-  export type FounderLogEntryAvgAggregateOutputType = {
-    upvoteCount: number | null
-  }
-
-  export type FounderLogEntrySumAggregateOutputType = {
-    upvoteCount: number | null
-  }
-
-  export type FounderLogEntryMinAggregateOutputType = {
-    id: string | null
-    userId: string | null
-    content: string | null
-    upvoteCount: number | null
-    createdAt: Date | null
-    updatedAt: Date | null
-  }
-
-  export type FounderLogEntryMaxAggregateOutputType = {
-    id: string | null
-    userId: string | null
-    content: string | null
-    upvoteCount: number | null
-    createdAt: Date | null
-    updatedAt: Date | null
-  }
-
-  export type FounderLogEntryCountAggregateOutputType = {
-    id: number
-    userId: number
-    content: number
-    upvoteCount: number
-    createdAt: number
-    updatedAt: number
-    _all: number
-  }
-
-
-  export type FounderLogEntryAvgAggregateInputType = {
-    upvoteCount?: true
-  }
-
-  export type FounderLogEntrySumAggregateInputType = {
-    upvoteCount?: true
-  }
-
-  export type FounderLogEntryMinAggregateInputType = {
-    id?: true
-    userId?: true
-    content?: true
-    upvoteCount?: true
-    createdAt?: true
-    updatedAt?: true
-  }
-
-  export type FounderLogEntryMaxAggregateInputType = {
-    id?: true
-    userId?: true
-    content?: true
-    upvoteCount?: true
-    createdAt?: true
-    updatedAt?: true
-  }
-
-  export type FounderLogEntryCountAggregateInputType = {
-    id?: true
-    userId?: true
-    content?: true
-    upvoteCount?: true
+    webpageUrl?: true
+    s3Url?: true
+    hookCutUrl?: true
+    title?: true
+    description?: true
+    views?: true
+    comments?: true
+    likes?: true
+    durationSeconds?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
   }
 
-  export type FounderLogEntryAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type SampleVideoAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Filter which FounderLogEntry to aggregate.
+     * Filter which SampleVideo to aggregate.
      */
-    where?: FounderLogEntryWhereInput
+    where?: SampleVideoWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of FounderLogEntries to fetch.
+     * Determine the order of SampleVideos to fetch.
      */
-    orderBy?: FounderLogEntryOrderByWithRelationInput | FounderLogEntryOrderByWithRelationInput[]
+    orderBy?: SampleVideoOrderByWithRelationInput | SampleVideoOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
      * Sets the start position
      */
-    cursor?: FounderLogEntryWhereUniqueInput
+    cursor?: SampleVideoWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` FounderLogEntries from the position of the cursor.
+     * Take `±n` SampleVideos from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` FounderLogEntries.
+     * Skip the first `n` SampleVideos.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
-     * Count returned FounderLogEntries
+     * Count returned SampleVideos
     **/
-    _count?: true | FounderLogEntryCountAggregateInputType
+    _count?: true | SampleVideoCountAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to average
     **/
-    _avg?: FounderLogEntryAvgAggregateInputType
+    _avg?: SampleVideoAvgAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to sum
     **/
-    _sum?: FounderLogEntrySumAggregateInputType
+    _sum?: SampleVideoSumAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to find the minimum value
     **/
-    _min?: FounderLogEntryMinAggregateInputType
+    _min?: SampleVideoMinAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to find the maximum value
     **/
-    _max?: FounderLogEntryMaxAggregateInputType
+    _max?: SampleVideoMaxAggregateInputType
   }
 
-  export type GetFounderLogEntryAggregateType<T extends FounderLogEntryAggregateArgs> = {
-        [P in keyof T & keyof AggregateFounderLogEntry]: P extends '_count' | 'count'
+  export type GetSampleVideoAggregateType<T extends SampleVideoAggregateArgs> = {
+        [P in keyof T & keyof AggregateSampleVideo]: P extends '_count' | 'count'
       ? T[P] extends true
         ? number
-        : GetScalarType<T[P], AggregateFounderLogEntry[P]>
-      : GetScalarType<T[P], AggregateFounderLogEntry[P]>
+        : GetScalarType<T[P], AggregateSampleVideo[P]>
+      : GetScalarType<T[P], AggregateSampleVideo[P]>
   }
 
 
 
 
-  export type FounderLogEntryGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: FounderLogEntryWhereInput
-    orderBy?: FounderLogEntryOrderByWithAggregationInput | FounderLogEntryOrderByWithAggregationInput[]
-    by: FounderLogEntryScalarFieldEnum[] | FounderLogEntryScalarFieldEnum
-    having?: FounderLogEntryScalarWhereWithAggregatesInput
+  export type SampleVideoGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: SampleVideoWhereInput
+    orderBy?: SampleVideoOrderByWithAggregationInput | SampleVideoOrderByWithAggregationInput[]
+    by: SampleVideoScalarFieldEnum[] | SampleVideoScalarFieldEnum
+    having?: SampleVideoScalarWhereWithAggregatesInput
     take?: number
     skip?: number
-    _count?: FounderLogEntryCountAggregateInputType | true
-    _avg?: FounderLogEntryAvgAggregateInputType
-    _sum?: FounderLogEntrySumAggregateInputType
-    _min?: FounderLogEntryMinAggregateInputType
-    _max?: FounderLogEntryMaxAggregateInputType
+    _count?: SampleVideoCountAggregateInputType | true
+    _avg?: SampleVideoAvgAggregateInputType
+    _sum?: SampleVideoSumAggregateInputType
+    _min?: SampleVideoMinAggregateInputType
+    _max?: SampleVideoMaxAggregateInputType
   }
 
-  export type FounderLogEntryGroupByOutputType = {
+  export type SampleVideoGroupByOutputType = {
     id: string
-    userId: string
-    content: string
-    upvoteCount: number
+    webpageUrl: string
+    s3Url: string
+    hookCutUrl: string | null
+    title: string
+    description: string | null
+    views: number
+    comments: number
+    likes: number
+    durationSeconds: number
     createdAt: Date
     updatedAt: Date
-    _count: FounderLogEntryCountAggregateOutputType | null
-    _avg: FounderLogEntryAvgAggregateOutputType | null
-    _sum: FounderLogEntrySumAggregateOutputType | null
-    _min: FounderLogEntryMinAggregateOutputType | null
-    _max: FounderLogEntryMaxAggregateOutputType | null
+    _count: SampleVideoCountAggregateOutputType | null
+    _avg: SampleVideoAvgAggregateOutputType | null
+    _sum: SampleVideoSumAggregateOutputType | null
+    _min: SampleVideoMinAggregateOutputType | null
+    _max: SampleVideoMaxAggregateOutputType | null
   }
 
-  type GetFounderLogEntryGroupByPayload<T extends FounderLogEntryGroupByArgs> = Prisma.PrismaPromise<
+  type GetSampleVideoGroupByPayload<T extends SampleVideoGroupByArgs> = Prisma.PrismaPromise<
     Array<
-      PickEnumerable<FounderLogEntryGroupByOutputType, T['by']> &
+      PickEnumerable<SampleVideoGroupByOutputType, T['by']> &
         {
-          [P in ((keyof T) & (keyof FounderLogEntryGroupByOutputType))]: P extends '_count'
+          [P in ((keyof T) & (keyof SampleVideoGroupByOutputType))]: P extends '_count'
             ? T[P] extends boolean
               ? number
-              : GetScalarType<T[P], FounderLogEntryGroupByOutputType[P]>
-            : GetScalarType<T[P], FounderLogEntryGroupByOutputType[P]>
+              : GetScalarType<T[P], SampleVideoGroupByOutputType[P]>
+            : GetScalarType<T[P], SampleVideoGroupByOutputType[P]>
         }
       >
     >
 
 
-  export type FounderLogEntrySelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type SampleVideoSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
-    userId?: boolean
-    content?: boolean
-    upvoteCount?: boolean
+    webpageUrl?: boolean
+    s3Url?: boolean
+    hookCutUrl?: boolean
+    title?: boolean
+    description?: boolean
+    views?: boolean
+    comments?: boolean
+    likes?: boolean
+    durationSeconds?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    user?: boolean | UserDefaultArgs<ExtArgs>
-    tags?: boolean | FounderLogEntry$tagsArgs<ExtArgs>
-    _count?: boolean | FounderLogEntryCountOutputTypeDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["founderLogEntry"]>
+  }, ExtArgs["result"]["sampleVideo"]>
 
-  export type FounderLogEntrySelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type SampleVideoSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
-    userId?: boolean
-    content?: boolean
-    upvoteCount?: boolean
+    webpageUrl?: boolean
+    s3Url?: boolean
+    hookCutUrl?: boolean
+    title?: boolean
+    description?: boolean
+    views?: boolean
+    comments?: boolean
+    likes?: boolean
+    durationSeconds?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    user?: boolean | UserDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["founderLogEntry"]>
+  }, ExtArgs["result"]["sampleVideo"]>
 
-  export type FounderLogEntrySelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type SampleVideoSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
-    userId?: boolean
-    content?: boolean
-    upvoteCount?: boolean
+    webpageUrl?: boolean
+    s3Url?: boolean
+    hookCutUrl?: boolean
+    title?: boolean
+    description?: boolean
+    views?: boolean
+    comments?: boolean
+    likes?: boolean
+    durationSeconds?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    user?: boolean | UserDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["founderLogEntry"]>
+  }, ExtArgs["result"]["sampleVideo"]>
 
-  export type FounderLogEntrySelectScalar = {
+  export type SampleVideoSelectScalar = {
     id?: boolean
-    userId?: boolean
-    content?: boolean
-    upvoteCount?: boolean
+    webpageUrl?: boolean
+    s3Url?: boolean
+    hookCutUrl?: boolean
+    title?: boolean
+    description?: boolean
+    views?: boolean
+    comments?: boolean
+    likes?: boolean
+    durationSeconds?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type FounderLogEntryOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "content" | "upvoteCount" | "createdAt" | "updatedAt", ExtArgs["result"]["founderLogEntry"]>
-  export type FounderLogEntryInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    user?: boolean | UserDefaultArgs<ExtArgs>
-    tags?: boolean | FounderLogEntry$tagsArgs<ExtArgs>
-    _count?: boolean | FounderLogEntryCountOutputTypeDefaultArgs<ExtArgs>
-  }
-  export type FounderLogEntryIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    user?: boolean | UserDefaultArgs<ExtArgs>
-  }
-  export type FounderLogEntryIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    user?: boolean | UserDefaultArgs<ExtArgs>
-  }
+  export type SampleVideoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "webpageUrl" | "s3Url" | "hookCutUrl" | "title" | "description" | "views" | "comments" | "likes" | "durationSeconds" | "createdAt" | "updatedAt", ExtArgs["result"]["sampleVideo"]>
 
-  export type $FounderLogEntryPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    name: "FounderLogEntry"
-    objects: {
-      user: Prisma.$UserPayload<ExtArgs>
-      tags: Prisma.$FounderLogEntryTagPayload<ExtArgs>[]
-    }
+  export type $SampleVideoPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "SampleVideo"
+    objects: {}
     scalars: $Extensions.GetPayloadResult<{
       id: string
-      userId: string
-      content: string
-      upvoteCount: number
+      webpageUrl: string
+      s3Url: string
+      hookCutUrl: string | null
+      title: string
+      description: string | null
+      views: number
+      comments: number
+      likes: number
+      durationSeconds: number
       createdAt: Date
       updatedAt: Date
-    }, ExtArgs["result"]["founderLogEntry"]>
+    }, ExtArgs["result"]["sampleVideo"]>
     composites: {}
   }
 
-  type FounderLogEntryGetPayload<S extends boolean | null | undefined | FounderLogEntryDefaultArgs> = $Result.GetResult<Prisma.$FounderLogEntryPayload, S>
+  type SampleVideoGetPayload<S extends boolean | null | undefined | SampleVideoDefaultArgs> = $Result.GetResult<Prisma.$SampleVideoPayload, S>
 
-  type FounderLogEntryCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
-    Omit<FounderLogEntryFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
-      select?: FounderLogEntryCountAggregateInputType | true
+  type SampleVideoCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<SampleVideoFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: SampleVideoCountAggregateInputType | true
     }
 
-  export interface FounderLogEntryDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
-    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['FounderLogEntry'], meta: { name: 'FounderLogEntry' } }
+  export interface SampleVideoDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['SampleVideo'], meta: { name: 'SampleVideo' } }
     /**
-     * Find zero or one FounderLogEntry that matches the filter.
-     * @param {FounderLogEntryFindUniqueArgs} args - Arguments to find a FounderLogEntry
+     * Find zero or one SampleVideo that matches the filter.
+     * @param {SampleVideoFindUniqueArgs} args - Arguments to find a SampleVideo
      * @example
-     * // Get one FounderLogEntry
-     * const founderLogEntry = await prisma.founderLogEntry.findUnique({
+     * // Get one SampleVideo
+     * const sampleVideo = await prisma.sampleVideo.findUnique({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findUnique<T extends FounderLogEntryFindUniqueArgs>(args: SelectSubset<T, FounderLogEntryFindUniqueArgs<ExtArgs>>): Prisma__FounderLogEntryClient<$Result.GetResult<Prisma.$FounderLogEntryPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findUnique<T extends SampleVideoFindUniqueArgs>(args: SelectSubset<T, SampleVideoFindUniqueArgs<ExtArgs>>): Prisma__SampleVideoClient<$Result.GetResult<Prisma.$SampleVideoPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find one FounderLogEntry that matches the filter or throw an error with `error.code='P2025'`
+     * Find one SampleVideo that matches the filter or throw an error with `error.code='P2025'`
      * if no matches were found.
-     * @param {FounderLogEntryFindUniqueOrThrowArgs} args - Arguments to find a FounderLogEntry
+     * @param {SampleVideoFindUniqueOrThrowArgs} args - Arguments to find a SampleVideo
      * @example
-     * // Get one FounderLogEntry
-     * const founderLogEntry = await prisma.founderLogEntry.findUniqueOrThrow({
+     * // Get one SampleVideo
+     * const sampleVideo = await prisma.sampleVideo.findUniqueOrThrow({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findUniqueOrThrow<T extends FounderLogEntryFindUniqueOrThrowArgs>(args: SelectSubset<T, FounderLogEntryFindUniqueOrThrowArgs<ExtArgs>>): Prisma__FounderLogEntryClient<$Result.GetResult<Prisma.$FounderLogEntryPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findUniqueOrThrow<T extends SampleVideoFindUniqueOrThrowArgs>(args: SelectSubset<T, SampleVideoFindUniqueOrThrowArgs<ExtArgs>>): Prisma__SampleVideoClient<$Result.GetResult<Prisma.$SampleVideoPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find the first FounderLogEntry that matches the filter.
+     * Find the first SampleVideo that matches the filter.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {FounderLogEntryFindFirstArgs} args - Arguments to find a FounderLogEntry
+     * @param {SampleVideoFindFirstArgs} args - Arguments to find a SampleVideo
      * @example
-     * // Get one FounderLogEntry
-     * const founderLogEntry = await prisma.founderLogEntry.findFirst({
+     * // Get one SampleVideo
+     * const sampleVideo = await prisma.sampleVideo.findFirst({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findFirst<T extends FounderLogEntryFindFirstArgs>(args?: SelectSubset<T, FounderLogEntryFindFirstArgs<ExtArgs>>): Prisma__FounderLogEntryClient<$Result.GetResult<Prisma.$FounderLogEntryPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findFirst<T extends SampleVideoFindFirstArgs>(args?: SelectSubset<T, SampleVideoFindFirstArgs<ExtArgs>>): Prisma__SampleVideoClient<$Result.GetResult<Prisma.$SampleVideoPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find the first FounderLogEntry that matches the filter or
+     * Find the first SampleVideo that matches the filter or
      * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {FounderLogEntryFindFirstOrThrowArgs} args - Arguments to find a FounderLogEntry
+     * @param {SampleVideoFindFirstOrThrowArgs} args - Arguments to find a SampleVideo
      * @example
-     * // Get one FounderLogEntry
-     * const founderLogEntry = await prisma.founderLogEntry.findFirstOrThrow({
+     * // Get one SampleVideo
+     * const sampleVideo = await prisma.sampleVideo.findFirstOrThrow({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findFirstOrThrow<T extends FounderLogEntryFindFirstOrThrowArgs>(args?: SelectSubset<T, FounderLogEntryFindFirstOrThrowArgs<ExtArgs>>): Prisma__FounderLogEntryClient<$Result.GetResult<Prisma.$FounderLogEntryPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findFirstOrThrow<T extends SampleVideoFindFirstOrThrowArgs>(args?: SelectSubset<T, SampleVideoFindFirstOrThrowArgs<ExtArgs>>): Prisma__SampleVideoClient<$Result.GetResult<Prisma.$SampleVideoPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find zero or more FounderLogEntries that matches the filter.
+     * Find zero or more SampleVideos that matches the filter.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {FounderLogEntryFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @param {SampleVideoFindManyArgs} args - Arguments to filter and select certain fields only.
      * @example
-     * // Get all FounderLogEntries
-     * const founderLogEntries = await prisma.founderLogEntry.findMany()
+     * // Get all SampleVideos
+     * const sampleVideos = await prisma.sampleVideo.findMany()
      * 
-     * // Get first 10 FounderLogEntries
-     * const founderLogEntries = await prisma.founderLogEntry.findMany({ take: 10 })
+     * // Get first 10 SampleVideos
+     * const sampleVideos = await prisma.sampleVideo.findMany({ take: 10 })
      * 
      * // Only select the `id`
-     * const founderLogEntryWithIdOnly = await prisma.founderLogEntry.findMany({ select: { id: true } })
+     * const sampleVideoWithIdOnly = await prisma.sampleVideo.findMany({ select: { id: true } })
      * 
      */
-    findMany<T extends FounderLogEntryFindManyArgs>(args?: SelectSubset<T, FounderLogEntryFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FounderLogEntryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+    findMany<T extends SampleVideoFindManyArgs>(args?: SelectSubset<T, SampleVideoFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SampleVideoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
 
     /**
-     * Create a FounderLogEntry.
-     * @param {FounderLogEntryCreateArgs} args - Arguments to create a FounderLogEntry.
+     * Create a SampleVideo.
+     * @param {SampleVideoCreateArgs} args - Arguments to create a SampleVideo.
      * @example
-     * // Create one FounderLogEntry
-     * const FounderLogEntry = await prisma.founderLogEntry.create({
+     * // Create one SampleVideo
+     * const SampleVideo = await prisma.sampleVideo.create({
      *   data: {
-     *     // ... data to create a FounderLogEntry
+     *     // ... data to create a SampleVideo
      *   }
      * })
      * 
      */
-    create<T extends FounderLogEntryCreateArgs>(args: SelectSubset<T, FounderLogEntryCreateArgs<ExtArgs>>): Prisma__FounderLogEntryClient<$Result.GetResult<Prisma.$FounderLogEntryPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    create<T extends SampleVideoCreateArgs>(args: SelectSubset<T, SampleVideoCreateArgs<ExtArgs>>): Prisma__SampleVideoClient<$Result.GetResult<Prisma.$SampleVideoPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Create many FounderLogEntries.
-     * @param {FounderLogEntryCreateManyArgs} args - Arguments to create many FounderLogEntries.
+     * Create many SampleVideos.
+     * @param {SampleVideoCreateManyArgs} args - Arguments to create many SampleVideos.
      * @example
-     * // Create many FounderLogEntries
-     * const founderLogEntry = await prisma.founderLogEntry.createMany({
+     * // Create many SampleVideos
+     * const sampleVideo = await prisma.sampleVideo.createMany({
      *   data: [
      *     // ... provide data here
      *   ]
      * })
      *     
      */
-    createMany<T extends FounderLogEntryCreateManyArgs>(args?: SelectSubset<T, FounderLogEntryCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    createMany<T extends SampleVideoCreateManyArgs>(args?: SelectSubset<T, SampleVideoCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Create many FounderLogEntries and returns the data saved in the database.
-     * @param {FounderLogEntryCreateManyAndReturnArgs} args - Arguments to create many FounderLogEntries.
+     * Create many SampleVideos and returns the data saved in the database.
+     * @param {SampleVideoCreateManyAndReturnArgs} args - Arguments to create many SampleVideos.
      * @example
-     * // Create many FounderLogEntries
-     * const founderLogEntry = await prisma.founderLogEntry.createManyAndReturn({
+     * // Create many SampleVideos
+     * const sampleVideo = await prisma.sampleVideo.createManyAndReturn({
      *   data: [
      *     // ... provide data here
      *   ]
      * })
      * 
-     * // Create many FounderLogEntries and only return the `id`
-     * const founderLogEntryWithIdOnly = await prisma.founderLogEntry.createManyAndReturn({
+     * // Create many SampleVideos and only return the `id`
+     * const sampleVideoWithIdOnly = await prisma.sampleVideo.createManyAndReturn({
      *   select: { id: true },
      *   data: [
      *     // ... provide data here
@@ -5087,28 +3618,28 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    createManyAndReturn<T extends FounderLogEntryCreateManyAndReturnArgs>(args?: SelectSubset<T, FounderLogEntryCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FounderLogEntryPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+    createManyAndReturn<T extends SampleVideoCreateManyAndReturnArgs>(args?: SelectSubset<T, SampleVideoCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SampleVideoPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
 
     /**
-     * Delete a FounderLogEntry.
-     * @param {FounderLogEntryDeleteArgs} args - Arguments to delete one FounderLogEntry.
+     * Delete a SampleVideo.
+     * @param {SampleVideoDeleteArgs} args - Arguments to delete one SampleVideo.
      * @example
-     * // Delete one FounderLogEntry
-     * const FounderLogEntry = await prisma.founderLogEntry.delete({
+     * // Delete one SampleVideo
+     * const SampleVideo = await prisma.sampleVideo.delete({
      *   where: {
-     *     // ... filter to delete one FounderLogEntry
+     *     // ... filter to delete one SampleVideo
      *   }
      * })
      * 
      */
-    delete<T extends FounderLogEntryDeleteArgs>(args: SelectSubset<T, FounderLogEntryDeleteArgs<ExtArgs>>): Prisma__FounderLogEntryClient<$Result.GetResult<Prisma.$FounderLogEntryPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    delete<T extends SampleVideoDeleteArgs>(args: SelectSubset<T, SampleVideoDeleteArgs<ExtArgs>>): Prisma__SampleVideoClient<$Result.GetResult<Prisma.$SampleVideoPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Update one FounderLogEntry.
-     * @param {FounderLogEntryUpdateArgs} args - Arguments to update one FounderLogEntry.
+     * Update one SampleVideo.
+     * @param {SampleVideoUpdateArgs} args - Arguments to update one SampleVideo.
      * @example
-     * // Update one FounderLogEntry
-     * const founderLogEntry = await prisma.founderLogEntry.update({
+     * // Update one SampleVideo
+     * const sampleVideo = await prisma.sampleVideo.update({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -5118,30 +3649,30 @@ export namespace Prisma {
      * })
      * 
      */
-    update<T extends FounderLogEntryUpdateArgs>(args: SelectSubset<T, FounderLogEntryUpdateArgs<ExtArgs>>): Prisma__FounderLogEntryClient<$Result.GetResult<Prisma.$FounderLogEntryPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    update<T extends SampleVideoUpdateArgs>(args: SelectSubset<T, SampleVideoUpdateArgs<ExtArgs>>): Prisma__SampleVideoClient<$Result.GetResult<Prisma.$SampleVideoPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Delete zero or more FounderLogEntries.
-     * @param {FounderLogEntryDeleteManyArgs} args - Arguments to filter FounderLogEntries to delete.
+     * Delete zero or more SampleVideos.
+     * @param {SampleVideoDeleteManyArgs} args - Arguments to filter SampleVideos to delete.
      * @example
-     * // Delete a few FounderLogEntries
-     * const { count } = await prisma.founderLogEntry.deleteMany({
+     * // Delete a few SampleVideos
+     * const { count } = await prisma.sampleVideo.deleteMany({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      * 
      */
-    deleteMany<T extends FounderLogEntryDeleteManyArgs>(args?: SelectSubset<T, FounderLogEntryDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    deleteMany<T extends SampleVideoDeleteManyArgs>(args?: SelectSubset<T, SampleVideoDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Update zero or more FounderLogEntries.
+     * Update zero or more SampleVideos.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {FounderLogEntryUpdateManyArgs} args - Arguments to update one or more rows.
+     * @param {SampleVideoUpdateManyArgs} args - Arguments to update one or more rows.
      * @example
-     * // Update many FounderLogEntries
-     * const founderLogEntry = await prisma.founderLogEntry.updateMany({
+     * // Update many SampleVideos
+     * const sampleVideo = await prisma.sampleVideo.updateMany({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -5151,14 +3682,14 @@ export namespace Prisma {
      * })
      * 
      */
-    updateMany<T extends FounderLogEntryUpdateManyArgs>(args: SelectSubset<T, FounderLogEntryUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    updateMany<T extends SampleVideoUpdateManyArgs>(args: SelectSubset<T, SampleVideoUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Update zero or more FounderLogEntries and returns the data updated in the database.
-     * @param {FounderLogEntryUpdateManyAndReturnArgs} args - Arguments to update many FounderLogEntries.
+     * Update zero or more SampleVideos and returns the data updated in the database.
+     * @param {SampleVideoUpdateManyAndReturnArgs} args - Arguments to update many SampleVideos.
      * @example
-     * // Update many FounderLogEntries
-     * const founderLogEntry = await prisma.founderLogEntry.updateManyAndReturn({
+     * // Update many SampleVideos
+     * const sampleVideo = await prisma.sampleVideo.updateManyAndReturn({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -5167,8 +3698,8 @@ export namespace Prisma {
      *   ]
      * })
      * 
-     * // Update zero or more FounderLogEntries and only return the `id`
-     * const founderLogEntryWithIdOnly = await prisma.founderLogEntry.updateManyAndReturn({
+     * // Update zero or more SampleVideos and only return the `id`
+     * const sampleVideoWithIdOnly = await prisma.sampleVideo.updateManyAndReturn({
      *   select: { id: true },
      *   where: {
      *     // ... provide filter here
@@ -5181,56 +3712,56 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    updateManyAndReturn<T extends FounderLogEntryUpdateManyAndReturnArgs>(args: SelectSubset<T, FounderLogEntryUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FounderLogEntryPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+    updateManyAndReturn<T extends SampleVideoUpdateManyAndReturnArgs>(args: SelectSubset<T, SampleVideoUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SampleVideoPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
     /**
-     * Create or update one FounderLogEntry.
-     * @param {FounderLogEntryUpsertArgs} args - Arguments to update or create a FounderLogEntry.
+     * Create or update one SampleVideo.
+     * @param {SampleVideoUpsertArgs} args - Arguments to update or create a SampleVideo.
      * @example
-     * // Update or create a FounderLogEntry
-     * const founderLogEntry = await prisma.founderLogEntry.upsert({
+     * // Update or create a SampleVideo
+     * const sampleVideo = await prisma.sampleVideo.upsert({
      *   create: {
-     *     // ... data to create a FounderLogEntry
+     *     // ... data to create a SampleVideo
      *   },
      *   update: {
      *     // ... in case it already exists, update
      *   },
      *   where: {
-     *     // ... the filter for the FounderLogEntry we want to update
+     *     // ... the filter for the SampleVideo we want to update
      *   }
      * })
      */
-    upsert<T extends FounderLogEntryUpsertArgs>(args: SelectSubset<T, FounderLogEntryUpsertArgs<ExtArgs>>): Prisma__FounderLogEntryClient<$Result.GetResult<Prisma.$FounderLogEntryPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    upsert<T extends SampleVideoUpsertArgs>(args: SelectSubset<T, SampleVideoUpsertArgs<ExtArgs>>): Prisma__SampleVideoClient<$Result.GetResult<Prisma.$SampleVideoPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
 
     /**
-     * Count the number of FounderLogEntries.
+     * Count the number of SampleVideos.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {FounderLogEntryCountArgs} args - Arguments to filter FounderLogEntries to count.
+     * @param {SampleVideoCountArgs} args - Arguments to filter SampleVideos to count.
      * @example
-     * // Count the number of FounderLogEntries
-     * const count = await prisma.founderLogEntry.count({
+     * // Count the number of SampleVideos
+     * const count = await prisma.sampleVideo.count({
      *   where: {
-     *     // ... the filter for the FounderLogEntries we want to count
+     *     // ... the filter for the SampleVideos we want to count
      *   }
      * })
     **/
-    count<T extends FounderLogEntryCountArgs>(
-      args?: Subset<T, FounderLogEntryCountArgs>,
+    count<T extends SampleVideoCountArgs>(
+      args?: Subset<T, SampleVideoCountArgs>,
     ): Prisma.PrismaPromise<
       T extends $Utils.Record<'select', any>
         ? T['select'] extends true
           ? number
-          : GetScalarType<T['select'], FounderLogEntryCountAggregateOutputType>
+          : GetScalarType<T['select'], SampleVideoCountAggregateOutputType>
         : number
     >
 
     /**
-     * Allows you to perform aggregations operations on a FounderLogEntry.
+     * Allows you to perform aggregations operations on a SampleVideo.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {FounderLogEntryAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @param {SampleVideoAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
      * @example
      * // Ordered by age ascending
      * // Where email contains prisma.io
@@ -5250,13 +3781,13 @@ export namespace Prisma {
      *   take: 10,
      * })
     **/
-    aggregate<T extends FounderLogEntryAggregateArgs>(args: Subset<T, FounderLogEntryAggregateArgs>): Prisma.PrismaPromise<GetFounderLogEntryAggregateType<T>>
+    aggregate<T extends SampleVideoAggregateArgs>(args: Subset<T, SampleVideoAggregateArgs>): Prisma.PrismaPromise<GetSampleVideoAggregateType<T>>
 
     /**
-     * Group by FounderLogEntry.
+     * Group by SampleVideo.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {FounderLogEntryGroupByArgs} args - Group by arguments.
+     * @param {SampleVideoGroupByArgs} args - Group by arguments.
      * @example
      * // Group by city, order by createdAt, get count
      * const result = await prisma.user.groupBy({
@@ -5271,14 +3802,14 @@ export namespace Prisma {
      * 
     **/
     groupBy<
-      T extends FounderLogEntryGroupByArgs,
+      T extends SampleVideoGroupByArgs,
       HasSelectOrTake extends Or<
         Extends<'skip', Keys<T>>,
         Extends<'take', Keys<T>>
       >,
       OrderByArg extends True extends HasSelectOrTake
-        ? { orderBy: FounderLogEntryGroupByArgs['orderBy'] }
-        : { orderBy?: FounderLogEntryGroupByArgs['orderBy'] },
+        ? { orderBy: SampleVideoGroupByArgs['orderBy'] }
+        : { orderBy?: SampleVideoGroupByArgs['orderBy'] },
       OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
       ByFields extends MaybeTupleToUnion<T['by']>,
       ByValid extends Has<ByFields, OrderFields>,
@@ -5327,23 +3858,21 @@ export namespace Prisma {
             ? never
             : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
         }[OrderFields]
-    >(args: SubsetIntersection<T, FounderLogEntryGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetFounderLogEntryGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+    >(args: SubsetIntersection<T, SampleVideoGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetSampleVideoGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
   /**
-   * Fields of the FounderLogEntry model
+   * Fields of the SampleVideo model
    */
-  readonly fields: FounderLogEntryFieldRefs;
+  readonly fields: SampleVideoFieldRefs;
   }
 
   /**
-   * The delegate class that acts as a "Promise-like" for FounderLogEntry.
+   * The delegate class that acts as a "Promise-like" for SampleVideo.
    * Why is this prefixed with `Prisma__`?
    * Because we want to prevent naming conflicts as mentioned in
    * https://github.com/prisma/prisma-client-js/issues/707
    */
-  export interface Prisma__FounderLogEntryClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+  export interface Prisma__SampleVideoClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-    tags<T extends FounderLogEntry$tagsArgs<ExtArgs> = {}>(args?: Subset<T, FounderLogEntry$tagsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FounderLogEntryTagPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -5370,2574 +3899,384 @@ export namespace Prisma {
 
 
   /**
-   * Fields of the FounderLogEntry model
+   * Fields of the SampleVideo model
    */
-  interface FounderLogEntryFieldRefs {
-    readonly id: FieldRef<"FounderLogEntry", 'String'>
-    readonly userId: FieldRef<"FounderLogEntry", 'String'>
-    readonly content: FieldRef<"FounderLogEntry", 'String'>
-    readonly upvoteCount: FieldRef<"FounderLogEntry", 'Int'>
-    readonly createdAt: FieldRef<"FounderLogEntry", 'DateTime'>
-    readonly updatedAt: FieldRef<"FounderLogEntry", 'DateTime'>
+  interface SampleVideoFieldRefs {
+    readonly id: FieldRef<"SampleVideo", 'String'>
+    readonly webpageUrl: FieldRef<"SampleVideo", 'String'>
+    readonly s3Url: FieldRef<"SampleVideo", 'String'>
+    readonly hookCutUrl: FieldRef<"SampleVideo", 'String'>
+    readonly title: FieldRef<"SampleVideo", 'String'>
+    readonly description: FieldRef<"SampleVideo", 'String'>
+    readonly views: FieldRef<"SampleVideo", 'Int'>
+    readonly comments: FieldRef<"SampleVideo", 'Int'>
+    readonly likes: FieldRef<"SampleVideo", 'Int'>
+    readonly durationSeconds: FieldRef<"SampleVideo", 'Int'>
+    readonly createdAt: FieldRef<"SampleVideo", 'DateTime'>
+    readonly updatedAt: FieldRef<"SampleVideo", 'DateTime'>
   }
     
 
   // Custom InputTypes
   /**
-   * FounderLogEntry findUnique
+   * SampleVideo findUnique
    */
-  export type FounderLogEntryFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type SampleVideoFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the FounderLogEntry
+     * Select specific fields to fetch from the SampleVideo
      */
-    select?: FounderLogEntrySelect<ExtArgs> | null
+    select?: SampleVideoSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the FounderLogEntry
+     * Omit specific fields from the SampleVideo
      */
-    omit?: FounderLogEntryOmit<ExtArgs> | null
+    omit?: SampleVideoOmit<ExtArgs> | null
     /**
-     * Choose, which related nodes to fetch as well
+     * Filter, which SampleVideo to fetch.
      */
-    include?: FounderLogEntryInclude<ExtArgs> | null
-    /**
-     * Filter, which FounderLogEntry to fetch.
-     */
-    where: FounderLogEntryWhereUniqueInput
+    where: SampleVideoWhereUniqueInput
   }
 
   /**
-   * FounderLogEntry findUniqueOrThrow
+   * SampleVideo findUniqueOrThrow
    */
-  export type FounderLogEntryFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type SampleVideoFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the FounderLogEntry
+     * Select specific fields to fetch from the SampleVideo
      */
-    select?: FounderLogEntrySelect<ExtArgs> | null
+    select?: SampleVideoSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the FounderLogEntry
+     * Omit specific fields from the SampleVideo
      */
-    omit?: FounderLogEntryOmit<ExtArgs> | null
+    omit?: SampleVideoOmit<ExtArgs> | null
     /**
-     * Choose, which related nodes to fetch as well
+     * Filter, which SampleVideo to fetch.
      */
-    include?: FounderLogEntryInclude<ExtArgs> | null
-    /**
-     * Filter, which FounderLogEntry to fetch.
-     */
-    where: FounderLogEntryWhereUniqueInput
+    where: SampleVideoWhereUniqueInput
   }
 
   /**
-   * FounderLogEntry findFirst
+   * SampleVideo findFirst
    */
-  export type FounderLogEntryFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type SampleVideoFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the FounderLogEntry
+     * Select specific fields to fetch from the SampleVideo
      */
-    select?: FounderLogEntrySelect<ExtArgs> | null
+    select?: SampleVideoSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the FounderLogEntry
+     * Omit specific fields from the SampleVideo
      */
-    omit?: FounderLogEntryOmit<ExtArgs> | null
+    omit?: SampleVideoOmit<ExtArgs> | null
     /**
-     * Choose, which related nodes to fetch as well
+     * Filter, which SampleVideo to fetch.
      */
-    include?: FounderLogEntryInclude<ExtArgs> | null
-    /**
-     * Filter, which FounderLogEntry to fetch.
-     */
-    where?: FounderLogEntryWhereInput
+    where?: SampleVideoWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of FounderLogEntries to fetch.
+     * Determine the order of SampleVideos to fetch.
      */
-    orderBy?: FounderLogEntryOrderByWithRelationInput | FounderLogEntryOrderByWithRelationInput[]
+    orderBy?: SampleVideoOrderByWithRelationInput | SampleVideoOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for searching for FounderLogEntries.
+     * Sets the position for searching for SampleVideos.
      */
-    cursor?: FounderLogEntryWhereUniqueInput
+    cursor?: SampleVideoWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` FounderLogEntries from the position of the cursor.
+     * Take `±n` SampleVideos from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` FounderLogEntries.
+     * Skip the first `n` SampleVideos.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
      * 
-     * Filter by unique combinations of FounderLogEntries.
+     * Filter by unique combinations of SampleVideos.
      */
-    distinct?: FounderLogEntryScalarFieldEnum | FounderLogEntryScalarFieldEnum[]
+    distinct?: SampleVideoScalarFieldEnum | SampleVideoScalarFieldEnum[]
   }
 
   /**
-   * FounderLogEntry findFirstOrThrow
+   * SampleVideo findFirstOrThrow
    */
-  export type FounderLogEntryFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type SampleVideoFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the FounderLogEntry
+     * Select specific fields to fetch from the SampleVideo
      */
-    select?: FounderLogEntrySelect<ExtArgs> | null
+    select?: SampleVideoSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the FounderLogEntry
+     * Omit specific fields from the SampleVideo
      */
-    omit?: FounderLogEntryOmit<ExtArgs> | null
+    omit?: SampleVideoOmit<ExtArgs> | null
     /**
-     * Choose, which related nodes to fetch as well
+     * Filter, which SampleVideo to fetch.
      */
-    include?: FounderLogEntryInclude<ExtArgs> | null
-    /**
-     * Filter, which FounderLogEntry to fetch.
-     */
-    where?: FounderLogEntryWhereInput
+    where?: SampleVideoWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of FounderLogEntries to fetch.
+     * Determine the order of SampleVideos to fetch.
      */
-    orderBy?: FounderLogEntryOrderByWithRelationInput | FounderLogEntryOrderByWithRelationInput[]
+    orderBy?: SampleVideoOrderByWithRelationInput | SampleVideoOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for searching for FounderLogEntries.
+     * Sets the position for searching for SampleVideos.
      */
-    cursor?: FounderLogEntryWhereUniqueInput
+    cursor?: SampleVideoWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` FounderLogEntries from the position of the cursor.
+     * Take `±n` SampleVideos from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` FounderLogEntries.
+     * Skip the first `n` SampleVideos.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
      * 
-     * Filter by unique combinations of FounderLogEntries.
+     * Filter by unique combinations of SampleVideos.
      */
-    distinct?: FounderLogEntryScalarFieldEnum | FounderLogEntryScalarFieldEnum[]
+    distinct?: SampleVideoScalarFieldEnum | SampleVideoScalarFieldEnum[]
   }
 
   /**
-   * FounderLogEntry findMany
+   * SampleVideo findMany
    */
-  export type FounderLogEntryFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type SampleVideoFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the FounderLogEntry
+     * Select specific fields to fetch from the SampleVideo
      */
-    select?: FounderLogEntrySelect<ExtArgs> | null
+    select?: SampleVideoSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the FounderLogEntry
+     * Omit specific fields from the SampleVideo
      */
-    omit?: FounderLogEntryOmit<ExtArgs> | null
+    omit?: SampleVideoOmit<ExtArgs> | null
     /**
-     * Choose, which related nodes to fetch as well
+     * Filter, which SampleVideos to fetch.
      */
-    include?: FounderLogEntryInclude<ExtArgs> | null
-    /**
-     * Filter, which FounderLogEntries to fetch.
-     */
-    where?: FounderLogEntryWhereInput
+    where?: SampleVideoWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of FounderLogEntries to fetch.
+     * Determine the order of SampleVideos to fetch.
      */
-    orderBy?: FounderLogEntryOrderByWithRelationInput | FounderLogEntryOrderByWithRelationInput[]
+    orderBy?: SampleVideoOrderByWithRelationInput | SampleVideoOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for listing FounderLogEntries.
+     * Sets the position for listing SampleVideos.
      */
-    cursor?: FounderLogEntryWhereUniqueInput
+    cursor?: SampleVideoWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` FounderLogEntries from the position of the cursor.
+     * Take `±n` SampleVideos from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` FounderLogEntries.
+     * Skip the first `n` SampleVideos.
      */
     skip?: number
-    distinct?: FounderLogEntryScalarFieldEnum | FounderLogEntryScalarFieldEnum[]
+    distinct?: SampleVideoScalarFieldEnum | SampleVideoScalarFieldEnum[]
   }
 
   /**
-   * FounderLogEntry create
+   * SampleVideo create
    */
-  export type FounderLogEntryCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type SampleVideoCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the FounderLogEntry
+     * Select specific fields to fetch from the SampleVideo
      */
-    select?: FounderLogEntrySelect<ExtArgs> | null
+    select?: SampleVideoSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the FounderLogEntry
+     * Omit specific fields from the SampleVideo
      */
-    omit?: FounderLogEntryOmit<ExtArgs> | null
+    omit?: SampleVideoOmit<ExtArgs> | null
     /**
-     * Choose, which related nodes to fetch as well
+     * The data needed to create a SampleVideo.
      */
-    include?: FounderLogEntryInclude<ExtArgs> | null
-    /**
-     * The data needed to create a FounderLogEntry.
-     */
-    data: XOR<FounderLogEntryCreateInput, FounderLogEntryUncheckedCreateInput>
+    data: XOR<SampleVideoCreateInput, SampleVideoUncheckedCreateInput>
   }
 
   /**
-   * FounderLogEntry createMany
+   * SampleVideo createMany
    */
-  export type FounderLogEntryCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type SampleVideoCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * The data used to create many FounderLogEntries.
+     * The data used to create many SampleVideos.
      */
-    data: FounderLogEntryCreateManyInput | FounderLogEntryCreateManyInput[]
+    data: SampleVideoCreateManyInput | SampleVideoCreateManyInput[]
     skipDuplicates?: boolean
   }
 
   /**
-   * FounderLogEntry createManyAndReturn
+   * SampleVideo createManyAndReturn
    */
-  export type FounderLogEntryCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type SampleVideoCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the FounderLogEntry
+     * Select specific fields to fetch from the SampleVideo
      */
-    select?: FounderLogEntrySelectCreateManyAndReturn<ExtArgs> | null
+    select?: SampleVideoSelectCreateManyAndReturn<ExtArgs> | null
     /**
-     * Omit specific fields from the FounderLogEntry
+     * Omit specific fields from the SampleVideo
      */
-    omit?: FounderLogEntryOmit<ExtArgs> | null
+    omit?: SampleVideoOmit<ExtArgs> | null
     /**
-     * The data used to create many FounderLogEntries.
+     * The data used to create many SampleVideos.
      */
-    data: FounderLogEntryCreateManyInput | FounderLogEntryCreateManyInput[]
-    skipDuplicates?: boolean
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogEntryIncludeCreateManyAndReturn<ExtArgs> | null
-  }
-
-  /**
-   * FounderLogEntry update
-   */
-  export type FounderLogEntryUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogEntry
-     */
-    select?: FounderLogEntrySelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the FounderLogEntry
-     */
-    omit?: FounderLogEntryOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogEntryInclude<ExtArgs> | null
-    /**
-     * The data needed to update a FounderLogEntry.
-     */
-    data: XOR<FounderLogEntryUpdateInput, FounderLogEntryUncheckedUpdateInput>
-    /**
-     * Choose, which FounderLogEntry to update.
-     */
-    where: FounderLogEntryWhereUniqueInput
-  }
-
-  /**
-   * FounderLogEntry updateMany
-   */
-  export type FounderLogEntryUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * The data used to update FounderLogEntries.
-     */
-    data: XOR<FounderLogEntryUpdateManyMutationInput, FounderLogEntryUncheckedUpdateManyInput>
-    /**
-     * Filter which FounderLogEntries to update
-     */
-    where?: FounderLogEntryWhereInput
-    /**
-     * Limit how many FounderLogEntries to update.
-     */
-    limit?: number
-  }
-
-  /**
-   * FounderLogEntry updateManyAndReturn
-   */
-  export type FounderLogEntryUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogEntry
-     */
-    select?: FounderLogEntrySelectUpdateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the FounderLogEntry
-     */
-    omit?: FounderLogEntryOmit<ExtArgs> | null
-    /**
-     * The data used to update FounderLogEntries.
-     */
-    data: XOR<FounderLogEntryUpdateManyMutationInput, FounderLogEntryUncheckedUpdateManyInput>
-    /**
-     * Filter which FounderLogEntries to update
-     */
-    where?: FounderLogEntryWhereInput
-    /**
-     * Limit how many FounderLogEntries to update.
-     */
-    limit?: number
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogEntryIncludeUpdateManyAndReturn<ExtArgs> | null
-  }
-
-  /**
-   * FounderLogEntry upsert
-   */
-  export type FounderLogEntryUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogEntry
-     */
-    select?: FounderLogEntrySelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the FounderLogEntry
-     */
-    omit?: FounderLogEntryOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogEntryInclude<ExtArgs> | null
-    /**
-     * The filter to search for the FounderLogEntry to update in case it exists.
-     */
-    where: FounderLogEntryWhereUniqueInput
-    /**
-     * In case the FounderLogEntry found by the `where` argument doesn't exist, create a new FounderLogEntry with this data.
-     */
-    create: XOR<FounderLogEntryCreateInput, FounderLogEntryUncheckedCreateInput>
-    /**
-     * In case the FounderLogEntry was found with the provided `where` argument, update it with this data.
-     */
-    update: XOR<FounderLogEntryUpdateInput, FounderLogEntryUncheckedUpdateInput>
-  }
-
-  /**
-   * FounderLogEntry delete
-   */
-  export type FounderLogEntryDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogEntry
-     */
-    select?: FounderLogEntrySelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the FounderLogEntry
-     */
-    omit?: FounderLogEntryOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogEntryInclude<ExtArgs> | null
-    /**
-     * Filter which FounderLogEntry to delete.
-     */
-    where: FounderLogEntryWhereUniqueInput
-  }
-
-  /**
-   * FounderLogEntry deleteMany
-   */
-  export type FounderLogEntryDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Filter which FounderLogEntries to delete
-     */
-    where?: FounderLogEntryWhereInput
-    /**
-     * Limit how many FounderLogEntries to delete.
-     */
-    limit?: number
-  }
-
-  /**
-   * FounderLogEntry.tags
-   */
-  export type FounderLogEntry$tagsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogEntryTag
-     */
-    select?: FounderLogEntryTagSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the FounderLogEntryTag
-     */
-    omit?: FounderLogEntryTagOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogEntryTagInclude<ExtArgs> | null
-    where?: FounderLogEntryTagWhereInput
-    orderBy?: FounderLogEntryTagOrderByWithRelationInput | FounderLogEntryTagOrderByWithRelationInput[]
-    cursor?: FounderLogEntryTagWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: FounderLogEntryTagScalarFieldEnum | FounderLogEntryTagScalarFieldEnum[]
-  }
-
-  /**
-   * FounderLogEntry without action
-   */
-  export type FounderLogEntryDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogEntry
-     */
-    select?: FounderLogEntrySelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the FounderLogEntry
-     */
-    omit?: FounderLogEntryOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogEntryInclude<ExtArgs> | null
-  }
-
-
-  /**
-   * Model FounderLogEntryTag
-   */
-
-  export type AggregateFounderLogEntryTag = {
-    _count: FounderLogEntryTagCountAggregateOutputType | null
-    _min: FounderLogEntryTagMinAggregateOutputType | null
-    _max: FounderLogEntryTagMaxAggregateOutputType | null
-  }
-
-  export type FounderLogEntryTagMinAggregateOutputType = {
-    id: string | null
-    entryId: string | null
-    tagId: string | null
-    createdAt: Date | null
-  }
-
-  export type FounderLogEntryTagMaxAggregateOutputType = {
-    id: string | null
-    entryId: string | null
-    tagId: string | null
-    createdAt: Date | null
-  }
-
-  export type FounderLogEntryTagCountAggregateOutputType = {
-    id: number
-    entryId: number
-    tagId: number
-    createdAt: number
-    _all: number
-  }
-
-
-  export type FounderLogEntryTagMinAggregateInputType = {
-    id?: true
-    entryId?: true
-    tagId?: true
-    createdAt?: true
-  }
-
-  export type FounderLogEntryTagMaxAggregateInputType = {
-    id?: true
-    entryId?: true
-    tagId?: true
-    createdAt?: true
-  }
-
-  export type FounderLogEntryTagCountAggregateInputType = {
-    id?: true
-    entryId?: true
-    tagId?: true
-    createdAt?: true
-    _all?: true
-  }
-
-  export type FounderLogEntryTagAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Filter which FounderLogEntryTag to aggregate.
-     */
-    where?: FounderLogEntryTagWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of FounderLogEntryTags to fetch.
-     */
-    orderBy?: FounderLogEntryTagOrderByWithRelationInput | FounderLogEntryTagOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the start position
-     */
-    cursor?: FounderLogEntryTagWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` FounderLogEntryTags from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` FounderLogEntryTags.
-     */
-    skip?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Count returned FounderLogEntryTags
-    **/
-    _count?: true | FounderLogEntryTagCountAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to find the minimum value
-    **/
-    _min?: FounderLogEntryTagMinAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to find the maximum value
-    **/
-    _max?: FounderLogEntryTagMaxAggregateInputType
-  }
-
-  export type GetFounderLogEntryTagAggregateType<T extends FounderLogEntryTagAggregateArgs> = {
-        [P in keyof T & keyof AggregateFounderLogEntryTag]: P extends '_count' | 'count'
-      ? T[P] extends true
-        ? number
-        : GetScalarType<T[P], AggregateFounderLogEntryTag[P]>
-      : GetScalarType<T[P], AggregateFounderLogEntryTag[P]>
-  }
-
-
-
-
-  export type FounderLogEntryTagGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: FounderLogEntryTagWhereInput
-    orderBy?: FounderLogEntryTagOrderByWithAggregationInput | FounderLogEntryTagOrderByWithAggregationInput[]
-    by: FounderLogEntryTagScalarFieldEnum[] | FounderLogEntryTagScalarFieldEnum
-    having?: FounderLogEntryTagScalarWhereWithAggregatesInput
-    take?: number
-    skip?: number
-    _count?: FounderLogEntryTagCountAggregateInputType | true
-    _min?: FounderLogEntryTagMinAggregateInputType
-    _max?: FounderLogEntryTagMaxAggregateInputType
-  }
-
-  export type FounderLogEntryTagGroupByOutputType = {
-    id: string
-    entryId: string
-    tagId: string
-    createdAt: Date
-    _count: FounderLogEntryTagCountAggregateOutputType | null
-    _min: FounderLogEntryTagMinAggregateOutputType | null
-    _max: FounderLogEntryTagMaxAggregateOutputType | null
-  }
-
-  type GetFounderLogEntryTagGroupByPayload<T extends FounderLogEntryTagGroupByArgs> = Prisma.PrismaPromise<
-    Array<
-      PickEnumerable<FounderLogEntryTagGroupByOutputType, T['by']> &
-        {
-          [P in ((keyof T) & (keyof FounderLogEntryTagGroupByOutputType))]: P extends '_count'
-            ? T[P] extends boolean
-              ? number
-              : GetScalarType<T[P], FounderLogEntryTagGroupByOutputType[P]>
-            : GetScalarType<T[P], FounderLogEntryTagGroupByOutputType[P]>
-        }
-      >
-    >
-
-
-  export type FounderLogEntryTagSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    entryId?: boolean
-    tagId?: boolean
-    createdAt?: boolean
-    entry?: boolean | FounderLogEntryDefaultArgs<ExtArgs>
-    tag?: boolean | FounderLogTagDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["founderLogEntryTag"]>
-
-  export type FounderLogEntryTagSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    entryId?: boolean
-    tagId?: boolean
-    createdAt?: boolean
-    entry?: boolean | FounderLogEntryDefaultArgs<ExtArgs>
-    tag?: boolean | FounderLogTagDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["founderLogEntryTag"]>
-
-  export type FounderLogEntryTagSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    entryId?: boolean
-    tagId?: boolean
-    createdAt?: boolean
-    entry?: boolean | FounderLogEntryDefaultArgs<ExtArgs>
-    tag?: boolean | FounderLogTagDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["founderLogEntryTag"]>
-
-  export type FounderLogEntryTagSelectScalar = {
-    id?: boolean
-    entryId?: boolean
-    tagId?: boolean
-    createdAt?: boolean
-  }
-
-  export type FounderLogEntryTagOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "entryId" | "tagId" | "createdAt", ExtArgs["result"]["founderLogEntryTag"]>
-  export type FounderLogEntryTagInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    entry?: boolean | FounderLogEntryDefaultArgs<ExtArgs>
-    tag?: boolean | FounderLogTagDefaultArgs<ExtArgs>
-  }
-  export type FounderLogEntryTagIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    entry?: boolean | FounderLogEntryDefaultArgs<ExtArgs>
-    tag?: boolean | FounderLogTagDefaultArgs<ExtArgs>
-  }
-  export type FounderLogEntryTagIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    entry?: boolean | FounderLogEntryDefaultArgs<ExtArgs>
-    tag?: boolean | FounderLogTagDefaultArgs<ExtArgs>
-  }
-
-  export type $FounderLogEntryTagPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    name: "FounderLogEntryTag"
-    objects: {
-      entry: Prisma.$FounderLogEntryPayload<ExtArgs>
-      tag: Prisma.$FounderLogTagPayload<ExtArgs>
-    }
-    scalars: $Extensions.GetPayloadResult<{
-      id: string
-      entryId: string
-      tagId: string
-      createdAt: Date
-    }, ExtArgs["result"]["founderLogEntryTag"]>
-    composites: {}
-  }
-
-  type FounderLogEntryTagGetPayload<S extends boolean | null | undefined | FounderLogEntryTagDefaultArgs> = $Result.GetResult<Prisma.$FounderLogEntryTagPayload, S>
-
-  type FounderLogEntryTagCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
-    Omit<FounderLogEntryTagFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
-      select?: FounderLogEntryTagCountAggregateInputType | true
-    }
-
-  export interface FounderLogEntryTagDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
-    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['FounderLogEntryTag'], meta: { name: 'FounderLogEntryTag' } }
-    /**
-     * Find zero or one FounderLogEntryTag that matches the filter.
-     * @param {FounderLogEntryTagFindUniqueArgs} args - Arguments to find a FounderLogEntryTag
-     * @example
-     * // Get one FounderLogEntryTag
-     * const founderLogEntryTag = await prisma.founderLogEntryTag.findUnique({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findUnique<T extends FounderLogEntryTagFindUniqueArgs>(args: SelectSubset<T, FounderLogEntryTagFindUniqueArgs<ExtArgs>>): Prisma__FounderLogEntryTagClient<$Result.GetResult<Prisma.$FounderLogEntryTagPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find one FounderLogEntryTag that matches the filter or throw an error with `error.code='P2025'`
-     * if no matches were found.
-     * @param {FounderLogEntryTagFindUniqueOrThrowArgs} args - Arguments to find a FounderLogEntryTag
-     * @example
-     * // Get one FounderLogEntryTag
-     * const founderLogEntryTag = await prisma.founderLogEntryTag.findUniqueOrThrow({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findUniqueOrThrow<T extends FounderLogEntryTagFindUniqueOrThrowArgs>(args: SelectSubset<T, FounderLogEntryTagFindUniqueOrThrowArgs<ExtArgs>>): Prisma__FounderLogEntryTagClient<$Result.GetResult<Prisma.$FounderLogEntryTagPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find the first FounderLogEntryTag that matches the filter.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {FounderLogEntryTagFindFirstArgs} args - Arguments to find a FounderLogEntryTag
-     * @example
-     * // Get one FounderLogEntryTag
-     * const founderLogEntryTag = await prisma.founderLogEntryTag.findFirst({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findFirst<T extends FounderLogEntryTagFindFirstArgs>(args?: SelectSubset<T, FounderLogEntryTagFindFirstArgs<ExtArgs>>): Prisma__FounderLogEntryTagClient<$Result.GetResult<Prisma.$FounderLogEntryTagPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find the first FounderLogEntryTag that matches the filter or
-     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {FounderLogEntryTagFindFirstOrThrowArgs} args - Arguments to find a FounderLogEntryTag
-     * @example
-     * // Get one FounderLogEntryTag
-     * const founderLogEntryTag = await prisma.founderLogEntryTag.findFirstOrThrow({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findFirstOrThrow<T extends FounderLogEntryTagFindFirstOrThrowArgs>(args?: SelectSubset<T, FounderLogEntryTagFindFirstOrThrowArgs<ExtArgs>>): Prisma__FounderLogEntryTagClient<$Result.GetResult<Prisma.$FounderLogEntryTagPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find zero or more FounderLogEntryTags that matches the filter.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {FounderLogEntryTagFindManyArgs} args - Arguments to filter and select certain fields only.
-     * @example
-     * // Get all FounderLogEntryTags
-     * const founderLogEntryTags = await prisma.founderLogEntryTag.findMany()
-     * 
-     * // Get first 10 FounderLogEntryTags
-     * const founderLogEntryTags = await prisma.founderLogEntryTag.findMany({ take: 10 })
-     * 
-     * // Only select the `id`
-     * const founderLogEntryTagWithIdOnly = await prisma.founderLogEntryTag.findMany({ select: { id: true } })
-     * 
-     */
-    findMany<T extends FounderLogEntryTagFindManyArgs>(args?: SelectSubset<T, FounderLogEntryTagFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FounderLogEntryTagPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
-
-    /**
-     * Create a FounderLogEntryTag.
-     * @param {FounderLogEntryTagCreateArgs} args - Arguments to create a FounderLogEntryTag.
-     * @example
-     * // Create one FounderLogEntryTag
-     * const FounderLogEntryTag = await prisma.founderLogEntryTag.create({
-     *   data: {
-     *     // ... data to create a FounderLogEntryTag
-     *   }
-     * })
-     * 
-     */
-    create<T extends FounderLogEntryTagCreateArgs>(args: SelectSubset<T, FounderLogEntryTagCreateArgs<ExtArgs>>): Prisma__FounderLogEntryTagClient<$Result.GetResult<Prisma.$FounderLogEntryTagPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Create many FounderLogEntryTags.
-     * @param {FounderLogEntryTagCreateManyArgs} args - Arguments to create many FounderLogEntryTags.
-     * @example
-     * // Create many FounderLogEntryTags
-     * const founderLogEntryTag = await prisma.founderLogEntryTag.createMany({
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     *     
-     */
-    createMany<T extends FounderLogEntryTagCreateManyArgs>(args?: SelectSubset<T, FounderLogEntryTagCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Create many FounderLogEntryTags and returns the data saved in the database.
-     * @param {FounderLogEntryTagCreateManyAndReturnArgs} args - Arguments to create many FounderLogEntryTags.
-     * @example
-     * // Create many FounderLogEntryTags
-     * const founderLogEntryTag = await prisma.founderLogEntryTag.createManyAndReturn({
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Create many FounderLogEntryTags and only return the `id`
-     * const founderLogEntryTagWithIdOnly = await prisma.founderLogEntryTag.createManyAndReturn({
-     *   select: { id: true },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    createManyAndReturn<T extends FounderLogEntryTagCreateManyAndReturnArgs>(args?: SelectSubset<T, FounderLogEntryTagCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FounderLogEntryTagPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
-
-    /**
-     * Delete a FounderLogEntryTag.
-     * @param {FounderLogEntryTagDeleteArgs} args - Arguments to delete one FounderLogEntryTag.
-     * @example
-     * // Delete one FounderLogEntryTag
-     * const FounderLogEntryTag = await prisma.founderLogEntryTag.delete({
-     *   where: {
-     *     // ... filter to delete one FounderLogEntryTag
-     *   }
-     * })
-     * 
-     */
-    delete<T extends FounderLogEntryTagDeleteArgs>(args: SelectSubset<T, FounderLogEntryTagDeleteArgs<ExtArgs>>): Prisma__FounderLogEntryTagClient<$Result.GetResult<Prisma.$FounderLogEntryTagPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Update one FounderLogEntryTag.
-     * @param {FounderLogEntryTagUpdateArgs} args - Arguments to update one FounderLogEntryTag.
-     * @example
-     * // Update one FounderLogEntryTag
-     * const founderLogEntryTag = await prisma.founderLogEntryTag.update({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: {
-     *     // ... provide data here
-     *   }
-     * })
-     * 
-     */
-    update<T extends FounderLogEntryTagUpdateArgs>(args: SelectSubset<T, FounderLogEntryTagUpdateArgs<ExtArgs>>): Prisma__FounderLogEntryTagClient<$Result.GetResult<Prisma.$FounderLogEntryTagPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Delete zero or more FounderLogEntryTags.
-     * @param {FounderLogEntryTagDeleteManyArgs} args - Arguments to filter FounderLogEntryTags to delete.
-     * @example
-     * // Delete a few FounderLogEntryTags
-     * const { count } = await prisma.founderLogEntryTag.deleteMany({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     * 
-     */
-    deleteMany<T extends FounderLogEntryTagDeleteManyArgs>(args?: SelectSubset<T, FounderLogEntryTagDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more FounderLogEntryTags.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {FounderLogEntryTagUpdateManyArgs} args - Arguments to update one or more rows.
-     * @example
-     * // Update many FounderLogEntryTags
-     * const founderLogEntryTag = await prisma.founderLogEntryTag.updateMany({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: {
-     *     // ... provide data here
-     *   }
-     * })
-     * 
-     */
-    updateMany<T extends FounderLogEntryTagUpdateManyArgs>(args: SelectSubset<T, FounderLogEntryTagUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more FounderLogEntryTags and returns the data updated in the database.
-     * @param {FounderLogEntryTagUpdateManyAndReturnArgs} args - Arguments to update many FounderLogEntryTags.
-     * @example
-     * // Update many FounderLogEntryTags
-     * const founderLogEntryTag = await prisma.founderLogEntryTag.updateManyAndReturn({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Update zero or more FounderLogEntryTags and only return the `id`
-     * const founderLogEntryTagWithIdOnly = await prisma.founderLogEntryTag.updateManyAndReturn({
-     *   select: { id: true },
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    updateManyAndReturn<T extends FounderLogEntryTagUpdateManyAndReturnArgs>(args: SelectSubset<T, FounderLogEntryTagUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FounderLogEntryTagPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
-
-    /**
-     * Create or update one FounderLogEntryTag.
-     * @param {FounderLogEntryTagUpsertArgs} args - Arguments to update or create a FounderLogEntryTag.
-     * @example
-     * // Update or create a FounderLogEntryTag
-     * const founderLogEntryTag = await prisma.founderLogEntryTag.upsert({
-     *   create: {
-     *     // ... data to create a FounderLogEntryTag
-     *   },
-     *   update: {
-     *     // ... in case it already exists, update
-     *   },
-     *   where: {
-     *     // ... the filter for the FounderLogEntryTag we want to update
-     *   }
-     * })
-     */
-    upsert<T extends FounderLogEntryTagUpsertArgs>(args: SelectSubset<T, FounderLogEntryTagUpsertArgs<ExtArgs>>): Prisma__FounderLogEntryTagClient<$Result.GetResult<Prisma.$FounderLogEntryTagPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-
-    /**
-     * Count the number of FounderLogEntryTags.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {FounderLogEntryTagCountArgs} args - Arguments to filter FounderLogEntryTags to count.
-     * @example
-     * // Count the number of FounderLogEntryTags
-     * const count = await prisma.founderLogEntryTag.count({
-     *   where: {
-     *     // ... the filter for the FounderLogEntryTags we want to count
-     *   }
-     * })
-    **/
-    count<T extends FounderLogEntryTagCountArgs>(
-      args?: Subset<T, FounderLogEntryTagCountArgs>,
-    ): Prisma.PrismaPromise<
-      T extends $Utils.Record<'select', any>
-        ? T['select'] extends true
-          ? number
-          : GetScalarType<T['select'], FounderLogEntryTagCountAggregateOutputType>
-        : number
-    >
-
-    /**
-     * Allows you to perform aggregations operations on a FounderLogEntryTag.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {FounderLogEntryTagAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
-     * @example
-     * // Ordered by age ascending
-     * // Where email contains prisma.io
-     * // Limited to the 10 users
-     * const aggregations = await prisma.user.aggregate({
-     *   _avg: {
-     *     age: true,
-     *   },
-     *   where: {
-     *     email: {
-     *       contains: "prisma.io",
-     *     },
-     *   },
-     *   orderBy: {
-     *     age: "asc",
-     *   },
-     *   take: 10,
-     * })
-    **/
-    aggregate<T extends FounderLogEntryTagAggregateArgs>(args: Subset<T, FounderLogEntryTagAggregateArgs>): Prisma.PrismaPromise<GetFounderLogEntryTagAggregateType<T>>
-
-    /**
-     * Group by FounderLogEntryTag.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {FounderLogEntryTagGroupByArgs} args - Group by arguments.
-     * @example
-     * // Group by city, order by createdAt, get count
-     * const result = await prisma.user.groupBy({
-     *   by: ['city', 'createdAt'],
-     *   orderBy: {
-     *     createdAt: true
-     *   },
-     *   _count: {
-     *     _all: true
-     *   },
-     * })
-     * 
-    **/
-    groupBy<
-      T extends FounderLogEntryTagGroupByArgs,
-      HasSelectOrTake extends Or<
-        Extends<'skip', Keys<T>>,
-        Extends<'take', Keys<T>>
-      >,
-      OrderByArg extends True extends HasSelectOrTake
-        ? { orderBy: FounderLogEntryTagGroupByArgs['orderBy'] }
-        : { orderBy?: FounderLogEntryTagGroupByArgs['orderBy'] },
-      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
-      ByFields extends MaybeTupleToUnion<T['by']>,
-      ByValid extends Has<ByFields, OrderFields>,
-      HavingFields extends GetHavingFields<T['having']>,
-      HavingValid extends Has<ByFields, HavingFields>,
-      ByEmpty extends T['by'] extends never[] ? True : False,
-      InputErrors extends ByEmpty extends True
-      ? `Error: "by" must not be empty.`
-      : HavingValid extends False
-      ? {
-          [P in HavingFields]: P extends ByFields
-            ? never
-            : P extends string
-            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
-            : [
-                Error,
-                'Field ',
-                P,
-                ` in "having" needs to be provided in "by"`,
-              ]
-        }[HavingFields]
-      : 'take' extends Keys<T>
-      ? 'orderBy' extends Keys<T>
-        ? ByValid extends True
-          ? {}
-          : {
-              [P in OrderFields]: P extends ByFields
-                ? never
-                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
-            }[OrderFields]
-        : 'Error: If you provide "take", you also need to provide "orderBy"'
-      : 'skip' extends Keys<T>
-      ? 'orderBy' extends Keys<T>
-        ? ByValid extends True
-          ? {}
-          : {
-              [P in OrderFields]: P extends ByFields
-                ? never
-                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
-            }[OrderFields]
-        : 'Error: If you provide "skip", you also need to provide "orderBy"'
-      : ByValid extends True
-      ? {}
-      : {
-          [P in OrderFields]: P extends ByFields
-            ? never
-            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
-        }[OrderFields]
-    >(args: SubsetIntersection<T, FounderLogEntryTagGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetFounderLogEntryTagGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
-  /**
-   * Fields of the FounderLogEntryTag model
-   */
-  readonly fields: FounderLogEntryTagFieldRefs;
-  }
-
-  /**
-   * The delegate class that acts as a "Promise-like" for FounderLogEntryTag.
-   * Why is this prefixed with `Prisma__`?
-   * Because we want to prevent naming conflicts as mentioned in
-   * https://github.com/prisma/prisma-client-js/issues/707
-   */
-  export interface Prisma__FounderLogEntryTagClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
-    readonly [Symbol.toStringTag]: "PrismaPromise"
-    entry<T extends FounderLogEntryDefaultArgs<ExtArgs> = {}>(args?: Subset<T, FounderLogEntryDefaultArgs<ExtArgs>>): Prisma__FounderLogEntryClient<$Result.GetResult<Prisma.$FounderLogEntryPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-    tag<T extends FounderLogTagDefaultArgs<ExtArgs> = {}>(args?: Subset<T, FounderLogTagDefaultArgs<ExtArgs>>): Prisma__FounderLogTagClient<$Result.GetResult<Prisma.$FounderLogTagPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-    /**
-     * Attaches callbacks for the resolution and/or rejection of the Promise.
-     * @param onfulfilled The callback to execute when the Promise is resolved.
-     * @param onrejected The callback to execute when the Promise is rejected.
-     * @returns A Promise for the completion of which ever callback is executed.
-     */
-    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
-    /**
-     * Attaches a callback for only the rejection of the Promise.
-     * @param onrejected The callback to execute when the Promise is rejected.
-     * @returns A Promise for the completion of the callback.
-     */
-    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
-    /**
-     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
-     * resolved value cannot be modified from the callback.
-     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
-     * @returns A Promise for the completion of the callback.
-     */
-    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
-  }
-
-
-
-
-  /**
-   * Fields of the FounderLogEntryTag model
-   */
-  interface FounderLogEntryTagFieldRefs {
-    readonly id: FieldRef<"FounderLogEntryTag", 'String'>
-    readonly entryId: FieldRef<"FounderLogEntryTag", 'String'>
-    readonly tagId: FieldRef<"FounderLogEntryTag", 'String'>
-    readonly createdAt: FieldRef<"FounderLogEntryTag", 'DateTime'>
-  }
-    
-
-  // Custom InputTypes
-  /**
-   * FounderLogEntryTag findUnique
-   */
-  export type FounderLogEntryTagFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogEntryTag
-     */
-    select?: FounderLogEntryTagSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the FounderLogEntryTag
-     */
-    omit?: FounderLogEntryTagOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogEntryTagInclude<ExtArgs> | null
-    /**
-     * Filter, which FounderLogEntryTag to fetch.
-     */
-    where: FounderLogEntryTagWhereUniqueInput
-  }
-
-  /**
-   * FounderLogEntryTag findUniqueOrThrow
-   */
-  export type FounderLogEntryTagFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogEntryTag
-     */
-    select?: FounderLogEntryTagSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the FounderLogEntryTag
-     */
-    omit?: FounderLogEntryTagOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogEntryTagInclude<ExtArgs> | null
-    /**
-     * Filter, which FounderLogEntryTag to fetch.
-     */
-    where: FounderLogEntryTagWhereUniqueInput
-  }
-
-  /**
-   * FounderLogEntryTag findFirst
-   */
-  export type FounderLogEntryTagFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogEntryTag
-     */
-    select?: FounderLogEntryTagSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the FounderLogEntryTag
-     */
-    omit?: FounderLogEntryTagOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogEntryTagInclude<ExtArgs> | null
-    /**
-     * Filter, which FounderLogEntryTag to fetch.
-     */
-    where?: FounderLogEntryTagWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of FounderLogEntryTags to fetch.
-     */
-    orderBy?: FounderLogEntryTagOrderByWithRelationInput | FounderLogEntryTagOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the position for searching for FounderLogEntryTags.
-     */
-    cursor?: FounderLogEntryTagWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` FounderLogEntryTags from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` FounderLogEntryTags.
-     */
-    skip?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     * 
-     * Filter by unique combinations of FounderLogEntryTags.
-     */
-    distinct?: FounderLogEntryTagScalarFieldEnum | FounderLogEntryTagScalarFieldEnum[]
-  }
-
-  /**
-   * FounderLogEntryTag findFirstOrThrow
-   */
-  export type FounderLogEntryTagFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogEntryTag
-     */
-    select?: FounderLogEntryTagSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the FounderLogEntryTag
-     */
-    omit?: FounderLogEntryTagOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogEntryTagInclude<ExtArgs> | null
-    /**
-     * Filter, which FounderLogEntryTag to fetch.
-     */
-    where?: FounderLogEntryTagWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of FounderLogEntryTags to fetch.
-     */
-    orderBy?: FounderLogEntryTagOrderByWithRelationInput | FounderLogEntryTagOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the position for searching for FounderLogEntryTags.
-     */
-    cursor?: FounderLogEntryTagWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` FounderLogEntryTags from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` FounderLogEntryTags.
-     */
-    skip?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     * 
-     * Filter by unique combinations of FounderLogEntryTags.
-     */
-    distinct?: FounderLogEntryTagScalarFieldEnum | FounderLogEntryTagScalarFieldEnum[]
-  }
-
-  /**
-   * FounderLogEntryTag findMany
-   */
-  export type FounderLogEntryTagFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogEntryTag
-     */
-    select?: FounderLogEntryTagSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the FounderLogEntryTag
-     */
-    omit?: FounderLogEntryTagOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogEntryTagInclude<ExtArgs> | null
-    /**
-     * Filter, which FounderLogEntryTags to fetch.
-     */
-    where?: FounderLogEntryTagWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of FounderLogEntryTags to fetch.
-     */
-    orderBy?: FounderLogEntryTagOrderByWithRelationInput | FounderLogEntryTagOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the position for listing FounderLogEntryTags.
-     */
-    cursor?: FounderLogEntryTagWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` FounderLogEntryTags from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` FounderLogEntryTags.
-     */
-    skip?: number
-    distinct?: FounderLogEntryTagScalarFieldEnum | FounderLogEntryTagScalarFieldEnum[]
-  }
-
-  /**
-   * FounderLogEntryTag create
-   */
-  export type FounderLogEntryTagCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogEntryTag
-     */
-    select?: FounderLogEntryTagSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the FounderLogEntryTag
-     */
-    omit?: FounderLogEntryTagOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogEntryTagInclude<ExtArgs> | null
-    /**
-     * The data needed to create a FounderLogEntryTag.
-     */
-    data: XOR<FounderLogEntryTagCreateInput, FounderLogEntryTagUncheckedCreateInput>
-  }
-
-  /**
-   * FounderLogEntryTag createMany
-   */
-  export type FounderLogEntryTagCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * The data used to create many FounderLogEntryTags.
-     */
-    data: FounderLogEntryTagCreateManyInput | FounderLogEntryTagCreateManyInput[]
+    data: SampleVideoCreateManyInput | SampleVideoCreateManyInput[]
     skipDuplicates?: boolean
   }
 
   /**
-   * FounderLogEntryTag createManyAndReturn
+   * SampleVideo update
    */
-  export type FounderLogEntryTagCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type SampleVideoUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the FounderLogEntryTag
+     * Select specific fields to fetch from the SampleVideo
      */
-    select?: FounderLogEntryTagSelectCreateManyAndReturn<ExtArgs> | null
+    select?: SampleVideoSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the FounderLogEntryTag
+     * Omit specific fields from the SampleVideo
      */
-    omit?: FounderLogEntryTagOmit<ExtArgs> | null
+    omit?: SampleVideoOmit<ExtArgs> | null
     /**
-     * The data used to create many FounderLogEntryTags.
+     * The data needed to update a SampleVideo.
      */
-    data: FounderLogEntryTagCreateManyInput | FounderLogEntryTagCreateManyInput[]
-    skipDuplicates?: boolean
+    data: XOR<SampleVideoUpdateInput, SampleVideoUncheckedUpdateInput>
     /**
-     * Choose, which related nodes to fetch as well
+     * Choose, which SampleVideo to update.
      */
-    include?: FounderLogEntryTagIncludeCreateManyAndReturn<ExtArgs> | null
+    where: SampleVideoWhereUniqueInput
   }
 
   /**
-   * FounderLogEntryTag update
+   * SampleVideo updateMany
    */
-  export type FounderLogEntryTagUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type SampleVideoUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the FounderLogEntryTag
+     * The data used to update SampleVideos.
      */
-    select?: FounderLogEntryTagSelect<ExtArgs> | null
+    data: XOR<SampleVideoUpdateManyMutationInput, SampleVideoUncheckedUpdateManyInput>
     /**
-     * Omit specific fields from the FounderLogEntryTag
+     * Filter which SampleVideos to update
      */
-    omit?: FounderLogEntryTagOmit<ExtArgs> | null
+    where?: SampleVideoWhereInput
     /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogEntryTagInclude<ExtArgs> | null
-    /**
-     * The data needed to update a FounderLogEntryTag.
-     */
-    data: XOR<FounderLogEntryTagUpdateInput, FounderLogEntryTagUncheckedUpdateInput>
-    /**
-     * Choose, which FounderLogEntryTag to update.
-     */
-    where: FounderLogEntryTagWhereUniqueInput
-  }
-
-  /**
-   * FounderLogEntryTag updateMany
-   */
-  export type FounderLogEntryTagUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * The data used to update FounderLogEntryTags.
-     */
-    data: XOR<FounderLogEntryTagUpdateManyMutationInput, FounderLogEntryTagUncheckedUpdateManyInput>
-    /**
-     * Filter which FounderLogEntryTags to update
-     */
-    where?: FounderLogEntryTagWhereInput
-    /**
-     * Limit how many FounderLogEntryTags to update.
+     * Limit how many SampleVideos to update.
      */
     limit?: number
   }
 
   /**
-   * FounderLogEntryTag updateManyAndReturn
+   * SampleVideo updateManyAndReturn
    */
-  export type FounderLogEntryTagUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type SampleVideoUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the FounderLogEntryTag
+     * Select specific fields to fetch from the SampleVideo
      */
-    select?: FounderLogEntryTagSelectUpdateManyAndReturn<ExtArgs> | null
+    select?: SampleVideoSelectUpdateManyAndReturn<ExtArgs> | null
     /**
-     * Omit specific fields from the FounderLogEntryTag
+     * Omit specific fields from the SampleVideo
      */
-    omit?: FounderLogEntryTagOmit<ExtArgs> | null
+    omit?: SampleVideoOmit<ExtArgs> | null
     /**
-     * The data used to update FounderLogEntryTags.
+     * The data used to update SampleVideos.
      */
-    data: XOR<FounderLogEntryTagUpdateManyMutationInput, FounderLogEntryTagUncheckedUpdateManyInput>
+    data: XOR<SampleVideoUpdateManyMutationInput, SampleVideoUncheckedUpdateManyInput>
     /**
-     * Filter which FounderLogEntryTags to update
+     * Filter which SampleVideos to update
      */
-    where?: FounderLogEntryTagWhereInput
+    where?: SampleVideoWhereInput
     /**
-     * Limit how many FounderLogEntryTags to update.
-     */
-    limit?: number
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogEntryTagIncludeUpdateManyAndReturn<ExtArgs> | null
-  }
-
-  /**
-   * FounderLogEntryTag upsert
-   */
-  export type FounderLogEntryTagUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogEntryTag
-     */
-    select?: FounderLogEntryTagSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the FounderLogEntryTag
-     */
-    omit?: FounderLogEntryTagOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogEntryTagInclude<ExtArgs> | null
-    /**
-     * The filter to search for the FounderLogEntryTag to update in case it exists.
-     */
-    where: FounderLogEntryTagWhereUniqueInput
-    /**
-     * In case the FounderLogEntryTag found by the `where` argument doesn't exist, create a new FounderLogEntryTag with this data.
-     */
-    create: XOR<FounderLogEntryTagCreateInput, FounderLogEntryTagUncheckedCreateInput>
-    /**
-     * In case the FounderLogEntryTag was found with the provided `where` argument, update it with this data.
-     */
-    update: XOR<FounderLogEntryTagUpdateInput, FounderLogEntryTagUncheckedUpdateInput>
-  }
-
-  /**
-   * FounderLogEntryTag delete
-   */
-  export type FounderLogEntryTagDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogEntryTag
-     */
-    select?: FounderLogEntryTagSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the FounderLogEntryTag
-     */
-    omit?: FounderLogEntryTagOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogEntryTagInclude<ExtArgs> | null
-    /**
-     * Filter which FounderLogEntryTag to delete.
-     */
-    where: FounderLogEntryTagWhereUniqueInput
-  }
-
-  /**
-   * FounderLogEntryTag deleteMany
-   */
-  export type FounderLogEntryTagDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Filter which FounderLogEntryTags to delete
-     */
-    where?: FounderLogEntryTagWhereInput
-    /**
-     * Limit how many FounderLogEntryTags to delete.
+     * Limit how many SampleVideos to update.
      */
     limit?: number
   }
 
   /**
-   * FounderLogEntryTag without action
+   * SampleVideo upsert
    */
-  export type FounderLogEntryTagDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type SampleVideoUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the FounderLogEntryTag
+     * Select specific fields to fetch from the SampleVideo
      */
-    select?: FounderLogEntryTagSelect<ExtArgs> | null
+    select?: SampleVideoSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the FounderLogEntryTag
+     * Omit specific fields from the SampleVideo
      */
-    omit?: FounderLogEntryTagOmit<ExtArgs> | null
+    omit?: SampleVideoOmit<ExtArgs> | null
     /**
-     * Choose, which related nodes to fetch as well
+     * The filter to search for the SampleVideo to update in case it exists.
      */
-    include?: FounderLogEntryTagInclude<ExtArgs> | null
-  }
-
-
-  /**
-   * Model FounderLogReflection
-   */
-
-  export type AggregateFounderLogReflection = {
-    _count: FounderLogReflectionCountAggregateOutputType | null
-    _min: FounderLogReflectionMinAggregateOutputType | null
-    _max: FounderLogReflectionMaxAggregateOutputType | null
-  }
-
-  export type FounderLogReflectionMinAggregateOutputType = {
-    id: string | null
-    userId: string | null
-    type: string | null
-    content: string | null
-    createdAt: Date | null
-    updatedAt: Date | null
-  }
-
-  export type FounderLogReflectionMaxAggregateOutputType = {
-    id: string | null
-    userId: string | null
-    type: string | null
-    content: string | null
-    createdAt: Date | null
-    updatedAt: Date | null
-  }
-
-  export type FounderLogReflectionCountAggregateOutputType = {
-    id: number
-    userId: number
-    type: number
-    content: number
-    createdAt: number
-    updatedAt: number
-    _all: number
-  }
-
-
-  export type FounderLogReflectionMinAggregateInputType = {
-    id?: true
-    userId?: true
-    type?: true
-    content?: true
-    createdAt?: true
-    updatedAt?: true
-  }
-
-  export type FounderLogReflectionMaxAggregateInputType = {
-    id?: true
-    userId?: true
-    type?: true
-    content?: true
-    createdAt?: true
-    updatedAt?: true
-  }
-
-  export type FounderLogReflectionCountAggregateInputType = {
-    id?: true
-    userId?: true
-    type?: true
-    content?: true
-    createdAt?: true
-    updatedAt?: true
-    _all?: true
-  }
-
-  export type FounderLogReflectionAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where: SampleVideoWhereUniqueInput
     /**
-     * Filter which FounderLogReflection to aggregate.
+     * In case the SampleVideo found by the `where` argument doesn't exist, create a new SampleVideo with this data.
      */
-    where?: FounderLogReflectionWhereInput
+    create: XOR<SampleVideoCreateInput, SampleVideoUncheckedCreateInput>
     /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of FounderLogReflections to fetch.
+     * In case the SampleVideo was found with the provided `where` argument, update it with this data.
      */
-    orderBy?: FounderLogReflectionOrderByWithRelationInput | FounderLogReflectionOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the start position
-     */
-    cursor?: FounderLogReflectionWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` FounderLogReflections from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` FounderLogReflections.
-     */
-    skip?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Count returned FounderLogReflections
-    **/
-    _count?: true | FounderLogReflectionCountAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to find the minimum value
-    **/
-    _min?: FounderLogReflectionMinAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to find the maximum value
-    **/
-    _max?: FounderLogReflectionMaxAggregateInputType
-  }
-
-  export type GetFounderLogReflectionAggregateType<T extends FounderLogReflectionAggregateArgs> = {
-        [P in keyof T & keyof AggregateFounderLogReflection]: P extends '_count' | 'count'
-      ? T[P] extends true
-        ? number
-        : GetScalarType<T[P], AggregateFounderLogReflection[P]>
-      : GetScalarType<T[P], AggregateFounderLogReflection[P]>
-  }
-
-
-
-
-  export type FounderLogReflectionGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: FounderLogReflectionWhereInput
-    orderBy?: FounderLogReflectionOrderByWithAggregationInput | FounderLogReflectionOrderByWithAggregationInput[]
-    by: FounderLogReflectionScalarFieldEnum[] | FounderLogReflectionScalarFieldEnum
-    having?: FounderLogReflectionScalarWhereWithAggregatesInput
-    take?: number
-    skip?: number
-    _count?: FounderLogReflectionCountAggregateInputType | true
-    _min?: FounderLogReflectionMinAggregateInputType
-    _max?: FounderLogReflectionMaxAggregateInputType
-  }
-
-  export type FounderLogReflectionGroupByOutputType = {
-    id: string
-    userId: string
-    type: string
-    content: string
-    createdAt: Date
-    updatedAt: Date
-    _count: FounderLogReflectionCountAggregateOutputType | null
-    _min: FounderLogReflectionMinAggregateOutputType | null
-    _max: FounderLogReflectionMaxAggregateOutputType | null
-  }
-
-  type GetFounderLogReflectionGroupByPayload<T extends FounderLogReflectionGroupByArgs> = Prisma.PrismaPromise<
-    Array<
-      PickEnumerable<FounderLogReflectionGroupByOutputType, T['by']> &
-        {
-          [P in ((keyof T) & (keyof FounderLogReflectionGroupByOutputType))]: P extends '_count'
-            ? T[P] extends boolean
-              ? number
-              : GetScalarType<T[P], FounderLogReflectionGroupByOutputType[P]>
-            : GetScalarType<T[P], FounderLogReflectionGroupByOutputType[P]>
-        }
-      >
-    >
-
-
-  export type FounderLogReflectionSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    userId?: boolean
-    type?: boolean
-    content?: boolean
-    createdAt?: boolean
-    updatedAt?: boolean
-    user?: boolean | UserDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["founderLogReflection"]>
-
-  export type FounderLogReflectionSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    userId?: boolean
-    type?: boolean
-    content?: boolean
-    createdAt?: boolean
-    updatedAt?: boolean
-    user?: boolean | UserDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["founderLogReflection"]>
-
-  export type FounderLogReflectionSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    userId?: boolean
-    type?: boolean
-    content?: boolean
-    createdAt?: boolean
-    updatedAt?: boolean
-    user?: boolean | UserDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["founderLogReflection"]>
-
-  export type FounderLogReflectionSelectScalar = {
-    id?: boolean
-    userId?: boolean
-    type?: boolean
-    content?: boolean
-    createdAt?: boolean
-    updatedAt?: boolean
-  }
-
-  export type FounderLogReflectionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "type" | "content" | "createdAt" | "updatedAt", ExtArgs["result"]["founderLogReflection"]>
-  export type FounderLogReflectionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    user?: boolean | UserDefaultArgs<ExtArgs>
-  }
-  export type FounderLogReflectionIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    user?: boolean | UserDefaultArgs<ExtArgs>
-  }
-  export type FounderLogReflectionIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    user?: boolean | UserDefaultArgs<ExtArgs>
-  }
-
-  export type $FounderLogReflectionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    name: "FounderLogReflection"
-    objects: {
-      user: Prisma.$UserPayload<ExtArgs>
-    }
-    scalars: $Extensions.GetPayloadResult<{
-      id: string
-      userId: string
-      type: string
-      content: string
-      createdAt: Date
-      updatedAt: Date
-    }, ExtArgs["result"]["founderLogReflection"]>
-    composites: {}
-  }
-
-  type FounderLogReflectionGetPayload<S extends boolean | null | undefined | FounderLogReflectionDefaultArgs> = $Result.GetResult<Prisma.$FounderLogReflectionPayload, S>
-
-  type FounderLogReflectionCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
-    Omit<FounderLogReflectionFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
-      select?: FounderLogReflectionCountAggregateInputType | true
-    }
-
-  export interface FounderLogReflectionDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
-    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['FounderLogReflection'], meta: { name: 'FounderLogReflection' } }
-    /**
-     * Find zero or one FounderLogReflection that matches the filter.
-     * @param {FounderLogReflectionFindUniqueArgs} args - Arguments to find a FounderLogReflection
-     * @example
-     * // Get one FounderLogReflection
-     * const founderLogReflection = await prisma.founderLogReflection.findUnique({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findUnique<T extends FounderLogReflectionFindUniqueArgs>(args: SelectSubset<T, FounderLogReflectionFindUniqueArgs<ExtArgs>>): Prisma__FounderLogReflectionClient<$Result.GetResult<Prisma.$FounderLogReflectionPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find one FounderLogReflection that matches the filter or throw an error with `error.code='P2025'`
-     * if no matches were found.
-     * @param {FounderLogReflectionFindUniqueOrThrowArgs} args - Arguments to find a FounderLogReflection
-     * @example
-     * // Get one FounderLogReflection
-     * const founderLogReflection = await prisma.founderLogReflection.findUniqueOrThrow({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findUniqueOrThrow<T extends FounderLogReflectionFindUniqueOrThrowArgs>(args: SelectSubset<T, FounderLogReflectionFindUniqueOrThrowArgs<ExtArgs>>): Prisma__FounderLogReflectionClient<$Result.GetResult<Prisma.$FounderLogReflectionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find the first FounderLogReflection that matches the filter.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {FounderLogReflectionFindFirstArgs} args - Arguments to find a FounderLogReflection
-     * @example
-     * // Get one FounderLogReflection
-     * const founderLogReflection = await prisma.founderLogReflection.findFirst({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findFirst<T extends FounderLogReflectionFindFirstArgs>(args?: SelectSubset<T, FounderLogReflectionFindFirstArgs<ExtArgs>>): Prisma__FounderLogReflectionClient<$Result.GetResult<Prisma.$FounderLogReflectionPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find the first FounderLogReflection that matches the filter or
-     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {FounderLogReflectionFindFirstOrThrowArgs} args - Arguments to find a FounderLogReflection
-     * @example
-     * // Get one FounderLogReflection
-     * const founderLogReflection = await prisma.founderLogReflection.findFirstOrThrow({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findFirstOrThrow<T extends FounderLogReflectionFindFirstOrThrowArgs>(args?: SelectSubset<T, FounderLogReflectionFindFirstOrThrowArgs<ExtArgs>>): Prisma__FounderLogReflectionClient<$Result.GetResult<Prisma.$FounderLogReflectionPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find zero or more FounderLogReflections that matches the filter.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {FounderLogReflectionFindManyArgs} args - Arguments to filter and select certain fields only.
-     * @example
-     * // Get all FounderLogReflections
-     * const founderLogReflections = await prisma.founderLogReflection.findMany()
-     * 
-     * // Get first 10 FounderLogReflections
-     * const founderLogReflections = await prisma.founderLogReflection.findMany({ take: 10 })
-     * 
-     * // Only select the `id`
-     * const founderLogReflectionWithIdOnly = await prisma.founderLogReflection.findMany({ select: { id: true } })
-     * 
-     */
-    findMany<T extends FounderLogReflectionFindManyArgs>(args?: SelectSubset<T, FounderLogReflectionFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FounderLogReflectionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
-
-    /**
-     * Create a FounderLogReflection.
-     * @param {FounderLogReflectionCreateArgs} args - Arguments to create a FounderLogReflection.
-     * @example
-     * // Create one FounderLogReflection
-     * const FounderLogReflection = await prisma.founderLogReflection.create({
-     *   data: {
-     *     // ... data to create a FounderLogReflection
-     *   }
-     * })
-     * 
-     */
-    create<T extends FounderLogReflectionCreateArgs>(args: SelectSubset<T, FounderLogReflectionCreateArgs<ExtArgs>>): Prisma__FounderLogReflectionClient<$Result.GetResult<Prisma.$FounderLogReflectionPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Create many FounderLogReflections.
-     * @param {FounderLogReflectionCreateManyArgs} args - Arguments to create many FounderLogReflections.
-     * @example
-     * // Create many FounderLogReflections
-     * const founderLogReflection = await prisma.founderLogReflection.createMany({
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     *     
-     */
-    createMany<T extends FounderLogReflectionCreateManyArgs>(args?: SelectSubset<T, FounderLogReflectionCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Create many FounderLogReflections and returns the data saved in the database.
-     * @param {FounderLogReflectionCreateManyAndReturnArgs} args - Arguments to create many FounderLogReflections.
-     * @example
-     * // Create many FounderLogReflections
-     * const founderLogReflection = await prisma.founderLogReflection.createManyAndReturn({
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Create many FounderLogReflections and only return the `id`
-     * const founderLogReflectionWithIdOnly = await prisma.founderLogReflection.createManyAndReturn({
-     *   select: { id: true },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    createManyAndReturn<T extends FounderLogReflectionCreateManyAndReturnArgs>(args?: SelectSubset<T, FounderLogReflectionCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FounderLogReflectionPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
-
-    /**
-     * Delete a FounderLogReflection.
-     * @param {FounderLogReflectionDeleteArgs} args - Arguments to delete one FounderLogReflection.
-     * @example
-     * // Delete one FounderLogReflection
-     * const FounderLogReflection = await prisma.founderLogReflection.delete({
-     *   where: {
-     *     // ... filter to delete one FounderLogReflection
-     *   }
-     * })
-     * 
-     */
-    delete<T extends FounderLogReflectionDeleteArgs>(args: SelectSubset<T, FounderLogReflectionDeleteArgs<ExtArgs>>): Prisma__FounderLogReflectionClient<$Result.GetResult<Prisma.$FounderLogReflectionPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Update one FounderLogReflection.
-     * @param {FounderLogReflectionUpdateArgs} args - Arguments to update one FounderLogReflection.
-     * @example
-     * // Update one FounderLogReflection
-     * const founderLogReflection = await prisma.founderLogReflection.update({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: {
-     *     // ... provide data here
-     *   }
-     * })
-     * 
-     */
-    update<T extends FounderLogReflectionUpdateArgs>(args: SelectSubset<T, FounderLogReflectionUpdateArgs<ExtArgs>>): Prisma__FounderLogReflectionClient<$Result.GetResult<Prisma.$FounderLogReflectionPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Delete zero or more FounderLogReflections.
-     * @param {FounderLogReflectionDeleteManyArgs} args - Arguments to filter FounderLogReflections to delete.
-     * @example
-     * // Delete a few FounderLogReflections
-     * const { count } = await prisma.founderLogReflection.deleteMany({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     * 
-     */
-    deleteMany<T extends FounderLogReflectionDeleteManyArgs>(args?: SelectSubset<T, FounderLogReflectionDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more FounderLogReflections.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {FounderLogReflectionUpdateManyArgs} args - Arguments to update one or more rows.
-     * @example
-     * // Update many FounderLogReflections
-     * const founderLogReflection = await prisma.founderLogReflection.updateMany({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: {
-     *     // ... provide data here
-     *   }
-     * })
-     * 
-     */
-    updateMany<T extends FounderLogReflectionUpdateManyArgs>(args: SelectSubset<T, FounderLogReflectionUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more FounderLogReflections and returns the data updated in the database.
-     * @param {FounderLogReflectionUpdateManyAndReturnArgs} args - Arguments to update many FounderLogReflections.
-     * @example
-     * // Update many FounderLogReflections
-     * const founderLogReflection = await prisma.founderLogReflection.updateManyAndReturn({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Update zero or more FounderLogReflections and only return the `id`
-     * const founderLogReflectionWithIdOnly = await prisma.founderLogReflection.updateManyAndReturn({
-     *   select: { id: true },
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    updateManyAndReturn<T extends FounderLogReflectionUpdateManyAndReturnArgs>(args: SelectSubset<T, FounderLogReflectionUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FounderLogReflectionPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
-
-    /**
-     * Create or update one FounderLogReflection.
-     * @param {FounderLogReflectionUpsertArgs} args - Arguments to update or create a FounderLogReflection.
-     * @example
-     * // Update or create a FounderLogReflection
-     * const founderLogReflection = await prisma.founderLogReflection.upsert({
-     *   create: {
-     *     // ... data to create a FounderLogReflection
-     *   },
-     *   update: {
-     *     // ... in case it already exists, update
-     *   },
-     *   where: {
-     *     // ... the filter for the FounderLogReflection we want to update
-     *   }
-     * })
-     */
-    upsert<T extends FounderLogReflectionUpsertArgs>(args: SelectSubset<T, FounderLogReflectionUpsertArgs<ExtArgs>>): Prisma__FounderLogReflectionClient<$Result.GetResult<Prisma.$FounderLogReflectionPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-
-    /**
-     * Count the number of FounderLogReflections.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {FounderLogReflectionCountArgs} args - Arguments to filter FounderLogReflections to count.
-     * @example
-     * // Count the number of FounderLogReflections
-     * const count = await prisma.founderLogReflection.count({
-     *   where: {
-     *     // ... the filter for the FounderLogReflections we want to count
-     *   }
-     * })
-    **/
-    count<T extends FounderLogReflectionCountArgs>(
-      args?: Subset<T, FounderLogReflectionCountArgs>,
-    ): Prisma.PrismaPromise<
-      T extends $Utils.Record<'select', any>
-        ? T['select'] extends true
-          ? number
-          : GetScalarType<T['select'], FounderLogReflectionCountAggregateOutputType>
-        : number
-    >
-
-    /**
-     * Allows you to perform aggregations operations on a FounderLogReflection.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {FounderLogReflectionAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
-     * @example
-     * // Ordered by age ascending
-     * // Where email contains prisma.io
-     * // Limited to the 10 users
-     * const aggregations = await prisma.user.aggregate({
-     *   _avg: {
-     *     age: true,
-     *   },
-     *   where: {
-     *     email: {
-     *       contains: "prisma.io",
-     *     },
-     *   },
-     *   orderBy: {
-     *     age: "asc",
-     *   },
-     *   take: 10,
-     * })
-    **/
-    aggregate<T extends FounderLogReflectionAggregateArgs>(args: Subset<T, FounderLogReflectionAggregateArgs>): Prisma.PrismaPromise<GetFounderLogReflectionAggregateType<T>>
-
-    /**
-     * Group by FounderLogReflection.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {FounderLogReflectionGroupByArgs} args - Group by arguments.
-     * @example
-     * // Group by city, order by createdAt, get count
-     * const result = await prisma.user.groupBy({
-     *   by: ['city', 'createdAt'],
-     *   orderBy: {
-     *     createdAt: true
-     *   },
-     *   _count: {
-     *     _all: true
-     *   },
-     * })
-     * 
-    **/
-    groupBy<
-      T extends FounderLogReflectionGroupByArgs,
-      HasSelectOrTake extends Or<
-        Extends<'skip', Keys<T>>,
-        Extends<'take', Keys<T>>
-      >,
-      OrderByArg extends True extends HasSelectOrTake
-        ? { orderBy: FounderLogReflectionGroupByArgs['orderBy'] }
-        : { orderBy?: FounderLogReflectionGroupByArgs['orderBy'] },
-      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
-      ByFields extends MaybeTupleToUnion<T['by']>,
-      ByValid extends Has<ByFields, OrderFields>,
-      HavingFields extends GetHavingFields<T['having']>,
-      HavingValid extends Has<ByFields, HavingFields>,
-      ByEmpty extends T['by'] extends never[] ? True : False,
-      InputErrors extends ByEmpty extends True
-      ? `Error: "by" must not be empty.`
-      : HavingValid extends False
-      ? {
-          [P in HavingFields]: P extends ByFields
-            ? never
-            : P extends string
-            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
-            : [
-                Error,
-                'Field ',
-                P,
-                ` in "having" needs to be provided in "by"`,
-              ]
-        }[HavingFields]
-      : 'take' extends Keys<T>
-      ? 'orderBy' extends Keys<T>
-        ? ByValid extends True
-          ? {}
-          : {
-              [P in OrderFields]: P extends ByFields
-                ? never
-                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
-            }[OrderFields]
-        : 'Error: If you provide "take", you also need to provide "orderBy"'
-      : 'skip' extends Keys<T>
-      ? 'orderBy' extends Keys<T>
-        ? ByValid extends True
-          ? {}
-          : {
-              [P in OrderFields]: P extends ByFields
-                ? never
-                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
-            }[OrderFields]
-        : 'Error: If you provide "skip", you also need to provide "orderBy"'
-      : ByValid extends True
-      ? {}
-      : {
-          [P in OrderFields]: P extends ByFields
-            ? never
-            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
-        }[OrderFields]
-    >(args: SubsetIntersection<T, FounderLogReflectionGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetFounderLogReflectionGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
-  /**
-   * Fields of the FounderLogReflection model
-   */
-  readonly fields: FounderLogReflectionFieldRefs;
+    update: XOR<SampleVideoUpdateInput, SampleVideoUncheckedUpdateInput>
   }
 
   /**
-   * The delegate class that acts as a "Promise-like" for FounderLogReflection.
-   * Why is this prefixed with `Prisma__`?
-   * Because we want to prevent naming conflicts as mentioned in
-   * https://github.com/prisma/prisma-client-js/issues/707
+   * SampleVideo delete
    */
-  export interface Prisma__FounderLogReflectionClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
-    readonly [Symbol.toStringTag]: "PrismaPromise"
-    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  export type SampleVideoDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Attaches callbacks for the resolution and/or rejection of the Promise.
-     * @param onfulfilled The callback to execute when the Promise is resolved.
-     * @param onrejected The callback to execute when the Promise is rejected.
-     * @returns A Promise for the completion of which ever callback is executed.
+     * Select specific fields to fetch from the SampleVideo
      */
-    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    select?: SampleVideoSelect<ExtArgs> | null
     /**
-     * Attaches a callback for only the rejection of the Promise.
-     * @param onrejected The callback to execute when the Promise is rejected.
-     * @returns A Promise for the completion of the callback.
+     * Omit specific fields from the SampleVideo
      */
-    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    omit?: SampleVideoOmit<ExtArgs> | null
     /**
-     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
-     * resolved value cannot be modified from the callback.
-     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
-     * @returns A Promise for the completion of the callback.
+     * Filter which SampleVideo to delete.
      */
-    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
-  }
-
-
-
-
-  /**
-   * Fields of the FounderLogReflection model
-   */
-  interface FounderLogReflectionFieldRefs {
-    readonly id: FieldRef<"FounderLogReflection", 'String'>
-    readonly userId: FieldRef<"FounderLogReflection", 'String'>
-    readonly type: FieldRef<"FounderLogReflection", 'String'>
-    readonly content: FieldRef<"FounderLogReflection", 'String'>
-    readonly createdAt: FieldRef<"FounderLogReflection", 'DateTime'>
-    readonly updatedAt: FieldRef<"FounderLogReflection", 'DateTime'>
-  }
-    
-
-  // Custom InputTypes
-  /**
-   * FounderLogReflection findUnique
-   */
-  export type FounderLogReflectionFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogReflection
-     */
-    select?: FounderLogReflectionSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the FounderLogReflection
-     */
-    omit?: FounderLogReflectionOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogReflectionInclude<ExtArgs> | null
-    /**
-     * Filter, which FounderLogReflection to fetch.
-     */
-    where: FounderLogReflectionWhereUniqueInput
+    where: SampleVideoWhereUniqueInput
   }
 
   /**
-   * FounderLogReflection findUniqueOrThrow
+   * SampleVideo deleteMany
    */
-  export type FounderLogReflectionFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type SampleVideoDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the FounderLogReflection
+     * Filter which SampleVideos to delete
      */
-    select?: FounderLogReflectionSelect<ExtArgs> | null
+    where?: SampleVideoWhereInput
     /**
-     * Omit specific fields from the FounderLogReflection
-     */
-    omit?: FounderLogReflectionOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogReflectionInclude<ExtArgs> | null
-    /**
-     * Filter, which FounderLogReflection to fetch.
-     */
-    where: FounderLogReflectionWhereUniqueInput
-  }
-
-  /**
-   * FounderLogReflection findFirst
-   */
-  export type FounderLogReflectionFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogReflection
-     */
-    select?: FounderLogReflectionSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the FounderLogReflection
-     */
-    omit?: FounderLogReflectionOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogReflectionInclude<ExtArgs> | null
-    /**
-     * Filter, which FounderLogReflection to fetch.
-     */
-    where?: FounderLogReflectionWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of FounderLogReflections to fetch.
-     */
-    orderBy?: FounderLogReflectionOrderByWithRelationInput | FounderLogReflectionOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the position for searching for FounderLogReflections.
-     */
-    cursor?: FounderLogReflectionWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` FounderLogReflections from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` FounderLogReflections.
-     */
-    skip?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     * 
-     * Filter by unique combinations of FounderLogReflections.
-     */
-    distinct?: FounderLogReflectionScalarFieldEnum | FounderLogReflectionScalarFieldEnum[]
-  }
-
-  /**
-   * FounderLogReflection findFirstOrThrow
-   */
-  export type FounderLogReflectionFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogReflection
-     */
-    select?: FounderLogReflectionSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the FounderLogReflection
-     */
-    omit?: FounderLogReflectionOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogReflectionInclude<ExtArgs> | null
-    /**
-     * Filter, which FounderLogReflection to fetch.
-     */
-    where?: FounderLogReflectionWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of FounderLogReflections to fetch.
-     */
-    orderBy?: FounderLogReflectionOrderByWithRelationInput | FounderLogReflectionOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the position for searching for FounderLogReflections.
-     */
-    cursor?: FounderLogReflectionWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` FounderLogReflections from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` FounderLogReflections.
-     */
-    skip?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     * 
-     * Filter by unique combinations of FounderLogReflections.
-     */
-    distinct?: FounderLogReflectionScalarFieldEnum | FounderLogReflectionScalarFieldEnum[]
-  }
-
-  /**
-   * FounderLogReflection findMany
-   */
-  export type FounderLogReflectionFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogReflection
-     */
-    select?: FounderLogReflectionSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the FounderLogReflection
-     */
-    omit?: FounderLogReflectionOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogReflectionInclude<ExtArgs> | null
-    /**
-     * Filter, which FounderLogReflections to fetch.
-     */
-    where?: FounderLogReflectionWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of FounderLogReflections to fetch.
-     */
-    orderBy?: FounderLogReflectionOrderByWithRelationInput | FounderLogReflectionOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the position for listing FounderLogReflections.
-     */
-    cursor?: FounderLogReflectionWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` FounderLogReflections from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` FounderLogReflections.
-     */
-    skip?: number
-    distinct?: FounderLogReflectionScalarFieldEnum | FounderLogReflectionScalarFieldEnum[]
-  }
-
-  /**
-   * FounderLogReflection create
-   */
-  export type FounderLogReflectionCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogReflection
-     */
-    select?: FounderLogReflectionSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the FounderLogReflection
-     */
-    omit?: FounderLogReflectionOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogReflectionInclude<ExtArgs> | null
-    /**
-     * The data needed to create a FounderLogReflection.
-     */
-    data: XOR<FounderLogReflectionCreateInput, FounderLogReflectionUncheckedCreateInput>
-  }
-
-  /**
-   * FounderLogReflection createMany
-   */
-  export type FounderLogReflectionCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * The data used to create many FounderLogReflections.
-     */
-    data: FounderLogReflectionCreateManyInput | FounderLogReflectionCreateManyInput[]
-    skipDuplicates?: boolean
-  }
-
-  /**
-   * FounderLogReflection createManyAndReturn
-   */
-  export type FounderLogReflectionCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogReflection
-     */
-    select?: FounderLogReflectionSelectCreateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the FounderLogReflection
-     */
-    omit?: FounderLogReflectionOmit<ExtArgs> | null
-    /**
-     * The data used to create many FounderLogReflections.
-     */
-    data: FounderLogReflectionCreateManyInput | FounderLogReflectionCreateManyInput[]
-    skipDuplicates?: boolean
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogReflectionIncludeCreateManyAndReturn<ExtArgs> | null
-  }
-
-  /**
-   * FounderLogReflection update
-   */
-  export type FounderLogReflectionUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogReflection
-     */
-    select?: FounderLogReflectionSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the FounderLogReflection
-     */
-    omit?: FounderLogReflectionOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogReflectionInclude<ExtArgs> | null
-    /**
-     * The data needed to update a FounderLogReflection.
-     */
-    data: XOR<FounderLogReflectionUpdateInput, FounderLogReflectionUncheckedUpdateInput>
-    /**
-     * Choose, which FounderLogReflection to update.
-     */
-    where: FounderLogReflectionWhereUniqueInput
-  }
-
-  /**
-   * FounderLogReflection updateMany
-   */
-  export type FounderLogReflectionUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * The data used to update FounderLogReflections.
-     */
-    data: XOR<FounderLogReflectionUpdateManyMutationInput, FounderLogReflectionUncheckedUpdateManyInput>
-    /**
-     * Filter which FounderLogReflections to update
-     */
-    where?: FounderLogReflectionWhereInput
-    /**
-     * Limit how many FounderLogReflections to update.
+     * Limit how many SampleVideos to delete.
      */
     limit?: number
   }
 
   /**
-   * FounderLogReflection updateManyAndReturn
+   * SampleVideo without action
    */
-  export type FounderLogReflectionUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type SampleVideoDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the FounderLogReflection
+     * Select specific fields to fetch from the SampleVideo
      */
-    select?: FounderLogReflectionSelectUpdateManyAndReturn<ExtArgs> | null
+    select?: SampleVideoSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the FounderLogReflection
+     * Omit specific fields from the SampleVideo
      */
-    omit?: FounderLogReflectionOmit<ExtArgs> | null
-    /**
-     * The data used to update FounderLogReflections.
-     */
-    data: XOR<FounderLogReflectionUpdateManyMutationInput, FounderLogReflectionUncheckedUpdateManyInput>
-    /**
-     * Filter which FounderLogReflections to update
-     */
-    where?: FounderLogReflectionWhereInput
-    /**
-     * Limit how many FounderLogReflections to update.
-     */
-    limit?: number
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogReflectionIncludeUpdateManyAndReturn<ExtArgs> | null
-  }
-
-  /**
-   * FounderLogReflection upsert
-   */
-  export type FounderLogReflectionUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogReflection
-     */
-    select?: FounderLogReflectionSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the FounderLogReflection
-     */
-    omit?: FounderLogReflectionOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogReflectionInclude<ExtArgs> | null
-    /**
-     * The filter to search for the FounderLogReflection to update in case it exists.
-     */
-    where: FounderLogReflectionWhereUniqueInput
-    /**
-     * In case the FounderLogReflection found by the `where` argument doesn't exist, create a new FounderLogReflection with this data.
-     */
-    create: XOR<FounderLogReflectionCreateInput, FounderLogReflectionUncheckedCreateInput>
-    /**
-     * In case the FounderLogReflection was found with the provided `where` argument, update it with this data.
-     */
-    update: XOR<FounderLogReflectionUpdateInput, FounderLogReflectionUncheckedUpdateInput>
-  }
-
-  /**
-   * FounderLogReflection delete
-   */
-  export type FounderLogReflectionDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogReflection
-     */
-    select?: FounderLogReflectionSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the FounderLogReflection
-     */
-    omit?: FounderLogReflectionOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogReflectionInclude<ExtArgs> | null
-    /**
-     * Filter which FounderLogReflection to delete.
-     */
-    where: FounderLogReflectionWhereUniqueInput
-  }
-
-  /**
-   * FounderLogReflection deleteMany
-   */
-  export type FounderLogReflectionDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Filter which FounderLogReflections to delete
-     */
-    where?: FounderLogReflectionWhereInput
-    /**
-     * Limit how many FounderLogReflections to delete.
-     */
-    limit?: number
-  }
-
-  /**
-   * FounderLogReflection without action
-   */
-  export type FounderLogReflectionDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the FounderLogReflection
-     */
-    select?: FounderLogReflectionSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the FounderLogReflection
-     */
-    omit?: FounderLogReflectionOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: FounderLogReflectionInclude<ExtArgs> | null
+    omit?: SampleVideoOmit<ExtArgs> | null
   }
 
 
@@ -7984,48 +4323,22 @@ export namespace Prisma {
   export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
 
 
-  export const FounderLogTagScalarFieldEnum: {
+  export const SampleVideoScalarFieldEnum: {
     id: 'id',
-    name: 'name',
+    webpageUrl: 'webpageUrl',
+    s3Url: 's3Url',
+    hookCutUrl: 'hookCutUrl',
+    title: 'title',
+    description: 'description',
+    views: 'views',
+    comments: 'comments',
+    likes: 'likes',
+    durationSeconds: 'durationSeconds',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
 
-  export type FounderLogTagScalarFieldEnum = (typeof FounderLogTagScalarFieldEnum)[keyof typeof FounderLogTagScalarFieldEnum]
-
-
-  export const FounderLogEntryScalarFieldEnum: {
-    id: 'id',
-    userId: 'userId',
-    content: 'content',
-    upvoteCount: 'upvoteCount',
-    createdAt: 'createdAt',
-    updatedAt: 'updatedAt'
-  };
-
-  export type FounderLogEntryScalarFieldEnum = (typeof FounderLogEntryScalarFieldEnum)[keyof typeof FounderLogEntryScalarFieldEnum]
-
-
-  export const FounderLogEntryTagScalarFieldEnum: {
-    id: 'id',
-    entryId: 'entryId',
-    tagId: 'tagId',
-    createdAt: 'createdAt'
-  };
-
-  export type FounderLogEntryTagScalarFieldEnum = (typeof FounderLogEntryTagScalarFieldEnum)[keyof typeof FounderLogEntryTagScalarFieldEnum]
-
-
-  export const FounderLogReflectionScalarFieldEnum: {
-    id: 'id',
-    userId: 'userId',
-    type: 'type',
-    content: 'content',
-    createdAt: 'createdAt',
-    updatedAt: 'updatedAt'
-  };
-
-  export type FounderLogReflectionScalarFieldEnum = (typeof FounderLogReflectionScalarFieldEnum)[keyof typeof FounderLogReflectionScalarFieldEnum]
+  export type SampleVideoScalarFieldEnum = (typeof SampleVideoScalarFieldEnum)[keyof typeof SampleVideoScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -8229,8 +4542,6 @@ export namespace Prisma {
     stripeUserProperties?: JsonNullableFilter<"User">
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
-    entries?: FounderLogEntryListRelationFilter
-    reflections?: FounderLogReflectionListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
@@ -8246,8 +4557,6 @@ export namespace Prisma {
     stripeUserProperties?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
-    entries?: FounderLogEntryOrderByRelationAggregateInput
-    reflections?: FounderLogReflectionOrderByRelationAggregateInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -8266,8 +4575,6 @@ export namespace Prisma {
     stripeUserProperties?: JsonNullableFilter<"User">
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
-    entries?: FounderLogEntryListRelationFilter
-    reflections?: FounderLogReflectionListRelationFilter
   }, "id" | "username" | "primaryEmailAddress" | "stripeCustomerId">
 
   export type UserOrderByWithAggregationInput = {
@@ -8306,233 +4613,93 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
   }
 
-  export type FounderLogTagWhereInput = {
-    AND?: FounderLogTagWhereInput | FounderLogTagWhereInput[]
-    OR?: FounderLogTagWhereInput[]
-    NOT?: FounderLogTagWhereInput | FounderLogTagWhereInput[]
-    id?: StringFilter<"FounderLogTag"> | string
-    name?: StringFilter<"FounderLogTag"> | string
-    createdAt?: DateTimeFilter<"FounderLogTag"> | Date | string
-    updatedAt?: DateTimeFilter<"FounderLogTag"> | Date | string
-    entries?: FounderLogEntryTagListRelationFilter
+  export type SampleVideoWhereInput = {
+    AND?: SampleVideoWhereInput | SampleVideoWhereInput[]
+    OR?: SampleVideoWhereInput[]
+    NOT?: SampleVideoWhereInput | SampleVideoWhereInput[]
+    id?: StringFilter<"SampleVideo"> | string
+    webpageUrl?: StringFilter<"SampleVideo"> | string
+    s3Url?: StringFilter<"SampleVideo"> | string
+    hookCutUrl?: StringNullableFilter<"SampleVideo"> | string | null
+    title?: StringFilter<"SampleVideo"> | string
+    description?: StringNullableFilter<"SampleVideo"> | string | null
+    views?: IntFilter<"SampleVideo"> | number
+    comments?: IntFilter<"SampleVideo"> | number
+    likes?: IntFilter<"SampleVideo"> | number
+    durationSeconds?: IntFilter<"SampleVideo"> | number
+    createdAt?: DateTimeFilter<"SampleVideo"> | Date | string
+    updatedAt?: DateTimeFilter<"SampleVideo"> | Date | string
   }
 
-  export type FounderLogTagOrderByWithRelationInput = {
+  export type SampleVideoOrderByWithRelationInput = {
     id?: SortOrder
-    name?: SortOrder
+    webpageUrl?: SortOrder
+    s3Url?: SortOrder
+    hookCutUrl?: SortOrderInput | SortOrder
+    title?: SortOrder
+    description?: SortOrderInput | SortOrder
+    views?: SortOrder
+    comments?: SortOrder
+    likes?: SortOrder
+    durationSeconds?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
-    entries?: FounderLogEntryTagOrderByRelationAggregateInput
   }
 
-  export type FounderLogTagWhereUniqueInput = Prisma.AtLeast<{
+  export type SampleVideoWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    name?: string
-    AND?: FounderLogTagWhereInput | FounderLogTagWhereInput[]
-    OR?: FounderLogTagWhereInput[]
-    NOT?: FounderLogTagWhereInput | FounderLogTagWhereInput[]
-    createdAt?: DateTimeFilter<"FounderLogTag"> | Date | string
-    updatedAt?: DateTimeFilter<"FounderLogTag"> | Date | string
-    entries?: FounderLogEntryTagListRelationFilter
-  }, "id" | "name">
+    webpageUrl?: string
+    AND?: SampleVideoWhereInput | SampleVideoWhereInput[]
+    OR?: SampleVideoWhereInput[]
+    NOT?: SampleVideoWhereInput | SampleVideoWhereInput[]
+    s3Url?: StringFilter<"SampleVideo"> | string
+    hookCutUrl?: StringNullableFilter<"SampleVideo"> | string | null
+    title?: StringFilter<"SampleVideo"> | string
+    description?: StringNullableFilter<"SampleVideo"> | string | null
+    views?: IntFilter<"SampleVideo"> | number
+    comments?: IntFilter<"SampleVideo"> | number
+    likes?: IntFilter<"SampleVideo"> | number
+    durationSeconds?: IntFilter<"SampleVideo"> | number
+    createdAt?: DateTimeFilter<"SampleVideo"> | Date | string
+    updatedAt?: DateTimeFilter<"SampleVideo"> | Date | string
+  }, "id" | "webpageUrl">
 
-  export type FounderLogTagOrderByWithAggregationInput = {
+  export type SampleVideoOrderByWithAggregationInput = {
     id?: SortOrder
-    name?: SortOrder
+    webpageUrl?: SortOrder
+    s3Url?: SortOrder
+    hookCutUrl?: SortOrderInput | SortOrder
+    title?: SortOrder
+    description?: SortOrderInput | SortOrder
+    views?: SortOrder
+    comments?: SortOrder
+    likes?: SortOrder
+    durationSeconds?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
-    _count?: FounderLogTagCountOrderByAggregateInput
-    _max?: FounderLogTagMaxOrderByAggregateInput
-    _min?: FounderLogTagMinOrderByAggregateInput
+    _count?: SampleVideoCountOrderByAggregateInput
+    _avg?: SampleVideoAvgOrderByAggregateInput
+    _max?: SampleVideoMaxOrderByAggregateInput
+    _min?: SampleVideoMinOrderByAggregateInput
+    _sum?: SampleVideoSumOrderByAggregateInput
   }
 
-  export type FounderLogTagScalarWhereWithAggregatesInput = {
-    AND?: FounderLogTagScalarWhereWithAggregatesInput | FounderLogTagScalarWhereWithAggregatesInput[]
-    OR?: FounderLogTagScalarWhereWithAggregatesInput[]
-    NOT?: FounderLogTagScalarWhereWithAggregatesInput | FounderLogTagScalarWhereWithAggregatesInput[]
-    id?: StringWithAggregatesFilter<"FounderLogTag"> | string
-    name?: StringWithAggregatesFilter<"FounderLogTag"> | string
-    createdAt?: DateTimeWithAggregatesFilter<"FounderLogTag"> | Date | string
-    updatedAt?: DateTimeWithAggregatesFilter<"FounderLogTag"> | Date | string
-  }
-
-  export type FounderLogEntryWhereInput = {
-    AND?: FounderLogEntryWhereInput | FounderLogEntryWhereInput[]
-    OR?: FounderLogEntryWhereInput[]
-    NOT?: FounderLogEntryWhereInput | FounderLogEntryWhereInput[]
-    id?: StringFilter<"FounderLogEntry"> | string
-    userId?: StringFilter<"FounderLogEntry"> | string
-    content?: StringFilter<"FounderLogEntry"> | string
-    upvoteCount?: IntFilter<"FounderLogEntry"> | number
-    createdAt?: DateTimeFilter<"FounderLogEntry"> | Date | string
-    updatedAt?: DateTimeFilter<"FounderLogEntry"> | Date | string
-    user?: XOR<UserScalarRelationFilter, UserWhereInput>
-    tags?: FounderLogEntryTagListRelationFilter
-  }
-
-  export type FounderLogEntryOrderByWithRelationInput = {
-    id?: SortOrder
-    userId?: SortOrder
-    content?: SortOrder
-    upvoteCount?: SortOrder
-    createdAt?: SortOrder
-    updatedAt?: SortOrder
-    user?: UserOrderByWithRelationInput
-    tags?: FounderLogEntryTagOrderByRelationAggregateInput
-  }
-
-  export type FounderLogEntryWhereUniqueInput = Prisma.AtLeast<{
-    id?: string
-    AND?: FounderLogEntryWhereInput | FounderLogEntryWhereInput[]
-    OR?: FounderLogEntryWhereInput[]
-    NOT?: FounderLogEntryWhereInput | FounderLogEntryWhereInput[]
-    userId?: StringFilter<"FounderLogEntry"> | string
-    content?: StringFilter<"FounderLogEntry"> | string
-    upvoteCount?: IntFilter<"FounderLogEntry"> | number
-    createdAt?: DateTimeFilter<"FounderLogEntry"> | Date | string
-    updatedAt?: DateTimeFilter<"FounderLogEntry"> | Date | string
-    user?: XOR<UserScalarRelationFilter, UserWhereInput>
-    tags?: FounderLogEntryTagListRelationFilter
-  }, "id">
-
-  export type FounderLogEntryOrderByWithAggregationInput = {
-    id?: SortOrder
-    userId?: SortOrder
-    content?: SortOrder
-    upvoteCount?: SortOrder
-    createdAt?: SortOrder
-    updatedAt?: SortOrder
-    _count?: FounderLogEntryCountOrderByAggregateInput
-    _avg?: FounderLogEntryAvgOrderByAggregateInput
-    _max?: FounderLogEntryMaxOrderByAggregateInput
-    _min?: FounderLogEntryMinOrderByAggregateInput
-    _sum?: FounderLogEntrySumOrderByAggregateInput
-  }
-
-  export type FounderLogEntryScalarWhereWithAggregatesInput = {
-    AND?: FounderLogEntryScalarWhereWithAggregatesInput | FounderLogEntryScalarWhereWithAggregatesInput[]
-    OR?: FounderLogEntryScalarWhereWithAggregatesInput[]
-    NOT?: FounderLogEntryScalarWhereWithAggregatesInput | FounderLogEntryScalarWhereWithAggregatesInput[]
-    id?: StringWithAggregatesFilter<"FounderLogEntry"> | string
-    userId?: StringWithAggregatesFilter<"FounderLogEntry"> | string
-    content?: StringWithAggregatesFilter<"FounderLogEntry"> | string
-    upvoteCount?: IntWithAggregatesFilter<"FounderLogEntry"> | number
-    createdAt?: DateTimeWithAggregatesFilter<"FounderLogEntry"> | Date | string
-    updatedAt?: DateTimeWithAggregatesFilter<"FounderLogEntry"> | Date | string
-  }
-
-  export type FounderLogEntryTagWhereInput = {
-    AND?: FounderLogEntryTagWhereInput | FounderLogEntryTagWhereInput[]
-    OR?: FounderLogEntryTagWhereInput[]
-    NOT?: FounderLogEntryTagWhereInput | FounderLogEntryTagWhereInput[]
-    id?: StringFilter<"FounderLogEntryTag"> | string
-    entryId?: StringFilter<"FounderLogEntryTag"> | string
-    tagId?: StringFilter<"FounderLogEntryTag"> | string
-    createdAt?: DateTimeFilter<"FounderLogEntryTag"> | Date | string
-    entry?: XOR<FounderLogEntryScalarRelationFilter, FounderLogEntryWhereInput>
-    tag?: XOR<FounderLogTagScalarRelationFilter, FounderLogTagWhereInput>
-  }
-
-  export type FounderLogEntryTagOrderByWithRelationInput = {
-    id?: SortOrder
-    entryId?: SortOrder
-    tagId?: SortOrder
-    createdAt?: SortOrder
-    entry?: FounderLogEntryOrderByWithRelationInput
-    tag?: FounderLogTagOrderByWithRelationInput
-  }
-
-  export type FounderLogEntryTagWhereUniqueInput = Prisma.AtLeast<{
-    id?: string
-    entryId_tagId?: FounderLogEntryTagEntryIdTagIdCompoundUniqueInput
-    AND?: FounderLogEntryTagWhereInput | FounderLogEntryTagWhereInput[]
-    OR?: FounderLogEntryTagWhereInput[]
-    NOT?: FounderLogEntryTagWhereInput | FounderLogEntryTagWhereInput[]
-    entryId?: StringFilter<"FounderLogEntryTag"> | string
-    tagId?: StringFilter<"FounderLogEntryTag"> | string
-    createdAt?: DateTimeFilter<"FounderLogEntryTag"> | Date | string
-    entry?: XOR<FounderLogEntryScalarRelationFilter, FounderLogEntryWhereInput>
-    tag?: XOR<FounderLogTagScalarRelationFilter, FounderLogTagWhereInput>
-  }, "id" | "entryId_tagId">
-
-  export type FounderLogEntryTagOrderByWithAggregationInput = {
-    id?: SortOrder
-    entryId?: SortOrder
-    tagId?: SortOrder
-    createdAt?: SortOrder
-    _count?: FounderLogEntryTagCountOrderByAggregateInput
-    _max?: FounderLogEntryTagMaxOrderByAggregateInput
-    _min?: FounderLogEntryTagMinOrderByAggregateInput
-  }
-
-  export type FounderLogEntryTagScalarWhereWithAggregatesInput = {
-    AND?: FounderLogEntryTagScalarWhereWithAggregatesInput | FounderLogEntryTagScalarWhereWithAggregatesInput[]
-    OR?: FounderLogEntryTagScalarWhereWithAggregatesInput[]
-    NOT?: FounderLogEntryTagScalarWhereWithAggregatesInput | FounderLogEntryTagScalarWhereWithAggregatesInput[]
-    id?: StringWithAggregatesFilter<"FounderLogEntryTag"> | string
-    entryId?: StringWithAggregatesFilter<"FounderLogEntryTag"> | string
-    tagId?: StringWithAggregatesFilter<"FounderLogEntryTag"> | string
-    createdAt?: DateTimeWithAggregatesFilter<"FounderLogEntryTag"> | Date | string
-  }
-
-  export type FounderLogReflectionWhereInput = {
-    AND?: FounderLogReflectionWhereInput | FounderLogReflectionWhereInput[]
-    OR?: FounderLogReflectionWhereInput[]
-    NOT?: FounderLogReflectionWhereInput | FounderLogReflectionWhereInput[]
-    id?: StringFilter<"FounderLogReflection"> | string
-    userId?: StringFilter<"FounderLogReflection"> | string
-    type?: StringFilter<"FounderLogReflection"> | string
-    content?: StringFilter<"FounderLogReflection"> | string
-    createdAt?: DateTimeFilter<"FounderLogReflection"> | Date | string
-    updatedAt?: DateTimeFilter<"FounderLogReflection"> | Date | string
-    user?: XOR<UserScalarRelationFilter, UserWhereInput>
-  }
-
-  export type FounderLogReflectionOrderByWithRelationInput = {
-    id?: SortOrder
-    userId?: SortOrder
-    type?: SortOrder
-    content?: SortOrder
-    createdAt?: SortOrder
-    updatedAt?: SortOrder
-    user?: UserOrderByWithRelationInput
-  }
-
-  export type FounderLogReflectionWhereUniqueInput = Prisma.AtLeast<{
-    id?: string
-    AND?: FounderLogReflectionWhereInput | FounderLogReflectionWhereInput[]
-    OR?: FounderLogReflectionWhereInput[]
-    NOT?: FounderLogReflectionWhereInput | FounderLogReflectionWhereInput[]
-    userId?: StringFilter<"FounderLogReflection"> | string
-    type?: StringFilter<"FounderLogReflection"> | string
-    content?: StringFilter<"FounderLogReflection"> | string
-    createdAt?: DateTimeFilter<"FounderLogReflection"> | Date | string
-    updatedAt?: DateTimeFilter<"FounderLogReflection"> | Date | string
-    user?: XOR<UserScalarRelationFilter, UserWhereInput>
-  }, "id">
-
-  export type FounderLogReflectionOrderByWithAggregationInput = {
-    id?: SortOrder
-    userId?: SortOrder
-    type?: SortOrder
-    content?: SortOrder
-    createdAt?: SortOrder
-    updatedAt?: SortOrder
-    _count?: FounderLogReflectionCountOrderByAggregateInput
-    _max?: FounderLogReflectionMaxOrderByAggregateInput
-    _min?: FounderLogReflectionMinOrderByAggregateInput
-  }
-
-  export type FounderLogReflectionScalarWhereWithAggregatesInput = {
-    AND?: FounderLogReflectionScalarWhereWithAggregatesInput | FounderLogReflectionScalarWhereWithAggregatesInput[]
-    OR?: FounderLogReflectionScalarWhereWithAggregatesInput[]
-    NOT?: FounderLogReflectionScalarWhereWithAggregatesInput | FounderLogReflectionScalarWhereWithAggregatesInput[]
-    id?: StringWithAggregatesFilter<"FounderLogReflection"> | string
-    userId?: StringWithAggregatesFilter<"FounderLogReflection"> | string
-    type?: StringWithAggregatesFilter<"FounderLogReflection"> | string
-    content?: StringWithAggregatesFilter<"FounderLogReflection"> | string
-    createdAt?: DateTimeWithAggregatesFilter<"FounderLogReflection"> | Date | string
-    updatedAt?: DateTimeWithAggregatesFilter<"FounderLogReflection"> | Date | string
+  export type SampleVideoScalarWhereWithAggregatesInput = {
+    AND?: SampleVideoScalarWhereWithAggregatesInput | SampleVideoScalarWhereWithAggregatesInput[]
+    OR?: SampleVideoScalarWhereWithAggregatesInput[]
+    NOT?: SampleVideoScalarWhereWithAggregatesInput | SampleVideoScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"SampleVideo"> | string
+    webpageUrl?: StringWithAggregatesFilter<"SampleVideo"> | string
+    s3Url?: StringWithAggregatesFilter<"SampleVideo"> | string
+    hookCutUrl?: StringNullableWithAggregatesFilter<"SampleVideo"> | string | null
+    title?: StringWithAggregatesFilter<"SampleVideo"> | string
+    description?: StringNullableWithAggregatesFilter<"SampleVideo"> | string | null
+    views?: IntWithAggregatesFilter<"SampleVideo"> | number
+    comments?: IntWithAggregatesFilter<"SampleVideo"> | number
+    likes?: IntWithAggregatesFilter<"SampleVideo"> | number
+    durationSeconds?: IntWithAggregatesFilter<"SampleVideo"> | number
+    createdAt?: DateTimeWithAggregatesFilter<"SampleVideo"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"SampleVideo"> | Date | string
   }
 
   export type PostCreateInput = {
@@ -8604,8 +4771,6 @@ export namespace Prisma {
     stripeUserProperties?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
-    entries?: FounderLogEntryCreateNestedManyWithoutUserInput
-    reflections?: FounderLogReflectionCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -8621,8 +4786,6 @@ export namespace Prisma {
     stripeUserProperties?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
-    entries?: FounderLogEntryUncheckedCreateNestedManyWithoutUserInput
-    reflections?: FounderLogReflectionUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserUpdateInput = {
@@ -8638,8 +4801,6 @@ export namespace Prisma {
     stripeUserProperties?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    entries?: FounderLogEntryUpdateManyWithoutUserNestedInput
-    reflections?: FounderLogReflectionUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -8655,8 +4816,6 @@ export namespace Prisma {
     stripeUserProperties?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    entries?: FounderLogEntryUncheckedUpdateManyWithoutUserNestedInput
-    reflections?: FounderLogReflectionUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -8704,230 +4863,107 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type FounderLogTagCreateInput = {
+  export type SampleVideoCreateInput = {
     id?: string
-    name: string
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    entries?: FounderLogEntryTagCreateNestedManyWithoutTagInput
-  }
-
-  export type FounderLogTagUncheckedCreateInput = {
-    id?: string
-    name: string
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    entries?: FounderLogEntryTagUncheckedCreateNestedManyWithoutTagInput
-  }
-
-  export type FounderLogTagUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    entries?: FounderLogEntryTagUpdateManyWithoutTagNestedInput
-  }
-
-  export type FounderLogTagUncheckedUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    entries?: FounderLogEntryTagUncheckedUpdateManyWithoutTagNestedInput
-  }
-
-  export type FounderLogTagCreateManyInput = {
-    id?: string
-    name: string
+    webpageUrl: string
+    s3Url: string
+    hookCutUrl?: string | null
+    title: string
+    description?: string | null
+    views?: number
+    comments?: number
+    likes?: number
+    durationSeconds: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
 
-  export type FounderLogTagUpdateManyMutationInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type FounderLogTagUncheckedUpdateManyInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type FounderLogEntryCreateInput = {
+  export type SampleVideoUncheckedCreateInput = {
     id?: string
-    content: string
-    upvoteCount?: number
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    user: UserCreateNestedOneWithoutEntriesInput
-    tags?: FounderLogEntryTagCreateNestedManyWithoutEntryInput
-  }
-
-  export type FounderLogEntryUncheckedCreateInput = {
-    id?: string
-    userId: string
-    content: string
-    upvoteCount?: number
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    tags?: FounderLogEntryTagUncheckedCreateNestedManyWithoutEntryInput
-  }
-
-  export type FounderLogEntryUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    content?: StringFieldUpdateOperationsInput | string
-    upvoteCount?: IntFieldUpdateOperationsInput | number
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    user?: UserUpdateOneRequiredWithoutEntriesNestedInput
-    tags?: FounderLogEntryTagUpdateManyWithoutEntryNestedInput
-  }
-
-  export type FounderLogEntryUncheckedUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    userId?: StringFieldUpdateOperationsInput | string
-    content?: StringFieldUpdateOperationsInput | string
-    upvoteCount?: IntFieldUpdateOperationsInput | number
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    tags?: FounderLogEntryTagUncheckedUpdateManyWithoutEntryNestedInput
-  }
-
-  export type FounderLogEntryCreateManyInput = {
-    id?: string
-    userId: string
-    content: string
-    upvoteCount?: number
+    webpageUrl: string
+    s3Url: string
+    hookCutUrl?: string | null
+    title: string
+    description?: string | null
+    views?: number
+    comments?: number
+    likes?: number
+    durationSeconds: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
 
-  export type FounderLogEntryUpdateManyMutationInput = {
+  export type SampleVideoUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    content?: StringFieldUpdateOperationsInput | string
-    upvoteCount?: IntFieldUpdateOperationsInput | number
+    webpageUrl?: StringFieldUpdateOperationsInput | string
+    s3Url?: StringFieldUpdateOperationsInput | string
+    hookCutUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    views?: IntFieldUpdateOperationsInput | number
+    comments?: IntFieldUpdateOperationsInput | number
+    likes?: IntFieldUpdateOperationsInput | number
+    durationSeconds?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type FounderLogEntryUncheckedUpdateManyInput = {
+  export type SampleVideoUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    userId?: StringFieldUpdateOperationsInput | string
-    content?: StringFieldUpdateOperationsInput | string
-    upvoteCount?: IntFieldUpdateOperationsInput | number
+    webpageUrl?: StringFieldUpdateOperationsInput | string
+    s3Url?: StringFieldUpdateOperationsInput | string
+    hookCutUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    views?: IntFieldUpdateOperationsInput | number
+    comments?: IntFieldUpdateOperationsInput | number
+    likes?: IntFieldUpdateOperationsInput | number
+    durationSeconds?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type FounderLogEntryTagCreateInput = {
+  export type SampleVideoCreateManyInput = {
     id?: string
-    createdAt?: Date | string
-    entry: FounderLogEntryCreateNestedOneWithoutTagsInput
-    tag: FounderLogTagCreateNestedOneWithoutEntriesInput
-  }
-
-  export type FounderLogEntryTagUncheckedCreateInput = {
-    id?: string
-    entryId: string
-    tagId: string
-    createdAt?: Date | string
-  }
-
-  export type FounderLogEntryTagUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    entry?: FounderLogEntryUpdateOneRequiredWithoutTagsNestedInput
-    tag?: FounderLogTagUpdateOneRequiredWithoutEntriesNestedInput
-  }
-
-  export type FounderLogEntryTagUncheckedUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    entryId?: StringFieldUpdateOperationsInput | string
-    tagId?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type FounderLogEntryTagCreateManyInput = {
-    id?: string
-    entryId: string
-    tagId: string
-    createdAt?: Date | string
-  }
-
-  export type FounderLogEntryTagUpdateManyMutationInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type FounderLogEntryTagUncheckedUpdateManyInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    entryId?: StringFieldUpdateOperationsInput | string
-    tagId?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type FounderLogReflectionCreateInput = {
-    id?: string
-    type: string
-    content: string
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    user: UserCreateNestedOneWithoutReflectionsInput
-  }
-
-  export type FounderLogReflectionUncheckedCreateInput = {
-    id?: string
-    userId: string
-    type: string
-    content: string
+    webpageUrl: string
+    s3Url: string
+    hookCutUrl?: string | null
+    title: string
+    description?: string | null
+    views?: number
+    comments?: number
+    likes?: number
+    durationSeconds: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
 
-  export type FounderLogReflectionUpdateInput = {
+  export type SampleVideoUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
-    type?: StringFieldUpdateOperationsInput | string
-    content?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    user?: UserUpdateOneRequiredWithoutReflectionsNestedInput
-  }
-
-  export type FounderLogReflectionUncheckedUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    userId?: StringFieldUpdateOperationsInput | string
-    type?: StringFieldUpdateOperationsInput | string
-    content?: StringFieldUpdateOperationsInput | string
+    webpageUrl?: StringFieldUpdateOperationsInput | string
+    s3Url?: StringFieldUpdateOperationsInput | string
+    hookCutUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    views?: IntFieldUpdateOperationsInput | number
+    comments?: IntFieldUpdateOperationsInput | number
+    likes?: IntFieldUpdateOperationsInput | number
+    durationSeconds?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type FounderLogReflectionCreateManyInput = {
-    id?: string
-    userId: string
-    type: string
-    content: string
-    createdAt?: Date | string
-    updatedAt?: Date | string
-  }
-
-  export type FounderLogReflectionUpdateManyMutationInput = {
+  export type SampleVideoUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
-    type?: StringFieldUpdateOperationsInput | string
-    content?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type FounderLogReflectionUncheckedUpdateManyInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    userId?: StringFieldUpdateOperationsInput | string
-    type?: StringFieldUpdateOperationsInput | string
-    content?: StringFieldUpdateOperationsInput | string
+    webpageUrl?: StringFieldUpdateOperationsInput | string
+    s3Url?: StringFieldUpdateOperationsInput | string
+    hookCutUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    views?: IntFieldUpdateOperationsInput | number
+    comments?: IntFieldUpdateOperationsInput | number
+    likes?: IntFieldUpdateOperationsInput | number
+    durationSeconds?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -9059,29 +5095,9 @@ export namespace Prisma {
     not?: NestedEnumAccessTypeFilter<$PrismaModel> | $Enums.AccessType
   }
 
-  export type FounderLogEntryListRelationFilter = {
-    every?: FounderLogEntryWhereInput
-    some?: FounderLogEntryWhereInput
-    none?: FounderLogEntryWhereInput
-  }
-
-  export type FounderLogReflectionListRelationFilter = {
-    every?: FounderLogReflectionWhereInput
-    some?: FounderLogReflectionWhereInput
-    none?: FounderLogReflectionWhereInput
-  }
-
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
-  }
-
-  export type FounderLogEntryOrderByRelationAggregateInput = {
-    _count?: SortOrder
-  }
-
-  export type FounderLogReflectionOrderByRelationAggregateInput = {
-    _count?: SortOrder
   }
 
   export type UserCountOrderByAggregateInput = {
@@ -9179,37 +5195,6 @@ export namespace Prisma {
     _max?: NestedEnumAccessTypeFilter<$PrismaModel>
   }
 
-  export type FounderLogEntryTagListRelationFilter = {
-    every?: FounderLogEntryTagWhereInput
-    some?: FounderLogEntryTagWhereInput
-    none?: FounderLogEntryTagWhereInput
-  }
-
-  export type FounderLogEntryTagOrderByRelationAggregateInput = {
-    _count?: SortOrder
-  }
-
-  export type FounderLogTagCountOrderByAggregateInput = {
-    id?: SortOrder
-    name?: SortOrder
-    createdAt?: SortOrder
-    updatedAt?: SortOrder
-  }
-
-  export type FounderLogTagMaxOrderByAggregateInput = {
-    id?: SortOrder
-    name?: SortOrder
-    createdAt?: SortOrder
-    updatedAt?: SortOrder
-  }
-
-  export type FounderLogTagMinOrderByAggregateInput = {
-    id?: SortOrder
-    name?: SortOrder
-    createdAt?: SortOrder
-    updatedAt?: SortOrder
-  }
-
   export type IntFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
     in?: number[] | ListIntFieldRefInput<$PrismaModel>
@@ -9221,44 +5206,63 @@ export namespace Prisma {
     not?: NestedIntFilter<$PrismaModel> | number
   }
 
-  export type UserScalarRelationFilter = {
-    is?: UserWhereInput
-    isNot?: UserWhereInput
-  }
-
-  export type FounderLogEntryCountOrderByAggregateInput = {
+  export type SampleVideoCountOrderByAggregateInput = {
     id?: SortOrder
-    userId?: SortOrder
-    content?: SortOrder
-    upvoteCount?: SortOrder
+    webpageUrl?: SortOrder
+    s3Url?: SortOrder
+    hookCutUrl?: SortOrder
+    title?: SortOrder
+    description?: SortOrder
+    views?: SortOrder
+    comments?: SortOrder
+    likes?: SortOrder
+    durationSeconds?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
 
-  export type FounderLogEntryAvgOrderByAggregateInput = {
-    upvoteCount?: SortOrder
+  export type SampleVideoAvgOrderByAggregateInput = {
+    views?: SortOrder
+    comments?: SortOrder
+    likes?: SortOrder
+    durationSeconds?: SortOrder
   }
 
-  export type FounderLogEntryMaxOrderByAggregateInput = {
+  export type SampleVideoMaxOrderByAggregateInput = {
     id?: SortOrder
-    userId?: SortOrder
-    content?: SortOrder
-    upvoteCount?: SortOrder
+    webpageUrl?: SortOrder
+    s3Url?: SortOrder
+    hookCutUrl?: SortOrder
+    title?: SortOrder
+    description?: SortOrder
+    views?: SortOrder
+    comments?: SortOrder
+    likes?: SortOrder
+    durationSeconds?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
 
-  export type FounderLogEntryMinOrderByAggregateInput = {
+  export type SampleVideoMinOrderByAggregateInput = {
     id?: SortOrder
-    userId?: SortOrder
-    content?: SortOrder
-    upvoteCount?: SortOrder
+    webpageUrl?: SortOrder
+    s3Url?: SortOrder
+    hookCutUrl?: SortOrder
+    title?: SortOrder
+    description?: SortOrder
+    views?: SortOrder
+    comments?: SortOrder
+    likes?: SortOrder
+    durationSeconds?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
 
-  export type FounderLogEntrySumOrderByAggregateInput = {
-    upvoteCount?: SortOrder
+  export type SampleVideoSumOrderByAggregateInput = {
+    views?: SortOrder
+    comments?: SortOrder
+    likes?: SortOrder
+    durationSeconds?: SortOrder
   }
 
   export type IntWithAggregatesFilter<$PrismaModel = never> = {
@@ -9277,103 +5281,12 @@ export namespace Prisma {
     _max?: NestedIntFilter<$PrismaModel>
   }
 
-  export type FounderLogEntryScalarRelationFilter = {
-    is?: FounderLogEntryWhereInput
-    isNot?: FounderLogEntryWhereInput
-  }
-
-  export type FounderLogTagScalarRelationFilter = {
-    is?: FounderLogTagWhereInput
-    isNot?: FounderLogTagWhereInput
-  }
-
-  export type FounderLogEntryTagEntryIdTagIdCompoundUniqueInput = {
-    entryId: string
-    tagId: string
-  }
-
-  export type FounderLogEntryTagCountOrderByAggregateInput = {
-    id?: SortOrder
-    entryId?: SortOrder
-    tagId?: SortOrder
-    createdAt?: SortOrder
-  }
-
-  export type FounderLogEntryTagMaxOrderByAggregateInput = {
-    id?: SortOrder
-    entryId?: SortOrder
-    tagId?: SortOrder
-    createdAt?: SortOrder
-  }
-
-  export type FounderLogEntryTagMinOrderByAggregateInput = {
-    id?: SortOrder
-    entryId?: SortOrder
-    tagId?: SortOrder
-    createdAt?: SortOrder
-  }
-
-  export type FounderLogReflectionCountOrderByAggregateInput = {
-    id?: SortOrder
-    userId?: SortOrder
-    type?: SortOrder
-    content?: SortOrder
-    createdAt?: SortOrder
-    updatedAt?: SortOrder
-  }
-
-  export type FounderLogReflectionMaxOrderByAggregateInput = {
-    id?: SortOrder
-    userId?: SortOrder
-    type?: SortOrder
-    content?: SortOrder
-    createdAt?: SortOrder
-    updatedAt?: SortOrder
-  }
-
-  export type FounderLogReflectionMinOrderByAggregateInput = {
-    id?: SortOrder
-    userId?: SortOrder
-    type?: SortOrder
-    content?: SortOrder
-    createdAt?: SortOrder
-    updatedAt?: SortOrder
-  }
-
   export type StringFieldUpdateOperationsInput = {
     set?: string
   }
 
   export type DateTimeFieldUpdateOperationsInput = {
     set?: Date | string
-  }
-
-  export type FounderLogEntryCreateNestedManyWithoutUserInput = {
-    create?: XOR<FounderLogEntryCreateWithoutUserInput, FounderLogEntryUncheckedCreateWithoutUserInput> | FounderLogEntryCreateWithoutUserInput[] | FounderLogEntryUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: FounderLogEntryCreateOrConnectWithoutUserInput | FounderLogEntryCreateOrConnectWithoutUserInput[]
-    createMany?: FounderLogEntryCreateManyUserInputEnvelope
-    connect?: FounderLogEntryWhereUniqueInput | FounderLogEntryWhereUniqueInput[]
-  }
-
-  export type FounderLogReflectionCreateNestedManyWithoutUserInput = {
-    create?: XOR<FounderLogReflectionCreateWithoutUserInput, FounderLogReflectionUncheckedCreateWithoutUserInput> | FounderLogReflectionCreateWithoutUserInput[] | FounderLogReflectionUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: FounderLogReflectionCreateOrConnectWithoutUserInput | FounderLogReflectionCreateOrConnectWithoutUserInput[]
-    createMany?: FounderLogReflectionCreateManyUserInputEnvelope
-    connect?: FounderLogReflectionWhereUniqueInput | FounderLogReflectionWhereUniqueInput[]
-  }
-
-  export type FounderLogEntryUncheckedCreateNestedManyWithoutUserInput = {
-    create?: XOR<FounderLogEntryCreateWithoutUserInput, FounderLogEntryUncheckedCreateWithoutUserInput> | FounderLogEntryCreateWithoutUserInput[] | FounderLogEntryUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: FounderLogEntryCreateOrConnectWithoutUserInput | FounderLogEntryCreateOrConnectWithoutUserInput[]
-    createMany?: FounderLogEntryCreateManyUserInputEnvelope
-    connect?: FounderLogEntryWhereUniqueInput | FounderLogEntryWhereUniqueInput[]
-  }
-
-  export type FounderLogReflectionUncheckedCreateNestedManyWithoutUserInput = {
-    create?: XOR<FounderLogReflectionCreateWithoutUserInput, FounderLogReflectionUncheckedCreateWithoutUserInput> | FounderLogReflectionCreateWithoutUserInput[] | FounderLogReflectionUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: FounderLogReflectionCreateOrConnectWithoutUserInput | FounderLogReflectionCreateOrConnectWithoutUserInput[]
-    createMany?: FounderLogReflectionCreateManyUserInputEnvelope
-    connect?: FounderLogReflectionWhereUniqueInput | FounderLogReflectionWhereUniqueInput[]
   }
 
   export type NullableStringFieldUpdateOperationsInput = {
@@ -9384,208 +5297,12 @@ export namespace Prisma {
     set?: $Enums.AccessType
   }
 
-  export type FounderLogEntryUpdateManyWithoutUserNestedInput = {
-    create?: XOR<FounderLogEntryCreateWithoutUserInput, FounderLogEntryUncheckedCreateWithoutUserInput> | FounderLogEntryCreateWithoutUserInput[] | FounderLogEntryUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: FounderLogEntryCreateOrConnectWithoutUserInput | FounderLogEntryCreateOrConnectWithoutUserInput[]
-    upsert?: FounderLogEntryUpsertWithWhereUniqueWithoutUserInput | FounderLogEntryUpsertWithWhereUniqueWithoutUserInput[]
-    createMany?: FounderLogEntryCreateManyUserInputEnvelope
-    set?: FounderLogEntryWhereUniqueInput | FounderLogEntryWhereUniqueInput[]
-    disconnect?: FounderLogEntryWhereUniqueInput | FounderLogEntryWhereUniqueInput[]
-    delete?: FounderLogEntryWhereUniqueInput | FounderLogEntryWhereUniqueInput[]
-    connect?: FounderLogEntryWhereUniqueInput | FounderLogEntryWhereUniqueInput[]
-    update?: FounderLogEntryUpdateWithWhereUniqueWithoutUserInput | FounderLogEntryUpdateWithWhereUniqueWithoutUserInput[]
-    updateMany?: FounderLogEntryUpdateManyWithWhereWithoutUserInput | FounderLogEntryUpdateManyWithWhereWithoutUserInput[]
-    deleteMany?: FounderLogEntryScalarWhereInput | FounderLogEntryScalarWhereInput[]
-  }
-
-  export type FounderLogReflectionUpdateManyWithoutUserNestedInput = {
-    create?: XOR<FounderLogReflectionCreateWithoutUserInput, FounderLogReflectionUncheckedCreateWithoutUserInput> | FounderLogReflectionCreateWithoutUserInput[] | FounderLogReflectionUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: FounderLogReflectionCreateOrConnectWithoutUserInput | FounderLogReflectionCreateOrConnectWithoutUserInput[]
-    upsert?: FounderLogReflectionUpsertWithWhereUniqueWithoutUserInput | FounderLogReflectionUpsertWithWhereUniqueWithoutUserInput[]
-    createMany?: FounderLogReflectionCreateManyUserInputEnvelope
-    set?: FounderLogReflectionWhereUniqueInput | FounderLogReflectionWhereUniqueInput[]
-    disconnect?: FounderLogReflectionWhereUniqueInput | FounderLogReflectionWhereUniqueInput[]
-    delete?: FounderLogReflectionWhereUniqueInput | FounderLogReflectionWhereUniqueInput[]
-    connect?: FounderLogReflectionWhereUniqueInput | FounderLogReflectionWhereUniqueInput[]
-    update?: FounderLogReflectionUpdateWithWhereUniqueWithoutUserInput | FounderLogReflectionUpdateWithWhereUniqueWithoutUserInput[]
-    updateMany?: FounderLogReflectionUpdateManyWithWhereWithoutUserInput | FounderLogReflectionUpdateManyWithWhereWithoutUserInput[]
-    deleteMany?: FounderLogReflectionScalarWhereInput | FounderLogReflectionScalarWhereInput[]
-  }
-
-  export type FounderLogEntryUncheckedUpdateManyWithoutUserNestedInput = {
-    create?: XOR<FounderLogEntryCreateWithoutUserInput, FounderLogEntryUncheckedCreateWithoutUserInput> | FounderLogEntryCreateWithoutUserInput[] | FounderLogEntryUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: FounderLogEntryCreateOrConnectWithoutUserInput | FounderLogEntryCreateOrConnectWithoutUserInput[]
-    upsert?: FounderLogEntryUpsertWithWhereUniqueWithoutUserInput | FounderLogEntryUpsertWithWhereUniqueWithoutUserInput[]
-    createMany?: FounderLogEntryCreateManyUserInputEnvelope
-    set?: FounderLogEntryWhereUniqueInput | FounderLogEntryWhereUniqueInput[]
-    disconnect?: FounderLogEntryWhereUniqueInput | FounderLogEntryWhereUniqueInput[]
-    delete?: FounderLogEntryWhereUniqueInput | FounderLogEntryWhereUniqueInput[]
-    connect?: FounderLogEntryWhereUniqueInput | FounderLogEntryWhereUniqueInput[]
-    update?: FounderLogEntryUpdateWithWhereUniqueWithoutUserInput | FounderLogEntryUpdateWithWhereUniqueWithoutUserInput[]
-    updateMany?: FounderLogEntryUpdateManyWithWhereWithoutUserInput | FounderLogEntryUpdateManyWithWhereWithoutUserInput[]
-    deleteMany?: FounderLogEntryScalarWhereInput | FounderLogEntryScalarWhereInput[]
-  }
-
-  export type FounderLogReflectionUncheckedUpdateManyWithoutUserNestedInput = {
-    create?: XOR<FounderLogReflectionCreateWithoutUserInput, FounderLogReflectionUncheckedCreateWithoutUserInput> | FounderLogReflectionCreateWithoutUserInput[] | FounderLogReflectionUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: FounderLogReflectionCreateOrConnectWithoutUserInput | FounderLogReflectionCreateOrConnectWithoutUserInput[]
-    upsert?: FounderLogReflectionUpsertWithWhereUniqueWithoutUserInput | FounderLogReflectionUpsertWithWhereUniqueWithoutUserInput[]
-    createMany?: FounderLogReflectionCreateManyUserInputEnvelope
-    set?: FounderLogReflectionWhereUniqueInput | FounderLogReflectionWhereUniqueInput[]
-    disconnect?: FounderLogReflectionWhereUniqueInput | FounderLogReflectionWhereUniqueInput[]
-    delete?: FounderLogReflectionWhereUniqueInput | FounderLogReflectionWhereUniqueInput[]
-    connect?: FounderLogReflectionWhereUniqueInput | FounderLogReflectionWhereUniqueInput[]
-    update?: FounderLogReflectionUpdateWithWhereUniqueWithoutUserInput | FounderLogReflectionUpdateWithWhereUniqueWithoutUserInput[]
-    updateMany?: FounderLogReflectionUpdateManyWithWhereWithoutUserInput | FounderLogReflectionUpdateManyWithWhereWithoutUserInput[]
-    deleteMany?: FounderLogReflectionScalarWhereInput | FounderLogReflectionScalarWhereInput[]
-  }
-
-  export type FounderLogEntryTagCreateNestedManyWithoutTagInput = {
-    create?: XOR<FounderLogEntryTagCreateWithoutTagInput, FounderLogEntryTagUncheckedCreateWithoutTagInput> | FounderLogEntryTagCreateWithoutTagInput[] | FounderLogEntryTagUncheckedCreateWithoutTagInput[]
-    connectOrCreate?: FounderLogEntryTagCreateOrConnectWithoutTagInput | FounderLogEntryTagCreateOrConnectWithoutTagInput[]
-    createMany?: FounderLogEntryTagCreateManyTagInputEnvelope
-    connect?: FounderLogEntryTagWhereUniqueInput | FounderLogEntryTagWhereUniqueInput[]
-  }
-
-  export type FounderLogEntryTagUncheckedCreateNestedManyWithoutTagInput = {
-    create?: XOR<FounderLogEntryTagCreateWithoutTagInput, FounderLogEntryTagUncheckedCreateWithoutTagInput> | FounderLogEntryTagCreateWithoutTagInput[] | FounderLogEntryTagUncheckedCreateWithoutTagInput[]
-    connectOrCreate?: FounderLogEntryTagCreateOrConnectWithoutTagInput | FounderLogEntryTagCreateOrConnectWithoutTagInput[]
-    createMany?: FounderLogEntryTagCreateManyTagInputEnvelope
-    connect?: FounderLogEntryTagWhereUniqueInput | FounderLogEntryTagWhereUniqueInput[]
-  }
-
-  export type FounderLogEntryTagUpdateManyWithoutTagNestedInput = {
-    create?: XOR<FounderLogEntryTagCreateWithoutTagInput, FounderLogEntryTagUncheckedCreateWithoutTagInput> | FounderLogEntryTagCreateWithoutTagInput[] | FounderLogEntryTagUncheckedCreateWithoutTagInput[]
-    connectOrCreate?: FounderLogEntryTagCreateOrConnectWithoutTagInput | FounderLogEntryTagCreateOrConnectWithoutTagInput[]
-    upsert?: FounderLogEntryTagUpsertWithWhereUniqueWithoutTagInput | FounderLogEntryTagUpsertWithWhereUniqueWithoutTagInput[]
-    createMany?: FounderLogEntryTagCreateManyTagInputEnvelope
-    set?: FounderLogEntryTagWhereUniqueInput | FounderLogEntryTagWhereUniqueInput[]
-    disconnect?: FounderLogEntryTagWhereUniqueInput | FounderLogEntryTagWhereUniqueInput[]
-    delete?: FounderLogEntryTagWhereUniqueInput | FounderLogEntryTagWhereUniqueInput[]
-    connect?: FounderLogEntryTagWhereUniqueInput | FounderLogEntryTagWhereUniqueInput[]
-    update?: FounderLogEntryTagUpdateWithWhereUniqueWithoutTagInput | FounderLogEntryTagUpdateWithWhereUniqueWithoutTagInput[]
-    updateMany?: FounderLogEntryTagUpdateManyWithWhereWithoutTagInput | FounderLogEntryTagUpdateManyWithWhereWithoutTagInput[]
-    deleteMany?: FounderLogEntryTagScalarWhereInput | FounderLogEntryTagScalarWhereInput[]
-  }
-
-  export type FounderLogEntryTagUncheckedUpdateManyWithoutTagNestedInput = {
-    create?: XOR<FounderLogEntryTagCreateWithoutTagInput, FounderLogEntryTagUncheckedCreateWithoutTagInput> | FounderLogEntryTagCreateWithoutTagInput[] | FounderLogEntryTagUncheckedCreateWithoutTagInput[]
-    connectOrCreate?: FounderLogEntryTagCreateOrConnectWithoutTagInput | FounderLogEntryTagCreateOrConnectWithoutTagInput[]
-    upsert?: FounderLogEntryTagUpsertWithWhereUniqueWithoutTagInput | FounderLogEntryTagUpsertWithWhereUniqueWithoutTagInput[]
-    createMany?: FounderLogEntryTagCreateManyTagInputEnvelope
-    set?: FounderLogEntryTagWhereUniqueInput | FounderLogEntryTagWhereUniqueInput[]
-    disconnect?: FounderLogEntryTagWhereUniqueInput | FounderLogEntryTagWhereUniqueInput[]
-    delete?: FounderLogEntryTagWhereUniqueInput | FounderLogEntryTagWhereUniqueInput[]
-    connect?: FounderLogEntryTagWhereUniqueInput | FounderLogEntryTagWhereUniqueInput[]
-    update?: FounderLogEntryTagUpdateWithWhereUniqueWithoutTagInput | FounderLogEntryTagUpdateWithWhereUniqueWithoutTagInput[]
-    updateMany?: FounderLogEntryTagUpdateManyWithWhereWithoutTagInput | FounderLogEntryTagUpdateManyWithWhereWithoutTagInput[]
-    deleteMany?: FounderLogEntryTagScalarWhereInput | FounderLogEntryTagScalarWhereInput[]
-  }
-
-  export type UserCreateNestedOneWithoutEntriesInput = {
-    create?: XOR<UserCreateWithoutEntriesInput, UserUncheckedCreateWithoutEntriesInput>
-    connectOrCreate?: UserCreateOrConnectWithoutEntriesInput
-    connect?: UserWhereUniqueInput
-  }
-
-  export type FounderLogEntryTagCreateNestedManyWithoutEntryInput = {
-    create?: XOR<FounderLogEntryTagCreateWithoutEntryInput, FounderLogEntryTagUncheckedCreateWithoutEntryInput> | FounderLogEntryTagCreateWithoutEntryInput[] | FounderLogEntryTagUncheckedCreateWithoutEntryInput[]
-    connectOrCreate?: FounderLogEntryTagCreateOrConnectWithoutEntryInput | FounderLogEntryTagCreateOrConnectWithoutEntryInput[]
-    createMany?: FounderLogEntryTagCreateManyEntryInputEnvelope
-    connect?: FounderLogEntryTagWhereUniqueInput | FounderLogEntryTagWhereUniqueInput[]
-  }
-
-  export type FounderLogEntryTagUncheckedCreateNestedManyWithoutEntryInput = {
-    create?: XOR<FounderLogEntryTagCreateWithoutEntryInput, FounderLogEntryTagUncheckedCreateWithoutEntryInput> | FounderLogEntryTagCreateWithoutEntryInput[] | FounderLogEntryTagUncheckedCreateWithoutEntryInput[]
-    connectOrCreate?: FounderLogEntryTagCreateOrConnectWithoutEntryInput | FounderLogEntryTagCreateOrConnectWithoutEntryInput[]
-    createMany?: FounderLogEntryTagCreateManyEntryInputEnvelope
-    connect?: FounderLogEntryTagWhereUniqueInput | FounderLogEntryTagWhereUniqueInput[]
-  }
-
   export type IntFieldUpdateOperationsInput = {
     set?: number
     increment?: number
     decrement?: number
     multiply?: number
     divide?: number
-  }
-
-  export type UserUpdateOneRequiredWithoutEntriesNestedInput = {
-    create?: XOR<UserCreateWithoutEntriesInput, UserUncheckedCreateWithoutEntriesInput>
-    connectOrCreate?: UserCreateOrConnectWithoutEntriesInput
-    upsert?: UserUpsertWithoutEntriesInput
-    connect?: UserWhereUniqueInput
-    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutEntriesInput, UserUpdateWithoutEntriesInput>, UserUncheckedUpdateWithoutEntriesInput>
-  }
-
-  export type FounderLogEntryTagUpdateManyWithoutEntryNestedInput = {
-    create?: XOR<FounderLogEntryTagCreateWithoutEntryInput, FounderLogEntryTagUncheckedCreateWithoutEntryInput> | FounderLogEntryTagCreateWithoutEntryInput[] | FounderLogEntryTagUncheckedCreateWithoutEntryInput[]
-    connectOrCreate?: FounderLogEntryTagCreateOrConnectWithoutEntryInput | FounderLogEntryTagCreateOrConnectWithoutEntryInput[]
-    upsert?: FounderLogEntryTagUpsertWithWhereUniqueWithoutEntryInput | FounderLogEntryTagUpsertWithWhereUniqueWithoutEntryInput[]
-    createMany?: FounderLogEntryTagCreateManyEntryInputEnvelope
-    set?: FounderLogEntryTagWhereUniqueInput | FounderLogEntryTagWhereUniqueInput[]
-    disconnect?: FounderLogEntryTagWhereUniqueInput | FounderLogEntryTagWhereUniqueInput[]
-    delete?: FounderLogEntryTagWhereUniqueInput | FounderLogEntryTagWhereUniqueInput[]
-    connect?: FounderLogEntryTagWhereUniqueInput | FounderLogEntryTagWhereUniqueInput[]
-    update?: FounderLogEntryTagUpdateWithWhereUniqueWithoutEntryInput | FounderLogEntryTagUpdateWithWhereUniqueWithoutEntryInput[]
-    updateMany?: FounderLogEntryTagUpdateManyWithWhereWithoutEntryInput | FounderLogEntryTagUpdateManyWithWhereWithoutEntryInput[]
-    deleteMany?: FounderLogEntryTagScalarWhereInput | FounderLogEntryTagScalarWhereInput[]
-  }
-
-  export type FounderLogEntryTagUncheckedUpdateManyWithoutEntryNestedInput = {
-    create?: XOR<FounderLogEntryTagCreateWithoutEntryInput, FounderLogEntryTagUncheckedCreateWithoutEntryInput> | FounderLogEntryTagCreateWithoutEntryInput[] | FounderLogEntryTagUncheckedCreateWithoutEntryInput[]
-    connectOrCreate?: FounderLogEntryTagCreateOrConnectWithoutEntryInput | FounderLogEntryTagCreateOrConnectWithoutEntryInput[]
-    upsert?: FounderLogEntryTagUpsertWithWhereUniqueWithoutEntryInput | FounderLogEntryTagUpsertWithWhereUniqueWithoutEntryInput[]
-    createMany?: FounderLogEntryTagCreateManyEntryInputEnvelope
-    set?: FounderLogEntryTagWhereUniqueInput | FounderLogEntryTagWhereUniqueInput[]
-    disconnect?: FounderLogEntryTagWhereUniqueInput | FounderLogEntryTagWhereUniqueInput[]
-    delete?: FounderLogEntryTagWhereUniqueInput | FounderLogEntryTagWhereUniqueInput[]
-    connect?: FounderLogEntryTagWhereUniqueInput | FounderLogEntryTagWhereUniqueInput[]
-    update?: FounderLogEntryTagUpdateWithWhereUniqueWithoutEntryInput | FounderLogEntryTagUpdateWithWhereUniqueWithoutEntryInput[]
-    updateMany?: FounderLogEntryTagUpdateManyWithWhereWithoutEntryInput | FounderLogEntryTagUpdateManyWithWhereWithoutEntryInput[]
-    deleteMany?: FounderLogEntryTagScalarWhereInput | FounderLogEntryTagScalarWhereInput[]
-  }
-
-  export type FounderLogEntryCreateNestedOneWithoutTagsInput = {
-    create?: XOR<FounderLogEntryCreateWithoutTagsInput, FounderLogEntryUncheckedCreateWithoutTagsInput>
-    connectOrCreate?: FounderLogEntryCreateOrConnectWithoutTagsInput
-    connect?: FounderLogEntryWhereUniqueInput
-  }
-
-  export type FounderLogTagCreateNestedOneWithoutEntriesInput = {
-    create?: XOR<FounderLogTagCreateWithoutEntriesInput, FounderLogTagUncheckedCreateWithoutEntriesInput>
-    connectOrCreate?: FounderLogTagCreateOrConnectWithoutEntriesInput
-    connect?: FounderLogTagWhereUniqueInput
-  }
-
-  export type FounderLogEntryUpdateOneRequiredWithoutTagsNestedInput = {
-    create?: XOR<FounderLogEntryCreateWithoutTagsInput, FounderLogEntryUncheckedCreateWithoutTagsInput>
-    connectOrCreate?: FounderLogEntryCreateOrConnectWithoutTagsInput
-    upsert?: FounderLogEntryUpsertWithoutTagsInput
-    connect?: FounderLogEntryWhereUniqueInput
-    update?: XOR<XOR<FounderLogEntryUpdateToOneWithWhereWithoutTagsInput, FounderLogEntryUpdateWithoutTagsInput>, FounderLogEntryUncheckedUpdateWithoutTagsInput>
-  }
-
-  export type FounderLogTagUpdateOneRequiredWithoutEntriesNestedInput = {
-    create?: XOR<FounderLogTagCreateWithoutEntriesInput, FounderLogTagUncheckedCreateWithoutEntriesInput>
-    connectOrCreate?: FounderLogTagCreateOrConnectWithoutEntriesInput
-    upsert?: FounderLogTagUpsertWithoutEntriesInput
-    connect?: FounderLogTagWhereUniqueInput
-    update?: XOR<XOR<FounderLogTagUpdateToOneWithWhereWithoutEntriesInput, FounderLogTagUpdateWithoutEntriesInput>, FounderLogTagUncheckedUpdateWithoutEntriesInput>
-  }
-
-  export type UserCreateNestedOneWithoutReflectionsInput = {
-    create?: XOR<UserCreateWithoutReflectionsInput, UserUncheckedCreateWithoutReflectionsInput>
-    connectOrCreate?: UserCreateOrConnectWithoutReflectionsInput
-    connect?: UserWhereUniqueInput
-  }
-
-  export type UserUpdateOneRequiredWithoutReflectionsNestedInput = {
-    create?: XOR<UserCreateWithoutReflectionsInput, UserUncheckedCreateWithoutReflectionsInput>
-    connectOrCreate?: UserCreateOrConnectWithoutReflectionsInput
-    upsert?: UserUpsertWithoutReflectionsInput
-    connect?: UserWhereUniqueInput
-    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutReflectionsInput, UserUpdateWithoutReflectionsInput>, UserUncheckedUpdateWithoutReflectionsInput>
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -9762,572 +5479,6 @@ export namespace Prisma {
     gt?: number | FloatFieldRefInput<$PrismaModel>
     gte?: number | FloatFieldRefInput<$PrismaModel>
     not?: NestedFloatFilter<$PrismaModel> | number
-  }
-
-  export type FounderLogEntryCreateWithoutUserInput = {
-    id?: string
-    content: string
-    upvoteCount?: number
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    tags?: FounderLogEntryTagCreateNestedManyWithoutEntryInput
-  }
-
-  export type FounderLogEntryUncheckedCreateWithoutUserInput = {
-    id?: string
-    content: string
-    upvoteCount?: number
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    tags?: FounderLogEntryTagUncheckedCreateNestedManyWithoutEntryInput
-  }
-
-  export type FounderLogEntryCreateOrConnectWithoutUserInput = {
-    where: FounderLogEntryWhereUniqueInput
-    create: XOR<FounderLogEntryCreateWithoutUserInput, FounderLogEntryUncheckedCreateWithoutUserInput>
-  }
-
-  export type FounderLogEntryCreateManyUserInputEnvelope = {
-    data: FounderLogEntryCreateManyUserInput | FounderLogEntryCreateManyUserInput[]
-    skipDuplicates?: boolean
-  }
-
-  export type FounderLogReflectionCreateWithoutUserInput = {
-    id?: string
-    type: string
-    content: string
-    createdAt?: Date | string
-    updatedAt?: Date | string
-  }
-
-  export type FounderLogReflectionUncheckedCreateWithoutUserInput = {
-    id?: string
-    type: string
-    content: string
-    createdAt?: Date | string
-    updatedAt?: Date | string
-  }
-
-  export type FounderLogReflectionCreateOrConnectWithoutUserInput = {
-    where: FounderLogReflectionWhereUniqueInput
-    create: XOR<FounderLogReflectionCreateWithoutUserInput, FounderLogReflectionUncheckedCreateWithoutUserInput>
-  }
-
-  export type FounderLogReflectionCreateManyUserInputEnvelope = {
-    data: FounderLogReflectionCreateManyUserInput | FounderLogReflectionCreateManyUserInput[]
-    skipDuplicates?: boolean
-  }
-
-  export type FounderLogEntryUpsertWithWhereUniqueWithoutUserInput = {
-    where: FounderLogEntryWhereUniqueInput
-    update: XOR<FounderLogEntryUpdateWithoutUserInput, FounderLogEntryUncheckedUpdateWithoutUserInput>
-    create: XOR<FounderLogEntryCreateWithoutUserInput, FounderLogEntryUncheckedCreateWithoutUserInput>
-  }
-
-  export type FounderLogEntryUpdateWithWhereUniqueWithoutUserInput = {
-    where: FounderLogEntryWhereUniqueInput
-    data: XOR<FounderLogEntryUpdateWithoutUserInput, FounderLogEntryUncheckedUpdateWithoutUserInput>
-  }
-
-  export type FounderLogEntryUpdateManyWithWhereWithoutUserInput = {
-    where: FounderLogEntryScalarWhereInput
-    data: XOR<FounderLogEntryUpdateManyMutationInput, FounderLogEntryUncheckedUpdateManyWithoutUserInput>
-  }
-
-  export type FounderLogEntryScalarWhereInput = {
-    AND?: FounderLogEntryScalarWhereInput | FounderLogEntryScalarWhereInput[]
-    OR?: FounderLogEntryScalarWhereInput[]
-    NOT?: FounderLogEntryScalarWhereInput | FounderLogEntryScalarWhereInput[]
-    id?: StringFilter<"FounderLogEntry"> | string
-    userId?: StringFilter<"FounderLogEntry"> | string
-    content?: StringFilter<"FounderLogEntry"> | string
-    upvoteCount?: IntFilter<"FounderLogEntry"> | number
-    createdAt?: DateTimeFilter<"FounderLogEntry"> | Date | string
-    updatedAt?: DateTimeFilter<"FounderLogEntry"> | Date | string
-  }
-
-  export type FounderLogReflectionUpsertWithWhereUniqueWithoutUserInput = {
-    where: FounderLogReflectionWhereUniqueInput
-    update: XOR<FounderLogReflectionUpdateWithoutUserInput, FounderLogReflectionUncheckedUpdateWithoutUserInput>
-    create: XOR<FounderLogReflectionCreateWithoutUserInput, FounderLogReflectionUncheckedCreateWithoutUserInput>
-  }
-
-  export type FounderLogReflectionUpdateWithWhereUniqueWithoutUserInput = {
-    where: FounderLogReflectionWhereUniqueInput
-    data: XOR<FounderLogReflectionUpdateWithoutUserInput, FounderLogReflectionUncheckedUpdateWithoutUserInput>
-  }
-
-  export type FounderLogReflectionUpdateManyWithWhereWithoutUserInput = {
-    where: FounderLogReflectionScalarWhereInput
-    data: XOR<FounderLogReflectionUpdateManyMutationInput, FounderLogReflectionUncheckedUpdateManyWithoutUserInput>
-  }
-
-  export type FounderLogReflectionScalarWhereInput = {
-    AND?: FounderLogReflectionScalarWhereInput | FounderLogReflectionScalarWhereInput[]
-    OR?: FounderLogReflectionScalarWhereInput[]
-    NOT?: FounderLogReflectionScalarWhereInput | FounderLogReflectionScalarWhereInput[]
-    id?: StringFilter<"FounderLogReflection"> | string
-    userId?: StringFilter<"FounderLogReflection"> | string
-    type?: StringFilter<"FounderLogReflection"> | string
-    content?: StringFilter<"FounderLogReflection"> | string
-    createdAt?: DateTimeFilter<"FounderLogReflection"> | Date | string
-    updatedAt?: DateTimeFilter<"FounderLogReflection"> | Date | string
-  }
-
-  export type FounderLogEntryTagCreateWithoutTagInput = {
-    id?: string
-    createdAt?: Date | string
-    entry: FounderLogEntryCreateNestedOneWithoutTagsInput
-  }
-
-  export type FounderLogEntryTagUncheckedCreateWithoutTagInput = {
-    id?: string
-    entryId: string
-    createdAt?: Date | string
-  }
-
-  export type FounderLogEntryTagCreateOrConnectWithoutTagInput = {
-    where: FounderLogEntryTagWhereUniqueInput
-    create: XOR<FounderLogEntryTagCreateWithoutTagInput, FounderLogEntryTagUncheckedCreateWithoutTagInput>
-  }
-
-  export type FounderLogEntryTagCreateManyTagInputEnvelope = {
-    data: FounderLogEntryTagCreateManyTagInput | FounderLogEntryTagCreateManyTagInput[]
-    skipDuplicates?: boolean
-  }
-
-  export type FounderLogEntryTagUpsertWithWhereUniqueWithoutTagInput = {
-    where: FounderLogEntryTagWhereUniqueInput
-    update: XOR<FounderLogEntryTagUpdateWithoutTagInput, FounderLogEntryTagUncheckedUpdateWithoutTagInput>
-    create: XOR<FounderLogEntryTagCreateWithoutTagInput, FounderLogEntryTagUncheckedCreateWithoutTagInput>
-  }
-
-  export type FounderLogEntryTagUpdateWithWhereUniqueWithoutTagInput = {
-    where: FounderLogEntryTagWhereUniqueInput
-    data: XOR<FounderLogEntryTagUpdateWithoutTagInput, FounderLogEntryTagUncheckedUpdateWithoutTagInput>
-  }
-
-  export type FounderLogEntryTagUpdateManyWithWhereWithoutTagInput = {
-    where: FounderLogEntryTagScalarWhereInput
-    data: XOR<FounderLogEntryTagUpdateManyMutationInput, FounderLogEntryTagUncheckedUpdateManyWithoutTagInput>
-  }
-
-  export type FounderLogEntryTagScalarWhereInput = {
-    AND?: FounderLogEntryTagScalarWhereInput | FounderLogEntryTagScalarWhereInput[]
-    OR?: FounderLogEntryTagScalarWhereInput[]
-    NOT?: FounderLogEntryTagScalarWhereInput | FounderLogEntryTagScalarWhereInput[]
-    id?: StringFilter<"FounderLogEntryTag"> | string
-    entryId?: StringFilter<"FounderLogEntryTag"> | string
-    tagId?: StringFilter<"FounderLogEntryTag"> | string
-    createdAt?: DateTimeFilter<"FounderLogEntryTag"> | Date | string
-  }
-
-  export type UserCreateWithoutEntriesInput = {
-    id: string
-    firstName?: string | null
-    lastName?: string | null
-    username?: string | null
-    primaryEmailAddress?: string | null
-    imageUrl?: string | null
-    clerkUserProperties?: NullableJsonNullValueInput | InputJsonValue
-    stripeCustomerId?: string | null
-    accessType?: $Enums.AccessType
-    stripeUserProperties?: NullableJsonNullValueInput | InputJsonValue
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    reflections?: FounderLogReflectionCreateNestedManyWithoutUserInput
-  }
-
-  export type UserUncheckedCreateWithoutEntriesInput = {
-    id: string
-    firstName?: string | null
-    lastName?: string | null
-    username?: string | null
-    primaryEmailAddress?: string | null
-    imageUrl?: string | null
-    clerkUserProperties?: NullableJsonNullValueInput | InputJsonValue
-    stripeCustomerId?: string | null
-    accessType?: $Enums.AccessType
-    stripeUserProperties?: NullableJsonNullValueInput | InputJsonValue
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    reflections?: FounderLogReflectionUncheckedCreateNestedManyWithoutUserInput
-  }
-
-  export type UserCreateOrConnectWithoutEntriesInput = {
-    where: UserWhereUniqueInput
-    create: XOR<UserCreateWithoutEntriesInput, UserUncheckedCreateWithoutEntriesInput>
-  }
-
-  export type FounderLogEntryTagCreateWithoutEntryInput = {
-    id?: string
-    createdAt?: Date | string
-    tag: FounderLogTagCreateNestedOneWithoutEntriesInput
-  }
-
-  export type FounderLogEntryTagUncheckedCreateWithoutEntryInput = {
-    id?: string
-    tagId: string
-    createdAt?: Date | string
-  }
-
-  export type FounderLogEntryTagCreateOrConnectWithoutEntryInput = {
-    where: FounderLogEntryTagWhereUniqueInput
-    create: XOR<FounderLogEntryTagCreateWithoutEntryInput, FounderLogEntryTagUncheckedCreateWithoutEntryInput>
-  }
-
-  export type FounderLogEntryTagCreateManyEntryInputEnvelope = {
-    data: FounderLogEntryTagCreateManyEntryInput | FounderLogEntryTagCreateManyEntryInput[]
-    skipDuplicates?: boolean
-  }
-
-  export type UserUpsertWithoutEntriesInput = {
-    update: XOR<UserUpdateWithoutEntriesInput, UserUncheckedUpdateWithoutEntriesInput>
-    create: XOR<UserCreateWithoutEntriesInput, UserUncheckedCreateWithoutEntriesInput>
-    where?: UserWhereInput
-  }
-
-  export type UserUpdateToOneWithWhereWithoutEntriesInput = {
-    where?: UserWhereInput
-    data: XOR<UserUpdateWithoutEntriesInput, UserUncheckedUpdateWithoutEntriesInput>
-  }
-
-  export type UserUpdateWithoutEntriesInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    firstName?: NullableStringFieldUpdateOperationsInput | string | null
-    lastName?: NullableStringFieldUpdateOperationsInput | string | null
-    username?: NullableStringFieldUpdateOperationsInput | string | null
-    primaryEmailAddress?: NullableStringFieldUpdateOperationsInput | string | null
-    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
-    clerkUserProperties?: NullableJsonNullValueInput | InputJsonValue
-    stripeCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
-    accessType?: EnumAccessTypeFieldUpdateOperationsInput | $Enums.AccessType
-    stripeUserProperties?: NullableJsonNullValueInput | InputJsonValue
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    reflections?: FounderLogReflectionUpdateManyWithoutUserNestedInput
-  }
-
-  export type UserUncheckedUpdateWithoutEntriesInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    firstName?: NullableStringFieldUpdateOperationsInput | string | null
-    lastName?: NullableStringFieldUpdateOperationsInput | string | null
-    username?: NullableStringFieldUpdateOperationsInput | string | null
-    primaryEmailAddress?: NullableStringFieldUpdateOperationsInput | string | null
-    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
-    clerkUserProperties?: NullableJsonNullValueInput | InputJsonValue
-    stripeCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
-    accessType?: EnumAccessTypeFieldUpdateOperationsInput | $Enums.AccessType
-    stripeUserProperties?: NullableJsonNullValueInput | InputJsonValue
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    reflections?: FounderLogReflectionUncheckedUpdateManyWithoutUserNestedInput
-  }
-
-  export type FounderLogEntryTagUpsertWithWhereUniqueWithoutEntryInput = {
-    where: FounderLogEntryTagWhereUniqueInput
-    update: XOR<FounderLogEntryTagUpdateWithoutEntryInput, FounderLogEntryTagUncheckedUpdateWithoutEntryInput>
-    create: XOR<FounderLogEntryTagCreateWithoutEntryInput, FounderLogEntryTagUncheckedCreateWithoutEntryInput>
-  }
-
-  export type FounderLogEntryTagUpdateWithWhereUniqueWithoutEntryInput = {
-    where: FounderLogEntryTagWhereUniqueInput
-    data: XOR<FounderLogEntryTagUpdateWithoutEntryInput, FounderLogEntryTagUncheckedUpdateWithoutEntryInput>
-  }
-
-  export type FounderLogEntryTagUpdateManyWithWhereWithoutEntryInput = {
-    where: FounderLogEntryTagScalarWhereInput
-    data: XOR<FounderLogEntryTagUpdateManyMutationInput, FounderLogEntryTagUncheckedUpdateManyWithoutEntryInput>
-  }
-
-  export type FounderLogEntryCreateWithoutTagsInput = {
-    id?: string
-    content: string
-    upvoteCount?: number
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    user: UserCreateNestedOneWithoutEntriesInput
-  }
-
-  export type FounderLogEntryUncheckedCreateWithoutTagsInput = {
-    id?: string
-    userId: string
-    content: string
-    upvoteCount?: number
-    createdAt?: Date | string
-    updatedAt?: Date | string
-  }
-
-  export type FounderLogEntryCreateOrConnectWithoutTagsInput = {
-    where: FounderLogEntryWhereUniqueInput
-    create: XOR<FounderLogEntryCreateWithoutTagsInput, FounderLogEntryUncheckedCreateWithoutTagsInput>
-  }
-
-  export type FounderLogTagCreateWithoutEntriesInput = {
-    id?: string
-    name: string
-    createdAt?: Date | string
-    updatedAt?: Date | string
-  }
-
-  export type FounderLogTagUncheckedCreateWithoutEntriesInput = {
-    id?: string
-    name: string
-    createdAt?: Date | string
-    updatedAt?: Date | string
-  }
-
-  export type FounderLogTagCreateOrConnectWithoutEntriesInput = {
-    where: FounderLogTagWhereUniqueInput
-    create: XOR<FounderLogTagCreateWithoutEntriesInput, FounderLogTagUncheckedCreateWithoutEntriesInput>
-  }
-
-  export type FounderLogEntryUpsertWithoutTagsInput = {
-    update: XOR<FounderLogEntryUpdateWithoutTagsInput, FounderLogEntryUncheckedUpdateWithoutTagsInput>
-    create: XOR<FounderLogEntryCreateWithoutTagsInput, FounderLogEntryUncheckedCreateWithoutTagsInput>
-    where?: FounderLogEntryWhereInput
-  }
-
-  export type FounderLogEntryUpdateToOneWithWhereWithoutTagsInput = {
-    where?: FounderLogEntryWhereInput
-    data: XOR<FounderLogEntryUpdateWithoutTagsInput, FounderLogEntryUncheckedUpdateWithoutTagsInput>
-  }
-
-  export type FounderLogEntryUpdateWithoutTagsInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    content?: StringFieldUpdateOperationsInput | string
-    upvoteCount?: IntFieldUpdateOperationsInput | number
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    user?: UserUpdateOneRequiredWithoutEntriesNestedInput
-  }
-
-  export type FounderLogEntryUncheckedUpdateWithoutTagsInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    userId?: StringFieldUpdateOperationsInput | string
-    content?: StringFieldUpdateOperationsInput | string
-    upvoteCount?: IntFieldUpdateOperationsInput | number
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type FounderLogTagUpsertWithoutEntriesInput = {
-    update: XOR<FounderLogTagUpdateWithoutEntriesInput, FounderLogTagUncheckedUpdateWithoutEntriesInput>
-    create: XOR<FounderLogTagCreateWithoutEntriesInput, FounderLogTagUncheckedCreateWithoutEntriesInput>
-    where?: FounderLogTagWhereInput
-  }
-
-  export type FounderLogTagUpdateToOneWithWhereWithoutEntriesInput = {
-    where?: FounderLogTagWhereInput
-    data: XOR<FounderLogTagUpdateWithoutEntriesInput, FounderLogTagUncheckedUpdateWithoutEntriesInput>
-  }
-
-  export type FounderLogTagUpdateWithoutEntriesInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type FounderLogTagUncheckedUpdateWithoutEntriesInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type UserCreateWithoutReflectionsInput = {
-    id: string
-    firstName?: string | null
-    lastName?: string | null
-    username?: string | null
-    primaryEmailAddress?: string | null
-    imageUrl?: string | null
-    clerkUserProperties?: NullableJsonNullValueInput | InputJsonValue
-    stripeCustomerId?: string | null
-    accessType?: $Enums.AccessType
-    stripeUserProperties?: NullableJsonNullValueInput | InputJsonValue
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    entries?: FounderLogEntryCreateNestedManyWithoutUserInput
-  }
-
-  export type UserUncheckedCreateWithoutReflectionsInput = {
-    id: string
-    firstName?: string | null
-    lastName?: string | null
-    username?: string | null
-    primaryEmailAddress?: string | null
-    imageUrl?: string | null
-    clerkUserProperties?: NullableJsonNullValueInput | InputJsonValue
-    stripeCustomerId?: string | null
-    accessType?: $Enums.AccessType
-    stripeUserProperties?: NullableJsonNullValueInput | InputJsonValue
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    entries?: FounderLogEntryUncheckedCreateNestedManyWithoutUserInput
-  }
-
-  export type UserCreateOrConnectWithoutReflectionsInput = {
-    where: UserWhereUniqueInput
-    create: XOR<UserCreateWithoutReflectionsInput, UserUncheckedCreateWithoutReflectionsInput>
-  }
-
-  export type UserUpsertWithoutReflectionsInput = {
-    update: XOR<UserUpdateWithoutReflectionsInput, UserUncheckedUpdateWithoutReflectionsInput>
-    create: XOR<UserCreateWithoutReflectionsInput, UserUncheckedCreateWithoutReflectionsInput>
-    where?: UserWhereInput
-  }
-
-  export type UserUpdateToOneWithWhereWithoutReflectionsInput = {
-    where?: UserWhereInput
-    data: XOR<UserUpdateWithoutReflectionsInput, UserUncheckedUpdateWithoutReflectionsInput>
-  }
-
-  export type UserUpdateWithoutReflectionsInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    firstName?: NullableStringFieldUpdateOperationsInput | string | null
-    lastName?: NullableStringFieldUpdateOperationsInput | string | null
-    username?: NullableStringFieldUpdateOperationsInput | string | null
-    primaryEmailAddress?: NullableStringFieldUpdateOperationsInput | string | null
-    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
-    clerkUserProperties?: NullableJsonNullValueInput | InputJsonValue
-    stripeCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
-    accessType?: EnumAccessTypeFieldUpdateOperationsInput | $Enums.AccessType
-    stripeUserProperties?: NullableJsonNullValueInput | InputJsonValue
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    entries?: FounderLogEntryUpdateManyWithoutUserNestedInput
-  }
-
-  export type UserUncheckedUpdateWithoutReflectionsInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    firstName?: NullableStringFieldUpdateOperationsInput | string | null
-    lastName?: NullableStringFieldUpdateOperationsInput | string | null
-    username?: NullableStringFieldUpdateOperationsInput | string | null
-    primaryEmailAddress?: NullableStringFieldUpdateOperationsInput | string | null
-    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
-    clerkUserProperties?: NullableJsonNullValueInput | InputJsonValue
-    stripeCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
-    accessType?: EnumAccessTypeFieldUpdateOperationsInput | $Enums.AccessType
-    stripeUserProperties?: NullableJsonNullValueInput | InputJsonValue
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    entries?: FounderLogEntryUncheckedUpdateManyWithoutUserNestedInput
-  }
-
-  export type FounderLogEntryCreateManyUserInput = {
-    id?: string
-    content: string
-    upvoteCount?: number
-    createdAt?: Date | string
-    updatedAt?: Date | string
-  }
-
-  export type FounderLogReflectionCreateManyUserInput = {
-    id?: string
-    type: string
-    content: string
-    createdAt?: Date | string
-    updatedAt?: Date | string
-  }
-
-  export type FounderLogEntryUpdateWithoutUserInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    content?: StringFieldUpdateOperationsInput | string
-    upvoteCount?: IntFieldUpdateOperationsInput | number
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    tags?: FounderLogEntryTagUpdateManyWithoutEntryNestedInput
-  }
-
-  export type FounderLogEntryUncheckedUpdateWithoutUserInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    content?: StringFieldUpdateOperationsInput | string
-    upvoteCount?: IntFieldUpdateOperationsInput | number
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    tags?: FounderLogEntryTagUncheckedUpdateManyWithoutEntryNestedInput
-  }
-
-  export type FounderLogEntryUncheckedUpdateManyWithoutUserInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    content?: StringFieldUpdateOperationsInput | string
-    upvoteCount?: IntFieldUpdateOperationsInput | number
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type FounderLogReflectionUpdateWithoutUserInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    type?: StringFieldUpdateOperationsInput | string
-    content?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type FounderLogReflectionUncheckedUpdateWithoutUserInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    type?: StringFieldUpdateOperationsInput | string
-    content?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type FounderLogReflectionUncheckedUpdateManyWithoutUserInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    type?: StringFieldUpdateOperationsInput | string
-    content?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type FounderLogEntryTagCreateManyTagInput = {
-    id?: string
-    entryId: string
-    createdAt?: Date | string
-  }
-
-  export type FounderLogEntryTagUpdateWithoutTagInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    entry?: FounderLogEntryUpdateOneRequiredWithoutTagsNestedInput
-  }
-
-  export type FounderLogEntryTagUncheckedUpdateWithoutTagInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    entryId?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type FounderLogEntryTagUncheckedUpdateManyWithoutTagInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    entryId?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type FounderLogEntryTagCreateManyEntryInput = {
-    id?: string
-    tagId: string
-    createdAt?: Date | string
-  }
-
-  export type FounderLogEntryTagUpdateWithoutEntryInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    tag?: FounderLogTagUpdateOneRequiredWithoutEntriesNestedInput
-  }
-
-  export type FounderLogEntryTagUncheckedUpdateWithoutEntryInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    tagId?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type FounderLogEntryTagUncheckedUpdateManyWithoutEntryInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    tagId?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
 
