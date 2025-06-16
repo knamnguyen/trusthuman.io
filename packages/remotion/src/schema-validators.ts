@@ -5,7 +5,7 @@ export const VideoStitchClipSchema = z.object({
     /^(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})$/,
     "Time range must be in format MM:SS-MM:SS or HH:MM-HH:MM"
   ),
-  caption: z.string().min(1, "Caption is required").max(200, "Caption must be 200 characters or less"),
+  caption: z.string().max(200, "Caption must be 200 characters or less").optional(),
 });
 
 export const VideoStitchInputSchema = z.object({
