@@ -2,35 +2,35 @@
 
 /**
  * TikTok Video Processor Script
- * 
+ *
  * Purpose: Process downloaded TikTok videos by uploading to S3 and saving metadata to database
- * 
+ *
  * Package.json Usage:
  *   "process-videos": "bun scripts/process-videos.ts"
- * 
+ *
  * Command Line Usage:
  *   pnpm process-videos [options]
  *   bun scripts/process-videos.ts [options]
- * 
+ *
  * Parameters (ALL OPTIONAL):
  *   --skip-duplicates, -s    Skip videos that already exist in database (check by webpage_url)
  *   --skip-cleanup, -c       Don't delete processed files after successful upload/save
  *   --dry-run, -d           Show what would be processed without actually doing it
  *   --help, -h              Show help message
- * 
+ *
  * Behavior:
  *   - Scans ./downloads/ folder for video files (.mp4, .webm, .mkv) and their .info.json metadata
- *   - For each video pair: uploads video to S3 (viralcut-s3bucket/video-sample/) 
+ *   - For each video pair: uploads video to S3 (viralcut-s3bucket/video-sample/)
  *   - Saves metadata to SampleVideo database table with S3 URL reference
  *   - By default, cleans up processed files after successful upload
  *   - Requires AWS credentials and database connection to be configured
- * 
+ *
  * Prerequisites:
  *   - Videos must be downloaded first (use tiktok-download script)
  *   - AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY environment variables
  *   - S3_BUCKET environment variable (defaults to "viralcut-s3bucket")
  *   - Database connection configured via @sassy/db package
- * 
+ *
  * Examples:
  *   pnpm process-videos                           # Process all videos, clean up after
  *   pnpm process-videos --skip-duplicates        # Skip videos already in database
@@ -38,11 +38,14 @@
  *   pnpm process-videos --dry-run                # Preview what would be processed
  *   bun scripts/process-videos.ts -s -c          # Skip duplicates, keep files
  */
+import { existsSync } from "fs";
+import { readdir, readFile, rmdir, unlink } from "fs/promises";
+import { basename, dirname, extname, join } from "path";
+import { fileURLToPath } from "url";
 
-import { readdir, readFile, unlink, rmdir } from "fs/promises";
-import { join, extname, basename } from "path";
-import { S3BucketService } from "@sassy/s3";
 import { db } from "@sassy/db";
+import { VideoVectorStore } from "@sassy/langchain/vector-store";
+import { S3BucketService } from "@sassy/s3";
 
 interface TikTokVideoMetadata {
   id: string;
@@ -63,6 +66,7 @@ interface ProcessVideoArgs {
 
 class VideoProcessor {
   private s3Service: S3BucketService;
+  private videoVectorStore: VideoVectorStore;
   private downloadsDir: string;
 
   constructor() {
@@ -73,6 +77,9 @@ class VideoProcessor {
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
       bucket: process.env.S3_BUCKET || "viralcut-s3bucket",
     });
+
+    // Initialize vector store
+    this.videoVectorStore = new VideoVectorStore();
 
     this.downloadsDir = join(process.cwd(), "downloads");
   }
@@ -86,7 +93,7 @@ class VideoProcessor {
 
     for (let i = 0; i < args.length; i++) {
       const arg = args[i];
-      
+
       switch (arg) {
         case "--skip-duplicates":
         case "-s":
@@ -109,11 +116,13 @@ class VideoProcessor {
   /**
    * Get all video files and their corresponding JSON metadata files
    */
-  private async getVideoFiles(): Promise<{ videoFile: string; jsonFile: string }[]> {
+  private async getVideoFiles(): Promise<
+    { videoFile: string; jsonFile: string }[]
+  > {
     try {
       const files = await readdir(this.downloadsDir);
-      const videoFiles = files.filter(file => 
-        ['.mp4', '.webm', '.mkv'].includes(extname(file))
+      const videoFiles = files.filter((file) =>
+        [".mp4", ".webm", ".mkv"].includes(extname(file)),
       );
 
       const pairs: { videoFile: string; jsonFile: string }[] = [];
@@ -121,14 +130,14 @@ class VideoProcessor {
       for (const videoFile of videoFiles) {
         // Extract the base name without extension and find corresponding JSON
         const baseName = basename(videoFile, extname(videoFile));
-        const jsonFile = files.find(file => 
-          file.endsWith('.info.json') && file.startsWith(baseName)
+        const jsonFile = files.find(
+          (file) => file.endsWith(".info.json") && file.startsWith(baseName),
         );
 
         if (jsonFile) {
           pairs.push({
             videoFile: join(this.downloadsDir, videoFile),
-            jsonFile: join(this.downloadsDir, jsonFile)
+            jsonFile: join(this.downloadsDir, jsonFile),
           });
         } else {
           console.warn(`⚠️  No metadata file found for ${videoFile}`);
@@ -145,14 +154,18 @@ class VideoProcessor {
   /**
    * Parse JSON metadata file and validate it's a video
    */
-  private async parseMetadata(jsonFilePath: string): Promise<TikTokVideoMetadata | null> {
+  private async parseMetadata(
+    jsonFilePath: string,
+  ): Promise<TikTokVideoMetadata | null> {
     try {
-      const jsonContent = await readFile(jsonFilePath, 'utf-8');
+      const jsonContent = await readFile(jsonFilePath, "utf-8");
       const metadata = JSON.parse(jsonContent);
 
       // Only process if this is a video type
       if (metadata._type !== "video") {
-        console.log(`⏭️  Skipping non-video content: ${metadata._type || "unknown type"}`);
+        console.log(
+          `⏭️  Skipping non-video content: ${metadata._type || "unknown type"}`,
+        );
         return null;
       }
 
@@ -190,25 +203,28 @@ class VideoProcessor {
   /**
    * Upload video to S3 using optimized multipart upload for large files
    */
-  private async uploadVideoToS3(videoFilePath: string, filename: string): Promise<string | null> {
+  private async uploadVideoToS3(
+    videoFilePath: string,
+    filename: string,
+  ): Promise<string | null> {
     try {
       console.log(`📤 Uploading ${filename} to S3...`);
-      
+
       // Read the video file
       const videoBuffer = await readFile(videoFilePath);
-      
+
       // Log file size
       const fileSizeMB = (videoBuffer.length / 1024 / 1024).toFixed(2);
       console.log(`📁 File size: ${fileSizeMB}MB`);
-      
+
       // Generate unique key for the video
       const key = this.s3Service.generateUniqueKey(filename, "video-sample");
-      
+
       // Upload to S3 using server-side multipart upload for large files
       const result = await this.s3Service.multipartUploadServer(
         videoBuffer,
         key,
-        "video/mp4"
+        "video/mp4",
       );
 
       console.log(`✅ Video uploaded successfully: ${result.location}`);
@@ -220,13 +236,17 @@ class VideoProcessor {
   }
 
   /**
-   * Save video metadata to database
+   * Save video metadata to database with vector embedding
    */
-  private async saveToDatabase(metadata: TikTokVideoMetadata, s3Url: string): Promise<boolean> {
+  private async saveToDatabase(
+    metadata: TikTokVideoMetadata,
+    s3Url: string,
+  ): Promise<boolean> {
     try {
       console.log(`💾 Saving metadata to database for: ${metadata.title}`);
-      
-      await db.sampleVideo.create({
+
+      // Create the video record first
+      const savedVideo = await db.sampleVideo.create({
         data: {
           webpageUrl: metadata.webpage_url,
           s3Url: s3Url,
@@ -240,6 +260,33 @@ class VideoProcessor {
       });
 
       console.log(`✅ Metadata saved successfully`);
+
+      // Generate and store vector embedding if description exists
+      if (metadata.description && metadata.description.trim()) {
+        try {
+          console.log(`🧠 Generating vector embedding for description...`);
+          await this.videoVectorStore.addVideoWithEmbedding({
+            id: savedVideo.id,
+            description: metadata.description,
+            title: metadata.title,
+            s3Url: s3Url,
+            views: metadata.view_count,
+            likes: metadata.like_count,
+            comments: metadata.comment_count,
+            durationSeconds: Math.round(metadata.duration),
+          });
+          console.log(`✅ Vector embedding generated and saved`);
+        } catch (embeddingError) {
+          console.warn(
+            `⚠️  Failed to generate vector embedding:`,
+            embeddingError,
+          );
+          // Don't fail the entire operation if embedding fails
+        }
+      } else {
+        console.log(`ℹ️  No description available, skipping vector embedding`);
+      }
+
       return true;
     } catch (error) {
       console.error(`Error saving to database:`, error);
@@ -252,7 +299,7 @@ class VideoProcessor {
    */
   private async cleanupFiles(filesToDelete: string[]): Promise<void> {
     console.log(`🧹 Cleaning up ${filesToDelete.length} files...`);
-    
+
     for (const file of filesToDelete) {
       try {
         await unlink(file);
@@ -286,7 +333,7 @@ class VideoProcessor {
     console.log(`📁 Processing videos from: ${this.downloadsDir}`);
 
     const videoPairs = await this.getVideoFiles();
-    
+
     if (videoPairs.length === 0) {
       console.log("📭 No video files found to process.");
       return;
@@ -312,8 +359,13 @@ class VideoProcessor {
       }
 
       // Check for duplicates
-      if (args.skipDuplicates && await this.videoExists(metadata.webpage_url)) {
-        console.log(`⏭️  Video already exists in database, skipping: ${metadata.title}`);
+      if (
+        args.skipDuplicates &&
+        (await this.videoExists(metadata.webpage_url))
+      ) {
+        console.log(
+          `⏭️  Video already exists in database, skipping: ${metadata.title}`,
+        );
         skipped++;
         filesToCleanup.push(videoFile, jsonFile);
         continue;
@@ -345,9 +397,9 @@ class VideoProcessor {
 
       processed++;
       filesToCleanup.push(videoFile, jsonFile);
-      
+
       // Also clean up description file if it exists
-      const descFile = videoFile.replace(extname(videoFile), '.description');
+      const descFile = videoFile.replace(extname(videoFile), ".description");
       try {
         await readFile(descFile);
         filesToCleanup.push(descFile);
@@ -366,7 +418,9 @@ class VideoProcessor {
     console.log(`   ✅ Processed: ${processed}`);
     console.log(`   ⏭️  Skipped: ${skipped}`);
     console.log(`   ❌ Failed: ${failed}`);
-    console.log(`   📁 Cleaned up: ${!args.skipCleanup ? filesToCleanup.length : 0} files`);
+    console.log(
+      `   📁 Cleaned up: ${!args.skipCleanup ? filesToCleanup.length : 0} files`,
+    );
   }
 
   /**
@@ -403,8 +457,8 @@ Examples:
 // Main execution
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
-  
-  if (args.includes('--help') || args.includes('-h')) {
+
+  if (args.includes("--help") || args.includes("-h")) {
     const processor = new VideoProcessor();
     (processor as any).printUsage();
     return;
@@ -420,4 +474,4 @@ async function main(): Promise<void> {
 }
 
 // Run the script
-main(); 
+main();

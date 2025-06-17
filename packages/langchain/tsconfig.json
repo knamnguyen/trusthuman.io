@@ -1,0 +1,12 @@
+{
+  "extends": "@sassy/tsconfig/base.json",
+  "compilerOptions": {
+    "lib": ["es2022"],
+    "target": "es2022",
+    "allowJs": true,
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true
+  },
+  "include": ["src/**/*.ts", "scripts/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

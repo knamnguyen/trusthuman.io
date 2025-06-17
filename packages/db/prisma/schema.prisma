@@ -10,6 +10,7 @@ generator client {
   provider = "prisma-client-js"
   output   = "../generated/node"
   binaryTargets = ["native", "rhel-openssl-3.0.x", "linux-arm64-openssl-3.0.x", "linux-musl-arm64-openssl-3.0.x"]
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 // Dedicated edge client for Cloudflare Workers
@@ -17,7 +18,7 @@ generator edge {
   provider = "prisma-client-js"
   output   = "../generated/edge"
   binaryTargets = ["native"]
-  previewFeatures = ["driverAdapters"]
+  previewFeatures = ["driverAdapters", "postgresqlExtensions"]
 }
 
 generator zod {
@@ -29,6 +30,7 @@ datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
+  extensions = [vector]
 }
 
 
@@ -75,6 +77,8 @@ model SampleVideo {
   hookCutUrl      String?   
   title           String   // Video title from TikTok
   description     String?  // Video description/caption
+  // Google text-embedding-004 produces 768-dimensional embeddings
+  descriptionEmbedding Unsupported("vector(768)")?
   views           Int      @default(0) // View count
   comments        Int      @default(0) // Comment count  
   likes           Int      @default(0) // Like count

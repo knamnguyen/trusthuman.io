@@ -1,28 +1,30 @@
 {
-  "name": "@sassy/tiktok-download",
+  "name": "@sassy/langchain",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./schema-validators": "./src/schema-validators.ts"
+    "./embeddings": "./src/embeddings.ts",
+    "./schema-validators": "./src/schema-validators.ts",
+    "./vector-store": "./src/vector-store.ts"
   },
   "license": "MIT",
   "scripts": {
-    "clean": "git clean -xdf .cache .turbo dist node_modules downloads",
+    "clean": "git clean -xdf .cache .turbo dist node_modules",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
     "with-env": "dotenv -e ../../.env --",
-    "tiktok-download": "pnpm with-env bun scripts/tiktok-download.ts",
-    "process-videos": "pnpm with-env bun scripts/process-videos.ts",
-    "process-videos:dry": "pnpm with-env bun scripts/process-videos.ts --dry-run"
+    "test-basic": "pnpm with-env bun scripts/test-basic-functionality.ts",
+    "test-search": "pnpm with-env bun scripts/test-similarity-search.ts"
   },
   "dependencies": {
+    "@langchain/community": "^0.3.0",
+    "@langchain/core": "^0.3.0",
+    "@langchain/google-genai": "^0.1.0",
     "@sassy/db": "workspace:*",
-    "@sassy/langchain": "workspace:*",
-    "@sassy/s3": "workspace:*",
-    "zod": "catalog:"
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@sassy/eslint-config": "workspace:*",
