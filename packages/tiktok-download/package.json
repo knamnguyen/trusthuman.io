@@ -16,18 +16,23 @@
     "with-env": "dotenv -e ../../.env --",
     "tiktok-download": "pnpm with-env bun scripts/tiktok-download.ts",
     "process-videos": "pnpm with-env bun scripts/process-videos.ts",
-    "process-videos:dry": "pnpm with-env bun scripts/process-videos.ts --dry-run"
+    "process-videos:dry": "pnpm with-env bun scripts/process-videos.ts --dry-run",
+    "test-whisper": "pnpm with-env bun scripts/test-whisper.ts"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.21.0",
     "@sassy/db": "workspace:*",
     "@sassy/langchain": "workspace:*",
     "@sassy/s3": "workspace:*",
+    "fluent-ffmpeg": "^2.1.3",
+    "replicate": "^0.34.1",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@sassy/eslint-config": "workspace:*",
     "@sassy/prettier-config": "workspace:*",
     "@sassy/tsconfig": "workspace:*",
+    "@types/fluent-ffmpeg": "^2.1.26",
     "@types/node": "^22.10.10",
     "dotenv-cli": "^8.0.0",
     "eslint": "catalog:",

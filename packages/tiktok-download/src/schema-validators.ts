@@ -28,4 +28,33 @@ export const tikTokDownloadResultSchema = z.object({
   error: z.string().optional(),
 });
 
-export type TikTokDownloadResult = z.infer<typeof tikTokDownloadResultSchema>; 
+export type TikTokDownloadResult = z.infer<typeof tikTokDownloadResultSchema>;
+
+// Whisper transcription input schema
+export const whisperTranscriptionInputSchema = z.object({
+  url: z.string().url("Must be a valid URL"),
+});
+
+export type WhisperTranscriptionInput = z.infer<
+  typeof whisperTranscriptionInputSchema
+>;
+
+// Gemini analysis response schema
+export const geminiAnalysisResponseSchema = z.object({
+  voiceoverDetected: z.boolean(),
+  confidence: z.number().min(0).max(1),
+});
+
+export type GeminiAnalysisResponse = z.infer<
+  typeof geminiAnalysisResponseSchema
+>;
+
+// Whisper transcription response schema (updated to use voiceoverDetected)
+export const whisperTranscriptionResponseSchema = z.object({
+  voiceoverDetected: z.boolean(),
+  speechContent: z.string(),
+});
+
+export type WhisperTranscriptionResponse = z.infer<
+  typeof whisperTranscriptionResponseSchema
+>;

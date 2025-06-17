@@ -15,11 +15,14 @@
  * Parameters (ALL OPTIONAL):
  *   --skip-duplicates, -s    Skip videos that already exist in database (check by webpage_url)
  *   --skip-cleanup, -c       Don't delete processed files after successful upload/save
+ *   --skip-voiceovers, -v    Skip videos that contain voice-over content (don't save to database)
+ *   --check-voiceovers       Enable voice-over detection but don't skip (log results only)
  *   --dry-run, -d           Show what would be processed without actually doing it
  *   --help, -h              Show help message
  *
  * Behavior:
  *   - Scans ./downloads/ folder for video files (.mp4, .webm, .mkv) and their .info.json metadata
+ *   - Optional: Checks for voice-over content using Whisper + Gemini AI analysis
  *   - For each video pair: uploads video to S3 (viralcut-s3bucket/video-sample/)
  *   - Saves metadata to SampleVideo database table with S3 URL reference
  *   - By default, cleans up processed files after successful upload
@@ -29,23 +32,34 @@
  *   - Videos must be downloaded first (use tiktok-download script)
  *   - AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY environment variables
  *   - S3_BUCKET environment variable (defaults to "viralcut-s3bucket")
+ *   - REPLICATE_API_TOKEN environment variable (for voice-over detection)
+ *   - GEMINI_API_KEY environment variable (for voice-over detection)
  *   - Database connection configured via @sassy/db package
+ *   - ffmpeg installed and available in PATH (for voice-over detection)
  *
  * Examples:
  *   pnpm process-videos                           # Process all videos, clean up after
  *   pnpm process-videos --skip-duplicates        # Skip videos already in database
+ *   pnpm process-videos --skip-voiceovers        # Skip videos with voice-over content
+ *   pnpm process-videos --check-voiceovers       # Check voice-overs but don't skip
  *   pnpm process-videos --skip-cleanup           # Keep files after processing
  *   pnpm process-videos --dry-run                # Preview what would be processed
- *   bun scripts/process-videos.ts -s -c          # Skip duplicates, keep files
+ *   bun scripts/process-videos.ts -s -v          # Skip duplicates and voice-overs
  */
 import { existsSync } from "fs";
 import { readdir, readFile, rmdir, unlink } from "fs/promises";
 import { basename, dirname, extname, join } from "path";
 import { fileURLToPath } from "url";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import ffmpeg from "fluent-ffmpeg";
+import Replicate from "replicate";
 
 import { db } from "@sassy/db";
 import { VideoVectorStore } from "@sassy/langchain/vector-store";
 import { S3BucketService } from "@sassy/s3";
+
+import type { GeminiAnalysisResponse } from "../src/schema-validators";
+import { geminiAnalysisResponseSchema } from "../src/schema-validators";
 
 interface TikTokVideoMetadata {
   id: string;
@@ -61,12 +75,16 @@ interface TikTokVideoMetadata {
 interface ProcessVideoArgs {
   skipDuplicates?: boolean;
   skipCleanup?: boolean;
+  skipVoiceovers?: boolean;
+  checkVoiceovers?: boolean;
   dryRun?: boolean;
 }
 
 class VideoProcessor {
   private s3Service: S3BucketService;
   private videoVectorStore: VideoVectorStore;
+  private replicate?: Replicate;
+  private gemini?: GoogleGenerativeAI;
   private downloadsDir: string;
 
   constructor() {
@@ -80,6 +98,17 @@ class VideoProcessor {
 
     // Initialize vector store
     this.videoVectorStore = new VideoVectorStore();
+
+    // Initialize voice-over detection services if API keys are available
+    if (process.env.REPLICATE_API_TOKEN) {
+      this.replicate = new Replicate({
+        auth: process.env.REPLICATE_API_TOKEN,
+      });
+    }
+
+    if (process.env.GEMINI_API_KEY) {
+      this.gemini = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    }
 
     this.downloadsDir = join(process.cwd(), "downloads");
   }
@@ -103,6 +132,13 @@ class VideoProcessor {
         case "-c":
           result.skipCleanup = true;
           break;
+        case "--skip-voiceovers":
+        case "-v":
+          result.skipVoiceovers = true;
+          break;
+        case "--check-voiceovers":
+          result.checkVoiceovers = true;
+          break;
         case "--dry-run":
         case "-d":
           result.dryRun = true;
@@ -111,6 +147,225 @@ class VideoProcessor {
     }
 
     return result;
+  }
+
+  /**
+   * Extract audio from video file for voice-over detection (optimized for speed)
+   */
+  private async extractAudioForAnalysis(videoPath: string): Promise<string> {
+    console.log(`🎵 Extracting audio for voice-over analysis...`);
+
+    const audioPath = join(dirname(videoPath), `analysis-${Date.now()}.wav`);
+
+    return new Promise((resolve, reject) => {
+      ffmpeg(videoPath)
+        .toFormat("wav")
+        .audioCodec("pcm_s16le")
+        .audioFrequency(16000)
+        .audioChannels(1)
+        .duration(45) // Only extract first 45 seconds for faster processing
+        .on("start", (commandLine: string) => {
+          console.log(`🔧 FFmpeg command: ${commandLine}`);
+        })
+        .on("progress", (progress: any) => {
+          if (progress.percent) {
+            console.log(
+              `⏳ Audio extraction: ${Math.round(progress.percent)}%`,
+            );
+          }
+        })
+        .on("end", () => {
+          console.log(
+            `✅ Audio extracted for analysis: ${basename(audioPath)}`,
+          );
+          resolve(audioPath);
+        })
+        .on("error", (error: Error) => {
+          console.error(`❌ FFmpeg error: ${error.message}`);
+          reject(new Error(`Audio extraction failed: ${error.message}`));
+        })
+        .save(audioPath);
+    });
+  }
+
+  /**
+   * Transcribe audio using Replicate Whisper API
+   */
+  private async transcribeAudio(audioPath: string): Promise<string> {
+    if (!this.replicate) {
+      throw new Error(
+        "Replicate API not initialized - REPLICATE_API_TOKEN required",
+      );
+    }
+
+    console.log(`🎤 Transcribing audio with Whisper...`);
+
+    try {
+      // Read the audio file as buffer and convert to base64
+      const audioBuffer = await readFile(audioPath);
+      const audioBase64 = `data:audio/wav;base64,${audioBuffer.toString("base64")}`;
+
+      console.log(
+        `📁 Audio file size: ${(audioBuffer.length / 1024 / 1024).toFixed(2)}MB`,
+      );
+
+      const output = (await this.replicate.run(
+        "vaibhavs10/incredibly-fast-whisper:3ab86df6c8f54c11309d4d1f930ac292bad43ace52d10c80d87eb258b3c9f79c",
+        {
+          input: {
+            audio: audioBase64,
+            task: "transcribe",
+            language: "None",
+            timestamp: "chunk",
+            batch_size: 64,
+            diarise_audio: false,
+          },
+        },
+      )) as { text: string };
+
+      const transcription = output.text || "";
+      console.log(`✅ Transcription completed (${transcription.length} chars)`);
+
+      return transcription;
+    } catch (error) {
+      throw new Error(
+        `Transcription failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  /**
+   * Analyze transcription with Gemini to determine if it's voice-over or music/soundtrack
+   */
+  private async analyzeTranscriptionWithGemini(
+    transcription: string,
+  ): Promise<GeminiAnalysisResponse> {
+    if (!this.gemini) {
+      throw new Error("Gemini API not initialized - GEMINI_API_KEY required");
+    }
+
+    console.log(`🧠 Analyzing transcription with Gemini AI...`);
+
+    try {
+      const model = this.gemini.getGenerativeModel({
+        model: "gemini-2.0-flash-exp",
+      });
+
+      const prompt = `
+You are analyzing a transcription from a TikTok video to determine if it contains voice-over content (human speech/narration) or just music/soundtrack lyrics.
+
+Transcription to analyze:
+"${transcription}"
+
+Please analyze this transcription and determine:
+1. Is this voice-over content (human speech, narration, talking) or music/soundtrack lyrics?
+2. What's your confidence level in this determination?
+
+Voice-over indicators:
+- Conversational language and natural speech patterns
+- Personal pronouns (I, you, we, my, your)
+- Questions and direct address to audience
+- Technical explanations or storytelling
+- Natural pauses and discourse markers (so, well, now, today)
+- Complete sentences with varied structure
+
+Music/soundtrack indicators:
+- Repetitive phrases or choruses
+- Simple, rhythmic language
+- Lack of conversational elements
+- Song-like structure with rhyming
+- Commands or exclamations without context (come on, rock your body)
+- Short, repetitive phrases
+
+Respond with a JSON object in this exact format:
+{
+  "voiceoverDetected": boolean,
+  "confidence": number between 0.0 and 1.0
+}
+
+Be strict in your analysis - only classify as voice-over if you're confident it's human speech/narration, not song lyrics.
+`;
+
+      const result = await model.generateContent(prompt);
+      const responseText = result.response.text();
+
+      console.log(`🤖 Gemini response: ${responseText.substring(0, 100)}...`);
+
+      // Extract JSON from response
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error("No JSON found in Gemini response");
+      }
+
+      const parsedResponse = JSON.parse(jsonMatch[0]);
+      const validatedResponse =
+        geminiAnalysisResponseSchema.parse(parsedResponse);
+
+      console.log(
+        `✅ Voice-over detected: ${validatedResponse.voiceoverDetected} (${(validatedResponse.confidence * 100).toFixed(1)}% confidence)`,
+      );
+
+      return validatedResponse;
+    } catch (error) {
+      console.warn(
+        `⚠️  Gemini analysis failed, falling back to basic detection:`,
+        error,
+      );
+
+      // Fallback to basic length-based detection
+      return {
+        voiceoverDetected: transcription.trim().length >= 20,
+        confidence: 0.5,
+      };
+    }
+  }
+
+  /**
+   * Check if video contains voice-over content
+   */
+  private async checkVoiceOver(
+    videoFilePath: string,
+  ): Promise<{ hasVoiceover: boolean; confidence: number }> {
+    const tempFiles: string[] = [];
+
+    try {
+      // Extract audio for analysis
+      const audioPath = await this.extractAudioForAnalysis(videoFilePath);
+      tempFiles.push(audioPath);
+
+      // Transcribe audio
+      const transcription = await this.transcribeAudio(audioPath);
+
+      // Analyze with Gemini if transcription has sufficient content
+      if (transcription.trim().length >= 20) {
+        const analysis =
+          await this.analyzeTranscriptionWithGemini(transcription);
+        return {
+          hasVoiceover: analysis.voiceoverDetected,
+          confidence: analysis.confidence,
+        };
+      } else {
+        console.log(
+          `ℹ️  Transcription too short (${transcription.trim().length} chars), assuming no voice-over`,
+        );
+        return {
+          hasVoiceover: false,
+          confidence: 0.8,
+        };
+      }
+    } finally {
+      // Clean up temporary audio files
+      for (const file of tempFiles) {
+        try {
+          if (existsSync(file)) {
+            await unlink(file);
+            console.log(`🗑️  Cleaned up: ${basename(file)}`);
+          }
+        } catch (error) {
+          console.warn(`⚠️  Failed to clean up ${file}:`, error);
+        }
+      }
+    }
   }
 
   /**
@@ -295,6 +550,50 @@ class VideoProcessor {
   }
 
   /**
+   * Add video and related files to cleanup list
+   */
+  private addVideoFilesToCleanup(
+    videoFile: string,
+    jsonFile: string,
+    filesToCleanup: string[],
+  ): void {
+    // Add video and metadata files
+    filesToCleanup.push(videoFile, jsonFile);
+
+    // Also add description file if it exists
+    const descFile = videoFile.replace(extname(videoFile), ".description");
+    try {
+      if (existsSync(descFile)) {
+        filesToCleanup.push(descFile);
+      }
+    } catch {
+      // Description file doesn't exist, ignore
+    }
+  }
+
+  /**
+   * Get playlist metadata files for cleanup
+   */
+  private async getPlaylistMetadataFiles(): Promise<string[]> {
+    try {
+      const files = await readdir(this.downloadsDir);
+      // Find playlist metadata files (user-level .info.json files)
+      // These have format: username-{hash}.info.json
+      const playlistFiles = files.filter(
+        (file) =>
+          file.endsWith(".info.json") &&
+          !file.match(/\d{13,}\.info\.json$/) && // Not video files (which have long numeric IDs)
+          file.includes("-MS4w"), // Playlist files contain this hash pattern
+      );
+
+      return playlistFiles.map((file) => join(this.downloadsDir, file));
+    } catch (error) {
+      console.warn("Error finding playlist metadata files:", error);
+      return [];
+    }
+  }
+
+  /**
    * Clean up downloaded files
    */
   private async cleanupFiles(filesToDelete: string[]): Promise<void> {
@@ -327,9 +626,26 @@ class VideoProcessor {
   async processVideos(): Promise<void> {
     const args = this.parseArgs();
     console.log("🚀 Starting video processing...");
+
     if (args.dryRun) {
       console.log("🔍 DRY RUN MODE - No actual processing will occur");
     }
+
+    if (args.skipVoiceovers || args.checkVoiceovers) {
+      if (!this.replicate || !this.gemini) {
+        console.error(
+          "❌ Voice-over detection requires REPLICATE_API_TOKEN and GEMINI_API_KEY",
+        );
+        console.log("ℹ️  Continuing without voice-over detection...");
+        args.skipVoiceovers = false;
+        args.checkVoiceovers = false;
+      } else {
+        console.log(
+          `🎤 Voice-over detection enabled (${args.skipVoiceovers ? "will skip" : "will log only"})`,
+        );
+      }
+    }
+
     console.log(`📁 Processing videos from: ${this.downloadsDir}`);
 
     const videoPairs = await this.getVideoFiles();
@@ -343,6 +659,7 @@ class VideoProcessor {
 
     let processed = 0;
     let skipped = 0;
+    let skippedVoiceovers = 0;
     let failed = 0;
     const filesToCleanup: string[] = [];
 
@@ -367,8 +684,40 @@ class VideoProcessor {
           `⏭️  Video already exists in database, skipping: ${metadata.title}`,
         );
         skipped++;
-        filesToCleanup.push(videoFile, jsonFile);
+        this.addVideoFilesToCleanup(videoFile, jsonFile, filesToCleanup);
         continue;
+      }
+
+      // Check for voice-overs if enabled
+      if (args.skipVoiceovers || args.checkVoiceovers) {
+        try {
+          const voiceoverCheck = await this.checkVoiceOver(videoFile);
+
+          if (voiceoverCheck.hasVoiceover) {
+            console.log(
+              `🎤 Voice-over detected (${(voiceoverCheck.confidence * 100).toFixed(1)}% confidence)`,
+            );
+
+            if (args.skipVoiceovers) {
+              console.log(
+                `⏭️  Skipping video with voice-over: ${metadata.title}`,
+              );
+              skippedVoiceovers++;
+              this.addVideoFilesToCleanup(videoFile, jsonFile, filesToCleanup);
+              continue;
+            }
+          } else {
+            console.log(
+              `🎵 No voice-over detected (${(voiceoverCheck.confidence * 100).toFixed(1)}% confidence)`,
+            );
+          }
+        } catch (error) {
+          console.warn(
+            `⚠️  Voice-over detection failed for ${videoFilename}:`,
+            error,
+          );
+          console.log(`ℹ️  Continuing with processing...`);
+        }
       }
 
       if (args.dryRun) {
@@ -396,16 +745,13 @@ class VideoProcessor {
       }
 
       processed++;
-      filesToCleanup.push(videoFile, jsonFile);
+      this.addVideoFilesToCleanup(videoFile, jsonFile, filesToCleanup);
+    }
 
-      // Also clean up description file if it exists
-      const descFile = videoFile.replace(extname(videoFile), ".description");
-      try {
-        await readFile(descFile);
-        filesToCleanup.push(descFile);
-      } catch {
-        // Description file doesn't exist, ignore
-      }
+    // Add playlist metadata files to cleanup
+    if (!args.skipCleanup) {
+      const playlistFiles = await this.getPlaylistMetadataFiles();
+      filesToCleanup.push(...playlistFiles);
     }
 
     // Cleanup files
@@ -416,7 +762,10 @@ class VideoProcessor {
     // Summary
     console.log(`\n📊 Processing Summary:`);
     console.log(`   ✅ Processed: ${processed}`);
-    console.log(`   ⏭️  Skipped: ${skipped}`);
+    console.log(`   ⏭️  Skipped (duplicates): ${skipped}`);
+    if (args.skipVoiceovers) {
+      console.log(`   🎤 Skipped (voice-overs): ${skippedVoiceovers}`);
+    }
     console.log(`   ❌ Failed: ${failed}`);
     console.log(
       `   📁 Cleaned up: ${!args.skipCleanup ? filesToCleanup.length : 0} files`,
@@ -435,21 +784,29 @@ Usage: bun scripts/process-videos.ts [options]
 Options:
   -s, --skip-duplicates    Skip videos that already exist in database
   -c, --skip-cleanup       Don't delete processed files
+  -v, --skip-voiceovers    Skip videos that contain voice-over content
+      --check-voiceovers   Enable voice-over detection but don't skip (log only)
   -d, --dry-run           Show what would be processed without doing it
   -h, --help              Show this help message
 
 Description:
   Processes downloaded TikTok videos by:
   1. Reading video files and metadata from downloads folder
-  2. Checking for existing videos in database (optional)
-  3. Uploading videos to S3 under video-sample/ prefix
-  4. Saving metadata to SampleVideo table
-  5. Cleaning up processed files (optional)
+  2. Optionally checking for voice-over content using AI analysis
+  3. Checking for existing videos in database (optional)
+  4. Uploading videos to S3 under video-sample/ prefix
+  5. Saving metadata to SampleVideo table
+  6. Cleaning up processed files (optional)
+
+Voice-over Detection:
+  Requires REPLICATE_API_TOKEN and GEMINI_API_KEY environment variables.
+  Uses Whisper for transcription and Gemini AI for voice-over vs music detection.
 
 Examples:
-  bun scripts/process-videos.ts                    # Process all videos
-  bun scripts/process-videos.ts --skip-duplicates  # Skip existing videos
-  bun scripts/process-videos.ts --skip-cleanup     # Keep files after processing
+  bun scripts/process-videos.ts                     # Process all videos
+  bun scripts/process-videos.ts --skip-duplicates   # Skip existing videos
+  bun scripts/process-videos.ts --skip-voiceovers   # Skip videos with voice-overs
+  bun scripts/process-videos.ts --check-voiceovers  # Log voice-over detection results
     `);
   }
 }
