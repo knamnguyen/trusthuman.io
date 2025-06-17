@@ -12,10 +12,9 @@ export const ViralHookInputSchema = z.object({
 
 // Output schema for viral hook extraction (matches VideoStitch requirements)
 export const ViralHookResponseSchema = z.object({
-  hookEndTimestamp: z.string().regex(
-    /^(\d{1,2}):(\d{2})$/,
-    "Hook end timestamp must be in MM:SS format"
-  ),
+  hookEndTimestamp: z
+    .string()
+    .regex(/^(\d{1,2}):(\d{2})$/, "Hook end timestamp must be in MM:SS format"),
   confidence: z.string().optional(),
   description: z.string().optional(),
 });
@@ -24,20 +23,36 @@ export const ViralHookResponseSchema = z.object({
 export const DemoVideoInputSchema = z.object({
   videoUrl: z.string().url("Valid video URL is required"),
   maxDuration: z.number().positive("Max duration must be positive"),
-  numSegments: z.number().int().min(1).max(20, "Number of segments must be between 1 and 20"),
+  numSegments: z
+    .number()
+    .int()
+    .min(1)
+    .max(20, "Number of segments must be between 1 and 20"),
 });
 
 // Individual segment schema (matches VideoStitch clip format)
 export const VideoSegmentSchema = z.object({
-  caption: z.string().min(1, "Caption is required").max(100, "Caption must be 100 characters or less"),
+  caption: z
+    .string()
+    .min(1, "Caption is required")
+    .max(100, "Caption must be 100 characters or less"),
   start: z.number().nonnegative("Start time must be non-negative"),
   end: z.number().positive("End time must be positive"),
 });
 
 // Output schema for demo video condensing
 export const DemoVideoResponseSchema = z.object({
-  segments: z.array(VideoSegmentSchema).min(1, "At least one segment is required"),
+  segments: z
+    .array(VideoSegmentSchema)
+    .min(1, "At least one segment is required"),
   totalDuration: z.number().positive("Total duration must be positive"),
+  productInfo: z
+    .string()
+    .min(10, "Product info must be at least 10 characters")
+    .max(
+      800,
+      "Product info must be 800 characters or less (approximately 100 words)",
+    ),
 });
 
 // General video processing input schema
@@ -61,4 +76,4 @@ export type DemoVideoInput = z.infer<typeof DemoVideoInputSchema>;
 export type DemoVideoResponse = z.infer<typeof DemoVideoResponseSchema>;
 export type VideoSegment = z.infer<typeof VideoSegmentSchema>;
 export type VideoProcessingInput = z.infer<typeof VideoProcessingInputSchema>;
-export type GeminiFileResponse = z.infer<typeof GeminiFileResponseSchema>; 
+export type GeminiFileResponse = z.infer<typeof GeminiFileResponseSchema>;

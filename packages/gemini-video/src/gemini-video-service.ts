@@ -1,28 +1,29 @@
-import { GoogleGenAI, createPartFromUri } from '@google/genai';
-import { writeFileSync, unlinkSync } from 'fs';
-import { tmpdir } from 'os';
-import { join } from 'path';
+import { unlinkSync, writeFileSync } from "fs";
+import { tmpdir } from "os";
+import { join } from "path";
+import { createPartFromUri, GoogleGenAI } from "@google/genai";
+
 import type {
-  GeminiVideoConfig,
-  ViralHookInput,
-  ViralHookResponse,
   DemoVideoInput,
   DemoVideoResponse,
-  VideoProcessingInput,
   GeminiFileResponse,
-} from './schema-validators';
+  GeminiVideoConfig,
+  VideoProcessingInput,
+  ViralHookInput,
+  ViralHookResponse,
+} from "./schema-validators";
 import {
-  GeminiVideoConfigSchema,
-  ViralHookInputSchema,
-  ViralHookResponseSchema,
   DemoVideoInputSchema,
   DemoVideoResponseSchema,
+  GeminiVideoConfigSchema,
   VideoProcessingInputSchema,
-} from './schema-validators';
+  ViralHookInputSchema,
+  ViralHookResponseSchema,
+} from "./schema-validators";
 
 /**
  * GeminiVideoService - A comprehensive service for video processing using Google's Gemini API
- * 
+ *
  * Features:
  * - Upload videos from S3 URLs to Gemini Files API
  * - Extract viral video hook timing with precise timestamps
@@ -36,7 +37,7 @@ export class GeminiVideoService {
   constructor(config: GeminiVideoConfig) {
     // Validate configuration
     this.config = GeminiVideoConfigSchema.parse(config);
-    
+
     // Initialize Gemini client
     this.client = new GoogleGenAI({ apiKey: this.config.apiKey });
   }
@@ -46,72 +47,81 @@ export class GeminiVideoService {
    * @param videoUrl - URL of the video to upload
    * @returns File response with name, URI, and MIME type
    */
-  private async uploadVideoToGemini(videoUrl: string): Promise<GeminiFileResponse> {
+  private async uploadVideoToGemini(
+    videoUrl: string,
+  ): Promise<GeminiFileResponse> {
     let tempFilePath: string | null = null;
-    
+
     try {
-      console.log('📤 Uploading video to Gemini Files API...');
-      console.log('🔗 Video URL:', videoUrl);
+      console.log("📤 Uploading video to Gemini Files API...");
+      console.log("🔗 Video URL:", videoUrl);
 
       // Extract filename from URL for display name
-      const urlParts = videoUrl.split('/');
-      const fileName = urlParts[urlParts.length - 1] || 'video.mp4';
-      const displayName = decodeURIComponent(fileName).replace(/[^\w\-_\.]/g, '_');
+      const urlParts = videoUrl.split("/");
+      const fileName = urlParts[urlParts.length - 1] || "video.mp4";
+      const displayName = decodeURIComponent(fileName).replace(
+        /[^\w\-_\.]/g,
+        "_",
+      );
 
       // Download video to temporary file
-      console.log('⬇️ Downloading video from S3...');
+      console.log("⬇️ Downloading video from S3...");
       const response = await fetch(videoUrl);
-      
+
       if (!response.ok) {
-        throw new Error(`Failed to download video: ${response.status} ${response.statusText}`);
+        throw new Error(
+          `Failed to download video: ${response.status} ${response.statusText}`,
+        );
       }
 
       const videoBuffer = Buffer.from(await response.arrayBuffer());
-      
+
       // Create temporary file
       const tempDir = tmpdir();
       tempFilePath = join(tempDir, `gemini-video-${Date.now()}-${displayName}`);
       writeFileSync(tempFilePath, videoBuffer);
-      
-      console.log('💾 Video downloaded to temporary file:', tempFilePath);
+
+      console.log("💾 Video downloaded to temporary file:", tempFilePath);
 
       // Upload video file to Gemini
       const uploadResult = await this.client.files.upload({
         file: tempFilePath,
         config: {
-          mimeType: 'video/mp4',
+          mimeType: "video/mp4",
           displayName: displayName,
         },
       });
 
-      console.log('✅ Video uploaded successfully');
-      console.log('📄 File name:', uploadResult.name);
-      console.log('🔗 File URI:', uploadResult.uri);
+      console.log("✅ Video uploaded successfully");
+      console.log("📄 File name:", uploadResult.name);
+      console.log("🔗 File URI:", uploadResult.uri);
 
       if (!uploadResult.name || !uploadResult.uri) {
-        throw new Error('Upload result missing required name or uri');
+        throw new Error("Upload result missing required name or uri");
       }
 
       // Wait for file to be processed and active
-      console.log('⏳ Waiting for file to be processed...');
+      console.log("⏳ Waiting for file to be processed...");
       await this.waitForFileActive(uploadResult.name);
 
       return {
         name: uploadResult.name,
         uri: uploadResult.uri,
-        mimeType: uploadResult.mimeType || 'video/mp4',
+        mimeType: uploadResult.mimeType || "video/mp4",
       };
     } catch (error) {
-      console.error('❌ Error uploading video to Gemini:', error);
-      throw new Error(`Failed to upload video to Gemini: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error("❌ Error uploading video to Gemini:", error);
+      throw new Error(
+        `Failed to upload video to Gemini: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     } finally {
       // Clean up temporary file
       if (tempFilePath) {
         try {
           unlinkSync(tempFilePath);
-          console.log('🗑️ Temporary file cleaned up');
+          console.log("🗑️ Temporary file cleaned up");
         } catch (cleanupError) {
-          console.warn('⚠️ Failed to clean up temporary file:', cleanupError);
+          console.warn("⚠️ Failed to clean up temporary file:", cleanupError);
         }
       }
     }
@@ -129,25 +139,27 @@ export class GeminiVideoService {
     while (Date.now() - startTime < maxWaitTime) {
       try {
         const fileInfo = await this.client.files.get({ name: fileName });
-        
-        if (fileInfo.state === 'ACTIVE') {
-          console.log('✅ File is now active and ready for processing');
+
+        if (fileInfo.state === "ACTIVE") {
+          console.log("✅ File is now active and ready for processing");
           return;
         }
-        
-        if (fileInfo.state === 'FAILED') {
-          throw new Error('File processing failed');
+
+        if (fileInfo.state === "FAILED") {
+          throw new Error("File processing failed");
         }
-        
+
         console.log(`⏳ File state: ${fileInfo.state}, waiting...`);
-        await new Promise(resolve => setTimeout(resolve, pollInterval));
+        await new Promise((resolve) => setTimeout(resolve, pollInterval));
       } catch (error) {
-        console.error('❌ Error checking file status:', error);
-        throw new Error(`Failed to check file status: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        console.error("❌ Error checking file status:", error);
+        throw new Error(
+          `Failed to check file status: ${error instanceof Error ? error.message : "Unknown error"}`,
+        );
       }
     }
-    
-    throw new Error('Timeout waiting for file to become active');
+
+    throw new Error("Timeout waiting for file to become active");
   }
 
   /**
@@ -157,9 +169,9 @@ export class GeminiVideoService {
   private async cleanupGeminiFile(fileName: string): Promise<void> {
     try {
       await this.client.files.delete({ name: fileName });
-      console.log('🗑️ Gemini file cleaned up:', fileName);
+      console.log("🗑️ Gemini file cleaned up:", fileName);
     } catch (error) {
-      console.warn('⚠️ Failed to clean up Gemini file:', error);
+      console.warn("⚠️ Failed to clean up Gemini file:", error);
     }
   }
 
@@ -172,16 +184,16 @@ export class GeminiVideoService {
     // Validate input
     const validatedInput = VideoProcessingInputSchema.parse(input);
     let videoFile: GeminiFileResponse | null = null;
-    
+
     try {
-      console.log('🎬 Processing video with custom prompt...');
-      
+      console.log("🎬 Processing video with custom prompt...");
+
       // Upload video to Gemini
       videoFile = await this.uploadVideoToGemini(validatedInput.videoUrl);
-      
+
       // Generate content with video and prompt
       const response = await this.client.models.generateContent({
-        model: 'gemini-2.0-flash',
+        model: "gemini-2.0-flash",
         contents: [
           createPartFromUri(videoFile.uri, videoFile.mimeType),
           validatedInput.prompt,
@@ -189,16 +201,18 @@ export class GeminiVideoService {
       });
 
       const result = response.text;
-      console.log('✅ Video processing completed');
-      
+      console.log("✅ Video processing completed");
+
       if (!result) {
-        throw new Error('Empty response from Gemini API');
+        throw new Error("Empty response from Gemini API");
       }
-      
+
       return result;
     } catch (error) {
-      console.error('❌ Error processing video:', error);
-      throw new Error(`Failed to process video: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error("❌ Error processing video:", error);
+      throw new Error(
+        `Failed to process video: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     } finally {
       // Clean up Gemini file
       if (videoFile) {
@@ -216,13 +230,13 @@ export class GeminiVideoService {
     // Validate input
     const validatedInput = ViralHookInputSchema.parse(input);
     let videoFile: GeminiFileResponse | null = null;
-    
+
     try {
-      console.log('🎣 Extracting viral hook timing...');
-      
+      console.log("🎣 Extracting viral hook timing...");
+
       // Upload video to Gemini
       videoFile = await this.uploadVideoToGemini(validatedInput.videoUrl);
-      
+
       // Create specific prompt for hook extraction
       const hookPrompt = `
         The following video is a viral short form video with a hook.
@@ -239,10 +253,10 @@ export class GeminiVideoService {
         
         Give me the time in MM:SS format (e.g., "00:05", "01:23").
       `;
-      
+
       // Generate content with video and hook extraction prompt
       const response = await this.client.models.generateContent({
-        model: 'gemini-2.0-flash',
+        model: "gemini-2.0-flash",
         contents: [
           createPartFromUri(videoFile.uri, videoFile.mimeType),
           hookPrompt,
@@ -250,12 +264,12 @@ export class GeminiVideoService {
       });
 
       const result = response.text;
-      console.log('📝 Raw response:', result);
-      
+      console.log("📝 Raw response:", result);
+
       if (!result) {
-        throw new Error('Empty response from Gemini API');
+        throw new Error("Empty response from Gemini API");
       }
-      
+
       // Parse JSON response
       let parsedResponse;
       try {
@@ -264,21 +278,23 @@ export class GeminiVideoService {
         const jsonStr = jsonMatch ? jsonMatch[0] : result;
         parsedResponse = JSON.parse(jsonStr);
       } catch (parseError) {
-        console.error('❌ Failed to parse JSON response:', parseError);
-        console.log('Raw response:', result);
-        throw new Error('Failed to parse hook extraction response as JSON');
+        console.error("❌ Failed to parse JSON response:", parseError);
+        console.log("Raw response:", result);
+        throw new Error("Failed to parse hook extraction response as JSON");
       }
-      
+
       // Validate response format
       const validatedResponse = ViralHookResponseSchema.parse(parsedResponse);
-      
-      console.log('✅ Hook extraction completed');
-      console.log('⏰ Hook ends at:', validatedResponse.hookEndTimestamp);
-      
+
+      console.log("✅ Hook extraction completed");
+      console.log("⏰ Hook ends at:", validatedResponse.hookEndTimestamp);
+
       return validatedResponse;
     } catch (error) {
-      console.error('❌ Error extracting viral hook:', error);
-      throw new Error(`Failed to extract viral hook: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error("❌ Error extracting viral hook:", error);
+      throw new Error(
+        `Failed to extract viral hook: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     } finally {
       // Clean up Gemini file
       if (videoFile) {
@@ -296,17 +312,21 @@ export class GeminiVideoService {
     // Validate input
     const validatedInput = DemoVideoInputSchema.parse(input);
     let videoFile: GeminiFileResponse | null = null;
-    
+
     try {
-      console.log('🎬 Condensing demo video...');
-      console.log(`📊 Target: ${validatedInput.numSegments} segments, max ${validatedInput.maxDuration}s total`);
-      
+      console.log("🎬 Condensing demo video...");
+      console.log(
+        `📊 Target: ${validatedInput.numSegments} segments, max ${validatedInput.maxDuration}s total`,
+      );
+
       // Upload video to Gemini
       videoFile = await this.uploadVideoToGemini(validatedInput.videoUrl);
-      
+
       // Calculate segment length
-      const snippetLength = Math.round(validatedInput.maxDuration / validatedInput.numSegments);
-      
+      const snippetLength = Math.round(
+        validatedInput.maxDuration / validatedInput.numSegments,
+      );
+
       // Create specific prompt for demo condensing
       const demoPrompt = `
         This is a product demo video. I need to condense it into a maximum ${validatedInput.maxDuration} second version.
@@ -321,20 +341,30 @@ export class GeminiVideoService {
         1. A brief caption (maximum 20 words)
         2. The exact start and end timestamps in the video (in seconds.milliseconds format)
         
+        Additionally, analyze the product being demonstrated and provide a comprehensive description that includes:
+        - Product name and type/category
+        - Key features and functionality shown
+        - Benefits and use cases demonstrated
+        - Target audience or industry
+        - Any technical specifications or capabilities mentioned
+        - Keywords that would help match this product with relevant marketing content
+        
         Format your response as JSON with this structure:
         {
           "segments": [
             {"caption": "Brief caption here", "start": 12.5, "end": 18.2}
           ],
-          "totalDuration": ${validatedInput.maxDuration}
+          "totalDuration": ${validatedInput.maxDuration},
+          "productInfo": "A comprehensive 100-word description of the product including features, benefits, categories, and relevant keywords for similarity matching..."
         }
         
         Ensure the total duration of all segments is less than ${validatedInput.maxDuration} seconds.
+        Ensure the productInfo is approximately 100 words and includes relevant keywords for similarity search.
       `;
-      
+
       // Generate content with video and demo condensing prompt
       const response = await this.client.models.generateContent({
-        model: 'gemini-2.0-flash',
+        model: "gemini-2.0-flash",
         contents: [
           createPartFromUri(videoFile.uri, videoFile.mimeType),
           demoPrompt,
@@ -342,12 +372,12 @@ export class GeminiVideoService {
       });
 
       const result = response.text;
-      console.log('📝 Raw response:', result);
-      
+      console.log("📝 Raw response:", result);
+
       if (!result) {
-        throw new Error('Empty response from Gemini API');
+        throw new Error("Empty response from Gemini API");
       }
-      
+
       // Parse JSON response
       let parsedResponse;
       try {
@@ -356,22 +386,24 @@ export class GeminiVideoService {
         const jsonStr = jsonMatch ? jsonMatch[0] : result;
         parsedResponse = JSON.parse(jsonStr);
       } catch (parseError) {
-        console.error('❌ Failed to parse JSON response:', parseError);
-        console.log('Raw response:', result);
-        throw new Error('Failed to parse demo condensing response as JSON');
+        console.error("❌ Failed to parse JSON response:", parseError);
+        console.log("Raw response:", result);
+        throw new Error("Failed to parse demo condensing response as JSON");
       }
-      
+
       // Validate response format
       const validatedResponse = DemoVideoResponseSchema.parse(parsedResponse);
-      
-      console.log('✅ Demo video condensing completed');
+
+      console.log("✅ Demo video condensing completed");
       console.log(`📊 Generated ${validatedResponse.segments.length} segments`);
       console.log(`⏱️ Total duration: ${validatedResponse.totalDuration}s`);
-      
+
       return validatedResponse;
     } catch (error) {
-      console.error('❌ Error condensing demo video:', error);
-      throw new Error(`Failed to condense demo video: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error("❌ Error condensing demo video:", error);
+      throw new Error(
+        `Failed to condense demo video: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     } finally {
       // Clean up Gemini file
       if (videoFile) {
@@ -386,12 +418,14 @@ export class GeminiVideoService {
  * @param apiKey - Optional API key, falls back to environment variable
  * @returns Configured GeminiVideoService instance
  */
-export const createGeminiVideoService = (apiKey?: string): GeminiVideoService => {
+export const createGeminiVideoService = (
+  apiKey?: string,
+): GeminiVideoService => {
   const geminiApiKey = apiKey || process.env.GEMINI_API_KEY;
-  
+
   if (!geminiApiKey) {
-    throw new Error('GEMINI_API_KEY environment variable is required');
+    throw new Error("GEMINI_API_KEY environment variable is required");
   }
-  
+
   return new GeminiVideoService({ apiKey: geminiApiKey });
-}; 
+};
