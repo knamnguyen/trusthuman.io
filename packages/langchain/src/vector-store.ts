@@ -29,16 +29,16 @@ export class VideoVectorStore {
       {
         prisma: Prisma,
         tableName: "SampleVideo",
-        vectorColumnName: "descriptionEmbedding",
+        vectorColumnName: "searchEmbedding",
         columns: {
           id: PrismaVectorStore.IdColumn,
           description: PrismaVectorStore.ContentColumn,
-          title: "title",
-          s3Url: "s3Url",
-          views: "views",
-          likes: "likes",
-          comments: "comments",
-          durationSeconds: "durationSeconds",
+          title: true,
+          s3Url: true,
+          views: true,
+          likes: true,
+          comments: true,
+          durationSeconds: true,
         },
       },
     );
@@ -50,6 +50,7 @@ export class VideoVectorStore {
   async addVideoWithEmbedding(video: {
     id: string;
     description: string | null;
+    hookInfo?: string | null | undefined;
     title: string;
     s3Url: string;
     views: number;
@@ -57,15 +58,26 @@ export class VideoVectorStore {
     comments: number;
     durationSeconds: number;
   }): Promise<void> {
-    if (!video.description) {
+    // Combine description and hookInfo for search embedding
+    const searchContent = [video.description?.trim(), video.hookInfo?.trim()]
+      .filter(Boolean)
+      .join(" ");
+
+    if (!searchContent) {
       console.warn(
-        `Video ${video.id} has no description, skipping embedding generation`,
+        `Video ${video.id} has no description or hook info, skipping embedding generation`,
       );
       return;
     }
 
+    // Create a video object with the combined content for embedding
+    const videoForEmbedding = {
+      ...video,
+      description: searchContent,
+    } as SampleVideo;
+
     // Add the video record with embedding generation handled by LangChain
-    await this.vectorStore.addModels([video as SampleVideo]);
+    await this.vectorStore.addModels([videoForEmbedding]);
   }
 
   /**
@@ -73,7 +85,7 @@ export class VideoVectorStore {
    */
   async findSimilarVideos(
     queryText: string,
-    limit: number = 3,
+    limit = 3,
   ): Promise<VideoSearchResult[]> {
     const results = await this.vectorStore.similaritySearch(queryText, limit);
 
@@ -85,7 +97,7 @@ export class VideoVectorStore {
    */
   async findSimilarVideosWithScore(
     queryText: string,
-    limit: number = 3,
+    limit = 3,
   ): Promise<VideoSearchResult[]> {
     const results = await this.vectorStore.similaritySearchWithScore(
       queryText,

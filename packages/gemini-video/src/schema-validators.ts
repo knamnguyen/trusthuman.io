@@ -16,7 +16,13 @@ export const ViralHookResponseSchema = z.object({
     .string()
     .regex(/^(\d{1,2}):(\d{2})$/, "Hook end timestamp must be in MM:SS format"),
   confidence: z.string().optional(),
-  description: z.string().optional(),
+  hookInfo: z
+    .string()
+    .min(10, "Hook info must be at least 10 characters")
+    .max(
+      800,
+      "Hook info must be 800 characters or less (approximately 100 words)",
+    ),
 });
 
 // Input schema for demo video condensing

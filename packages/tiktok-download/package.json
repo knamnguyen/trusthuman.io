@@ -22,6 +22,7 @@
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
     "@sassy/db": "workspace:*",
+    "@sassy/gemini-video": "workspace:*",
     "@sassy/langchain": "workspace:*",
     "@sassy/s3": "workspace:*",
     "fluent-ffmpeg": "^2.1.3",

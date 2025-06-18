@@ -248,10 +248,12 @@ export class GeminiVideoService {
         {
           "hookEndTimestamp": "MM:SS",
           "confidence": "high/medium/low",
-          "description": "Brief description of what happens at the hook end"
+          "hookInfo": "A comprehensive 100-word description of the hook including what happens at the beginning, throughout, and end of the hook, text that appears, visual elements, audio cues, and any other relevant details for similarity matching with product demos"
         }
         
         Give me the time in MM:SS format (e.g., "00:05", "01:23").
+        Make sure the hookInfo is approximately 100 words and includes relevant keywords for similarity search.
+
       `;
 
       // Generate content with video and hook extraction prompt
@@ -288,6 +290,10 @@ export class GeminiVideoService {
 
       console.log("✅ Hook extraction completed");
       console.log("⏰ Hook ends at:", validatedResponse.hookEndTimestamp);
+      console.log(
+        "📝 Hook info:",
+        validatedResponse.hookInfo.substring(0, 100) + "...",
+      );
 
       return validatedResponse;
     } catch (error) {

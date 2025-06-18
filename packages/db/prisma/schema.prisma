@@ -74,11 +74,14 @@ model SampleVideo {
   id              String   @id @default(cuid())
   webpageUrl      String   @unique // TikTok video URL - used to check for duplicates
   s3Url           String   // S3 URL where the video is stored
-  hookCutUrl      String?   
+  hookEndTimestamp String   // Timestamp where the hook ends
+  hookCutConfidence String? // Confidence in the hook cut
+  hookCutUrl      String?   // S3 URL where the hook cut is stored
+  hookInfo        String?   // Description of the hook
   title           String   // Video title from TikTok
   description     String?  // Video description/caption
   // Google text-embedding-004 produces 768-dimensional embeddings
-  descriptionEmbedding Unsupported("vector(768)")?
+  searchEmbedding Unsupported("vector(768)")?
   views           Int      @default(0) // View count
   comments        Int      @default(0) // Comment count  
   likes           Int      @default(0) // Like count

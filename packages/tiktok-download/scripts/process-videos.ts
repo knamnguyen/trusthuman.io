@@ -55,6 +55,7 @@ import ffmpeg from "fluent-ffmpeg";
 import Replicate from "replicate";
 
 import { db } from "@sassy/db";
+import { createGeminiVideoService } from "@sassy/gemini-video";
 import { VideoVectorStore } from "@sassy/langchain/vector-store";
 import { S3BucketService } from "@sassy/s3";
 
@@ -70,6 +71,9 @@ interface TikTokVideoMetadata {
   comment_count: number;
   duration: number;
   webpage_url: string;
+  hookEndTimestamp?: string;
+  hookCutConfidence?: string;
+  hookInfo?: string;
 }
 
 interface ProcessVideoArgs {
@@ -85,6 +89,7 @@ class VideoProcessor {
   private videoVectorStore: VideoVectorStore;
   private replicate?: Replicate;
   private gemini?: GoogleGenerativeAI;
+  private geminiVideoService: any;
   private downloadsDir: string;
 
   constructor() {
@@ -109,6 +114,9 @@ class VideoProcessor {
     if (process.env.GEMINI_API_KEY) {
       this.gemini = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     }
+
+    // Initialize Gemini Video Service for hook extraction
+    this.geminiVideoService = createGeminiVideoService();
 
     this.downloadsDir = join(process.cwd(), "downloads");
   }
@@ -456,6 +464,36 @@ Be strict in your analysis - only classify as voice-over if you're confident it'
   }
 
   /**
+   * Extract viral hook from S3 URL using GeminiVideoService
+   */
+  private async extractViralHook(s3Url: string): Promise<{
+    hookEndTimestamp: string;
+    confidence: string;
+    hookInfo: string;
+  }> {
+    console.log(`🎣 Extracting viral hook from S3 URL...`);
+
+    try {
+      const result = await this.geminiVideoService.extractViralHook({
+        videoUrl: s3Url,
+      });
+
+      console.log(`✅ Hook extraction completed: ${result.hookEndTimestamp}`);
+
+      return {
+        hookEndTimestamp: result.hookEndTimestamp,
+        confidence: result.confidence || "medium",
+        hookInfo: result.hookInfo || "",
+      };
+    } catch (error) {
+      console.error(`❌ Hook extraction failed:`, error);
+      throw new Error(
+        `Hook extraction failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    }
+  }
+
+  /**
    * Upload video to S3 using optimized multipart upload for large files
    */
   private async uploadVideoToS3(
@@ -505,6 +543,9 @@ Be strict in your analysis - only classify as voice-over if you're confident it'
         data: {
           webpageUrl: metadata.webpage_url,
           s3Url: s3Url,
+          hookEndTimestamp: metadata.hookEndTimestamp || "00:00",
+          hookCutConfidence: metadata.hookCutConfidence,
+          hookInfo: metadata.hookInfo,
           title: metadata.title,
           description: metadata.description,
           views: metadata.view_count,
@@ -516,13 +557,20 @@ Be strict in your analysis - only classify as voice-over if you're confident it'
 
       console.log(`✅ Metadata saved successfully`);
 
-      // Generate and store vector embedding if description exists
-      if (metadata.description && metadata.description.trim()) {
+      // Generate and store vector embedding if description or hookInfo exists
+      const hasContent =
+        (metadata.description && metadata.description.trim()) ||
+        (metadata.hookInfo && metadata.hookInfo.trim());
+
+      if (hasContent) {
         try {
-          console.log(`🧠 Generating vector embedding for description...`);
+          console.log(
+            `🧠 Generating vector embedding for description + hook info...`,
+          );
           await this.videoVectorStore.addVideoWithEmbedding({
             id: savedVideo.id,
             description: metadata.description,
+            hookInfo: metadata.hookInfo,
             title: metadata.title,
             s3Url: s3Url,
             views: metadata.view_count,
@@ -539,7 +587,9 @@ Be strict in your analysis - only classify as voice-over if you're confident it'
           // Don't fail the entire operation if embedding fails
         }
       } else {
-        console.log(`ℹ️  No description available, skipping vector embedding`);
+        console.log(
+          `ℹ️  No description or hook info available, skipping vector embedding`,
+        );
       }
 
       return true;
@@ -660,6 +710,7 @@ Be strict in your analysis - only classify as voice-over if you're confident it'
     let processed = 0;
     let skipped = 0;
     let skippedVoiceovers = 0;
+    let hookExtractionFailed = 0;
     let failed = 0;
     const filesToCleanup: string[] = [];
 
@@ -736,6 +787,21 @@ Be strict in your analysis - only classify as voice-over if you're confident it'
         continue;
       }
 
+      // Extract viral hook after S3 upload
+      try {
+        const hookData = await this.extractViralHook(s3Url);
+        metadata.hookEndTimestamp = hookData.hookEndTimestamp;
+        metadata.hookCutConfidence = hookData.confidence;
+        metadata.hookInfo = hookData.hookInfo;
+        console.log(`✅ Hook extraction successful for ${videoFilename}`);
+      } catch (error) {
+        console.error(`❌ Hook extraction failed for ${videoFilename}:`, error);
+        hookExtractionFailed++;
+        // Skip this video for data quality
+        this.addVideoFilesToCleanup(videoFile, jsonFile, filesToCleanup);
+        continue;
+      }
+
       // Save to database
       const saved = await this.saveToDatabase(metadata, s3Url);
       if (!saved) {
@@ -766,6 +832,9 @@ Be strict in your analysis - only classify as voice-over if you're confident it'
     if (args.skipVoiceovers) {
       console.log(`   🎤 Skipped (voice-overs): ${skippedVoiceovers}`);
     }
+    console.log(
+      `   🎣 Skipped (hook extraction failed): ${hookExtractionFailed}`,
+    );
     console.log(`   ❌ Failed: ${failed}`);
     console.log(
       `   📁 Cleaned up: ${!args.skipCleanup ? filesToCleanup.length : 0} files`,

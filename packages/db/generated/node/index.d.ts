@@ -3174,7 +3174,10 @@ export namespace Prisma {
     id: string | null
     webpageUrl: string | null
     s3Url: string | null
+    hookEndTimestamp: string | null
+    hookCutConfidence: string | null
     hookCutUrl: string | null
+    hookInfo: string | null
     title: string | null
     description: string | null
     views: number | null
@@ -3189,7 +3192,10 @@ export namespace Prisma {
     id: string | null
     webpageUrl: string | null
     s3Url: string | null
+    hookEndTimestamp: string | null
+    hookCutConfidence: string | null
     hookCutUrl: string | null
+    hookInfo: string | null
     title: string | null
     description: string | null
     views: number | null
@@ -3204,7 +3210,10 @@ export namespace Prisma {
     id: number
     webpageUrl: number
     s3Url: number
+    hookEndTimestamp: number
+    hookCutConfidence: number
     hookCutUrl: number
+    hookInfo: number
     title: number
     description: number
     views: number
@@ -3235,7 +3244,10 @@ export namespace Prisma {
     id?: true
     webpageUrl?: true
     s3Url?: true
+    hookEndTimestamp?: true
+    hookCutConfidence?: true
     hookCutUrl?: true
+    hookInfo?: true
     title?: true
     description?: true
     views?: true
@@ -3250,7 +3262,10 @@ export namespace Prisma {
     id?: true
     webpageUrl?: true
     s3Url?: true
+    hookEndTimestamp?: true
+    hookCutConfidence?: true
     hookCutUrl?: true
+    hookInfo?: true
     title?: true
     description?: true
     views?: true
@@ -3265,7 +3280,10 @@ export namespace Prisma {
     id?: true
     webpageUrl?: true
     s3Url?: true
+    hookEndTimestamp?: true
+    hookCutConfidence?: true
     hookCutUrl?: true
+    hookInfo?: true
     title?: true
     description?: true
     views?: true
@@ -3367,7 +3385,10 @@ export namespace Prisma {
     id: string
     webpageUrl: string
     s3Url: string
+    hookEndTimestamp: string
+    hookCutConfidence: string | null
     hookCutUrl: string | null
+    hookInfo: string | null
     title: string
     description: string | null
     views: number
@@ -3401,7 +3422,10 @@ export namespace Prisma {
     id?: boolean
     webpageUrl?: boolean
     s3Url?: boolean
+    hookEndTimestamp?: boolean
+    hookCutConfidence?: boolean
     hookCutUrl?: boolean
+    hookInfo?: boolean
     title?: boolean
     description?: boolean
     views?: boolean
@@ -3416,7 +3440,10 @@ export namespace Prisma {
     id?: boolean
     webpageUrl?: boolean
     s3Url?: boolean
+    hookEndTimestamp?: boolean
+    hookCutConfidence?: boolean
     hookCutUrl?: boolean
+    hookInfo?: boolean
     title?: boolean
     description?: boolean
     views?: boolean
@@ -3431,7 +3458,10 @@ export namespace Prisma {
     id?: boolean
     webpageUrl?: boolean
     s3Url?: boolean
+    hookEndTimestamp?: boolean
+    hookCutConfidence?: boolean
     hookCutUrl?: boolean
+    hookInfo?: boolean
     title?: boolean
     description?: boolean
     views?: boolean
@@ -3446,7 +3476,10 @@ export namespace Prisma {
     id?: boolean
     webpageUrl?: boolean
     s3Url?: boolean
+    hookEndTimestamp?: boolean
+    hookCutConfidence?: boolean
     hookCutUrl?: boolean
+    hookInfo?: boolean
     title?: boolean
     description?: boolean
     views?: boolean
@@ -3457,7 +3490,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type SampleVideoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "webpageUrl" | "s3Url" | "hookCutUrl" | "title" | "description" | "views" | "comments" | "likes" | "durationSeconds" | "createdAt" | "updatedAt", ExtArgs["result"]["sampleVideo"]>
+  export type SampleVideoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "webpageUrl" | "s3Url" | "hookEndTimestamp" | "hookCutConfidence" | "hookCutUrl" | "hookInfo" | "title" | "description" | "views" | "comments" | "likes" | "durationSeconds" | "createdAt" | "updatedAt", ExtArgs["result"]["sampleVideo"]>
 
   export type $SampleVideoPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "SampleVideo"
@@ -3466,7 +3499,10 @@ export namespace Prisma {
       id: string
       webpageUrl: string
       s3Url: string
+      hookEndTimestamp: string
+      hookCutConfidence: string | null
       hookCutUrl: string | null
+      hookInfo: string | null
       title: string
       description: string | null
       views: number
@@ -3901,7 +3937,10 @@ export namespace Prisma {
     readonly id: FieldRef<"SampleVideo", 'String'>
     readonly webpageUrl: FieldRef<"SampleVideo", 'String'>
     readonly s3Url: FieldRef<"SampleVideo", 'String'>
+    readonly hookEndTimestamp: FieldRef<"SampleVideo", 'String'>
+    readonly hookCutConfidence: FieldRef<"SampleVideo", 'String'>
     readonly hookCutUrl: FieldRef<"SampleVideo", 'String'>
+    readonly hookInfo: FieldRef<"SampleVideo", 'String'>
     readonly title: FieldRef<"SampleVideo", 'String'>
     readonly description: FieldRef<"SampleVideo", 'String'>
     readonly views: FieldRef<"SampleVideo", 'Int'>
@@ -4323,7 +4362,10 @@ export namespace Prisma {
     id: 'id',
     webpageUrl: 'webpageUrl',
     s3Url: 's3Url',
+    hookEndTimestamp: 'hookEndTimestamp',
+    hookCutConfidence: 'hookCutConfidence',
     hookCutUrl: 'hookCutUrl',
+    hookInfo: 'hookInfo',
     title: 'title',
     description: 'description',
     views: 'views',
@@ -4616,7 +4658,10 @@ export namespace Prisma {
     id?: StringFilter<"SampleVideo"> | string
     webpageUrl?: StringFilter<"SampleVideo"> | string
     s3Url?: StringFilter<"SampleVideo"> | string
+    hookEndTimestamp?: StringFilter<"SampleVideo"> | string
+    hookCutConfidence?: StringNullableFilter<"SampleVideo"> | string | null
     hookCutUrl?: StringNullableFilter<"SampleVideo"> | string | null
+    hookInfo?: StringNullableFilter<"SampleVideo"> | string | null
     title?: StringFilter<"SampleVideo"> | string
     description?: StringNullableFilter<"SampleVideo"> | string | null
     views?: IntFilter<"SampleVideo"> | number
@@ -4631,7 +4676,10 @@ export namespace Prisma {
     id?: SortOrder
     webpageUrl?: SortOrder
     s3Url?: SortOrder
+    hookEndTimestamp?: SortOrder
+    hookCutConfidence?: SortOrderInput | SortOrder
     hookCutUrl?: SortOrderInput | SortOrder
+    hookInfo?: SortOrderInput | SortOrder
     title?: SortOrder
     description?: SortOrderInput | SortOrder
     views?: SortOrder
@@ -4649,7 +4697,10 @@ export namespace Prisma {
     OR?: SampleVideoWhereInput[]
     NOT?: SampleVideoWhereInput | SampleVideoWhereInput[]
     s3Url?: StringFilter<"SampleVideo"> | string
+    hookEndTimestamp?: StringFilter<"SampleVideo"> | string
+    hookCutConfidence?: StringNullableFilter<"SampleVideo"> | string | null
     hookCutUrl?: StringNullableFilter<"SampleVideo"> | string | null
+    hookInfo?: StringNullableFilter<"SampleVideo"> | string | null
     title?: StringFilter<"SampleVideo"> | string
     description?: StringNullableFilter<"SampleVideo"> | string | null
     views?: IntFilter<"SampleVideo"> | number
@@ -4664,7 +4715,10 @@ export namespace Prisma {
     id?: SortOrder
     webpageUrl?: SortOrder
     s3Url?: SortOrder
+    hookEndTimestamp?: SortOrder
+    hookCutConfidence?: SortOrderInput | SortOrder
     hookCutUrl?: SortOrderInput | SortOrder
+    hookInfo?: SortOrderInput | SortOrder
     title?: SortOrder
     description?: SortOrderInput | SortOrder
     views?: SortOrder
@@ -4687,7 +4741,10 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"SampleVideo"> | string
     webpageUrl?: StringWithAggregatesFilter<"SampleVideo"> | string
     s3Url?: StringWithAggregatesFilter<"SampleVideo"> | string
+    hookEndTimestamp?: StringWithAggregatesFilter<"SampleVideo"> | string
+    hookCutConfidence?: StringNullableWithAggregatesFilter<"SampleVideo"> | string | null
     hookCutUrl?: StringNullableWithAggregatesFilter<"SampleVideo"> | string | null
+    hookInfo?: StringNullableWithAggregatesFilter<"SampleVideo"> | string | null
     title?: StringWithAggregatesFilter<"SampleVideo"> | string
     description?: StringNullableWithAggregatesFilter<"SampleVideo"> | string | null
     views?: IntWithAggregatesFilter<"SampleVideo"> | number
@@ -4863,7 +4920,10 @@ export namespace Prisma {
     id?: string
     webpageUrl: string
     s3Url: string
+    hookEndTimestamp: string
+    hookCutConfidence?: string | null
     hookCutUrl?: string | null
+    hookInfo?: string | null
     title: string
     description?: string | null
     views?: number
@@ -4878,7 +4938,10 @@ export namespace Prisma {
     id?: string
     webpageUrl: string
     s3Url: string
+    hookEndTimestamp: string
+    hookCutConfidence?: string | null
     hookCutUrl?: string | null
+    hookInfo?: string | null
     title: string
     description?: string | null
     views?: number
@@ -4893,7 +4956,10 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     webpageUrl?: StringFieldUpdateOperationsInput | string
     s3Url?: StringFieldUpdateOperationsInput | string
+    hookEndTimestamp?: StringFieldUpdateOperationsInput | string
+    hookCutConfidence?: NullableStringFieldUpdateOperationsInput | string | null
     hookCutUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    hookInfo?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     views?: IntFieldUpdateOperationsInput | number
@@ -4908,7 +4974,10 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     webpageUrl?: StringFieldUpdateOperationsInput | string
     s3Url?: StringFieldUpdateOperationsInput | string
+    hookEndTimestamp?: StringFieldUpdateOperationsInput | string
+    hookCutConfidence?: NullableStringFieldUpdateOperationsInput | string | null
     hookCutUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    hookInfo?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     views?: IntFieldUpdateOperationsInput | number
@@ -4923,7 +4992,10 @@ export namespace Prisma {
     id?: string
     webpageUrl: string
     s3Url: string
+    hookEndTimestamp: string
+    hookCutConfidence?: string | null
     hookCutUrl?: string | null
+    hookInfo?: string | null
     title: string
     description?: string | null
     views?: number
@@ -4938,7 +5010,10 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     webpageUrl?: StringFieldUpdateOperationsInput | string
     s3Url?: StringFieldUpdateOperationsInput | string
+    hookEndTimestamp?: StringFieldUpdateOperationsInput | string
+    hookCutConfidence?: NullableStringFieldUpdateOperationsInput | string | null
     hookCutUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    hookInfo?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     views?: IntFieldUpdateOperationsInput | number
@@ -4953,7 +5028,10 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     webpageUrl?: StringFieldUpdateOperationsInput | string
     s3Url?: StringFieldUpdateOperationsInput | string
+    hookEndTimestamp?: StringFieldUpdateOperationsInput | string
+    hookCutConfidence?: NullableStringFieldUpdateOperationsInput | string | null
     hookCutUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    hookInfo?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     views?: IntFieldUpdateOperationsInput | number
@@ -5206,7 +5284,10 @@ export namespace Prisma {
     id?: SortOrder
     webpageUrl?: SortOrder
     s3Url?: SortOrder
+    hookEndTimestamp?: SortOrder
+    hookCutConfidence?: SortOrder
     hookCutUrl?: SortOrder
+    hookInfo?: SortOrder
     title?: SortOrder
     description?: SortOrder
     views?: SortOrder
@@ -5228,7 +5309,10 @@ export namespace Prisma {
     id?: SortOrder
     webpageUrl?: SortOrder
     s3Url?: SortOrder
+    hookEndTimestamp?: SortOrder
+    hookCutConfidence?: SortOrder
     hookCutUrl?: SortOrder
+    hookInfo?: SortOrder
     title?: SortOrder
     description?: SortOrder
     views?: SortOrder
@@ -5243,7 +5327,10 @@ export namespace Prisma {
     id?: SortOrder
     webpageUrl?: SortOrder
     s3Url?: SortOrder
+    hookEndTimestamp?: SortOrder
+    hookCutConfidence?: SortOrder
     hookCutUrl?: SortOrder
+    hookInfo?: SortOrder
     title?: SortOrder
     description?: SortOrder
     views?: SortOrder
