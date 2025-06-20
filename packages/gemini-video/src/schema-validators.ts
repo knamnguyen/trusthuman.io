@@ -5,6 +5,41 @@ export const GeminiVideoConfigSchema = z.object({
   apiKey: z.string().min(1, "Gemini API key is required"),
 });
 
+// Color schema for individual color in palette
+export const ColorSchema = z.object({
+  red: z.number().int().min(0).max(255, "Red value must be 0-255"),
+  green: z.number().int().min(0).max(255, "Green value must be 0-255"),
+  blue: z.number().int().min(0).max(255, "Blue value must be 0-255"),
+  percentage: z.number().min(0).max(1, "Percentage must be between 0 and 1"),
+});
+
+// Color palette schema - exactly 5 colors sorted by percentage descending
+export const ColorPaletteSchema = z
+  .array(ColorSchema)
+  .length(5, "Color palette must contain exactly 5 colors")
+  .refine(
+    (colors) => {
+      // Check if sorted by percentage descending
+      for (let i = 0; i < colors.length - 1; i++) {
+        const current = colors[i];
+        const next = colors[i + 1];
+        if (current && next && current.percentage < next.percentage) {
+          return false;
+        }
+      }
+      return true;
+    },
+    { message: "Colors must be sorted by percentage in descending order" },
+  )
+  .refine(
+    (colors) => {
+      // Check if percentages sum to exactly 1.0 (with small tolerance for floating point)
+      const sum = colors.reduce((total, color) => total + color.percentage, 0);
+      return Math.abs(sum - 1.0) < 0.001;
+    },
+    { message: "Color percentages must sum to exactly 1.0" },
+  );
+
 // Input schema for viral hook extraction
 export const ViralHookInputSchema = z.object({
   videoUrl: z.string().url("Valid video URL is required"),
@@ -23,6 +58,7 @@ export const ViralHookResponseSchema = z.object({
       800,
       "Hook info must be 800 characters or less (approximately 100 words)",
     ),
+  colorPalette: ColorPaletteSchema,
 });
 
 // Input schema for demo video condensing
@@ -59,6 +95,7 @@ export const DemoVideoResponseSchema = z.object({
       800,
       "Product info must be 800 characters or less (approximately 100 words)",
     ),
+  colorPalette: ColorPaletteSchema,
 });
 
 // General video processing input schema
@@ -76,6 +113,8 @@ export const GeminiFileResponseSchema = z.object({
 
 // Type exports
 export type GeminiVideoConfig = z.infer<typeof GeminiVideoConfigSchema>;
+export type Color = z.infer<typeof ColorSchema>;
+export type ColorPalette = z.infer<typeof ColorPaletteSchema>;
 export type ViralHookInput = z.infer<typeof ViralHookInputSchema>;
 export type ViralHookResponse = z.infer<typeof ViralHookResponseSchema>;
 export type DemoVideoInput = z.infer<typeof DemoVideoInputSchema>;

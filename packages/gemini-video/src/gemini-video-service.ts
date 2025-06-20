@@ -244,15 +244,28 @@ export class GeminiVideoService {
         The hook is at the beginning and related but separate from the rest of the content of the video.
         Be extremely specific to the 2 decimal points of the second because I need precise cut.
         
+        Additionally, analyze the visual theme of the video by extracting a color palette from frames throughout the video.
+        Sample frames consistently across the entire video duration to get the overall color theme.
+        Identify the 5 most dominant colors and their approximate percentages in the video.
+        
         Respond in JSON format with this exact structure:
         {
           "hookEndTimestamp": "MM:SS",
           "confidence": "high/medium/low",
-          "hookInfo": "A comprehensive 100-word description of the hook including what happens at the beginning, throughout, and end of the hook, text that appears, visual elements, audio cues, and any other relevant details for similarity matching with product demos"
+          "hookInfo": "A comprehensive 100-word description of the hook including what happens at the beginning, throughout, and end of the hook, text that appears, visual elements, audio cues, and any other relevant details for similarity matching with product demos",
+          "colorPalette": [
+            {"red": 0, "green": 0, "blue": 0, "percentage": 0.4},
+            {"red": 255, "green": 255, "blue": 255, "percentage": 0.35},
+            {"red": 162, "green": 146, "blue": 106, "percentage": 0.15},
+            {"red": 107, "green": 142, "blue": 35, "percentage": 0.08},
+            {"red": 200, "green": 100, "blue": 50, "percentage": 0.02}
+          ]
         }
         
         Give me the time in MM:SS format (e.g., "00:05", "01:23").
         Make sure the hookInfo is approximately 100 words and includes relevant keywords for similarity search.
+        Make sure the colorPalette contains exactly 5 colors sorted by percentage (descending) and percentages add up to exactly 1.0.
+        Use RGB values (0-255) and percentage values (0.0-1.0).
 
       `;
 
@@ -355,17 +368,30 @@ export class GeminiVideoService {
         - Any technical specifications or capabilities mentioned
         - Keywords that would help match this product with relevant marketing content
         
+        Also, analyze the visual theme of the video by extracting a color palette from frames throughout the video.
+        Sample frames consistently across the entire video duration to get the overall color theme.
+        Identify the 5 most dominant colors and their approximate percentages in the video.
+        
         Format your response as JSON with this structure:
         {
           "segments": [
             {"caption": "Brief caption here", "start": 12.5, "end": 18.2}
           ],
           "totalDuration": ${validatedInput.maxDuration},
-          "productInfo": "A comprehensive 100-word description of the product including features, benefits, categories, and relevant keywords for similarity matching..."
+          "productInfo": "A comprehensive 100-word description of the product including features, benefits, categories, and relevant keywords for similarity matching...",
+          "colorPalette": [
+            {"red": 0, "green": 0, "blue": 0, "percentage": 0.4},
+            {"red": 255, "green": 255, "blue": 255, "percentage": 0.35},
+            {"red": 162, "green": 146, "blue": 106, "percentage": 0.15},
+            {"red": 107, "green": 142, "blue": 35, "percentage": 0.08},
+            {"red": 200, "green": 100, "blue": 50, "percentage": 0.02}
+          ]
         }
         
         Ensure the total duration of all segments is less than ${validatedInput.maxDuration} seconds.
         Ensure the productInfo is approximately 100 words and includes relevant keywords for similarity search.
+        Make sure the colorPalette contains exactly 5 colors sorted by percentage (descending) and percentages add up to exactly 1.0.
+        Use RGB values (0-255) and percentage values (0.0-1.0).
       `;
 
       // Generate content with video and demo condensing prompt

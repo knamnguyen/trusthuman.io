@@ -87,12 +87,24 @@ async function main() {
     console.log("🎯 Confidence:", result.confidence || "Not specified");
     console.log("📝 Description:", result.hookInfo || "Not provided");
     console.log("");
+    console.log("🎨 COLOR PALETTE:");
+    console.log("=================");
+    result.colorPalette.forEach((color, index) => {
+      const percentage = (color.percentage * 100).toFixed(1);
+      console.log(
+        `${index + 1}. RGB(${color.red}, ${color.green}, ${color.blue}) - ${percentage}%`,
+      );
+    });
+    console.log("");
     console.log("✅ Hook extraction completed successfully!");
     console.log("");
     console.log(
       "💡 This timestamp can be used to cut the hook from the viral video.",
     );
     console.log("💡 Format is compatible with VideoStitch composition ranges.");
+    console.log(
+      "💡 Color palette can be used for video style matching and theming.",
+    );
   } catch (error) {
     console.error("");
     console.error("❌ HOOK EXTRACTION FAILED");

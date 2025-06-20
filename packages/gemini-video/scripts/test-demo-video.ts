@@ -122,6 +122,15 @@ async function main() {
     console.log("================");
     console.log(result.productInfo);
     console.log("");
+    console.log("🎨 COLOR PALETTE:");
+    console.log("=================");
+    result.colorPalette.forEach((color, index) => {
+      const percentage = (color.percentage * 100).toFixed(1);
+      console.log(
+        `${index + 1}. RGB(${color.red}, ${color.green}, ${color.blue}) - ${percentage}%`,
+      );
+    });
+    console.log("");
     console.log("🎥 SEGMENTS:");
     console.log("============");
 
@@ -141,6 +150,9 @@ async function main() {
       "💡 Convert start/end times to MM:SS format for VideoStitch ranges.",
     );
     console.log("💡 Product info can be used for similarity search matching.");
+    console.log(
+      "💡 Color palette can be used for video style matching and theming.",
+    );
 
     // Show VideoStitch format conversion
     console.log("");
