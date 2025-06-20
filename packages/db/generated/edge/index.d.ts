@@ -29,6 +29,11 @@ export type User = $Result.DefaultSelection<Prisma.$UserPayload>
  */
 export type DemoVideo = $Result.DefaultSelection<Prisma.$DemoVideoPayload>
 /**
+ * Model ShortDemo
+ * 
+ */
+export type ShortDemo = $Result.DefaultSelection<Prisma.$ShortDemoPayload>
+/**
  * Model SampleVideo
  * 
  */
@@ -208,6 +213,16 @@ export class PrismaClient<
     * ```
     */
   get demoVideo(): Prisma.DemoVideoDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.shortDemo`: Exposes CRUD operations for the **ShortDemo** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ShortDemos
+    * const shortDemos = await prisma.shortDemo.findMany()
+    * ```
+    */
+  get shortDemo(): Prisma.ShortDemoDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.sampleVideo`: Exposes CRUD operations for the **SampleVideo** model.
@@ -661,6 +676,7 @@ export namespace Prisma {
     Post: 'Post',
     User: 'User',
     DemoVideo: 'DemoVideo',
+    ShortDemo: 'ShortDemo',
     SampleVideo: 'SampleVideo'
   };
 
@@ -680,7 +696,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "post" | "user" | "demoVideo" | "sampleVideo"
+      modelProps: "post" | "user" | "demoVideo" | "shortDemo" | "sampleVideo"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -906,6 +922,80 @@ export namespace Prisma {
           }
         }
       }
+      ShortDemo: {
+        payload: Prisma.$ShortDemoPayload<ExtArgs>
+        fields: Prisma.ShortDemoFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ShortDemoFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ShortDemoPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ShortDemoFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ShortDemoPayload>
+          }
+          findFirst: {
+            args: Prisma.ShortDemoFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ShortDemoPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ShortDemoFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ShortDemoPayload>
+          }
+          findMany: {
+            args: Prisma.ShortDemoFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ShortDemoPayload>[]
+          }
+          create: {
+            args: Prisma.ShortDemoCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ShortDemoPayload>
+          }
+          createMany: {
+            args: Prisma.ShortDemoCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ShortDemoCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ShortDemoPayload>[]
+          }
+          delete: {
+            args: Prisma.ShortDemoDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ShortDemoPayload>
+          }
+          update: {
+            args: Prisma.ShortDemoUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ShortDemoPayload>
+          }
+          deleteMany: {
+            args: Prisma.ShortDemoDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ShortDemoUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ShortDemoUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ShortDemoPayload>[]
+          }
+          upsert: {
+            args: Prisma.ShortDemoUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ShortDemoPayload>
+          }
+          aggregate: {
+            args: Prisma.ShortDemoAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateShortDemo>
+          }
+          groupBy: {
+            args: Prisma.ShortDemoGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ShortDemoGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ShortDemoCountArgs<ExtArgs>
+            result: $Utils.Optional<ShortDemoCountAggregateOutputType> | number
+          }
+        }
+      }
       SampleVideo: {
         payload: Prisma.$SampleVideoPayload<ExtArgs>
         fields: Prisma.SampleVideoFieldRefs
@@ -1071,6 +1161,7 @@ export namespace Prisma {
     post?: PostOmit
     user?: UserOmit
     demoVideo?: DemoVideoOmit
+    shortDemo?: ShortDemoOmit
     sampleVideo?: SampleVideoOmit
   }
 
@@ -1160,6 +1251,36 @@ export namespace Prisma {
    * Count Types
    */
 
+
+  /**
+   * Count Type DemoVideoCountOutputType
+   */
+
+  export type DemoVideoCountOutputType = {
+    shortDemos: number
+  }
+
+  export type DemoVideoCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    shortDemos?: boolean | DemoVideoCountOutputTypeCountShortDemosArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * DemoVideoCountOutputType without action
+   */
+  export type DemoVideoCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DemoVideoCountOutputType
+     */
+    select?: DemoVideoCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * DemoVideoCountOutputType without action
+   */
+  export type DemoVideoCountOutputTypeCountShortDemosArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ShortDemoWhereInput
+  }
 
 
   /**
@@ -3420,7 +3541,7 @@ export namespace Prisma {
     id: string
     s3Url: string
     productInfo: string | null
-    colorPalette: string
+    colorPalette: string | null
     durationSeconds: number
     createdAt: Date
     updatedAt: Date
@@ -3453,6 +3574,8 @@ export namespace Prisma {
     durationSeconds?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    shortDemos?: boolean | DemoVideo$shortDemosArgs<ExtArgs>
+    _count?: boolean | DemoVideoCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["demoVideo"]>
 
   export type DemoVideoSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -3486,15 +3609,23 @@ export namespace Prisma {
   }
 
   export type DemoVideoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "s3Url" | "productInfo" | "colorPalette" | "durationSeconds" | "createdAt" | "updatedAt", ExtArgs["result"]["demoVideo"]>
+  export type DemoVideoInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    shortDemos?: boolean | DemoVideo$shortDemosArgs<ExtArgs>
+    _count?: boolean | DemoVideoCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type DemoVideoIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type DemoVideoIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
 
   export type $DemoVideoPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "DemoVideo"
-    objects: {}
+    objects: {
+      shortDemos: Prisma.$ShortDemoPayload<ExtArgs>[]
+    }
     scalars: $Extensions.GetPayloadResult<{
       id: string
       s3Url: string
       productInfo: string | null
-      colorPalette: string
+      colorPalette: string | null
       durationSeconds: number
       createdAt: Date
       updatedAt: Date
@@ -3892,6 +4023,7 @@ export namespace Prisma {
    */
   export interface Prisma__DemoVideoClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
+    shortDemos<T extends DemoVideo$shortDemosArgs<ExtArgs> = {}>(args?: Subset<T, DemoVideo$shortDemosArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ShortDemoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -3945,6 +4077,10 @@ export namespace Prisma {
      */
     omit?: DemoVideoOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DemoVideoInclude<ExtArgs> | null
+    /**
      * Filter, which DemoVideo to fetch.
      */
     where: DemoVideoWhereUniqueInput
@@ -3963,6 +4099,10 @@ export namespace Prisma {
      */
     omit?: DemoVideoOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DemoVideoInclude<ExtArgs> | null
+    /**
      * Filter, which DemoVideo to fetch.
      */
     where: DemoVideoWhereUniqueInput
@@ -3980,6 +4120,10 @@ export namespace Prisma {
      * Omit specific fields from the DemoVideo
      */
     omit?: DemoVideoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DemoVideoInclude<ExtArgs> | null
     /**
      * Filter, which DemoVideo to fetch.
      */
@@ -4029,6 +4173,10 @@ export namespace Prisma {
      */
     omit?: DemoVideoOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DemoVideoInclude<ExtArgs> | null
+    /**
      * Filter, which DemoVideo to fetch.
      */
     where?: DemoVideoWhereInput
@@ -4077,6 +4225,10 @@ export namespace Prisma {
      */
     omit?: DemoVideoOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DemoVideoInclude<ExtArgs> | null
+    /**
      * Filter, which DemoVideos to fetch.
      */
     where?: DemoVideoWhereInput
@@ -4119,6 +4271,10 @@ export namespace Prisma {
      * Omit specific fields from the DemoVideo
      */
     omit?: DemoVideoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DemoVideoInclude<ExtArgs> | null
     /**
      * The data needed to create a DemoVideo.
      */
@@ -4167,6 +4323,10 @@ export namespace Prisma {
      * Omit specific fields from the DemoVideo
      */
     omit?: DemoVideoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DemoVideoInclude<ExtArgs> | null
     /**
      * The data needed to update a DemoVideo.
      */
@@ -4234,6 +4394,10 @@ export namespace Prisma {
      */
     omit?: DemoVideoOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DemoVideoInclude<ExtArgs> | null
+    /**
      * The filter to search for the DemoVideo to update in case it exists.
      */
     where: DemoVideoWhereUniqueInput
@@ -4260,6 +4424,10 @@ export namespace Prisma {
      */
     omit?: DemoVideoOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DemoVideoInclude<ExtArgs> | null
+    /**
      * Filter which DemoVideo to delete.
      */
     where: DemoVideoWhereUniqueInput
@@ -4280,6 +4448,30 @@ export namespace Prisma {
   }
 
   /**
+   * DemoVideo.shortDemos
+   */
+  export type DemoVideo$shortDemosArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ShortDemo
+     */
+    select?: ShortDemoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ShortDemo
+     */
+    omit?: ShortDemoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ShortDemoInclude<ExtArgs> | null
+    where?: ShortDemoWhereInput
+    orderBy?: ShortDemoOrderByWithRelationInput | ShortDemoOrderByWithRelationInput[]
+    cursor?: ShortDemoWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ShortDemoScalarFieldEnum | ShortDemoScalarFieldEnum[]
+  }
+
+  /**
    * DemoVideo without action
    */
   export type DemoVideoDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -4291,6 +4483,1141 @@ export namespace Prisma {
      * Omit specific fields from the DemoVideo
      */
     omit?: DemoVideoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DemoVideoInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model ShortDemo
+   */
+
+  export type AggregateShortDemo = {
+    _count: ShortDemoCountAggregateOutputType | null
+    _avg: ShortDemoAvgAggregateOutputType | null
+    _sum: ShortDemoSumAggregateOutputType | null
+    _min: ShortDemoMinAggregateOutputType | null
+    _max: ShortDemoMaxAggregateOutputType | null
+  }
+
+  export type ShortDemoAvgAggregateOutputType = {
+    durationSeconds: number | null
+  }
+
+  export type ShortDemoSumAggregateOutputType = {
+    durationSeconds: number | null
+  }
+
+  export type ShortDemoMinAggregateOutputType = {
+    id: string | null
+    demoVideoId: string | null
+    s3Url: string | null
+    durationSeconds: number | null
+    colorPalette: string | null
+    shortDemoInfo: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ShortDemoMaxAggregateOutputType = {
+    id: string | null
+    demoVideoId: string | null
+    s3Url: string | null
+    durationSeconds: number | null
+    colorPalette: string | null
+    shortDemoInfo: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ShortDemoCountAggregateOutputType = {
+    id: number
+    demoVideoId: number
+    s3Url: number
+    durationSeconds: number
+    colorPalette: number
+    shortDemoInfo: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type ShortDemoAvgAggregateInputType = {
+    durationSeconds?: true
+  }
+
+  export type ShortDemoSumAggregateInputType = {
+    durationSeconds?: true
+  }
+
+  export type ShortDemoMinAggregateInputType = {
+    id?: true
+    demoVideoId?: true
+    s3Url?: true
+    durationSeconds?: true
+    colorPalette?: true
+    shortDemoInfo?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ShortDemoMaxAggregateInputType = {
+    id?: true
+    demoVideoId?: true
+    s3Url?: true
+    durationSeconds?: true
+    colorPalette?: true
+    shortDemoInfo?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ShortDemoCountAggregateInputType = {
+    id?: true
+    demoVideoId?: true
+    s3Url?: true
+    durationSeconds?: true
+    colorPalette?: true
+    shortDemoInfo?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type ShortDemoAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ShortDemo to aggregate.
+     */
+    where?: ShortDemoWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ShortDemos to fetch.
+     */
+    orderBy?: ShortDemoOrderByWithRelationInput | ShortDemoOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ShortDemoWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ShortDemos from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ShortDemos.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ShortDemos
+    **/
+    _count?: true | ShortDemoCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: ShortDemoAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ShortDemoSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ShortDemoMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ShortDemoMaxAggregateInputType
+  }
+
+  export type GetShortDemoAggregateType<T extends ShortDemoAggregateArgs> = {
+        [P in keyof T & keyof AggregateShortDemo]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateShortDemo[P]>
+      : GetScalarType<T[P], AggregateShortDemo[P]>
+  }
+
+
+
+
+  export type ShortDemoGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ShortDemoWhereInput
+    orderBy?: ShortDemoOrderByWithAggregationInput | ShortDemoOrderByWithAggregationInput[]
+    by: ShortDemoScalarFieldEnum[] | ShortDemoScalarFieldEnum
+    having?: ShortDemoScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ShortDemoCountAggregateInputType | true
+    _avg?: ShortDemoAvgAggregateInputType
+    _sum?: ShortDemoSumAggregateInputType
+    _min?: ShortDemoMinAggregateInputType
+    _max?: ShortDemoMaxAggregateInputType
+  }
+
+  export type ShortDemoGroupByOutputType = {
+    id: string
+    demoVideoId: string
+    s3Url: string
+    durationSeconds: number
+    colorPalette: string | null
+    shortDemoInfo: string | null
+    createdAt: Date
+    updatedAt: Date
+    _count: ShortDemoCountAggregateOutputType | null
+    _avg: ShortDemoAvgAggregateOutputType | null
+    _sum: ShortDemoSumAggregateOutputType | null
+    _min: ShortDemoMinAggregateOutputType | null
+    _max: ShortDemoMaxAggregateOutputType | null
+  }
+
+  type GetShortDemoGroupByPayload<T extends ShortDemoGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ShortDemoGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ShortDemoGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ShortDemoGroupByOutputType[P]>
+            : GetScalarType<T[P], ShortDemoGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ShortDemoSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    demoVideoId?: boolean
+    s3Url?: boolean
+    durationSeconds?: boolean
+    colorPalette?: boolean
+    shortDemoInfo?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    demoVideo?: boolean | DemoVideoDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["shortDemo"]>
+
+  export type ShortDemoSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    demoVideoId?: boolean
+    s3Url?: boolean
+    durationSeconds?: boolean
+    colorPalette?: boolean
+    shortDemoInfo?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    demoVideo?: boolean | DemoVideoDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["shortDemo"]>
+
+  export type ShortDemoSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    demoVideoId?: boolean
+    s3Url?: boolean
+    durationSeconds?: boolean
+    colorPalette?: boolean
+    shortDemoInfo?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    demoVideo?: boolean | DemoVideoDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["shortDemo"]>
+
+  export type ShortDemoSelectScalar = {
+    id?: boolean
+    demoVideoId?: boolean
+    s3Url?: boolean
+    durationSeconds?: boolean
+    colorPalette?: boolean
+    shortDemoInfo?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type ShortDemoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "demoVideoId" | "s3Url" | "durationSeconds" | "colorPalette" | "shortDemoInfo" | "createdAt" | "updatedAt", ExtArgs["result"]["shortDemo"]>
+  export type ShortDemoInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    demoVideo?: boolean | DemoVideoDefaultArgs<ExtArgs>
+  }
+  export type ShortDemoIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    demoVideo?: boolean | DemoVideoDefaultArgs<ExtArgs>
+  }
+  export type ShortDemoIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    demoVideo?: boolean | DemoVideoDefaultArgs<ExtArgs>
+  }
+
+  export type $ShortDemoPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ShortDemo"
+    objects: {
+      demoVideo: Prisma.$DemoVideoPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      demoVideoId: string
+      s3Url: string
+      durationSeconds: number
+      colorPalette: string | null
+      shortDemoInfo: string | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["shortDemo"]>
+    composites: {}
+  }
+
+  type ShortDemoGetPayload<S extends boolean | null | undefined | ShortDemoDefaultArgs> = $Result.GetResult<Prisma.$ShortDemoPayload, S>
+
+  type ShortDemoCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ShortDemoFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ShortDemoCountAggregateInputType | true
+    }
+
+  export interface ShortDemoDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ShortDemo'], meta: { name: 'ShortDemo' } }
+    /**
+     * Find zero or one ShortDemo that matches the filter.
+     * @param {ShortDemoFindUniqueArgs} args - Arguments to find a ShortDemo
+     * @example
+     * // Get one ShortDemo
+     * const shortDemo = await prisma.shortDemo.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ShortDemoFindUniqueArgs>(args: SelectSubset<T, ShortDemoFindUniqueArgs<ExtArgs>>): Prisma__ShortDemoClient<$Result.GetResult<Prisma.$ShortDemoPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ShortDemo that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ShortDemoFindUniqueOrThrowArgs} args - Arguments to find a ShortDemo
+     * @example
+     * // Get one ShortDemo
+     * const shortDemo = await prisma.shortDemo.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ShortDemoFindUniqueOrThrowArgs>(args: SelectSubset<T, ShortDemoFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ShortDemoClient<$Result.GetResult<Prisma.$ShortDemoPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ShortDemo that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ShortDemoFindFirstArgs} args - Arguments to find a ShortDemo
+     * @example
+     * // Get one ShortDemo
+     * const shortDemo = await prisma.shortDemo.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ShortDemoFindFirstArgs>(args?: SelectSubset<T, ShortDemoFindFirstArgs<ExtArgs>>): Prisma__ShortDemoClient<$Result.GetResult<Prisma.$ShortDemoPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ShortDemo that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ShortDemoFindFirstOrThrowArgs} args - Arguments to find a ShortDemo
+     * @example
+     * // Get one ShortDemo
+     * const shortDemo = await prisma.shortDemo.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ShortDemoFindFirstOrThrowArgs>(args?: SelectSubset<T, ShortDemoFindFirstOrThrowArgs<ExtArgs>>): Prisma__ShortDemoClient<$Result.GetResult<Prisma.$ShortDemoPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ShortDemos that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ShortDemoFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ShortDemos
+     * const shortDemos = await prisma.shortDemo.findMany()
+     * 
+     * // Get first 10 ShortDemos
+     * const shortDemos = await prisma.shortDemo.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const shortDemoWithIdOnly = await prisma.shortDemo.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ShortDemoFindManyArgs>(args?: SelectSubset<T, ShortDemoFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ShortDemoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ShortDemo.
+     * @param {ShortDemoCreateArgs} args - Arguments to create a ShortDemo.
+     * @example
+     * // Create one ShortDemo
+     * const ShortDemo = await prisma.shortDemo.create({
+     *   data: {
+     *     // ... data to create a ShortDemo
+     *   }
+     * })
+     * 
+     */
+    create<T extends ShortDemoCreateArgs>(args: SelectSubset<T, ShortDemoCreateArgs<ExtArgs>>): Prisma__ShortDemoClient<$Result.GetResult<Prisma.$ShortDemoPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ShortDemos.
+     * @param {ShortDemoCreateManyArgs} args - Arguments to create many ShortDemos.
+     * @example
+     * // Create many ShortDemos
+     * const shortDemo = await prisma.shortDemo.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ShortDemoCreateManyArgs>(args?: SelectSubset<T, ShortDemoCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ShortDemos and returns the data saved in the database.
+     * @param {ShortDemoCreateManyAndReturnArgs} args - Arguments to create many ShortDemos.
+     * @example
+     * // Create many ShortDemos
+     * const shortDemo = await prisma.shortDemo.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ShortDemos and only return the `id`
+     * const shortDemoWithIdOnly = await prisma.shortDemo.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ShortDemoCreateManyAndReturnArgs>(args?: SelectSubset<T, ShortDemoCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ShortDemoPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a ShortDemo.
+     * @param {ShortDemoDeleteArgs} args - Arguments to delete one ShortDemo.
+     * @example
+     * // Delete one ShortDemo
+     * const ShortDemo = await prisma.shortDemo.delete({
+     *   where: {
+     *     // ... filter to delete one ShortDemo
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ShortDemoDeleteArgs>(args: SelectSubset<T, ShortDemoDeleteArgs<ExtArgs>>): Prisma__ShortDemoClient<$Result.GetResult<Prisma.$ShortDemoPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ShortDemo.
+     * @param {ShortDemoUpdateArgs} args - Arguments to update one ShortDemo.
+     * @example
+     * // Update one ShortDemo
+     * const shortDemo = await prisma.shortDemo.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ShortDemoUpdateArgs>(args: SelectSubset<T, ShortDemoUpdateArgs<ExtArgs>>): Prisma__ShortDemoClient<$Result.GetResult<Prisma.$ShortDemoPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ShortDemos.
+     * @param {ShortDemoDeleteManyArgs} args - Arguments to filter ShortDemos to delete.
+     * @example
+     * // Delete a few ShortDemos
+     * const { count } = await prisma.shortDemo.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ShortDemoDeleteManyArgs>(args?: SelectSubset<T, ShortDemoDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ShortDemos.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ShortDemoUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ShortDemos
+     * const shortDemo = await prisma.shortDemo.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ShortDemoUpdateManyArgs>(args: SelectSubset<T, ShortDemoUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ShortDemos and returns the data updated in the database.
+     * @param {ShortDemoUpdateManyAndReturnArgs} args - Arguments to update many ShortDemos.
+     * @example
+     * // Update many ShortDemos
+     * const shortDemo = await prisma.shortDemo.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ShortDemos and only return the `id`
+     * const shortDemoWithIdOnly = await prisma.shortDemo.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ShortDemoUpdateManyAndReturnArgs>(args: SelectSubset<T, ShortDemoUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ShortDemoPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one ShortDemo.
+     * @param {ShortDemoUpsertArgs} args - Arguments to update or create a ShortDemo.
+     * @example
+     * // Update or create a ShortDemo
+     * const shortDemo = await prisma.shortDemo.upsert({
+     *   create: {
+     *     // ... data to create a ShortDemo
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ShortDemo we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ShortDemoUpsertArgs>(args: SelectSubset<T, ShortDemoUpsertArgs<ExtArgs>>): Prisma__ShortDemoClient<$Result.GetResult<Prisma.$ShortDemoPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ShortDemos.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ShortDemoCountArgs} args - Arguments to filter ShortDemos to count.
+     * @example
+     * // Count the number of ShortDemos
+     * const count = await prisma.shortDemo.count({
+     *   where: {
+     *     // ... the filter for the ShortDemos we want to count
+     *   }
+     * })
+    **/
+    count<T extends ShortDemoCountArgs>(
+      args?: Subset<T, ShortDemoCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ShortDemoCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ShortDemo.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ShortDemoAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ShortDemoAggregateArgs>(args: Subset<T, ShortDemoAggregateArgs>): Prisma.PrismaPromise<GetShortDemoAggregateType<T>>
+
+    /**
+     * Group by ShortDemo.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ShortDemoGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ShortDemoGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ShortDemoGroupByArgs['orderBy'] }
+        : { orderBy?: ShortDemoGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ShortDemoGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetShortDemoGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ShortDemo model
+   */
+  readonly fields: ShortDemoFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ShortDemo.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ShortDemoClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    demoVideo<T extends DemoVideoDefaultArgs<ExtArgs> = {}>(args?: Subset<T, DemoVideoDefaultArgs<ExtArgs>>): Prisma__DemoVideoClient<$Result.GetResult<Prisma.$DemoVideoPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ShortDemo model
+   */
+  interface ShortDemoFieldRefs {
+    readonly id: FieldRef<"ShortDemo", 'String'>
+    readonly demoVideoId: FieldRef<"ShortDemo", 'String'>
+    readonly s3Url: FieldRef<"ShortDemo", 'String'>
+    readonly durationSeconds: FieldRef<"ShortDemo", 'Int'>
+    readonly colorPalette: FieldRef<"ShortDemo", 'String'>
+    readonly shortDemoInfo: FieldRef<"ShortDemo", 'String'>
+    readonly createdAt: FieldRef<"ShortDemo", 'DateTime'>
+    readonly updatedAt: FieldRef<"ShortDemo", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ShortDemo findUnique
+   */
+  export type ShortDemoFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ShortDemo
+     */
+    select?: ShortDemoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ShortDemo
+     */
+    omit?: ShortDemoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ShortDemoInclude<ExtArgs> | null
+    /**
+     * Filter, which ShortDemo to fetch.
+     */
+    where: ShortDemoWhereUniqueInput
+  }
+
+  /**
+   * ShortDemo findUniqueOrThrow
+   */
+  export type ShortDemoFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ShortDemo
+     */
+    select?: ShortDemoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ShortDemo
+     */
+    omit?: ShortDemoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ShortDemoInclude<ExtArgs> | null
+    /**
+     * Filter, which ShortDemo to fetch.
+     */
+    where: ShortDemoWhereUniqueInput
+  }
+
+  /**
+   * ShortDemo findFirst
+   */
+  export type ShortDemoFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ShortDemo
+     */
+    select?: ShortDemoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ShortDemo
+     */
+    omit?: ShortDemoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ShortDemoInclude<ExtArgs> | null
+    /**
+     * Filter, which ShortDemo to fetch.
+     */
+    where?: ShortDemoWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ShortDemos to fetch.
+     */
+    orderBy?: ShortDemoOrderByWithRelationInput | ShortDemoOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ShortDemos.
+     */
+    cursor?: ShortDemoWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ShortDemos from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ShortDemos.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ShortDemos.
+     */
+    distinct?: ShortDemoScalarFieldEnum | ShortDemoScalarFieldEnum[]
+  }
+
+  /**
+   * ShortDemo findFirstOrThrow
+   */
+  export type ShortDemoFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ShortDemo
+     */
+    select?: ShortDemoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ShortDemo
+     */
+    omit?: ShortDemoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ShortDemoInclude<ExtArgs> | null
+    /**
+     * Filter, which ShortDemo to fetch.
+     */
+    where?: ShortDemoWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ShortDemos to fetch.
+     */
+    orderBy?: ShortDemoOrderByWithRelationInput | ShortDemoOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ShortDemos.
+     */
+    cursor?: ShortDemoWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ShortDemos from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ShortDemos.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ShortDemos.
+     */
+    distinct?: ShortDemoScalarFieldEnum | ShortDemoScalarFieldEnum[]
+  }
+
+  /**
+   * ShortDemo findMany
+   */
+  export type ShortDemoFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ShortDemo
+     */
+    select?: ShortDemoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ShortDemo
+     */
+    omit?: ShortDemoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ShortDemoInclude<ExtArgs> | null
+    /**
+     * Filter, which ShortDemos to fetch.
+     */
+    where?: ShortDemoWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ShortDemos to fetch.
+     */
+    orderBy?: ShortDemoOrderByWithRelationInput | ShortDemoOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ShortDemos.
+     */
+    cursor?: ShortDemoWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ShortDemos from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ShortDemos.
+     */
+    skip?: number
+    distinct?: ShortDemoScalarFieldEnum | ShortDemoScalarFieldEnum[]
+  }
+
+  /**
+   * ShortDemo create
+   */
+  export type ShortDemoCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ShortDemo
+     */
+    select?: ShortDemoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ShortDemo
+     */
+    omit?: ShortDemoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ShortDemoInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ShortDemo.
+     */
+    data: XOR<ShortDemoCreateInput, ShortDemoUncheckedCreateInput>
+  }
+
+  /**
+   * ShortDemo createMany
+   */
+  export type ShortDemoCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ShortDemos.
+     */
+    data: ShortDemoCreateManyInput | ShortDemoCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ShortDemo createManyAndReturn
+   */
+  export type ShortDemoCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ShortDemo
+     */
+    select?: ShortDemoSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ShortDemo
+     */
+    omit?: ShortDemoOmit<ExtArgs> | null
+    /**
+     * The data used to create many ShortDemos.
+     */
+    data: ShortDemoCreateManyInput | ShortDemoCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ShortDemoIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ShortDemo update
+   */
+  export type ShortDemoUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ShortDemo
+     */
+    select?: ShortDemoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ShortDemo
+     */
+    omit?: ShortDemoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ShortDemoInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ShortDemo.
+     */
+    data: XOR<ShortDemoUpdateInput, ShortDemoUncheckedUpdateInput>
+    /**
+     * Choose, which ShortDemo to update.
+     */
+    where: ShortDemoWhereUniqueInput
+  }
+
+  /**
+   * ShortDemo updateMany
+   */
+  export type ShortDemoUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ShortDemos.
+     */
+    data: XOR<ShortDemoUpdateManyMutationInput, ShortDemoUncheckedUpdateManyInput>
+    /**
+     * Filter which ShortDemos to update
+     */
+    where?: ShortDemoWhereInput
+    /**
+     * Limit how many ShortDemos to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ShortDemo updateManyAndReturn
+   */
+  export type ShortDemoUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ShortDemo
+     */
+    select?: ShortDemoSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ShortDemo
+     */
+    omit?: ShortDemoOmit<ExtArgs> | null
+    /**
+     * The data used to update ShortDemos.
+     */
+    data: XOR<ShortDemoUpdateManyMutationInput, ShortDemoUncheckedUpdateManyInput>
+    /**
+     * Filter which ShortDemos to update
+     */
+    where?: ShortDemoWhereInput
+    /**
+     * Limit how many ShortDemos to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ShortDemoIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ShortDemo upsert
+   */
+  export type ShortDemoUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ShortDemo
+     */
+    select?: ShortDemoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ShortDemo
+     */
+    omit?: ShortDemoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ShortDemoInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ShortDemo to update in case it exists.
+     */
+    where: ShortDemoWhereUniqueInput
+    /**
+     * In case the ShortDemo found by the `where` argument doesn't exist, create a new ShortDemo with this data.
+     */
+    create: XOR<ShortDemoCreateInput, ShortDemoUncheckedCreateInput>
+    /**
+     * In case the ShortDemo was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ShortDemoUpdateInput, ShortDemoUncheckedUpdateInput>
+  }
+
+  /**
+   * ShortDemo delete
+   */
+  export type ShortDemoDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ShortDemo
+     */
+    select?: ShortDemoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ShortDemo
+     */
+    omit?: ShortDemoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ShortDemoInclude<ExtArgs> | null
+    /**
+     * Filter which ShortDemo to delete.
+     */
+    where: ShortDemoWhereUniqueInput
+  }
+
+  /**
+   * ShortDemo deleteMany
+   */
+  export type ShortDemoDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ShortDemos to delete
+     */
+    where?: ShortDemoWhereInput
+    /**
+     * Limit how many ShortDemos to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ShortDemo without action
+   */
+  export type ShortDemoDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ShortDemo
+     */
+    select?: ShortDemoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ShortDemo
+     */
+    omit?: ShortDemoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ShortDemoInclude<ExtArgs> | null
   }
 
 
@@ -5534,6 +6861,20 @@ export namespace Prisma {
   export type DemoVideoScalarFieldEnum = (typeof DemoVideoScalarFieldEnum)[keyof typeof DemoVideoScalarFieldEnum]
 
 
+  export const ShortDemoScalarFieldEnum: {
+    id: 'id',
+    demoVideoId: 'demoVideoId',
+    s3Url: 's3Url',
+    durationSeconds: 'durationSeconds',
+    colorPalette: 'colorPalette',
+    shortDemoInfo: 'shortDemoInfo',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type ShortDemoScalarFieldEnum = (typeof ShortDemoScalarFieldEnum)[keyof typeof ShortDemoScalarFieldEnum]
+
+
   export const SampleVideoScalarFieldEnum: {
     id: 'id',
     webpageUrl: 'webpageUrl',
@@ -5835,20 +7176,22 @@ export namespace Prisma {
     id?: StringFilter<"DemoVideo"> | string
     s3Url?: StringFilter<"DemoVideo"> | string
     productInfo?: StringNullableFilter<"DemoVideo"> | string | null
-    colorPalette?: StringFilter<"DemoVideo"> | string
+    colorPalette?: StringNullableFilter<"DemoVideo"> | string | null
     durationSeconds?: IntFilter<"DemoVideo"> | number
     createdAt?: DateTimeFilter<"DemoVideo"> | Date | string
     updatedAt?: DateTimeFilter<"DemoVideo"> | Date | string
+    shortDemos?: ShortDemoListRelationFilter
   }
 
   export type DemoVideoOrderByWithRelationInput = {
     id?: SortOrder
     s3Url?: SortOrder
     productInfo?: SortOrderInput | SortOrder
-    colorPalette?: SortOrder
+    colorPalette?: SortOrderInput | SortOrder
     durationSeconds?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    shortDemos?: ShortDemoOrderByRelationAggregateInput
   }
 
   export type DemoVideoWhereUniqueInput = Prisma.AtLeast<{
@@ -5858,17 +7201,18 @@ export namespace Prisma {
     NOT?: DemoVideoWhereInput | DemoVideoWhereInput[]
     s3Url?: StringFilter<"DemoVideo"> | string
     productInfo?: StringNullableFilter<"DemoVideo"> | string | null
-    colorPalette?: StringFilter<"DemoVideo"> | string
+    colorPalette?: StringNullableFilter<"DemoVideo"> | string | null
     durationSeconds?: IntFilter<"DemoVideo"> | number
     createdAt?: DateTimeFilter<"DemoVideo"> | Date | string
     updatedAt?: DateTimeFilter<"DemoVideo"> | Date | string
+    shortDemos?: ShortDemoListRelationFilter
   }, "id">
 
   export type DemoVideoOrderByWithAggregationInput = {
     id?: SortOrder
     s3Url?: SortOrder
     productInfo?: SortOrderInput | SortOrder
-    colorPalette?: SortOrder
+    colorPalette?: SortOrderInput | SortOrder
     durationSeconds?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -5886,10 +7230,82 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"DemoVideo"> | string
     s3Url?: StringWithAggregatesFilter<"DemoVideo"> | string
     productInfo?: StringNullableWithAggregatesFilter<"DemoVideo"> | string | null
-    colorPalette?: StringWithAggregatesFilter<"DemoVideo"> | string
+    colorPalette?: StringNullableWithAggregatesFilter<"DemoVideo"> | string | null
     durationSeconds?: IntWithAggregatesFilter<"DemoVideo"> | number
     createdAt?: DateTimeWithAggregatesFilter<"DemoVideo"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"DemoVideo"> | Date | string
+  }
+
+  export type ShortDemoWhereInput = {
+    AND?: ShortDemoWhereInput | ShortDemoWhereInput[]
+    OR?: ShortDemoWhereInput[]
+    NOT?: ShortDemoWhereInput | ShortDemoWhereInput[]
+    id?: StringFilter<"ShortDemo"> | string
+    demoVideoId?: StringFilter<"ShortDemo"> | string
+    s3Url?: StringFilter<"ShortDemo"> | string
+    durationSeconds?: IntFilter<"ShortDemo"> | number
+    colorPalette?: StringNullableFilter<"ShortDemo"> | string | null
+    shortDemoInfo?: StringNullableFilter<"ShortDemo"> | string | null
+    createdAt?: DateTimeFilter<"ShortDemo"> | Date | string
+    updatedAt?: DateTimeFilter<"ShortDemo"> | Date | string
+    demoVideo?: XOR<DemoVideoScalarRelationFilter, DemoVideoWhereInput>
+  }
+
+  export type ShortDemoOrderByWithRelationInput = {
+    id?: SortOrder
+    demoVideoId?: SortOrder
+    s3Url?: SortOrder
+    durationSeconds?: SortOrder
+    colorPalette?: SortOrderInput | SortOrder
+    shortDemoInfo?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    demoVideo?: DemoVideoOrderByWithRelationInput
+  }
+
+  export type ShortDemoWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: ShortDemoWhereInput | ShortDemoWhereInput[]
+    OR?: ShortDemoWhereInput[]
+    NOT?: ShortDemoWhereInput | ShortDemoWhereInput[]
+    demoVideoId?: StringFilter<"ShortDemo"> | string
+    s3Url?: StringFilter<"ShortDemo"> | string
+    durationSeconds?: IntFilter<"ShortDemo"> | number
+    colorPalette?: StringNullableFilter<"ShortDemo"> | string | null
+    shortDemoInfo?: StringNullableFilter<"ShortDemo"> | string | null
+    createdAt?: DateTimeFilter<"ShortDemo"> | Date | string
+    updatedAt?: DateTimeFilter<"ShortDemo"> | Date | string
+    demoVideo?: XOR<DemoVideoScalarRelationFilter, DemoVideoWhereInput>
+  }, "id">
+
+  export type ShortDemoOrderByWithAggregationInput = {
+    id?: SortOrder
+    demoVideoId?: SortOrder
+    s3Url?: SortOrder
+    durationSeconds?: SortOrder
+    colorPalette?: SortOrderInput | SortOrder
+    shortDemoInfo?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: ShortDemoCountOrderByAggregateInput
+    _avg?: ShortDemoAvgOrderByAggregateInput
+    _max?: ShortDemoMaxOrderByAggregateInput
+    _min?: ShortDemoMinOrderByAggregateInput
+    _sum?: ShortDemoSumOrderByAggregateInput
+  }
+
+  export type ShortDemoScalarWhereWithAggregatesInput = {
+    AND?: ShortDemoScalarWhereWithAggregatesInput | ShortDemoScalarWhereWithAggregatesInput[]
+    OR?: ShortDemoScalarWhereWithAggregatesInput[]
+    NOT?: ShortDemoScalarWhereWithAggregatesInput | ShortDemoScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"ShortDemo"> | string
+    demoVideoId?: StringWithAggregatesFilter<"ShortDemo"> | string
+    s3Url?: StringWithAggregatesFilter<"ShortDemo"> | string
+    durationSeconds?: IntWithAggregatesFilter<"ShortDemo"> | number
+    colorPalette?: StringNullableWithAggregatesFilter<"ShortDemo"> | string | null
+    shortDemoInfo?: StringNullableWithAggregatesFilter<"ShortDemo"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"ShortDemo"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"ShortDemo"> | Date | string
   }
 
   export type SampleVideoWhereInput = {
@@ -6166,47 +7582,51 @@ export namespace Prisma {
     id?: string
     s3Url: string
     productInfo?: string | null
-    colorPalette: string
+    colorPalette?: string | null
     durationSeconds: number
     createdAt?: Date | string
     updatedAt?: Date | string
+    shortDemos?: ShortDemoCreateNestedManyWithoutDemoVideoInput
   }
 
   export type DemoVideoUncheckedCreateInput = {
     id?: string
     s3Url: string
     productInfo?: string | null
-    colorPalette: string
+    colorPalette?: string | null
     durationSeconds: number
     createdAt?: Date | string
     updatedAt?: Date | string
+    shortDemos?: ShortDemoUncheckedCreateNestedManyWithoutDemoVideoInput
   }
 
   export type DemoVideoUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     s3Url?: StringFieldUpdateOperationsInput | string
     productInfo?: NullableStringFieldUpdateOperationsInput | string | null
-    colorPalette?: StringFieldUpdateOperationsInput | string
+    colorPalette?: NullableStringFieldUpdateOperationsInput | string | null
     durationSeconds?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    shortDemos?: ShortDemoUpdateManyWithoutDemoVideoNestedInput
   }
 
   export type DemoVideoUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     s3Url?: StringFieldUpdateOperationsInput | string
     productInfo?: NullableStringFieldUpdateOperationsInput | string | null
-    colorPalette?: StringFieldUpdateOperationsInput | string
+    colorPalette?: NullableStringFieldUpdateOperationsInput | string | null
     durationSeconds?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    shortDemos?: ShortDemoUncheckedUpdateManyWithoutDemoVideoNestedInput
   }
 
   export type DemoVideoCreateManyInput = {
     id?: string
     s3Url: string
     productInfo?: string | null
-    colorPalette: string
+    colorPalette?: string | null
     durationSeconds: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -6216,7 +7636,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     s3Url?: StringFieldUpdateOperationsInput | string
     productInfo?: NullableStringFieldUpdateOperationsInput | string | null
-    colorPalette?: StringFieldUpdateOperationsInput | string
+    colorPalette?: NullableStringFieldUpdateOperationsInput | string | null
     durationSeconds?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -6226,8 +7646,84 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     s3Url?: StringFieldUpdateOperationsInput | string
     productInfo?: NullableStringFieldUpdateOperationsInput | string | null
-    colorPalette?: StringFieldUpdateOperationsInput | string
+    colorPalette?: NullableStringFieldUpdateOperationsInput | string | null
     durationSeconds?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ShortDemoCreateInput = {
+    id?: string
+    s3Url: string
+    durationSeconds: number
+    colorPalette?: string | null
+    shortDemoInfo?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    demoVideo: DemoVideoCreateNestedOneWithoutShortDemosInput
+  }
+
+  export type ShortDemoUncheckedCreateInput = {
+    id?: string
+    demoVideoId: string
+    s3Url: string
+    durationSeconds: number
+    colorPalette?: string | null
+    shortDemoInfo?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ShortDemoUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    s3Url?: StringFieldUpdateOperationsInput | string
+    durationSeconds?: IntFieldUpdateOperationsInput | number
+    colorPalette?: NullableStringFieldUpdateOperationsInput | string | null
+    shortDemoInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    demoVideo?: DemoVideoUpdateOneRequiredWithoutShortDemosNestedInput
+  }
+
+  export type ShortDemoUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    demoVideoId?: StringFieldUpdateOperationsInput | string
+    s3Url?: StringFieldUpdateOperationsInput | string
+    durationSeconds?: IntFieldUpdateOperationsInput | number
+    colorPalette?: NullableStringFieldUpdateOperationsInput | string | null
+    shortDemoInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ShortDemoCreateManyInput = {
+    id?: string
+    demoVideoId: string
+    s3Url: string
+    durationSeconds: number
+    colorPalette?: string | null
+    shortDemoInfo?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ShortDemoUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    s3Url?: StringFieldUpdateOperationsInput | string
+    durationSeconds?: IntFieldUpdateOperationsInput | number
+    colorPalette?: NullableStringFieldUpdateOperationsInput | string | null
+    shortDemoInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ShortDemoUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    demoVideoId?: StringFieldUpdateOperationsInput | string
+    s3Url?: StringFieldUpdateOperationsInput | string
+    durationSeconds?: IntFieldUpdateOperationsInput | number
+    colorPalette?: NullableStringFieldUpdateOperationsInput | string | null
+    shortDemoInfo?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -6603,6 +8099,16 @@ export namespace Prisma {
     not?: NestedIntFilter<$PrismaModel> | number
   }
 
+  export type ShortDemoListRelationFilter = {
+    every?: ShortDemoWhereInput
+    some?: ShortDemoWhereInput
+    none?: ShortDemoWhereInput
+  }
+
+  export type ShortDemoOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
   export type DemoVideoCountOrderByAggregateInput = {
     id?: SortOrder
     s3Url?: SortOrder
@@ -6655,6 +8161,52 @@ export namespace Prisma {
     _sum?: NestedIntFilter<$PrismaModel>
     _min?: NestedIntFilter<$PrismaModel>
     _max?: NestedIntFilter<$PrismaModel>
+  }
+
+  export type DemoVideoScalarRelationFilter = {
+    is?: DemoVideoWhereInput
+    isNot?: DemoVideoWhereInput
+  }
+
+  export type ShortDemoCountOrderByAggregateInput = {
+    id?: SortOrder
+    demoVideoId?: SortOrder
+    s3Url?: SortOrder
+    durationSeconds?: SortOrder
+    colorPalette?: SortOrder
+    shortDemoInfo?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ShortDemoAvgOrderByAggregateInput = {
+    durationSeconds?: SortOrder
+  }
+
+  export type ShortDemoMaxOrderByAggregateInput = {
+    id?: SortOrder
+    demoVideoId?: SortOrder
+    s3Url?: SortOrder
+    durationSeconds?: SortOrder
+    colorPalette?: SortOrder
+    shortDemoInfo?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ShortDemoMinOrderByAggregateInput = {
+    id?: SortOrder
+    demoVideoId?: SortOrder
+    s3Url?: SortOrder
+    durationSeconds?: SortOrder
+    colorPalette?: SortOrder
+    shortDemoInfo?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ShortDemoSumOrderByAggregateInput = {
+    durationSeconds?: SortOrder
   }
 
   export type SampleVideoCountOrderByAggregateInput = {
@@ -6744,12 +8296,68 @@ export namespace Prisma {
     set?: $Enums.AccessType
   }
 
+  export type ShortDemoCreateNestedManyWithoutDemoVideoInput = {
+    create?: XOR<ShortDemoCreateWithoutDemoVideoInput, ShortDemoUncheckedCreateWithoutDemoVideoInput> | ShortDemoCreateWithoutDemoVideoInput[] | ShortDemoUncheckedCreateWithoutDemoVideoInput[]
+    connectOrCreate?: ShortDemoCreateOrConnectWithoutDemoVideoInput | ShortDemoCreateOrConnectWithoutDemoVideoInput[]
+    createMany?: ShortDemoCreateManyDemoVideoInputEnvelope
+    connect?: ShortDemoWhereUniqueInput | ShortDemoWhereUniqueInput[]
+  }
+
+  export type ShortDemoUncheckedCreateNestedManyWithoutDemoVideoInput = {
+    create?: XOR<ShortDemoCreateWithoutDemoVideoInput, ShortDemoUncheckedCreateWithoutDemoVideoInput> | ShortDemoCreateWithoutDemoVideoInput[] | ShortDemoUncheckedCreateWithoutDemoVideoInput[]
+    connectOrCreate?: ShortDemoCreateOrConnectWithoutDemoVideoInput | ShortDemoCreateOrConnectWithoutDemoVideoInput[]
+    createMany?: ShortDemoCreateManyDemoVideoInputEnvelope
+    connect?: ShortDemoWhereUniqueInput | ShortDemoWhereUniqueInput[]
+  }
+
   export type IntFieldUpdateOperationsInput = {
     set?: number
     increment?: number
     decrement?: number
     multiply?: number
     divide?: number
+  }
+
+  export type ShortDemoUpdateManyWithoutDemoVideoNestedInput = {
+    create?: XOR<ShortDemoCreateWithoutDemoVideoInput, ShortDemoUncheckedCreateWithoutDemoVideoInput> | ShortDemoCreateWithoutDemoVideoInput[] | ShortDemoUncheckedCreateWithoutDemoVideoInput[]
+    connectOrCreate?: ShortDemoCreateOrConnectWithoutDemoVideoInput | ShortDemoCreateOrConnectWithoutDemoVideoInput[]
+    upsert?: ShortDemoUpsertWithWhereUniqueWithoutDemoVideoInput | ShortDemoUpsertWithWhereUniqueWithoutDemoVideoInput[]
+    createMany?: ShortDemoCreateManyDemoVideoInputEnvelope
+    set?: ShortDemoWhereUniqueInput | ShortDemoWhereUniqueInput[]
+    disconnect?: ShortDemoWhereUniqueInput | ShortDemoWhereUniqueInput[]
+    delete?: ShortDemoWhereUniqueInput | ShortDemoWhereUniqueInput[]
+    connect?: ShortDemoWhereUniqueInput | ShortDemoWhereUniqueInput[]
+    update?: ShortDemoUpdateWithWhereUniqueWithoutDemoVideoInput | ShortDemoUpdateWithWhereUniqueWithoutDemoVideoInput[]
+    updateMany?: ShortDemoUpdateManyWithWhereWithoutDemoVideoInput | ShortDemoUpdateManyWithWhereWithoutDemoVideoInput[]
+    deleteMany?: ShortDemoScalarWhereInput | ShortDemoScalarWhereInput[]
+  }
+
+  export type ShortDemoUncheckedUpdateManyWithoutDemoVideoNestedInput = {
+    create?: XOR<ShortDemoCreateWithoutDemoVideoInput, ShortDemoUncheckedCreateWithoutDemoVideoInput> | ShortDemoCreateWithoutDemoVideoInput[] | ShortDemoUncheckedCreateWithoutDemoVideoInput[]
+    connectOrCreate?: ShortDemoCreateOrConnectWithoutDemoVideoInput | ShortDemoCreateOrConnectWithoutDemoVideoInput[]
+    upsert?: ShortDemoUpsertWithWhereUniqueWithoutDemoVideoInput | ShortDemoUpsertWithWhereUniqueWithoutDemoVideoInput[]
+    createMany?: ShortDemoCreateManyDemoVideoInputEnvelope
+    set?: ShortDemoWhereUniqueInput | ShortDemoWhereUniqueInput[]
+    disconnect?: ShortDemoWhereUniqueInput | ShortDemoWhereUniqueInput[]
+    delete?: ShortDemoWhereUniqueInput | ShortDemoWhereUniqueInput[]
+    connect?: ShortDemoWhereUniqueInput | ShortDemoWhereUniqueInput[]
+    update?: ShortDemoUpdateWithWhereUniqueWithoutDemoVideoInput | ShortDemoUpdateWithWhereUniqueWithoutDemoVideoInput[]
+    updateMany?: ShortDemoUpdateManyWithWhereWithoutDemoVideoInput | ShortDemoUpdateManyWithWhereWithoutDemoVideoInput[]
+    deleteMany?: ShortDemoScalarWhereInput | ShortDemoScalarWhereInput[]
+  }
+
+  export type DemoVideoCreateNestedOneWithoutShortDemosInput = {
+    create?: XOR<DemoVideoCreateWithoutShortDemosInput, DemoVideoUncheckedCreateWithoutShortDemosInput>
+    connectOrCreate?: DemoVideoCreateOrConnectWithoutShortDemosInput
+    connect?: DemoVideoWhereUniqueInput
+  }
+
+  export type DemoVideoUpdateOneRequiredWithoutShortDemosNestedInput = {
+    create?: XOR<DemoVideoCreateWithoutShortDemosInput, DemoVideoUncheckedCreateWithoutShortDemosInput>
+    connectOrCreate?: DemoVideoCreateOrConnectWithoutShortDemosInput
+    upsert?: DemoVideoUpsertWithoutShortDemosInput
+    connect?: DemoVideoWhereUniqueInput
+    update?: XOR<XOR<DemoVideoUpdateToOneWithWhereWithoutShortDemosInput, DemoVideoUpdateWithoutShortDemosInput>, DemoVideoUncheckedUpdateWithoutShortDemosInput>
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -6926,6 +8534,162 @@ export namespace Prisma {
     gt?: number | FloatFieldRefInput<$PrismaModel>
     gte?: number | FloatFieldRefInput<$PrismaModel>
     not?: NestedFloatFilter<$PrismaModel> | number
+  }
+
+  export type ShortDemoCreateWithoutDemoVideoInput = {
+    id?: string
+    s3Url: string
+    durationSeconds: number
+    colorPalette?: string | null
+    shortDemoInfo?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ShortDemoUncheckedCreateWithoutDemoVideoInput = {
+    id?: string
+    s3Url: string
+    durationSeconds: number
+    colorPalette?: string | null
+    shortDemoInfo?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ShortDemoCreateOrConnectWithoutDemoVideoInput = {
+    where: ShortDemoWhereUniqueInput
+    create: XOR<ShortDemoCreateWithoutDemoVideoInput, ShortDemoUncheckedCreateWithoutDemoVideoInput>
+  }
+
+  export type ShortDemoCreateManyDemoVideoInputEnvelope = {
+    data: ShortDemoCreateManyDemoVideoInput | ShortDemoCreateManyDemoVideoInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type ShortDemoUpsertWithWhereUniqueWithoutDemoVideoInput = {
+    where: ShortDemoWhereUniqueInput
+    update: XOR<ShortDemoUpdateWithoutDemoVideoInput, ShortDemoUncheckedUpdateWithoutDemoVideoInput>
+    create: XOR<ShortDemoCreateWithoutDemoVideoInput, ShortDemoUncheckedCreateWithoutDemoVideoInput>
+  }
+
+  export type ShortDemoUpdateWithWhereUniqueWithoutDemoVideoInput = {
+    where: ShortDemoWhereUniqueInput
+    data: XOR<ShortDemoUpdateWithoutDemoVideoInput, ShortDemoUncheckedUpdateWithoutDemoVideoInput>
+  }
+
+  export type ShortDemoUpdateManyWithWhereWithoutDemoVideoInput = {
+    where: ShortDemoScalarWhereInput
+    data: XOR<ShortDemoUpdateManyMutationInput, ShortDemoUncheckedUpdateManyWithoutDemoVideoInput>
+  }
+
+  export type ShortDemoScalarWhereInput = {
+    AND?: ShortDemoScalarWhereInput | ShortDemoScalarWhereInput[]
+    OR?: ShortDemoScalarWhereInput[]
+    NOT?: ShortDemoScalarWhereInput | ShortDemoScalarWhereInput[]
+    id?: StringFilter<"ShortDemo"> | string
+    demoVideoId?: StringFilter<"ShortDemo"> | string
+    s3Url?: StringFilter<"ShortDemo"> | string
+    durationSeconds?: IntFilter<"ShortDemo"> | number
+    colorPalette?: StringNullableFilter<"ShortDemo"> | string | null
+    shortDemoInfo?: StringNullableFilter<"ShortDemo"> | string | null
+    createdAt?: DateTimeFilter<"ShortDemo"> | Date | string
+    updatedAt?: DateTimeFilter<"ShortDemo"> | Date | string
+  }
+
+  export type DemoVideoCreateWithoutShortDemosInput = {
+    id?: string
+    s3Url: string
+    productInfo?: string | null
+    colorPalette?: string | null
+    durationSeconds: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type DemoVideoUncheckedCreateWithoutShortDemosInput = {
+    id?: string
+    s3Url: string
+    productInfo?: string | null
+    colorPalette?: string | null
+    durationSeconds: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type DemoVideoCreateOrConnectWithoutShortDemosInput = {
+    where: DemoVideoWhereUniqueInput
+    create: XOR<DemoVideoCreateWithoutShortDemosInput, DemoVideoUncheckedCreateWithoutShortDemosInput>
+  }
+
+  export type DemoVideoUpsertWithoutShortDemosInput = {
+    update: XOR<DemoVideoUpdateWithoutShortDemosInput, DemoVideoUncheckedUpdateWithoutShortDemosInput>
+    create: XOR<DemoVideoCreateWithoutShortDemosInput, DemoVideoUncheckedCreateWithoutShortDemosInput>
+    where?: DemoVideoWhereInput
+  }
+
+  export type DemoVideoUpdateToOneWithWhereWithoutShortDemosInput = {
+    where?: DemoVideoWhereInput
+    data: XOR<DemoVideoUpdateWithoutShortDemosInput, DemoVideoUncheckedUpdateWithoutShortDemosInput>
+  }
+
+  export type DemoVideoUpdateWithoutShortDemosInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    s3Url?: StringFieldUpdateOperationsInput | string
+    productInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    colorPalette?: NullableStringFieldUpdateOperationsInput | string | null
+    durationSeconds?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DemoVideoUncheckedUpdateWithoutShortDemosInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    s3Url?: StringFieldUpdateOperationsInput | string
+    productInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    colorPalette?: NullableStringFieldUpdateOperationsInput | string | null
+    durationSeconds?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ShortDemoCreateManyDemoVideoInput = {
+    id?: string
+    s3Url: string
+    durationSeconds: number
+    colorPalette?: string | null
+    shortDemoInfo?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ShortDemoUpdateWithoutDemoVideoInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    s3Url?: StringFieldUpdateOperationsInput | string
+    durationSeconds?: IntFieldUpdateOperationsInput | number
+    colorPalette?: NullableStringFieldUpdateOperationsInput | string | null
+    shortDemoInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ShortDemoUncheckedUpdateWithoutDemoVideoInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    s3Url?: StringFieldUpdateOperationsInput | string
+    durationSeconds?: IntFieldUpdateOperationsInput | number
+    colorPalette?: NullableStringFieldUpdateOperationsInput | string | null
+    shortDemoInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ShortDemoUncheckedUpdateManyWithoutDemoVideoInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    s3Url?: StringFieldUpdateOperationsInput | string
+    durationSeconds?: IntFieldUpdateOperationsInput | number
+    colorPalette?: NullableStringFieldUpdateOperationsInput | string | null
+    shortDemoInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
 
