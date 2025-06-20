@@ -73,10 +73,11 @@ model User {
 model DemoVideo {
   id              String   @id @default(cuid())
   s3Url           String   // S3 URL where the video is stored
-  thumbnailUrl    String?  // S3 URL where the thumbnail is stored
   productInfo     String?  // Product information
-  colorPalette    String?  // Color palette of the video
-  searchEmbedding Unsupported("vector(768)")?
+  colorPalette    String  // Color palette of the video
+  demoInfoEmbedding Unsupported("vector(768)")?
+  colorPaletteEmbedding Unsupported("vector(768)")?
+  durationSeconds Int      // Video duration in seconds
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -88,7 +89,6 @@ model SampleVideo {
   id              String   @id @default(cuid())
   webpageUrl      String   @unique // TikTok video URL - used to check for duplicates
   s3Url           String   // S3 URL where the video is stored
-  thumbnailUrl    String?  // S3 URL where the thumbnail is stored
   colorPalette    String?  // Color palette of the video
   hookEndTimestamp String   // Timestamp where the hook ends
   hookCutConfidence String? // Confidence in the hook cut
@@ -97,7 +97,8 @@ model SampleVideo {
   title           String   // Video title from TikTok
   description     String?  // Video description/caption
   // Google text-embedding-004 produces 768-dimensional embeddings
-  searchEmbedding Unsupported("vector(768)")?
+  viralInfoEmbedding Unsupported("vector(768)")?
+  colorPaletteEmbedding Unsupported("vector(768)")?
   views           Int      @default(0) // View count
   comments        Int      @default(0) // Comment count  
   likes           Int      @default(0) // Like count

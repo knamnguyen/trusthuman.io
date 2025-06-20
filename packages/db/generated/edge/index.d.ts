@@ -24,6 +24,11 @@ export type Post = $Result.DefaultSelection<Prisma.$PostPayload>
  */
 export type User = $Result.DefaultSelection<Prisma.$UserPayload>
 /**
+ * Model DemoVideo
+ * 
+ */
+export type DemoVideo = $Result.DefaultSelection<Prisma.$DemoVideoPayload>
+/**
  * Model SampleVideo
  * 
  */
@@ -193,6 +198,16 @@ export class PrismaClient<
     * ```
     */
   get user(): Prisma.UserDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.demoVideo`: Exposes CRUD operations for the **DemoVideo** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more DemoVideos
+    * const demoVideos = await prisma.demoVideo.findMany()
+    * ```
+    */
+  get demoVideo(): Prisma.DemoVideoDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.sampleVideo`: Exposes CRUD operations for the **SampleVideo** model.
@@ -645,6 +660,7 @@ export namespace Prisma {
   export const ModelName: {
     Post: 'Post',
     User: 'User',
+    DemoVideo: 'DemoVideo',
     SampleVideo: 'SampleVideo'
   };
 
@@ -664,7 +680,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "post" | "user" | "sampleVideo"
+      modelProps: "post" | "user" | "demoVideo" | "sampleVideo"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -813,6 +829,80 @@ export namespace Prisma {
           count: {
             args: Prisma.UserCountArgs<ExtArgs>
             result: $Utils.Optional<UserCountAggregateOutputType> | number
+          }
+        }
+      }
+      DemoVideo: {
+        payload: Prisma.$DemoVideoPayload<ExtArgs>
+        fields: Prisma.DemoVideoFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.DemoVideoFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DemoVideoPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.DemoVideoFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DemoVideoPayload>
+          }
+          findFirst: {
+            args: Prisma.DemoVideoFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DemoVideoPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.DemoVideoFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DemoVideoPayload>
+          }
+          findMany: {
+            args: Prisma.DemoVideoFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DemoVideoPayload>[]
+          }
+          create: {
+            args: Prisma.DemoVideoCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DemoVideoPayload>
+          }
+          createMany: {
+            args: Prisma.DemoVideoCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.DemoVideoCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DemoVideoPayload>[]
+          }
+          delete: {
+            args: Prisma.DemoVideoDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DemoVideoPayload>
+          }
+          update: {
+            args: Prisma.DemoVideoUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DemoVideoPayload>
+          }
+          deleteMany: {
+            args: Prisma.DemoVideoDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.DemoVideoUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.DemoVideoUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DemoVideoPayload>[]
+          }
+          upsert: {
+            args: Prisma.DemoVideoUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DemoVideoPayload>
+          }
+          aggregate: {
+            args: Prisma.DemoVideoAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateDemoVideo>
+          }
+          groupBy: {
+            args: Prisma.DemoVideoGroupByArgs<ExtArgs>
+            result: $Utils.Optional<DemoVideoGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.DemoVideoCountArgs<ExtArgs>
+            result: $Utils.Optional<DemoVideoCountAggregateOutputType> | number
           }
         }
       }
@@ -980,6 +1070,7 @@ export namespace Prisma {
   export type GlobalOmitConfig = {
     post?: PostOmit
     user?: UserOmit
+    demoVideo?: DemoVideoOmit
     sampleVideo?: SampleVideoOmit
   }
 
@@ -3149,6 +3240,1061 @@ export namespace Prisma {
 
 
   /**
+   * Model DemoVideo
+   */
+
+  export type AggregateDemoVideo = {
+    _count: DemoVideoCountAggregateOutputType | null
+    _avg: DemoVideoAvgAggregateOutputType | null
+    _sum: DemoVideoSumAggregateOutputType | null
+    _min: DemoVideoMinAggregateOutputType | null
+    _max: DemoVideoMaxAggregateOutputType | null
+  }
+
+  export type DemoVideoAvgAggregateOutputType = {
+    durationSeconds: number | null
+  }
+
+  export type DemoVideoSumAggregateOutputType = {
+    durationSeconds: number | null
+  }
+
+  export type DemoVideoMinAggregateOutputType = {
+    id: string | null
+    s3Url: string | null
+    productInfo: string | null
+    colorPalette: string | null
+    durationSeconds: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type DemoVideoMaxAggregateOutputType = {
+    id: string | null
+    s3Url: string | null
+    productInfo: string | null
+    colorPalette: string | null
+    durationSeconds: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type DemoVideoCountAggregateOutputType = {
+    id: number
+    s3Url: number
+    productInfo: number
+    colorPalette: number
+    durationSeconds: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type DemoVideoAvgAggregateInputType = {
+    durationSeconds?: true
+  }
+
+  export type DemoVideoSumAggregateInputType = {
+    durationSeconds?: true
+  }
+
+  export type DemoVideoMinAggregateInputType = {
+    id?: true
+    s3Url?: true
+    productInfo?: true
+    colorPalette?: true
+    durationSeconds?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type DemoVideoMaxAggregateInputType = {
+    id?: true
+    s3Url?: true
+    productInfo?: true
+    colorPalette?: true
+    durationSeconds?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type DemoVideoCountAggregateInputType = {
+    id?: true
+    s3Url?: true
+    productInfo?: true
+    colorPalette?: true
+    durationSeconds?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type DemoVideoAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which DemoVideo to aggregate.
+     */
+    where?: DemoVideoWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DemoVideos to fetch.
+     */
+    orderBy?: DemoVideoOrderByWithRelationInput | DemoVideoOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: DemoVideoWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DemoVideos from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DemoVideos.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned DemoVideos
+    **/
+    _count?: true | DemoVideoCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: DemoVideoAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: DemoVideoSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: DemoVideoMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: DemoVideoMaxAggregateInputType
+  }
+
+  export type GetDemoVideoAggregateType<T extends DemoVideoAggregateArgs> = {
+        [P in keyof T & keyof AggregateDemoVideo]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateDemoVideo[P]>
+      : GetScalarType<T[P], AggregateDemoVideo[P]>
+  }
+
+
+
+
+  export type DemoVideoGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: DemoVideoWhereInput
+    orderBy?: DemoVideoOrderByWithAggregationInput | DemoVideoOrderByWithAggregationInput[]
+    by: DemoVideoScalarFieldEnum[] | DemoVideoScalarFieldEnum
+    having?: DemoVideoScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: DemoVideoCountAggregateInputType | true
+    _avg?: DemoVideoAvgAggregateInputType
+    _sum?: DemoVideoSumAggregateInputType
+    _min?: DemoVideoMinAggregateInputType
+    _max?: DemoVideoMaxAggregateInputType
+  }
+
+  export type DemoVideoGroupByOutputType = {
+    id: string
+    s3Url: string
+    productInfo: string | null
+    colorPalette: string
+    durationSeconds: number
+    createdAt: Date
+    updatedAt: Date
+    _count: DemoVideoCountAggregateOutputType | null
+    _avg: DemoVideoAvgAggregateOutputType | null
+    _sum: DemoVideoSumAggregateOutputType | null
+    _min: DemoVideoMinAggregateOutputType | null
+    _max: DemoVideoMaxAggregateOutputType | null
+  }
+
+  type GetDemoVideoGroupByPayload<T extends DemoVideoGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<DemoVideoGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof DemoVideoGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], DemoVideoGroupByOutputType[P]>
+            : GetScalarType<T[P], DemoVideoGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type DemoVideoSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    s3Url?: boolean
+    productInfo?: boolean
+    colorPalette?: boolean
+    durationSeconds?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["demoVideo"]>
+
+  export type DemoVideoSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    s3Url?: boolean
+    productInfo?: boolean
+    colorPalette?: boolean
+    durationSeconds?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["demoVideo"]>
+
+  export type DemoVideoSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    s3Url?: boolean
+    productInfo?: boolean
+    colorPalette?: boolean
+    durationSeconds?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["demoVideo"]>
+
+  export type DemoVideoSelectScalar = {
+    id?: boolean
+    s3Url?: boolean
+    productInfo?: boolean
+    colorPalette?: boolean
+    durationSeconds?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type DemoVideoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "s3Url" | "productInfo" | "colorPalette" | "durationSeconds" | "createdAt" | "updatedAt", ExtArgs["result"]["demoVideo"]>
+
+  export type $DemoVideoPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "DemoVideo"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      s3Url: string
+      productInfo: string | null
+      colorPalette: string
+      durationSeconds: number
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["demoVideo"]>
+    composites: {}
+  }
+
+  type DemoVideoGetPayload<S extends boolean | null | undefined | DemoVideoDefaultArgs> = $Result.GetResult<Prisma.$DemoVideoPayload, S>
+
+  type DemoVideoCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<DemoVideoFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: DemoVideoCountAggregateInputType | true
+    }
+
+  export interface DemoVideoDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['DemoVideo'], meta: { name: 'DemoVideo' } }
+    /**
+     * Find zero or one DemoVideo that matches the filter.
+     * @param {DemoVideoFindUniqueArgs} args - Arguments to find a DemoVideo
+     * @example
+     * // Get one DemoVideo
+     * const demoVideo = await prisma.demoVideo.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends DemoVideoFindUniqueArgs>(args: SelectSubset<T, DemoVideoFindUniqueArgs<ExtArgs>>): Prisma__DemoVideoClient<$Result.GetResult<Prisma.$DemoVideoPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one DemoVideo that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {DemoVideoFindUniqueOrThrowArgs} args - Arguments to find a DemoVideo
+     * @example
+     * // Get one DemoVideo
+     * const demoVideo = await prisma.demoVideo.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends DemoVideoFindUniqueOrThrowArgs>(args: SelectSubset<T, DemoVideoFindUniqueOrThrowArgs<ExtArgs>>): Prisma__DemoVideoClient<$Result.GetResult<Prisma.$DemoVideoPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first DemoVideo that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DemoVideoFindFirstArgs} args - Arguments to find a DemoVideo
+     * @example
+     * // Get one DemoVideo
+     * const demoVideo = await prisma.demoVideo.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends DemoVideoFindFirstArgs>(args?: SelectSubset<T, DemoVideoFindFirstArgs<ExtArgs>>): Prisma__DemoVideoClient<$Result.GetResult<Prisma.$DemoVideoPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first DemoVideo that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DemoVideoFindFirstOrThrowArgs} args - Arguments to find a DemoVideo
+     * @example
+     * // Get one DemoVideo
+     * const demoVideo = await prisma.demoVideo.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends DemoVideoFindFirstOrThrowArgs>(args?: SelectSubset<T, DemoVideoFindFirstOrThrowArgs<ExtArgs>>): Prisma__DemoVideoClient<$Result.GetResult<Prisma.$DemoVideoPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more DemoVideos that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DemoVideoFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all DemoVideos
+     * const demoVideos = await prisma.demoVideo.findMany()
+     * 
+     * // Get first 10 DemoVideos
+     * const demoVideos = await prisma.demoVideo.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const demoVideoWithIdOnly = await prisma.demoVideo.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends DemoVideoFindManyArgs>(args?: SelectSubset<T, DemoVideoFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DemoVideoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a DemoVideo.
+     * @param {DemoVideoCreateArgs} args - Arguments to create a DemoVideo.
+     * @example
+     * // Create one DemoVideo
+     * const DemoVideo = await prisma.demoVideo.create({
+     *   data: {
+     *     // ... data to create a DemoVideo
+     *   }
+     * })
+     * 
+     */
+    create<T extends DemoVideoCreateArgs>(args: SelectSubset<T, DemoVideoCreateArgs<ExtArgs>>): Prisma__DemoVideoClient<$Result.GetResult<Prisma.$DemoVideoPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many DemoVideos.
+     * @param {DemoVideoCreateManyArgs} args - Arguments to create many DemoVideos.
+     * @example
+     * // Create many DemoVideos
+     * const demoVideo = await prisma.demoVideo.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends DemoVideoCreateManyArgs>(args?: SelectSubset<T, DemoVideoCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many DemoVideos and returns the data saved in the database.
+     * @param {DemoVideoCreateManyAndReturnArgs} args - Arguments to create many DemoVideos.
+     * @example
+     * // Create many DemoVideos
+     * const demoVideo = await prisma.demoVideo.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many DemoVideos and only return the `id`
+     * const demoVideoWithIdOnly = await prisma.demoVideo.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends DemoVideoCreateManyAndReturnArgs>(args?: SelectSubset<T, DemoVideoCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DemoVideoPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a DemoVideo.
+     * @param {DemoVideoDeleteArgs} args - Arguments to delete one DemoVideo.
+     * @example
+     * // Delete one DemoVideo
+     * const DemoVideo = await prisma.demoVideo.delete({
+     *   where: {
+     *     // ... filter to delete one DemoVideo
+     *   }
+     * })
+     * 
+     */
+    delete<T extends DemoVideoDeleteArgs>(args: SelectSubset<T, DemoVideoDeleteArgs<ExtArgs>>): Prisma__DemoVideoClient<$Result.GetResult<Prisma.$DemoVideoPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one DemoVideo.
+     * @param {DemoVideoUpdateArgs} args - Arguments to update one DemoVideo.
+     * @example
+     * // Update one DemoVideo
+     * const demoVideo = await prisma.demoVideo.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends DemoVideoUpdateArgs>(args: SelectSubset<T, DemoVideoUpdateArgs<ExtArgs>>): Prisma__DemoVideoClient<$Result.GetResult<Prisma.$DemoVideoPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more DemoVideos.
+     * @param {DemoVideoDeleteManyArgs} args - Arguments to filter DemoVideos to delete.
+     * @example
+     * // Delete a few DemoVideos
+     * const { count } = await prisma.demoVideo.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends DemoVideoDeleteManyArgs>(args?: SelectSubset<T, DemoVideoDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more DemoVideos.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DemoVideoUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many DemoVideos
+     * const demoVideo = await prisma.demoVideo.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends DemoVideoUpdateManyArgs>(args: SelectSubset<T, DemoVideoUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more DemoVideos and returns the data updated in the database.
+     * @param {DemoVideoUpdateManyAndReturnArgs} args - Arguments to update many DemoVideos.
+     * @example
+     * // Update many DemoVideos
+     * const demoVideo = await prisma.demoVideo.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more DemoVideos and only return the `id`
+     * const demoVideoWithIdOnly = await prisma.demoVideo.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends DemoVideoUpdateManyAndReturnArgs>(args: SelectSubset<T, DemoVideoUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DemoVideoPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one DemoVideo.
+     * @param {DemoVideoUpsertArgs} args - Arguments to update or create a DemoVideo.
+     * @example
+     * // Update or create a DemoVideo
+     * const demoVideo = await prisma.demoVideo.upsert({
+     *   create: {
+     *     // ... data to create a DemoVideo
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the DemoVideo we want to update
+     *   }
+     * })
+     */
+    upsert<T extends DemoVideoUpsertArgs>(args: SelectSubset<T, DemoVideoUpsertArgs<ExtArgs>>): Prisma__DemoVideoClient<$Result.GetResult<Prisma.$DemoVideoPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of DemoVideos.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DemoVideoCountArgs} args - Arguments to filter DemoVideos to count.
+     * @example
+     * // Count the number of DemoVideos
+     * const count = await prisma.demoVideo.count({
+     *   where: {
+     *     // ... the filter for the DemoVideos we want to count
+     *   }
+     * })
+    **/
+    count<T extends DemoVideoCountArgs>(
+      args?: Subset<T, DemoVideoCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], DemoVideoCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a DemoVideo.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DemoVideoAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends DemoVideoAggregateArgs>(args: Subset<T, DemoVideoAggregateArgs>): Prisma.PrismaPromise<GetDemoVideoAggregateType<T>>
+
+    /**
+     * Group by DemoVideo.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DemoVideoGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends DemoVideoGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: DemoVideoGroupByArgs['orderBy'] }
+        : { orderBy?: DemoVideoGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, DemoVideoGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetDemoVideoGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the DemoVideo model
+   */
+  readonly fields: DemoVideoFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for DemoVideo.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__DemoVideoClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the DemoVideo model
+   */
+  interface DemoVideoFieldRefs {
+    readonly id: FieldRef<"DemoVideo", 'String'>
+    readonly s3Url: FieldRef<"DemoVideo", 'String'>
+    readonly productInfo: FieldRef<"DemoVideo", 'String'>
+    readonly colorPalette: FieldRef<"DemoVideo", 'String'>
+    readonly durationSeconds: FieldRef<"DemoVideo", 'Int'>
+    readonly createdAt: FieldRef<"DemoVideo", 'DateTime'>
+    readonly updatedAt: FieldRef<"DemoVideo", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * DemoVideo findUnique
+   */
+  export type DemoVideoFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DemoVideo
+     */
+    select?: DemoVideoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DemoVideo
+     */
+    omit?: DemoVideoOmit<ExtArgs> | null
+    /**
+     * Filter, which DemoVideo to fetch.
+     */
+    where: DemoVideoWhereUniqueInput
+  }
+
+  /**
+   * DemoVideo findUniqueOrThrow
+   */
+  export type DemoVideoFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DemoVideo
+     */
+    select?: DemoVideoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DemoVideo
+     */
+    omit?: DemoVideoOmit<ExtArgs> | null
+    /**
+     * Filter, which DemoVideo to fetch.
+     */
+    where: DemoVideoWhereUniqueInput
+  }
+
+  /**
+   * DemoVideo findFirst
+   */
+  export type DemoVideoFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DemoVideo
+     */
+    select?: DemoVideoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DemoVideo
+     */
+    omit?: DemoVideoOmit<ExtArgs> | null
+    /**
+     * Filter, which DemoVideo to fetch.
+     */
+    where?: DemoVideoWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DemoVideos to fetch.
+     */
+    orderBy?: DemoVideoOrderByWithRelationInput | DemoVideoOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for DemoVideos.
+     */
+    cursor?: DemoVideoWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DemoVideos from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DemoVideos.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of DemoVideos.
+     */
+    distinct?: DemoVideoScalarFieldEnum | DemoVideoScalarFieldEnum[]
+  }
+
+  /**
+   * DemoVideo findFirstOrThrow
+   */
+  export type DemoVideoFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DemoVideo
+     */
+    select?: DemoVideoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DemoVideo
+     */
+    omit?: DemoVideoOmit<ExtArgs> | null
+    /**
+     * Filter, which DemoVideo to fetch.
+     */
+    where?: DemoVideoWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DemoVideos to fetch.
+     */
+    orderBy?: DemoVideoOrderByWithRelationInput | DemoVideoOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for DemoVideos.
+     */
+    cursor?: DemoVideoWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DemoVideos from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DemoVideos.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of DemoVideos.
+     */
+    distinct?: DemoVideoScalarFieldEnum | DemoVideoScalarFieldEnum[]
+  }
+
+  /**
+   * DemoVideo findMany
+   */
+  export type DemoVideoFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DemoVideo
+     */
+    select?: DemoVideoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DemoVideo
+     */
+    omit?: DemoVideoOmit<ExtArgs> | null
+    /**
+     * Filter, which DemoVideos to fetch.
+     */
+    where?: DemoVideoWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DemoVideos to fetch.
+     */
+    orderBy?: DemoVideoOrderByWithRelationInput | DemoVideoOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing DemoVideos.
+     */
+    cursor?: DemoVideoWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DemoVideos from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DemoVideos.
+     */
+    skip?: number
+    distinct?: DemoVideoScalarFieldEnum | DemoVideoScalarFieldEnum[]
+  }
+
+  /**
+   * DemoVideo create
+   */
+  export type DemoVideoCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DemoVideo
+     */
+    select?: DemoVideoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DemoVideo
+     */
+    omit?: DemoVideoOmit<ExtArgs> | null
+    /**
+     * The data needed to create a DemoVideo.
+     */
+    data: XOR<DemoVideoCreateInput, DemoVideoUncheckedCreateInput>
+  }
+
+  /**
+   * DemoVideo createMany
+   */
+  export type DemoVideoCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many DemoVideos.
+     */
+    data: DemoVideoCreateManyInput | DemoVideoCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * DemoVideo createManyAndReturn
+   */
+  export type DemoVideoCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DemoVideo
+     */
+    select?: DemoVideoSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the DemoVideo
+     */
+    omit?: DemoVideoOmit<ExtArgs> | null
+    /**
+     * The data used to create many DemoVideos.
+     */
+    data: DemoVideoCreateManyInput | DemoVideoCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * DemoVideo update
+   */
+  export type DemoVideoUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DemoVideo
+     */
+    select?: DemoVideoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DemoVideo
+     */
+    omit?: DemoVideoOmit<ExtArgs> | null
+    /**
+     * The data needed to update a DemoVideo.
+     */
+    data: XOR<DemoVideoUpdateInput, DemoVideoUncheckedUpdateInput>
+    /**
+     * Choose, which DemoVideo to update.
+     */
+    where: DemoVideoWhereUniqueInput
+  }
+
+  /**
+   * DemoVideo updateMany
+   */
+  export type DemoVideoUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update DemoVideos.
+     */
+    data: XOR<DemoVideoUpdateManyMutationInput, DemoVideoUncheckedUpdateManyInput>
+    /**
+     * Filter which DemoVideos to update
+     */
+    where?: DemoVideoWhereInput
+    /**
+     * Limit how many DemoVideos to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * DemoVideo updateManyAndReturn
+   */
+  export type DemoVideoUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DemoVideo
+     */
+    select?: DemoVideoSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the DemoVideo
+     */
+    omit?: DemoVideoOmit<ExtArgs> | null
+    /**
+     * The data used to update DemoVideos.
+     */
+    data: XOR<DemoVideoUpdateManyMutationInput, DemoVideoUncheckedUpdateManyInput>
+    /**
+     * Filter which DemoVideos to update
+     */
+    where?: DemoVideoWhereInput
+    /**
+     * Limit how many DemoVideos to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * DemoVideo upsert
+   */
+  export type DemoVideoUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DemoVideo
+     */
+    select?: DemoVideoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DemoVideo
+     */
+    omit?: DemoVideoOmit<ExtArgs> | null
+    /**
+     * The filter to search for the DemoVideo to update in case it exists.
+     */
+    where: DemoVideoWhereUniqueInput
+    /**
+     * In case the DemoVideo found by the `where` argument doesn't exist, create a new DemoVideo with this data.
+     */
+    create: XOR<DemoVideoCreateInput, DemoVideoUncheckedCreateInput>
+    /**
+     * In case the DemoVideo was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<DemoVideoUpdateInput, DemoVideoUncheckedUpdateInput>
+  }
+
+  /**
+   * DemoVideo delete
+   */
+  export type DemoVideoDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DemoVideo
+     */
+    select?: DemoVideoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DemoVideo
+     */
+    omit?: DemoVideoOmit<ExtArgs> | null
+    /**
+     * Filter which DemoVideo to delete.
+     */
+    where: DemoVideoWhereUniqueInput
+  }
+
+  /**
+   * DemoVideo deleteMany
+   */
+  export type DemoVideoDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which DemoVideos to delete
+     */
+    where?: DemoVideoWhereInput
+    /**
+     * Limit how many DemoVideos to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * DemoVideo without action
+   */
+  export type DemoVideoDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DemoVideo
+     */
+    select?: DemoVideoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DemoVideo
+     */
+    omit?: DemoVideoOmit<ExtArgs> | null
+  }
+
+
+  /**
    * Model SampleVideo
    */
 
@@ -3178,6 +4324,7 @@ export namespace Prisma {
     id: string | null
     webpageUrl: string | null
     s3Url: string | null
+    colorPalette: string | null
     hookEndTimestamp: string | null
     hookCutConfidence: string | null
     hookCutUrl: string | null
@@ -3196,6 +4343,7 @@ export namespace Prisma {
     id: string | null
     webpageUrl: string | null
     s3Url: string | null
+    colorPalette: string | null
     hookEndTimestamp: string | null
     hookCutConfidence: string | null
     hookCutUrl: string | null
@@ -3214,6 +4362,7 @@ export namespace Prisma {
     id: number
     webpageUrl: number
     s3Url: number
+    colorPalette: number
     hookEndTimestamp: number
     hookCutConfidence: number
     hookCutUrl: number
@@ -3248,6 +4397,7 @@ export namespace Prisma {
     id?: true
     webpageUrl?: true
     s3Url?: true
+    colorPalette?: true
     hookEndTimestamp?: true
     hookCutConfidence?: true
     hookCutUrl?: true
@@ -3266,6 +4416,7 @@ export namespace Prisma {
     id?: true
     webpageUrl?: true
     s3Url?: true
+    colorPalette?: true
     hookEndTimestamp?: true
     hookCutConfidence?: true
     hookCutUrl?: true
@@ -3284,6 +4435,7 @@ export namespace Prisma {
     id?: true
     webpageUrl?: true
     s3Url?: true
+    colorPalette?: true
     hookEndTimestamp?: true
     hookCutConfidence?: true
     hookCutUrl?: true
@@ -3389,6 +4541,7 @@ export namespace Prisma {
     id: string
     webpageUrl: string
     s3Url: string
+    colorPalette: string | null
     hookEndTimestamp: string
     hookCutConfidence: string | null
     hookCutUrl: string | null
@@ -3426,6 +4579,7 @@ export namespace Prisma {
     id?: boolean
     webpageUrl?: boolean
     s3Url?: boolean
+    colorPalette?: boolean
     hookEndTimestamp?: boolean
     hookCutConfidence?: boolean
     hookCutUrl?: boolean
@@ -3444,6 +4598,7 @@ export namespace Prisma {
     id?: boolean
     webpageUrl?: boolean
     s3Url?: boolean
+    colorPalette?: boolean
     hookEndTimestamp?: boolean
     hookCutConfidence?: boolean
     hookCutUrl?: boolean
@@ -3462,6 +4617,7 @@ export namespace Prisma {
     id?: boolean
     webpageUrl?: boolean
     s3Url?: boolean
+    colorPalette?: boolean
     hookEndTimestamp?: boolean
     hookCutConfidence?: boolean
     hookCutUrl?: boolean
@@ -3480,6 +4636,7 @@ export namespace Prisma {
     id?: boolean
     webpageUrl?: boolean
     s3Url?: boolean
+    colorPalette?: boolean
     hookEndTimestamp?: boolean
     hookCutConfidence?: boolean
     hookCutUrl?: boolean
@@ -3494,7 +4651,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type SampleVideoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "webpageUrl" | "s3Url" | "hookEndTimestamp" | "hookCutConfidence" | "hookCutUrl" | "hookInfo" | "title" | "description" | "views" | "comments" | "likes" | "durationSeconds" | "createdAt" | "updatedAt", ExtArgs["result"]["sampleVideo"]>
+  export type SampleVideoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "webpageUrl" | "s3Url" | "colorPalette" | "hookEndTimestamp" | "hookCutConfidence" | "hookCutUrl" | "hookInfo" | "title" | "description" | "views" | "comments" | "likes" | "durationSeconds" | "createdAt" | "updatedAt", ExtArgs["result"]["sampleVideo"]>
 
   export type $SampleVideoPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "SampleVideo"
@@ -3503,6 +4660,7 @@ export namespace Prisma {
       id: string
       webpageUrl: string
       s3Url: string
+      colorPalette: string | null
       hookEndTimestamp: string
       hookCutConfidence: string | null
       hookCutUrl: string | null
@@ -3941,6 +5099,7 @@ export namespace Prisma {
     readonly id: FieldRef<"SampleVideo", 'String'>
     readonly webpageUrl: FieldRef<"SampleVideo", 'String'>
     readonly s3Url: FieldRef<"SampleVideo", 'String'>
+    readonly colorPalette: FieldRef<"SampleVideo", 'String'>
     readonly hookEndTimestamp: FieldRef<"SampleVideo", 'String'>
     readonly hookCutConfidence: FieldRef<"SampleVideo", 'String'>
     readonly hookCutUrl: FieldRef<"SampleVideo", 'String'>
@@ -4362,10 +5521,24 @@ export namespace Prisma {
   export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
 
 
+  export const DemoVideoScalarFieldEnum: {
+    id: 'id',
+    s3Url: 's3Url',
+    productInfo: 'productInfo',
+    colorPalette: 'colorPalette',
+    durationSeconds: 'durationSeconds',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type DemoVideoScalarFieldEnum = (typeof DemoVideoScalarFieldEnum)[keyof typeof DemoVideoScalarFieldEnum]
+
+
   export const SampleVideoScalarFieldEnum: {
     id: 'id',
     webpageUrl: 'webpageUrl',
     s3Url: 's3Url',
+    colorPalette: 'colorPalette',
     hookEndTimestamp: 'hookEndTimestamp',
     hookCutConfidence: 'hookCutConfidence',
     hookCutUrl: 'hookCutUrl',
@@ -4655,6 +5828,70 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
   }
 
+  export type DemoVideoWhereInput = {
+    AND?: DemoVideoWhereInput | DemoVideoWhereInput[]
+    OR?: DemoVideoWhereInput[]
+    NOT?: DemoVideoWhereInput | DemoVideoWhereInput[]
+    id?: StringFilter<"DemoVideo"> | string
+    s3Url?: StringFilter<"DemoVideo"> | string
+    productInfo?: StringNullableFilter<"DemoVideo"> | string | null
+    colorPalette?: StringFilter<"DemoVideo"> | string
+    durationSeconds?: IntFilter<"DemoVideo"> | number
+    createdAt?: DateTimeFilter<"DemoVideo"> | Date | string
+    updatedAt?: DateTimeFilter<"DemoVideo"> | Date | string
+  }
+
+  export type DemoVideoOrderByWithRelationInput = {
+    id?: SortOrder
+    s3Url?: SortOrder
+    productInfo?: SortOrderInput | SortOrder
+    colorPalette?: SortOrder
+    durationSeconds?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type DemoVideoWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: DemoVideoWhereInput | DemoVideoWhereInput[]
+    OR?: DemoVideoWhereInput[]
+    NOT?: DemoVideoWhereInput | DemoVideoWhereInput[]
+    s3Url?: StringFilter<"DemoVideo"> | string
+    productInfo?: StringNullableFilter<"DemoVideo"> | string | null
+    colorPalette?: StringFilter<"DemoVideo"> | string
+    durationSeconds?: IntFilter<"DemoVideo"> | number
+    createdAt?: DateTimeFilter<"DemoVideo"> | Date | string
+    updatedAt?: DateTimeFilter<"DemoVideo"> | Date | string
+  }, "id">
+
+  export type DemoVideoOrderByWithAggregationInput = {
+    id?: SortOrder
+    s3Url?: SortOrder
+    productInfo?: SortOrderInput | SortOrder
+    colorPalette?: SortOrder
+    durationSeconds?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: DemoVideoCountOrderByAggregateInput
+    _avg?: DemoVideoAvgOrderByAggregateInput
+    _max?: DemoVideoMaxOrderByAggregateInput
+    _min?: DemoVideoMinOrderByAggregateInput
+    _sum?: DemoVideoSumOrderByAggregateInput
+  }
+
+  export type DemoVideoScalarWhereWithAggregatesInput = {
+    AND?: DemoVideoScalarWhereWithAggregatesInput | DemoVideoScalarWhereWithAggregatesInput[]
+    OR?: DemoVideoScalarWhereWithAggregatesInput[]
+    NOT?: DemoVideoScalarWhereWithAggregatesInput | DemoVideoScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"DemoVideo"> | string
+    s3Url?: StringWithAggregatesFilter<"DemoVideo"> | string
+    productInfo?: StringNullableWithAggregatesFilter<"DemoVideo"> | string | null
+    colorPalette?: StringWithAggregatesFilter<"DemoVideo"> | string
+    durationSeconds?: IntWithAggregatesFilter<"DemoVideo"> | number
+    createdAt?: DateTimeWithAggregatesFilter<"DemoVideo"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"DemoVideo"> | Date | string
+  }
+
   export type SampleVideoWhereInput = {
     AND?: SampleVideoWhereInput | SampleVideoWhereInput[]
     OR?: SampleVideoWhereInput[]
@@ -4662,6 +5899,7 @@ export namespace Prisma {
     id?: StringFilter<"SampleVideo"> | string
     webpageUrl?: StringFilter<"SampleVideo"> | string
     s3Url?: StringFilter<"SampleVideo"> | string
+    colorPalette?: StringNullableFilter<"SampleVideo"> | string | null
     hookEndTimestamp?: StringFilter<"SampleVideo"> | string
     hookCutConfidence?: StringNullableFilter<"SampleVideo"> | string | null
     hookCutUrl?: StringNullableFilter<"SampleVideo"> | string | null
@@ -4680,6 +5918,7 @@ export namespace Prisma {
     id?: SortOrder
     webpageUrl?: SortOrder
     s3Url?: SortOrder
+    colorPalette?: SortOrderInput | SortOrder
     hookEndTimestamp?: SortOrder
     hookCutConfidence?: SortOrderInput | SortOrder
     hookCutUrl?: SortOrderInput | SortOrder
@@ -4701,6 +5940,7 @@ export namespace Prisma {
     OR?: SampleVideoWhereInput[]
     NOT?: SampleVideoWhereInput | SampleVideoWhereInput[]
     s3Url?: StringFilter<"SampleVideo"> | string
+    colorPalette?: StringNullableFilter<"SampleVideo"> | string | null
     hookEndTimestamp?: StringFilter<"SampleVideo"> | string
     hookCutConfidence?: StringNullableFilter<"SampleVideo"> | string | null
     hookCutUrl?: StringNullableFilter<"SampleVideo"> | string | null
@@ -4719,6 +5959,7 @@ export namespace Prisma {
     id?: SortOrder
     webpageUrl?: SortOrder
     s3Url?: SortOrder
+    colorPalette?: SortOrderInput | SortOrder
     hookEndTimestamp?: SortOrder
     hookCutConfidence?: SortOrderInput | SortOrder
     hookCutUrl?: SortOrderInput | SortOrder
@@ -4745,6 +5986,7 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"SampleVideo"> | string
     webpageUrl?: StringWithAggregatesFilter<"SampleVideo"> | string
     s3Url?: StringWithAggregatesFilter<"SampleVideo"> | string
+    colorPalette?: StringNullableWithAggregatesFilter<"SampleVideo"> | string | null
     hookEndTimestamp?: StringWithAggregatesFilter<"SampleVideo"> | string
     hookCutConfidence?: StringNullableWithAggregatesFilter<"SampleVideo"> | string | null
     hookCutUrl?: StringNullableWithAggregatesFilter<"SampleVideo"> | string | null
@@ -4920,10 +6162,81 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type DemoVideoCreateInput = {
+    id?: string
+    s3Url: string
+    productInfo?: string | null
+    colorPalette: string
+    durationSeconds: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type DemoVideoUncheckedCreateInput = {
+    id?: string
+    s3Url: string
+    productInfo?: string | null
+    colorPalette: string
+    durationSeconds: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type DemoVideoUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    s3Url?: StringFieldUpdateOperationsInput | string
+    productInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    colorPalette?: StringFieldUpdateOperationsInput | string
+    durationSeconds?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DemoVideoUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    s3Url?: StringFieldUpdateOperationsInput | string
+    productInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    colorPalette?: StringFieldUpdateOperationsInput | string
+    durationSeconds?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DemoVideoCreateManyInput = {
+    id?: string
+    s3Url: string
+    productInfo?: string | null
+    colorPalette: string
+    durationSeconds: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type DemoVideoUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    s3Url?: StringFieldUpdateOperationsInput | string
+    productInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    colorPalette?: StringFieldUpdateOperationsInput | string
+    durationSeconds?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DemoVideoUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    s3Url?: StringFieldUpdateOperationsInput | string
+    productInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    colorPalette?: StringFieldUpdateOperationsInput | string
+    durationSeconds?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type SampleVideoCreateInput = {
     id?: string
     webpageUrl: string
     s3Url: string
+    colorPalette?: string | null
     hookEndTimestamp: string
     hookCutConfidence?: string | null
     hookCutUrl?: string | null
@@ -4942,6 +6255,7 @@ export namespace Prisma {
     id?: string
     webpageUrl: string
     s3Url: string
+    colorPalette?: string | null
     hookEndTimestamp: string
     hookCutConfidence?: string | null
     hookCutUrl?: string | null
@@ -4960,6 +6274,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     webpageUrl?: StringFieldUpdateOperationsInput | string
     s3Url?: StringFieldUpdateOperationsInput | string
+    colorPalette?: NullableStringFieldUpdateOperationsInput | string | null
     hookEndTimestamp?: StringFieldUpdateOperationsInput | string
     hookCutConfidence?: NullableStringFieldUpdateOperationsInput | string | null
     hookCutUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -4978,6 +6293,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     webpageUrl?: StringFieldUpdateOperationsInput | string
     s3Url?: StringFieldUpdateOperationsInput | string
+    colorPalette?: NullableStringFieldUpdateOperationsInput | string | null
     hookEndTimestamp?: StringFieldUpdateOperationsInput | string
     hookCutConfidence?: NullableStringFieldUpdateOperationsInput | string | null
     hookCutUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -4996,6 +6312,7 @@ export namespace Prisma {
     id?: string
     webpageUrl: string
     s3Url: string
+    colorPalette?: string | null
     hookEndTimestamp: string
     hookCutConfidence?: string | null
     hookCutUrl?: string | null
@@ -5014,6 +6331,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     webpageUrl?: StringFieldUpdateOperationsInput | string
     s3Url?: StringFieldUpdateOperationsInput | string
+    colorPalette?: NullableStringFieldUpdateOperationsInput | string | null
     hookEndTimestamp?: StringFieldUpdateOperationsInput | string
     hookCutConfidence?: NullableStringFieldUpdateOperationsInput | string | null
     hookCutUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -5032,6 +6350,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     webpageUrl?: StringFieldUpdateOperationsInput | string
     s3Url?: StringFieldUpdateOperationsInput | string
+    colorPalette?: NullableStringFieldUpdateOperationsInput | string | null
     hookEndTimestamp?: StringFieldUpdateOperationsInput | string
     hookCutConfidence?: NullableStringFieldUpdateOperationsInput | string | null
     hookCutUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -5284,10 +6603,65 @@ export namespace Prisma {
     not?: NestedIntFilter<$PrismaModel> | number
   }
 
+  export type DemoVideoCountOrderByAggregateInput = {
+    id?: SortOrder
+    s3Url?: SortOrder
+    productInfo?: SortOrder
+    colorPalette?: SortOrder
+    durationSeconds?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type DemoVideoAvgOrderByAggregateInput = {
+    durationSeconds?: SortOrder
+  }
+
+  export type DemoVideoMaxOrderByAggregateInput = {
+    id?: SortOrder
+    s3Url?: SortOrder
+    productInfo?: SortOrder
+    colorPalette?: SortOrder
+    durationSeconds?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type DemoVideoMinOrderByAggregateInput = {
+    id?: SortOrder
+    s3Url?: SortOrder
+    productInfo?: SortOrder
+    colorPalette?: SortOrder
+    durationSeconds?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type DemoVideoSumOrderByAggregateInput = {
+    durationSeconds?: SortOrder
+  }
+
+  export type IntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedIntFilter<$PrismaModel>
+    _min?: NestedIntFilter<$PrismaModel>
+    _max?: NestedIntFilter<$PrismaModel>
+  }
+
   export type SampleVideoCountOrderByAggregateInput = {
     id?: SortOrder
     webpageUrl?: SortOrder
     s3Url?: SortOrder
+    colorPalette?: SortOrder
     hookEndTimestamp?: SortOrder
     hookCutConfidence?: SortOrder
     hookCutUrl?: SortOrder
@@ -5313,6 +6687,7 @@ export namespace Prisma {
     id?: SortOrder
     webpageUrl?: SortOrder
     s3Url?: SortOrder
+    colorPalette?: SortOrder
     hookEndTimestamp?: SortOrder
     hookCutConfidence?: SortOrder
     hookCutUrl?: SortOrder
@@ -5331,6 +6706,7 @@ export namespace Prisma {
     id?: SortOrder
     webpageUrl?: SortOrder
     s3Url?: SortOrder
+    colorPalette?: SortOrder
     hookEndTimestamp?: SortOrder
     hookCutConfidence?: SortOrder
     hookCutUrl?: SortOrder
@@ -5350,22 +6726,6 @@ export namespace Prisma {
     comments?: SortOrder
     likes?: SortOrder
     durationSeconds?: SortOrder
-  }
-
-  export type IntWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
-    _count?: NestedIntFilter<$PrismaModel>
-    _avg?: NestedFloatFilter<$PrismaModel>
-    _sum?: NestedIntFilter<$PrismaModel>
-    _min?: NestedIntFilter<$PrismaModel>
-    _max?: NestedIntFilter<$PrismaModel>
   }
 
   export type StringFieldUpdateOperationsInput = {

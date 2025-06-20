@@ -143,10 +143,21 @@ exports.Prisma.UserScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.DemoVideoScalarFieldEnum = {
+  id: 'id',
+  s3Url: 's3Url',
+  productInfo: 'productInfo',
+  colorPalette: 'colorPalette',
+  durationSeconds: 'durationSeconds',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SampleVideoScalarFieldEnum = {
   id: 'id',
   webpageUrl: 'webpageUrl',
   s3Url: 's3Url',
+  colorPalette: 'colorPalette',
   hookEndTimestamp: 'hookEndTimestamp',
   hookCutConfidence: 'hookCutConfidence',
   hookCutUrl: 'hookCutUrl',
@@ -197,6 +208,7 @@ exports.AccessType = exports.$Enums.AccessType = {
 exports.Prisma.ModelName = {
   Post: 'Post',
   User: 'User',
+  DemoVideo: 'DemoVideo',
   SampleVideo: 'SampleVideo'
 };
 
