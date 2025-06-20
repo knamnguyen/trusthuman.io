@@ -74,7 +74,7 @@ model DemoVideo {
   id              String   @id @default(cuid())
   s3Url           String   // S3 URL where the original demo video is stored
   productInfo     String?  // Product information
-  colorPalette    String?  // Color palette of the video (optional)
+  colorPalette    Json?    // Color palette of the video as JSON array (optional)
   demoInfoEmbedding Unsupported("vector(768)")?
   colorPaletteEmbedding Unsupported("vector(768)")?
   durationSeconds Int      // Original video duration in seconds
@@ -115,7 +115,7 @@ model HookViralVideo {
   id              String   @id @default(cuid())
   webpageUrl      String   @unique // TikTok video URL - used to check for duplicates
   s3Url           String   // S3 URL where the video is stored
-  colorPalette    String?  // Color palette of the video
+  colorPalette    Json?    // Color palette of the video as JSON array
   hookEndTimestamp String   // Timestamp where the hook ends
   hookCutConfidence String? // Confidence in the hook cut
   hookCutUrl      String?   // S3 URL where the hook cut is stored

@@ -164,7 +164,7 @@ exports.Prisma.ShortDemoScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
-exports.Prisma.SampleVideoScalarFieldEnum = {
+exports.Prisma.HookViralVideoScalarFieldEnum = {
   id: 'id',
   webpageUrl: 'webpageUrl',
   s3Url: 's3Url',
@@ -221,7 +221,7 @@ exports.Prisma.ModelName = {
   User: 'User',
   DemoVideo: 'DemoVideo',
   ShortDemo: 'ShortDemo',
-  SampleVideo: 'SampleVideo'
+  HookViralVideo: 'HookViralVideo'
 };
 
 /**

@@ -34,10 +34,10 @@ export type DemoVideo = $Result.DefaultSelection<Prisma.$DemoVideoPayload>
  */
 export type ShortDemo = $Result.DefaultSelection<Prisma.$ShortDemoPayload>
 /**
- * Model SampleVideo
+ * Model HookViralVideo
  * 
  */
-export type SampleVideo = $Result.DefaultSelection<Prisma.$SampleVideoPayload>
+export type HookViralVideo = $Result.DefaultSelection<Prisma.$HookViralVideoPayload>
 
 /**
  * Enums
@@ -225,14 +225,14 @@ export class PrismaClient<
   get shortDemo(): Prisma.ShortDemoDelegate<ExtArgs, ClientOptions>;
 
   /**
-   * `prisma.sampleVideo`: Exposes CRUD operations for the **SampleVideo** model.
+   * `prisma.hookViralVideo`: Exposes CRUD operations for the **HookViralVideo** model.
     * Example usage:
     * ```ts
-    * // Fetch zero or more SampleVideos
-    * const sampleVideos = await prisma.sampleVideo.findMany()
+    * // Fetch zero or more HookViralVideos
+    * const hookViralVideos = await prisma.hookViralVideo.findMany()
     * ```
     */
-  get sampleVideo(): Prisma.SampleVideoDelegate<ExtArgs, ClientOptions>;
+  get hookViralVideo(): Prisma.HookViralVideoDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -677,7 +677,7 @@ export namespace Prisma {
     User: 'User',
     DemoVideo: 'DemoVideo',
     ShortDemo: 'ShortDemo',
-    SampleVideo: 'SampleVideo'
+    HookViralVideo: 'HookViralVideo'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -696,7 +696,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "post" | "user" | "demoVideo" | "shortDemo" | "sampleVideo"
+      modelProps: "post" | "user" | "demoVideo" | "shortDemo" | "hookViralVideo"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -996,77 +996,77 @@ export namespace Prisma {
           }
         }
       }
-      SampleVideo: {
-        payload: Prisma.$SampleVideoPayload<ExtArgs>
-        fields: Prisma.SampleVideoFieldRefs
+      HookViralVideo: {
+        payload: Prisma.$HookViralVideoPayload<ExtArgs>
+        fields: Prisma.HookViralVideoFieldRefs
         operations: {
           findUnique: {
-            args: Prisma.SampleVideoFindUniqueArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$SampleVideoPayload> | null
+            args: Prisma.HookViralVideoFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HookViralVideoPayload> | null
           }
           findUniqueOrThrow: {
-            args: Prisma.SampleVideoFindUniqueOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$SampleVideoPayload>
+            args: Prisma.HookViralVideoFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HookViralVideoPayload>
           }
           findFirst: {
-            args: Prisma.SampleVideoFindFirstArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$SampleVideoPayload> | null
+            args: Prisma.HookViralVideoFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HookViralVideoPayload> | null
           }
           findFirstOrThrow: {
-            args: Prisma.SampleVideoFindFirstOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$SampleVideoPayload>
+            args: Prisma.HookViralVideoFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HookViralVideoPayload>
           }
           findMany: {
-            args: Prisma.SampleVideoFindManyArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$SampleVideoPayload>[]
+            args: Prisma.HookViralVideoFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HookViralVideoPayload>[]
           }
           create: {
-            args: Prisma.SampleVideoCreateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$SampleVideoPayload>
+            args: Prisma.HookViralVideoCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HookViralVideoPayload>
           }
           createMany: {
-            args: Prisma.SampleVideoCreateManyArgs<ExtArgs>
+            args: Prisma.HookViralVideoCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
           createManyAndReturn: {
-            args: Prisma.SampleVideoCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$SampleVideoPayload>[]
+            args: Prisma.HookViralVideoCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HookViralVideoPayload>[]
           }
           delete: {
-            args: Prisma.SampleVideoDeleteArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$SampleVideoPayload>
+            args: Prisma.HookViralVideoDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HookViralVideoPayload>
           }
           update: {
-            args: Prisma.SampleVideoUpdateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$SampleVideoPayload>
+            args: Prisma.HookViralVideoUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HookViralVideoPayload>
           }
           deleteMany: {
-            args: Prisma.SampleVideoDeleteManyArgs<ExtArgs>
+            args: Prisma.HookViralVideoDeleteManyArgs<ExtArgs>
             result: BatchPayload
           }
           updateMany: {
-            args: Prisma.SampleVideoUpdateManyArgs<ExtArgs>
+            args: Prisma.HookViralVideoUpdateManyArgs<ExtArgs>
             result: BatchPayload
           }
           updateManyAndReturn: {
-            args: Prisma.SampleVideoUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$SampleVideoPayload>[]
+            args: Prisma.HookViralVideoUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HookViralVideoPayload>[]
           }
           upsert: {
-            args: Prisma.SampleVideoUpsertArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$SampleVideoPayload>
+            args: Prisma.HookViralVideoUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$HookViralVideoPayload>
           }
           aggregate: {
-            args: Prisma.SampleVideoAggregateArgs<ExtArgs>
-            result: $Utils.Optional<AggregateSampleVideo>
+            args: Prisma.HookViralVideoAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateHookViralVideo>
           }
           groupBy: {
-            args: Prisma.SampleVideoGroupByArgs<ExtArgs>
-            result: $Utils.Optional<SampleVideoGroupByOutputType>[]
+            args: Prisma.HookViralVideoGroupByArgs<ExtArgs>
+            result: $Utils.Optional<HookViralVideoGroupByOutputType>[]
           }
           count: {
-            args: Prisma.SampleVideoCountArgs<ExtArgs>
-            result: $Utils.Optional<SampleVideoCountAggregateOutputType> | number
+            args: Prisma.HookViralVideoCountArgs<ExtArgs>
+            result: $Utils.Optional<HookViralVideoCountAggregateOutputType> | number
           }
         }
       }
@@ -1158,7 +1158,7 @@ export namespace Prisma {
     user?: UserOmit
     demoVideo?: DemoVideoOmit
     shortDemo?: ShortDemoOmit
-    sampleVideo?: SampleVideoOmit
+    hookViralVideo?: HookViralVideoOmit
   }
 
   /* Types for Logging */
@@ -3380,7 +3380,6 @@ export namespace Prisma {
     id: string | null
     s3Url: string | null
     productInfo: string | null
-    colorPalette: string | null
     durationSeconds: number | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -3390,7 +3389,6 @@ export namespace Prisma {
     id: string | null
     s3Url: string | null
     productInfo: string | null
-    colorPalette: string | null
     durationSeconds: number | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -3420,7 +3418,6 @@ export namespace Prisma {
     id?: true
     s3Url?: true
     productInfo?: true
-    colorPalette?: true
     durationSeconds?: true
     createdAt?: true
     updatedAt?: true
@@ -3430,7 +3427,6 @@ export namespace Prisma {
     id?: true
     s3Url?: true
     productInfo?: true
-    colorPalette?: true
     durationSeconds?: true
     createdAt?: true
     updatedAt?: true
@@ -3537,7 +3533,7 @@ export namespace Prisma {
     id: string
     s3Url: string
     productInfo: string | null
-    colorPalette: string | null
+    colorPalette: JsonValue | null
     durationSeconds: number
     createdAt: Date
     updatedAt: Date
@@ -3621,7 +3617,7 @@ export namespace Prisma {
       id: string
       s3Url: string
       productInfo: string | null
-      colorPalette: string | null
+      colorPalette: Prisma.JsonValue | null
       durationSeconds: number
       createdAt: Date
       updatedAt: Date
@@ -4052,7 +4048,7 @@ export namespace Prisma {
     readonly id: FieldRef<"DemoVideo", 'String'>
     readonly s3Url: FieldRef<"DemoVideo", 'String'>
     readonly productInfo: FieldRef<"DemoVideo", 'String'>
-    readonly colorPalette: FieldRef<"DemoVideo", 'String'>
+    readonly colorPalette: FieldRef<"DemoVideo", 'Json'>
     readonly durationSeconds: FieldRef<"DemoVideo", 'Int'>
     readonly createdAt: FieldRef<"DemoVideo", 'DateTime'>
     readonly updatedAt: FieldRef<"DemoVideo", 'DateTime'>
@@ -5618,36 +5614,35 @@ export namespace Prisma {
 
 
   /**
-   * Model SampleVideo
+   * Model HookViralVideo
    */
 
-  export type AggregateSampleVideo = {
-    _count: SampleVideoCountAggregateOutputType | null
-    _avg: SampleVideoAvgAggregateOutputType | null
-    _sum: SampleVideoSumAggregateOutputType | null
-    _min: SampleVideoMinAggregateOutputType | null
-    _max: SampleVideoMaxAggregateOutputType | null
+  export type AggregateHookViralVideo = {
+    _count: HookViralVideoCountAggregateOutputType | null
+    _avg: HookViralVideoAvgAggregateOutputType | null
+    _sum: HookViralVideoSumAggregateOutputType | null
+    _min: HookViralVideoMinAggregateOutputType | null
+    _max: HookViralVideoMaxAggregateOutputType | null
   }
 
-  export type SampleVideoAvgAggregateOutputType = {
+  export type HookViralVideoAvgAggregateOutputType = {
     views: number | null
     comments: number | null
     likes: number | null
     durationSeconds: number | null
   }
 
-  export type SampleVideoSumAggregateOutputType = {
+  export type HookViralVideoSumAggregateOutputType = {
     views: number | null
     comments: number | null
     likes: number | null
     durationSeconds: number | null
   }
 
-  export type SampleVideoMinAggregateOutputType = {
+  export type HookViralVideoMinAggregateOutputType = {
     id: string | null
     webpageUrl: string | null
     s3Url: string | null
-    colorPalette: string | null
     hookEndTimestamp: string | null
     hookCutConfidence: string | null
     hookCutUrl: string | null
@@ -5662,11 +5657,10 @@ export namespace Prisma {
     updatedAt: Date | null
   }
 
-  export type SampleVideoMaxAggregateOutputType = {
+  export type HookViralVideoMaxAggregateOutputType = {
     id: string | null
     webpageUrl: string | null
     s3Url: string | null
-    colorPalette: string | null
     hookEndTimestamp: string | null
     hookCutConfidence: string | null
     hookCutUrl: string | null
@@ -5681,7 +5675,7 @@ export namespace Prisma {
     updatedAt: Date | null
   }
 
-  export type SampleVideoCountAggregateOutputType = {
+  export type HookViralVideoCountAggregateOutputType = {
     id: number
     webpageUrl: number
     s3Url: number
@@ -5702,25 +5696,24 @@ export namespace Prisma {
   }
 
 
-  export type SampleVideoAvgAggregateInputType = {
+  export type HookViralVideoAvgAggregateInputType = {
     views?: true
     comments?: true
     likes?: true
     durationSeconds?: true
   }
 
-  export type SampleVideoSumAggregateInputType = {
+  export type HookViralVideoSumAggregateInputType = {
     views?: true
     comments?: true
     likes?: true
     durationSeconds?: true
   }
 
-  export type SampleVideoMinAggregateInputType = {
+  export type HookViralVideoMinAggregateInputType = {
     id?: true
     webpageUrl?: true
     s3Url?: true
-    colorPalette?: true
     hookEndTimestamp?: true
     hookCutConfidence?: true
     hookCutUrl?: true
@@ -5735,11 +5728,10 @@ export namespace Prisma {
     updatedAt?: true
   }
 
-  export type SampleVideoMaxAggregateInputType = {
+  export type HookViralVideoMaxAggregateInputType = {
     id?: true
     webpageUrl?: true
     s3Url?: true
-    colorPalette?: true
     hookEndTimestamp?: true
     hookCutConfidence?: true
     hookCutUrl?: true
@@ -5754,7 +5746,7 @@ export namespace Prisma {
     updatedAt?: true
   }
 
-  export type SampleVideoCountAggregateInputType = {
+  export type HookViralVideoCountAggregateInputType = {
     id?: true
     webpageUrl?: true
     s3Url?: true
@@ -5774,97 +5766,97 @@ export namespace Prisma {
     _all?: true
   }
 
-  export type SampleVideoAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type HookViralVideoAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Filter which SampleVideo to aggregate.
+     * Filter which HookViralVideo to aggregate.
      */
-    where?: SampleVideoWhereInput
+    where?: HookViralVideoWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of SampleVideos to fetch.
+     * Determine the order of HookViralVideos to fetch.
      */
-    orderBy?: SampleVideoOrderByWithRelationInput | SampleVideoOrderByWithRelationInput[]
+    orderBy?: HookViralVideoOrderByWithRelationInput | HookViralVideoOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
      * Sets the start position
      */
-    cursor?: SampleVideoWhereUniqueInput
+    cursor?: HookViralVideoWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` SampleVideos from the position of the cursor.
+     * Take `±n` HookViralVideos from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` SampleVideos.
+     * Skip the first `n` HookViralVideos.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
-     * Count returned SampleVideos
+     * Count returned HookViralVideos
     **/
-    _count?: true | SampleVideoCountAggregateInputType
+    _count?: true | HookViralVideoCountAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to average
     **/
-    _avg?: SampleVideoAvgAggregateInputType
+    _avg?: HookViralVideoAvgAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to sum
     **/
-    _sum?: SampleVideoSumAggregateInputType
+    _sum?: HookViralVideoSumAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to find the minimum value
     **/
-    _min?: SampleVideoMinAggregateInputType
+    _min?: HookViralVideoMinAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to find the maximum value
     **/
-    _max?: SampleVideoMaxAggregateInputType
+    _max?: HookViralVideoMaxAggregateInputType
   }
 
-  export type GetSampleVideoAggregateType<T extends SampleVideoAggregateArgs> = {
-        [P in keyof T & keyof AggregateSampleVideo]: P extends '_count' | 'count'
+  export type GetHookViralVideoAggregateType<T extends HookViralVideoAggregateArgs> = {
+        [P in keyof T & keyof AggregateHookViralVideo]: P extends '_count' | 'count'
       ? T[P] extends true
         ? number
-        : GetScalarType<T[P], AggregateSampleVideo[P]>
-      : GetScalarType<T[P], AggregateSampleVideo[P]>
+        : GetScalarType<T[P], AggregateHookViralVideo[P]>
+      : GetScalarType<T[P], AggregateHookViralVideo[P]>
   }
 
 
 
 
-  export type SampleVideoGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: SampleVideoWhereInput
-    orderBy?: SampleVideoOrderByWithAggregationInput | SampleVideoOrderByWithAggregationInput[]
-    by: SampleVideoScalarFieldEnum[] | SampleVideoScalarFieldEnum
-    having?: SampleVideoScalarWhereWithAggregatesInput
+  export type HookViralVideoGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: HookViralVideoWhereInput
+    orderBy?: HookViralVideoOrderByWithAggregationInput | HookViralVideoOrderByWithAggregationInput[]
+    by: HookViralVideoScalarFieldEnum[] | HookViralVideoScalarFieldEnum
+    having?: HookViralVideoScalarWhereWithAggregatesInput
     take?: number
     skip?: number
-    _count?: SampleVideoCountAggregateInputType | true
-    _avg?: SampleVideoAvgAggregateInputType
-    _sum?: SampleVideoSumAggregateInputType
-    _min?: SampleVideoMinAggregateInputType
-    _max?: SampleVideoMaxAggregateInputType
+    _count?: HookViralVideoCountAggregateInputType | true
+    _avg?: HookViralVideoAvgAggregateInputType
+    _sum?: HookViralVideoSumAggregateInputType
+    _min?: HookViralVideoMinAggregateInputType
+    _max?: HookViralVideoMaxAggregateInputType
   }
 
-  export type SampleVideoGroupByOutputType = {
+  export type HookViralVideoGroupByOutputType = {
     id: string
     webpageUrl: string
     s3Url: string
-    colorPalette: string | null
+    colorPalette: JsonValue | null
     hookEndTimestamp: string
     hookCutConfidence: string | null
     hookCutUrl: string | null
@@ -5877,28 +5869,28 @@ export namespace Prisma {
     durationSeconds: number
     createdAt: Date
     updatedAt: Date
-    _count: SampleVideoCountAggregateOutputType | null
-    _avg: SampleVideoAvgAggregateOutputType | null
-    _sum: SampleVideoSumAggregateOutputType | null
-    _min: SampleVideoMinAggregateOutputType | null
-    _max: SampleVideoMaxAggregateOutputType | null
+    _count: HookViralVideoCountAggregateOutputType | null
+    _avg: HookViralVideoAvgAggregateOutputType | null
+    _sum: HookViralVideoSumAggregateOutputType | null
+    _min: HookViralVideoMinAggregateOutputType | null
+    _max: HookViralVideoMaxAggregateOutputType | null
   }
 
-  type GetSampleVideoGroupByPayload<T extends SampleVideoGroupByArgs> = Prisma.PrismaPromise<
+  type GetHookViralVideoGroupByPayload<T extends HookViralVideoGroupByArgs> = Prisma.PrismaPromise<
     Array<
-      PickEnumerable<SampleVideoGroupByOutputType, T['by']> &
+      PickEnumerable<HookViralVideoGroupByOutputType, T['by']> &
         {
-          [P in ((keyof T) & (keyof SampleVideoGroupByOutputType))]: P extends '_count'
+          [P in ((keyof T) & (keyof HookViralVideoGroupByOutputType))]: P extends '_count'
             ? T[P] extends boolean
               ? number
-              : GetScalarType<T[P], SampleVideoGroupByOutputType[P]>
-            : GetScalarType<T[P], SampleVideoGroupByOutputType[P]>
+              : GetScalarType<T[P], HookViralVideoGroupByOutputType[P]>
+            : GetScalarType<T[P], HookViralVideoGroupByOutputType[P]>
         }
       >
     >
 
 
-  export type SampleVideoSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type HookViralVideoSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     webpageUrl?: boolean
     s3Url?: boolean
@@ -5915,9 +5907,9 @@ export namespace Prisma {
     durationSeconds?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-  }, ExtArgs["result"]["sampleVideo"]>
+  }, ExtArgs["result"]["hookViralVideo"]>
 
-  export type SampleVideoSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type HookViralVideoSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     webpageUrl?: boolean
     s3Url?: boolean
@@ -5934,9 +5926,9 @@ export namespace Prisma {
     durationSeconds?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-  }, ExtArgs["result"]["sampleVideo"]>
+  }, ExtArgs["result"]["hookViralVideo"]>
 
-  export type SampleVideoSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type HookViralVideoSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     webpageUrl?: boolean
     s3Url?: boolean
@@ -5953,9 +5945,9 @@ export namespace Prisma {
     durationSeconds?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-  }, ExtArgs["result"]["sampleVideo"]>
+  }, ExtArgs["result"]["hookViralVideo"]>
 
-  export type SampleVideoSelectScalar = {
+  export type HookViralVideoSelectScalar = {
     id?: boolean
     webpageUrl?: boolean
     s3Url?: boolean
@@ -5974,16 +5966,16 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type SampleVideoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "webpageUrl" | "s3Url" | "colorPalette" | "hookEndTimestamp" | "hookCutConfidence" | "hookCutUrl" | "hookInfo" | "title" | "description" | "views" | "comments" | "likes" | "durationSeconds" | "createdAt" | "updatedAt", ExtArgs["result"]["sampleVideo"]>
+  export type HookViralVideoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "webpageUrl" | "s3Url" | "colorPalette" | "hookEndTimestamp" | "hookCutConfidence" | "hookCutUrl" | "hookInfo" | "title" | "description" | "views" | "comments" | "likes" | "durationSeconds" | "createdAt" | "updatedAt", ExtArgs["result"]["hookViralVideo"]>
 
-  export type $SampleVideoPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    name: "SampleVideo"
+  export type $HookViralVideoPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "HookViralVideo"
     objects: {}
     scalars: $Extensions.GetPayloadResult<{
       id: string
       webpageUrl: string
       s3Url: string
-      colorPalette: string | null
+      colorPalette: Prisma.JsonValue | null
       hookEndTimestamp: string
       hookCutConfidence: string | null
       hookCutUrl: string | null
@@ -5996,136 +5988,136 @@ export namespace Prisma {
       durationSeconds: number
       createdAt: Date
       updatedAt: Date
-    }, ExtArgs["result"]["sampleVideo"]>
+    }, ExtArgs["result"]["hookViralVideo"]>
     composites: {}
   }
 
-  type SampleVideoGetPayload<S extends boolean | null | undefined | SampleVideoDefaultArgs> = $Result.GetResult<Prisma.$SampleVideoPayload, S>
+  type HookViralVideoGetPayload<S extends boolean | null | undefined | HookViralVideoDefaultArgs> = $Result.GetResult<Prisma.$HookViralVideoPayload, S>
 
-  type SampleVideoCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
-    Omit<SampleVideoFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
-      select?: SampleVideoCountAggregateInputType | true
+  type HookViralVideoCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<HookViralVideoFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: HookViralVideoCountAggregateInputType | true
     }
 
-  export interface SampleVideoDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
-    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['SampleVideo'], meta: { name: 'SampleVideo' } }
+  export interface HookViralVideoDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['HookViralVideo'], meta: { name: 'HookViralVideo' } }
     /**
-     * Find zero or one SampleVideo that matches the filter.
-     * @param {SampleVideoFindUniqueArgs} args - Arguments to find a SampleVideo
+     * Find zero or one HookViralVideo that matches the filter.
+     * @param {HookViralVideoFindUniqueArgs} args - Arguments to find a HookViralVideo
      * @example
-     * // Get one SampleVideo
-     * const sampleVideo = await prisma.sampleVideo.findUnique({
+     * // Get one HookViralVideo
+     * const hookViralVideo = await prisma.hookViralVideo.findUnique({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findUnique<T extends SampleVideoFindUniqueArgs>(args: SelectSubset<T, SampleVideoFindUniqueArgs<ExtArgs>>): Prisma__SampleVideoClient<$Result.GetResult<Prisma.$SampleVideoPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findUnique<T extends HookViralVideoFindUniqueArgs>(args: SelectSubset<T, HookViralVideoFindUniqueArgs<ExtArgs>>): Prisma__HookViralVideoClient<$Result.GetResult<Prisma.$HookViralVideoPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find one SampleVideo that matches the filter or throw an error with `error.code='P2025'`
+     * Find one HookViralVideo that matches the filter or throw an error with `error.code='P2025'`
      * if no matches were found.
-     * @param {SampleVideoFindUniqueOrThrowArgs} args - Arguments to find a SampleVideo
+     * @param {HookViralVideoFindUniqueOrThrowArgs} args - Arguments to find a HookViralVideo
      * @example
-     * // Get one SampleVideo
-     * const sampleVideo = await prisma.sampleVideo.findUniqueOrThrow({
+     * // Get one HookViralVideo
+     * const hookViralVideo = await prisma.hookViralVideo.findUniqueOrThrow({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findUniqueOrThrow<T extends SampleVideoFindUniqueOrThrowArgs>(args: SelectSubset<T, SampleVideoFindUniqueOrThrowArgs<ExtArgs>>): Prisma__SampleVideoClient<$Result.GetResult<Prisma.$SampleVideoPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findUniqueOrThrow<T extends HookViralVideoFindUniqueOrThrowArgs>(args: SelectSubset<T, HookViralVideoFindUniqueOrThrowArgs<ExtArgs>>): Prisma__HookViralVideoClient<$Result.GetResult<Prisma.$HookViralVideoPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find the first SampleVideo that matches the filter.
+     * Find the first HookViralVideo that matches the filter.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {SampleVideoFindFirstArgs} args - Arguments to find a SampleVideo
+     * @param {HookViralVideoFindFirstArgs} args - Arguments to find a HookViralVideo
      * @example
-     * // Get one SampleVideo
-     * const sampleVideo = await prisma.sampleVideo.findFirst({
+     * // Get one HookViralVideo
+     * const hookViralVideo = await prisma.hookViralVideo.findFirst({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findFirst<T extends SampleVideoFindFirstArgs>(args?: SelectSubset<T, SampleVideoFindFirstArgs<ExtArgs>>): Prisma__SampleVideoClient<$Result.GetResult<Prisma.$SampleVideoPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findFirst<T extends HookViralVideoFindFirstArgs>(args?: SelectSubset<T, HookViralVideoFindFirstArgs<ExtArgs>>): Prisma__HookViralVideoClient<$Result.GetResult<Prisma.$HookViralVideoPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find the first SampleVideo that matches the filter or
+     * Find the first HookViralVideo that matches the filter or
      * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {SampleVideoFindFirstOrThrowArgs} args - Arguments to find a SampleVideo
+     * @param {HookViralVideoFindFirstOrThrowArgs} args - Arguments to find a HookViralVideo
      * @example
-     * // Get one SampleVideo
-     * const sampleVideo = await prisma.sampleVideo.findFirstOrThrow({
+     * // Get one HookViralVideo
+     * const hookViralVideo = await prisma.hookViralVideo.findFirstOrThrow({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findFirstOrThrow<T extends SampleVideoFindFirstOrThrowArgs>(args?: SelectSubset<T, SampleVideoFindFirstOrThrowArgs<ExtArgs>>): Prisma__SampleVideoClient<$Result.GetResult<Prisma.$SampleVideoPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findFirstOrThrow<T extends HookViralVideoFindFirstOrThrowArgs>(args?: SelectSubset<T, HookViralVideoFindFirstOrThrowArgs<ExtArgs>>): Prisma__HookViralVideoClient<$Result.GetResult<Prisma.$HookViralVideoPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find zero or more SampleVideos that matches the filter.
+     * Find zero or more HookViralVideos that matches the filter.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {SampleVideoFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @param {HookViralVideoFindManyArgs} args - Arguments to filter and select certain fields only.
      * @example
-     * // Get all SampleVideos
-     * const sampleVideos = await prisma.sampleVideo.findMany()
+     * // Get all HookViralVideos
+     * const hookViralVideos = await prisma.hookViralVideo.findMany()
      * 
-     * // Get first 10 SampleVideos
-     * const sampleVideos = await prisma.sampleVideo.findMany({ take: 10 })
+     * // Get first 10 HookViralVideos
+     * const hookViralVideos = await prisma.hookViralVideo.findMany({ take: 10 })
      * 
      * // Only select the `id`
-     * const sampleVideoWithIdOnly = await prisma.sampleVideo.findMany({ select: { id: true } })
+     * const hookViralVideoWithIdOnly = await prisma.hookViralVideo.findMany({ select: { id: true } })
      * 
      */
-    findMany<T extends SampleVideoFindManyArgs>(args?: SelectSubset<T, SampleVideoFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SampleVideoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+    findMany<T extends HookViralVideoFindManyArgs>(args?: SelectSubset<T, HookViralVideoFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HookViralVideoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
 
     /**
-     * Create a SampleVideo.
-     * @param {SampleVideoCreateArgs} args - Arguments to create a SampleVideo.
+     * Create a HookViralVideo.
+     * @param {HookViralVideoCreateArgs} args - Arguments to create a HookViralVideo.
      * @example
-     * // Create one SampleVideo
-     * const SampleVideo = await prisma.sampleVideo.create({
+     * // Create one HookViralVideo
+     * const HookViralVideo = await prisma.hookViralVideo.create({
      *   data: {
-     *     // ... data to create a SampleVideo
+     *     // ... data to create a HookViralVideo
      *   }
      * })
      * 
      */
-    create<T extends SampleVideoCreateArgs>(args: SelectSubset<T, SampleVideoCreateArgs<ExtArgs>>): Prisma__SampleVideoClient<$Result.GetResult<Prisma.$SampleVideoPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    create<T extends HookViralVideoCreateArgs>(args: SelectSubset<T, HookViralVideoCreateArgs<ExtArgs>>): Prisma__HookViralVideoClient<$Result.GetResult<Prisma.$HookViralVideoPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Create many SampleVideos.
-     * @param {SampleVideoCreateManyArgs} args - Arguments to create many SampleVideos.
+     * Create many HookViralVideos.
+     * @param {HookViralVideoCreateManyArgs} args - Arguments to create many HookViralVideos.
      * @example
-     * // Create many SampleVideos
-     * const sampleVideo = await prisma.sampleVideo.createMany({
+     * // Create many HookViralVideos
+     * const hookViralVideo = await prisma.hookViralVideo.createMany({
      *   data: [
      *     // ... provide data here
      *   ]
      * })
      *     
      */
-    createMany<T extends SampleVideoCreateManyArgs>(args?: SelectSubset<T, SampleVideoCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    createMany<T extends HookViralVideoCreateManyArgs>(args?: SelectSubset<T, HookViralVideoCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Create many SampleVideos and returns the data saved in the database.
-     * @param {SampleVideoCreateManyAndReturnArgs} args - Arguments to create many SampleVideos.
+     * Create many HookViralVideos and returns the data saved in the database.
+     * @param {HookViralVideoCreateManyAndReturnArgs} args - Arguments to create many HookViralVideos.
      * @example
-     * // Create many SampleVideos
-     * const sampleVideo = await prisma.sampleVideo.createManyAndReturn({
+     * // Create many HookViralVideos
+     * const hookViralVideo = await prisma.hookViralVideo.createManyAndReturn({
      *   data: [
      *     // ... provide data here
      *   ]
      * })
      * 
-     * // Create many SampleVideos and only return the `id`
-     * const sampleVideoWithIdOnly = await prisma.sampleVideo.createManyAndReturn({
+     * // Create many HookViralVideos and only return the `id`
+     * const hookViralVideoWithIdOnly = await prisma.hookViralVideo.createManyAndReturn({
      *   select: { id: true },
      *   data: [
      *     // ... provide data here
@@ -6135,28 +6127,28 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    createManyAndReturn<T extends SampleVideoCreateManyAndReturnArgs>(args?: SelectSubset<T, SampleVideoCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SampleVideoPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+    createManyAndReturn<T extends HookViralVideoCreateManyAndReturnArgs>(args?: SelectSubset<T, HookViralVideoCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HookViralVideoPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
 
     /**
-     * Delete a SampleVideo.
-     * @param {SampleVideoDeleteArgs} args - Arguments to delete one SampleVideo.
+     * Delete a HookViralVideo.
+     * @param {HookViralVideoDeleteArgs} args - Arguments to delete one HookViralVideo.
      * @example
-     * // Delete one SampleVideo
-     * const SampleVideo = await prisma.sampleVideo.delete({
+     * // Delete one HookViralVideo
+     * const HookViralVideo = await prisma.hookViralVideo.delete({
      *   where: {
-     *     // ... filter to delete one SampleVideo
+     *     // ... filter to delete one HookViralVideo
      *   }
      * })
      * 
      */
-    delete<T extends SampleVideoDeleteArgs>(args: SelectSubset<T, SampleVideoDeleteArgs<ExtArgs>>): Prisma__SampleVideoClient<$Result.GetResult<Prisma.$SampleVideoPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    delete<T extends HookViralVideoDeleteArgs>(args: SelectSubset<T, HookViralVideoDeleteArgs<ExtArgs>>): Prisma__HookViralVideoClient<$Result.GetResult<Prisma.$HookViralVideoPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Update one SampleVideo.
-     * @param {SampleVideoUpdateArgs} args - Arguments to update one SampleVideo.
+     * Update one HookViralVideo.
+     * @param {HookViralVideoUpdateArgs} args - Arguments to update one HookViralVideo.
      * @example
-     * // Update one SampleVideo
-     * const sampleVideo = await prisma.sampleVideo.update({
+     * // Update one HookViralVideo
+     * const hookViralVideo = await prisma.hookViralVideo.update({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -6166,30 +6158,30 @@ export namespace Prisma {
      * })
      * 
      */
-    update<T extends SampleVideoUpdateArgs>(args: SelectSubset<T, SampleVideoUpdateArgs<ExtArgs>>): Prisma__SampleVideoClient<$Result.GetResult<Prisma.$SampleVideoPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    update<T extends HookViralVideoUpdateArgs>(args: SelectSubset<T, HookViralVideoUpdateArgs<ExtArgs>>): Prisma__HookViralVideoClient<$Result.GetResult<Prisma.$HookViralVideoPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Delete zero or more SampleVideos.
-     * @param {SampleVideoDeleteManyArgs} args - Arguments to filter SampleVideos to delete.
+     * Delete zero or more HookViralVideos.
+     * @param {HookViralVideoDeleteManyArgs} args - Arguments to filter HookViralVideos to delete.
      * @example
-     * // Delete a few SampleVideos
-     * const { count } = await prisma.sampleVideo.deleteMany({
+     * // Delete a few HookViralVideos
+     * const { count } = await prisma.hookViralVideo.deleteMany({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      * 
      */
-    deleteMany<T extends SampleVideoDeleteManyArgs>(args?: SelectSubset<T, SampleVideoDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    deleteMany<T extends HookViralVideoDeleteManyArgs>(args?: SelectSubset<T, HookViralVideoDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Update zero or more SampleVideos.
+     * Update zero or more HookViralVideos.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {SampleVideoUpdateManyArgs} args - Arguments to update one or more rows.
+     * @param {HookViralVideoUpdateManyArgs} args - Arguments to update one or more rows.
      * @example
-     * // Update many SampleVideos
-     * const sampleVideo = await prisma.sampleVideo.updateMany({
+     * // Update many HookViralVideos
+     * const hookViralVideo = await prisma.hookViralVideo.updateMany({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -6199,14 +6191,14 @@ export namespace Prisma {
      * })
      * 
      */
-    updateMany<T extends SampleVideoUpdateManyArgs>(args: SelectSubset<T, SampleVideoUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    updateMany<T extends HookViralVideoUpdateManyArgs>(args: SelectSubset<T, HookViralVideoUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Update zero or more SampleVideos and returns the data updated in the database.
-     * @param {SampleVideoUpdateManyAndReturnArgs} args - Arguments to update many SampleVideos.
+     * Update zero or more HookViralVideos and returns the data updated in the database.
+     * @param {HookViralVideoUpdateManyAndReturnArgs} args - Arguments to update many HookViralVideos.
      * @example
-     * // Update many SampleVideos
-     * const sampleVideo = await prisma.sampleVideo.updateManyAndReturn({
+     * // Update many HookViralVideos
+     * const hookViralVideo = await prisma.hookViralVideo.updateManyAndReturn({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -6215,8 +6207,8 @@ export namespace Prisma {
      *   ]
      * })
      * 
-     * // Update zero or more SampleVideos and only return the `id`
-     * const sampleVideoWithIdOnly = await prisma.sampleVideo.updateManyAndReturn({
+     * // Update zero or more HookViralVideos and only return the `id`
+     * const hookViralVideoWithIdOnly = await prisma.hookViralVideo.updateManyAndReturn({
      *   select: { id: true },
      *   where: {
      *     // ... provide filter here
@@ -6229,56 +6221,56 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    updateManyAndReturn<T extends SampleVideoUpdateManyAndReturnArgs>(args: SelectSubset<T, SampleVideoUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SampleVideoPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+    updateManyAndReturn<T extends HookViralVideoUpdateManyAndReturnArgs>(args: SelectSubset<T, HookViralVideoUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HookViralVideoPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
     /**
-     * Create or update one SampleVideo.
-     * @param {SampleVideoUpsertArgs} args - Arguments to update or create a SampleVideo.
+     * Create or update one HookViralVideo.
+     * @param {HookViralVideoUpsertArgs} args - Arguments to update or create a HookViralVideo.
      * @example
-     * // Update or create a SampleVideo
-     * const sampleVideo = await prisma.sampleVideo.upsert({
+     * // Update or create a HookViralVideo
+     * const hookViralVideo = await prisma.hookViralVideo.upsert({
      *   create: {
-     *     // ... data to create a SampleVideo
+     *     // ... data to create a HookViralVideo
      *   },
      *   update: {
      *     // ... in case it already exists, update
      *   },
      *   where: {
-     *     // ... the filter for the SampleVideo we want to update
+     *     // ... the filter for the HookViralVideo we want to update
      *   }
      * })
      */
-    upsert<T extends SampleVideoUpsertArgs>(args: SelectSubset<T, SampleVideoUpsertArgs<ExtArgs>>): Prisma__SampleVideoClient<$Result.GetResult<Prisma.$SampleVideoPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    upsert<T extends HookViralVideoUpsertArgs>(args: SelectSubset<T, HookViralVideoUpsertArgs<ExtArgs>>): Prisma__HookViralVideoClient<$Result.GetResult<Prisma.$HookViralVideoPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
 
     /**
-     * Count the number of SampleVideos.
+     * Count the number of HookViralVideos.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {SampleVideoCountArgs} args - Arguments to filter SampleVideos to count.
+     * @param {HookViralVideoCountArgs} args - Arguments to filter HookViralVideos to count.
      * @example
-     * // Count the number of SampleVideos
-     * const count = await prisma.sampleVideo.count({
+     * // Count the number of HookViralVideos
+     * const count = await prisma.hookViralVideo.count({
      *   where: {
-     *     // ... the filter for the SampleVideos we want to count
+     *     // ... the filter for the HookViralVideos we want to count
      *   }
      * })
     **/
-    count<T extends SampleVideoCountArgs>(
-      args?: Subset<T, SampleVideoCountArgs>,
+    count<T extends HookViralVideoCountArgs>(
+      args?: Subset<T, HookViralVideoCountArgs>,
     ): Prisma.PrismaPromise<
       T extends $Utils.Record<'select', any>
         ? T['select'] extends true
           ? number
-          : GetScalarType<T['select'], SampleVideoCountAggregateOutputType>
+          : GetScalarType<T['select'], HookViralVideoCountAggregateOutputType>
         : number
     >
 
     /**
-     * Allows you to perform aggregations operations on a SampleVideo.
+     * Allows you to perform aggregations operations on a HookViralVideo.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {SampleVideoAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @param {HookViralVideoAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
      * @example
      * // Ordered by age ascending
      * // Where email contains prisma.io
@@ -6298,13 +6290,13 @@ export namespace Prisma {
      *   take: 10,
      * })
     **/
-    aggregate<T extends SampleVideoAggregateArgs>(args: Subset<T, SampleVideoAggregateArgs>): Prisma.PrismaPromise<GetSampleVideoAggregateType<T>>
+    aggregate<T extends HookViralVideoAggregateArgs>(args: Subset<T, HookViralVideoAggregateArgs>): Prisma.PrismaPromise<GetHookViralVideoAggregateType<T>>
 
     /**
-     * Group by SampleVideo.
+     * Group by HookViralVideo.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {SampleVideoGroupByArgs} args - Group by arguments.
+     * @param {HookViralVideoGroupByArgs} args - Group by arguments.
      * @example
      * // Group by city, order by createdAt, get count
      * const result = await prisma.user.groupBy({
@@ -6319,14 +6311,14 @@ export namespace Prisma {
      * 
     **/
     groupBy<
-      T extends SampleVideoGroupByArgs,
+      T extends HookViralVideoGroupByArgs,
       HasSelectOrTake extends Or<
         Extends<'skip', Keys<T>>,
         Extends<'take', Keys<T>>
       >,
       OrderByArg extends True extends HasSelectOrTake
-        ? { orderBy: SampleVideoGroupByArgs['orderBy'] }
-        : { orderBy?: SampleVideoGroupByArgs['orderBy'] },
+        ? { orderBy: HookViralVideoGroupByArgs['orderBy'] }
+        : { orderBy?: HookViralVideoGroupByArgs['orderBy'] },
       OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
       ByFields extends MaybeTupleToUnion<T['by']>,
       ByValid extends Has<ByFields, OrderFields>,
@@ -6375,20 +6367,20 @@ export namespace Prisma {
             ? never
             : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
         }[OrderFields]
-    >(args: SubsetIntersection<T, SampleVideoGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetSampleVideoGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+    >(args: SubsetIntersection<T, HookViralVideoGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetHookViralVideoGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
   /**
-   * Fields of the SampleVideo model
+   * Fields of the HookViralVideo model
    */
-  readonly fields: SampleVideoFieldRefs;
+  readonly fields: HookViralVideoFieldRefs;
   }
 
   /**
-   * The delegate class that acts as a "Promise-like" for SampleVideo.
+   * The delegate class that acts as a "Promise-like" for HookViralVideo.
    * Why is this prefixed with `Prisma__`?
    * Because we want to prevent naming conflicts as mentioned in
    * https://github.com/prisma/prisma-client-js/issues/707
    */
-  export interface Prisma__SampleVideoClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+  export interface Prisma__HookViralVideoClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -6416,388 +6408,388 @@ export namespace Prisma {
 
 
   /**
-   * Fields of the SampleVideo model
+   * Fields of the HookViralVideo model
    */
-  interface SampleVideoFieldRefs {
-    readonly id: FieldRef<"SampleVideo", 'String'>
-    readonly webpageUrl: FieldRef<"SampleVideo", 'String'>
-    readonly s3Url: FieldRef<"SampleVideo", 'String'>
-    readonly colorPalette: FieldRef<"SampleVideo", 'String'>
-    readonly hookEndTimestamp: FieldRef<"SampleVideo", 'String'>
-    readonly hookCutConfidence: FieldRef<"SampleVideo", 'String'>
-    readonly hookCutUrl: FieldRef<"SampleVideo", 'String'>
-    readonly hookInfo: FieldRef<"SampleVideo", 'String'>
-    readonly title: FieldRef<"SampleVideo", 'String'>
-    readonly description: FieldRef<"SampleVideo", 'String'>
-    readonly views: FieldRef<"SampleVideo", 'Int'>
-    readonly comments: FieldRef<"SampleVideo", 'Int'>
-    readonly likes: FieldRef<"SampleVideo", 'Int'>
-    readonly durationSeconds: FieldRef<"SampleVideo", 'Int'>
-    readonly createdAt: FieldRef<"SampleVideo", 'DateTime'>
-    readonly updatedAt: FieldRef<"SampleVideo", 'DateTime'>
+  interface HookViralVideoFieldRefs {
+    readonly id: FieldRef<"HookViralVideo", 'String'>
+    readonly webpageUrl: FieldRef<"HookViralVideo", 'String'>
+    readonly s3Url: FieldRef<"HookViralVideo", 'String'>
+    readonly colorPalette: FieldRef<"HookViralVideo", 'Json'>
+    readonly hookEndTimestamp: FieldRef<"HookViralVideo", 'String'>
+    readonly hookCutConfidence: FieldRef<"HookViralVideo", 'String'>
+    readonly hookCutUrl: FieldRef<"HookViralVideo", 'String'>
+    readonly hookInfo: FieldRef<"HookViralVideo", 'String'>
+    readonly title: FieldRef<"HookViralVideo", 'String'>
+    readonly description: FieldRef<"HookViralVideo", 'String'>
+    readonly views: FieldRef<"HookViralVideo", 'Int'>
+    readonly comments: FieldRef<"HookViralVideo", 'Int'>
+    readonly likes: FieldRef<"HookViralVideo", 'Int'>
+    readonly durationSeconds: FieldRef<"HookViralVideo", 'Int'>
+    readonly createdAt: FieldRef<"HookViralVideo", 'DateTime'>
+    readonly updatedAt: FieldRef<"HookViralVideo", 'DateTime'>
   }
     
 
   // Custom InputTypes
   /**
-   * SampleVideo findUnique
+   * HookViralVideo findUnique
    */
-  export type SampleVideoFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type HookViralVideoFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the SampleVideo
+     * Select specific fields to fetch from the HookViralVideo
      */
-    select?: SampleVideoSelect<ExtArgs> | null
+    select?: HookViralVideoSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the SampleVideo
+     * Omit specific fields from the HookViralVideo
      */
-    omit?: SampleVideoOmit<ExtArgs> | null
+    omit?: HookViralVideoOmit<ExtArgs> | null
     /**
-     * Filter, which SampleVideo to fetch.
+     * Filter, which HookViralVideo to fetch.
      */
-    where: SampleVideoWhereUniqueInput
+    where: HookViralVideoWhereUniqueInput
   }
 
   /**
-   * SampleVideo findUniqueOrThrow
+   * HookViralVideo findUniqueOrThrow
    */
-  export type SampleVideoFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type HookViralVideoFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the SampleVideo
+     * Select specific fields to fetch from the HookViralVideo
      */
-    select?: SampleVideoSelect<ExtArgs> | null
+    select?: HookViralVideoSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the SampleVideo
+     * Omit specific fields from the HookViralVideo
      */
-    omit?: SampleVideoOmit<ExtArgs> | null
+    omit?: HookViralVideoOmit<ExtArgs> | null
     /**
-     * Filter, which SampleVideo to fetch.
+     * Filter, which HookViralVideo to fetch.
      */
-    where: SampleVideoWhereUniqueInput
+    where: HookViralVideoWhereUniqueInput
   }
 
   /**
-   * SampleVideo findFirst
+   * HookViralVideo findFirst
    */
-  export type SampleVideoFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type HookViralVideoFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the SampleVideo
+     * Select specific fields to fetch from the HookViralVideo
      */
-    select?: SampleVideoSelect<ExtArgs> | null
+    select?: HookViralVideoSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the SampleVideo
+     * Omit specific fields from the HookViralVideo
      */
-    omit?: SampleVideoOmit<ExtArgs> | null
+    omit?: HookViralVideoOmit<ExtArgs> | null
     /**
-     * Filter, which SampleVideo to fetch.
+     * Filter, which HookViralVideo to fetch.
      */
-    where?: SampleVideoWhereInput
+    where?: HookViralVideoWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of SampleVideos to fetch.
+     * Determine the order of HookViralVideos to fetch.
      */
-    orderBy?: SampleVideoOrderByWithRelationInput | SampleVideoOrderByWithRelationInput[]
+    orderBy?: HookViralVideoOrderByWithRelationInput | HookViralVideoOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for searching for SampleVideos.
+     * Sets the position for searching for HookViralVideos.
      */
-    cursor?: SampleVideoWhereUniqueInput
+    cursor?: HookViralVideoWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` SampleVideos from the position of the cursor.
+     * Take `±n` HookViralVideos from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` SampleVideos.
+     * Skip the first `n` HookViralVideos.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
      * 
-     * Filter by unique combinations of SampleVideos.
+     * Filter by unique combinations of HookViralVideos.
      */
-    distinct?: SampleVideoScalarFieldEnum | SampleVideoScalarFieldEnum[]
+    distinct?: HookViralVideoScalarFieldEnum | HookViralVideoScalarFieldEnum[]
   }
 
   /**
-   * SampleVideo findFirstOrThrow
+   * HookViralVideo findFirstOrThrow
    */
-  export type SampleVideoFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type HookViralVideoFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the SampleVideo
+     * Select specific fields to fetch from the HookViralVideo
      */
-    select?: SampleVideoSelect<ExtArgs> | null
+    select?: HookViralVideoSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the SampleVideo
+     * Omit specific fields from the HookViralVideo
      */
-    omit?: SampleVideoOmit<ExtArgs> | null
+    omit?: HookViralVideoOmit<ExtArgs> | null
     /**
-     * Filter, which SampleVideo to fetch.
+     * Filter, which HookViralVideo to fetch.
      */
-    where?: SampleVideoWhereInput
+    where?: HookViralVideoWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of SampleVideos to fetch.
+     * Determine the order of HookViralVideos to fetch.
      */
-    orderBy?: SampleVideoOrderByWithRelationInput | SampleVideoOrderByWithRelationInput[]
+    orderBy?: HookViralVideoOrderByWithRelationInput | HookViralVideoOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for searching for SampleVideos.
+     * Sets the position for searching for HookViralVideos.
      */
-    cursor?: SampleVideoWhereUniqueInput
+    cursor?: HookViralVideoWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` SampleVideos from the position of the cursor.
+     * Take `±n` HookViralVideos from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` SampleVideos.
+     * Skip the first `n` HookViralVideos.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
      * 
-     * Filter by unique combinations of SampleVideos.
+     * Filter by unique combinations of HookViralVideos.
      */
-    distinct?: SampleVideoScalarFieldEnum | SampleVideoScalarFieldEnum[]
+    distinct?: HookViralVideoScalarFieldEnum | HookViralVideoScalarFieldEnum[]
   }
 
   /**
-   * SampleVideo findMany
+   * HookViralVideo findMany
    */
-  export type SampleVideoFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type HookViralVideoFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the SampleVideo
+     * Select specific fields to fetch from the HookViralVideo
      */
-    select?: SampleVideoSelect<ExtArgs> | null
+    select?: HookViralVideoSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the SampleVideo
+     * Omit specific fields from the HookViralVideo
      */
-    omit?: SampleVideoOmit<ExtArgs> | null
+    omit?: HookViralVideoOmit<ExtArgs> | null
     /**
-     * Filter, which SampleVideos to fetch.
+     * Filter, which HookViralVideos to fetch.
      */
-    where?: SampleVideoWhereInput
+    where?: HookViralVideoWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of SampleVideos to fetch.
+     * Determine the order of HookViralVideos to fetch.
      */
-    orderBy?: SampleVideoOrderByWithRelationInput | SampleVideoOrderByWithRelationInput[]
+    orderBy?: HookViralVideoOrderByWithRelationInput | HookViralVideoOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for listing SampleVideos.
+     * Sets the position for listing HookViralVideos.
      */
-    cursor?: SampleVideoWhereUniqueInput
+    cursor?: HookViralVideoWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` SampleVideos from the position of the cursor.
+     * Take `±n` HookViralVideos from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` SampleVideos.
+     * Skip the first `n` HookViralVideos.
      */
     skip?: number
-    distinct?: SampleVideoScalarFieldEnum | SampleVideoScalarFieldEnum[]
+    distinct?: HookViralVideoScalarFieldEnum | HookViralVideoScalarFieldEnum[]
   }
 
   /**
-   * SampleVideo create
+   * HookViralVideo create
    */
-  export type SampleVideoCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type HookViralVideoCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the SampleVideo
+     * Select specific fields to fetch from the HookViralVideo
      */
-    select?: SampleVideoSelect<ExtArgs> | null
+    select?: HookViralVideoSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the SampleVideo
+     * Omit specific fields from the HookViralVideo
      */
-    omit?: SampleVideoOmit<ExtArgs> | null
+    omit?: HookViralVideoOmit<ExtArgs> | null
     /**
-     * The data needed to create a SampleVideo.
+     * The data needed to create a HookViralVideo.
      */
-    data: XOR<SampleVideoCreateInput, SampleVideoUncheckedCreateInput>
+    data: XOR<HookViralVideoCreateInput, HookViralVideoUncheckedCreateInput>
   }
 
   /**
-   * SampleVideo createMany
+   * HookViralVideo createMany
    */
-  export type SampleVideoCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type HookViralVideoCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * The data used to create many SampleVideos.
+     * The data used to create many HookViralVideos.
      */
-    data: SampleVideoCreateManyInput | SampleVideoCreateManyInput[]
+    data: HookViralVideoCreateManyInput | HookViralVideoCreateManyInput[]
     skipDuplicates?: boolean
   }
 
   /**
-   * SampleVideo createManyAndReturn
+   * HookViralVideo createManyAndReturn
    */
-  export type SampleVideoCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type HookViralVideoCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the SampleVideo
+     * Select specific fields to fetch from the HookViralVideo
      */
-    select?: SampleVideoSelectCreateManyAndReturn<ExtArgs> | null
+    select?: HookViralVideoSelectCreateManyAndReturn<ExtArgs> | null
     /**
-     * Omit specific fields from the SampleVideo
+     * Omit specific fields from the HookViralVideo
      */
-    omit?: SampleVideoOmit<ExtArgs> | null
+    omit?: HookViralVideoOmit<ExtArgs> | null
     /**
-     * The data used to create many SampleVideos.
+     * The data used to create many HookViralVideos.
      */
-    data: SampleVideoCreateManyInput | SampleVideoCreateManyInput[]
+    data: HookViralVideoCreateManyInput | HookViralVideoCreateManyInput[]
     skipDuplicates?: boolean
   }
 
   /**
-   * SampleVideo update
+   * HookViralVideo update
    */
-  export type SampleVideoUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type HookViralVideoUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the SampleVideo
+     * Select specific fields to fetch from the HookViralVideo
      */
-    select?: SampleVideoSelect<ExtArgs> | null
+    select?: HookViralVideoSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the SampleVideo
+     * Omit specific fields from the HookViralVideo
      */
-    omit?: SampleVideoOmit<ExtArgs> | null
+    omit?: HookViralVideoOmit<ExtArgs> | null
     /**
-     * The data needed to update a SampleVideo.
+     * The data needed to update a HookViralVideo.
      */
-    data: XOR<SampleVideoUpdateInput, SampleVideoUncheckedUpdateInput>
+    data: XOR<HookViralVideoUpdateInput, HookViralVideoUncheckedUpdateInput>
     /**
-     * Choose, which SampleVideo to update.
+     * Choose, which HookViralVideo to update.
      */
-    where: SampleVideoWhereUniqueInput
+    where: HookViralVideoWhereUniqueInput
   }
 
   /**
-   * SampleVideo updateMany
+   * HookViralVideo updateMany
    */
-  export type SampleVideoUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type HookViralVideoUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * The data used to update SampleVideos.
+     * The data used to update HookViralVideos.
      */
-    data: XOR<SampleVideoUpdateManyMutationInput, SampleVideoUncheckedUpdateManyInput>
+    data: XOR<HookViralVideoUpdateManyMutationInput, HookViralVideoUncheckedUpdateManyInput>
     /**
-     * Filter which SampleVideos to update
+     * Filter which HookViralVideos to update
      */
-    where?: SampleVideoWhereInput
+    where?: HookViralVideoWhereInput
     /**
-     * Limit how many SampleVideos to update.
+     * Limit how many HookViralVideos to update.
      */
     limit?: number
   }
 
   /**
-   * SampleVideo updateManyAndReturn
+   * HookViralVideo updateManyAndReturn
    */
-  export type SampleVideoUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type HookViralVideoUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the SampleVideo
+     * Select specific fields to fetch from the HookViralVideo
      */
-    select?: SampleVideoSelectUpdateManyAndReturn<ExtArgs> | null
+    select?: HookViralVideoSelectUpdateManyAndReturn<ExtArgs> | null
     /**
-     * Omit specific fields from the SampleVideo
+     * Omit specific fields from the HookViralVideo
      */
-    omit?: SampleVideoOmit<ExtArgs> | null
+    omit?: HookViralVideoOmit<ExtArgs> | null
     /**
-     * The data used to update SampleVideos.
+     * The data used to update HookViralVideos.
      */
-    data: XOR<SampleVideoUpdateManyMutationInput, SampleVideoUncheckedUpdateManyInput>
+    data: XOR<HookViralVideoUpdateManyMutationInput, HookViralVideoUncheckedUpdateManyInput>
     /**
-     * Filter which SampleVideos to update
+     * Filter which HookViralVideos to update
      */
-    where?: SampleVideoWhereInput
+    where?: HookViralVideoWhereInput
     /**
-     * Limit how many SampleVideos to update.
+     * Limit how many HookViralVideos to update.
      */
     limit?: number
   }
 
   /**
-   * SampleVideo upsert
+   * HookViralVideo upsert
    */
-  export type SampleVideoUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type HookViralVideoUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the SampleVideo
+     * Select specific fields to fetch from the HookViralVideo
      */
-    select?: SampleVideoSelect<ExtArgs> | null
+    select?: HookViralVideoSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the SampleVideo
+     * Omit specific fields from the HookViralVideo
      */
-    omit?: SampleVideoOmit<ExtArgs> | null
+    omit?: HookViralVideoOmit<ExtArgs> | null
     /**
-     * The filter to search for the SampleVideo to update in case it exists.
+     * The filter to search for the HookViralVideo to update in case it exists.
      */
-    where: SampleVideoWhereUniqueInput
+    where: HookViralVideoWhereUniqueInput
     /**
-     * In case the SampleVideo found by the `where` argument doesn't exist, create a new SampleVideo with this data.
+     * In case the HookViralVideo found by the `where` argument doesn't exist, create a new HookViralVideo with this data.
      */
-    create: XOR<SampleVideoCreateInput, SampleVideoUncheckedCreateInput>
+    create: XOR<HookViralVideoCreateInput, HookViralVideoUncheckedCreateInput>
     /**
-     * In case the SampleVideo was found with the provided `where` argument, update it with this data.
+     * In case the HookViralVideo was found with the provided `where` argument, update it with this data.
      */
-    update: XOR<SampleVideoUpdateInput, SampleVideoUncheckedUpdateInput>
+    update: XOR<HookViralVideoUpdateInput, HookViralVideoUncheckedUpdateInput>
   }
 
   /**
-   * SampleVideo delete
+   * HookViralVideo delete
    */
-  export type SampleVideoDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type HookViralVideoDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the SampleVideo
+     * Select specific fields to fetch from the HookViralVideo
      */
-    select?: SampleVideoSelect<ExtArgs> | null
+    select?: HookViralVideoSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the SampleVideo
+     * Omit specific fields from the HookViralVideo
      */
-    omit?: SampleVideoOmit<ExtArgs> | null
+    omit?: HookViralVideoOmit<ExtArgs> | null
     /**
-     * Filter which SampleVideo to delete.
+     * Filter which HookViralVideo to delete.
      */
-    where: SampleVideoWhereUniqueInput
+    where: HookViralVideoWhereUniqueInput
   }
 
   /**
-   * SampleVideo deleteMany
+   * HookViralVideo deleteMany
    */
-  export type SampleVideoDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type HookViralVideoDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Filter which SampleVideos to delete
+     * Filter which HookViralVideos to delete
      */
-    where?: SampleVideoWhereInput
+    where?: HookViralVideoWhereInput
     /**
-     * Limit how many SampleVideos to delete.
+     * Limit how many HookViralVideos to delete.
      */
     limit?: number
   }
 
   /**
-   * SampleVideo without action
+   * HookViralVideo without action
    */
-  export type SampleVideoDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type HookViralVideoDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the SampleVideo
+     * Select specific fields to fetch from the HookViralVideo
      */
-    select?: SampleVideoSelect<ExtArgs> | null
+    select?: HookViralVideoSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the SampleVideo
+     * Omit specific fields from the HookViralVideo
      */
-    omit?: SampleVideoOmit<ExtArgs> | null
+    omit?: HookViralVideoOmit<ExtArgs> | null
   }
 
 
@@ -6871,7 +6863,7 @@ export namespace Prisma {
   export type ShortDemoScalarFieldEnum = (typeof ShortDemoScalarFieldEnum)[keyof typeof ShortDemoScalarFieldEnum]
 
 
-  export const SampleVideoScalarFieldEnum: {
+  export const HookViralVideoScalarFieldEnum: {
     id: 'id',
     webpageUrl: 'webpageUrl',
     s3Url: 's3Url',
@@ -6890,7 +6882,7 @@ export namespace Prisma {
     updatedAt: 'updatedAt'
   };
 
-  export type SampleVideoScalarFieldEnum = (typeof SampleVideoScalarFieldEnum)[keyof typeof SampleVideoScalarFieldEnum]
+  export type HookViralVideoScalarFieldEnum = (typeof HookViralVideoScalarFieldEnum)[keyof typeof HookViralVideoScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -7172,7 +7164,7 @@ export namespace Prisma {
     id?: StringFilter<"DemoVideo"> | string
     s3Url?: StringFilter<"DemoVideo"> | string
     productInfo?: StringNullableFilter<"DemoVideo"> | string | null
-    colorPalette?: StringNullableFilter<"DemoVideo"> | string | null
+    colorPalette?: JsonNullableFilter<"DemoVideo">
     durationSeconds?: IntFilter<"DemoVideo"> | number
     createdAt?: DateTimeFilter<"DemoVideo"> | Date | string
     updatedAt?: DateTimeFilter<"DemoVideo"> | Date | string
@@ -7197,7 +7189,7 @@ export namespace Prisma {
     NOT?: DemoVideoWhereInput | DemoVideoWhereInput[]
     s3Url?: StringFilter<"DemoVideo"> | string
     productInfo?: StringNullableFilter<"DemoVideo"> | string | null
-    colorPalette?: StringNullableFilter<"DemoVideo"> | string | null
+    colorPalette?: JsonNullableFilter<"DemoVideo">
     durationSeconds?: IntFilter<"DemoVideo"> | number
     createdAt?: DateTimeFilter<"DemoVideo"> | Date | string
     updatedAt?: DateTimeFilter<"DemoVideo"> | Date | string
@@ -7226,7 +7218,7 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"DemoVideo"> | string
     s3Url?: StringWithAggregatesFilter<"DemoVideo"> | string
     productInfo?: StringNullableWithAggregatesFilter<"DemoVideo"> | string | null
-    colorPalette?: StringNullableWithAggregatesFilter<"DemoVideo"> | string | null
+    colorPalette?: JsonNullableWithAggregatesFilter<"DemoVideo">
     durationSeconds?: IntWithAggregatesFilter<"DemoVideo"> | number
     createdAt?: DateTimeWithAggregatesFilter<"DemoVideo"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"DemoVideo"> | Date | string
@@ -7304,29 +7296,29 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"ShortDemo"> | Date | string
   }
 
-  export type SampleVideoWhereInput = {
-    AND?: SampleVideoWhereInput | SampleVideoWhereInput[]
-    OR?: SampleVideoWhereInput[]
-    NOT?: SampleVideoWhereInput | SampleVideoWhereInput[]
-    id?: StringFilter<"SampleVideo"> | string
-    webpageUrl?: StringFilter<"SampleVideo"> | string
-    s3Url?: StringFilter<"SampleVideo"> | string
-    colorPalette?: StringNullableFilter<"SampleVideo"> | string | null
-    hookEndTimestamp?: StringFilter<"SampleVideo"> | string
-    hookCutConfidence?: StringNullableFilter<"SampleVideo"> | string | null
-    hookCutUrl?: StringNullableFilter<"SampleVideo"> | string | null
-    hookInfo?: StringNullableFilter<"SampleVideo"> | string | null
-    title?: StringFilter<"SampleVideo"> | string
-    description?: StringNullableFilter<"SampleVideo"> | string | null
-    views?: IntFilter<"SampleVideo"> | number
-    comments?: IntFilter<"SampleVideo"> | number
-    likes?: IntFilter<"SampleVideo"> | number
-    durationSeconds?: IntFilter<"SampleVideo"> | number
-    createdAt?: DateTimeFilter<"SampleVideo"> | Date | string
-    updatedAt?: DateTimeFilter<"SampleVideo"> | Date | string
+  export type HookViralVideoWhereInput = {
+    AND?: HookViralVideoWhereInput | HookViralVideoWhereInput[]
+    OR?: HookViralVideoWhereInput[]
+    NOT?: HookViralVideoWhereInput | HookViralVideoWhereInput[]
+    id?: StringFilter<"HookViralVideo"> | string
+    webpageUrl?: StringFilter<"HookViralVideo"> | string
+    s3Url?: StringFilter<"HookViralVideo"> | string
+    colorPalette?: JsonNullableFilter<"HookViralVideo">
+    hookEndTimestamp?: StringFilter<"HookViralVideo"> | string
+    hookCutConfidence?: StringNullableFilter<"HookViralVideo"> | string | null
+    hookCutUrl?: StringNullableFilter<"HookViralVideo"> | string | null
+    hookInfo?: StringNullableFilter<"HookViralVideo"> | string | null
+    title?: StringFilter<"HookViralVideo"> | string
+    description?: StringNullableFilter<"HookViralVideo"> | string | null
+    views?: IntFilter<"HookViralVideo"> | number
+    comments?: IntFilter<"HookViralVideo"> | number
+    likes?: IntFilter<"HookViralVideo"> | number
+    durationSeconds?: IntFilter<"HookViralVideo"> | number
+    createdAt?: DateTimeFilter<"HookViralVideo"> | Date | string
+    updatedAt?: DateTimeFilter<"HookViralVideo"> | Date | string
   }
 
-  export type SampleVideoOrderByWithRelationInput = {
+  export type HookViralVideoOrderByWithRelationInput = {
     id?: SortOrder
     webpageUrl?: SortOrder
     s3Url?: SortOrder
@@ -7345,29 +7337,29 @@ export namespace Prisma {
     updatedAt?: SortOrder
   }
 
-  export type SampleVideoWhereUniqueInput = Prisma.AtLeast<{
+  export type HookViralVideoWhereUniqueInput = Prisma.AtLeast<{
     id?: string
     webpageUrl?: string
-    AND?: SampleVideoWhereInput | SampleVideoWhereInput[]
-    OR?: SampleVideoWhereInput[]
-    NOT?: SampleVideoWhereInput | SampleVideoWhereInput[]
-    s3Url?: StringFilter<"SampleVideo"> | string
-    colorPalette?: StringNullableFilter<"SampleVideo"> | string | null
-    hookEndTimestamp?: StringFilter<"SampleVideo"> | string
-    hookCutConfidence?: StringNullableFilter<"SampleVideo"> | string | null
-    hookCutUrl?: StringNullableFilter<"SampleVideo"> | string | null
-    hookInfo?: StringNullableFilter<"SampleVideo"> | string | null
-    title?: StringFilter<"SampleVideo"> | string
-    description?: StringNullableFilter<"SampleVideo"> | string | null
-    views?: IntFilter<"SampleVideo"> | number
-    comments?: IntFilter<"SampleVideo"> | number
-    likes?: IntFilter<"SampleVideo"> | number
-    durationSeconds?: IntFilter<"SampleVideo"> | number
-    createdAt?: DateTimeFilter<"SampleVideo"> | Date | string
-    updatedAt?: DateTimeFilter<"SampleVideo"> | Date | string
+    AND?: HookViralVideoWhereInput | HookViralVideoWhereInput[]
+    OR?: HookViralVideoWhereInput[]
+    NOT?: HookViralVideoWhereInput | HookViralVideoWhereInput[]
+    s3Url?: StringFilter<"HookViralVideo"> | string
+    colorPalette?: JsonNullableFilter<"HookViralVideo">
+    hookEndTimestamp?: StringFilter<"HookViralVideo"> | string
+    hookCutConfidence?: StringNullableFilter<"HookViralVideo"> | string | null
+    hookCutUrl?: StringNullableFilter<"HookViralVideo"> | string | null
+    hookInfo?: StringNullableFilter<"HookViralVideo"> | string | null
+    title?: StringFilter<"HookViralVideo"> | string
+    description?: StringNullableFilter<"HookViralVideo"> | string | null
+    views?: IntFilter<"HookViralVideo"> | number
+    comments?: IntFilter<"HookViralVideo"> | number
+    likes?: IntFilter<"HookViralVideo"> | number
+    durationSeconds?: IntFilter<"HookViralVideo"> | number
+    createdAt?: DateTimeFilter<"HookViralVideo"> | Date | string
+    updatedAt?: DateTimeFilter<"HookViralVideo"> | Date | string
   }, "id" | "webpageUrl">
 
-  export type SampleVideoOrderByWithAggregationInput = {
+  export type HookViralVideoOrderByWithAggregationInput = {
     id?: SortOrder
     webpageUrl?: SortOrder
     s3Url?: SortOrder
@@ -7384,33 +7376,33 @@ export namespace Prisma {
     durationSeconds?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
-    _count?: SampleVideoCountOrderByAggregateInput
-    _avg?: SampleVideoAvgOrderByAggregateInput
-    _max?: SampleVideoMaxOrderByAggregateInput
-    _min?: SampleVideoMinOrderByAggregateInput
-    _sum?: SampleVideoSumOrderByAggregateInput
+    _count?: HookViralVideoCountOrderByAggregateInput
+    _avg?: HookViralVideoAvgOrderByAggregateInput
+    _max?: HookViralVideoMaxOrderByAggregateInput
+    _min?: HookViralVideoMinOrderByAggregateInput
+    _sum?: HookViralVideoSumOrderByAggregateInput
   }
 
-  export type SampleVideoScalarWhereWithAggregatesInput = {
-    AND?: SampleVideoScalarWhereWithAggregatesInput | SampleVideoScalarWhereWithAggregatesInput[]
-    OR?: SampleVideoScalarWhereWithAggregatesInput[]
-    NOT?: SampleVideoScalarWhereWithAggregatesInput | SampleVideoScalarWhereWithAggregatesInput[]
-    id?: StringWithAggregatesFilter<"SampleVideo"> | string
-    webpageUrl?: StringWithAggregatesFilter<"SampleVideo"> | string
-    s3Url?: StringWithAggregatesFilter<"SampleVideo"> | string
-    colorPalette?: StringNullableWithAggregatesFilter<"SampleVideo"> | string | null
-    hookEndTimestamp?: StringWithAggregatesFilter<"SampleVideo"> | string
-    hookCutConfidence?: StringNullableWithAggregatesFilter<"SampleVideo"> | string | null
-    hookCutUrl?: StringNullableWithAggregatesFilter<"SampleVideo"> | string | null
-    hookInfo?: StringNullableWithAggregatesFilter<"SampleVideo"> | string | null
-    title?: StringWithAggregatesFilter<"SampleVideo"> | string
-    description?: StringNullableWithAggregatesFilter<"SampleVideo"> | string | null
-    views?: IntWithAggregatesFilter<"SampleVideo"> | number
-    comments?: IntWithAggregatesFilter<"SampleVideo"> | number
-    likes?: IntWithAggregatesFilter<"SampleVideo"> | number
-    durationSeconds?: IntWithAggregatesFilter<"SampleVideo"> | number
-    createdAt?: DateTimeWithAggregatesFilter<"SampleVideo"> | Date | string
-    updatedAt?: DateTimeWithAggregatesFilter<"SampleVideo"> | Date | string
+  export type HookViralVideoScalarWhereWithAggregatesInput = {
+    AND?: HookViralVideoScalarWhereWithAggregatesInput | HookViralVideoScalarWhereWithAggregatesInput[]
+    OR?: HookViralVideoScalarWhereWithAggregatesInput[]
+    NOT?: HookViralVideoScalarWhereWithAggregatesInput | HookViralVideoScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"HookViralVideo"> | string
+    webpageUrl?: StringWithAggregatesFilter<"HookViralVideo"> | string
+    s3Url?: StringWithAggregatesFilter<"HookViralVideo"> | string
+    colorPalette?: JsonNullableWithAggregatesFilter<"HookViralVideo">
+    hookEndTimestamp?: StringWithAggregatesFilter<"HookViralVideo"> | string
+    hookCutConfidence?: StringNullableWithAggregatesFilter<"HookViralVideo"> | string | null
+    hookCutUrl?: StringNullableWithAggregatesFilter<"HookViralVideo"> | string | null
+    hookInfo?: StringNullableWithAggregatesFilter<"HookViralVideo"> | string | null
+    title?: StringWithAggregatesFilter<"HookViralVideo"> | string
+    description?: StringNullableWithAggregatesFilter<"HookViralVideo"> | string | null
+    views?: IntWithAggregatesFilter<"HookViralVideo"> | number
+    comments?: IntWithAggregatesFilter<"HookViralVideo"> | number
+    likes?: IntWithAggregatesFilter<"HookViralVideo"> | number
+    durationSeconds?: IntWithAggregatesFilter<"HookViralVideo"> | number
+    createdAt?: DateTimeWithAggregatesFilter<"HookViralVideo"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"HookViralVideo"> | Date | string
   }
 
   export type PostCreateInput = {
@@ -7578,7 +7570,7 @@ export namespace Prisma {
     id?: string
     s3Url: string
     productInfo?: string | null
-    colorPalette?: string | null
+    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     durationSeconds: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -7589,7 +7581,7 @@ export namespace Prisma {
     id?: string
     s3Url: string
     productInfo?: string | null
-    colorPalette?: string | null
+    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     durationSeconds: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -7600,7 +7592,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     s3Url?: StringFieldUpdateOperationsInput | string
     productInfo?: NullableStringFieldUpdateOperationsInput | string | null
-    colorPalette?: NullableStringFieldUpdateOperationsInput | string | null
+    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     durationSeconds?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -7611,7 +7603,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     s3Url?: StringFieldUpdateOperationsInput | string
     productInfo?: NullableStringFieldUpdateOperationsInput | string | null
-    colorPalette?: NullableStringFieldUpdateOperationsInput | string | null
+    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     durationSeconds?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -7622,7 +7614,7 @@ export namespace Prisma {
     id?: string
     s3Url: string
     productInfo?: string | null
-    colorPalette?: string | null
+    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     durationSeconds: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -7632,7 +7624,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     s3Url?: StringFieldUpdateOperationsInput | string
     productInfo?: NullableStringFieldUpdateOperationsInput | string | null
-    colorPalette?: NullableStringFieldUpdateOperationsInput | string | null
+    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     durationSeconds?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -7642,7 +7634,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     s3Url?: StringFieldUpdateOperationsInput | string
     productInfo?: NullableStringFieldUpdateOperationsInput | string | null
-    colorPalette?: NullableStringFieldUpdateOperationsInput | string | null
+    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     durationSeconds?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -7724,11 +7716,11 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type SampleVideoCreateInput = {
+  export type HookViralVideoCreateInput = {
     id?: string
     webpageUrl: string
     s3Url: string
-    colorPalette?: string | null
+    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     hookEndTimestamp: string
     hookCutConfidence?: string | null
     hookCutUrl?: string | null
@@ -7743,11 +7735,11 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
-  export type SampleVideoUncheckedCreateInput = {
+  export type HookViralVideoUncheckedCreateInput = {
     id?: string
     webpageUrl: string
     s3Url: string
-    colorPalette?: string | null
+    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     hookEndTimestamp: string
     hookCutConfidence?: string | null
     hookCutUrl?: string | null
@@ -7762,11 +7754,11 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
-  export type SampleVideoUpdateInput = {
+  export type HookViralVideoUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     webpageUrl?: StringFieldUpdateOperationsInput | string
     s3Url?: StringFieldUpdateOperationsInput | string
-    colorPalette?: NullableStringFieldUpdateOperationsInput | string | null
+    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     hookEndTimestamp?: StringFieldUpdateOperationsInput | string
     hookCutConfidence?: NullableStringFieldUpdateOperationsInput | string | null
     hookCutUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -7781,11 +7773,11 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type SampleVideoUncheckedUpdateInput = {
+  export type HookViralVideoUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     webpageUrl?: StringFieldUpdateOperationsInput | string
     s3Url?: StringFieldUpdateOperationsInput | string
-    colorPalette?: NullableStringFieldUpdateOperationsInput | string | null
+    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     hookEndTimestamp?: StringFieldUpdateOperationsInput | string
     hookCutConfidence?: NullableStringFieldUpdateOperationsInput | string | null
     hookCutUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -7800,11 +7792,11 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type SampleVideoCreateManyInput = {
+  export type HookViralVideoCreateManyInput = {
     id?: string
     webpageUrl: string
     s3Url: string
-    colorPalette?: string | null
+    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     hookEndTimestamp: string
     hookCutConfidence?: string | null
     hookCutUrl?: string | null
@@ -7819,11 +7811,11 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
-  export type SampleVideoUpdateManyMutationInput = {
+  export type HookViralVideoUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     webpageUrl?: StringFieldUpdateOperationsInput | string
     s3Url?: StringFieldUpdateOperationsInput | string
-    colorPalette?: NullableStringFieldUpdateOperationsInput | string | null
+    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     hookEndTimestamp?: StringFieldUpdateOperationsInput | string
     hookCutConfidence?: NullableStringFieldUpdateOperationsInput | string | null
     hookCutUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -7838,11 +7830,11 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type SampleVideoUncheckedUpdateManyInput = {
+  export type HookViralVideoUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     webpageUrl?: StringFieldUpdateOperationsInput | string
     s3Url?: StringFieldUpdateOperationsInput | string
-    colorPalette?: NullableStringFieldUpdateOperationsInput | string | null
+    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     hookEndTimestamp?: StringFieldUpdateOperationsInput | string
     hookCutConfidence?: NullableStringFieldUpdateOperationsInput | string | null
     hookCutUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -8123,7 +8115,6 @@ export namespace Prisma {
     id?: SortOrder
     s3Url?: SortOrder
     productInfo?: SortOrder
-    colorPalette?: SortOrder
     durationSeconds?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -8133,7 +8124,6 @@ export namespace Prisma {
     id?: SortOrder
     s3Url?: SortOrder
     productInfo?: SortOrder
-    colorPalette?: SortOrder
     durationSeconds?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -8205,7 +8195,7 @@ export namespace Prisma {
     durationSeconds?: SortOrder
   }
 
-  export type SampleVideoCountOrderByAggregateInput = {
+  export type HookViralVideoCountOrderByAggregateInput = {
     id?: SortOrder
     webpageUrl?: SortOrder
     s3Url?: SortOrder
@@ -8224,18 +8214,17 @@ export namespace Prisma {
     updatedAt?: SortOrder
   }
 
-  export type SampleVideoAvgOrderByAggregateInput = {
+  export type HookViralVideoAvgOrderByAggregateInput = {
     views?: SortOrder
     comments?: SortOrder
     likes?: SortOrder
     durationSeconds?: SortOrder
   }
 
-  export type SampleVideoMaxOrderByAggregateInput = {
+  export type HookViralVideoMaxOrderByAggregateInput = {
     id?: SortOrder
     webpageUrl?: SortOrder
     s3Url?: SortOrder
-    colorPalette?: SortOrder
     hookEndTimestamp?: SortOrder
     hookCutConfidence?: SortOrder
     hookCutUrl?: SortOrder
@@ -8250,11 +8239,10 @@ export namespace Prisma {
     updatedAt?: SortOrder
   }
 
-  export type SampleVideoMinOrderByAggregateInput = {
+  export type HookViralVideoMinOrderByAggregateInput = {
     id?: SortOrder
     webpageUrl?: SortOrder
     s3Url?: SortOrder
-    colorPalette?: SortOrder
     hookEndTimestamp?: SortOrder
     hookCutConfidence?: SortOrder
     hookCutUrl?: SortOrder
@@ -8269,7 +8257,7 @@ export namespace Prisma {
     updatedAt?: SortOrder
   }
 
-  export type SampleVideoSumOrderByAggregateInput = {
+  export type HookViralVideoSumOrderByAggregateInput = {
     views?: SortOrder
     comments?: SortOrder
     likes?: SortOrder
@@ -8596,7 +8584,7 @@ export namespace Prisma {
     id?: string
     s3Url: string
     productInfo?: string | null
-    colorPalette?: string | null
+    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     durationSeconds: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -8606,7 +8594,7 @@ export namespace Prisma {
     id?: string
     s3Url: string
     productInfo?: string | null
-    colorPalette?: string | null
+    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     durationSeconds: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -8632,7 +8620,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     s3Url?: StringFieldUpdateOperationsInput | string
     productInfo?: NullableStringFieldUpdateOperationsInput | string | null
-    colorPalette?: NullableStringFieldUpdateOperationsInput | string | null
+    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     durationSeconds?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -8642,7 +8630,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     s3Url?: StringFieldUpdateOperationsInput | string
     productInfo?: NullableStringFieldUpdateOperationsInput | string | null
-    colorPalette?: NullableStringFieldUpdateOperationsInput | string | null
+    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     durationSeconds?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
