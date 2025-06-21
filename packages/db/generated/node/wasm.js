@@ -154,20 +154,19 @@ exports.Prisma.DemoVideoScalarFieldEnum = {
 exports.Prisma.ShortDemoScalarFieldEnum = {
   id: 'id',
   demoVideoId: 'demoVideoId',
-  demoCutUrl: 'demoCutUrl',
   durationSeconds: 'durationSeconds',
-  segments: 'segments',
-  productInfo: 'productInfo',
-  colorPalette: 'colorPalette',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  demoCutUrl: 'demoCutUrl',
+  productInfo: 'productInfo',
+  segments: 'segments',
+  colorPalette: 'colorPalette'
 };
 
 exports.Prisma.HookViralVideoScalarFieldEnum = {
   id: 'id',
   webpageUrl: 'webpageUrl',
   s3Url: 's3Url',
-  colorPalette: 'colorPalette',
   hookEndTimestamp: 'hookEndTimestamp',
   hookCutConfidence: 'hookCutConfidence',
   hookCutUrl: 'hookCutUrl',
@@ -179,7 +178,8 @@ exports.Prisma.HookViralVideoScalarFieldEnum = {
   likes: 'likes',
   durationSeconds: 'durationSeconds',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  colorPalette: 'colorPalette'
 };
 
 exports.Prisma.SortOrder = {

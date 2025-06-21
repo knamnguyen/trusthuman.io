@@ -1,24 +1,15 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
-//binaryTargets to handle the client for production environment on vercel
-//specify output locations so that path resolve work with turbo repo
 generator client {
   provider        = "prisma-client-js"
   output          = "../generated/node"
-  binaryTargets   = ["native", "rhel-openssl-3.0.x", "linux-arm64-openssl-3.0.x", "linux-musl-arm64-openssl-3.0.x"]
   previewFeatures = ["postgresqlExtensions"]
+  binaryTargets   = ["native", "rhel-openssl-3.0.x", "linux-arm64-openssl-3.0.x", "linux-musl-arm64-openssl-3.0.x"]
 }
 
-// Dedicated edge client for Cloudflare Workers
 generator edge {
   provider        = "prisma-client-js"
   output          = "../generated/edge"
-  binaryTargets   = ["native"]
   previewFeatures = ["driverAdapters", "postgresqlExtensions"]
+  binaryTargets   = ["native"]
 }
 
 generator zod {
@@ -30,17 +21,82 @@ datasource db {
   provider   = "postgresql"
   url        = env("DATABASE_URL")
   directUrl  = env("DIRECT_URL")
-  extensions = [vector]
+  extensions = [uuid_ossp(map: "uuid-ossp", schema: "extensions"), vector]
 }
 
-//note that post current does not connect to a user
-//you would want to connect it to a user later
 model Post {
   id        String   @id @default(uuid())
   title     String   @db.VarChar(256)
   content   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model User {
+  id                   String     @id
+  firstName            String?
+  lastName             String?
+  username             String?    @unique
+  primaryEmailAddress  String?    @unique
+  imageUrl             String?
+  clerkUserProperties  Json?
+  stripeCustomerId     String?    @unique
+  accessType           AccessType @default(FREE)
+  stripeUserProperties Json?
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+}
+
+model DemoVideo {
+  id              String      @id @default(cuid())
+  s3Url           String
+  durationSeconds Int
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  shortDemos      ShortDemo[]
+
+  @@index([s3Url])
+}
+
+model ShortDemo {
+  id                    String                 @id @default(cuid())
+  demoVideoId           String
+  durationSeconds       Int
+  colorPaletteEmbedding Unsupported("vector")?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  demoCutUrl            String
+  productInfo           String?
+  productInfoEmbedding  Unsupported("vector")?
+  segments              Json
+  colorPalette          Json?
+  demoVideo             DemoVideo              @relation(fields: [demoVideoId], references: [id], onDelete: Cascade)
+
+  @@index([demoVideoId])
+  @@index([demoCutUrl])
+}
+
+model HookViralVideo {
+  id                    String                 @id @default(cuid())
+  webpageUrl            String                 @unique
+  s3Url                 String
+  hookEndTimestamp      String
+  hookCutConfidence     String?
+  hookCutUrl            String?
+  hookInfo              String?
+  title                 String
+  description           String?
+  viralInfoEmbedding    Unsupported("vector")?
+  views                 Int                    @default(0)
+  comments              Int                    @default(0)
+  likes                 Int                    @default(0)
+  durationSeconds       Int
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  colorPaletteEmbedding Unsupported("vector")?
+  colorPalette          Json?
+
+  @@index([webpageUrl])
 }
 
 enum AccessType {
@@ -50,82 +106,3 @@ enum AccessType {
   MONTHLY
   YEARLY
 }
-
-// User model to link with Clerk users
-model User {
-  id                   String     @id // This is the Clerk ID
-  firstName            String?
-  lastName             String?
-  username             String?    @unique
-  primaryEmailAddress  String?    @unique
-  imageUrl             String?
-  clerkUserProperties  Json? // Made optional to preserve existing data
-  stripeCustomerId     String?    @unique
-  accessType           AccessType @default(FREE)
-  stripeUserProperties Json?
-  createdAt            DateTime   @default(now())
-  updatedAt            DateTime   @updatedAt
-}
-
-// Original uploaded demo videos (4-5 minutes)
-model DemoVideo {
-  id              String   @id @default(cuid())
-  s3Url           String // S3 URL where the original demo video is stored
-  durationSeconds Int // Original video duration in seconds
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  // Relationship to generated short versions
-  shortDemos ShortDemo[]
-
-  @@index([s3Url])
-}
-
-// AI-generated short versions of demo videos (30 seconds)
-model ShortDemo {
-  id                    String                      @id @default(cuid())
-  demoVideoId           String // Foreign key to original demo
-  demoCutUrl            String // S3 URL of the short version
-  durationSeconds       Int // Actual duration of short video
-  segments              Json // Array of video segments with captions and timing
-  productInfo           String? // Product information
-  productInfoEmbedding  Unsupported("vector(768)")?
-  colorPalette          Json? // Color palette of the video as JSON array
-  colorPaletteEmbedding Unsupported("vector(768)")?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relationship back to original demo
-  demoVideo DemoVideo @relation(fields: [demoVideoId], references: [id], onDelete: Cascade)
-
-  @@index([demoVideoId]) // Fast lookup: "Find all shorts for this demo"
-  @@index([demoCutUrl]) // Fast lookup: "Find short by S3 URL"
-}
-
-// Hook viral videos from TikTok for training/reference data
-model HookViralVideo {
-  id                    String                      @id @default(cuid())
-  webpageUrl            String                      @unique // TikTok video URL - used to check for duplicates
-  s3Url                 String // S3 URL where the video is stored
-  colorPalette          Json? // Color palette of the video as JSON array
-  hookEndTimestamp      String // Timestamp where the hook ends
-  hookCutConfidence     String? // Confidence in the hook cut
-  hookCutUrl            String? // S3 URL where the hook cut is stored
-  hookInfo              String? // Description of the hook
-  title                 String // Video title from TikTok
-  description           String? // Video description/caption
-  // Google text-embedding-004 produces 768-dimensional embeddings
-  viralInfoEmbedding    Unsupported("vector(768)")?
-  colorPaletteEmbedding Unsupported("vector(768)")?
-  views                 Int                         @default(0) // View count
-  comments              Int                         @default(0) // Comment count  
-  likes                 Int                         @default(0) // Like count
-  durationSeconds       Int // Video duration in seconds
-  createdAt             DateTime                    @default(now())
-  updatedAt             DateTime                    @updatedAt
-
-  @@index([webpageUrl])
-}
-
-//User and and Stripe subscribers info is stored in the Clerk User object so it is not defined in this schema here
