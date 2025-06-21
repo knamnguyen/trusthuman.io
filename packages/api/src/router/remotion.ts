@@ -1,8 +1,13 @@
-import { z } from "zod";
-import { createTRPCRouter, publicProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
-import { RemotionService } from "../services/remotion-service";
-import type { VideoProcessingRequest, RemotionRenderResult } from "../services/remotion-service";
+import { z } from "zod";
+
+import type {
+  RemotionRenderResult,
+  VideoProcessingRequest,
+} from "@sassy/remotion/remotion-service";
+import { RemotionService } from "@sassy/remotion/remotion-service";
+
+import { createTRPCRouter, publicProcedure } from "../trpc";
 
 // Initialize Remotion service
 const remotionService = new RemotionService();
@@ -36,10 +41,11 @@ export const remotionRouter = createTRPCRouter({
         };
 
         console.log("Starting video processing:", request);
-        
+
         // Start Remotion processing
-        const result: RemotionRenderResult = await remotionService.processVideoSpeed(request);
-        
+        const result: RemotionRenderResult =
+          await remotionService.processVideoSpeed(request);
+
         return {
           success: true,
           renderId: result.renderId,
@@ -50,7 +56,8 @@ export const remotionRouter = createTRPCRouter({
         console.error("Video processing failed:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: error instanceof Error ? error.message : "Video processing failed",
+          message:
+            error instanceof Error ? error.message : "Video processing failed",
         });
       }
     }),
@@ -62,15 +69,18 @@ export const remotionRouter = createTRPCRouter({
       try {
         const progress = await remotionService.getRenderProgress(
           input.renderId,
-          input.bucketName
+          input.bucketName,
         );
-        
+
         return progress;
       } catch (error) {
         console.error("Failed to get render progress:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: error instanceof Error ? error.message : "Failed to get render progress",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Failed to get render progress",
         });
       }
     }),
@@ -82,9 +92,9 @@ export const remotionRouter = createTRPCRouter({
       try {
         const downloadUrl = remotionService.generateDownloadUrl(
           input.bucketName,
-          input.outputFile
+          input.outputFile,
         );
-        
+
         return {
           success: true,
           downloadUrl,
@@ -93,8 +103,11 @@ export const remotionRouter = createTRPCRouter({
         console.error("Failed to generate download URL:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: error instanceof Error ? error.message : "Failed to generate download URL",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Failed to generate download URL",
         });
       }
     }),
-}); 
+});

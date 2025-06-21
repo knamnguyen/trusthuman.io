@@ -21,6 +21,9 @@ catalogs:
     '@trpc/tanstack-react-query':
       specifier: ^11.0.0-rc.824
       version: 11.1.2
+    date-fns:
+      specifier: ^4.1.0
+      version: 4.1.0
     eslint:
       specifier: ^9.19.0
       version: 9.27.0
@@ -401,6 +404,9 @@ importers:
       '@sassy/db':
         specifier: workspace:*
         version: link:../db
+      '@sassy/gemini-video':
+        specifier: workspace:*
+        version: link:../gemini-video
       zod:
         specifier: ^3.22.4
         version: 3.25.67
@@ -444,6 +450,9 @@ importers:
       '@sassy/validators':
         specifier: workspace:*
         version: link:../validators
+      date-fns:
+        specifier: 'catalog:'
+        version: 4.1.0
       react:
         specifier: catalog:react19
         version: 19.0.0
@@ -585,12 +594,24 @@ importers:
       '@sassy/langchain':
         specifier: workspace:*
         version: link:../langchain
+      '@sassy/remotion':
+        specifier: workspace:*
+        version: link:../remotion
       '@sassy/s3':
         specifier: workspace:*
         version: link:../s3
+      chalk:
+        specifier: ^5.3.0
+        version: 5.4.1
+      date-fns:
+        specifier: 'catalog:'
+        version: 4.1.0
       fluent-ffmpeg:
         specifier: ^2.1.3
         version: 2.1.3
+      p-limit:
+        specifier: ^6.1.0
+        version: 6.2.0
       replicate:
         specifier: ^0.34.1
         version: 0.34.1
@@ -608,7 +629,7 @@ importers:
         specifier: workspace:*
         version: link:../../tooling/typescript
       '@types/fluent-ffmpeg':
-        specifier: ^2.1.26
+        specifier: ^2.1.27
         version: 2.1.27
       '@types/node':
         specifier: ^22.10.10
@@ -619,6 +640,9 @@ importers:
       eslint:
         specifier: 'catalog:'
         version: 9.27.0(jiti@2.4.2)
+      prettier:
+        specifier: 'catalog:'
+        version: 3.5.3
       typescript:
         specifier: 'catalog:'
         version: 5.8.3
@@ -6682,6 +6706,10 @@ packages:
     resolution: {integrity: sha512-TYOanM3wGwNGsZN2cVTYPArw454xnXj5qmWF1bEoAc4+cU/ol7GVh7odevjp1FNHduHc3KZMcFduxU5Xc6uJRQ==}
     engines: {node: '>=10'}
 
+  p-limit@6.2.0:
+    resolution: {integrity: sha512-kuUqqHNUqoIWp/c467RI4X6mmyuojY5jGutNU0wVTmEOOfcuwLqyMVoAi9MKi2Ak+5i9+nhmrK4ufZE8069kHA==}
+    engines: {node: '>=18'}
+
   p-locate@5.0.0:
     resolution: {integrity: sha512-LaNjtRWUBY++zB5nE/NwcaoMylSPk+S+ZHNB1TzdbMJMny6dynpAGt7X/tl/QYq3TIeE6nxHppbo2LGymrG5Pw==}
     engines: {node: '>=10'}
@@ -8183,6 +8211,10 @@ packages:
   yocto-queue@0.1.0:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
+
+  yocto-queue@1.2.1:
+    resolution: {integrity: sha512-AyeEbWOu/TAXdxlV9wmGcR0+yh2j3vYPGOECcIj2S7MkrLyC7ne+oye2BKTItt0ii2PHk4cDy+95+LshzbXnGg==}
+    engines: {node: '>=12.20'}
 
   yoctocolors-cjs@2.1.2:
     resolution: {integrity: sha512-cYVsTjKl8b+FrnidjibDWskAv7UKOfcwaVZdp/it9n1s9fU3IkgDbhdIRKCW4JDsAlECJY0ytoVPT3sK6kideA==}
@@ -14969,6 +15001,10 @@ snapshots:
     dependencies:
       yocto-queue: 0.1.0
 
+  p-limit@6.2.0:
+    dependencies:
+      yocto-queue: 1.2.1
+
   p-locate@5.0.0:
     dependencies:
       p-limit: 3.1.0
@@ -16710,6 +16746,8 @@ snapshots:
   yn@3.1.1: {}
 
   yocto-queue@0.1.0: {}
+
+  yocto-queue@1.2.1: {}
 
   yoctocolors-cjs@2.1.2: {}
 

@@ -24,7 +24,7 @@
  *   - Scans ./downloads/ folder for video files (.mp4, .webm, .mkv) and their .info.json metadata
  *   - Optional: Checks for voice-over content using Whisper + Gemini AI analysis
  *   - For each video pair: uploads video to S3 (viralcut-s3bucket/video-sample/)
- *   - Saves metadata to SampleVideo database table with S3 URL reference
+ *   - Saves metadata to HookViralVideo database table with S3 URL reference
  *   - By default, cleans up processed files after successful upload
  *   - Requires AWS credentials and database connection to be configured
  *
@@ -47,16 +47,24 @@
  *   bun scripts/process-videos.ts -s -v          # Skip duplicates and voice-overs
  */
 import { existsSync } from "fs";
-import { readdir, readFile, rmdir, unlink } from "fs/promises";
+import { readdir, readFile, rmdir, unlink, writeFile } from "fs/promises";
 import { basename, dirname, extname, join } from "path";
-import { fileURLToPath } from "url";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import chalk from "chalk";
+import { format } from "date-fns";
 import ffmpeg from "fluent-ffmpeg";
+import pLimit from "p-limit";
 import Replicate from "replicate";
 
+import type { ColorPalette } from "@sassy/gemini-video";
+// Local imports
 import { db } from "@sassy/db";
-import { createGeminiVideoService } from "@sassy/gemini-video";
+import {
+  createGeminiVideoService,
+  GeminiVideoService,
+} from "@sassy/gemini-video";
 import { VideoVectorStore } from "@sassy/langchain/vector-store";
+import { RemotionService } from "@sassy/remotion";
 import { S3BucketService } from "@sassy/s3";
 
 import type { GeminiAnalysisResponse } from "../src/schema-validators";
@@ -74,6 +82,8 @@ interface TikTokVideoMetadata {
   hookEndTimestamp?: string;
   hookCutConfidence?: string;
   hookInfo?: string;
+  hookCutUrl?: string;
+  colorPalette?: ColorPalette;
 }
 
 interface ProcessVideoArgs {
@@ -90,6 +100,7 @@ class VideoProcessor {
   private replicate?: Replicate;
   private gemini?: GoogleGenerativeAI;
   private geminiVideoService: any;
+  private remotionService: RemotionService;
   private downloadsDir: string;
 
   constructor() {
@@ -117,6 +128,9 @@ class VideoProcessor {
 
     // Initialize Gemini Video Service for hook extraction
     this.geminiVideoService = createGeminiVideoService();
+
+    // Initialize RemotionService
+    this.remotionService = new RemotionService();
 
     this.downloadsDir = join(process.cwd(), "downloads");
   }
@@ -453,7 +467,7 @@ Be strict in your analysis - only classify as voice-over if you're confident it'
    */
   private async videoExists(webpageUrl: string): Promise<boolean> {
     try {
-      const existingVideo = await db.sampleVideo.findUnique({
+      const existingVideo = await db.hookViralVideo.findUnique({
         where: { webpageUrl },
       });
       return !!existingVideo;
@@ -464,12 +478,111 @@ Be strict in your analysis - only classify as voice-over if you're confident it'
   }
 
   /**
+   * Cut viral hook using Remotion Lambda and wait for completion
+   */
+  private async cutViralHook(
+    s3Url: string,
+    hookEndTimestamp: string,
+    videoFilename: string,
+  ): Promise<string | null> {
+    try {
+      console.log(
+        `✂️  Cutting viral hook from ${videoFilename} at ${hookEndTimestamp}...`,
+      );
+
+      // Start the render
+      const renderResult = await this.remotionService.processVideoStitch({
+        videoUrl: s3Url,
+        clips: [
+          {
+            range: `00:00-${hookEndTimestamp}`,
+            caption: "Viral Hook",
+          },
+        ],
+        originalDuration: 60, // Default duration, will be updated when we have metadata
+      });
+
+      if (!renderResult.success) {
+        console.error(`❌ Hook cutting failed:`, renderResult.message);
+        return null;
+      }
+
+      console.log(
+        `🎬 Render started successfully. Render ID: ${renderResult.renderId}`,
+      );
+      console.log(`⏳ Waiting for render to complete...`);
+
+      // Poll for completion
+      const maxAttempts = 60; // 5 minutes max (5 second intervals)
+      let attempts = 0;
+
+      while (attempts < maxAttempts) {
+        attempts++;
+
+        try {
+          const progress = await this.remotionService.getRenderProgress(
+            renderResult.renderId,
+            renderResult.bucketName,
+          );
+
+          console.log(
+            `📊 Render progress: ${(progress.progress * 100).toFixed(1)}% (attempt ${attempts}/${maxAttempts})`,
+          );
+
+          if (progress.done) {
+            if (progress.outputFile) {
+              // Check if outputFile is already a complete URL
+              const finalUrl = progress.outputFile.startsWith("https://")
+                ? progress.outputFile
+                : this.remotionService.generateDownloadUrl(
+                    progress.outputBucket || "",
+                    progress.outputFile,
+                  );
+              console.log(`✅ Viral hook cut completed: ${finalUrl}`);
+              return finalUrl;
+            } else {
+              console.error(`❌ Render completed but no output file found`);
+              return null;
+            }
+          }
+
+          if (
+            progress.fatalErrorEncountered ||
+            (progress.errors && progress.errors.length > 0)
+          ) {
+            console.error(`❌ Render failed with errors:`, progress.errors);
+            return null;
+          }
+
+          // Wait 5 seconds before next check
+          await new Promise((resolve) => setTimeout(resolve, 5000));
+        } catch (progressError) {
+          console.warn(
+            `⚠️  Error checking progress (attempt ${attempts}):`,
+            progressError,
+          );
+
+          // Wait a bit longer on error
+          await new Promise((resolve) => setTimeout(resolve, 10000));
+        }
+      }
+
+      console.error(`❌ Render timed out after ${maxAttempts} attempts`);
+      return null;
+    } catch (error) {
+      console.error(`❌ Hook cutting failed for ${videoFilename}:`, error);
+      return null;
+    }
+  }
+
+  /**
    * Extract viral hook from S3 URL using GeminiVideoService
    */
   private async extractViralHook(s3Url: string): Promise<{
     hookEndTimestamp: string;
     confidence: string;
     hookInfo: string;
+    colorPalette: ColorPalette;
   }> {
     console.log(`🎣 Extracting viral hook from S3 URL...`);
 
@@ -479,11 +592,15 @@ Be strict in your analysis - only classify as voice-over if you're confident it'
       });
 
       console.log(`✅ Hook extraction completed: ${result.hookEndTimestamp}`);
+      console.log(
+        `🎨 Color palette extracted with ${result.colorPalette.length} colors`,
+      );
 
       return {
         hookEndTimestamp: result.hookEndTimestamp,
         confidence: result.confidence || "medium",
         hookInfo: result.hookInfo || "",
+        colorPalette: result.colorPalette,
       };
     } catch (error) {
       console.error(`❌ Hook extraction failed:`, error);
@@ -539,15 +656,19 @@ Be strict in your analysis - only classify as voice-over if you're confident it'
       console.log(`💾 Saving metadata to database for: ${metadata.title}`);
 
       // Create the video record first
-      const savedVideo = await db.sampleVideo.create({
+      const savedVideo = await db.hookViralVideo.create({
         data: {
           webpageUrl: metadata.webpage_url,
           s3Url: s3Url,
           hookEndTimestamp: metadata.hookEndTimestamp || "00:00",
           hookCutConfidence: metadata.hookCutConfidence,
           hookInfo: metadata.hookInfo,
+          hookCutUrl: metadata.hookCutUrl,
           title: metadata.title,
           description: metadata.description,
+          colorPalette: metadata.colorPalette
+            ? JSON.parse(JSON.stringify(metadata.colorPalette))
+            : undefined,
           views: metadata.view_count,
           comments: metadata.comment_count,
           likes: metadata.like_count,
@@ -557,39 +678,25 @@ Be strict in your analysis - only classify as voice-over if you're confident it'
 
       console.log(`✅ Metadata saved successfully`);
 
-      // Generate and store vector embedding if description or hookInfo exists
-      const hasContent =
-        (metadata.description && metadata.description.trim()) ||
-        (metadata.hookInfo && metadata.hookInfo.trim());
-
-      if (hasContent) {
-        try {
-          console.log(
-            `🧠 Generating vector embedding for description + hook info...`,
-          );
-          await this.videoVectorStore.addVideoWithEmbedding({
-            id: savedVideo.id,
-            description: metadata.description,
-            hookInfo: metadata.hookInfo,
-            title: metadata.title,
-            s3Url: s3Url,
-            views: metadata.view_count,
-            likes: metadata.like_count,
-            comments: metadata.comment_count,
-            durationSeconds: Math.round(metadata.duration),
-          });
-          console.log(`✅ Vector embedding generated and saved`);
-        } catch (embeddingError) {
-          console.warn(
-            `⚠️  Failed to generate vector embedding:`,
-            embeddingError,
-          );
-          // Don't fail the entire operation if embedding fails
-        }
-      } else {
-        console.log(
-          `ℹ️  No description or hook info available, skipping vector embedding`,
-        );
+      // Generate and store both text and color embeddings using VideoVectorStore
+      try {
+        console.log(`🧠 Generating embeddings (text and color)...`);
+        await this.videoVectorStore.addVideoWithEmbedding({
+          id: savedVideo.id,
+          description: metadata.description || null,
+          hookInfo: metadata.hookInfo || null,
+          title: metadata.title,
+          s3Url: s3Url,
+          views: metadata.view_count,
+          likes: metadata.like_count,
+          comments: metadata.comment_count,
+          durationSeconds: Math.round(metadata.duration),
+          colorPalette: metadata.colorPalette || null,
+        });
+        console.log(`✅ All embeddings generated and saved successfully`);
+      } catch (embeddingError) {
+        console.warn(`⚠️  Failed to generate embeddings:`, embeddingError);
+        // Don't fail the entire operation if embedding fails
       }
 
       return true;
@@ -793,7 +900,26 @@ Be strict in your analysis - only classify as voice-over if you're confident it'
         metadata.hookEndTimestamp = hookData.hookEndTimestamp;
         metadata.hookCutConfidence = hookData.confidence;
         metadata.hookInfo = hookData.hookInfo;
+        metadata.colorPalette = hookData.colorPalette;
         console.log(`✅ Hook extraction successful for ${videoFilename}`);
+        console.log(
+          `🎨 Color palette extracted with ${hookData.colorPalette.length} colors`,
+        );
+
+        // Cut the viral hook using Remotion Lambda
+        const hookCutResult = await this.cutViralHook(
+          s3Url,
+          hookData.hookEndTimestamp,
+          videoFilename,
+        );
+        if (hookCutResult) {
+          metadata.hookCutUrl = hookCutResult;
+          console.log(`✅ Hook cutting initiated for ${videoFilename}`);
+        } else {
+          console.warn(
+            `⚠️  Hook cutting failed for ${videoFilename}, continuing without cut URL`,
+          );
+        }
       } catch (error) {
         console.error(`❌ Hook extraction failed for ${videoFilename}:`, error);
         hookExtractionFailed++;
@@ -864,7 +990,7 @@ Description:
   2. Optionally checking for voice-over content using AI analysis
   3. Checking for existing videos in database (optional)
   4. Uploading videos to S3 under video-sample/ prefix
-  5. Saving metadata to SampleVideo table
+       5. Saving metadata to HookViralVideo table
   6. Cleaning up processed files (optional)
 
 Voice-over Detection:

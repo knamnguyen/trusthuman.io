@@ -17,13 +17,15 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
     "with-env": "dotenv -e ../../.env --",
     "test-basic": "pnpm with-env bun scripts/test-basic-functionality.ts",
-    "test-search": "pnpm with-env bun scripts/test-similarity-search.ts"
+    "test-search": "pnpm with-env bun scripts/test-similarity-search.ts",
+    "test-color": "pnpm with-env bun scripts/test-color-functionality.ts"
   },
   "dependencies": {
     "@langchain/community": "^0.3.0",
     "@langchain/core": "^0.3.0",
     "@langchain/google-genai": "^0.1.0",
     "@sassy/db": "workspace:*",
+    "@sassy/gemini-video": "workspace:*",
     "zod": "^3.22.4"
   },
   "devDependencies": {

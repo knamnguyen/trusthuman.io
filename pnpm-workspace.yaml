@@ -19,6 +19,7 @@ catalog:
 
   # Misc
   zod: ^3.24.1
+  date-fns: ^4.1.0
 
   # Tanstack & tRPC
   "@tanstack/react-query": ^5.67.1
