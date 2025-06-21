@@ -1,20 +1,22 @@
 "use client";
- 
+
+import type { DropzoneOptions } from "react-dropzone";
+import { useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+
+import { Button } from "@sassy/ui/button";
 import {
-  FileUploader,
   FileInput,
+  FileUploader,
   FileUploaderContent,
   FileUploaderItem,
 } from "@sassy/ui/components/file-uploader";
-import { Button } from "@sassy/ui/button";
 import { Progress } from "@sassy/ui/progress";
 import { VIDEO_CONSTRAINTS } from "@sassy/ui/schema-validators";
-import { useState } from "react";
-import { DropzoneOptions } from "react-dropzone";
-import { useTRPC } from "~/trpc/react";
-import { toast } from "sonner";
-import { useMutation, useQuery } from "@tanstack/react-query";
+
 import { useMultipartUpload } from "~/hooks/use-multipart-upload";
+import { useTRPC } from "~/trpc/react";
 
 interface VideoClip {
   range: string;
@@ -25,14 +27,18 @@ const FileUploadDropzone = () => {
   const [files, setFiles] = useState<File[] | null>([]);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadStatus, setUploadStatus] = useState<"idle" | "uploading" | "completed" | "failed">("idle");
-  const [processingStatus, setProcessingStatus] = useState<"idle" | "processing" | "completed" | "failed">("idle");
-  
+  const [uploadStatus, setUploadStatus] = useState<
+    "idle" | "uploading" | "completed" | "failed"
+  >("idle");
+  const [processingStatus, setProcessingStatus] = useState<
+    "idle" | "processing" | "completed" | "failed"
+  >("idle");
+
   // Video clips state
   const [clips, setClips] = useState<VideoClip[]>([
-    { range: "00:05-00:15", caption: "This is a great clip!" }
+    { range: "00:05-00:15", caption: "This is a great clip!" },
   ]);
-  
+
   // Store processing data from Remotion
   const [processingData, setProcessingData] = useState<{
     renderId: string;
@@ -40,9 +46,11 @@ const FileUploadDropzone = () => {
     videoUrl: string;
     originalDuration: number;
   } | null>(null);
-  
+
   // Store final result
-  const [processedVideoUrl, setProcessedVideoUrl] = useState<string | null>(null);
+  const [processedVideoUrl, setProcessedVideoUrl] = useState<string | null>(
+    null,
+  );
 
   const trpc = useTRPC();
 
@@ -60,7 +68,7 @@ const FileUploadDropzone = () => {
       setUploadStatus("failed");
     },
   });
-  
+
   const processVideoStitch = useMutation(
     trpc.remotionDemoStitch.processVideoStitch.mutationOptions({
       onSuccess: (data) => {
@@ -72,7 +80,7 @@ const FileUploadDropzone = () => {
         toast.error("Failed to start video stitch processing");
         setProcessingStatus("failed");
       },
-    })
+    }),
   );
 
   // Query for processing progress
@@ -81,7 +89,11 @@ const FileUploadDropzone = () => {
       renderId: processingData?.renderId || "",
       bucketName: processingData?.bucketName || "",
     }),
-    enabled: Boolean(processingData?.renderId && processingData?.bucketName && processingStatus === "processing"),
+    enabled: Boolean(
+      processingData?.renderId &&
+        processingData?.bucketName &&
+        processingStatus === "processing",
+    ),
     refetchInterval: (data: any) => {
       return processingStatus === "processing" && !data?.done ? 10000 : false;
     },
@@ -93,7 +105,12 @@ const FileUploadDropzone = () => {
       bucketName: processingData?.bucketName || "",
       outputFile: progress?.outputFile || "",
     }),
-    enabled: Boolean(processingData?.bucketName && progress?.outputFile && progress?.done && !progress?.fatalErrorEncountered),
+    enabled: Boolean(
+      processingData?.bucketName &&
+        progress?.outputFile &&
+        progress?.done &&
+        !progress?.fatalErrorEncountered,
+    ),
   });
 
   // Update processing status based on progress
@@ -116,7 +133,7 @@ const FileUploadDropzone = () => {
     downloadData,
     processedVideoUrl,
   });
- 
+
   const dropzone = {
     accept: {
       "video/*": [".mp4", ".mov", ".avi", ".mkv", ".webm"],
@@ -138,13 +155,18 @@ const FileUploadDropzone = () => {
     setUploadProgress(0);
 
     try {
-      // Step 1: Upload to S3 using multipart upload
-      const uploadResult = await uploadFileWithMultipart(file);
-
-      // Step 2: Get video duration for processing
-      setUploadProgress(80);
+      // Step 1: Get video duration first
       const duration = await getVideoDuration(file);
-      
+      if (duration <= 0) {
+        throw new Error("Unable to determine video duration");
+      }
+
+      // Step 2: Upload to S3 with duration for database save
+      const uploadResult = await uploadFileWithMultipart(file, {
+        prefix: "uploads",
+        durationSeconds: Math.round(duration),
+      });
+
       // Step 3: Store processing info for later use
       setProcessingData({
         renderId: "", // Will be set after processing starts
@@ -155,12 +177,16 @@ const FileUploadDropzone = () => {
 
       setUploadProgress(100);
       setUploadStatus("completed");
-      
-      toast.success("Video uploaded successfully!");
 
+      toast.success("Video uploaded successfully!");
+      if (uploadResult.demoVideo) {
+        console.log("Demo video saved to database:", uploadResult.demoVideo);
+      }
     } catch (error) {
       console.error("Upload error:", error);
-      toast.error(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+      toast.error(
+        `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
       setUploadStatus("failed");
     } finally {
       setIsUploading(false);
@@ -209,12 +235,15 @@ const FileUploadDropzone = () => {
       });
 
       // Update processing data with render info
-      setProcessingData(prev => prev ? {
-        ...prev,
-        renderId: result.renderId,
-        bucketName: result.bucketName,
-      } : null);
-
+      setProcessingData((prev) =>
+        prev
+          ? {
+              ...prev,
+              renderId: result.renderId,
+              bucketName: result.bucketName,
+            }
+          : null,
+      );
     } catch (error) {
       console.error("Processing error:", error);
       setProcessingStatus("failed");
@@ -225,15 +254,15 @@ const FileUploadDropzone = () => {
     return new Promise((resolve) => {
       const video = document.createElement("video");
       video.preload = "metadata";
-      
+
       video.onloadedmetadata = () => {
         resolve(video.duration);
       };
-      
+
       video.onerror = () => {
         resolve(0); // Default duration if unable to detect
       };
-      
+
       video.src = URL.createObjectURL(file);
     });
   };
@@ -295,13 +324,14 @@ const FileUploadDropzone = () => {
         return "";
     }
   };
- 
+
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
+    <div className="mx-auto max-w-4xl space-y-6 p-6">
       <div className="space-y-4">
         <h1 className="text-2xl font-bold">Video Demo Stitch</h1>
         <p className="text-gray-600">
-          Upload a video and create highlight reels by selecting time ranges and adding captions. Maximum 20 clips, each up to 30 seconds.
+          Upload a video and create highlight reels by selecting time ranges and
+          adding captions. Maximum 20 clips, each up to 30 seconds.
         </p>
       </div>
 
@@ -311,23 +341,23 @@ const FileUploadDropzone = () => {
         dropzoneOptions={dropzone}
       >
         <FileInput>
-          <div className="flex items-center justify-center h-32 w-full border bg-background rounded-md">
+          <div className="bg-background flex h-32 w-full items-center justify-center rounded-md border">
             <p className="text-gray-400">Drop video files here</p>
           </div>
         </FileInput>
-        <FileUploaderContent className="flex items-center flex-row gap-2">
+        <FileUploaderContent className="flex flex-row items-center gap-2">
           {files?.map((file, i) => (
             <FileUploaderItem
               key={i}
               index={i}
-              className="w-full p-4 rounded-md overflow-hidden border"
+              className="w-full overflow-hidden rounded-md border p-4"
               aria-roledescription={`file ${i + 1} containing ${file.name}`}
             >
               <div className="space-y-2">
                 <video
                   src={URL.createObjectURL(file)}
                   controls
-                  className="w-full h-40 rounded"
+                  className="h-40 w-full rounded"
                   preload="metadata"
                 />
                 <div className="text-sm text-gray-600">
@@ -342,7 +372,7 @@ const FileUploadDropzone = () => {
 
       {files && files.length > 0 && uploadStatus === "idle" && (
         <div className="space-y-4">
-          <Button 
+          <Button
             onClick={handleUpload}
             disabled={isUploading}
             className="w-full"
@@ -353,7 +383,7 @@ const FileUploadDropzone = () => {
       )}
 
       {uploadStatus === "uploading" && (
-        <div className="space-y-4 p-4 bg-blue-50 border border-blue-200 rounded">
+        <div className="space-y-4 rounded border border-blue-200 bg-blue-50 p-4">
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span>{getUploadStatusMessage()}</span>
@@ -365,13 +395,13 @@ const FileUploadDropzone = () => {
       )}
 
       {uploadStatus === "completed" && processingStatus === "idle" && (
-        <div className="space-y-4 p-4 bg-green-50 border border-green-200 rounded">
+        <div className="space-y-4 rounded border border-green-200 bg-green-50 p-4">
           <h3 className="text-lg font-semibold text-green-800">
             Video Uploaded Successfully!
           </h3>
           <div className="space-y-4">
             <div className="space-y-4">
-              <div className="flex justify-between items-center">
+              <div className="flex items-center justify-between">
                 <label className="text-sm font-medium text-green-700">
                   Video Clips ({clips.length}/20)
                 </label>
@@ -380,21 +410,25 @@ const FileUploadDropzone = () => {
                 </Button>
               </div>
               <Button
-                onClick={() => setClips([
-                  { range: "00:00-00:05", caption: "First demo snippet" },
-                  { range: "00:10-00:15", caption: "Second demo snippet" },
-                  { range: "00:20-00:25", caption: "Third demo snippet" },
-                ])}
+                onClick={() =>
+                  setClips([
+                    { range: "00:00-00:05", caption: "First demo snippet" },
+                    { range: "00:10-00:15", caption: "Second demo snippet" },
+                    { range: "00:20-00:25", caption: "Third demo snippet" },
+                  ])
+                }
                 variant="secondary"
-                className="w-full mb-2"
+                className="mb-2 w-full"
               >
                 Load Demo Clips
               </Button>
-              
+
               {clips.map((clip, index) => (
-                <div key={index} className="space-y-2 p-3 border rounded">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Clip {index + 1}</span>
+                <div key={index} className="space-y-2 rounded border p-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">
+                      Clip {index + 1}
+                    </span>
                     {clips.length > 1 && (
                       <Button
                         onClick={() => removeClip(index)}
@@ -405,43 +439,53 @@ const FileUploadDropzone = () => {
                       </Button>
                     )}
                   </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+
+                  <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
                     <div>
-                      <label className="text-xs text-gray-600">Time Range (MM:SS-MM:SS)</label>
+                      <label className="text-xs text-gray-600">
+                        Time Range (MM:SS-MM:SS)
+                      </label>
                       <input
                         type="text"
                         value={clip.range}
-                        onChange={(e) => updateClip(index, "range", e.target.value)}
+                        onChange={(e) =>
+                          updateClip(index, "range", e.target.value)
+                        }
                         placeholder="01:30-02:00"
-                        className="w-full p-2 text-sm border rounded focus:outline-hidden focus:ring-2 focus:ring-green-500 text-gray-900"
+                        className="w-full rounded border p-2 text-sm text-gray-900 focus:ring-2 focus:ring-green-500 focus:outline-hidden"
                       />
                     </div>
-                    
+
                     <div>
-                      <label className="text-xs text-gray-600">Caption (max 200 chars)</label>
+                      <label className="text-xs text-gray-600">
+                        Caption (max 200 chars)
+                      </label>
                       <input
                         type="text"
                         value={clip.caption}
-                        onChange={(e) => updateClip(index, "caption", e.target.value)}
+                        onChange={(e) =>
+                          updateClip(index, "caption", e.target.value)
+                        }
                         placeholder="Enter caption..."
                         maxLength={200}
-                        className="w-full p-2 text-sm border rounded focus:outline-hidden focus:ring-2 focus:ring-green-500 text-gray-900"
+                        className="w-full rounded border p-2 text-sm text-gray-900 focus:ring-2 focus:ring-green-500 focus:outline-hidden"
                       />
                     </div>
                   </div>
                 </div>
               ))}
             </div>
-            
-            <Button 
+
+            <Button
               onClick={handleProcessVideoStitch}
               disabled={processVideoStitch.isPending}
               className="w-full"
             >
-              {processVideoStitch.isPending ? "Starting Processing..." : "Create Video Stitch"}
+              {processVideoStitch.isPending
+                ? "Starting Processing..."
+                : "Create Video Stitch"}
             </Button>
-            
+
             <Button onClick={resetUpload} variant="outline" className="w-full">
               Upload Another Video
             </Button>
@@ -450,13 +494,16 @@ const FileUploadDropzone = () => {
       )}
 
       {processingStatus === "processing" && (
-        <div className="space-y-4 p-4 bg-blue-50 border border-blue-200 rounded">
+        <div className="space-y-4 rounded border border-blue-200 bg-blue-50 p-4">
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span>{getProcessingStatusMessage()}</span>
               <span>{progress ? Math.round(progress.progress * 100) : 0}%</span>
             </div>
-            <Progress value={progress ? progress.progress * 100 : 0} className="w-full" />
+            <Progress
+              value={progress ? progress.progress * 100 : 0}
+              className="w-full"
+            />
           </div>
           <p className="text-sm text-blue-700">
             This may take a few minutes depending on the number of clips...
@@ -465,47 +512,57 @@ const FileUploadDropzone = () => {
       )}
 
       {processingStatus === "completed" && (
-        <div className="space-y-4 p-4 bg-green-50 border border-green-200 rounded">
+        <div className="space-y-4 rounded border border-green-200 bg-green-50 p-4">
           <h3 className="text-lg font-semibold text-green-800">
             Video Stitch Complete!
           </h3>
-          
+
           {!processedVideoUrl && (
             <p className="text-sm text-blue-700">Loading processed video...</p>
           )}
-          
+
           {processedVideoUrl && (
             <div className="space-y-4">
               <div className="space-y-2">
-                <p className="text-sm text-green-700 font-medium">Final Stitched Video:</p>
+                <p className="text-sm font-medium text-green-700">
+                  Final Stitched Video:
+                </p>
                 <video
                   src={processedVideoUrl}
                   controls
-                  className="w-full h-60 rounded border"
+                  className="h-60 w-full rounded border"
                   preload="metadata"
                 />
               </div>
-              
+
               <div className="flex gap-2">
-                <Button 
-                  onClick={() => window.open(processedVideoUrl, '_blank')}
+                <Button
+                  onClick={() => window.open(processedVideoUrl, "_blank")}
                   className="flex-1"
                 >
                   Download Video
                 </Button>
-                <Button onClick={resetUpload} variant="outline" className="flex-1">
+                <Button
+                  onClick={resetUpload}
+                  variant="outline"
+                  className="flex-1"
+                >
                   Create Another Stitch
                 </Button>
               </div>
             </div>
           )}
-          
+
           {!processedVideoUrl && (
             <div className="space-y-2">
               <p className="text-sm text-gray-600">
                 Video URL not available yet. This may take a moment...
               </p>
-              <Button onClick={resetUpload} variant="outline" className="w-full">
+              <Button
+                onClick={resetUpload}
+                variant="outline"
+                className="w-full"
+              >
                 Try Creating Another Stitch
               </Button>
             </div>
@@ -514,7 +571,7 @@ const FileUploadDropzone = () => {
       )}
 
       {(uploadStatus === "failed" || processingStatus === "failed") && (
-        <div className="space-y-4 p-4 bg-red-50 border border-red-200 rounded">
+        <div className="space-y-4 rounded border border-red-200 bg-red-50 p-4">
           <h3 className="text-lg font-semibold text-red-800">
             {uploadStatus === "failed" ? "Upload Failed" : "Processing Failed"}
           </h3>
@@ -531,5 +588,5 @@ const FileUploadDropzone = () => {
     </div>
   );
 };
- 
-export default FileUploadDropzone; 
+
+export default FileUploadDropzone;

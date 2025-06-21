@@ -182,6 +182,16 @@ exports.Prisma.HookViralVideoScalarFieldEnum = {
   colorPalette: 'colorPalette'
 };
 
+exports.Prisma.ViralStitchScalarFieldEnum = {
+  id: 'id',
+  shortDemoId: 'shortDemoId',
+  hookViralVideoId: 'hookViralVideoId',
+  stitchedVideoUrl: 'stitchedVideoUrl',
+  durationSeconds: 'durationSeconds',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -224,7 +234,8 @@ exports.Prisma.ModelName = {
   User: 'User',
   DemoVideo: 'DemoVideo',
   ShortDemo: 'ShortDemo',
-  HookViralVideo: 'HookViralVideo'
+  HookViralVideo: 'HookViralVideo',
+  ViralStitch: 'ViralStitch'
 };
 
 /**

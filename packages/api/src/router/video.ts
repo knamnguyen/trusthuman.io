@@ -1,10 +1,15 @@
-import { z } from "zod";
-import { createTRPCRouter, publicProcedure } from "../trpc";
-import { S3BucketService } from "@sassy/s3";
 import { TRPCError } from "@trpc/server";
-import type { VideoProcessingJob } from "@sassy/s3/schema-validators";
-import type { VideoProcessingRequest, RemotionRenderResult } from "../services/remotion-service";
+import { z } from "zod";
 
+import type {
+  RemotionRenderResult,
+  VideoProcessingRequest,
+} from "@sassy/remotion";
+import type { VideoProcessingJob } from "@sassy/s3/schema-validators";
+import { DemoVideoCreateInputSchema } from "@sassy/db/schema-validators";
+import { S3BucketService } from "@sassy/s3";
+
+import { createTRPCRouter, publicProcedure } from "../trpc";
 
 // Initialize S3 service with single bucket
 const s3Service = new S3BucketService({
@@ -18,6 +23,7 @@ const GetUploadUrlInputSchema = z.object({
   fileName: z.string(),
   contentType: z.string().optional(),
   prefix: z.string().optional(),
+  durationSeconds: z.number().int().positive().optional(),
 });
 
 const InitMultipartUploadInputSchema = z.object({
@@ -35,10 +41,13 @@ const GetPartUrlsInputSchema = z.object({
 const CompleteMultipartUploadInputSchema = z.object({
   key: z.string(),
   uploadId: z.string(),
-  parts: z.array(z.object({
-    partNumber: z.number(),
-    etag: z.string(),
-  })),
+  parts: z.array(
+    z.object({
+      partNumber: z.number(),
+      etag: z.string(),
+    }),
+  ),
+  durationSeconds: z.number().int().positive(),
 });
 
 const AbortMultipartUploadInputSchema = z.object({
@@ -46,28 +55,75 @@ const AbortMultipartUploadInputSchema = z.object({
   uploadId: z.string(),
 });
 
+// Helper function to save video metadata to database
+const saveDemoVideoToDB = async (
+  s3Url: string,
+  durationSeconds: number,
+  db: any,
+) => {
+  try {
+    return await db.demoVideo.create({
+      data: {
+        s3Url,
+        durationSeconds,
+      },
+    });
+  } catch (error) {
+    console.error("Failed to save demo video to database:", error);
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Failed to save video metadata to database",
+      cause: error,
+    });
+  }
+};
 
 export const videoRouter = createTRPCRouter({
   // Get presigned URL for direct upload to S3 (single part - for files < 10MB)
   getUploadUrl: publicProcedure
     .input(GetUploadUrlInputSchema)
-    .mutation(async ({ input }) => {
-        const key = s3Service.generateUniqueKey(input.fileName, input.prefix || "uploads");
+    .mutation(async ({ input, ctx }) => {
+      const key = s3Service.generateUniqueKey(
+        input.fileName,
+        input.prefix || "uploads",
+      );
+
+      try {
         const uploadUrl = await s3Service.getPresignedUploadUrl(
           key,
           input.contentType,
-          3600 // 1 hour expiry
+          3600, // 1 hour expiry
         );
 
         console.log("uploadUrl", uploadUrl);
-        
+
+        // If durationSeconds is provided, save to database
+        let demoVideo = null;
+        if (input.durationSeconds) {
+          const s3Url = `https://${s3Service.getBucket()}.s3.${process.env.AWS_REGION || "us-west-2"}.amazonaws.com/${key}`;
+          demoVideo = await saveDemoVideoToDB(
+            s3Url,
+            input.durationSeconds,
+            ctx.db,
+          );
+        }
+
         return {
           success: true,
           uploadUrl,
           key,
           bucket: s3Service.getBucket(),
           expiresIn: 3600,
+          demoVideo,
         };
+      } catch (error) {
+        console.error("Failed to process upload URL request:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to process upload request",
+          cause: error,
+        });
+      }
     }),
 
   // Initialize multipart upload for large files (≥ 10MB)
@@ -75,9 +131,15 @@ export const videoRouter = createTRPCRouter({
     .input(InitMultipartUploadInputSchema)
     .mutation(async ({ input }) => {
       try {
-        const key = s3Service.generateUniqueKey(input.fileName, input.prefix || "uploads");
-        const result = await s3Service.initializeMultipartUpload(key, input.contentType);
-        
+        const key = s3Service.generateUniqueKey(
+          input.fileName,
+          input.prefix || "uploads",
+        );
+        const result = await s3Service.initializeMultipartUpload(
+          key,
+          input.contentType,
+        );
+
         return {
           success: true,
           ...result,
@@ -100,9 +162,9 @@ export const videoRouter = createTRPCRouter({
           input.key,
           input.uploadId,
           input.partNumbers,
-          3600 // 1 hour expiry
+          3600, // 1 hour expiry
         );
-        
+
         return {
           success: true,
           partUrls,
@@ -119,17 +181,26 @@ export const videoRouter = createTRPCRouter({
   // Complete multipart upload
   completeMultipartUpload: publicProcedure
     .input(CompleteMultipartUploadInputSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
+        // First complete the S3 multipart upload
         const result = await s3Service.completeMultipartUpload(
           input.key,
           input.uploadId,
-          input.parts
+          input.parts,
         );
-        
+
+        // Then save to database
+        const demoVideo = await saveDemoVideoToDB(
+          result.location,
+          input.durationSeconds,
+          ctx.db,
+        );
+
         return {
           success: true,
           ...result,
+          demoVideo,
         };
       } catch (error) {
         console.error("Failed to complete multipart upload:", error);
@@ -145,8 +216,11 @@ export const videoRouter = createTRPCRouter({
     .input(AbortMultipartUploadInputSchema)
     .mutation(async ({ input }) => {
       try {
-        const result = await s3Service.abortMultipartUpload(input.key, input.uploadId);
-        
+        const result = await s3Service.abortMultipartUpload(
+          input.key,
+          input.uploadId,
+        );
+
         return {
           success: result,
         };
@@ -158,5 +232,4 @@ export const videoRouter = createTRPCRouter({
         });
       }
     }),
-
-}); 
+});

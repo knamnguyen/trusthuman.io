@@ -66,6 +66,8 @@ export const ShortDemoScalarFieldEnumSchema = z.enum(['id','demoVideoId','durati
 
 export const HookViralVideoScalarFieldEnumSchema = z.enum(['id','webpageUrl','s3Url','hookEndTimestamp','hookCutConfidence','hookCutUrl','hookInfo','title','description','views','comments','likes','durationSeconds','createdAt','updatedAt','colorPalette']);
 
+export const ViralStitchScalarFieldEnumSchema = z.enum(['id','shortDemoId','hookViralVideoId','stitchedVideoUrl','durationSeconds','createdAt','updatedAt']);
+
 export const SortOrderSchema = z.enum(['asc','desc']);
 
 export const NullableJsonNullValueInputSchema = z.enum(['DbNull','JsonNull',]).transform((value) => value === 'JsonNull' ? Prisma.JsonNull : value === 'DbNull' ? Prisma.DbNull : value);
@@ -179,6 +181,22 @@ export const HookViralVideoSchema = z.object({
 export type HookViralVideo = z.infer<typeof HookViralVideoSchema>
 
 /////////////////////////////////////////
+// VIRAL STITCH SCHEMA
+/////////////////////////////////////////
+
+export const ViralStitchSchema = z.object({
+  id: z.string().cuid(),
+  shortDemoId: z.string(),
+  hookViralVideoId: z.string(),
+  stitchedVideoUrl: z.string(),
+  durationSeconds: z.number().int(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
+})
+
+export type ViralStitch = z.infer<typeof ViralStitchSchema>
+
+/////////////////////////////////////////
 // SELECT & INCLUDE
 /////////////////////////////////////////
 
@@ -247,11 +265,21 @@ export const DemoVideoSelectSchema: z.ZodType<Prisma.DemoVideoSelect> = z.object
 
 export const ShortDemoIncludeSchema: z.ZodType<Prisma.ShortDemoInclude> = z.object({
   demoVideo: z.union([z.boolean(),z.lazy(() => DemoVideoArgsSchema)]).optional(),
+  viralStitches: z.union([z.boolean(),z.lazy(() => ViralStitchFindManyArgsSchema)]).optional(),
+  _count: z.union([z.boolean(),z.lazy(() => ShortDemoCountOutputTypeArgsSchema)]).optional(),
 }).strict()
 
 export const ShortDemoArgsSchema: z.ZodType<Prisma.ShortDemoDefaultArgs> = z.object({
   select: z.lazy(() => ShortDemoSelectSchema).optional(),
   include: z.lazy(() => ShortDemoIncludeSchema).optional(),
+}).strict();
+
+export const ShortDemoCountOutputTypeArgsSchema: z.ZodType<Prisma.ShortDemoCountOutputTypeDefaultArgs> = z.object({
+  select: z.lazy(() => ShortDemoCountOutputTypeSelectSchema).nullish(),
+}).strict();
+
+export const ShortDemoCountOutputTypeSelectSchema: z.ZodType<Prisma.ShortDemoCountOutputTypeSelect> = z.object({
+  viralStitches: z.boolean().optional(),
 }).strict();
 
 export const ShortDemoSelectSchema: z.ZodType<Prisma.ShortDemoSelect> = z.object({
@@ -265,10 +293,30 @@ export const ShortDemoSelectSchema: z.ZodType<Prisma.ShortDemoSelect> = z.object
   segments: z.boolean().optional(),
   colorPalette: z.boolean().optional(),
   demoVideo: z.union([z.boolean(),z.lazy(() => DemoVideoArgsSchema)]).optional(),
+  viralStitches: z.union([z.boolean(),z.lazy(() => ViralStitchFindManyArgsSchema)]).optional(),
+  _count: z.union([z.boolean(),z.lazy(() => ShortDemoCountOutputTypeArgsSchema)]).optional(),
 }).strict()
 
 // HOOK VIRAL VIDEO
 //------------------------------------------------------
+
+export const HookViralVideoIncludeSchema: z.ZodType<Prisma.HookViralVideoInclude> = z.object({
+  viralStitches: z.union([z.boolean(),z.lazy(() => ViralStitchFindManyArgsSchema)]).optional(),
+  _count: z.union([z.boolean(),z.lazy(() => HookViralVideoCountOutputTypeArgsSchema)]).optional(),
+}).strict()
+
+export const HookViralVideoArgsSchema: z.ZodType<Prisma.HookViralVideoDefaultArgs> = z.object({
+  select: z.lazy(() => HookViralVideoSelectSchema).optional(),
+  include: z.lazy(() => HookViralVideoIncludeSchema).optional(),
+}).strict();
+
+export const HookViralVideoCountOutputTypeArgsSchema: z.ZodType<Prisma.HookViralVideoCountOutputTypeDefaultArgs> = z.object({
+  select: z.lazy(() => HookViralVideoCountOutputTypeSelectSchema).nullish(),
+}).strict();
+
+export const HookViralVideoCountOutputTypeSelectSchema: z.ZodType<Prisma.HookViralVideoCountOutputTypeSelect> = z.object({
+  viralStitches: z.boolean().optional(),
+}).strict();
 
 export const HookViralVideoSelectSchema: z.ZodType<Prisma.HookViralVideoSelect> = z.object({
   id: z.boolean().optional(),
@@ -287,6 +335,33 @@ export const HookViralVideoSelectSchema: z.ZodType<Prisma.HookViralVideoSelect> 
   createdAt: z.boolean().optional(),
   updatedAt: z.boolean().optional(),
   colorPalette: z.boolean().optional(),
+  viralStitches: z.union([z.boolean(),z.lazy(() => ViralStitchFindManyArgsSchema)]).optional(),
+  _count: z.union([z.boolean(),z.lazy(() => HookViralVideoCountOutputTypeArgsSchema)]).optional(),
+}).strict()
+
+// VIRAL STITCH
+//------------------------------------------------------
+
+export const ViralStitchIncludeSchema: z.ZodType<Prisma.ViralStitchInclude> = z.object({
+  shortDemo: z.union([z.boolean(),z.lazy(() => ShortDemoArgsSchema)]).optional(),
+  hookViralVideo: z.union([z.boolean(),z.lazy(() => HookViralVideoArgsSchema)]).optional(),
+}).strict()
+
+export const ViralStitchArgsSchema: z.ZodType<Prisma.ViralStitchDefaultArgs> = z.object({
+  select: z.lazy(() => ViralStitchSelectSchema).optional(),
+  include: z.lazy(() => ViralStitchIncludeSchema).optional(),
+}).strict();
+
+export const ViralStitchSelectSchema: z.ZodType<Prisma.ViralStitchSelect> = z.object({
+  id: z.boolean().optional(),
+  shortDemoId: z.boolean().optional(),
+  hookViralVideoId: z.boolean().optional(),
+  stitchedVideoUrl: z.boolean().optional(),
+  durationSeconds: z.boolean().optional(),
+  createdAt: z.boolean().optional(),
+  updatedAt: z.boolean().optional(),
+  shortDemo: z.union([z.boolean(),z.lazy(() => ShortDemoArgsSchema)]).optional(),
+  hookViralVideo: z.union([z.boolean(),z.lazy(() => HookViralVideoArgsSchema)]).optional(),
 }).strict()
 
 
@@ -574,6 +649,7 @@ export const ShortDemoWhereInputSchema: z.ZodType<Prisma.ShortDemoWhereInput> = 
   segments: z.lazy(() => JsonFilterSchema).optional(),
   colorPalette: z.lazy(() => JsonNullableFilterSchema).optional(),
   demoVideo: z.union([ z.lazy(() => DemoVideoScalarRelationFilterSchema),z.lazy(() => DemoVideoWhereInputSchema) ]).optional(),
+  viralStitches: z.lazy(() => ViralStitchListRelationFilterSchema).optional()
 }).strict();
 
 export const ShortDemoOrderByWithRelationInputSchema: z.ZodType<Prisma.ShortDemoOrderByWithRelationInput> = z.object({
@@ -586,7 +662,8 @@ export const ShortDemoOrderByWithRelationInputSchema: z.ZodType<Prisma.ShortDemo
   productInfo: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   segments: z.lazy(() => SortOrderSchema).optional(),
   colorPalette: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
-  demoVideo: z.lazy(() => DemoVideoOrderByWithRelationInputSchema).optional()
+  demoVideo: z.lazy(() => DemoVideoOrderByWithRelationInputSchema).optional(),
+  viralStitches: z.lazy(() => ViralStitchOrderByRelationAggregateInputSchema).optional()
 }).strict();
 
 export const ShortDemoWhereUniqueInputSchema: z.ZodType<Prisma.ShortDemoWhereUniqueInput> = z.object({
@@ -606,6 +683,7 @@ export const ShortDemoWhereUniqueInputSchema: z.ZodType<Prisma.ShortDemoWhereUni
   segments: z.lazy(() => JsonFilterSchema).optional(),
   colorPalette: z.lazy(() => JsonNullableFilterSchema).optional(),
   demoVideo: z.union([ z.lazy(() => DemoVideoScalarRelationFilterSchema),z.lazy(() => DemoVideoWhereInputSchema) ]).optional(),
+  viralStitches: z.lazy(() => ViralStitchListRelationFilterSchema).optional()
 }).strict());
 
 export const ShortDemoOrderByWithAggregationInputSchema: z.ZodType<Prisma.ShortDemoOrderByWithAggregationInput> = z.object({
@@ -659,7 +737,8 @@ export const HookViralVideoWhereInputSchema: z.ZodType<Prisma.HookViralVideoWher
   durationSeconds: z.union([ z.lazy(() => IntFilterSchema),z.number() ]).optional(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
-  colorPalette: z.lazy(() => JsonNullableFilterSchema).optional()
+  colorPalette: z.lazy(() => JsonNullableFilterSchema).optional(),
+  viralStitches: z.lazy(() => ViralStitchListRelationFilterSchema).optional()
 }).strict();
 
 export const HookViralVideoOrderByWithRelationInputSchema: z.ZodType<Prisma.HookViralVideoOrderByWithRelationInput> = z.object({
@@ -679,6 +758,7 @@ export const HookViralVideoOrderByWithRelationInputSchema: z.ZodType<Prisma.Hook
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
   colorPalette: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
+  viralStitches: z.lazy(() => ViralStitchOrderByRelationAggregateInputSchema).optional()
 }).strict();
 
 export const HookViralVideoWhereUniqueInputSchema: z.ZodType<Prisma.HookViralVideoWhereUniqueInput> = z.union([
@@ -712,7 +792,8 @@ export const HookViralVideoWhereUniqueInputSchema: z.ZodType<Prisma.HookViralVid
   durationSeconds: z.union([ z.lazy(() => IntFilterSchema),z.number().int() ]).optional(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
-  colorPalette: z.lazy(() => JsonNullableFilterSchema).optional()
+  colorPalette: z.lazy(() => JsonNullableFilterSchema).optional(),
+  viralStitches: z.lazy(() => ViralStitchListRelationFilterSchema).optional()
 }).strict());
 
 export const HookViralVideoOrderByWithAggregationInputSchema: z.ZodType<Prisma.HookViralVideoOrderByWithAggregationInput> = z.object({
@@ -759,6 +840,89 @@ export const HookViralVideoScalarWhereWithAggregatesInputSchema: z.ZodType<Prism
   createdAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
   colorPalette: z.lazy(() => JsonNullableWithAggregatesFilterSchema).optional()
+}).strict();
+
+export const ViralStitchWhereInputSchema: z.ZodType<Prisma.ViralStitchWhereInput> = z.object({
+  AND: z.union([ z.lazy(() => ViralStitchWhereInputSchema),z.lazy(() => ViralStitchWhereInputSchema).array() ]).optional(),
+  OR: z.lazy(() => ViralStitchWhereInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => ViralStitchWhereInputSchema),z.lazy(() => ViralStitchWhereInputSchema).array() ]).optional(),
+  id: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  shortDemoId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  hookViralVideoId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  stitchedVideoUrl: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  durationSeconds: z.union([ z.lazy(() => IntFilterSchema),z.number() ]).optional(),
+  createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
+  updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
+  shortDemo: z.union([ z.lazy(() => ShortDemoScalarRelationFilterSchema),z.lazy(() => ShortDemoWhereInputSchema) ]).optional(),
+  hookViralVideo: z.union([ z.lazy(() => HookViralVideoScalarRelationFilterSchema),z.lazy(() => HookViralVideoWhereInputSchema) ]).optional(),
+}).strict();
+
+export const ViralStitchOrderByWithRelationInputSchema: z.ZodType<Prisma.ViralStitchOrderByWithRelationInput> = z.object({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  shortDemoId: z.lazy(() => SortOrderSchema).optional(),
+  hookViralVideoId: z.lazy(() => SortOrderSchema).optional(),
+  stitchedVideoUrl: z.lazy(() => SortOrderSchema).optional(),
+  durationSeconds: z.lazy(() => SortOrderSchema).optional(),
+  createdAt: z.lazy(() => SortOrderSchema).optional(),
+  updatedAt: z.lazy(() => SortOrderSchema).optional(),
+  shortDemo: z.lazy(() => ShortDemoOrderByWithRelationInputSchema).optional(),
+  hookViralVideo: z.lazy(() => HookViralVideoOrderByWithRelationInputSchema).optional()
+}).strict();
+
+export const ViralStitchWhereUniqueInputSchema: z.ZodType<Prisma.ViralStitchWhereUniqueInput> = z.union([
+  z.object({
+    id: z.string().cuid(),
+    shortDemoId_hookViralVideoId: z.lazy(() => ViralStitchShortDemoIdHookViralVideoIdCompoundUniqueInputSchema)
+  }),
+  z.object({
+    id: z.string().cuid(),
+  }),
+  z.object({
+    shortDemoId_hookViralVideoId: z.lazy(() => ViralStitchShortDemoIdHookViralVideoIdCompoundUniqueInputSchema),
+  }),
+])
+.and(z.object({
+  id: z.string().cuid().optional(),
+  shortDemoId_hookViralVideoId: z.lazy(() => ViralStitchShortDemoIdHookViralVideoIdCompoundUniqueInputSchema).optional(),
+  AND: z.union([ z.lazy(() => ViralStitchWhereInputSchema),z.lazy(() => ViralStitchWhereInputSchema).array() ]).optional(),
+  OR: z.lazy(() => ViralStitchWhereInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => ViralStitchWhereInputSchema),z.lazy(() => ViralStitchWhereInputSchema).array() ]).optional(),
+  shortDemoId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  hookViralVideoId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  stitchedVideoUrl: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  durationSeconds: z.union([ z.lazy(() => IntFilterSchema),z.number().int() ]).optional(),
+  createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
+  updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
+  shortDemo: z.union([ z.lazy(() => ShortDemoScalarRelationFilterSchema),z.lazy(() => ShortDemoWhereInputSchema) ]).optional(),
+  hookViralVideo: z.union([ z.lazy(() => HookViralVideoScalarRelationFilterSchema),z.lazy(() => HookViralVideoWhereInputSchema) ]).optional(),
+}).strict());
+
+export const ViralStitchOrderByWithAggregationInputSchema: z.ZodType<Prisma.ViralStitchOrderByWithAggregationInput> = z.object({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  shortDemoId: z.lazy(() => SortOrderSchema).optional(),
+  hookViralVideoId: z.lazy(() => SortOrderSchema).optional(),
+  stitchedVideoUrl: z.lazy(() => SortOrderSchema).optional(),
+  durationSeconds: z.lazy(() => SortOrderSchema).optional(),
+  createdAt: z.lazy(() => SortOrderSchema).optional(),
+  updatedAt: z.lazy(() => SortOrderSchema).optional(),
+  _count: z.lazy(() => ViralStitchCountOrderByAggregateInputSchema).optional(),
+  _avg: z.lazy(() => ViralStitchAvgOrderByAggregateInputSchema).optional(),
+  _max: z.lazy(() => ViralStitchMaxOrderByAggregateInputSchema).optional(),
+  _min: z.lazy(() => ViralStitchMinOrderByAggregateInputSchema).optional(),
+  _sum: z.lazy(() => ViralStitchSumOrderByAggregateInputSchema).optional()
+}).strict();
+
+export const ViralStitchScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.ViralStitchScalarWhereWithAggregatesInput> = z.object({
+  AND: z.union([ z.lazy(() => ViralStitchScalarWhereWithAggregatesInputSchema),z.lazy(() => ViralStitchScalarWhereWithAggregatesInputSchema).array() ]).optional(),
+  OR: z.lazy(() => ViralStitchScalarWhereWithAggregatesInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => ViralStitchScalarWhereWithAggregatesInputSchema),z.lazy(() => ViralStitchScalarWhereWithAggregatesInputSchema).array() ]).optional(),
+  id: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
+  shortDemoId: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
+  hookViralVideoId: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
+  stitchedVideoUrl: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
+  durationSeconds: z.union([ z.lazy(() => IntWithAggregatesFilterSchema),z.number() ]).optional(),
+  createdAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
+  updatedAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
 }).strict();
 
 export const PostCreateInputSchema: z.ZodType<Prisma.PostCreateInput> = z.object({
@@ -991,7 +1155,8 @@ export const ShortDemoCreateInputSchema: z.ZodType<Prisma.ShortDemoCreateInput> 
   productInfo: z.string().optional().nullable(),
   segments: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
   colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
-  demoVideo: z.lazy(() => DemoVideoCreateNestedOneWithoutShortDemosInputSchema)
+  demoVideo: z.lazy(() => DemoVideoCreateNestedOneWithoutShortDemosInputSchema),
+  viralStitches: z.lazy(() => ViralStitchCreateNestedManyWithoutShortDemoInputSchema).optional()
 }).strict();
 
 export const ShortDemoUncheckedCreateInputSchema: z.ZodType<Prisma.ShortDemoUncheckedCreateInput> = z.object({
@@ -1004,6 +1169,7 @@ export const ShortDemoUncheckedCreateInputSchema: z.ZodType<Prisma.ShortDemoUnch
   productInfo: z.string().optional().nullable(),
   segments: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
   colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+  viralStitches: z.lazy(() => ViralStitchUncheckedCreateNestedManyWithoutShortDemoInputSchema).optional()
 }).strict();
 
 export const ShortDemoUpdateInputSchema: z.ZodType<Prisma.ShortDemoUpdateInput> = z.object({
@@ -1015,7 +1181,8 @@ export const ShortDemoUpdateInputSchema: z.ZodType<Prisma.ShortDemoUpdateInput> 
   productInfo: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   segments: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
-  demoVideo: z.lazy(() => DemoVideoUpdateOneRequiredWithoutShortDemosNestedInputSchema).optional()
+  demoVideo: z.lazy(() => DemoVideoUpdateOneRequiredWithoutShortDemosNestedInputSchema).optional(),
+  viralStitches: z.lazy(() => ViralStitchUpdateManyWithoutShortDemoNestedInputSchema).optional()
 }).strict();
 
 export const ShortDemoUncheckedUpdateInputSchema: z.ZodType<Prisma.ShortDemoUncheckedUpdateInput> = z.object({
@@ -1028,6 +1195,7 @@ export const ShortDemoUncheckedUpdateInputSchema: z.ZodType<Prisma.ShortDemoUnch
   productInfo: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   segments: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+  viralStitches: z.lazy(() => ViralStitchUncheckedUpdateManyWithoutShortDemoNestedInputSchema).optional()
 }).strict();
 
 export const ShortDemoCreateManyInputSchema: z.ZodType<Prisma.ShortDemoCreateManyInput> = z.object({
@@ -1082,6 +1250,7 @@ export const HookViralVideoCreateInputSchema: z.ZodType<Prisma.HookViralVideoCre
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+  viralStitches: z.lazy(() => ViralStitchCreateNestedManyWithoutHookViralVideoInputSchema).optional()
 }).strict();
 
 export const HookViralVideoUncheckedCreateInputSchema: z.ZodType<Prisma.HookViralVideoUncheckedCreateInput> = z.object({
@@ -1101,6 +1270,7 @@ export const HookViralVideoUncheckedCreateInputSchema: z.ZodType<Prisma.HookVira
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+  viralStitches: z.lazy(() => ViralStitchUncheckedCreateNestedManyWithoutHookViralVideoInputSchema).optional()
 }).strict();
 
 export const HookViralVideoUpdateInputSchema: z.ZodType<Prisma.HookViralVideoUpdateInput> = z.object({
@@ -1120,6 +1290,7 @@ export const HookViralVideoUpdateInputSchema: z.ZodType<Prisma.HookViralVideoUpd
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+  viralStitches: z.lazy(() => ViralStitchUpdateManyWithoutHookViralVideoNestedInputSchema).optional()
 }).strict();
 
 export const HookViralVideoUncheckedUpdateInputSchema: z.ZodType<Prisma.HookViralVideoUncheckedUpdateInput> = z.object({
@@ -1139,6 +1310,7 @@ export const HookViralVideoUncheckedUpdateInputSchema: z.ZodType<Prisma.HookVira
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+  viralStitches: z.lazy(() => ViralStitchUncheckedUpdateManyWithoutHookViralVideoNestedInputSchema).optional()
 }).strict();
 
 export const HookViralVideoCreateManyInputSchema: z.ZodType<Prisma.HookViralVideoCreateManyInput> = z.object({
@@ -1196,6 +1368,74 @@ export const HookViralVideoUncheckedUpdateManyInputSchema: z.ZodType<Prisma.Hook
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+}).strict();
+
+export const ViralStitchCreateInputSchema: z.ZodType<Prisma.ViralStitchCreateInput> = z.object({
+  id: z.string().cuid().optional(),
+  stitchedVideoUrl: z.string(),
+  durationSeconds: z.number().int(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+  shortDemo: z.lazy(() => ShortDemoCreateNestedOneWithoutViralStitchesInputSchema),
+  hookViralVideo: z.lazy(() => HookViralVideoCreateNestedOneWithoutViralStitchesInputSchema)
+}).strict();
+
+export const ViralStitchUncheckedCreateInputSchema: z.ZodType<Prisma.ViralStitchUncheckedCreateInput> = z.object({
+  id: z.string().cuid().optional(),
+  shortDemoId: z.string(),
+  hookViralVideoId: z.string(),
+  stitchedVideoUrl: z.string(),
+  durationSeconds: z.number().int(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional()
+}).strict();
+
+export const ViralStitchUpdateInputSchema: z.ZodType<Prisma.ViralStitchUpdateInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  stitchedVideoUrl: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  durationSeconds: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  shortDemo: z.lazy(() => ShortDemoUpdateOneRequiredWithoutViralStitchesNestedInputSchema).optional(),
+  hookViralVideo: z.lazy(() => HookViralVideoUpdateOneRequiredWithoutViralStitchesNestedInputSchema).optional()
+}).strict();
+
+export const ViralStitchUncheckedUpdateInputSchema: z.ZodType<Prisma.ViralStitchUncheckedUpdateInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  shortDemoId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  hookViralVideoId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  stitchedVideoUrl: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  durationSeconds: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+}).strict();
+
+export const ViralStitchCreateManyInputSchema: z.ZodType<Prisma.ViralStitchCreateManyInput> = z.object({
+  id: z.string().cuid().optional(),
+  shortDemoId: z.string(),
+  hookViralVideoId: z.string(),
+  stitchedVideoUrl: z.string(),
+  durationSeconds: z.number().int(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional()
+}).strict();
+
+export const ViralStitchUpdateManyMutationInputSchema: z.ZodType<Prisma.ViralStitchUpdateManyMutationInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  stitchedVideoUrl: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  durationSeconds: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+}).strict();
+
+export const ViralStitchUncheckedUpdateManyInputSchema: z.ZodType<Prisma.ViralStitchUncheckedUpdateManyInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  shortDemoId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  hookViralVideoId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  stitchedVideoUrl: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  durationSeconds: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
 export const StringFilterSchema: z.ZodType<Prisma.StringFilter> = z.object({
@@ -1504,6 +1744,16 @@ export const DemoVideoScalarRelationFilterSchema: z.ZodType<Prisma.DemoVideoScal
   isNot: z.lazy(() => DemoVideoWhereInputSchema).optional()
 }).strict();
 
+export const ViralStitchListRelationFilterSchema: z.ZodType<Prisma.ViralStitchListRelationFilter> = z.object({
+  every: z.lazy(() => ViralStitchWhereInputSchema).optional(),
+  some: z.lazy(() => ViralStitchWhereInputSchema).optional(),
+  none: z.lazy(() => ViralStitchWhereInputSchema).optional()
+}).strict();
+
+export const ViralStitchOrderByRelationAggregateInputSchema: z.ZodType<Prisma.ViralStitchOrderByRelationAggregateInput> = z.object({
+  _count: z.lazy(() => SortOrderSchema).optional()
+}).strict();
+
 export const ShortDemoCountOrderByAggregateInputSchema: z.ZodType<Prisma.ShortDemoCountOrderByAggregateInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
   demoVideoId: z.lazy(() => SortOrderSchema).optional(),
@@ -1633,6 +1883,59 @@ export const HookViralVideoSumOrderByAggregateInputSchema: z.ZodType<Prisma.Hook
   durationSeconds: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
+export const ShortDemoScalarRelationFilterSchema: z.ZodType<Prisma.ShortDemoScalarRelationFilter> = z.object({
+  is: z.lazy(() => ShortDemoWhereInputSchema).optional(),
+  isNot: z.lazy(() => ShortDemoWhereInputSchema).optional()
+}).strict();
+
+export const HookViralVideoScalarRelationFilterSchema: z.ZodType<Prisma.HookViralVideoScalarRelationFilter> = z.object({
+  is: z.lazy(() => HookViralVideoWhereInputSchema).optional(),
+  isNot: z.lazy(() => HookViralVideoWhereInputSchema).optional()
+}).strict();
+
+export const ViralStitchShortDemoIdHookViralVideoIdCompoundUniqueInputSchema: z.ZodType<Prisma.ViralStitchShortDemoIdHookViralVideoIdCompoundUniqueInput> = z.object({
+  shortDemoId: z.string(),
+  hookViralVideoId: z.string()
+}).strict();
+
+export const ViralStitchCountOrderByAggregateInputSchema: z.ZodType<Prisma.ViralStitchCountOrderByAggregateInput> = z.object({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  shortDemoId: z.lazy(() => SortOrderSchema).optional(),
+  hookViralVideoId: z.lazy(() => SortOrderSchema).optional(),
+  stitchedVideoUrl: z.lazy(() => SortOrderSchema).optional(),
+  durationSeconds: z.lazy(() => SortOrderSchema).optional(),
+  createdAt: z.lazy(() => SortOrderSchema).optional(),
+  updatedAt: z.lazy(() => SortOrderSchema).optional()
+}).strict();
+
+export const ViralStitchAvgOrderByAggregateInputSchema: z.ZodType<Prisma.ViralStitchAvgOrderByAggregateInput> = z.object({
+  durationSeconds: z.lazy(() => SortOrderSchema).optional()
+}).strict();
+
+export const ViralStitchMaxOrderByAggregateInputSchema: z.ZodType<Prisma.ViralStitchMaxOrderByAggregateInput> = z.object({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  shortDemoId: z.lazy(() => SortOrderSchema).optional(),
+  hookViralVideoId: z.lazy(() => SortOrderSchema).optional(),
+  stitchedVideoUrl: z.lazy(() => SortOrderSchema).optional(),
+  durationSeconds: z.lazy(() => SortOrderSchema).optional(),
+  createdAt: z.lazy(() => SortOrderSchema).optional(),
+  updatedAt: z.lazy(() => SortOrderSchema).optional()
+}).strict();
+
+export const ViralStitchMinOrderByAggregateInputSchema: z.ZodType<Prisma.ViralStitchMinOrderByAggregateInput> = z.object({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  shortDemoId: z.lazy(() => SortOrderSchema).optional(),
+  hookViralVideoId: z.lazy(() => SortOrderSchema).optional(),
+  stitchedVideoUrl: z.lazy(() => SortOrderSchema).optional(),
+  durationSeconds: z.lazy(() => SortOrderSchema).optional(),
+  createdAt: z.lazy(() => SortOrderSchema).optional(),
+  updatedAt: z.lazy(() => SortOrderSchema).optional()
+}).strict();
+
+export const ViralStitchSumOrderByAggregateInputSchema: z.ZodType<Prisma.ViralStitchSumOrderByAggregateInput> = z.object({
+  durationSeconds: z.lazy(() => SortOrderSchema).optional()
+}).strict();
+
 export const StringFieldUpdateOperationsInputSchema: z.ZodType<Prisma.StringFieldUpdateOperationsInput> = z.object({
   set: z.string().optional()
 }).strict();
@@ -1705,12 +2008,124 @@ export const DemoVideoCreateNestedOneWithoutShortDemosInputSchema: z.ZodType<Pri
   connect: z.lazy(() => DemoVideoWhereUniqueInputSchema).optional()
 }).strict();
 
+export const ViralStitchCreateNestedManyWithoutShortDemoInputSchema: z.ZodType<Prisma.ViralStitchCreateNestedManyWithoutShortDemoInput> = z.object({
+  create: z.union([ z.lazy(() => ViralStitchCreateWithoutShortDemoInputSchema),z.lazy(() => ViralStitchCreateWithoutShortDemoInputSchema).array(),z.lazy(() => ViralStitchUncheckedCreateWithoutShortDemoInputSchema),z.lazy(() => ViralStitchUncheckedCreateWithoutShortDemoInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => ViralStitchCreateOrConnectWithoutShortDemoInputSchema),z.lazy(() => ViralStitchCreateOrConnectWithoutShortDemoInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => ViralStitchCreateManyShortDemoInputEnvelopeSchema).optional(),
+  connect: z.union([ z.lazy(() => ViralStitchWhereUniqueInputSchema),z.lazy(() => ViralStitchWhereUniqueInputSchema).array() ]).optional(),
+}).strict();
+
+export const ViralStitchUncheckedCreateNestedManyWithoutShortDemoInputSchema: z.ZodType<Prisma.ViralStitchUncheckedCreateNestedManyWithoutShortDemoInput> = z.object({
+  create: z.union([ z.lazy(() => ViralStitchCreateWithoutShortDemoInputSchema),z.lazy(() => ViralStitchCreateWithoutShortDemoInputSchema).array(),z.lazy(() => ViralStitchUncheckedCreateWithoutShortDemoInputSchema),z.lazy(() => ViralStitchUncheckedCreateWithoutShortDemoInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => ViralStitchCreateOrConnectWithoutShortDemoInputSchema),z.lazy(() => ViralStitchCreateOrConnectWithoutShortDemoInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => ViralStitchCreateManyShortDemoInputEnvelopeSchema).optional(),
+  connect: z.union([ z.lazy(() => ViralStitchWhereUniqueInputSchema),z.lazy(() => ViralStitchWhereUniqueInputSchema).array() ]).optional(),
+}).strict();
+
 export const DemoVideoUpdateOneRequiredWithoutShortDemosNestedInputSchema: z.ZodType<Prisma.DemoVideoUpdateOneRequiredWithoutShortDemosNestedInput> = z.object({
   create: z.union([ z.lazy(() => DemoVideoCreateWithoutShortDemosInputSchema),z.lazy(() => DemoVideoUncheckedCreateWithoutShortDemosInputSchema) ]).optional(),
   connectOrCreate: z.lazy(() => DemoVideoCreateOrConnectWithoutShortDemosInputSchema).optional(),
   upsert: z.lazy(() => DemoVideoUpsertWithoutShortDemosInputSchema).optional(),
   connect: z.lazy(() => DemoVideoWhereUniqueInputSchema).optional(),
   update: z.union([ z.lazy(() => DemoVideoUpdateToOneWithWhereWithoutShortDemosInputSchema),z.lazy(() => DemoVideoUpdateWithoutShortDemosInputSchema),z.lazy(() => DemoVideoUncheckedUpdateWithoutShortDemosInputSchema) ]).optional(),
+}).strict();
+
+export const ViralStitchUpdateManyWithoutShortDemoNestedInputSchema: z.ZodType<Prisma.ViralStitchUpdateManyWithoutShortDemoNestedInput> = z.object({
+  create: z.union([ z.lazy(() => ViralStitchCreateWithoutShortDemoInputSchema),z.lazy(() => ViralStitchCreateWithoutShortDemoInputSchema).array(),z.lazy(() => ViralStitchUncheckedCreateWithoutShortDemoInputSchema),z.lazy(() => ViralStitchUncheckedCreateWithoutShortDemoInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => ViralStitchCreateOrConnectWithoutShortDemoInputSchema),z.lazy(() => ViralStitchCreateOrConnectWithoutShortDemoInputSchema).array() ]).optional(),
+  upsert: z.union([ z.lazy(() => ViralStitchUpsertWithWhereUniqueWithoutShortDemoInputSchema),z.lazy(() => ViralStitchUpsertWithWhereUniqueWithoutShortDemoInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => ViralStitchCreateManyShortDemoInputEnvelopeSchema).optional(),
+  set: z.union([ z.lazy(() => ViralStitchWhereUniqueInputSchema),z.lazy(() => ViralStitchWhereUniqueInputSchema).array() ]).optional(),
+  disconnect: z.union([ z.lazy(() => ViralStitchWhereUniqueInputSchema),z.lazy(() => ViralStitchWhereUniqueInputSchema).array() ]).optional(),
+  delete: z.union([ z.lazy(() => ViralStitchWhereUniqueInputSchema),z.lazy(() => ViralStitchWhereUniqueInputSchema).array() ]).optional(),
+  connect: z.union([ z.lazy(() => ViralStitchWhereUniqueInputSchema),z.lazy(() => ViralStitchWhereUniqueInputSchema).array() ]).optional(),
+  update: z.union([ z.lazy(() => ViralStitchUpdateWithWhereUniqueWithoutShortDemoInputSchema),z.lazy(() => ViralStitchUpdateWithWhereUniqueWithoutShortDemoInputSchema).array() ]).optional(),
+  updateMany: z.union([ z.lazy(() => ViralStitchUpdateManyWithWhereWithoutShortDemoInputSchema),z.lazy(() => ViralStitchUpdateManyWithWhereWithoutShortDemoInputSchema).array() ]).optional(),
+  deleteMany: z.union([ z.lazy(() => ViralStitchScalarWhereInputSchema),z.lazy(() => ViralStitchScalarWhereInputSchema).array() ]).optional(),
+}).strict();
+
+export const ViralStitchUncheckedUpdateManyWithoutShortDemoNestedInputSchema: z.ZodType<Prisma.ViralStitchUncheckedUpdateManyWithoutShortDemoNestedInput> = z.object({
+  create: z.union([ z.lazy(() => ViralStitchCreateWithoutShortDemoInputSchema),z.lazy(() => ViralStitchCreateWithoutShortDemoInputSchema).array(),z.lazy(() => ViralStitchUncheckedCreateWithoutShortDemoInputSchema),z.lazy(() => ViralStitchUncheckedCreateWithoutShortDemoInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => ViralStitchCreateOrConnectWithoutShortDemoInputSchema),z.lazy(() => ViralStitchCreateOrConnectWithoutShortDemoInputSchema).array() ]).optional(),
+  upsert: z.union([ z.lazy(() => ViralStitchUpsertWithWhereUniqueWithoutShortDemoInputSchema),z.lazy(() => ViralStitchUpsertWithWhereUniqueWithoutShortDemoInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => ViralStitchCreateManyShortDemoInputEnvelopeSchema).optional(),
+  set: z.union([ z.lazy(() => ViralStitchWhereUniqueInputSchema),z.lazy(() => ViralStitchWhereUniqueInputSchema).array() ]).optional(),
+  disconnect: z.union([ z.lazy(() => ViralStitchWhereUniqueInputSchema),z.lazy(() => ViralStitchWhereUniqueInputSchema).array() ]).optional(),
+  delete: z.union([ z.lazy(() => ViralStitchWhereUniqueInputSchema),z.lazy(() => ViralStitchWhereUniqueInputSchema).array() ]).optional(),
+  connect: z.union([ z.lazy(() => ViralStitchWhereUniqueInputSchema),z.lazy(() => ViralStitchWhereUniqueInputSchema).array() ]).optional(),
+  update: z.union([ z.lazy(() => ViralStitchUpdateWithWhereUniqueWithoutShortDemoInputSchema),z.lazy(() => ViralStitchUpdateWithWhereUniqueWithoutShortDemoInputSchema).array() ]).optional(),
+  updateMany: z.union([ z.lazy(() => ViralStitchUpdateManyWithWhereWithoutShortDemoInputSchema),z.lazy(() => ViralStitchUpdateManyWithWhereWithoutShortDemoInputSchema).array() ]).optional(),
+  deleteMany: z.union([ z.lazy(() => ViralStitchScalarWhereInputSchema),z.lazy(() => ViralStitchScalarWhereInputSchema).array() ]).optional(),
+}).strict();
+
+export const ViralStitchCreateNestedManyWithoutHookViralVideoInputSchema: z.ZodType<Prisma.ViralStitchCreateNestedManyWithoutHookViralVideoInput> = z.object({
+  create: z.union([ z.lazy(() => ViralStitchCreateWithoutHookViralVideoInputSchema),z.lazy(() => ViralStitchCreateWithoutHookViralVideoInputSchema).array(),z.lazy(() => ViralStitchUncheckedCreateWithoutHookViralVideoInputSchema),z.lazy(() => ViralStitchUncheckedCreateWithoutHookViralVideoInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => ViralStitchCreateOrConnectWithoutHookViralVideoInputSchema),z.lazy(() => ViralStitchCreateOrConnectWithoutHookViralVideoInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => ViralStitchCreateManyHookViralVideoInputEnvelopeSchema).optional(),
+  connect: z.union([ z.lazy(() => ViralStitchWhereUniqueInputSchema),z.lazy(() => ViralStitchWhereUniqueInputSchema).array() ]).optional(),
+}).strict();
+
+export const ViralStitchUncheckedCreateNestedManyWithoutHookViralVideoInputSchema: z.ZodType<Prisma.ViralStitchUncheckedCreateNestedManyWithoutHookViralVideoInput> = z.object({
+  create: z.union([ z.lazy(() => ViralStitchCreateWithoutHookViralVideoInputSchema),z.lazy(() => ViralStitchCreateWithoutHookViralVideoInputSchema).array(),z.lazy(() => ViralStitchUncheckedCreateWithoutHookViralVideoInputSchema),z.lazy(() => ViralStitchUncheckedCreateWithoutHookViralVideoInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => ViralStitchCreateOrConnectWithoutHookViralVideoInputSchema),z.lazy(() => ViralStitchCreateOrConnectWithoutHookViralVideoInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => ViralStitchCreateManyHookViralVideoInputEnvelopeSchema).optional(),
+  connect: z.union([ z.lazy(() => ViralStitchWhereUniqueInputSchema),z.lazy(() => ViralStitchWhereUniqueInputSchema).array() ]).optional(),
+}).strict();
+
+export const ViralStitchUpdateManyWithoutHookViralVideoNestedInputSchema: z.ZodType<Prisma.ViralStitchUpdateManyWithoutHookViralVideoNestedInput> = z.object({
+  create: z.union([ z.lazy(() => ViralStitchCreateWithoutHookViralVideoInputSchema),z.lazy(() => ViralStitchCreateWithoutHookViralVideoInputSchema).array(),z.lazy(() => ViralStitchUncheckedCreateWithoutHookViralVideoInputSchema),z.lazy(() => ViralStitchUncheckedCreateWithoutHookViralVideoInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => ViralStitchCreateOrConnectWithoutHookViralVideoInputSchema),z.lazy(() => ViralStitchCreateOrConnectWithoutHookViralVideoInputSchema).array() ]).optional(),
+  upsert: z.union([ z.lazy(() => ViralStitchUpsertWithWhereUniqueWithoutHookViralVideoInputSchema),z.lazy(() => ViralStitchUpsertWithWhereUniqueWithoutHookViralVideoInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => ViralStitchCreateManyHookViralVideoInputEnvelopeSchema).optional(),
+  set: z.union([ z.lazy(() => ViralStitchWhereUniqueInputSchema),z.lazy(() => ViralStitchWhereUniqueInputSchema).array() ]).optional(),
+  disconnect: z.union([ z.lazy(() => ViralStitchWhereUniqueInputSchema),z.lazy(() => ViralStitchWhereUniqueInputSchema).array() ]).optional(),
+  delete: z.union([ z.lazy(() => ViralStitchWhereUniqueInputSchema),z.lazy(() => ViralStitchWhereUniqueInputSchema).array() ]).optional(),
+  connect: z.union([ z.lazy(() => ViralStitchWhereUniqueInputSchema),z.lazy(() => ViralStitchWhereUniqueInputSchema).array() ]).optional(),
+  update: z.union([ z.lazy(() => ViralStitchUpdateWithWhereUniqueWithoutHookViralVideoInputSchema),z.lazy(() => ViralStitchUpdateWithWhereUniqueWithoutHookViralVideoInputSchema).array() ]).optional(),
+  updateMany: z.union([ z.lazy(() => ViralStitchUpdateManyWithWhereWithoutHookViralVideoInputSchema),z.lazy(() => ViralStitchUpdateManyWithWhereWithoutHookViralVideoInputSchema).array() ]).optional(),
+  deleteMany: z.union([ z.lazy(() => ViralStitchScalarWhereInputSchema),z.lazy(() => ViralStitchScalarWhereInputSchema).array() ]).optional(),
+}).strict();
+
+export const ViralStitchUncheckedUpdateManyWithoutHookViralVideoNestedInputSchema: z.ZodType<Prisma.ViralStitchUncheckedUpdateManyWithoutHookViralVideoNestedInput> = z.object({
+  create: z.union([ z.lazy(() => ViralStitchCreateWithoutHookViralVideoInputSchema),z.lazy(() => ViralStitchCreateWithoutHookViralVideoInputSchema).array(),z.lazy(() => ViralStitchUncheckedCreateWithoutHookViralVideoInputSchema),z.lazy(() => ViralStitchUncheckedCreateWithoutHookViralVideoInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => ViralStitchCreateOrConnectWithoutHookViralVideoInputSchema),z.lazy(() => ViralStitchCreateOrConnectWithoutHookViralVideoInputSchema).array() ]).optional(),
+  upsert: z.union([ z.lazy(() => ViralStitchUpsertWithWhereUniqueWithoutHookViralVideoInputSchema),z.lazy(() => ViralStitchUpsertWithWhereUniqueWithoutHookViralVideoInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => ViralStitchCreateManyHookViralVideoInputEnvelopeSchema).optional(),
+  set: z.union([ z.lazy(() => ViralStitchWhereUniqueInputSchema),z.lazy(() => ViralStitchWhereUniqueInputSchema).array() ]).optional(),
+  disconnect: z.union([ z.lazy(() => ViralStitchWhereUniqueInputSchema),z.lazy(() => ViralStitchWhereUniqueInputSchema).array() ]).optional(),
+  delete: z.union([ z.lazy(() => ViralStitchWhereUniqueInputSchema),z.lazy(() => ViralStitchWhereUniqueInputSchema).array() ]).optional(),
+  connect: z.union([ z.lazy(() => ViralStitchWhereUniqueInputSchema),z.lazy(() => ViralStitchWhereUniqueInputSchema).array() ]).optional(),
+  update: z.union([ z.lazy(() => ViralStitchUpdateWithWhereUniqueWithoutHookViralVideoInputSchema),z.lazy(() => ViralStitchUpdateWithWhereUniqueWithoutHookViralVideoInputSchema).array() ]).optional(),
+  updateMany: z.union([ z.lazy(() => ViralStitchUpdateManyWithWhereWithoutHookViralVideoInputSchema),z.lazy(() => ViralStitchUpdateManyWithWhereWithoutHookViralVideoInputSchema).array() ]).optional(),
+  deleteMany: z.union([ z.lazy(() => ViralStitchScalarWhereInputSchema),z.lazy(() => ViralStitchScalarWhereInputSchema).array() ]).optional(),
+}).strict();
+
+export const ShortDemoCreateNestedOneWithoutViralStitchesInputSchema: z.ZodType<Prisma.ShortDemoCreateNestedOneWithoutViralStitchesInput> = z.object({
+  create: z.union([ z.lazy(() => ShortDemoCreateWithoutViralStitchesInputSchema),z.lazy(() => ShortDemoUncheckedCreateWithoutViralStitchesInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => ShortDemoCreateOrConnectWithoutViralStitchesInputSchema).optional(),
+  connect: z.lazy(() => ShortDemoWhereUniqueInputSchema).optional()
+}).strict();
+
+export const HookViralVideoCreateNestedOneWithoutViralStitchesInputSchema: z.ZodType<Prisma.HookViralVideoCreateNestedOneWithoutViralStitchesInput> = z.object({
+  create: z.union([ z.lazy(() => HookViralVideoCreateWithoutViralStitchesInputSchema),z.lazy(() => HookViralVideoUncheckedCreateWithoutViralStitchesInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => HookViralVideoCreateOrConnectWithoutViralStitchesInputSchema).optional(),
+  connect: z.lazy(() => HookViralVideoWhereUniqueInputSchema).optional()
+}).strict();
+
+export const ShortDemoUpdateOneRequiredWithoutViralStitchesNestedInputSchema: z.ZodType<Prisma.ShortDemoUpdateOneRequiredWithoutViralStitchesNestedInput> = z.object({
+  create: z.union([ z.lazy(() => ShortDemoCreateWithoutViralStitchesInputSchema),z.lazy(() => ShortDemoUncheckedCreateWithoutViralStitchesInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => ShortDemoCreateOrConnectWithoutViralStitchesInputSchema).optional(),
+  upsert: z.lazy(() => ShortDemoUpsertWithoutViralStitchesInputSchema).optional(),
+  connect: z.lazy(() => ShortDemoWhereUniqueInputSchema).optional(),
+  update: z.union([ z.lazy(() => ShortDemoUpdateToOneWithWhereWithoutViralStitchesInputSchema),z.lazy(() => ShortDemoUpdateWithoutViralStitchesInputSchema),z.lazy(() => ShortDemoUncheckedUpdateWithoutViralStitchesInputSchema) ]).optional(),
+}).strict();
+
+export const HookViralVideoUpdateOneRequiredWithoutViralStitchesNestedInputSchema: z.ZodType<Prisma.HookViralVideoUpdateOneRequiredWithoutViralStitchesNestedInput> = z.object({
+  create: z.union([ z.lazy(() => HookViralVideoCreateWithoutViralStitchesInputSchema),z.lazy(() => HookViralVideoUncheckedCreateWithoutViralStitchesInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => HookViralVideoCreateOrConnectWithoutViralStitchesInputSchema).optional(),
+  upsert: z.lazy(() => HookViralVideoUpsertWithoutViralStitchesInputSchema).optional(),
+  connect: z.lazy(() => HookViralVideoWhereUniqueInputSchema).optional(),
+  update: z.union([ z.lazy(() => HookViralVideoUpdateToOneWithWhereWithoutViralStitchesInputSchema),z.lazy(() => HookViralVideoUpdateWithoutViralStitchesInputSchema),z.lazy(() => HookViralVideoUncheckedUpdateWithoutViralStitchesInputSchema) ]).optional(),
 }).strict();
 
 export const NestedStringFilterSchema: z.ZodType<Prisma.NestedStringFilter> = z.object({
@@ -1909,6 +2324,7 @@ export const ShortDemoCreateWithoutDemoVideoInputSchema: z.ZodType<Prisma.ShortD
   productInfo: z.string().optional().nullable(),
   segments: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
   colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+  viralStitches: z.lazy(() => ViralStitchCreateNestedManyWithoutShortDemoInputSchema).optional()
 }).strict();
 
 export const ShortDemoUncheckedCreateWithoutDemoVideoInputSchema: z.ZodType<Prisma.ShortDemoUncheckedCreateWithoutDemoVideoInput> = z.object({
@@ -1920,6 +2336,7 @@ export const ShortDemoUncheckedCreateWithoutDemoVideoInputSchema: z.ZodType<Pris
   productInfo: z.string().optional().nullable(),
   segments: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
   colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+  viralStitches: z.lazy(() => ViralStitchUncheckedCreateNestedManyWithoutShortDemoInputSchema).optional()
 }).strict();
 
 export const ShortDemoCreateOrConnectWithoutDemoVideoInputSchema: z.ZodType<Prisma.ShortDemoCreateOrConnectWithoutDemoVideoInput> = z.object({
@@ -1984,6 +2401,34 @@ export const DemoVideoCreateOrConnectWithoutShortDemosInputSchema: z.ZodType<Pri
   create: z.union([ z.lazy(() => DemoVideoCreateWithoutShortDemosInputSchema),z.lazy(() => DemoVideoUncheckedCreateWithoutShortDemosInputSchema) ]),
 }).strict();
 
+export const ViralStitchCreateWithoutShortDemoInputSchema: z.ZodType<Prisma.ViralStitchCreateWithoutShortDemoInput> = z.object({
+  id: z.string().cuid().optional(),
+  stitchedVideoUrl: z.string(),
+  durationSeconds: z.number().int(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+  hookViralVideo: z.lazy(() => HookViralVideoCreateNestedOneWithoutViralStitchesInputSchema)
+}).strict();
+
+export const ViralStitchUncheckedCreateWithoutShortDemoInputSchema: z.ZodType<Prisma.ViralStitchUncheckedCreateWithoutShortDemoInput> = z.object({
+  id: z.string().cuid().optional(),
+  hookViralVideoId: z.string(),
+  stitchedVideoUrl: z.string(),
+  durationSeconds: z.number().int(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional()
+}).strict();
+
+export const ViralStitchCreateOrConnectWithoutShortDemoInputSchema: z.ZodType<Prisma.ViralStitchCreateOrConnectWithoutShortDemoInput> = z.object({
+  where: z.lazy(() => ViralStitchWhereUniqueInputSchema),
+  create: z.union([ z.lazy(() => ViralStitchCreateWithoutShortDemoInputSchema),z.lazy(() => ViralStitchUncheckedCreateWithoutShortDemoInputSchema) ]),
+}).strict();
+
+export const ViralStitchCreateManyShortDemoInputEnvelopeSchema: z.ZodType<Prisma.ViralStitchCreateManyShortDemoInputEnvelope> = z.object({
+  data: z.union([ z.lazy(() => ViralStitchCreateManyShortDemoInputSchema),z.lazy(() => ViralStitchCreateManyShortDemoInputSchema).array() ]),
+  skipDuplicates: z.boolean().optional()
+}).strict();
+
 export const DemoVideoUpsertWithoutShortDemosInputSchema: z.ZodType<Prisma.DemoVideoUpsertWithoutShortDemosInput> = z.object({
   update: z.union([ z.lazy(() => DemoVideoUpdateWithoutShortDemosInputSchema),z.lazy(() => DemoVideoUncheckedUpdateWithoutShortDemosInputSchema) ]),
   create: z.union([ z.lazy(() => DemoVideoCreateWithoutShortDemosInputSchema),z.lazy(() => DemoVideoUncheckedCreateWithoutShortDemosInputSchema) ]),
@@ -2011,6 +2456,235 @@ export const DemoVideoUncheckedUpdateWithoutShortDemosInputSchema: z.ZodType<Pri
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
+export const ViralStitchUpsertWithWhereUniqueWithoutShortDemoInputSchema: z.ZodType<Prisma.ViralStitchUpsertWithWhereUniqueWithoutShortDemoInput> = z.object({
+  where: z.lazy(() => ViralStitchWhereUniqueInputSchema),
+  update: z.union([ z.lazy(() => ViralStitchUpdateWithoutShortDemoInputSchema),z.lazy(() => ViralStitchUncheckedUpdateWithoutShortDemoInputSchema) ]),
+  create: z.union([ z.lazy(() => ViralStitchCreateWithoutShortDemoInputSchema),z.lazy(() => ViralStitchUncheckedCreateWithoutShortDemoInputSchema) ]),
+}).strict();
+
+export const ViralStitchUpdateWithWhereUniqueWithoutShortDemoInputSchema: z.ZodType<Prisma.ViralStitchUpdateWithWhereUniqueWithoutShortDemoInput> = z.object({
+  where: z.lazy(() => ViralStitchWhereUniqueInputSchema),
+  data: z.union([ z.lazy(() => ViralStitchUpdateWithoutShortDemoInputSchema),z.lazy(() => ViralStitchUncheckedUpdateWithoutShortDemoInputSchema) ]),
+}).strict();
+
+export const ViralStitchUpdateManyWithWhereWithoutShortDemoInputSchema: z.ZodType<Prisma.ViralStitchUpdateManyWithWhereWithoutShortDemoInput> = z.object({
+  where: z.lazy(() => ViralStitchScalarWhereInputSchema),
+  data: z.union([ z.lazy(() => ViralStitchUpdateManyMutationInputSchema),z.lazy(() => ViralStitchUncheckedUpdateManyWithoutShortDemoInputSchema) ]),
+}).strict();
+
+export const ViralStitchScalarWhereInputSchema: z.ZodType<Prisma.ViralStitchScalarWhereInput> = z.object({
+  AND: z.union([ z.lazy(() => ViralStitchScalarWhereInputSchema),z.lazy(() => ViralStitchScalarWhereInputSchema).array() ]).optional(),
+  OR: z.lazy(() => ViralStitchScalarWhereInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => ViralStitchScalarWhereInputSchema),z.lazy(() => ViralStitchScalarWhereInputSchema).array() ]).optional(),
+  id: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  shortDemoId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  hookViralVideoId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  stitchedVideoUrl: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  durationSeconds: z.union([ z.lazy(() => IntFilterSchema),z.number() ]).optional(),
+  createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
+  updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
+}).strict();
+
+export const ViralStitchCreateWithoutHookViralVideoInputSchema: z.ZodType<Prisma.ViralStitchCreateWithoutHookViralVideoInput> = z.object({
+  id: z.string().cuid().optional(),
+  stitchedVideoUrl: z.string(),
+  durationSeconds: z.number().int(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+  shortDemo: z.lazy(() => ShortDemoCreateNestedOneWithoutViralStitchesInputSchema)
+}).strict();
+
+export const ViralStitchUncheckedCreateWithoutHookViralVideoInputSchema: z.ZodType<Prisma.ViralStitchUncheckedCreateWithoutHookViralVideoInput> = z.object({
+  id: z.string().cuid().optional(),
+  shortDemoId: z.string(),
+  stitchedVideoUrl: z.string(),
+  durationSeconds: z.number().int(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional()
+}).strict();
+
+export const ViralStitchCreateOrConnectWithoutHookViralVideoInputSchema: z.ZodType<Prisma.ViralStitchCreateOrConnectWithoutHookViralVideoInput> = z.object({
+  where: z.lazy(() => ViralStitchWhereUniqueInputSchema),
+  create: z.union([ z.lazy(() => ViralStitchCreateWithoutHookViralVideoInputSchema),z.lazy(() => ViralStitchUncheckedCreateWithoutHookViralVideoInputSchema) ]),
+}).strict();
+
+export const ViralStitchCreateManyHookViralVideoInputEnvelopeSchema: z.ZodType<Prisma.ViralStitchCreateManyHookViralVideoInputEnvelope> = z.object({
+  data: z.union([ z.lazy(() => ViralStitchCreateManyHookViralVideoInputSchema),z.lazy(() => ViralStitchCreateManyHookViralVideoInputSchema).array() ]),
+  skipDuplicates: z.boolean().optional()
+}).strict();
+
+export const ViralStitchUpsertWithWhereUniqueWithoutHookViralVideoInputSchema: z.ZodType<Prisma.ViralStitchUpsertWithWhereUniqueWithoutHookViralVideoInput> = z.object({
+  where: z.lazy(() => ViralStitchWhereUniqueInputSchema),
+  update: z.union([ z.lazy(() => ViralStitchUpdateWithoutHookViralVideoInputSchema),z.lazy(() => ViralStitchUncheckedUpdateWithoutHookViralVideoInputSchema) ]),
+  create: z.union([ z.lazy(() => ViralStitchCreateWithoutHookViralVideoInputSchema),z.lazy(() => ViralStitchUncheckedCreateWithoutHookViralVideoInputSchema) ]),
+}).strict();
+
+export const ViralStitchUpdateWithWhereUniqueWithoutHookViralVideoInputSchema: z.ZodType<Prisma.ViralStitchUpdateWithWhereUniqueWithoutHookViralVideoInput> = z.object({
+  where: z.lazy(() => ViralStitchWhereUniqueInputSchema),
+  data: z.union([ z.lazy(() => ViralStitchUpdateWithoutHookViralVideoInputSchema),z.lazy(() => ViralStitchUncheckedUpdateWithoutHookViralVideoInputSchema) ]),
+}).strict();
+
+export const ViralStitchUpdateManyWithWhereWithoutHookViralVideoInputSchema: z.ZodType<Prisma.ViralStitchUpdateManyWithWhereWithoutHookViralVideoInput> = z.object({
+  where: z.lazy(() => ViralStitchScalarWhereInputSchema),
+  data: z.union([ z.lazy(() => ViralStitchUpdateManyMutationInputSchema),z.lazy(() => ViralStitchUncheckedUpdateManyWithoutHookViralVideoInputSchema) ]),
+}).strict();
+
+export const ShortDemoCreateWithoutViralStitchesInputSchema: z.ZodType<Prisma.ShortDemoCreateWithoutViralStitchesInput> = z.object({
+  id: z.string().cuid().optional(),
+  durationSeconds: z.number().int(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+  demoCutUrl: z.string(),
+  productInfo: z.string().optional().nullable(),
+  segments: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
+  colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+  demoVideo: z.lazy(() => DemoVideoCreateNestedOneWithoutShortDemosInputSchema)
+}).strict();
+
+export const ShortDemoUncheckedCreateWithoutViralStitchesInputSchema: z.ZodType<Prisma.ShortDemoUncheckedCreateWithoutViralStitchesInput> = z.object({
+  id: z.string().cuid().optional(),
+  demoVideoId: z.string(),
+  durationSeconds: z.number().int(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+  demoCutUrl: z.string(),
+  productInfo: z.string().optional().nullable(),
+  segments: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
+  colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+}).strict();
+
+export const ShortDemoCreateOrConnectWithoutViralStitchesInputSchema: z.ZodType<Prisma.ShortDemoCreateOrConnectWithoutViralStitchesInput> = z.object({
+  where: z.lazy(() => ShortDemoWhereUniqueInputSchema),
+  create: z.union([ z.lazy(() => ShortDemoCreateWithoutViralStitchesInputSchema),z.lazy(() => ShortDemoUncheckedCreateWithoutViralStitchesInputSchema) ]),
+}).strict();
+
+export const HookViralVideoCreateWithoutViralStitchesInputSchema: z.ZodType<Prisma.HookViralVideoCreateWithoutViralStitchesInput> = z.object({
+  id: z.string().cuid().optional(),
+  webpageUrl: z.string(),
+  s3Url: z.string(),
+  hookEndTimestamp: z.string(),
+  hookCutConfidence: z.string().optional().nullable(),
+  hookCutUrl: z.string().optional().nullable(),
+  hookInfo: z.string().optional().nullable(),
+  title: z.string(),
+  description: z.string().optional().nullable(),
+  views: z.number().int().optional(),
+  comments: z.number().int().optional(),
+  likes: z.number().int().optional(),
+  durationSeconds: z.number().int(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+  colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+}).strict();
+
+export const HookViralVideoUncheckedCreateWithoutViralStitchesInputSchema: z.ZodType<Prisma.HookViralVideoUncheckedCreateWithoutViralStitchesInput> = z.object({
+  id: z.string().cuid().optional(),
+  webpageUrl: z.string(),
+  s3Url: z.string(),
+  hookEndTimestamp: z.string(),
+  hookCutConfidence: z.string().optional().nullable(),
+  hookCutUrl: z.string().optional().nullable(),
+  hookInfo: z.string().optional().nullable(),
+  title: z.string(),
+  description: z.string().optional().nullable(),
+  views: z.number().int().optional(),
+  comments: z.number().int().optional(),
+  likes: z.number().int().optional(),
+  durationSeconds: z.number().int(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+  colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+}).strict();
+
+export const HookViralVideoCreateOrConnectWithoutViralStitchesInputSchema: z.ZodType<Prisma.HookViralVideoCreateOrConnectWithoutViralStitchesInput> = z.object({
+  where: z.lazy(() => HookViralVideoWhereUniqueInputSchema),
+  create: z.union([ z.lazy(() => HookViralVideoCreateWithoutViralStitchesInputSchema),z.lazy(() => HookViralVideoUncheckedCreateWithoutViralStitchesInputSchema) ]),
+}).strict();
+
+export const ShortDemoUpsertWithoutViralStitchesInputSchema: z.ZodType<Prisma.ShortDemoUpsertWithoutViralStitchesInput> = z.object({
+  update: z.union([ z.lazy(() => ShortDemoUpdateWithoutViralStitchesInputSchema),z.lazy(() => ShortDemoUncheckedUpdateWithoutViralStitchesInputSchema) ]),
+  create: z.union([ z.lazy(() => ShortDemoCreateWithoutViralStitchesInputSchema),z.lazy(() => ShortDemoUncheckedCreateWithoutViralStitchesInputSchema) ]),
+  where: z.lazy(() => ShortDemoWhereInputSchema).optional()
+}).strict();
+
+export const ShortDemoUpdateToOneWithWhereWithoutViralStitchesInputSchema: z.ZodType<Prisma.ShortDemoUpdateToOneWithWhereWithoutViralStitchesInput> = z.object({
+  where: z.lazy(() => ShortDemoWhereInputSchema).optional(),
+  data: z.union([ z.lazy(() => ShortDemoUpdateWithoutViralStitchesInputSchema),z.lazy(() => ShortDemoUncheckedUpdateWithoutViralStitchesInputSchema) ]),
+}).strict();
+
+export const ShortDemoUpdateWithoutViralStitchesInputSchema: z.ZodType<Prisma.ShortDemoUpdateWithoutViralStitchesInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  durationSeconds: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  demoCutUrl: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  productInfo: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  segments: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+  colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+  demoVideo: z.lazy(() => DemoVideoUpdateOneRequiredWithoutShortDemosNestedInputSchema).optional()
+}).strict();
+
+export const ShortDemoUncheckedUpdateWithoutViralStitchesInputSchema: z.ZodType<Prisma.ShortDemoUncheckedUpdateWithoutViralStitchesInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  demoVideoId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  durationSeconds: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  demoCutUrl: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  productInfo: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  segments: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+  colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+}).strict();
+
+export const HookViralVideoUpsertWithoutViralStitchesInputSchema: z.ZodType<Prisma.HookViralVideoUpsertWithoutViralStitchesInput> = z.object({
+  update: z.union([ z.lazy(() => HookViralVideoUpdateWithoutViralStitchesInputSchema),z.lazy(() => HookViralVideoUncheckedUpdateWithoutViralStitchesInputSchema) ]),
+  create: z.union([ z.lazy(() => HookViralVideoCreateWithoutViralStitchesInputSchema),z.lazy(() => HookViralVideoUncheckedCreateWithoutViralStitchesInputSchema) ]),
+  where: z.lazy(() => HookViralVideoWhereInputSchema).optional()
+}).strict();
+
+export const HookViralVideoUpdateToOneWithWhereWithoutViralStitchesInputSchema: z.ZodType<Prisma.HookViralVideoUpdateToOneWithWhereWithoutViralStitchesInput> = z.object({
+  where: z.lazy(() => HookViralVideoWhereInputSchema).optional(),
+  data: z.union([ z.lazy(() => HookViralVideoUpdateWithoutViralStitchesInputSchema),z.lazy(() => HookViralVideoUncheckedUpdateWithoutViralStitchesInputSchema) ]),
+}).strict();
+
+export const HookViralVideoUpdateWithoutViralStitchesInputSchema: z.ZodType<Prisma.HookViralVideoUpdateWithoutViralStitchesInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  webpageUrl: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  s3Url: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  hookEndTimestamp: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  hookCutConfidence: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  hookCutUrl: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  hookInfo: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  views: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  comments: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  likes: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  durationSeconds: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+}).strict();
+
+export const HookViralVideoUncheckedUpdateWithoutViralStitchesInputSchema: z.ZodType<Prisma.HookViralVideoUncheckedUpdateWithoutViralStitchesInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  webpageUrl: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  s3Url: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  hookEndTimestamp: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  hookCutConfidence: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  hookCutUrl: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  hookInfo: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  description: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  views: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  comments: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  likes: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  durationSeconds: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+}).strict();
+
 export const ShortDemoCreateManyDemoVideoInputSchema: z.ZodType<Prisma.ShortDemoCreateManyDemoVideoInput> = z.object({
   id: z.string().cuid().optional(),
   durationSeconds: z.number().int(),
@@ -2031,6 +2705,7 @@ export const ShortDemoUpdateWithoutDemoVideoInputSchema: z.ZodType<Prisma.ShortD
   productInfo: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   segments: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+  viralStitches: z.lazy(() => ViralStitchUpdateManyWithoutShortDemoNestedInputSchema).optional()
 }).strict();
 
 export const ShortDemoUncheckedUpdateWithoutDemoVideoInputSchema: z.ZodType<Prisma.ShortDemoUncheckedUpdateWithoutDemoVideoInput> = z.object({
@@ -2042,6 +2717,7 @@ export const ShortDemoUncheckedUpdateWithoutDemoVideoInputSchema: z.ZodType<Pris
   productInfo: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   segments: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+  viralStitches: z.lazy(() => ViralStitchUncheckedUpdateManyWithoutShortDemoNestedInputSchema).optional()
 }).strict();
 
 export const ShortDemoUncheckedUpdateManyWithoutDemoVideoInputSchema: z.ZodType<Prisma.ShortDemoUncheckedUpdateManyWithoutDemoVideoInput> = z.object({
@@ -2053,6 +2729,78 @@ export const ShortDemoUncheckedUpdateManyWithoutDemoVideoInputSchema: z.ZodType<
   productInfo: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   segments: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+}).strict();
+
+export const ViralStitchCreateManyShortDemoInputSchema: z.ZodType<Prisma.ViralStitchCreateManyShortDemoInput> = z.object({
+  id: z.string().cuid().optional(),
+  hookViralVideoId: z.string(),
+  stitchedVideoUrl: z.string(),
+  durationSeconds: z.number().int(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional()
+}).strict();
+
+export const ViralStitchUpdateWithoutShortDemoInputSchema: z.ZodType<Prisma.ViralStitchUpdateWithoutShortDemoInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  stitchedVideoUrl: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  durationSeconds: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  hookViralVideo: z.lazy(() => HookViralVideoUpdateOneRequiredWithoutViralStitchesNestedInputSchema).optional()
+}).strict();
+
+export const ViralStitchUncheckedUpdateWithoutShortDemoInputSchema: z.ZodType<Prisma.ViralStitchUncheckedUpdateWithoutShortDemoInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  hookViralVideoId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  stitchedVideoUrl: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  durationSeconds: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+}).strict();
+
+export const ViralStitchUncheckedUpdateManyWithoutShortDemoInputSchema: z.ZodType<Prisma.ViralStitchUncheckedUpdateManyWithoutShortDemoInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  hookViralVideoId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  stitchedVideoUrl: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  durationSeconds: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+}).strict();
+
+export const ViralStitchCreateManyHookViralVideoInputSchema: z.ZodType<Prisma.ViralStitchCreateManyHookViralVideoInput> = z.object({
+  id: z.string().cuid().optional(),
+  shortDemoId: z.string(),
+  stitchedVideoUrl: z.string(),
+  durationSeconds: z.number().int(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional()
+}).strict();
+
+export const ViralStitchUpdateWithoutHookViralVideoInputSchema: z.ZodType<Prisma.ViralStitchUpdateWithoutHookViralVideoInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  stitchedVideoUrl: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  durationSeconds: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  shortDemo: z.lazy(() => ShortDemoUpdateOneRequiredWithoutViralStitchesNestedInputSchema).optional()
+}).strict();
+
+export const ViralStitchUncheckedUpdateWithoutHookViralVideoInputSchema: z.ZodType<Prisma.ViralStitchUncheckedUpdateWithoutHookViralVideoInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  shortDemoId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  stitchedVideoUrl: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  durationSeconds: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+}).strict();
+
+export const ViralStitchUncheckedUpdateManyWithoutHookViralVideoInputSchema: z.ZodType<Prisma.ViralStitchUncheckedUpdateManyWithoutHookViralVideoInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  shortDemoId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  stitchedVideoUrl: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  durationSeconds: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
 /////////////////////////////////////////
@@ -2299,6 +3047,7 @@ export const ShortDemoFindUniqueOrThrowArgsSchema: z.ZodType<Prisma.ShortDemoFin
 
 export const HookViralVideoFindFirstArgsSchema: z.ZodType<Prisma.HookViralVideoFindFirstArgs> = z.object({
   select: HookViralVideoSelectSchema.optional(),
+  include: HookViralVideoIncludeSchema.optional(),
   where: HookViralVideoWhereInputSchema.optional(),
   orderBy: z.union([ HookViralVideoOrderByWithRelationInputSchema.array(),HookViralVideoOrderByWithRelationInputSchema ]).optional(),
   cursor: HookViralVideoWhereUniqueInputSchema.optional(),
@@ -2309,6 +3058,7 @@ export const HookViralVideoFindFirstArgsSchema: z.ZodType<Prisma.HookViralVideoF
 
 export const HookViralVideoFindFirstOrThrowArgsSchema: z.ZodType<Prisma.HookViralVideoFindFirstOrThrowArgs> = z.object({
   select: HookViralVideoSelectSchema.optional(),
+  include: HookViralVideoIncludeSchema.optional(),
   where: HookViralVideoWhereInputSchema.optional(),
   orderBy: z.union([ HookViralVideoOrderByWithRelationInputSchema.array(),HookViralVideoOrderByWithRelationInputSchema ]).optional(),
   cursor: HookViralVideoWhereUniqueInputSchema.optional(),
@@ -2319,6 +3069,7 @@ export const HookViralVideoFindFirstOrThrowArgsSchema: z.ZodType<Prisma.HookVira
 
 export const HookViralVideoFindManyArgsSchema: z.ZodType<Prisma.HookViralVideoFindManyArgs> = z.object({
   select: HookViralVideoSelectSchema.optional(),
+  include: HookViralVideoIncludeSchema.optional(),
   where: HookViralVideoWhereInputSchema.optional(),
   orderBy: z.union([ HookViralVideoOrderByWithRelationInputSchema.array(),HookViralVideoOrderByWithRelationInputSchema ]).optional(),
   cursor: HookViralVideoWhereUniqueInputSchema.optional(),
@@ -2346,12 +3097,76 @@ export const HookViralVideoGroupByArgsSchema: z.ZodType<Prisma.HookViralVideoGro
 
 export const HookViralVideoFindUniqueArgsSchema: z.ZodType<Prisma.HookViralVideoFindUniqueArgs> = z.object({
   select: HookViralVideoSelectSchema.optional(),
+  include: HookViralVideoIncludeSchema.optional(),
   where: HookViralVideoWhereUniqueInputSchema,
 }).strict() ;
 
 export const HookViralVideoFindUniqueOrThrowArgsSchema: z.ZodType<Prisma.HookViralVideoFindUniqueOrThrowArgs> = z.object({
   select: HookViralVideoSelectSchema.optional(),
+  include: HookViralVideoIncludeSchema.optional(),
   where: HookViralVideoWhereUniqueInputSchema,
+}).strict() ;
+
+export const ViralStitchFindFirstArgsSchema: z.ZodType<Prisma.ViralStitchFindFirstArgs> = z.object({
+  select: ViralStitchSelectSchema.optional(),
+  include: ViralStitchIncludeSchema.optional(),
+  where: ViralStitchWhereInputSchema.optional(),
+  orderBy: z.union([ ViralStitchOrderByWithRelationInputSchema.array(),ViralStitchOrderByWithRelationInputSchema ]).optional(),
+  cursor: ViralStitchWhereUniqueInputSchema.optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
+  distinct: z.union([ ViralStitchScalarFieldEnumSchema,ViralStitchScalarFieldEnumSchema.array() ]).optional(),
+}).strict() ;
+
+export const ViralStitchFindFirstOrThrowArgsSchema: z.ZodType<Prisma.ViralStitchFindFirstOrThrowArgs> = z.object({
+  select: ViralStitchSelectSchema.optional(),
+  include: ViralStitchIncludeSchema.optional(),
+  where: ViralStitchWhereInputSchema.optional(),
+  orderBy: z.union([ ViralStitchOrderByWithRelationInputSchema.array(),ViralStitchOrderByWithRelationInputSchema ]).optional(),
+  cursor: ViralStitchWhereUniqueInputSchema.optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
+  distinct: z.union([ ViralStitchScalarFieldEnumSchema,ViralStitchScalarFieldEnumSchema.array() ]).optional(),
+}).strict() ;
+
+export const ViralStitchFindManyArgsSchema: z.ZodType<Prisma.ViralStitchFindManyArgs> = z.object({
+  select: ViralStitchSelectSchema.optional(),
+  include: ViralStitchIncludeSchema.optional(),
+  where: ViralStitchWhereInputSchema.optional(),
+  orderBy: z.union([ ViralStitchOrderByWithRelationInputSchema.array(),ViralStitchOrderByWithRelationInputSchema ]).optional(),
+  cursor: ViralStitchWhereUniqueInputSchema.optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
+  distinct: z.union([ ViralStitchScalarFieldEnumSchema,ViralStitchScalarFieldEnumSchema.array() ]).optional(),
+}).strict() ;
+
+export const ViralStitchAggregateArgsSchema: z.ZodType<Prisma.ViralStitchAggregateArgs> = z.object({
+  where: ViralStitchWhereInputSchema.optional(),
+  orderBy: z.union([ ViralStitchOrderByWithRelationInputSchema.array(),ViralStitchOrderByWithRelationInputSchema ]).optional(),
+  cursor: ViralStitchWhereUniqueInputSchema.optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
+}).strict() ;
+
+export const ViralStitchGroupByArgsSchema: z.ZodType<Prisma.ViralStitchGroupByArgs> = z.object({
+  where: ViralStitchWhereInputSchema.optional(),
+  orderBy: z.union([ ViralStitchOrderByWithAggregationInputSchema.array(),ViralStitchOrderByWithAggregationInputSchema ]).optional(),
+  by: ViralStitchScalarFieldEnumSchema.array(),
+  having: ViralStitchScalarWhereWithAggregatesInputSchema.optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
+}).strict() ;
+
+export const ViralStitchFindUniqueArgsSchema: z.ZodType<Prisma.ViralStitchFindUniqueArgs> = z.object({
+  select: ViralStitchSelectSchema.optional(),
+  include: ViralStitchIncludeSchema.optional(),
+  where: ViralStitchWhereUniqueInputSchema,
+}).strict() ;
+
+export const ViralStitchFindUniqueOrThrowArgsSchema: z.ZodType<Prisma.ViralStitchFindUniqueOrThrowArgs> = z.object({
+  select: ViralStitchSelectSchema.optional(),
+  include: ViralStitchIncludeSchema.optional(),
+  where: ViralStitchWhereUniqueInputSchema,
 }).strict() ;
 
 export const PostCreateArgsSchema: z.ZodType<Prisma.PostCreateArgs> = z.object({
@@ -2564,11 +3379,13 @@ export const ShortDemoDeleteManyArgsSchema: z.ZodType<Prisma.ShortDemoDeleteMany
 
 export const HookViralVideoCreateArgsSchema: z.ZodType<Prisma.HookViralVideoCreateArgs> = z.object({
   select: HookViralVideoSelectSchema.optional(),
+  include: HookViralVideoIncludeSchema.optional(),
   data: z.union([ HookViralVideoCreateInputSchema,HookViralVideoUncheckedCreateInputSchema ]),
 }).strict() ;
 
 export const HookViralVideoUpsertArgsSchema: z.ZodType<Prisma.HookViralVideoUpsertArgs> = z.object({
   select: HookViralVideoSelectSchema.optional(),
+  include: HookViralVideoIncludeSchema.optional(),
   where: HookViralVideoWhereUniqueInputSchema,
   create: z.union([ HookViralVideoCreateInputSchema,HookViralVideoUncheckedCreateInputSchema ]),
   update: z.union([ HookViralVideoUpdateInputSchema,HookViralVideoUncheckedUpdateInputSchema ]),
@@ -2586,11 +3403,13 @@ export const HookViralVideoCreateManyAndReturnArgsSchema: z.ZodType<Prisma.HookV
 
 export const HookViralVideoDeleteArgsSchema: z.ZodType<Prisma.HookViralVideoDeleteArgs> = z.object({
   select: HookViralVideoSelectSchema.optional(),
+  include: HookViralVideoIncludeSchema.optional(),
   where: HookViralVideoWhereUniqueInputSchema,
 }).strict() ;
 
 export const HookViralVideoUpdateArgsSchema: z.ZodType<Prisma.HookViralVideoUpdateArgs> = z.object({
   select: HookViralVideoSelectSchema.optional(),
+  include: HookViralVideoIncludeSchema.optional(),
   data: z.union([ HookViralVideoUpdateInputSchema,HookViralVideoUncheckedUpdateInputSchema ]),
   where: HookViralVideoWhereUniqueInputSchema,
 }).strict() ;
@@ -2609,5 +3428,59 @@ export const HookViralVideoUpdateManyAndReturnArgsSchema: z.ZodType<Prisma.HookV
 
 export const HookViralVideoDeleteManyArgsSchema: z.ZodType<Prisma.HookViralVideoDeleteManyArgs> = z.object({
   where: HookViralVideoWhereInputSchema.optional(),
+  limit: z.number().optional(),
+}).strict() ;
+
+export const ViralStitchCreateArgsSchema: z.ZodType<Prisma.ViralStitchCreateArgs> = z.object({
+  select: ViralStitchSelectSchema.optional(),
+  include: ViralStitchIncludeSchema.optional(),
+  data: z.union([ ViralStitchCreateInputSchema,ViralStitchUncheckedCreateInputSchema ]),
+}).strict() ;
+
+export const ViralStitchUpsertArgsSchema: z.ZodType<Prisma.ViralStitchUpsertArgs> = z.object({
+  select: ViralStitchSelectSchema.optional(),
+  include: ViralStitchIncludeSchema.optional(),
+  where: ViralStitchWhereUniqueInputSchema,
+  create: z.union([ ViralStitchCreateInputSchema,ViralStitchUncheckedCreateInputSchema ]),
+  update: z.union([ ViralStitchUpdateInputSchema,ViralStitchUncheckedUpdateInputSchema ]),
+}).strict() ;
+
+export const ViralStitchCreateManyArgsSchema: z.ZodType<Prisma.ViralStitchCreateManyArgs> = z.object({
+  data: z.union([ ViralStitchCreateManyInputSchema,ViralStitchCreateManyInputSchema.array() ]),
+  skipDuplicates: z.boolean().optional(),
+}).strict() ;
+
+export const ViralStitchCreateManyAndReturnArgsSchema: z.ZodType<Prisma.ViralStitchCreateManyAndReturnArgs> = z.object({
+  data: z.union([ ViralStitchCreateManyInputSchema,ViralStitchCreateManyInputSchema.array() ]),
+  skipDuplicates: z.boolean().optional(),
+}).strict() ;
+
+export const ViralStitchDeleteArgsSchema: z.ZodType<Prisma.ViralStitchDeleteArgs> = z.object({
+  select: ViralStitchSelectSchema.optional(),
+  include: ViralStitchIncludeSchema.optional(),
+  where: ViralStitchWhereUniqueInputSchema,
+}).strict() ;
+
+export const ViralStitchUpdateArgsSchema: z.ZodType<Prisma.ViralStitchUpdateArgs> = z.object({
+  select: ViralStitchSelectSchema.optional(),
+  include: ViralStitchIncludeSchema.optional(),
+  data: z.union([ ViralStitchUpdateInputSchema,ViralStitchUncheckedUpdateInputSchema ]),
+  where: ViralStitchWhereUniqueInputSchema,
+}).strict() ;
+
+export const ViralStitchUpdateManyArgsSchema: z.ZodType<Prisma.ViralStitchUpdateManyArgs> = z.object({
+  data: z.union([ ViralStitchUpdateManyMutationInputSchema,ViralStitchUncheckedUpdateManyInputSchema ]),
+  where: ViralStitchWhereInputSchema.optional(),
+  limit: z.number().optional(),
+}).strict() ;
+
+export const ViralStitchUpdateManyAndReturnArgsSchema: z.ZodType<Prisma.ViralStitchUpdateManyAndReturnArgs> = z.object({
+  data: z.union([ ViralStitchUpdateManyMutationInputSchema,ViralStitchUncheckedUpdateManyInputSchema ]),
+  where: ViralStitchWhereInputSchema.optional(),
+  limit: z.number().optional(),
+}).strict() ;
+
+export const ViralStitchDeleteManyArgsSchema: z.ZodType<Prisma.ViralStitchDeleteManyArgs> = z.object({
+  where: ViralStitchWhereInputSchema.optional(),
   limit: z.number().optional(),
 }).strict() ;

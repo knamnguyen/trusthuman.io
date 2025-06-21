@@ -71,6 +71,7 @@ model ShortDemo {
   segments              Json
   colorPalette          Json?
   demoVideo             DemoVideo              @relation(fields: [demoVideoId], references: [id], onDelete: Cascade)
+  viralStitches         ViralStitch[]
 
   @@index([demoVideoId])
   @@index([demoCutUrl])
@@ -95,8 +96,28 @@ model HookViralVideo {
   updatedAt             DateTime               @updatedAt
   colorPaletteEmbedding Unsupported("vector")?
   colorPalette          Json?
+  viralStitches         ViralStitch[]
 
   @@index([webpageUrl])
+}
+
+model ViralStitch {
+  id               String         @id @default(cuid())
+  shortDemoId      String
+  hookViralVideoId String
+  stitchedVideoUrl String
+  durationSeconds  Int
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  // Relationships
+  shortDemo      ShortDemo      @relation(fields: [shortDemoId], references: [id], onDelete: Cascade)
+  hookViralVideo HookViralVideo @relation(fields: [hookViralVideoId], references: [id], onDelete: Cascade)
+
+  @@index([shortDemoId])
+  @@index([hookViralVideoId])
+  @@index([stitchedVideoUrl])
+  @@unique([shortDemoId, hookViralVideoId])
 }
 
 enum AccessType {

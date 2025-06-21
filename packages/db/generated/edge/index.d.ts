@@ -38,6 +38,11 @@ export type ShortDemo = $Result.DefaultSelection<Prisma.$ShortDemoPayload>
  * 
  */
 export type HookViralVideo = $Result.DefaultSelection<Prisma.$HookViralVideoPayload>
+/**
+ * Model ViralStitch
+ * 
+ */
+export type ViralStitch = $Result.DefaultSelection<Prisma.$ViralStitchPayload>
 
 /**
  * Enums
@@ -233,6 +238,16 @@ export class PrismaClient<
     * ```
     */
   get hookViralVideo(): Prisma.HookViralVideoDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.viralStitch`: Exposes CRUD operations for the **ViralStitch** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ViralStitches
+    * const viralStitches = await prisma.viralStitch.findMany()
+    * ```
+    */
+  get viralStitch(): Prisma.ViralStitchDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -677,7 +692,8 @@ export namespace Prisma {
     User: 'User',
     DemoVideo: 'DemoVideo',
     ShortDemo: 'ShortDemo',
-    HookViralVideo: 'HookViralVideo'
+    HookViralVideo: 'HookViralVideo',
+    ViralStitch: 'ViralStitch'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -696,7 +712,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "post" | "user" | "demoVideo" | "shortDemo" | "hookViralVideo"
+      modelProps: "post" | "user" | "demoVideo" | "shortDemo" | "hookViralVideo" | "viralStitch"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1070,6 +1086,80 @@ export namespace Prisma {
           }
         }
       }
+      ViralStitch: {
+        payload: Prisma.$ViralStitchPayload<ExtArgs>
+        fields: Prisma.ViralStitchFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ViralStitchFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ViralStitchPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ViralStitchFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ViralStitchPayload>
+          }
+          findFirst: {
+            args: Prisma.ViralStitchFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ViralStitchPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ViralStitchFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ViralStitchPayload>
+          }
+          findMany: {
+            args: Prisma.ViralStitchFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ViralStitchPayload>[]
+          }
+          create: {
+            args: Prisma.ViralStitchCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ViralStitchPayload>
+          }
+          createMany: {
+            args: Prisma.ViralStitchCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ViralStitchCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ViralStitchPayload>[]
+          }
+          delete: {
+            args: Prisma.ViralStitchDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ViralStitchPayload>
+          }
+          update: {
+            args: Prisma.ViralStitchUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ViralStitchPayload>
+          }
+          deleteMany: {
+            args: Prisma.ViralStitchDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ViralStitchUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ViralStitchUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ViralStitchPayload>[]
+          }
+          upsert: {
+            args: Prisma.ViralStitchUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ViralStitchPayload>
+          }
+          aggregate: {
+            args: Prisma.ViralStitchAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateViralStitch>
+          }
+          groupBy: {
+            args: Prisma.ViralStitchGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ViralStitchGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ViralStitchCountArgs<ExtArgs>
+            result: $Utils.Optional<ViralStitchCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -1163,6 +1253,7 @@ export namespace Prisma {
     demoVideo?: DemoVideoOmit
     shortDemo?: ShortDemoOmit
     hookViralVideo?: HookViralVideoOmit
+    viralStitch?: ViralStitchOmit
   }
 
   /* Types for Logging */
@@ -1280,6 +1371,68 @@ export namespace Prisma {
    */
   export type DemoVideoCountOutputTypeCountShortDemosArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: ShortDemoWhereInput
+  }
+
+
+  /**
+   * Count Type ShortDemoCountOutputType
+   */
+
+  export type ShortDemoCountOutputType = {
+    viralStitches: number
+  }
+
+  export type ShortDemoCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    viralStitches?: boolean | ShortDemoCountOutputTypeCountViralStitchesArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * ShortDemoCountOutputType without action
+   */
+  export type ShortDemoCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ShortDemoCountOutputType
+     */
+    select?: ShortDemoCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * ShortDemoCountOutputType without action
+   */
+  export type ShortDemoCountOutputTypeCountViralStitchesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ViralStitchWhereInput
+  }
+
+
+  /**
+   * Count Type HookViralVideoCountOutputType
+   */
+
+  export type HookViralVideoCountOutputType = {
+    viralStitches: number
+  }
+
+  export type HookViralVideoCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    viralStitches?: boolean | HookViralVideoCountOutputTypeCountViralStitchesArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * HookViralVideoCountOutputType without action
+   */
+  export type HookViralVideoCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the HookViralVideoCountOutputType
+     */
+    select?: HookViralVideoCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * HookViralVideoCountOutputType without action
+   */
+  export type HookViralVideoCountOutputTypeCountViralStitchesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ViralStitchWhereInput
   }
 
 
@@ -4687,6 +4840,8 @@ export namespace Prisma {
     segments?: boolean
     colorPalette?: boolean
     demoVideo?: boolean | DemoVideoDefaultArgs<ExtArgs>
+    viralStitches?: boolean | ShortDemo$viralStitchesArgs<ExtArgs>
+    _count?: boolean | ShortDemoCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["shortDemo"]>
 
   export type ShortDemoSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -4730,6 +4885,8 @@ export namespace Prisma {
   export type ShortDemoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "demoVideoId" | "durationSeconds" | "createdAt" | "updatedAt" | "demoCutUrl" | "productInfo" | "segments" | "colorPalette", ExtArgs["result"]["shortDemo"]>
   export type ShortDemoInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     demoVideo?: boolean | DemoVideoDefaultArgs<ExtArgs>
+    viralStitches?: boolean | ShortDemo$viralStitchesArgs<ExtArgs>
+    _count?: boolean | ShortDemoCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type ShortDemoIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     demoVideo?: boolean | DemoVideoDefaultArgs<ExtArgs>
@@ -4742,6 +4899,7 @@ export namespace Prisma {
     name: "ShortDemo"
     objects: {
       demoVideo: Prisma.$DemoVideoPayload<ExtArgs>
+      viralStitches: Prisma.$ViralStitchPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -5148,6 +5306,7 @@ export namespace Prisma {
   export interface Prisma__ShortDemoClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     demoVideo<T extends DemoVideoDefaultArgs<ExtArgs> = {}>(args?: Subset<T, DemoVideoDefaultArgs<ExtArgs>>): Prisma__DemoVideoClient<$Result.GetResult<Prisma.$DemoVideoPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    viralStitches<T extends ShortDemo$viralStitchesArgs<ExtArgs> = {}>(args?: Subset<T, ShortDemo$viralStitchesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ViralStitchPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -5582,6 +5741,30 @@ export namespace Prisma {
   }
 
   /**
+   * ShortDemo.viralStitches
+   */
+  export type ShortDemo$viralStitchesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ViralStitch
+     */
+    select?: ViralStitchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ViralStitch
+     */
+    omit?: ViralStitchOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ViralStitchInclude<ExtArgs> | null
+    where?: ViralStitchWhereInput
+    orderBy?: ViralStitchOrderByWithRelationInput | ViralStitchOrderByWithRelationInput[]
+    cursor?: ViralStitchWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ViralStitchScalarFieldEnum | ViralStitchScalarFieldEnum[]
+  }
+
+  /**
    * ShortDemo without action
    */
   export type ShortDemoDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -5894,6 +6077,8 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     colorPalette?: boolean
+    viralStitches?: boolean | HookViralVideo$viralStitchesArgs<ExtArgs>
+    _count?: boolean | HookViralVideoCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["hookViralVideo"]>
 
   export type HookViralVideoSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -5954,10 +6139,18 @@ export namespace Prisma {
   }
 
   export type HookViralVideoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "webpageUrl" | "s3Url" | "hookEndTimestamp" | "hookCutConfidence" | "hookCutUrl" | "hookInfo" | "title" | "description" | "views" | "comments" | "likes" | "durationSeconds" | "createdAt" | "updatedAt" | "colorPalette", ExtArgs["result"]["hookViralVideo"]>
+  export type HookViralVideoInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    viralStitches?: boolean | HookViralVideo$viralStitchesArgs<ExtArgs>
+    _count?: boolean | HookViralVideoCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type HookViralVideoIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type HookViralVideoIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
 
   export type $HookViralVideoPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "HookViralVideo"
-    objects: {}
+    objects: {
+      viralStitches: Prisma.$ViralStitchPayload<ExtArgs>[]
+    }
     scalars: $Extensions.GetPayloadResult<{
       id: string
       webpageUrl: string
@@ -6369,6 +6562,7 @@ export namespace Prisma {
    */
   export interface Prisma__HookViralVideoClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
+    viralStitches<T extends HookViralVideo$viralStitchesArgs<ExtArgs> = {}>(args?: Subset<T, HookViralVideo$viralStitchesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ViralStitchPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -6431,6 +6625,10 @@ export namespace Prisma {
      */
     omit?: HookViralVideoOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HookViralVideoInclude<ExtArgs> | null
+    /**
      * Filter, which HookViralVideo to fetch.
      */
     where: HookViralVideoWhereUniqueInput
@@ -6449,6 +6647,10 @@ export namespace Prisma {
      */
     omit?: HookViralVideoOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HookViralVideoInclude<ExtArgs> | null
+    /**
      * Filter, which HookViralVideo to fetch.
      */
     where: HookViralVideoWhereUniqueInput
@@ -6466,6 +6668,10 @@ export namespace Prisma {
      * Omit specific fields from the HookViralVideo
      */
     omit?: HookViralVideoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HookViralVideoInclude<ExtArgs> | null
     /**
      * Filter, which HookViralVideo to fetch.
      */
@@ -6515,6 +6721,10 @@ export namespace Prisma {
      */
     omit?: HookViralVideoOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HookViralVideoInclude<ExtArgs> | null
+    /**
      * Filter, which HookViralVideo to fetch.
      */
     where?: HookViralVideoWhereInput
@@ -6563,6 +6773,10 @@ export namespace Prisma {
      */
     omit?: HookViralVideoOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HookViralVideoInclude<ExtArgs> | null
+    /**
      * Filter, which HookViralVideos to fetch.
      */
     where?: HookViralVideoWhereInput
@@ -6605,6 +6819,10 @@ export namespace Prisma {
      * Omit specific fields from the HookViralVideo
      */
     omit?: HookViralVideoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HookViralVideoInclude<ExtArgs> | null
     /**
      * The data needed to create a HookViralVideo.
      */
@@ -6653,6 +6871,10 @@ export namespace Prisma {
      * Omit specific fields from the HookViralVideo
      */
     omit?: HookViralVideoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HookViralVideoInclude<ExtArgs> | null
     /**
      * The data needed to update a HookViralVideo.
      */
@@ -6720,6 +6942,10 @@ export namespace Prisma {
      */
     omit?: HookViralVideoOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HookViralVideoInclude<ExtArgs> | null
+    /**
      * The filter to search for the HookViralVideo to update in case it exists.
      */
     where: HookViralVideoWhereUniqueInput
@@ -6746,6 +6972,10 @@ export namespace Prisma {
      */
     omit?: HookViralVideoOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HookViralVideoInclude<ExtArgs> | null
+    /**
      * Filter which HookViralVideo to delete.
      */
     where: HookViralVideoWhereUniqueInput
@@ -6766,6 +6996,30 @@ export namespace Prisma {
   }
 
   /**
+   * HookViralVideo.viralStitches
+   */
+  export type HookViralVideo$viralStitchesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ViralStitch
+     */
+    select?: ViralStitchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ViralStitch
+     */
+    omit?: ViralStitchOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ViralStitchInclude<ExtArgs> | null
+    where?: ViralStitchWhereInput
+    orderBy?: ViralStitchOrderByWithRelationInput | ViralStitchOrderByWithRelationInput[]
+    cursor?: ViralStitchWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ViralStitchScalarFieldEnum | ViralStitchScalarFieldEnum[]
+  }
+
+  /**
    * HookViralVideo without action
    */
   export type HookViralVideoDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -6777,6 +7031,1136 @@ export namespace Prisma {
      * Omit specific fields from the HookViralVideo
      */
     omit?: HookViralVideoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: HookViralVideoInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model ViralStitch
+   */
+
+  export type AggregateViralStitch = {
+    _count: ViralStitchCountAggregateOutputType | null
+    _avg: ViralStitchAvgAggregateOutputType | null
+    _sum: ViralStitchSumAggregateOutputType | null
+    _min: ViralStitchMinAggregateOutputType | null
+    _max: ViralStitchMaxAggregateOutputType | null
+  }
+
+  export type ViralStitchAvgAggregateOutputType = {
+    durationSeconds: number | null
+  }
+
+  export type ViralStitchSumAggregateOutputType = {
+    durationSeconds: number | null
+  }
+
+  export type ViralStitchMinAggregateOutputType = {
+    id: string | null
+    shortDemoId: string | null
+    hookViralVideoId: string | null
+    stitchedVideoUrl: string | null
+    durationSeconds: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ViralStitchMaxAggregateOutputType = {
+    id: string | null
+    shortDemoId: string | null
+    hookViralVideoId: string | null
+    stitchedVideoUrl: string | null
+    durationSeconds: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ViralStitchCountAggregateOutputType = {
+    id: number
+    shortDemoId: number
+    hookViralVideoId: number
+    stitchedVideoUrl: number
+    durationSeconds: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type ViralStitchAvgAggregateInputType = {
+    durationSeconds?: true
+  }
+
+  export type ViralStitchSumAggregateInputType = {
+    durationSeconds?: true
+  }
+
+  export type ViralStitchMinAggregateInputType = {
+    id?: true
+    shortDemoId?: true
+    hookViralVideoId?: true
+    stitchedVideoUrl?: true
+    durationSeconds?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ViralStitchMaxAggregateInputType = {
+    id?: true
+    shortDemoId?: true
+    hookViralVideoId?: true
+    stitchedVideoUrl?: true
+    durationSeconds?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ViralStitchCountAggregateInputType = {
+    id?: true
+    shortDemoId?: true
+    hookViralVideoId?: true
+    stitchedVideoUrl?: true
+    durationSeconds?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type ViralStitchAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ViralStitch to aggregate.
+     */
+    where?: ViralStitchWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ViralStitches to fetch.
+     */
+    orderBy?: ViralStitchOrderByWithRelationInput | ViralStitchOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ViralStitchWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ViralStitches from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ViralStitches.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ViralStitches
+    **/
+    _count?: true | ViralStitchCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: ViralStitchAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ViralStitchSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ViralStitchMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ViralStitchMaxAggregateInputType
+  }
+
+  export type GetViralStitchAggregateType<T extends ViralStitchAggregateArgs> = {
+        [P in keyof T & keyof AggregateViralStitch]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateViralStitch[P]>
+      : GetScalarType<T[P], AggregateViralStitch[P]>
+  }
+
+
+
+
+  export type ViralStitchGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ViralStitchWhereInput
+    orderBy?: ViralStitchOrderByWithAggregationInput | ViralStitchOrderByWithAggregationInput[]
+    by: ViralStitchScalarFieldEnum[] | ViralStitchScalarFieldEnum
+    having?: ViralStitchScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ViralStitchCountAggregateInputType | true
+    _avg?: ViralStitchAvgAggregateInputType
+    _sum?: ViralStitchSumAggregateInputType
+    _min?: ViralStitchMinAggregateInputType
+    _max?: ViralStitchMaxAggregateInputType
+  }
+
+  export type ViralStitchGroupByOutputType = {
+    id: string
+    shortDemoId: string
+    hookViralVideoId: string
+    stitchedVideoUrl: string
+    durationSeconds: number
+    createdAt: Date
+    updatedAt: Date
+    _count: ViralStitchCountAggregateOutputType | null
+    _avg: ViralStitchAvgAggregateOutputType | null
+    _sum: ViralStitchSumAggregateOutputType | null
+    _min: ViralStitchMinAggregateOutputType | null
+    _max: ViralStitchMaxAggregateOutputType | null
+  }
+
+  type GetViralStitchGroupByPayload<T extends ViralStitchGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ViralStitchGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ViralStitchGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ViralStitchGroupByOutputType[P]>
+            : GetScalarType<T[P], ViralStitchGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ViralStitchSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    shortDemoId?: boolean
+    hookViralVideoId?: boolean
+    stitchedVideoUrl?: boolean
+    durationSeconds?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    shortDemo?: boolean | ShortDemoDefaultArgs<ExtArgs>
+    hookViralVideo?: boolean | HookViralVideoDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["viralStitch"]>
+
+  export type ViralStitchSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    shortDemoId?: boolean
+    hookViralVideoId?: boolean
+    stitchedVideoUrl?: boolean
+    durationSeconds?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    shortDemo?: boolean | ShortDemoDefaultArgs<ExtArgs>
+    hookViralVideo?: boolean | HookViralVideoDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["viralStitch"]>
+
+  export type ViralStitchSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    shortDemoId?: boolean
+    hookViralVideoId?: boolean
+    stitchedVideoUrl?: boolean
+    durationSeconds?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    shortDemo?: boolean | ShortDemoDefaultArgs<ExtArgs>
+    hookViralVideo?: boolean | HookViralVideoDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["viralStitch"]>
+
+  export type ViralStitchSelectScalar = {
+    id?: boolean
+    shortDemoId?: boolean
+    hookViralVideoId?: boolean
+    stitchedVideoUrl?: boolean
+    durationSeconds?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type ViralStitchOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "shortDemoId" | "hookViralVideoId" | "stitchedVideoUrl" | "durationSeconds" | "createdAt" | "updatedAt", ExtArgs["result"]["viralStitch"]>
+  export type ViralStitchInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    shortDemo?: boolean | ShortDemoDefaultArgs<ExtArgs>
+    hookViralVideo?: boolean | HookViralVideoDefaultArgs<ExtArgs>
+  }
+  export type ViralStitchIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    shortDemo?: boolean | ShortDemoDefaultArgs<ExtArgs>
+    hookViralVideo?: boolean | HookViralVideoDefaultArgs<ExtArgs>
+  }
+  export type ViralStitchIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    shortDemo?: boolean | ShortDemoDefaultArgs<ExtArgs>
+    hookViralVideo?: boolean | HookViralVideoDefaultArgs<ExtArgs>
+  }
+
+  export type $ViralStitchPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ViralStitch"
+    objects: {
+      shortDemo: Prisma.$ShortDemoPayload<ExtArgs>
+      hookViralVideo: Prisma.$HookViralVideoPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      shortDemoId: string
+      hookViralVideoId: string
+      stitchedVideoUrl: string
+      durationSeconds: number
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["viralStitch"]>
+    composites: {}
+  }
+
+  type ViralStitchGetPayload<S extends boolean | null | undefined | ViralStitchDefaultArgs> = $Result.GetResult<Prisma.$ViralStitchPayload, S>
+
+  type ViralStitchCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ViralStitchFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ViralStitchCountAggregateInputType | true
+    }
+
+  export interface ViralStitchDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ViralStitch'], meta: { name: 'ViralStitch' } }
+    /**
+     * Find zero or one ViralStitch that matches the filter.
+     * @param {ViralStitchFindUniqueArgs} args - Arguments to find a ViralStitch
+     * @example
+     * // Get one ViralStitch
+     * const viralStitch = await prisma.viralStitch.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ViralStitchFindUniqueArgs>(args: SelectSubset<T, ViralStitchFindUniqueArgs<ExtArgs>>): Prisma__ViralStitchClient<$Result.GetResult<Prisma.$ViralStitchPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ViralStitch that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ViralStitchFindUniqueOrThrowArgs} args - Arguments to find a ViralStitch
+     * @example
+     * // Get one ViralStitch
+     * const viralStitch = await prisma.viralStitch.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ViralStitchFindUniqueOrThrowArgs>(args: SelectSubset<T, ViralStitchFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ViralStitchClient<$Result.GetResult<Prisma.$ViralStitchPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ViralStitch that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ViralStitchFindFirstArgs} args - Arguments to find a ViralStitch
+     * @example
+     * // Get one ViralStitch
+     * const viralStitch = await prisma.viralStitch.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ViralStitchFindFirstArgs>(args?: SelectSubset<T, ViralStitchFindFirstArgs<ExtArgs>>): Prisma__ViralStitchClient<$Result.GetResult<Prisma.$ViralStitchPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ViralStitch that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ViralStitchFindFirstOrThrowArgs} args - Arguments to find a ViralStitch
+     * @example
+     * // Get one ViralStitch
+     * const viralStitch = await prisma.viralStitch.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ViralStitchFindFirstOrThrowArgs>(args?: SelectSubset<T, ViralStitchFindFirstOrThrowArgs<ExtArgs>>): Prisma__ViralStitchClient<$Result.GetResult<Prisma.$ViralStitchPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ViralStitches that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ViralStitchFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ViralStitches
+     * const viralStitches = await prisma.viralStitch.findMany()
+     * 
+     * // Get first 10 ViralStitches
+     * const viralStitches = await prisma.viralStitch.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const viralStitchWithIdOnly = await prisma.viralStitch.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ViralStitchFindManyArgs>(args?: SelectSubset<T, ViralStitchFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ViralStitchPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ViralStitch.
+     * @param {ViralStitchCreateArgs} args - Arguments to create a ViralStitch.
+     * @example
+     * // Create one ViralStitch
+     * const ViralStitch = await prisma.viralStitch.create({
+     *   data: {
+     *     // ... data to create a ViralStitch
+     *   }
+     * })
+     * 
+     */
+    create<T extends ViralStitchCreateArgs>(args: SelectSubset<T, ViralStitchCreateArgs<ExtArgs>>): Prisma__ViralStitchClient<$Result.GetResult<Prisma.$ViralStitchPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ViralStitches.
+     * @param {ViralStitchCreateManyArgs} args - Arguments to create many ViralStitches.
+     * @example
+     * // Create many ViralStitches
+     * const viralStitch = await prisma.viralStitch.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ViralStitchCreateManyArgs>(args?: SelectSubset<T, ViralStitchCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ViralStitches and returns the data saved in the database.
+     * @param {ViralStitchCreateManyAndReturnArgs} args - Arguments to create many ViralStitches.
+     * @example
+     * // Create many ViralStitches
+     * const viralStitch = await prisma.viralStitch.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ViralStitches and only return the `id`
+     * const viralStitchWithIdOnly = await prisma.viralStitch.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ViralStitchCreateManyAndReturnArgs>(args?: SelectSubset<T, ViralStitchCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ViralStitchPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a ViralStitch.
+     * @param {ViralStitchDeleteArgs} args - Arguments to delete one ViralStitch.
+     * @example
+     * // Delete one ViralStitch
+     * const ViralStitch = await prisma.viralStitch.delete({
+     *   where: {
+     *     // ... filter to delete one ViralStitch
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ViralStitchDeleteArgs>(args: SelectSubset<T, ViralStitchDeleteArgs<ExtArgs>>): Prisma__ViralStitchClient<$Result.GetResult<Prisma.$ViralStitchPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ViralStitch.
+     * @param {ViralStitchUpdateArgs} args - Arguments to update one ViralStitch.
+     * @example
+     * // Update one ViralStitch
+     * const viralStitch = await prisma.viralStitch.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ViralStitchUpdateArgs>(args: SelectSubset<T, ViralStitchUpdateArgs<ExtArgs>>): Prisma__ViralStitchClient<$Result.GetResult<Prisma.$ViralStitchPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ViralStitches.
+     * @param {ViralStitchDeleteManyArgs} args - Arguments to filter ViralStitches to delete.
+     * @example
+     * // Delete a few ViralStitches
+     * const { count } = await prisma.viralStitch.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ViralStitchDeleteManyArgs>(args?: SelectSubset<T, ViralStitchDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ViralStitches.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ViralStitchUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ViralStitches
+     * const viralStitch = await prisma.viralStitch.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ViralStitchUpdateManyArgs>(args: SelectSubset<T, ViralStitchUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ViralStitches and returns the data updated in the database.
+     * @param {ViralStitchUpdateManyAndReturnArgs} args - Arguments to update many ViralStitches.
+     * @example
+     * // Update many ViralStitches
+     * const viralStitch = await prisma.viralStitch.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ViralStitches and only return the `id`
+     * const viralStitchWithIdOnly = await prisma.viralStitch.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ViralStitchUpdateManyAndReturnArgs>(args: SelectSubset<T, ViralStitchUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ViralStitchPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one ViralStitch.
+     * @param {ViralStitchUpsertArgs} args - Arguments to update or create a ViralStitch.
+     * @example
+     * // Update or create a ViralStitch
+     * const viralStitch = await prisma.viralStitch.upsert({
+     *   create: {
+     *     // ... data to create a ViralStitch
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ViralStitch we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ViralStitchUpsertArgs>(args: SelectSubset<T, ViralStitchUpsertArgs<ExtArgs>>): Prisma__ViralStitchClient<$Result.GetResult<Prisma.$ViralStitchPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ViralStitches.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ViralStitchCountArgs} args - Arguments to filter ViralStitches to count.
+     * @example
+     * // Count the number of ViralStitches
+     * const count = await prisma.viralStitch.count({
+     *   where: {
+     *     // ... the filter for the ViralStitches we want to count
+     *   }
+     * })
+    **/
+    count<T extends ViralStitchCountArgs>(
+      args?: Subset<T, ViralStitchCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ViralStitchCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ViralStitch.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ViralStitchAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ViralStitchAggregateArgs>(args: Subset<T, ViralStitchAggregateArgs>): Prisma.PrismaPromise<GetViralStitchAggregateType<T>>
+
+    /**
+     * Group by ViralStitch.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ViralStitchGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ViralStitchGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ViralStitchGroupByArgs['orderBy'] }
+        : { orderBy?: ViralStitchGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ViralStitchGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetViralStitchGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ViralStitch model
+   */
+  readonly fields: ViralStitchFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ViralStitch.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ViralStitchClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    shortDemo<T extends ShortDemoDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ShortDemoDefaultArgs<ExtArgs>>): Prisma__ShortDemoClient<$Result.GetResult<Prisma.$ShortDemoPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    hookViralVideo<T extends HookViralVideoDefaultArgs<ExtArgs> = {}>(args?: Subset<T, HookViralVideoDefaultArgs<ExtArgs>>): Prisma__HookViralVideoClient<$Result.GetResult<Prisma.$HookViralVideoPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ViralStitch model
+   */
+  interface ViralStitchFieldRefs {
+    readonly id: FieldRef<"ViralStitch", 'String'>
+    readonly shortDemoId: FieldRef<"ViralStitch", 'String'>
+    readonly hookViralVideoId: FieldRef<"ViralStitch", 'String'>
+    readonly stitchedVideoUrl: FieldRef<"ViralStitch", 'String'>
+    readonly durationSeconds: FieldRef<"ViralStitch", 'Int'>
+    readonly createdAt: FieldRef<"ViralStitch", 'DateTime'>
+    readonly updatedAt: FieldRef<"ViralStitch", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ViralStitch findUnique
+   */
+  export type ViralStitchFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ViralStitch
+     */
+    select?: ViralStitchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ViralStitch
+     */
+    omit?: ViralStitchOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ViralStitchInclude<ExtArgs> | null
+    /**
+     * Filter, which ViralStitch to fetch.
+     */
+    where: ViralStitchWhereUniqueInput
+  }
+
+  /**
+   * ViralStitch findUniqueOrThrow
+   */
+  export type ViralStitchFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ViralStitch
+     */
+    select?: ViralStitchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ViralStitch
+     */
+    omit?: ViralStitchOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ViralStitchInclude<ExtArgs> | null
+    /**
+     * Filter, which ViralStitch to fetch.
+     */
+    where: ViralStitchWhereUniqueInput
+  }
+
+  /**
+   * ViralStitch findFirst
+   */
+  export type ViralStitchFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ViralStitch
+     */
+    select?: ViralStitchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ViralStitch
+     */
+    omit?: ViralStitchOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ViralStitchInclude<ExtArgs> | null
+    /**
+     * Filter, which ViralStitch to fetch.
+     */
+    where?: ViralStitchWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ViralStitches to fetch.
+     */
+    orderBy?: ViralStitchOrderByWithRelationInput | ViralStitchOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ViralStitches.
+     */
+    cursor?: ViralStitchWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ViralStitches from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ViralStitches.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ViralStitches.
+     */
+    distinct?: ViralStitchScalarFieldEnum | ViralStitchScalarFieldEnum[]
+  }
+
+  /**
+   * ViralStitch findFirstOrThrow
+   */
+  export type ViralStitchFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ViralStitch
+     */
+    select?: ViralStitchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ViralStitch
+     */
+    omit?: ViralStitchOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ViralStitchInclude<ExtArgs> | null
+    /**
+     * Filter, which ViralStitch to fetch.
+     */
+    where?: ViralStitchWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ViralStitches to fetch.
+     */
+    orderBy?: ViralStitchOrderByWithRelationInput | ViralStitchOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ViralStitches.
+     */
+    cursor?: ViralStitchWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ViralStitches from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ViralStitches.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ViralStitches.
+     */
+    distinct?: ViralStitchScalarFieldEnum | ViralStitchScalarFieldEnum[]
+  }
+
+  /**
+   * ViralStitch findMany
+   */
+  export type ViralStitchFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ViralStitch
+     */
+    select?: ViralStitchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ViralStitch
+     */
+    omit?: ViralStitchOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ViralStitchInclude<ExtArgs> | null
+    /**
+     * Filter, which ViralStitches to fetch.
+     */
+    where?: ViralStitchWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ViralStitches to fetch.
+     */
+    orderBy?: ViralStitchOrderByWithRelationInput | ViralStitchOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ViralStitches.
+     */
+    cursor?: ViralStitchWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ViralStitches from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ViralStitches.
+     */
+    skip?: number
+    distinct?: ViralStitchScalarFieldEnum | ViralStitchScalarFieldEnum[]
+  }
+
+  /**
+   * ViralStitch create
+   */
+  export type ViralStitchCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ViralStitch
+     */
+    select?: ViralStitchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ViralStitch
+     */
+    omit?: ViralStitchOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ViralStitchInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ViralStitch.
+     */
+    data: XOR<ViralStitchCreateInput, ViralStitchUncheckedCreateInput>
+  }
+
+  /**
+   * ViralStitch createMany
+   */
+  export type ViralStitchCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ViralStitches.
+     */
+    data: ViralStitchCreateManyInput | ViralStitchCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ViralStitch createManyAndReturn
+   */
+  export type ViralStitchCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ViralStitch
+     */
+    select?: ViralStitchSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ViralStitch
+     */
+    omit?: ViralStitchOmit<ExtArgs> | null
+    /**
+     * The data used to create many ViralStitches.
+     */
+    data: ViralStitchCreateManyInput | ViralStitchCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ViralStitchIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ViralStitch update
+   */
+  export type ViralStitchUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ViralStitch
+     */
+    select?: ViralStitchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ViralStitch
+     */
+    omit?: ViralStitchOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ViralStitchInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ViralStitch.
+     */
+    data: XOR<ViralStitchUpdateInput, ViralStitchUncheckedUpdateInput>
+    /**
+     * Choose, which ViralStitch to update.
+     */
+    where: ViralStitchWhereUniqueInput
+  }
+
+  /**
+   * ViralStitch updateMany
+   */
+  export type ViralStitchUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ViralStitches.
+     */
+    data: XOR<ViralStitchUpdateManyMutationInput, ViralStitchUncheckedUpdateManyInput>
+    /**
+     * Filter which ViralStitches to update
+     */
+    where?: ViralStitchWhereInput
+    /**
+     * Limit how many ViralStitches to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ViralStitch updateManyAndReturn
+   */
+  export type ViralStitchUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ViralStitch
+     */
+    select?: ViralStitchSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ViralStitch
+     */
+    omit?: ViralStitchOmit<ExtArgs> | null
+    /**
+     * The data used to update ViralStitches.
+     */
+    data: XOR<ViralStitchUpdateManyMutationInput, ViralStitchUncheckedUpdateManyInput>
+    /**
+     * Filter which ViralStitches to update
+     */
+    where?: ViralStitchWhereInput
+    /**
+     * Limit how many ViralStitches to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ViralStitchIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ViralStitch upsert
+   */
+  export type ViralStitchUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ViralStitch
+     */
+    select?: ViralStitchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ViralStitch
+     */
+    omit?: ViralStitchOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ViralStitchInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ViralStitch to update in case it exists.
+     */
+    where: ViralStitchWhereUniqueInput
+    /**
+     * In case the ViralStitch found by the `where` argument doesn't exist, create a new ViralStitch with this data.
+     */
+    create: XOR<ViralStitchCreateInput, ViralStitchUncheckedCreateInput>
+    /**
+     * In case the ViralStitch was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ViralStitchUpdateInput, ViralStitchUncheckedUpdateInput>
+  }
+
+  /**
+   * ViralStitch delete
+   */
+  export type ViralStitchDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ViralStitch
+     */
+    select?: ViralStitchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ViralStitch
+     */
+    omit?: ViralStitchOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ViralStitchInclude<ExtArgs> | null
+    /**
+     * Filter which ViralStitch to delete.
+     */
+    where: ViralStitchWhereUniqueInput
+  }
+
+  /**
+   * ViralStitch deleteMany
+   */
+  export type ViralStitchDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ViralStitches to delete
+     */
+    where?: ViralStitchWhereInput
+    /**
+     * Limit how many ViralStitches to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ViralStitch without action
+   */
+  export type ViralStitchDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ViralStitch
+     */
+    select?: ViralStitchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ViralStitch
+     */
+    omit?: ViralStitchOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ViralStitchInclude<ExtArgs> | null
   }
 
 
@@ -6869,6 +8253,19 @@ export namespace Prisma {
   };
 
   export type HookViralVideoScalarFieldEnum = (typeof HookViralVideoScalarFieldEnum)[keyof typeof HookViralVideoScalarFieldEnum]
+
+
+  export const ViralStitchScalarFieldEnum: {
+    id: 'id',
+    shortDemoId: 'shortDemoId',
+    hookViralVideoId: 'hookViralVideoId',
+    stitchedVideoUrl: 'stitchedVideoUrl',
+    durationSeconds: 'durationSeconds',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type ViralStitchScalarFieldEnum = (typeof ViralStitchScalarFieldEnum)[keyof typeof ViralStitchScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -7221,6 +8618,7 @@ export namespace Prisma {
     segments?: JsonFilter<"ShortDemo">
     colorPalette?: JsonNullableFilter<"ShortDemo">
     demoVideo?: XOR<DemoVideoScalarRelationFilter, DemoVideoWhereInput>
+    viralStitches?: ViralStitchListRelationFilter
   }
 
   export type ShortDemoOrderByWithRelationInput = {
@@ -7234,6 +8632,7 @@ export namespace Prisma {
     segments?: SortOrder
     colorPalette?: SortOrderInput | SortOrder
     demoVideo?: DemoVideoOrderByWithRelationInput
+    viralStitches?: ViralStitchOrderByRelationAggregateInput
   }
 
   export type ShortDemoWhereUniqueInput = Prisma.AtLeast<{
@@ -7250,6 +8649,7 @@ export namespace Prisma {
     segments?: JsonFilter<"ShortDemo">
     colorPalette?: JsonNullableFilter<"ShortDemo">
     demoVideo?: XOR<DemoVideoScalarRelationFilter, DemoVideoWhereInput>
+    viralStitches?: ViralStitchListRelationFilter
   }, "id">
 
   export type ShortDemoOrderByWithAggregationInput = {
@@ -7304,6 +8704,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"HookViralVideo"> | Date | string
     updatedAt?: DateTimeFilter<"HookViralVideo"> | Date | string
     colorPalette?: JsonNullableFilter<"HookViralVideo">
+    viralStitches?: ViralStitchListRelationFilter
   }
 
   export type HookViralVideoOrderByWithRelationInput = {
@@ -7323,6 +8724,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     colorPalette?: SortOrderInput | SortOrder
+    viralStitches?: ViralStitchOrderByRelationAggregateInput
   }
 
   export type HookViralVideoWhereUniqueInput = Prisma.AtLeast<{
@@ -7345,6 +8747,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"HookViralVideo"> | Date | string
     updatedAt?: DateTimeFilter<"HookViralVideo"> | Date | string
     colorPalette?: JsonNullableFilter<"HookViralVideo">
+    viralStitches?: ViralStitchListRelationFilter
   }, "id" | "webpageUrl">
 
   export type HookViralVideoOrderByWithAggregationInput = {
@@ -7391,6 +8794,77 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"HookViralVideo"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"HookViralVideo"> | Date | string
     colorPalette?: JsonNullableWithAggregatesFilter<"HookViralVideo">
+  }
+
+  export type ViralStitchWhereInput = {
+    AND?: ViralStitchWhereInput | ViralStitchWhereInput[]
+    OR?: ViralStitchWhereInput[]
+    NOT?: ViralStitchWhereInput | ViralStitchWhereInput[]
+    id?: StringFilter<"ViralStitch"> | string
+    shortDemoId?: StringFilter<"ViralStitch"> | string
+    hookViralVideoId?: StringFilter<"ViralStitch"> | string
+    stitchedVideoUrl?: StringFilter<"ViralStitch"> | string
+    durationSeconds?: IntFilter<"ViralStitch"> | number
+    createdAt?: DateTimeFilter<"ViralStitch"> | Date | string
+    updatedAt?: DateTimeFilter<"ViralStitch"> | Date | string
+    shortDemo?: XOR<ShortDemoScalarRelationFilter, ShortDemoWhereInput>
+    hookViralVideo?: XOR<HookViralVideoScalarRelationFilter, HookViralVideoWhereInput>
+  }
+
+  export type ViralStitchOrderByWithRelationInput = {
+    id?: SortOrder
+    shortDemoId?: SortOrder
+    hookViralVideoId?: SortOrder
+    stitchedVideoUrl?: SortOrder
+    durationSeconds?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    shortDemo?: ShortDemoOrderByWithRelationInput
+    hookViralVideo?: HookViralVideoOrderByWithRelationInput
+  }
+
+  export type ViralStitchWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    shortDemoId_hookViralVideoId?: ViralStitchShortDemoIdHookViralVideoIdCompoundUniqueInput
+    AND?: ViralStitchWhereInput | ViralStitchWhereInput[]
+    OR?: ViralStitchWhereInput[]
+    NOT?: ViralStitchWhereInput | ViralStitchWhereInput[]
+    shortDemoId?: StringFilter<"ViralStitch"> | string
+    hookViralVideoId?: StringFilter<"ViralStitch"> | string
+    stitchedVideoUrl?: StringFilter<"ViralStitch"> | string
+    durationSeconds?: IntFilter<"ViralStitch"> | number
+    createdAt?: DateTimeFilter<"ViralStitch"> | Date | string
+    updatedAt?: DateTimeFilter<"ViralStitch"> | Date | string
+    shortDemo?: XOR<ShortDemoScalarRelationFilter, ShortDemoWhereInput>
+    hookViralVideo?: XOR<HookViralVideoScalarRelationFilter, HookViralVideoWhereInput>
+  }, "id" | "shortDemoId_hookViralVideoId">
+
+  export type ViralStitchOrderByWithAggregationInput = {
+    id?: SortOrder
+    shortDemoId?: SortOrder
+    hookViralVideoId?: SortOrder
+    stitchedVideoUrl?: SortOrder
+    durationSeconds?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: ViralStitchCountOrderByAggregateInput
+    _avg?: ViralStitchAvgOrderByAggregateInput
+    _max?: ViralStitchMaxOrderByAggregateInput
+    _min?: ViralStitchMinOrderByAggregateInput
+    _sum?: ViralStitchSumOrderByAggregateInput
+  }
+
+  export type ViralStitchScalarWhereWithAggregatesInput = {
+    AND?: ViralStitchScalarWhereWithAggregatesInput | ViralStitchScalarWhereWithAggregatesInput[]
+    OR?: ViralStitchScalarWhereWithAggregatesInput[]
+    NOT?: ViralStitchScalarWhereWithAggregatesInput | ViralStitchScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"ViralStitch"> | string
+    shortDemoId?: StringWithAggregatesFilter<"ViralStitch"> | string
+    hookViralVideoId?: StringWithAggregatesFilter<"ViralStitch"> | string
+    stitchedVideoUrl?: StringWithAggregatesFilter<"ViralStitch"> | string
+    durationSeconds?: IntWithAggregatesFilter<"ViralStitch"> | number
+    createdAt?: DateTimeWithAggregatesFilter<"ViralStitch"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"ViralStitch"> | Date | string
   }
 
   export type PostCreateInput = {
@@ -7624,6 +9098,7 @@ export namespace Prisma {
     segments: JsonNullValueInput | InputJsonValue
     colorPalette?: NullableJsonNullValueInput | InputJsonValue
     demoVideo: DemoVideoCreateNestedOneWithoutShortDemosInput
+    viralStitches?: ViralStitchCreateNestedManyWithoutShortDemoInput
   }
 
   export type ShortDemoUncheckedCreateInput = {
@@ -7636,6 +9111,7 @@ export namespace Prisma {
     productInfo?: string | null
     segments: JsonNullValueInput | InputJsonValue
     colorPalette?: NullableJsonNullValueInput | InputJsonValue
+    viralStitches?: ViralStitchUncheckedCreateNestedManyWithoutShortDemoInput
   }
 
   export type ShortDemoUpdateInput = {
@@ -7648,6 +9124,7 @@ export namespace Prisma {
     segments?: JsonNullValueInput | InputJsonValue
     colorPalette?: NullableJsonNullValueInput | InputJsonValue
     demoVideo?: DemoVideoUpdateOneRequiredWithoutShortDemosNestedInput
+    viralStitches?: ViralStitchUpdateManyWithoutShortDemoNestedInput
   }
 
   export type ShortDemoUncheckedUpdateInput = {
@@ -7660,6 +9137,7 @@ export namespace Prisma {
     productInfo?: NullableStringFieldUpdateOperationsInput | string | null
     segments?: JsonNullValueInput | InputJsonValue
     colorPalette?: NullableJsonNullValueInput | InputJsonValue
+    viralStitches?: ViralStitchUncheckedUpdateManyWithoutShortDemoNestedInput
   }
 
   export type ShortDemoCreateManyInput = {
@@ -7714,6 +9192,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     colorPalette?: NullableJsonNullValueInput | InputJsonValue
+    viralStitches?: ViralStitchCreateNestedManyWithoutHookViralVideoInput
   }
 
   export type HookViralVideoUncheckedCreateInput = {
@@ -7733,6 +9212,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     colorPalette?: NullableJsonNullValueInput | InputJsonValue
+    viralStitches?: ViralStitchUncheckedCreateNestedManyWithoutHookViralVideoInput
   }
 
   export type HookViralVideoUpdateInput = {
@@ -7752,6 +9232,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     colorPalette?: NullableJsonNullValueInput | InputJsonValue
+    viralStitches?: ViralStitchUpdateManyWithoutHookViralVideoNestedInput
   }
 
   export type HookViralVideoUncheckedUpdateInput = {
@@ -7771,6 +9252,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     colorPalette?: NullableJsonNullValueInput | InputJsonValue
+    viralStitches?: ViralStitchUncheckedUpdateManyWithoutHookViralVideoNestedInput
   }
 
   export type HookViralVideoCreateManyInput = {
@@ -7828,6 +9310,74 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     colorPalette?: NullableJsonNullValueInput | InputJsonValue
+  }
+
+  export type ViralStitchCreateInput = {
+    id?: string
+    stitchedVideoUrl: string
+    durationSeconds: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    shortDemo: ShortDemoCreateNestedOneWithoutViralStitchesInput
+    hookViralVideo: HookViralVideoCreateNestedOneWithoutViralStitchesInput
+  }
+
+  export type ViralStitchUncheckedCreateInput = {
+    id?: string
+    shortDemoId: string
+    hookViralVideoId: string
+    stitchedVideoUrl: string
+    durationSeconds: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ViralStitchUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    stitchedVideoUrl?: StringFieldUpdateOperationsInput | string
+    durationSeconds?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    shortDemo?: ShortDemoUpdateOneRequiredWithoutViralStitchesNestedInput
+    hookViralVideo?: HookViralVideoUpdateOneRequiredWithoutViralStitchesNestedInput
+  }
+
+  export type ViralStitchUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    shortDemoId?: StringFieldUpdateOperationsInput | string
+    hookViralVideoId?: StringFieldUpdateOperationsInput | string
+    stitchedVideoUrl?: StringFieldUpdateOperationsInput | string
+    durationSeconds?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ViralStitchCreateManyInput = {
+    id?: string
+    shortDemoId: string
+    hookViralVideoId: string
+    stitchedVideoUrl: string
+    durationSeconds: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ViralStitchUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    stitchedVideoUrl?: StringFieldUpdateOperationsInput | string
+    durationSeconds?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ViralStitchUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    shortDemoId?: StringFieldUpdateOperationsInput | string
+    hookViralVideoId?: StringFieldUpdateOperationsInput | string
+    stitchedVideoUrl?: StringFieldUpdateOperationsInput | string
+    durationSeconds?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type StringFilter<$PrismaModel = never> = {
@@ -8154,6 +9704,16 @@ export namespace Prisma {
     isNot?: DemoVideoWhereInput
   }
 
+  export type ViralStitchListRelationFilter = {
+    every?: ViralStitchWhereInput
+    some?: ViralStitchWhereInput
+    none?: ViralStitchWhereInput
+  }
+
+  export type ViralStitchOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
   export type ShortDemoCountOrderByAggregateInput = {
     id?: SortOrder
     demoVideoId?: SortOrder
@@ -8289,6 +9849,59 @@ export namespace Prisma {
     durationSeconds?: SortOrder
   }
 
+  export type ShortDemoScalarRelationFilter = {
+    is?: ShortDemoWhereInput
+    isNot?: ShortDemoWhereInput
+  }
+
+  export type HookViralVideoScalarRelationFilter = {
+    is?: HookViralVideoWhereInput
+    isNot?: HookViralVideoWhereInput
+  }
+
+  export type ViralStitchShortDemoIdHookViralVideoIdCompoundUniqueInput = {
+    shortDemoId: string
+    hookViralVideoId: string
+  }
+
+  export type ViralStitchCountOrderByAggregateInput = {
+    id?: SortOrder
+    shortDemoId?: SortOrder
+    hookViralVideoId?: SortOrder
+    stitchedVideoUrl?: SortOrder
+    durationSeconds?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ViralStitchAvgOrderByAggregateInput = {
+    durationSeconds?: SortOrder
+  }
+
+  export type ViralStitchMaxOrderByAggregateInput = {
+    id?: SortOrder
+    shortDemoId?: SortOrder
+    hookViralVideoId?: SortOrder
+    stitchedVideoUrl?: SortOrder
+    durationSeconds?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ViralStitchMinOrderByAggregateInput = {
+    id?: SortOrder
+    shortDemoId?: SortOrder
+    hookViralVideoId?: SortOrder
+    stitchedVideoUrl?: SortOrder
+    durationSeconds?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ViralStitchSumOrderByAggregateInput = {
+    durationSeconds?: SortOrder
+  }
+
   export type StringFieldUpdateOperationsInput = {
     set?: string
   }
@@ -8361,12 +9974,124 @@ export namespace Prisma {
     connect?: DemoVideoWhereUniqueInput
   }
 
+  export type ViralStitchCreateNestedManyWithoutShortDemoInput = {
+    create?: XOR<ViralStitchCreateWithoutShortDemoInput, ViralStitchUncheckedCreateWithoutShortDemoInput> | ViralStitchCreateWithoutShortDemoInput[] | ViralStitchUncheckedCreateWithoutShortDemoInput[]
+    connectOrCreate?: ViralStitchCreateOrConnectWithoutShortDemoInput | ViralStitchCreateOrConnectWithoutShortDemoInput[]
+    createMany?: ViralStitchCreateManyShortDemoInputEnvelope
+    connect?: ViralStitchWhereUniqueInput | ViralStitchWhereUniqueInput[]
+  }
+
+  export type ViralStitchUncheckedCreateNestedManyWithoutShortDemoInput = {
+    create?: XOR<ViralStitchCreateWithoutShortDemoInput, ViralStitchUncheckedCreateWithoutShortDemoInput> | ViralStitchCreateWithoutShortDemoInput[] | ViralStitchUncheckedCreateWithoutShortDemoInput[]
+    connectOrCreate?: ViralStitchCreateOrConnectWithoutShortDemoInput | ViralStitchCreateOrConnectWithoutShortDemoInput[]
+    createMany?: ViralStitchCreateManyShortDemoInputEnvelope
+    connect?: ViralStitchWhereUniqueInput | ViralStitchWhereUniqueInput[]
+  }
+
   export type DemoVideoUpdateOneRequiredWithoutShortDemosNestedInput = {
     create?: XOR<DemoVideoCreateWithoutShortDemosInput, DemoVideoUncheckedCreateWithoutShortDemosInput>
     connectOrCreate?: DemoVideoCreateOrConnectWithoutShortDemosInput
     upsert?: DemoVideoUpsertWithoutShortDemosInput
     connect?: DemoVideoWhereUniqueInput
     update?: XOR<XOR<DemoVideoUpdateToOneWithWhereWithoutShortDemosInput, DemoVideoUpdateWithoutShortDemosInput>, DemoVideoUncheckedUpdateWithoutShortDemosInput>
+  }
+
+  export type ViralStitchUpdateManyWithoutShortDemoNestedInput = {
+    create?: XOR<ViralStitchCreateWithoutShortDemoInput, ViralStitchUncheckedCreateWithoutShortDemoInput> | ViralStitchCreateWithoutShortDemoInput[] | ViralStitchUncheckedCreateWithoutShortDemoInput[]
+    connectOrCreate?: ViralStitchCreateOrConnectWithoutShortDemoInput | ViralStitchCreateOrConnectWithoutShortDemoInput[]
+    upsert?: ViralStitchUpsertWithWhereUniqueWithoutShortDemoInput | ViralStitchUpsertWithWhereUniqueWithoutShortDemoInput[]
+    createMany?: ViralStitchCreateManyShortDemoInputEnvelope
+    set?: ViralStitchWhereUniqueInput | ViralStitchWhereUniqueInput[]
+    disconnect?: ViralStitchWhereUniqueInput | ViralStitchWhereUniqueInput[]
+    delete?: ViralStitchWhereUniqueInput | ViralStitchWhereUniqueInput[]
+    connect?: ViralStitchWhereUniqueInput | ViralStitchWhereUniqueInput[]
+    update?: ViralStitchUpdateWithWhereUniqueWithoutShortDemoInput | ViralStitchUpdateWithWhereUniqueWithoutShortDemoInput[]
+    updateMany?: ViralStitchUpdateManyWithWhereWithoutShortDemoInput | ViralStitchUpdateManyWithWhereWithoutShortDemoInput[]
+    deleteMany?: ViralStitchScalarWhereInput | ViralStitchScalarWhereInput[]
+  }
+
+  export type ViralStitchUncheckedUpdateManyWithoutShortDemoNestedInput = {
+    create?: XOR<ViralStitchCreateWithoutShortDemoInput, ViralStitchUncheckedCreateWithoutShortDemoInput> | ViralStitchCreateWithoutShortDemoInput[] | ViralStitchUncheckedCreateWithoutShortDemoInput[]
+    connectOrCreate?: ViralStitchCreateOrConnectWithoutShortDemoInput | ViralStitchCreateOrConnectWithoutShortDemoInput[]
+    upsert?: ViralStitchUpsertWithWhereUniqueWithoutShortDemoInput | ViralStitchUpsertWithWhereUniqueWithoutShortDemoInput[]
+    createMany?: ViralStitchCreateManyShortDemoInputEnvelope
+    set?: ViralStitchWhereUniqueInput | ViralStitchWhereUniqueInput[]
+    disconnect?: ViralStitchWhereUniqueInput | ViralStitchWhereUniqueInput[]
+    delete?: ViralStitchWhereUniqueInput | ViralStitchWhereUniqueInput[]
+    connect?: ViralStitchWhereUniqueInput | ViralStitchWhereUniqueInput[]
+    update?: ViralStitchUpdateWithWhereUniqueWithoutShortDemoInput | ViralStitchUpdateWithWhereUniqueWithoutShortDemoInput[]
+    updateMany?: ViralStitchUpdateManyWithWhereWithoutShortDemoInput | ViralStitchUpdateManyWithWhereWithoutShortDemoInput[]
+    deleteMany?: ViralStitchScalarWhereInput | ViralStitchScalarWhereInput[]
+  }
+
+  export type ViralStitchCreateNestedManyWithoutHookViralVideoInput = {
+    create?: XOR<ViralStitchCreateWithoutHookViralVideoInput, ViralStitchUncheckedCreateWithoutHookViralVideoInput> | ViralStitchCreateWithoutHookViralVideoInput[] | ViralStitchUncheckedCreateWithoutHookViralVideoInput[]
+    connectOrCreate?: ViralStitchCreateOrConnectWithoutHookViralVideoInput | ViralStitchCreateOrConnectWithoutHookViralVideoInput[]
+    createMany?: ViralStitchCreateManyHookViralVideoInputEnvelope
+    connect?: ViralStitchWhereUniqueInput | ViralStitchWhereUniqueInput[]
+  }
+
+  export type ViralStitchUncheckedCreateNestedManyWithoutHookViralVideoInput = {
+    create?: XOR<ViralStitchCreateWithoutHookViralVideoInput, ViralStitchUncheckedCreateWithoutHookViralVideoInput> | ViralStitchCreateWithoutHookViralVideoInput[] | ViralStitchUncheckedCreateWithoutHookViralVideoInput[]
+    connectOrCreate?: ViralStitchCreateOrConnectWithoutHookViralVideoInput | ViralStitchCreateOrConnectWithoutHookViralVideoInput[]
+    createMany?: ViralStitchCreateManyHookViralVideoInputEnvelope
+    connect?: ViralStitchWhereUniqueInput | ViralStitchWhereUniqueInput[]
+  }
+
+  export type ViralStitchUpdateManyWithoutHookViralVideoNestedInput = {
+    create?: XOR<ViralStitchCreateWithoutHookViralVideoInput, ViralStitchUncheckedCreateWithoutHookViralVideoInput> | ViralStitchCreateWithoutHookViralVideoInput[] | ViralStitchUncheckedCreateWithoutHookViralVideoInput[]
+    connectOrCreate?: ViralStitchCreateOrConnectWithoutHookViralVideoInput | ViralStitchCreateOrConnectWithoutHookViralVideoInput[]
+    upsert?: ViralStitchUpsertWithWhereUniqueWithoutHookViralVideoInput | ViralStitchUpsertWithWhereUniqueWithoutHookViralVideoInput[]
+    createMany?: ViralStitchCreateManyHookViralVideoInputEnvelope
+    set?: ViralStitchWhereUniqueInput | ViralStitchWhereUniqueInput[]
+    disconnect?: ViralStitchWhereUniqueInput | ViralStitchWhereUniqueInput[]
+    delete?: ViralStitchWhereUniqueInput | ViralStitchWhereUniqueInput[]
+    connect?: ViralStitchWhereUniqueInput | ViralStitchWhereUniqueInput[]
+    update?: ViralStitchUpdateWithWhereUniqueWithoutHookViralVideoInput | ViralStitchUpdateWithWhereUniqueWithoutHookViralVideoInput[]
+    updateMany?: ViralStitchUpdateManyWithWhereWithoutHookViralVideoInput | ViralStitchUpdateManyWithWhereWithoutHookViralVideoInput[]
+    deleteMany?: ViralStitchScalarWhereInput | ViralStitchScalarWhereInput[]
+  }
+
+  export type ViralStitchUncheckedUpdateManyWithoutHookViralVideoNestedInput = {
+    create?: XOR<ViralStitchCreateWithoutHookViralVideoInput, ViralStitchUncheckedCreateWithoutHookViralVideoInput> | ViralStitchCreateWithoutHookViralVideoInput[] | ViralStitchUncheckedCreateWithoutHookViralVideoInput[]
+    connectOrCreate?: ViralStitchCreateOrConnectWithoutHookViralVideoInput | ViralStitchCreateOrConnectWithoutHookViralVideoInput[]
+    upsert?: ViralStitchUpsertWithWhereUniqueWithoutHookViralVideoInput | ViralStitchUpsertWithWhereUniqueWithoutHookViralVideoInput[]
+    createMany?: ViralStitchCreateManyHookViralVideoInputEnvelope
+    set?: ViralStitchWhereUniqueInput | ViralStitchWhereUniqueInput[]
+    disconnect?: ViralStitchWhereUniqueInput | ViralStitchWhereUniqueInput[]
+    delete?: ViralStitchWhereUniqueInput | ViralStitchWhereUniqueInput[]
+    connect?: ViralStitchWhereUniqueInput | ViralStitchWhereUniqueInput[]
+    update?: ViralStitchUpdateWithWhereUniqueWithoutHookViralVideoInput | ViralStitchUpdateWithWhereUniqueWithoutHookViralVideoInput[]
+    updateMany?: ViralStitchUpdateManyWithWhereWithoutHookViralVideoInput | ViralStitchUpdateManyWithWhereWithoutHookViralVideoInput[]
+    deleteMany?: ViralStitchScalarWhereInput | ViralStitchScalarWhereInput[]
+  }
+
+  export type ShortDemoCreateNestedOneWithoutViralStitchesInput = {
+    create?: XOR<ShortDemoCreateWithoutViralStitchesInput, ShortDemoUncheckedCreateWithoutViralStitchesInput>
+    connectOrCreate?: ShortDemoCreateOrConnectWithoutViralStitchesInput
+    connect?: ShortDemoWhereUniqueInput
+  }
+
+  export type HookViralVideoCreateNestedOneWithoutViralStitchesInput = {
+    create?: XOR<HookViralVideoCreateWithoutViralStitchesInput, HookViralVideoUncheckedCreateWithoutViralStitchesInput>
+    connectOrCreate?: HookViralVideoCreateOrConnectWithoutViralStitchesInput
+    connect?: HookViralVideoWhereUniqueInput
+  }
+
+  export type ShortDemoUpdateOneRequiredWithoutViralStitchesNestedInput = {
+    create?: XOR<ShortDemoCreateWithoutViralStitchesInput, ShortDemoUncheckedCreateWithoutViralStitchesInput>
+    connectOrCreate?: ShortDemoCreateOrConnectWithoutViralStitchesInput
+    upsert?: ShortDemoUpsertWithoutViralStitchesInput
+    connect?: ShortDemoWhereUniqueInput
+    update?: XOR<XOR<ShortDemoUpdateToOneWithWhereWithoutViralStitchesInput, ShortDemoUpdateWithoutViralStitchesInput>, ShortDemoUncheckedUpdateWithoutViralStitchesInput>
+  }
+
+  export type HookViralVideoUpdateOneRequiredWithoutViralStitchesNestedInput = {
+    create?: XOR<HookViralVideoCreateWithoutViralStitchesInput, HookViralVideoUncheckedCreateWithoutViralStitchesInput>
+    connectOrCreate?: HookViralVideoCreateOrConnectWithoutViralStitchesInput
+    upsert?: HookViralVideoUpsertWithoutViralStitchesInput
+    connect?: HookViralVideoWhereUniqueInput
+    update?: XOR<XOR<HookViralVideoUpdateToOneWithWhereWithoutViralStitchesInput, HookViralVideoUpdateWithoutViralStitchesInput>, HookViralVideoUncheckedUpdateWithoutViralStitchesInput>
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -8577,6 +10302,7 @@ export namespace Prisma {
     productInfo?: string | null
     segments: JsonNullValueInput | InputJsonValue
     colorPalette?: NullableJsonNullValueInput | InputJsonValue
+    viralStitches?: ViralStitchCreateNestedManyWithoutShortDemoInput
   }
 
   export type ShortDemoUncheckedCreateWithoutDemoVideoInput = {
@@ -8588,6 +10314,7 @@ export namespace Prisma {
     productInfo?: string | null
     segments: JsonNullValueInput | InputJsonValue
     colorPalette?: NullableJsonNullValueInput | InputJsonValue
+    viralStitches?: ViralStitchUncheckedCreateNestedManyWithoutShortDemoInput
   }
 
   export type ShortDemoCreateOrConnectWithoutDemoVideoInput = {
@@ -8652,6 +10379,34 @@ export namespace Prisma {
     create: XOR<DemoVideoCreateWithoutShortDemosInput, DemoVideoUncheckedCreateWithoutShortDemosInput>
   }
 
+  export type ViralStitchCreateWithoutShortDemoInput = {
+    id?: string
+    stitchedVideoUrl: string
+    durationSeconds: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    hookViralVideo: HookViralVideoCreateNestedOneWithoutViralStitchesInput
+  }
+
+  export type ViralStitchUncheckedCreateWithoutShortDemoInput = {
+    id?: string
+    hookViralVideoId: string
+    stitchedVideoUrl: string
+    durationSeconds: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ViralStitchCreateOrConnectWithoutShortDemoInput = {
+    where: ViralStitchWhereUniqueInput
+    create: XOR<ViralStitchCreateWithoutShortDemoInput, ViralStitchUncheckedCreateWithoutShortDemoInput>
+  }
+
+  export type ViralStitchCreateManyShortDemoInputEnvelope = {
+    data: ViralStitchCreateManyShortDemoInput | ViralStitchCreateManyShortDemoInput[]
+    skipDuplicates?: boolean
+  }
+
   export type DemoVideoUpsertWithoutShortDemosInput = {
     update: XOR<DemoVideoUpdateWithoutShortDemosInput, DemoVideoUncheckedUpdateWithoutShortDemosInput>
     create: XOR<DemoVideoCreateWithoutShortDemosInput, DemoVideoUncheckedCreateWithoutShortDemosInput>
@@ -8679,6 +10434,235 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type ViralStitchUpsertWithWhereUniqueWithoutShortDemoInput = {
+    where: ViralStitchWhereUniqueInput
+    update: XOR<ViralStitchUpdateWithoutShortDemoInput, ViralStitchUncheckedUpdateWithoutShortDemoInput>
+    create: XOR<ViralStitchCreateWithoutShortDemoInput, ViralStitchUncheckedCreateWithoutShortDemoInput>
+  }
+
+  export type ViralStitchUpdateWithWhereUniqueWithoutShortDemoInput = {
+    where: ViralStitchWhereUniqueInput
+    data: XOR<ViralStitchUpdateWithoutShortDemoInput, ViralStitchUncheckedUpdateWithoutShortDemoInput>
+  }
+
+  export type ViralStitchUpdateManyWithWhereWithoutShortDemoInput = {
+    where: ViralStitchScalarWhereInput
+    data: XOR<ViralStitchUpdateManyMutationInput, ViralStitchUncheckedUpdateManyWithoutShortDemoInput>
+  }
+
+  export type ViralStitchScalarWhereInput = {
+    AND?: ViralStitchScalarWhereInput | ViralStitchScalarWhereInput[]
+    OR?: ViralStitchScalarWhereInput[]
+    NOT?: ViralStitchScalarWhereInput | ViralStitchScalarWhereInput[]
+    id?: StringFilter<"ViralStitch"> | string
+    shortDemoId?: StringFilter<"ViralStitch"> | string
+    hookViralVideoId?: StringFilter<"ViralStitch"> | string
+    stitchedVideoUrl?: StringFilter<"ViralStitch"> | string
+    durationSeconds?: IntFilter<"ViralStitch"> | number
+    createdAt?: DateTimeFilter<"ViralStitch"> | Date | string
+    updatedAt?: DateTimeFilter<"ViralStitch"> | Date | string
+  }
+
+  export type ViralStitchCreateWithoutHookViralVideoInput = {
+    id?: string
+    stitchedVideoUrl: string
+    durationSeconds: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    shortDemo: ShortDemoCreateNestedOneWithoutViralStitchesInput
+  }
+
+  export type ViralStitchUncheckedCreateWithoutHookViralVideoInput = {
+    id?: string
+    shortDemoId: string
+    stitchedVideoUrl: string
+    durationSeconds: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ViralStitchCreateOrConnectWithoutHookViralVideoInput = {
+    where: ViralStitchWhereUniqueInput
+    create: XOR<ViralStitchCreateWithoutHookViralVideoInput, ViralStitchUncheckedCreateWithoutHookViralVideoInput>
+  }
+
+  export type ViralStitchCreateManyHookViralVideoInputEnvelope = {
+    data: ViralStitchCreateManyHookViralVideoInput | ViralStitchCreateManyHookViralVideoInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type ViralStitchUpsertWithWhereUniqueWithoutHookViralVideoInput = {
+    where: ViralStitchWhereUniqueInput
+    update: XOR<ViralStitchUpdateWithoutHookViralVideoInput, ViralStitchUncheckedUpdateWithoutHookViralVideoInput>
+    create: XOR<ViralStitchCreateWithoutHookViralVideoInput, ViralStitchUncheckedCreateWithoutHookViralVideoInput>
+  }
+
+  export type ViralStitchUpdateWithWhereUniqueWithoutHookViralVideoInput = {
+    where: ViralStitchWhereUniqueInput
+    data: XOR<ViralStitchUpdateWithoutHookViralVideoInput, ViralStitchUncheckedUpdateWithoutHookViralVideoInput>
+  }
+
+  export type ViralStitchUpdateManyWithWhereWithoutHookViralVideoInput = {
+    where: ViralStitchScalarWhereInput
+    data: XOR<ViralStitchUpdateManyMutationInput, ViralStitchUncheckedUpdateManyWithoutHookViralVideoInput>
+  }
+
+  export type ShortDemoCreateWithoutViralStitchesInput = {
+    id?: string
+    durationSeconds: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    demoCutUrl: string
+    productInfo?: string | null
+    segments: JsonNullValueInput | InputJsonValue
+    colorPalette?: NullableJsonNullValueInput | InputJsonValue
+    demoVideo: DemoVideoCreateNestedOneWithoutShortDemosInput
+  }
+
+  export type ShortDemoUncheckedCreateWithoutViralStitchesInput = {
+    id?: string
+    demoVideoId: string
+    durationSeconds: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    demoCutUrl: string
+    productInfo?: string | null
+    segments: JsonNullValueInput | InputJsonValue
+    colorPalette?: NullableJsonNullValueInput | InputJsonValue
+  }
+
+  export type ShortDemoCreateOrConnectWithoutViralStitchesInput = {
+    where: ShortDemoWhereUniqueInput
+    create: XOR<ShortDemoCreateWithoutViralStitchesInput, ShortDemoUncheckedCreateWithoutViralStitchesInput>
+  }
+
+  export type HookViralVideoCreateWithoutViralStitchesInput = {
+    id?: string
+    webpageUrl: string
+    s3Url: string
+    hookEndTimestamp: string
+    hookCutConfidence?: string | null
+    hookCutUrl?: string | null
+    hookInfo?: string | null
+    title: string
+    description?: string | null
+    views?: number
+    comments?: number
+    likes?: number
+    durationSeconds: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    colorPalette?: NullableJsonNullValueInput | InputJsonValue
+  }
+
+  export type HookViralVideoUncheckedCreateWithoutViralStitchesInput = {
+    id?: string
+    webpageUrl: string
+    s3Url: string
+    hookEndTimestamp: string
+    hookCutConfidence?: string | null
+    hookCutUrl?: string | null
+    hookInfo?: string | null
+    title: string
+    description?: string | null
+    views?: number
+    comments?: number
+    likes?: number
+    durationSeconds: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    colorPalette?: NullableJsonNullValueInput | InputJsonValue
+  }
+
+  export type HookViralVideoCreateOrConnectWithoutViralStitchesInput = {
+    where: HookViralVideoWhereUniqueInput
+    create: XOR<HookViralVideoCreateWithoutViralStitchesInput, HookViralVideoUncheckedCreateWithoutViralStitchesInput>
+  }
+
+  export type ShortDemoUpsertWithoutViralStitchesInput = {
+    update: XOR<ShortDemoUpdateWithoutViralStitchesInput, ShortDemoUncheckedUpdateWithoutViralStitchesInput>
+    create: XOR<ShortDemoCreateWithoutViralStitchesInput, ShortDemoUncheckedCreateWithoutViralStitchesInput>
+    where?: ShortDemoWhereInput
+  }
+
+  export type ShortDemoUpdateToOneWithWhereWithoutViralStitchesInput = {
+    where?: ShortDemoWhereInput
+    data: XOR<ShortDemoUpdateWithoutViralStitchesInput, ShortDemoUncheckedUpdateWithoutViralStitchesInput>
+  }
+
+  export type ShortDemoUpdateWithoutViralStitchesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    durationSeconds?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    demoCutUrl?: StringFieldUpdateOperationsInput | string
+    productInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    segments?: JsonNullValueInput | InputJsonValue
+    colorPalette?: NullableJsonNullValueInput | InputJsonValue
+    demoVideo?: DemoVideoUpdateOneRequiredWithoutShortDemosNestedInput
+  }
+
+  export type ShortDemoUncheckedUpdateWithoutViralStitchesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    demoVideoId?: StringFieldUpdateOperationsInput | string
+    durationSeconds?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    demoCutUrl?: StringFieldUpdateOperationsInput | string
+    productInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    segments?: JsonNullValueInput | InputJsonValue
+    colorPalette?: NullableJsonNullValueInput | InputJsonValue
+  }
+
+  export type HookViralVideoUpsertWithoutViralStitchesInput = {
+    update: XOR<HookViralVideoUpdateWithoutViralStitchesInput, HookViralVideoUncheckedUpdateWithoutViralStitchesInput>
+    create: XOR<HookViralVideoCreateWithoutViralStitchesInput, HookViralVideoUncheckedCreateWithoutViralStitchesInput>
+    where?: HookViralVideoWhereInput
+  }
+
+  export type HookViralVideoUpdateToOneWithWhereWithoutViralStitchesInput = {
+    where?: HookViralVideoWhereInput
+    data: XOR<HookViralVideoUpdateWithoutViralStitchesInput, HookViralVideoUncheckedUpdateWithoutViralStitchesInput>
+  }
+
+  export type HookViralVideoUpdateWithoutViralStitchesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    webpageUrl?: StringFieldUpdateOperationsInput | string
+    s3Url?: StringFieldUpdateOperationsInput | string
+    hookEndTimestamp?: StringFieldUpdateOperationsInput | string
+    hookCutConfidence?: NullableStringFieldUpdateOperationsInput | string | null
+    hookCutUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    hookInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    views?: IntFieldUpdateOperationsInput | number
+    comments?: IntFieldUpdateOperationsInput | number
+    likes?: IntFieldUpdateOperationsInput | number
+    durationSeconds?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    colorPalette?: NullableJsonNullValueInput | InputJsonValue
+  }
+
+  export type HookViralVideoUncheckedUpdateWithoutViralStitchesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    webpageUrl?: StringFieldUpdateOperationsInput | string
+    s3Url?: StringFieldUpdateOperationsInput | string
+    hookEndTimestamp?: StringFieldUpdateOperationsInput | string
+    hookCutConfidence?: NullableStringFieldUpdateOperationsInput | string | null
+    hookCutUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    hookInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    views?: IntFieldUpdateOperationsInput | number
+    comments?: IntFieldUpdateOperationsInput | number
+    likes?: IntFieldUpdateOperationsInput | number
+    durationSeconds?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    colorPalette?: NullableJsonNullValueInput | InputJsonValue
+  }
+
   export type ShortDemoCreateManyDemoVideoInput = {
     id?: string
     durationSeconds: number
@@ -8699,6 +10683,7 @@ export namespace Prisma {
     productInfo?: NullableStringFieldUpdateOperationsInput | string | null
     segments?: JsonNullValueInput | InputJsonValue
     colorPalette?: NullableJsonNullValueInput | InputJsonValue
+    viralStitches?: ViralStitchUpdateManyWithoutShortDemoNestedInput
   }
 
   export type ShortDemoUncheckedUpdateWithoutDemoVideoInput = {
@@ -8710,6 +10695,7 @@ export namespace Prisma {
     productInfo?: NullableStringFieldUpdateOperationsInput | string | null
     segments?: JsonNullValueInput | InputJsonValue
     colorPalette?: NullableJsonNullValueInput | InputJsonValue
+    viralStitches?: ViralStitchUncheckedUpdateManyWithoutShortDemoNestedInput
   }
 
   export type ShortDemoUncheckedUpdateManyWithoutDemoVideoInput = {
@@ -8721,6 +10707,78 @@ export namespace Prisma {
     productInfo?: NullableStringFieldUpdateOperationsInput | string | null
     segments?: JsonNullValueInput | InputJsonValue
     colorPalette?: NullableJsonNullValueInput | InputJsonValue
+  }
+
+  export type ViralStitchCreateManyShortDemoInput = {
+    id?: string
+    hookViralVideoId: string
+    stitchedVideoUrl: string
+    durationSeconds: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ViralStitchUpdateWithoutShortDemoInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    stitchedVideoUrl?: StringFieldUpdateOperationsInput | string
+    durationSeconds?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    hookViralVideo?: HookViralVideoUpdateOneRequiredWithoutViralStitchesNestedInput
+  }
+
+  export type ViralStitchUncheckedUpdateWithoutShortDemoInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    hookViralVideoId?: StringFieldUpdateOperationsInput | string
+    stitchedVideoUrl?: StringFieldUpdateOperationsInput | string
+    durationSeconds?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ViralStitchUncheckedUpdateManyWithoutShortDemoInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    hookViralVideoId?: StringFieldUpdateOperationsInput | string
+    stitchedVideoUrl?: StringFieldUpdateOperationsInput | string
+    durationSeconds?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ViralStitchCreateManyHookViralVideoInput = {
+    id?: string
+    shortDemoId: string
+    stitchedVideoUrl: string
+    durationSeconds: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ViralStitchUpdateWithoutHookViralVideoInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    stitchedVideoUrl?: StringFieldUpdateOperationsInput | string
+    durationSeconds?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    shortDemo?: ShortDemoUpdateOneRequiredWithoutViralStitchesNestedInput
+  }
+
+  export type ViralStitchUncheckedUpdateWithoutHookViralVideoInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    shortDemoId?: StringFieldUpdateOperationsInput | string
+    stitchedVideoUrl?: StringFieldUpdateOperationsInput | string
+    durationSeconds?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ViralStitchUncheckedUpdateManyWithoutHookViralVideoInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    shortDemoId?: StringFieldUpdateOperationsInput | string
+    stitchedVideoUrl?: StringFieldUpdateOperationsInput | string
+    durationSeconds?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
 

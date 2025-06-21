@@ -1,30 +1,35 @@
 "use client";
- 
+
+import type { DropzoneOptions } from "react-dropzone";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+
+import { Button } from "@sassy/ui/button";
 import {
-  FileUploader,
   FileInput,
+  FileUploader,
   FileUploaderContent,
   FileUploaderItem,
 } from "@sassy/ui/components/file-uploader";
-import { Button } from "@sassy/ui/button";
 import { Progress } from "@sassy/ui/progress";
 import { VIDEO_CONSTRAINTS } from "@sassy/ui/schema-validators";
-import { useState } from "react";
-import { DropzoneOptions } from "react-dropzone";
-import { useTRPC } from "~/trpc/react";
-import { toast } from "sonner";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMultipartUpload } from "~/hooks/use-multipart-upload";
 
- 
+import { useMultipartUpload } from "~/hooks/use-multipart-upload";
+import { useTRPC } from "~/trpc/react";
+
 const FileUploadDropzone = () => {
   const [files, setFiles] = useState<File[] | null>([]);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadStatus, setUploadStatus] = useState<"idle" | "uploading" | "completed" | "failed">("idle");
+  const [uploadStatus, setUploadStatus] = useState<
+    "idle" | "uploading" | "completed" | "failed"
+  >("idle");
   const [speedMultiplier, setSpeedMultiplier] = useState(0.5);
-  const [processingStatus, setProcessingStatus] = useState<"idle" | "processing" | "completed" | "failed">("idle");
-  
+  const [processingStatus, setProcessingStatus] = useState<
+    "idle" | "processing" | "completed" | "failed"
+  >("idle");
+
   // Store processing data from Remotion
   const [processingData, setProcessingData] = useState<{
     renderId: string;
@@ -32,15 +37,20 @@ const FileUploadDropzone = () => {
     videoUrl: string;
     originalDuration: number;
   } | null>(null);
-  
+
   // Store final result
-  const [processedVideoUrl, setProcessedVideoUrl] = useState<string | null>(null);
+  const [processedVideoUrl, setProcessedVideoUrl] = useState<string | null>(
+    null,
+  );
 
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
   // Multipart upload hook
-  const { uploadFile: uploadFileWithMultipart, isUploading: isMultipartUploading } = useMultipartUpload({
+  const {
+    uploadFile: uploadFileWithMultipart,
+    isUploading: isMultipartUploading,
+  } = useMultipartUpload({
     onProgress: (progress) => {
       setUploadProgress(progress.percentage);
     },
@@ -53,7 +63,7 @@ const FileUploadDropzone = () => {
       setUploadStatus("failed");
     },
   });
-  
+
   const processVideoSpeed = useMutation(
     trpc.remotion.processVideoSpeed.mutationOptions({
       onSuccess: (data) => {
@@ -65,7 +75,7 @@ const FileUploadDropzone = () => {
         toast.error("Failed to start video processing");
         setProcessingStatus("failed");
       },
-    })
+    }),
   );
 
   // Query for processing progress
@@ -74,7 +84,11 @@ const FileUploadDropzone = () => {
       renderId: processingData?.renderId || "",
       bucketName: processingData?.bucketName || "",
     }),
-    enabled: Boolean(processingData?.renderId && processingData?.bucketName && processingStatus === "processing"),
+    enabled: Boolean(
+      processingData?.renderId &&
+        processingData?.bucketName &&
+        processingStatus === "processing",
+    ),
     refetchInterval: (data: any) => {
       return processingStatus === "processing" && !data?.done ? 10000 : false;
     },
@@ -86,7 +100,12 @@ const FileUploadDropzone = () => {
       bucketName: processingData?.bucketName || "",
       outputFile: progress?.outputFile || "",
     }),
-    enabled: Boolean(processingData?.bucketName && progress?.outputFile && progress?.done && !progress?.fatalErrorEncountered),
+    enabled: Boolean(
+      processingData?.bucketName &&
+        progress?.outputFile &&
+        progress?.done &&
+        !progress?.fatalErrorEncountered,
+    ),
   });
 
   // Update processing status based on progress
@@ -109,7 +128,7 @@ const FileUploadDropzone = () => {
     downloadData,
     processedVideoUrl,
   });
- 
+
   const dropzone = {
     accept: {
       "video/*": [".mp4", ".mov", ".avi", ".mkv", ".webm"],
@@ -131,13 +150,18 @@ const FileUploadDropzone = () => {
     setUploadProgress(0);
 
     try {
-      // Step 1: Upload to S3 using multipart upload
-      const uploadResult = await uploadFileWithMultipart(file);
-
-      // Step 2: Get video duration for processing
-      setUploadProgress(80);
+      // Step 1: Get video duration first
       const duration = await getVideoDuration(file);
-      
+      if (duration <= 0) {
+        throw new Error("Unable to determine video duration");
+      }
+
+      // Step 2: Upload to S3 with duration for database save
+      const uploadResult = await uploadFileWithMultipart(file, {
+        prefix: "uploads",
+        durationSeconds: Math.round(duration),
+      });
+
       // Step 3: Store processing info for later use
       setProcessingData({
         renderId: "", // Will be set after processing starts
@@ -148,12 +172,16 @@ const FileUploadDropzone = () => {
 
       setUploadProgress(100);
       setUploadStatus("completed");
-      
-      toast.success("Video uploaded successfully!");
 
+      toast.success("Video uploaded successfully!");
+      if (uploadResult.demoVideo) {
+        console.log("Demo video saved to database:", uploadResult.demoVideo);
+      }
     } catch (error) {
       console.error("Upload error:", error);
-      toast.error(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+      toast.error(
+        `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
       setUploadStatus("failed");
     } finally {
       setIsUploading(false);
@@ -169,17 +197,20 @@ const FileUploadDropzone = () => {
     try {
       const result = await processVideoSpeed.mutateAsync({
         videoUrl: processingData.videoUrl,
-      speedMultiplier,
+        speedMultiplier,
         originalDuration: processingData.originalDuration,
       });
 
       // Update processing data with render info
-      setProcessingData(prev => prev ? {
-        ...prev,
-        renderId: result.renderId,
-        bucketName: result.bucketName,
-      } : null);
-
+      setProcessingData((prev) =>
+        prev
+          ? {
+              ...prev,
+              renderId: result.renderId,
+              bucketName: result.bucketName,
+            }
+          : null,
+      );
     } catch (error) {
       console.error("Processing error:", error);
       setProcessingStatus("failed");
@@ -190,15 +221,15 @@ const FileUploadDropzone = () => {
     return new Promise((resolve) => {
       const video = document.createElement("video");
       video.preload = "metadata";
-      
+
       video.onloadedmetadata = () => {
         resolve(video.duration);
       };
-      
+
       video.onerror = () => {
         resolve(0); // Default duration if unable to detect
       };
-      
+
       video.src = URL.createObjectURL(file);
     });
   };
@@ -237,54 +268,55 @@ const FileUploadDropzone = () => {
         return "";
     }
   };
- 
+
   return (
-    <div className="p-6 max-w-2xl mx-auto space-y-6">
+    <div className="mx-auto max-w-2xl space-y-6 p-6">
       <div className="space-y-4">
         <h1 className="text-2xl font-bold">Video Speed Adjustment</h1>
         <p className="text-gray-600">
-          Upload a video (max 2GB, 5 minutes) and adjust its playback speed using AI processing
+          Upload a video (max 2GB, 5 minutes) and adjust its playback speed
+          using AI processing
         </p>
       </div>
 
-    <FileUploader
-      value={files}
-      onValueChange={setFiles}
-      dropzoneOptions={dropzone}
-    >
-      <FileInput>
-        <div className="flex items-center justify-center h-32 w-full border bg-background rounded-md">
+      <FileUploader
+        value={files}
+        onValueChange={setFiles}
+        dropzoneOptions={dropzone}
+      >
+        <FileInput>
+          <div className="bg-background flex h-32 w-full items-center justify-center rounded-md border">
             <p className="text-gray-400">Drop video files here</p>
-        </div>
-      </FileInput>
-      <FileUploaderContent className="flex items-center flex-row gap-2">
-        {files?.map((file, i) => (
-          <FileUploaderItem
-            key={i}
-            index={i}
-              className="w-full p-4 rounded-md overflow-hidden border"
-            aria-roledescription={`file ${i + 1} containing ${file.name}`}
-          >
+          </div>
+        </FileInput>
+        <FileUploaderContent className="flex flex-row items-center gap-2">
+          {files?.map((file, i) => (
+            <FileUploaderItem
+              key={i}
+              index={i}
+              className="w-full overflow-hidden rounded-md border p-4"
+              aria-roledescription={`file ${i + 1} containing ${file.name}`}
+            >
               <div className="space-y-2">
                 <video
-              src={URL.createObjectURL(file)}
+                  src={URL.createObjectURL(file)}
                   controls
-                  className="w-full h-40 rounded"
+                  className="h-40 w-full rounded"
                   preload="metadata"
-            />
+                />
                 <div className="text-sm text-gray-600">
                   <p>File: {file.name}</p>
                   <p>Size: {(file.size / 1024 / 1024).toFixed(1)} MB</p>
                 </div>
               </div>
-          </FileUploaderItem>
-        ))}
-      </FileUploaderContent>
-    </FileUploader>
+            </FileUploaderItem>
+          ))}
+        </FileUploaderContent>
+      </FileUploader>
 
       {files && files.length > 0 && uploadStatus === "idle" && (
         <div className="space-y-4">
-          <Button 
+          <Button
             onClick={handleUpload}
             disabled={isUploading}
             className="w-full"
@@ -295,7 +327,7 @@ const FileUploadDropzone = () => {
       )}
 
       {uploadStatus === "uploading" && (
-        <div className="space-y-4 p-4 bg-blue-50 border border-blue-200 rounded">
+        <div className="space-y-4 rounded border border-blue-200 bg-blue-50 p-4">
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span>{getUploadStatusMessage()}</span>
@@ -307,7 +339,7 @@ const FileUploadDropzone = () => {
       )}
 
       {uploadStatus === "completed" && processingStatus === "idle" && (
-        <div className="space-y-4 p-4 bg-green-50 border border-green-200 rounded">
+        <div className="space-y-4 rounded border border-green-200 bg-green-50 p-4">
           <h3 className="text-lg font-semibold text-green-800">
             Video Uploaded Successfully!
           </h3>
@@ -323,7 +355,7 @@ const FileUploadDropzone = () => {
                 step="0.1"
                 value={speedMultiplier}
                 onChange={(e) => setSpeedMultiplier(parseFloat(e.target.value))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200"
               />
               <div className="flex justify-between text-xs text-gray-500">
                 <span>0.1x (Very Slow)</span>
@@ -331,15 +363,17 @@ const FileUploadDropzone = () => {
                 <span>3x (Fast)</span>
               </div>
             </div>
-            
-            <Button 
+
+            <Button
               onClick={handleAdjustSpeed}
               disabled={processVideoSpeed.isPending}
               className="w-full"
             >
-              {processVideoSpeed.isPending ? "Starting Processing..." : "Adjust Video Speed"}
+              {processVideoSpeed.isPending
+                ? "Starting Processing..."
+                : "Adjust Video Speed"}
             </Button>
-            
+
             <Button onClick={resetUpload} variant="outline" className="w-full">
               Upload Another Video
             </Button>
@@ -348,13 +382,16 @@ const FileUploadDropzone = () => {
       )}
 
       {processingStatus === "processing" && (
-        <div className="space-y-4 p-4 bg-blue-50 border border-blue-200 rounded">
+        <div className="space-y-4 rounded border border-blue-200 bg-blue-50 p-4">
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span>{getProcessingStatusMessage()}</span>
               <span>{progress ? Math.round(progress.progress * 100) : 0}%</span>
             </div>
-            <Progress value={progress ? progress.progress * 100 : 0} className="w-full" />
+            <Progress
+              value={progress ? progress.progress * 100 : 0}
+              className="w-full"
+            />
           </div>
           <p className="text-sm text-blue-700">
             This may take a few minutes depending on video length...
@@ -363,47 +400,57 @@ const FileUploadDropzone = () => {
       )}
 
       {processingStatus === "completed" && (
-        <div className="space-y-4 p-4 bg-green-50 border border-green-200 rounded">
+        <div className="space-y-4 rounded border border-green-200 bg-green-50 p-4">
           <h3 className="text-lg font-semibold text-green-800">
             Video Processing Complete!
           </h3>
-          
+
           {!processedVideoUrl && (
             <p className="text-sm text-blue-700">Loading processed video...</p>
           )}
-          
+
           {processedVideoUrl && (
             <div className="space-y-4">
-            <div className="space-y-2">
-                <p className="text-sm text-green-700 font-medium">Processed Video Preview:</p>
-              <video
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-green-700">
+                  Processed Video Preview:
+                </p>
+                <video
                   src={processedVideoUrl}
-                controls
-                  className="w-full h-60 rounded border"
-                preload="metadata"
-              />
-            </div>
-            
-            <div className="flex gap-2">
-                <Button 
-                  onClick={() => window.open(processedVideoUrl, '_blank')}
+                  controls
+                  className="h-60 w-full rounded border"
+                  preload="metadata"
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => window.open(processedVideoUrl, "_blank")}
                   className="flex-1"
                 >
                   Download Video
                 </Button>
-                <Button onClick={resetUpload} variant="outline" className="flex-1">
+                <Button
+                  onClick={resetUpload}
+                  variant="outline"
+                  className="flex-1"
+                >
                   Process Another Video
                 </Button>
               </div>
             </div>
           )}
-          
+
           {!processedVideoUrl && (
             <div className="space-y-2">
               <p className="text-sm text-gray-600">
                 Video URL not available yet. This may take a moment...
               </p>
-              <Button onClick={resetUpload} variant="outline" className="w-full">
+              <Button
+                onClick={resetUpload}
+                variant="outline"
+                className="w-full"
+              >
                 Try Processing Another Video
               </Button>
             </div>
@@ -412,7 +459,7 @@ const FileUploadDropzone = () => {
       )}
 
       {(uploadStatus === "failed" || processingStatus === "failed") && (
-        <div className="space-y-4 p-4 bg-red-50 border border-red-200 rounded">
+        <div className="space-y-4 rounded border border-red-200 bg-red-50 p-4">
           <h3 className="text-lg font-semibold text-red-800">
             {uploadStatus === "failed" ? "Upload Failed" : "Processing Failed"}
           </h3>
@@ -429,5 +476,5 @@ const FileUploadDropzone = () => {
     </div>
   );
 };
- 
+
 export default FileUploadDropzone;
