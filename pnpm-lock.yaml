@@ -318,6 +318,9 @@ importers:
       '@sassy/db-node':
         specifier: link:generated/node
         version: link:generated/node
+      '@sassy/gemini-video':
+        specifier: workspace:*
+        version: link:../gemini-video
       zod:
         specifier: 'catalog:'
         version: 3.25.13

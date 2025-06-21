@@ -63,6 +63,43 @@ The project uses Tailwind CSS v4 with the following setup:
 - `/packages/validators`: Shared Zod validation schemas
 - `/packages/stripe`: Stripe service implementation
 
+### Service Co-location Principle
+
+Services should be co-located with their domain logic rather than grouped by framework or infrastructure concerns:
+
+**✅ Correct**: Place services in their domain package
+- `packages/remotion/src/remotion-service.ts` - Handles Remotion Lambda operations
+- `packages/stripe/src/stripe-service.ts` - Handles Stripe operations  
+- `packages/gemini-video/src/gemini-video-service.ts` - Handles Gemini video processing
+
+**❌ Incorrect**: Grouping services by framework
+- `packages/api/src/services/remotion-service.ts` - Has no tRPC dependencies
+- `packages/api/src/services/stripe-service.ts` - Only used by API, but could be reused
+
+**Benefits of Domain Co-location:**
+- **Reusability**: Services can be imported by both API endpoints and standalone scripts
+- **No Code Duplication**: Single source of truth for business logic
+- **Clear Dependencies**: Service dependencies are explicit and domain-focused
+- **Better Testing**: Domain services can be tested independently of API layer
+
+**Implementation Pattern:**
+```typescript
+// packages/domain/src/domain-service.ts
+export class DomainService {
+  // Business logic here
+}
+
+// packages/domain/src/index.ts  
+export { DomainService } from './domain-service';
+export type { DomainServiceTypes } from './domain-service';
+
+// Usage in API
+import { DomainService } from '@sassy/domain';
+
+// Usage in scripts
+import { DomainService } from '@sassy/domain';
+```
+
 ## Architectural Patterns
 
 1. **Type Safety**: All communication between services is fully typed

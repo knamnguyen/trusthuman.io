@@ -118,6 +118,42 @@ When creating package scripts that need environment variables:
    - Document required environment variables and parameters
    - Include usage examples for both package.json and direct execution
 
+### Package Export Strategy for Services
+
+When creating or moving services between packages, ensure proper export configuration:
+
+**1. Main Index Export**
+```typescript
+// packages/domain/src/index.ts
+export { DomainService } from './domain-service';
+export type { 
+  DomainServiceConfig,
+  DomainServiceResult 
+} from './domain-service';
+```
+
+**2. Package.json Export Paths (for JIT compilation)**
+```json
+{
+  "exports": {
+    ".": "./src/index.ts",
+    "./domain-service": "./src/domain-service.ts"
+  }
+}
+```
+
+**3. Update Consuming Package Imports**
+```typescript
+// Before (coupled to location)
+import { Service } from '../services/service';
+
+// After (decoupled from location)  
+import { Service } from '@sassy/domain';
+```
+
+**4. TypeScript Path Mapping**
+Ensure TypeScript can resolve the new imports during development and build.
+
 ### Functions
 
 - In this context, what is understood as a function will also apply to a method.

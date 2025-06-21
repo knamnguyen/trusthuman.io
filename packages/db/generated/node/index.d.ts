@@ -3379,7 +3379,6 @@ export namespace Prisma {
   export type DemoVideoMinAggregateOutputType = {
     id: string | null
     s3Url: string | null
-    productInfo: string | null
     durationSeconds: number | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -3388,7 +3387,6 @@ export namespace Prisma {
   export type DemoVideoMaxAggregateOutputType = {
     id: string | null
     s3Url: string | null
-    productInfo: string | null
     durationSeconds: number | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -3397,8 +3395,6 @@ export namespace Prisma {
   export type DemoVideoCountAggregateOutputType = {
     id: number
     s3Url: number
-    productInfo: number
-    colorPalette: number
     durationSeconds: number
     createdAt: number
     updatedAt: number
@@ -3417,7 +3413,6 @@ export namespace Prisma {
   export type DemoVideoMinAggregateInputType = {
     id?: true
     s3Url?: true
-    productInfo?: true
     durationSeconds?: true
     createdAt?: true
     updatedAt?: true
@@ -3426,7 +3421,6 @@ export namespace Prisma {
   export type DemoVideoMaxAggregateInputType = {
     id?: true
     s3Url?: true
-    productInfo?: true
     durationSeconds?: true
     createdAt?: true
     updatedAt?: true
@@ -3435,8 +3429,6 @@ export namespace Prisma {
   export type DemoVideoCountAggregateInputType = {
     id?: true
     s3Url?: true
-    productInfo?: true
-    colorPalette?: true
     durationSeconds?: true
     createdAt?: true
     updatedAt?: true
@@ -3532,8 +3524,6 @@ export namespace Prisma {
   export type DemoVideoGroupByOutputType = {
     id: string
     s3Url: string
-    productInfo: string | null
-    colorPalette: JsonValue | null
     durationSeconds: number
     createdAt: Date
     updatedAt: Date
@@ -3561,8 +3551,6 @@ export namespace Prisma {
   export type DemoVideoSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     s3Url?: boolean
-    productInfo?: boolean
-    colorPalette?: boolean
     durationSeconds?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -3573,8 +3561,6 @@ export namespace Prisma {
   export type DemoVideoSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     s3Url?: boolean
-    productInfo?: boolean
-    colorPalette?: boolean
     durationSeconds?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -3583,8 +3569,6 @@ export namespace Prisma {
   export type DemoVideoSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     s3Url?: boolean
-    productInfo?: boolean
-    colorPalette?: boolean
     durationSeconds?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -3593,14 +3577,12 @@ export namespace Prisma {
   export type DemoVideoSelectScalar = {
     id?: boolean
     s3Url?: boolean
-    productInfo?: boolean
-    colorPalette?: boolean
     durationSeconds?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type DemoVideoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "s3Url" | "productInfo" | "colorPalette" | "durationSeconds" | "createdAt" | "updatedAt", ExtArgs["result"]["demoVideo"]>
+  export type DemoVideoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "s3Url" | "durationSeconds" | "createdAt" | "updatedAt", ExtArgs["result"]["demoVideo"]>
   export type DemoVideoInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     shortDemos?: boolean | DemoVideo$shortDemosArgs<ExtArgs>
     _count?: boolean | DemoVideoCountOutputTypeDefaultArgs<ExtArgs>
@@ -3616,8 +3598,6 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
       id: string
       s3Url: string
-      productInfo: string | null
-      colorPalette: Prisma.JsonValue | null
       durationSeconds: number
       createdAt: Date
       updatedAt: Date
@@ -4047,8 +4027,6 @@ export namespace Prisma {
   interface DemoVideoFieldRefs {
     readonly id: FieldRef<"DemoVideo", 'String'>
     readonly s3Url: FieldRef<"DemoVideo", 'String'>
-    readonly productInfo: FieldRef<"DemoVideo", 'String'>
-    readonly colorPalette: FieldRef<"DemoVideo", 'Json'>
     readonly durationSeconds: FieldRef<"DemoVideo", 'Int'>
     readonly createdAt: FieldRef<"DemoVideo", 'DateTime'>
     readonly updatedAt: FieldRef<"DemoVideo", 'DateTime'>
@@ -4505,10 +4483,9 @@ export namespace Prisma {
   export type ShortDemoMinAggregateOutputType = {
     id: string | null
     demoVideoId: string | null
-    s3Url: string | null
+    demoCutUrl: string | null
     durationSeconds: number | null
-    colorPalette: string | null
-    shortDemoInfo: string | null
+    productInfo: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -4516,10 +4493,9 @@ export namespace Prisma {
   export type ShortDemoMaxAggregateOutputType = {
     id: string | null
     demoVideoId: string | null
-    s3Url: string | null
+    demoCutUrl: string | null
     durationSeconds: number | null
-    colorPalette: string | null
-    shortDemoInfo: string | null
+    productInfo: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -4527,10 +4503,11 @@ export namespace Prisma {
   export type ShortDemoCountAggregateOutputType = {
     id: number
     demoVideoId: number
-    s3Url: number
+    demoCutUrl: number
     durationSeconds: number
+    segments: number
+    productInfo: number
     colorPalette: number
-    shortDemoInfo: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -4548,10 +4525,9 @@ export namespace Prisma {
   export type ShortDemoMinAggregateInputType = {
     id?: true
     demoVideoId?: true
-    s3Url?: true
+    demoCutUrl?: true
     durationSeconds?: true
-    colorPalette?: true
-    shortDemoInfo?: true
+    productInfo?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -4559,10 +4535,9 @@ export namespace Prisma {
   export type ShortDemoMaxAggregateInputType = {
     id?: true
     demoVideoId?: true
-    s3Url?: true
+    demoCutUrl?: true
     durationSeconds?: true
-    colorPalette?: true
-    shortDemoInfo?: true
+    productInfo?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -4570,10 +4545,11 @@ export namespace Prisma {
   export type ShortDemoCountAggregateInputType = {
     id?: true
     demoVideoId?: true
-    s3Url?: true
+    demoCutUrl?: true
     durationSeconds?: true
+    segments?: true
+    productInfo?: true
     colorPalette?: true
-    shortDemoInfo?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -4668,10 +4644,11 @@ export namespace Prisma {
   export type ShortDemoGroupByOutputType = {
     id: string
     demoVideoId: string
-    s3Url: string
+    demoCutUrl: string
     durationSeconds: number
-    colorPalette: string | null
-    shortDemoInfo: string | null
+    segments: JsonValue
+    productInfo: string | null
+    colorPalette: JsonValue | null
     createdAt: Date
     updatedAt: Date
     _count: ShortDemoCountAggregateOutputType | null
@@ -4698,10 +4675,11 @@ export namespace Prisma {
   export type ShortDemoSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     demoVideoId?: boolean
-    s3Url?: boolean
+    demoCutUrl?: boolean
     durationSeconds?: boolean
+    segments?: boolean
+    productInfo?: boolean
     colorPalette?: boolean
-    shortDemoInfo?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     demoVideo?: boolean | DemoVideoDefaultArgs<ExtArgs>
@@ -4710,10 +4688,11 @@ export namespace Prisma {
   export type ShortDemoSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     demoVideoId?: boolean
-    s3Url?: boolean
+    demoCutUrl?: boolean
     durationSeconds?: boolean
+    segments?: boolean
+    productInfo?: boolean
     colorPalette?: boolean
-    shortDemoInfo?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     demoVideo?: boolean | DemoVideoDefaultArgs<ExtArgs>
@@ -4722,10 +4701,11 @@ export namespace Prisma {
   export type ShortDemoSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     demoVideoId?: boolean
-    s3Url?: boolean
+    demoCutUrl?: boolean
     durationSeconds?: boolean
+    segments?: boolean
+    productInfo?: boolean
     colorPalette?: boolean
-    shortDemoInfo?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     demoVideo?: boolean | DemoVideoDefaultArgs<ExtArgs>
@@ -4734,15 +4714,16 @@ export namespace Prisma {
   export type ShortDemoSelectScalar = {
     id?: boolean
     demoVideoId?: boolean
-    s3Url?: boolean
+    demoCutUrl?: boolean
     durationSeconds?: boolean
+    segments?: boolean
+    productInfo?: boolean
     colorPalette?: boolean
-    shortDemoInfo?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type ShortDemoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "demoVideoId" | "s3Url" | "durationSeconds" | "colorPalette" | "shortDemoInfo" | "createdAt" | "updatedAt", ExtArgs["result"]["shortDemo"]>
+  export type ShortDemoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "demoVideoId" | "demoCutUrl" | "durationSeconds" | "segments" | "productInfo" | "colorPalette" | "createdAt" | "updatedAt", ExtArgs["result"]["shortDemo"]>
   export type ShortDemoInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     demoVideo?: boolean | DemoVideoDefaultArgs<ExtArgs>
   }
@@ -4761,10 +4742,11 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
       id: string
       demoVideoId: string
-      s3Url: string
+      demoCutUrl: string
       durationSeconds: number
-      colorPalette: string | null
-      shortDemoInfo: string | null
+      segments: Prisma.JsonValue
+      productInfo: string | null
+      colorPalette: Prisma.JsonValue | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["shortDemo"]>
@@ -5193,10 +5175,11 @@ export namespace Prisma {
   interface ShortDemoFieldRefs {
     readonly id: FieldRef<"ShortDemo", 'String'>
     readonly demoVideoId: FieldRef<"ShortDemo", 'String'>
-    readonly s3Url: FieldRef<"ShortDemo", 'String'>
+    readonly demoCutUrl: FieldRef<"ShortDemo", 'String'>
     readonly durationSeconds: FieldRef<"ShortDemo", 'Int'>
-    readonly colorPalette: FieldRef<"ShortDemo", 'String'>
-    readonly shortDemoInfo: FieldRef<"ShortDemo", 'String'>
+    readonly segments: FieldRef<"ShortDemo", 'Json'>
+    readonly productInfo: FieldRef<"ShortDemo", 'String'>
+    readonly colorPalette: FieldRef<"ShortDemo", 'Json'>
     readonly createdAt: FieldRef<"ShortDemo", 'DateTime'>
     readonly updatedAt: FieldRef<"ShortDemo", 'DateTime'>
   }
@@ -6839,8 +6822,6 @@ export namespace Prisma {
   export const DemoVideoScalarFieldEnum: {
     id: 'id',
     s3Url: 's3Url',
-    productInfo: 'productInfo',
-    colorPalette: 'colorPalette',
     durationSeconds: 'durationSeconds',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
@@ -6852,10 +6833,11 @@ export namespace Prisma {
   export const ShortDemoScalarFieldEnum: {
     id: 'id',
     demoVideoId: 'demoVideoId',
-    s3Url: 's3Url',
+    demoCutUrl: 'demoCutUrl',
     durationSeconds: 'durationSeconds',
+    segments: 'segments',
+    productInfo: 'productInfo',
     colorPalette: 'colorPalette',
-    shortDemoInfo: 'shortDemoInfo',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -6899,6 +6881,13 @@ export namespace Prisma {
   };
 
   export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
+
+
+  export const JsonNullValueInput: {
+    JsonNull: typeof JsonNull
+  };
+
+  export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
 
 
   export const QueryMode: {
@@ -7163,8 +7152,6 @@ export namespace Prisma {
     NOT?: DemoVideoWhereInput | DemoVideoWhereInput[]
     id?: StringFilter<"DemoVideo"> | string
     s3Url?: StringFilter<"DemoVideo"> | string
-    productInfo?: StringNullableFilter<"DemoVideo"> | string | null
-    colorPalette?: JsonNullableFilter<"DemoVideo">
     durationSeconds?: IntFilter<"DemoVideo"> | number
     createdAt?: DateTimeFilter<"DemoVideo"> | Date | string
     updatedAt?: DateTimeFilter<"DemoVideo"> | Date | string
@@ -7174,8 +7161,6 @@ export namespace Prisma {
   export type DemoVideoOrderByWithRelationInput = {
     id?: SortOrder
     s3Url?: SortOrder
-    productInfo?: SortOrderInput | SortOrder
-    colorPalette?: SortOrderInput | SortOrder
     durationSeconds?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -7188,8 +7173,6 @@ export namespace Prisma {
     OR?: DemoVideoWhereInput[]
     NOT?: DemoVideoWhereInput | DemoVideoWhereInput[]
     s3Url?: StringFilter<"DemoVideo"> | string
-    productInfo?: StringNullableFilter<"DemoVideo"> | string | null
-    colorPalette?: JsonNullableFilter<"DemoVideo">
     durationSeconds?: IntFilter<"DemoVideo"> | number
     createdAt?: DateTimeFilter<"DemoVideo"> | Date | string
     updatedAt?: DateTimeFilter<"DemoVideo"> | Date | string
@@ -7199,8 +7182,6 @@ export namespace Prisma {
   export type DemoVideoOrderByWithAggregationInput = {
     id?: SortOrder
     s3Url?: SortOrder
-    productInfo?: SortOrderInput | SortOrder
-    colorPalette?: SortOrderInput | SortOrder
     durationSeconds?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -7217,8 +7198,6 @@ export namespace Prisma {
     NOT?: DemoVideoScalarWhereWithAggregatesInput | DemoVideoScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"DemoVideo"> | string
     s3Url?: StringWithAggregatesFilter<"DemoVideo"> | string
-    productInfo?: StringNullableWithAggregatesFilter<"DemoVideo"> | string | null
-    colorPalette?: JsonNullableWithAggregatesFilter<"DemoVideo">
     durationSeconds?: IntWithAggregatesFilter<"DemoVideo"> | number
     createdAt?: DateTimeWithAggregatesFilter<"DemoVideo"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"DemoVideo"> | Date | string
@@ -7230,10 +7209,11 @@ export namespace Prisma {
     NOT?: ShortDemoWhereInput | ShortDemoWhereInput[]
     id?: StringFilter<"ShortDemo"> | string
     demoVideoId?: StringFilter<"ShortDemo"> | string
-    s3Url?: StringFilter<"ShortDemo"> | string
+    demoCutUrl?: StringFilter<"ShortDemo"> | string
     durationSeconds?: IntFilter<"ShortDemo"> | number
-    colorPalette?: StringNullableFilter<"ShortDemo"> | string | null
-    shortDemoInfo?: StringNullableFilter<"ShortDemo"> | string | null
+    segments?: JsonFilter<"ShortDemo">
+    productInfo?: StringNullableFilter<"ShortDemo"> | string | null
+    colorPalette?: JsonNullableFilter<"ShortDemo">
     createdAt?: DateTimeFilter<"ShortDemo"> | Date | string
     updatedAt?: DateTimeFilter<"ShortDemo"> | Date | string
     demoVideo?: XOR<DemoVideoScalarRelationFilter, DemoVideoWhereInput>
@@ -7242,10 +7222,11 @@ export namespace Prisma {
   export type ShortDemoOrderByWithRelationInput = {
     id?: SortOrder
     demoVideoId?: SortOrder
-    s3Url?: SortOrder
+    demoCutUrl?: SortOrder
     durationSeconds?: SortOrder
+    segments?: SortOrder
+    productInfo?: SortOrderInput | SortOrder
     colorPalette?: SortOrderInput | SortOrder
-    shortDemoInfo?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     demoVideo?: DemoVideoOrderByWithRelationInput
@@ -7257,10 +7238,11 @@ export namespace Prisma {
     OR?: ShortDemoWhereInput[]
     NOT?: ShortDemoWhereInput | ShortDemoWhereInput[]
     demoVideoId?: StringFilter<"ShortDemo"> | string
-    s3Url?: StringFilter<"ShortDemo"> | string
+    demoCutUrl?: StringFilter<"ShortDemo"> | string
     durationSeconds?: IntFilter<"ShortDemo"> | number
-    colorPalette?: StringNullableFilter<"ShortDemo"> | string | null
-    shortDemoInfo?: StringNullableFilter<"ShortDemo"> | string | null
+    segments?: JsonFilter<"ShortDemo">
+    productInfo?: StringNullableFilter<"ShortDemo"> | string | null
+    colorPalette?: JsonNullableFilter<"ShortDemo">
     createdAt?: DateTimeFilter<"ShortDemo"> | Date | string
     updatedAt?: DateTimeFilter<"ShortDemo"> | Date | string
     demoVideo?: XOR<DemoVideoScalarRelationFilter, DemoVideoWhereInput>
@@ -7269,10 +7251,11 @@ export namespace Prisma {
   export type ShortDemoOrderByWithAggregationInput = {
     id?: SortOrder
     demoVideoId?: SortOrder
-    s3Url?: SortOrder
+    demoCutUrl?: SortOrder
     durationSeconds?: SortOrder
+    segments?: SortOrder
+    productInfo?: SortOrderInput | SortOrder
     colorPalette?: SortOrderInput | SortOrder
-    shortDemoInfo?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: ShortDemoCountOrderByAggregateInput
@@ -7288,10 +7271,11 @@ export namespace Prisma {
     NOT?: ShortDemoScalarWhereWithAggregatesInput | ShortDemoScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"ShortDemo"> | string
     demoVideoId?: StringWithAggregatesFilter<"ShortDemo"> | string
-    s3Url?: StringWithAggregatesFilter<"ShortDemo"> | string
+    demoCutUrl?: StringWithAggregatesFilter<"ShortDemo"> | string
     durationSeconds?: IntWithAggregatesFilter<"ShortDemo"> | number
-    colorPalette?: StringNullableWithAggregatesFilter<"ShortDemo"> | string | null
-    shortDemoInfo?: StringNullableWithAggregatesFilter<"ShortDemo"> | string | null
+    segments?: JsonWithAggregatesFilter<"ShortDemo">
+    productInfo?: StringNullableWithAggregatesFilter<"ShortDemo"> | string | null
+    colorPalette?: JsonNullableWithAggregatesFilter<"ShortDemo">
     createdAt?: DateTimeWithAggregatesFilter<"ShortDemo"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"ShortDemo"> | Date | string
   }
@@ -7569,8 +7553,6 @@ export namespace Prisma {
   export type DemoVideoCreateInput = {
     id?: string
     s3Url: string
-    productInfo?: string | null
-    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     durationSeconds: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -7580,8 +7562,6 @@ export namespace Prisma {
   export type DemoVideoUncheckedCreateInput = {
     id?: string
     s3Url: string
-    productInfo?: string | null
-    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     durationSeconds: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -7591,8 +7571,6 @@ export namespace Prisma {
   export type DemoVideoUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     s3Url?: StringFieldUpdateOperationsInput | string
-    productInfo?: NullableStringFieldUpdateOperationsInput | string | null
-    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     durationSeconds?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -7602,8 +7580,6 @@ export namespace Prisma {
   export type DemoVideoUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     s3Url?: StringFieldUpdateOperationsInput | string
-    productInfo?: NullableStringFieldUpdateOperationsInput | string | null
-    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     durationSeconds?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -7613,8 +7589,6 @@ export namespace Prisma {
   export type DemoVideoCreateManyInput = {
     id?: string
     s3Url: string
-    productInfo?: string | null
-    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     durationSeconds: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -7623,8 +7597,6 @@ export namespace Prisma {
   export type DemoVideoUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     s3Url?: StringFieldUpdateOperationsInput | string
-    productInfo?: NullableStringFieldUpdateOperationsInput | string | null
-    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     durationSeconds?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -7633,8 +7605,6 @@ export namespace Prisma {
   export type DemoVideoUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     s3Url?: StringFieldUpdateOperationsInput | string
-    productInfo?: NullableStringFieldUpdateOperationsInput | string | null
-    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     durationSeconds?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -7642,10 +7612,11 @@ export namespace Prisma {
 
   export type ShortDemoCreateInput = {
     id?: string
-    s3Url: string
+    demoCutUrl: string
     durationSeconds: number
-    colorPalette?: string | null
-    shortDemoInfo?: string | null
+    segments: JsonNullValueInput | InputJsonValue
+    productInfo?: string | null
+    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     demoVideo: DemoVideoCreateNestedOneWithoutShortDemosInput
@@ -7654,20 +7625,22 @@ export namespace Prisma {
   export type ShortDemoUncheckedCreateInput = {
     id?: string
     demoVideoId: string
-    s3Url: string
+    demoCutUrl: string
     durationSeconds: number
-    colorPalette?: string | null
-    shortDemoInfo?: string | null
+    segments: JsonNullValueInput | InputJsonValue
+    productInfo?: string | null
+    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
   }
 
   export type ShortDemoUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    s3Url?: StringFieldUpdateOperationsInput | string
+    demoCutUrl?: StringFieldUpdateOperationsInput | string
     durationSeconds?: IntFieldUpdateOperationsInput | number
-    colorPalette?: NullableStringFieldUpdateOperationsInput | string | null
-    shortDemoInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    segments?: JsonNullValueInput | InputJsonValue
+    productInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     demoVideo?: DemoVideoUpdateOneRequiredWithoutShortDemosNestedInput
@@ -7676,10 +7649,11 @@ export namespace Prisma {
   export type ShortDemoUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     demoVideoId?: StringFieldUpdateOperationsInput | string
-    s3Url?: StringFieldUpdateOperationsInput | string
+    demoCutUrl?: StringFieldUpdateOperationsInput | string
     durationSeconds?: IntFieldUpdateOperationsInput | number
-    colorPalette?: NullableStringFieldUpdateOperationsInput | string | null
-    shortDemoInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    segments?: JsonNullValueInput | InputJsonValue
+    productInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -7687,20 +7661,22 @@ export namespace Prisma {
   export type ShortDemoCreateManyInput = {
     id?: string
     demoVideoId: string
-    s3Url: string
+    demoCutUrl: string
     durationSeconds: number
-    colorPalette?: string | null
-    shortDemoInfo?: string | null
+    segments: JsonNullValueInput | InputJsonValue
+    productInfo?: string | null
+    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
   }
 
   export type ShortDemoUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
-    s3Url?: StringFieldUpdateOperationsInput | string
+    demoCutUrl?: StringFieldUpdateOperationsInput | string
     durationSeconds?: IntFieldUpdateOperationsInput | number
-    colorPalette?: NullableStringFieldUpdateOperationsInput | string | null
-    shortDemoInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    segments?: JsonNullValueInput | InputJsonValue
+    productInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -7708,10 +7684,11 @@ export namespace Prisma {
   export type ShortDemoUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     demoVideoId?: StringFieldUpdateOperationsInput | string
-    s3Url?: StringFieldUpdateOperationsInput | string
+    demoCutUrl?: StringFieldUpdateOperationsInput | string
     durationSeconds?: IntFieldUpdateOperationsInput | number
-    colorPalette?: NullableStringFieldUpdateOperationsInput | string | null
-    shortDemoInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    segments?: JsonNullValueInput | InputJsonValue
+    productInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -8100,8 +8077,6 @@ export namespace Prisma {
   export type DemoVideoCountOrderByAggregateInput = {
     id?: SortOrder
     s3Url?: SortOrder
-    productInfo?: SortOrder
-    colorPalette?: SortOrder
     durationSeconds?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -8114,7 +8089,6 @@ export namespace Prisma {
   export type DemoVideoMaxOrderByAggregateInput = {
     id?: SortOrder
     s3Url?: SortOrder
-    productInfo?: SortOrder
     durationSeconds?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -8123,7 +8097,6 @@ export namespace Prisma {
   export type DemoVideoMinOrderByAggregateInput = {
     id?: SortOrder
     s3Url?: SortOrder
-    productInfo?: SortOrder
     durationSeconds?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -8148,6 +8121,29 @@ export namespace Prisma {
     _min?: NestedIntFilter<$PrismaModel>
     _max?: NestedIntFilter<$PrismaModel>
   }
+  export type JsonFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
 
   export type DemoVideoScalarRelationFilter = {
     is?: DemoVideoWhereInput
@@ -8157,10 +8153,11 @@ export namespace Prisma {
   export type ShortDemoCountOrderByAggregateInput = {
     id?: SortOrder
     demoVideoId?: SortOrder
-    s3Url?: SortOrder
+    demoCutUrl?: SortOrder
     durationSeconds?: SortOrder
+    segments?: SortOrder
+    productInfo?: SortOrder
     colorPalette?: SortOrder
-    shortDemoInfo?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -8172,10 +8169,9 @@ export namespace Prisma {
   export type ShortDemoMaxOrderByAggregateInput = {
     id?: SortOrder
     demoVideoId?: SortOrder
-    s3Url?: SortOrder
+    demoCutUrl?: SortOrder
     durationSeconds?: SortOrder
-    colorPalette?: SortOrder
-    shortDemoInfo?: SortOrder
+    productInfo?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -8183,16 +8179,41 @@ export namespace Prisma {
   export type ShortDemoMinOrderByAggregateInput = {
     id?: SortOrder
     demoVideoId?: SortOrder
-    s3Url?: SortOrder
+    demoCutUrl?: SortOrder
     durationSeconds?: SortOrder
-    colorPalette?: SortOrder
-    shortDemoInfo?: SortOrder
+    productInfo?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
 
   export type ShortDemoSumOrderByAggregateInput = {
     durationSeconds?: SortOrder
+  }
+  export type JsonWithAggregatesFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonWithAggregatesFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonWithAggregatesFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedJsonFilter<$PrismaModel>
+    _max?: NestedJsonFilter<$PrismaModel>
   }
 
   export type HookViralVideoCountOrderByAggregateInput = {
@@ -8519,23 +8540,48 @@ export namespace Prisma {
     gte?: number | FloatFieldRefInput<$PrismaModel>
     not?: NestedFloatFilter<$PrismaModel> | number
   }
+  export type NestedJsonFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<NestedJsonFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>,
+        Required<NestedJsonFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>
+
+  export type NestedJsonFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
 
   export type ShortDemoCreateWithoutDemoVideoInput = {
     id?: string
-    s3Url: string
+    demoCutUrl: string
     durationSeconds: number
-    colorPalette?: string | null
-    shortDemoInfo?: string | null
+    segments: JsonNullValueInput | InputJsonValue
+    productInfo?: string | null
+    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
   }
 
   export type ShortDemoUncheckedCreateWithoutDemoVideoInput = {
     id?: string
-    s3Url: string
+    demoCutUrl: string
     durationSeconds: number
-    colorPalette?: string | null
-    shortDemoInfo?: string | null
+    segments: JsonNullValueInput | InputJsonValue
+    productInfo?: string | null
+    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -8572,10 +8618,11 @@ export namespace Prisma {
     NOT?: ShortDemoScalarWhereInput | ShortDemoScalarWhereInput[]
     id?: StringFilter<"ShortDemo"> | string
     demoVideoId?: StringFilter<"ShortDemo"> | string
-    s3Url?: StringFilter<"ShortDemo"> | string
+    demoCutUrl?: StringFilter<"ShortDemo"> | string
     durationSeconds?: IntFilter<"ShortDemo"> | number
-    colorPalette?: StringNullableFilter<"ShortDemo"> | string | null
-    shortDemoInfo?: StringNullableFilter<"ShortDemo"> | string | null
+    segments?: JsonFilter<"ShortDemo">
+    productInfo?: StringNullableFilter<"ShortDemo"> | string | null
+    colorPalette?: JsonNullableFilter<"ShortDemo">
     createdAt?: DateTimeFilter<"ShortDemo"> | Date | string
     updatedAt?: DateTimeFilter<"ShortDemo"> | Date | string
   }
@@ -8583,8 +8630,6 @@ export namespace Prisma {
   export type DemoVideoCreateWithoutShortDemosInput = {
     id?: string
     s3Url: string
-    productInfo?: string | null
-    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     durationSeconds: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -8593,8 +8638,6 @@ export namespace Prisma {
   export type DemoVideoUncheckedCreateWithoutShortDemosInput = {
     id?: string
     s3Url: string
-    productInfo?: string | null
-    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     durationSeconds: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -8619,8 +8662,6 @@ export namespace Prisma {
   export type DemoVideoUpdateWithoutShortDemosInput = {
     id?: StringFieldUpdateOperationsInput | string
     s3Url?: StringFieldUpdateOperationsInput | string
-    productInfo?: NullableStringFieldUpdateOperationsInput | string | null
-    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     durationSeconds?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -8629,8 +8670,6 @@ export namespace Prisma {
   export type DemoVideoUncheckedUpdateWithoutShortDemosInput = {
     id?: StringFieldUpdateOperationsInput | string
     s3Url?: StringFieldUpdateOperationsInput | string
-    productInfo?: NullableStringFieldUpdateOperationsInput | string | null
-    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     durationSeconds?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -8638,40 +8677,44 @@ export namespace Prisma {
 
   export type ShortDemoCreateManyDemoVideoInput = {
     id?: string
-    s3Url: string
+    demoCutUrl: string
     durationSeconds: number
-    colorPalette?: string | null
-    shortDemoInfo?: string | null
+    segments: JsonNullValueInput | InputJsonValue
+    productInfo?: string | null
+    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
   }
 
   export type ShortDemoUpdateWithoutDemoVideoInput = {
     id?: StringFieldUpdateOperationsInput | string
-    s3Url?: StringFieldUpdateOperationsInput | string
+    demoCutUrl?: StringFieldUpdateOperationsInput | string
     durationSeconds?: IntFieldUpdateOperationsInput | number
-    colorPalette?: NullableStringFieldUpdateOperationsInput | string | null
-    shortDemoInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    segments?: JsonNullValueInput | InputJsonValue
+    productInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ShortDemoUncheckedUpdateWithoutDemoVideoInput = {
     id?: StringFieldUpdateOperationsInput | string
-    s3Url?: StringFieldUpdateOperationsInput | string
+    demoCutUrl?: StringFieldUpdateOperationsInput | string
     durationSeconds?: IntFieldUpdateOperationsInput | number
-    colorPalette?: NullableStringFieldUpdateOperationsInput | string | null
-    shortDemoInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    segments?: JsonNullValueInput | InputJsonValue
+    productInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ShortDemoUncheckedUpdateManyWithoutDemoVideoInput = {
     id?: StringFieldUpdateOperationsInput | string
-    s3Url?: StringFieldUpdateOperationsInput | string
+    demoCutUrl?: StringFieldUpdateOperationsInput | string
     durationSeconds?: IntFieldUpdateOperationsInput | number
-    colorPalette?: NullableStringFieldUpdateOperationsInput | string | null
-    shortDemoInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    segments?: JsonNullValueInput | InputJsonValue
+    productInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    colorPalette?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

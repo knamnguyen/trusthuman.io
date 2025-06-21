@@ -73,10 +73,6 @@ model User {
 model DemoVideo {
   id              String   @id @default(cuid())
   s3Url           String   // S3 URL where the original demo video is stored
-  productInfo     String?  // Product information
-  colorPalette    Json?    // Color palette of the video as JSON array (optional)
-  demoInfoEmbedding Unsupported("vector(768)")?
-  colorPaletteEmbedding Unsupported("vector(768)")?
   durationSeconds Int      // Original video duration in seconds
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -91,14 +87,13 @@ model DemoVideo {
 model ShortDemo {
   id              String   @id @default(cuid())
   demoVideoId     String   // Foreign key to original demo
-  s3Url           String   // S3 URL of the short version
+  demoCutUrl      String   // S3 URL of the short version
   durationSeconds Int      // Actual duration of short video
-
-  // Optional fields for future use
-  colorPalette    String?  // Color palette (optional)
+  segments        Json     // Array of video segments with captions and timing
+  productInfo     String?  // Product information
+  productInfoEmbedding Unsupported("vector(768)")?
+  colorPalette    Json?    // Color palette of the video as JSON array
   colorPaletteEmbedding Unsupported("vector(768)")?
-  shortDemoInfo   String?  // Description/info about this short version (optional)
-  shortDemoInfoEmbedding Unsupported("vector(768)")?
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -107,7 +102,7 @@ model ShortDemo {
   demoVideo       DemoVideo @relation(fields: [demoVideoId], references: [id], onDelete: Cascade)
 
   @@index([demoVideoId])  // Fast lookup: "Find all shorts for this demo"
-  @@index([s3Url])        // Fast lookup: "Find short by S3 URL"
+  @@index([demoCutUrl])   // Fast lookup: "Find short by S3 URL"
 }
 
 // Hook viral videos from TikTok for training/reference data

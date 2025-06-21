@@ -146,8 +146,6 @@ exports.Prisma.UserScalarFieldEnum = {
 exports.Prisma.DemoVideoScalarFieldEnum = {
   id: 'id',
   s3Url: 's3Url',
-  productInfo: 'productInfo',
-  colorPalette: 'colorPalette',
   durationSeconds: 'durationSeconds',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -156,10 +154,11 @@ exports.Prisma.DemoVideoScalarFieldEnum = {
 exports.Prisma.ShortDemoScalarFieldEnum = {
   id: 'id',
   demoVideoId: 'demoVideoId',
-  s3Url: 's3Url',
+  demoCutUrl: 'demoCutUrl',
   durationSeconds: 'durationSeconds',
+  segments: 'segments',
+  productInfo: 'productInfo',
   colorPalette: 'colorPalette',
-  shortDemoInfo: 'shortDemoInfo',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -190,6 +189,10 @@ exports.Prisma.SortOrder = {
 
 exports.Prisma.NullableJsonNullValueInput = {
   DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull
+};
+
+exports.Prisma.JsonNullValueInput = {
   JsonNull: Prisma.JsonNull
 };
 
