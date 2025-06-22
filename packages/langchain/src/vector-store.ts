@@ -53,56 +53,32 @@ export class VideoVectorStore {
   }
 
   /**
-   * Normalize and flatten color palette for vector embedding
-   * Converts RGB values from 0-255 to 0-1 scale and flattens the structure
+   * Create direct color vector from color palette
+   * Fixed size vector: 768 dimensions (padded to match existing column)
+   * First 16 dimensions: 4 colors × 4 values (r, g, b, percentage)
+   * Remaining 752 dimensions: zeros (padding)
    */
-  private normalizeColorPalette(colorPalette: ColorPalette): number[] {
-    const normalized: number[] = [];
+  private createDirectColorVector(colorPalette: ColorPalette): number[] {
+    // Initialize 768-dimension vector with zeros to match existing column
+    const vector = new Array(768).fill(0);
 
-    for (const color of colorPalette) {
+    // Take up to 4 most dominant colors and fill first 16 dimensions
+    const colorsToProcess = colorPalette.slice(0, 4);
+
+    colorsToProcess.forEach((color, index) => {
+      const baseIndex = index * 4;
+
       // Normalize RGB values from 0-255 to 0-1 scale
-      const normalizedRed = color.red / 255;
-      const normalizedGreen = color.green / 255;
-      const normalizedBlue = color.blue / 255;
+      vector[baseIndex] = color.red / 255;
+      vector[baseIndex + 1] = color.green / 255;
+      vector[baseIndex + 2] = color.blue / 255;
 
       // Percentage is already in 0-1 scale
-      const percentage = color.percentage;
+      vector[baseIndex + 3] = color.percentage;
+    });
 
-      // Flatten into array: [r, g, b, percentage]
-      normalized.push(
-        normalizedRed,
-        normalizedGreen,
-        normalizedBlue,
-        percentage,
-      );
-    }
-
-    return normalized;
-  }
-
-  /**
-   * Convert color palette to text representation for embedding
-   */
-  private colorPaletteToText(colorPalette: ColorPalette): string {
-    const normalizedValues = this.normalizeColorPalette(colorPalette);
-
-    return normalizedValues
-      .map((value, index) => {
-        const colorIndex = Math.floor(index / 4) + 1;
-        const component = ["red", "green", "blue", "percentage"][index % 4];
-        return `color${colorIndex}_${component}:${value.toFixed(3)}`;
-      })
-      .join(" ");
-  }
-
-  /**
-   * Generate color palette embedding
-   */
-  private async generateColorPaletteEmbedding(
-    colorPalette: ColorPalette,
-  ): Promise<number[]> {
-    const colorText = this.colorPaletteToText(colorPalette);
-    return await this.embeddings.embedQuery(colorText);
+    // Remaining 752 dimensions stay as zeros (padding)
+    return vector;
   }
 
   /**
@@ -134,6 +110,13 @@ export class VideoVectorStore {
     durationSeconds: number;
     colorPalette?: ColorPalette | null;
   }): Promise<void> {
+    // Debug logging for colorPalette
+    console.log(`🔍 DEBUG - Color palette type: ${typeof video.colorPalette}`);
+    console.log(`🔍 DEBUG - Color palette value:`, video.colorPalette);
+    console.log(
+      `🔍 DEBUG - Color palette length: ${video.colorPalette?.length}`,
+    );
+
     // Generate text embedding if content exists
     const hasContent =
       (video.description && video.description.trim()) || video.hookInfo?.trim();
@@ -159,26 +142,27 @@ export class VideoVectorStore {
       );
     }
 
-    // Generate color palette embedding if color palette exists
+    // Generate direct color vector if color palette exists
     if (video.colorPalette && video.colorPalette.length > 0) {
       try {
-        console.log(`🎨 Generating color palette vector embedding...`);
+        console.log(`🎨 Generating direct color vector embedding...`);
 
-        const colorEmbedding = await this.generateColorPaletteEmbedding(
-          video.colorPalette,
-        );
-        await this.storeColorPaletteEmbedding(video.id, colorEmbedding);
+        const colorVector = this.createDirectColorVector(video.colorPalette);
+        await this.storeColorPaletteEmbedding(video.id, colorVector);
 
         console.log(
-          `✅ Color palette vector embedding generated and saved (${colorEmbedding.length} dimensions)`,
+          `✅ Direct color vector embedding generated and saved (${colorVector.length} dimensions)`,
         );
       } catch (error) {
-        console.warn(`⚠️ Failed to generate color palette embedding:`, error);
+        console.warn(`⚠️ Failed to generate color vector embedding:`, error);
         throw error;
       }
     } else {
       console.log(
         `ℹ️ No color palette available, skipping color vector embedding`,
+      );
+      console.log(
+        `🔍 DEBUG - Condition check failed: colorPalette=${!!video.colorPalette}, length=${video.colorPalette?.length}`,
       );
     }
   }
@@ -201,8 +185,7 @@ export class VideoVectorStore {
     colorPalette: ColorPalette,
     limit = 3,
   ): Promise<VideoSearchResult[]> {
-    const colorEmbedding =
-      await this.generateColorPaletteEmbedding(colorPalette);
+    const colorVector = this.createDirectColorVector(colorPalette);
 
     const results = await db.$queryRaw<
       {
@@ -220,10 +203,10 @@ export class VideoVectorStore {
     >`
       SELECT 
         id, title, description, "s3Url", views, likes, comments, "durationSeconds", "colorPalette",
-        1 - ("colorPaletteEmbedding" <=> ${`[${colorEmbedding.join(",")}]`}::vector) as similarity
+        1 - ("colorPaletteEmbedding" <=> ${`[${colorVector.join(",")}]`}::vector) as similarity
       FROM "HookViralVideo"
       WHERE "colorPaletteEmbedding" IS NOT NULL
-      ORDER BY "colorPaletteEmbedding" <=> ${`[${colorEmbedding.join(",")}]`}::vector
+      ORDER BY "colorPaletteEmbedding" <=> ${`[${colorVector.join(",")}]`}::vector
       LIMIT ${limit}
     `;
 
@@ -253,8 +236,7 @@ export class VideoVectorStore {
       return [];
     }
 
-    const colorEmbedding =
-      await this.generateColorPaletteEmbedding(colorPalette);
+    const colorVector = this.createDirectColorVector(colorPalette);
 
     const results = await db.$queryRaw<
       {
@@ -272,11 +254,11 @@ export class VideoVectorStore {
     >`
       SELECT 
         id, title, description, "s3Url", views, likes, comments, "durationSeconds", "colorPalette",
-        1 - ("colorPaletteEmbedding" <=> ${`[${colorEmbedding.join(",")}]`}::vector) as similarity
+        1 - ("colorPaletteEmbedding" <=> ${`[${colorVector.join(",")}]`}::vector) as similarity
       FROM "HookViralVideo"
       WHERE "colorPaletteEmbedding" IS NOT NULL
         AND id = ANY(${videoIds})
-      ORDER BY "colorPaletteEmbedding" <=> ${`[${colorEmbedding.join(",")}]`}::vector
+      ORDER BY "colorPaletteEmbedding" <=> ${`[${colorVector.join(",")}]`}::vector
       LIMIT ${limit}
     `;
 
