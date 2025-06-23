@@ -64,12 +64,14 @@ export const ViralHookResponseSchema = z.object({
 // Input schema for demo video condensing
 export const DemoVideoInputSchema = z.object({
   videoUrl: z.string().url("Valid video URL is required"),
-  maxDuration: z.number().positive("Max duration must be positive"),
+  maxDuration: z.number().positive("Max duration must be positive").default(30),
   numSegments: z
     .number()
     .int()
     .min(1)
-    .max(20, "Number of segments must be between 1 and 20"),
+    .max(20, "Number of segments must be between 1 and 20")
+    .default(3),
+  contentGuide: z.string().optional(),
 });
 
 // Individual segment schema (matches VideoStitch clip format)
@@ -78,8 +80,11 @@ export const VideoSegmentSchema = z.object({
     .string()
     .min(1, "Caption is required")
     .max(100, "Caption must be 100 characters or less"),
-  start: z.number().nonnegative("Start time must be non-negative"),
-  end: z.number().positive("End time must be positive"),
+  start: z
+    .number()
+    .int()
+    .nonnegative("Start time must be a non-negative integer"),
+  end: z.number().int().positive("End time must be a positive integer"),
 });
 
 // Output schema for demo video condensing

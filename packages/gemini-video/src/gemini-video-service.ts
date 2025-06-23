@@ -324,7 +324,7 @@ export class GeminiVideoService {
 
   /**
    * Condense demo videos into segments with captions
-   * @param input - Video URL, max duration, and number of segments
+   * @param input - Video URL, max duration, number of segments, and optional content guide
    * @returns Array of video segments with captions and timing
    */
   async condenseDemoVideo(input: DemoVideoInput): Promise<DemoVideoResponse> {
@@ -337,6 +337,9 @@ export class GeminiVideoService {
       console.log(
         `📊 Target: ${validatedInput.numSegments} segments, max ${validatedInput.maxDuration}s total`,
       );
+      if (validatedInput.contentGuide) {
+        console.log("📝 Content guide provided:", validatedInput.contentGuide);
+      }
 
       // Upload video to Gemini
       videoFile = await this.uploadVideoToGemini(validatedInput.videoUrl);
@@ -346,10 +349,27 @@ export class GeminiVideoService {
         validatedInput.maxDuration / validatedInput.numSegments,
       );
 
-      // Create specific prompt for demo condensing
+      // Create specific prompt for demo condensing with optional content guide
+      const contentGuideInstruction = validatedInput.contentGuide
+        ? `
+        IMPORTANT: Follow this content guide for segment selection and caption direction:
+        "${validatedInput.contentGuide}"
+        
+        Use this guide to determine:
+        - Which parts of the video to prioritize for segments
+        - The style and focus for captions
+        - The overall narrative direction for the condensed version
+        `
+        : `
+        Focus on the most important and engaging parts of the demo that showcase key features and user interactions.
+        `;
+
       const demoPrompt = `
         This is a product demo video. I need to condense it into a maximum ${validatedInput.maxDuration} second version.
         Create a script for a condensed version that highlights the key steps and features.
+        
+        ${contentGuideInstruction}
+        
         The script should:
         1. Focus on important UI interactions, button clicks, and transitions
         2. Capture the essential flow of the demo
@@ -358,7 +378,7 @@ export class GeminiVideoService {
         
         For each segment provide:
         1. A brief caption (maximum 20 words)
-        2. The exact start and end timestamps in the video (in seconds.milliseconds format)
+        2. The exact start and end timestamps in the video (in whole seconds format)
         
         Additionally, analyze the product being demonstrated and provide a comprehensive description that includes:
         - Product name and type/category
@@ -375,7 +395,7 @@ export class GeminiVideoService {
         Format your response as JSON with this structure:
         {
           "segments": [
-            {"caption": "Brief caption here", "start": 12.5, "end": 18.2}
+            {"caption": "Brief caption here", "start": 12, "end": 18}
           ],
           "totalDuration": ${validatedInput.maxDuration},
           "productInfo": "A comprehensive 100-word description of the product including features, benefits, categories, and relevant keywords for similarity matching...",
@@ -388,6 +408,8 @@ export class GeminiVideoService {
           ]
         }
         
+        IMPORTANT: Use whole number values for start and end times (e.g., 12, 18) NOT decimal values like 12.5 or string values like "00:12".
+        The start and end times must be integers representing whole seconds.
         Ensure the total duration of all segments is less than ${validatedInput.maxDuration} seconds.
         Ensure the productInfo is approximately 100 words and includes relevant keywords for similarity search.
         Make sure the colorPalette contains exactly 5 colors sorted by percentage (descending) and percentages add up to exactly 1.0.

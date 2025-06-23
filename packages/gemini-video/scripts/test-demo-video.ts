@@ -86,8 +86,10 @@ const TEST_CONFIG = {
   // Use the TikTok video as demo video for testing
   videoUrl:
     "https://viralcut-s3bucket.s3.us-west-2.amazonaws.com/uploads%2F1749454504863-ikkpy1mr-ivatar_code_overview.mp4",
-  maxDuration: 30, // 30 seconds total
-  numSegments: 3, // 3 segments of ~10 seconds each
+  maxDuration: 15, // 15 seconds total
+  numSegments: 5, // 5 segments of ~3 seconds each
+  contentGuide:
+    "Focus on how to use the app. Which button to click, what it does, benefit, effect, and so on",
 };
 
 async function main() {
@@ -96,6 +98,7 @@ async function main() {
   console.log("📹 Video URL:", TEST_CONFIG.videoUrl);
   console.log("⏱️ Max Duration:", TEST_CONFIG.maxDuration, "seconds");
   console.log("📊 Target Segments:", TEST_CONFIG.numSegments);
+  console.log("📝 Content Guide:", TEST_CONFIG.contentGuide);
   console.log("");
 
   try {
@@ -110,6 +113,7 @@ async function main() {
       videoUrl: TEST_CONFIG.videoUrl,
       maxDuration: TEST_CONFIG.maxDuration,
       numSegments: TEST_CONFIG.numSegments,
+      contentGuide: TEST_CONFIG.contentGuide,
     });
 
     console.log("");
