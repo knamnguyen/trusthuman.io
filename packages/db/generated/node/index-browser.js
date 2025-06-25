@@ -147,6 +147,7 @@ exports.Prisma.DemoVideoScalarFieldEnum = {
   id: 'id',
   s3Url: 's3Url',
   durationSeconds: 'durationSeconds',
+  masterScript: 'masterScript',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };

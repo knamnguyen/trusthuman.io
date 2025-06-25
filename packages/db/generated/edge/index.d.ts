@@ -3553,6 +3553,7 @@ export namespace Prisma {
     id: number
     s3Url: number
     durationSeconds: number
+    masterScript: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -3587,6 +3588,7 @@ export namespace Prisma {
     id?: true
     s3Url?: true
     durationSeconds?: true
+    masterScript?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -3682,6 +3684,7 @@ export namespace Prisma {
     id: string
     s3Url: string
     durationSeconds: number
+    masterScript: JsonValue
     createdAt: Date
     updatedAt: Date
     _count: DemoVideoCountAggregateOutputType | null
@@ -3709,6 +3712,7 @@ export namespace Prisma {
     id?: boolean
     s3Url?: boolean
     durationSeconds?: boolean
+    masterScript?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     shortDemos?: boolean | DemoVideo$shortDemosArgs<ExtArgs>
@@ -3719,6 +3723,7 @@ export namespace Prisma {
     id?: boolean
     s3Url?: boolean
     durationSeconds?: boolean
+    masterScript?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["demoVideo"]>
@@ -3727,6 +3732,7 @@ export namespace Prisma {
     id?: boolean
     s3Url?: boolean
     durationSeconds?: boolean
+    masterScript?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["demoVideo"]>
@@ -3735,11 +3741,12 @@ export namespace Prisma {
     id?: boolean
     s3Url?: boolean
     durationSeconds?: boolean
+    masterScript?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type DemoVideoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "s3Url" | "durationSeconds" | "createdAt" | "updatedAt", ExtArgs["result"]["demoVideo"]>
+  export type DemoVideoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "s3Url" | "durationSeconds" | "masterScript" | "createdAt" | "updatedAt", ExtArgs["result"]["demoVideo"]>
   export type DemoVideoInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     shortDemos?: boolean | DemoVideo$shortDemosArgs<ExtArgs>
     _count?: boolean | DemoVideoCountOutputTypeDefaultArgs<ExtArgs>
@@ -3756,6 +3763,7 @@ export namespace Prisma {
       id: string
       s3Url: string
       durationSeconds: number
+      masterScript: Prisma.JsonValue
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["demoVideo"]>
@@ -4185,6 +4193,7 @@ export namespace Prisma {
     readonly id: FieldRef<"DemoVideo", 'String'>
     readonly s3Url: FieldRef<"DemoVideo", 'String'>
     readonly durationSeconds: FieldRef<"DemoVideo", 'Int'>
+    readonly masterScript: FieldRef<"DemoVideo", 'Json'>
     readonly createdAt: FieldRef<"DemoVideo", 'DateTime'>
     readonly updatedAt: FieldRef<"DemoVideo", 'DateTime'>
   }
@@ -8211,6 +8220,7 @@ export namespace Prisma {
     id: 'id',
     s3Url: 's3Url',
     durationSeconds: 'durationSeconds',
+    masterScript: 'masterScript',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -8554,6 +8564,7 @@ export namespace Prisma {
     id?: StringFilter<"DemoVideo"> | string
     s3Url?: StringFilter<"DemoVideo"> | string
     durationSeconds?: IntFilter<"DemoVideo"> | number
+    masterScript?: JsonFilter<"DemoVideo">
     createdAt?: DateTimeFilter<"DemoVideo"> | Date | string
     updatedAt?: DateTimeFilter<"DemoVideo"> | Date | string
     shortDemos?: ShortDemoListRelationFilter
@@ -8563,6 +8574,7 @@ export namespace Prisma {
     id?: SortOrder
     s3Url?: SortOrder
     durationSeconds?: SortOrder
+    masterScript?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     shortDemos?: ShortDemoOrderByRelationAggregateInput
@@ -8575,6 +8587,7 @@ export namespace Prisma {
     NOT?: DemoVideoWhereInput | DemoVideoWhereInput[]
     s3Url?: StringFilter<"DemoVideo"> | string
     durationSeconds?: IntFilter<"DemoVideo"> | number
+    masterScript?: JsonFilter<"DemoVideo">
     createdAt?: DateTimeFilter<"DemoVideo"> | Date | string
     updatedAt?: DateTimeFilter<"DemoVideo"> | Date | string
     shortDemos?: ShortDemoListRelationFilter
@@ -8584,6 +8597,7 @@ export namespace Prisma {
     id?: SortOrder
     s3Url?: SortOrder
     durationSeconds?: SortOrder
+    masterScript?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: DemoVideoCountOrderByAggregateInput
@@ -8600,6 +8614,7 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"DemoVideo"> | string
     s3Url?: StringWithAggregatesFilter<"DemoVideo"> | string
     durationSeconds?: IntWithAggregatesFilter<"DemoVideo"> | number
+    masterScript?: JsonWithAggregatesFilter<"DemoVideo">
     createdAt?: DateTimeWithAggregatesFilter<"DemoVideo"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"DemoVideo"> | Date | string
   }
@@ -9032,6 +9047,7 @@ export namespace Prisma {
     id?: string
     s3Url: string
     durationSeconds: number
+    masterScript?: JsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     shortDemos?: ShortDemoCreateNestedManyWithoutDemoVideoInput
@@ -9041,6 +9057,7 @@ export namespace Prisma {
     id?: string
     s3Url: string
     durationSeconds: number
+    masterScript?: JsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     shortDemos?: ShortDemoUncheckedCreateNestedManyWithoutDemoVideoInput
@@ -9050,6 +9067,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     s3Url?: StringFieldUpdateOperationsInput | string
     durationSeconds?: IntFieldUpdateOperationsInput | number
+    masterScript?: JsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     shortDemos?: ShortDemoUpdateManyWithoutDemoVideoNestedInput
@@ -9059,6 +9077,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     s3Url?: StringFieldUpdateOperationsInput | string
     durationSeconds?: IntFieldUpdateOperationsInput | number
+    masterScript?: JsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     shortDemos?: ShortDemoUncheckedUpdateManyWithoutDemoVideoNestedInput
@@ -9068,6 +9087,7 @@ export namespace Prisma {
     id?: string
     s3Url: string
     durationSeconds: number
+    masterScript?: JsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -9076,6 +9096,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     s3Url?: StringFieldUpdateOperationsInput | string
     durationSeconds?: IntFieldUpdateOperationsInput | number
+    masterScript?: JsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -9084,6 +9105,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     s3Url?: StringFieldUpdateOperationsInput | string
     durationSeconds?: IntFieldUpdateOperationsInput | number
+    masterScript?: JsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -9617,6 +9639,29 @@ export namespace Prisma {
     gte?: number | IntFieldRefInput<$PrismaModel>
     not?: NestedIntFilter<$PrismaModel> | number
   }
+  export type JsonFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
 
   export type ShortDemoListRelationFilter = {
     every?: ShortDemoWhereInput
@@ -9632,6 +9677,7 @@ export namespace Prisma {
     id?: SortOrder
     s3Url?: SortOrder
     durationSeconds?: SortOrder
+    masterScript?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -9675,14 +9721,14 @@ export namespace Prisma {
     _min?: NestedIntFilter<$PrismaModel>
     _max?: NestedIntFilter<$PrismaModel>
   }
-  export type JsonFilter<$PrismaModel = never> =
+  export type JsonWithAggregatesFilter<$PrismaModel = never> =
     | PatchUndefined<
-        Either<Required<JsonFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonFilterBase<$PrismaModel>>, 'path'>>,
-        Required<JsonFilterBase<$PrismaModel>>
+        Either<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonWithAggregatesFilterBase<$PrismaModel>>
       >
-    | OptionalFlat<Omit<Required<JsonFilterBase<$PrismaModel>>, 'path'>>
+    | OptionalFlat<Omit<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
 
-  export type JsonFilterBase<$PrismaModel = never> = {
+  export type JsonWithAggregatesFilterBase<$PrismaModel = never> = {
     equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
     path?: string[]
     mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
@@ -9697,6 +9743,9 @@ export namespace Prisma {
     gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
     gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedJsonFilter<$PrismaModel>
+    _max?: NestedJsonFilter<$PrismaModel>
   }
 
   export type DemoVideoScalarRelationFilter = {
@@ -9752,32 +9801,6 @@ export namespace Prisma {
 
   export type ShortDemoSumOrderByAggregateInput = {
     durationSeconds?: SortOrder
-  }
-  export type JsonWithAggregatesFilter<$PrismaModel = never> =
-    | PatchUndefined<
-        Either<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
-        Required<JsonWithAggregatesFilterBase<$PrismaModel>>
-      >
-    | OptionalFlat<Omit<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
-
-  export type JsonWithAggregatesFilterBase<$PrismaModel = never> = {
-    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    path?: string[]
-    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
-    string_contains?: string | StringFieldRefInput<$PrismaModel>
-    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
-    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
-    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedJsonFilter<$PrismaModel>
-    _max?: NestedJsonFilter<$PrismaModel>
   }
 
   export type HookViralVideoCountOrderByAggregateInput = {
@@ -10362,6 +10385,7 @@ export namespace Prisma {
     id?: string
     s3Url: string
     durationSeconds: number
+    masterScript?: JsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -10370,6 +10394,7 @@ export namespace Prisma {
     id?: string
     s3Url: string
     durationSeconds: number
+    masterScript?: JsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -10422,6 +10447,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     s3Url?: StringFieldUpdateOperationsInput | string
     durationSeconds?: IntFieldUpdateOperationsInput | number
+    masterScript?: JsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -10430,6 +10456,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     s3Url?: StringFieldUpdateOperationsInput | string
     durationSeconds?: IntFieldUpdateOperationsInput | number
+    masterScript?: JsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

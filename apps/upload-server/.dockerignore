@@ -1,0 +1,9 @@
+node_modules
+dist
+.turbo
+.git
+.gitignore
+README.md
+*.log
+.env*
+!.env.example 

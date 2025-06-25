@@ -2,7 +2,7 @@
 
 import type { DropzoneOptions } from "react-dropzone";
 import { useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { Button } from "@sassy/ui/button";
@@ -15,7 +15,7 @@ import {
 import { Progress } from "@sassy/ui/progress";
 import { VIDEO_CONSTRAINTS } from "@sassy/ui/schema-validators";
 
-import { useMultipartUpload } from "~/hooks/use-multipart-upload";
+import { useParallelUpload } from "~/hooks/use-parallel-upload";
 import { useTRPC } from "~/trpc/react";
 
 interface VideoClip {
@@ -28,8 +28,9 @@ const FileUploadDropzone = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<
-    "idle" | "uploading" | "completed" | "failed"
+    "idle" | "uploading" | "generating-script" | "completed" | "failed"
   >("idle");
+  const [speedMultiplier, setSpeedMultiplier] = useState(0.5);
   const [processingStatus, setProcessingStatus] = useState<
     "idle" | "processing" | "completed" | "failed"
   >("idle");
@@ -39,7 +40,7 @@ const FileUploadDropzone = () => {
     { range: "00:05-00:15", caption: "This is a great clip!" },
   ]);
 
-  // Store processing data from Remotion
+  // Store processing data from uploads
   const [processingData, setProcessingData] = useState<{
     renderId: string;
     bucketName: string;
@@ -53,17 +54,23 @@ const FileUploadDropzone = () => {
   );
 
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
 
-  // Multipart upload hook
-  const { uploadFile: uploadFileWithMultipart } = useMultipartUpload({
+  // Parallel upload hook (S3 + Gemini)
+  const {
+    uploadFile: uploadFileParallel,
+    isUploading: isParallelUploading,
+    progress: parallelProgress,
+  } = useParallelUpload({
     onProgress: (progress) => {
-      setUploadProgress(progress.percentage);
+      setUploadProgress(progress.overall);
     },
     onSuccess: (result) => {
-      console.log("Upload successful:", result);
+      console.log("Parallel upload successful:", result);
+      setUploadStatus("completed");
     },
     onError: (error) => {
-      console.error("Upload error:", error);
+      console.error("Parallel upload error:", error);
       toast.error(`Error: ${error.message}`);
       setUploadStatus("failed");
     },
@@ -162,7 +169,7 @@ const FileUploadDropzone = () => {
       }
 
       // Step 2: Upload to S3 with duration for database save
-      const uploadResult = await uploadFileWithMultipart(file, {
+      const uploadResult = await uploadFileParallel(file, {
         prefix: "uploads",
         durationSeconds: Math.round(duration),
       });
@@ -171,16 +178,19 @@ const FileUploadDropzone = () => {
       setProcessingData({
         renderId: "", // Will be set after processing starts
         bucketName: "", // Will be set after processing starts
-        videoUrl: uploadResult.location,
+        videoUrl: uploadResult.s3.location,
         originalDuration: duration,
       });
 
       setUploadProgress(100);
       setUploadStatus("completed");
 
-      toast.success("Video uploaded successfully!");
+      toast.success("Video uploaded and master script generated successfully!");
       if (uploadResult.demoVideo) {
-        console.log("Demo video saved to database:", uploadResult.demoVideo);
+        console.log(
+          "Demo video saved with master script:",
+          uploadResult.demoVideo,
+        );
       }
     } catch (error) {
       console.error("Upload error:", error);
@@ -303,10 +313,12 @@ const FileUploadDropzone = () => {
     switch (uploadStatus) {
       case "uploading":
         return "Uploading video to cloud storage...";
+      case "generating-script":
+        return "Generating master script with AI analysis...";
       case "completed":
-        return "Video uploaded successfully!";
+        return "Video uploaded and master script generated successfully!";
       case "failed":
-        return "Upload failed. Please try again.";
+        return "Upload or master script generation failed. Please try again.";
       default:
         return "";
     }
@@ -331,7 +343,9 @@ const FileUploadDropzone = () => {
         <h1 className="text-2xl font-bold">Video Demo Stitch</h1>
         <p className="text-gray-600">
           Upload a video and create highlight reels by selecting time ranges and
-          adding captions. Maximum 20 clips, each up to 30 seconds.
+          adding captions. The system will automatically generate a master
+          script with AI analysis during upload. Maximum 20 clips, each up to 30
+          seconds.
         </p>
       </div>
 
@@ -377,19 +391,37 @@ const FileUploadDropzone = () => {
             disabled={isUploading}
             className="w-full"
           >
-            Upload Video
+            Upload Video & Generate Master Script
           </Button>
+          <p className="text-center text-sm text-gray-600">
+            This will upload your video and automatically generate a master
+            script with AI analysis
+          </p>
         </div>
       )}
 
-      {uploadStatus === "uploading" && (
+      {(uploadStatus === "uploading" ||
+        uploadStatus === "generating-script") && (
         <div className="space-y-4 rounded border border-blue-200 bg-blue-50 p-4">
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span>{getUploadStatusMessage()}</span>
-              <span>{Math.round(uploadProgress)}%</span>
+              <span>
+                {uploadStatus === "generating-script"
+                  ? "Processing..."
+                  : `${Math.round(uploadProgress)}%`}
+              </span>
             </div>
-            <Progress value={uploadProgress} className="w-full" />
+            <Progress
+              value={uploadStatus === "generating-script" ? 95 : uploadProgress}
+              className="w-full"
+            />
+            {uploadStatus === "generating-script" && (
+              <p className="text-sm text-blue-700">
+                AI is analyzing your video to create a master script with
+                timestamps and descriptions. This may take a few minutes...
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -397,8 +429,16 @@ const FileUploadDropzone = () => {
       {uploadStatus === "completed" && processingStatus === "idle" && (
         <div className="space-y-4 rounded border border-green-200 bg-green-50 p-4">
           <h3 className="text-lg font-semibold text-green-800">
-            Video Uploaded Successfully!
+            Video Uploaded & Master Script Generated!
           </h3>
+          <div className="space-y-2">
+            <p className="text-sm text-green-700">
+              ✅ Video uploaded to cloud storage
+              <br />
+              ✅ Master script generated with AI analysis
+              <br />✅ Ready for video stitching
+            </p>
+          </div>
           <div className="space-y-4">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -483,7 +523,7 @@ const FileUploadDropzone = () => {
             >
               {processVideoStitch.isPending
                 ? "Starting Processing..."
-                : "Create Video Stitch"}
+                : "Create Video Stitch with Clips"}
             </Button>
 
             <Button onClick={resetUpload} variant="outline" className="w-full">
@@ -573,11 +613,15 @@ const FileUploadDropzone = () => {
       {(uploadStatus === "failed" || processingStatus === "failed") && (
         <div className="space-y-4 rounded border border-red-200 bg-red-50 p-4">
           <h3 className="text-lg font-semibold text-red-800">
-            {uploadStatus === "failed" ? "Upload Failed" : "Processing Failed"}
+            {uploadStatus === "failed"
+              ? "Upload or Master Script Generation Failed"
+              : "Processing Failed"}
           </h3>
           <div className="space-y-2">
             <p className="text-sm text-red-700">
-              Something went wrong. Please try again.
+              {uploadStatus === "failed"
+                ? "The upload or master script generation failed. This could be due to video format issues or AI processing errors. Please try again."
+                : "Video stitching processing failed. Please try again."}
             </p>
             <Button onClick={resetUpload} variant="outline" className="w-full">
               Try Again

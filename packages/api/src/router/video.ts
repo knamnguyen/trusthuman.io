@@ -1,12 +1,14 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import type { MasterScriptResponse } from "@sassy/gemini-video";
 import type {
   RemotionRenderResult,
   VideoProcessingRequest,
 } from "@sassy/remotion";
 import type { VideoProcessingJob } from "@sassy/s3/schema-validators";
 import { DemoVideoCreateInputSchema } from "@sassy/db/schema-validators";
+import { createGeminiVideoService } from "@sassy/gemini-video";
 import { S3BucketService } from "@sassy/s3";
 
 import { createTRPCRouter, publicProcedure } from "../trpc";
@@ -18,6 +20,9 @@ const s3Service = new S3BucketService({
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
   bucket: process.env.S3_BUCKET || "viralcut-s3bucket",
 });
+
+// Initialize Gemini Video Service
+const geminiVideoService = createGeminiVideoService(process.env.GEMINI_API_KEY);
 
 const GetUploadUrlInputSchema = z.object({
   fileName: z.string(),
@@ -55,10 +60,43 @@ const AbortMultipartUploadInputSchema = z.object({
   uploadId: z.string(),
 });
 
-// Helper function to save video metadata to database
+const GenerateMasterScriptInputSchema = z.object({
+  demoVideoId: z.string(),
+});
+
+const GenerateMasterScriptFromUriInputSchema = z.object({
+  fileUri: z.string(),
+  mimeType: z.string(),
+  s3Url: z.string(),
+  durationSeconds: z.number().int().positive(),
+});
+
+// Helper function to generate master script for a video
+const generateMasterScriptForVideo = async (
+  s3Url: string,
+): Promise<MasterScriptResponse> => {
+  try {
+    console.log("🎬 Generating master script for video:", s3Url);
+    const masterScriptResponse = await geminiVideoService.generateMasterScript({
+      videoUrl: s3Url,
+    });
+    console.log("✅ Master script generated successfully");
+    return masterScriptResponse;
+  } catch (error) {
+    console.error("❌ Failed to generate master script:", error);
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Failed to generate master script for video",
+      cause: error,
+    });
+  }
+};
+
+// Helper function to save video metadata with master script to database
 const saveDemoVideoToDB = async (
   s3Url: string,
   durationSeconds: number,
+  masterScript: MasterScriptResponse["masterScript"],
   db: any,
 ) => {
   try {
@@ -66,6 +104,7 @@ const saveDemoVideoToDB = async (
       data: {
         s3Url,
         durationSeconds,
+        masterScript,
       },
     });
   } catch (error) {
@@ -97,16 +136,7 @@ export const videoRouter = createTRPCRouter({
 
         console.log("uploadUrl", uploadUrl);
 
-        // If durationSeconds is provided, save to database
-        let demoVideo = null;
-        if (input.durationSeconds) {
-          const s3Url = `https://${s3Service.getBucket()}.s3.${process.env.AWS_REGION || "us-west-2"}.amazonaws.com/${key}`;
-          demoVideo = await saveDemoVideoToDB(
-            s3Url,
-            input.durationSeconds,
-            ctx.db,
-          );
-        }
+        // No automatic master script generation - will be done separately via generateMasterScriptFromUri
 
         return {
           success: true,
@@ -114,7 +144,6 @@ export const videoRouter = createTRPCRouter({
           key,
           bucket: s3Service.getBucket(),
           expiresIn: 3600,
-          demoVideo,
         };
       } catch (error) {
         console.error("Failed to process upload URL request:", error);
@@ -183,24 +212,18 @@ export const videoRouter = createTRPCRouter({
     .input(CompleteMultipartUploadInputSchema)
     .mutation(async ({ input, ctx }) => {
       try {
-        // First complete the S3 multipart upload
+        // Complete the S3 multipart upload
         const result = await s3Service.completeMultipartUpload(
           input.key,
           input.uploadId,
           input.parts,
         );
 
-        // Then save to database
-        const demoVideo = await saveDemoVideoToDB(
-          result.location,
-          input.durationSeconds,
-          ctx.db,
-        );
+        // No automatic master script generation - will be done separately via generateMasterScriptFromUri
 
         return {
           success: true,
           ...result,
-          demoVideo,
         };
       } catch (error) {
         console.error("Failed to complete multipart upload:", error);
@@ -229,6 +252,91 @@ export const videoRouter = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to abort multipart upload",
+        });
+      }
+    }),
+
+  // Generate master script for existing demo video
+  generateMasterScript: publicProcedure
+    .input(GenerateMasterScriptInputSchema)
+    .mutation(async ({ input, ctx }) => {
+      try {
+        // First, get the demo video from database
+        const demoVideo = await ctx.db.demoVideo.findUnique({
+          where: { id: input.demoVideoId },
+        });
+
+        if (!demoVideo) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Demo video not found",
+          });
+        }
+
+        // Generate master script for the video
+        const masterScriptResponse = await generateMasterScriptForVideo(
+          demoVideo.s3Url,
+        );
+
+        // Update the database record with the new master script
+        const updatedDemoVideo = await ctx.db.demoVideo.update({
+          where: { id: input.demoVideoId },
+          data: {
+            masterScript: masterScriptResponse.masterScript,
+          },
+        });
+
+        return {
+          success: true,
+          demoVideo: updatedDemoVideo,
+          masterScript: masterScriptResponse.masterScript,
+        };
+      } catch (error) {
+        console.error("Failed to generate master script:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to generate master script",
+          cause: error,
+        });
+      }
+    }),
+
+  // Generate master script from existing Gemini file URI (optimized for parallel upload)
+  generateMasterScriptFromUri: publicProcedure
+    .input(GenerateMasterScriptFromUriInputSchema)
+    .mutation(async ({ input, ctx }) => {
+      try {
+        console.log(
+          "🎬 Generating master script from Gemini URI:",
+          input.fileUri,
+        );
+
+        // Use the optimized method that doesn't download from S3
+        const masterScriptResponse =
+          await geminiVideoService.generateMasterScriptFromUri(
+            input.fileUri,
+            input.mimeType,
+          );
+
+        // Save to database with the S3 URL and master script
+        const demoVideo = await saveDemoVideoToDB(
+          input.s3Url,
+          input.durationSeconds,
+          masterScriptResponse.masterScript,
+          ctx.db,
+        );
+
+        return {
+          success: true,
+          demoVideo,
+          masterScript: masterScriptResponse.masterScript,
+        };
+      } catch (error) {
+        console.error("Failed to generate master script from URI:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to generate master script from URI",
+          cause: error,
         });
       }
     }),

@@ -18,13 +18,7 @@ interface UploadResult {
   key: string;
   bucket: string;
   location: string;
-  demoVideo?: {
-    id: string;
-    s3Url: string;
-    durationSeconds: number;
-    createdAt: Date;
-    updatedAt: Date;
-  };
+  // demoVideo removed - no longer auto-generated during S3 upload
 }
 
 interface UseMultipartUploadProps {
@@ -197,7 +191,6 @@ export const useMultipartUpload = ({
             key: uploadData.key,
             bucket: uploadData.bucket,
             location: `https://${uploadData.bucket}.s3.amazonaws.com/${uploadData.key}`,
-            demoVideo: uploadData.demoVideo,
           };
 
           onSuccess?.(result);
@@ -269,7 +262,6 @@ export const useMultipartUpload = ({
           key: completeResult.key,
           bucket: completeResult.bucket,
           location: completeResult.location,
-          demoVideo: completeResult.demoVideo,
         };
 
         onSuccess?.(result);

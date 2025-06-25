@@ -51,7 +51,7 @@ model DemoVideo {
   id              String      @id @default(cuid())
   s3Url           String
   durationSeconds Int
-  masterScript    Json
+  masterScript    Json        @default("[]")
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
   shortDemos      ShortDemo[]

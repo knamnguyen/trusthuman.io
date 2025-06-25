@@ -19,6 +19,7 @@
     "@clerk/nextjs": "^6.12.5",
     "@remotion/lambda": "4.0.314",
     "@sassy/db": "workspace:*",
+    "@sassy/gemini-video": "workspace:*",
     "@sassy/remotion": "workspace:*",
     "@sassy/s3": "workspace:*",
     "@sassy/stripe": "workspace:*",
