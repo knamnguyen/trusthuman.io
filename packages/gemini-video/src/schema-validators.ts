@@ -116,6 +116,30 @@ export const GeminiFileResponseSchema = z.object({
   mimeType: z.string(),
 });
 
+// Master script entry schema
+export const MasterScriptEntrySchema = z.object({
+  secondRange: z
+    .string()
+    .regex(
+      /^(\d{2}):(\d{2})-(\d{2}):(\d{2})$/,
+      "Second range must be in MM:SS-MM:SS format (e.g., '00:23-00:47')",
+    ),
+  transcript: z.string().min(0, "Transcript can be empty but must be a string"),
+  frameDescription: z.string().min(1, "Frame description is required"),
+});
+
+// Input schema for master script generation
+export const MasterScriptInputSchema = z.object({
+  videoUrl: z.string().url("Valid video URL is required"),
+});
+
+// Output schema for master script generation
+export const MasterScriptResponseSchema = z.object({
+  masterScript: z
+    .array(MasterScriptEntrySchema)
+    .min(1, "At least one master script entry is required"),
+});
+
 // Type exports
 export type GeminiVideoConfig = z.infer<typeof GeminiVideoConfigSchema>;
 export type Color = z.infer<typeof ColorSchema>;
@@ -127,3 +151,6 @@ export type DemoVideoResponse = z.infer<typeof DemoVideoResponseSchema>;
 export type VideoSegment = z.infer<typeof VideoSegmentSchema>;
 export type VideoProcessingInput = z.infer<typeof VideoProcessingInputSchema>;
 export type GeminiFileResponse = z.infer<typeof GeminiFileResponseSchema>;
+export type MasterScriptEntry = z.infer<typeof MasterScriptEntrySchema>;
+export type MasterScriptInput = z.infer<typeof MasterScriptInputSchema>;
+export type MasterScriptResponse = z.infer<typeof MasterScriptResponseSchema>;

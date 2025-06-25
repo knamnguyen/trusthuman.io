@@ -1,4 +1,5 @@
 import { unlinkSync, writeFileSync } from "fs";
+import { writeFile } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
 import { createPartFromUri, GoogleGenAI } from "@google/genai";
@@ -8,6 +9,8 @@ import type {
   DemoVideoResponse,
   GeminiFileResponse,
   GeminiVideoConfig,
+  MasterScriptInput,
+  MasterScriptResponse,
   VideoProcessingInput,
   ViralHookInput,
   ViralHookResponse,
@@ -16,6 +19,8 @@ import {
   DemoVideoInputSchema,
   DemoVideoResponseSchema,
   GeminiVideoConfigSchema,
+  MasterScriptInputSchema,
+  MasterScriptResponseSchema,
   VideoProcessingInputSchema,
   ViralHookInputSchema,
   ViralHookResponseSchema,
@@ -276,6 +281,10 @@ export class GeminiVideoService {
           createPartFromUri(videoFile.uri, videoFile.mimeType),
           hookPrompt,
         ],
+        config: {
+          maxOutputTokens: 50000,
+          temperature: 0.1,
+        },
       });
 
       const result = response.text;
@@ -313,6 +322,175 @@ export class GeminiVideoService {
       console.error("❌ Error extracting viral hook:", error);
       throw new Error(
         `Failed to extract viral hook: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    } finally {
+      // Clean up Gemini file
+      if (videoFile) {
+        await this.cleanupGeminiFile(videoFile.name);
+      }
+    }
+  }
+
+  /**
+   * Generate master script with time-range-based annotations
+   * @param input - Video URL to analyze
+   * @returns Master script with annotations for time ranges
+   */
+  async generateMasterScript(
+    input: MasterScriptInput,
+  ): Promise<MasterScriptResponse> {
+    // Validate input
+    const validatedInput = MasterScriptInputSchema.parse(input);
+    let videoFile: GeminiFileResponse | null = null;
+
+    try {
+      console.log(
+        "📝 Generating master script with time-range-based annotations...",
+      );
+
+      // Upload video to Gemini
+      videoFile = await this.uploadVideoToGemini(validatedInput.videoUrl);
+
+      // Create specific prompt for master script generation
+      const masterScriptPrompt = `
+        You have already processed this video and have access to its full duration.
+        I need you to return time-range-based annotations for the ENTIRE video, from 00:00 to the final second.
+        
+        Return a JSON array of objects, with one entry for each time range where the content is similar.
+        Each object should have three fields: "secondRange" (string), "transcript" (string), and "frameDescription" (string).
+
+        Group similar content efficiently:
+        - When transcript and visual content are similar across multiple seconds, group them into a single range
+        - When content changes significantly (new speaker, scene change, different visual), start a new range
+        - Optimize for efficiency while maintaining accuracy
+
+        For each range, provide:
+        - secondRange: Time range in MM:SS-MM:SS format (e.g., "00:23-00:47", "01:15-01:32")
+        - transcript: All speech/audio content within that time range (empty string if no speech)
+        - frameDescription: Description of the visual content throughout that range
+
+        Don't generate new information, just use the existing annotations from your system that you have access to.
+
+        Example response format:
+        [
+          {"secondRange": "00:00-00:05", "transcript": "Hello everyone, welcome to today's video", "frameDescription": "Person standing in front of camera with bright background"},
+          {"secondRange": "00:06-00:15", "transcript": "", "frameDescription": "Cut to computer screen showing application interface with various menu options"},
+          {"secondRange": "00:16-00:22", "transcript": "Now let's explore the main features", "frameDescription": "Mouse cursor clicking through different sections of the application"}
+        ]
+        
+        CRITICAL INSTRUCTIONS:
+        - Return ONLY a valid JSON array of objects.
+        - The FIRST range MUST start with "00:00"
+        - The LAST range MUST end with the final second of the video (e.g., if video is 148 seconds, last range ends with "02:28")
+        - Ranges should be contiguous and cover the entire video with no gaps
+        - Each object must have exactly three fields: secondRange, transcript, frameDescription
+        - Use MM:SS format for all timestamps (e.g., "00:05", "01:23", "02:47")
+        - Group similar content efficiently to reduce redundancy
+        - Transcript should include all speech within the range
+        - FrameDescription should describe the consistent visual elements throughout the range
+        - Do not include any other text, markdown, or explanations outside the JSON array.
+      `;
+
+      // Generate content with video and master script prompt
+      const response = await this.client.models.generateContent({
+        model: "gemini-2.0-flash",
+        contents: [
+          createPartFromUri(videoFile.uri, videoFile.mimeType),
+          masterScriptPrompt,
+        ],
+        config: {
+          maxOutputTokens: 1000000, // Maximum possible limit for complete video annotations
+          temperature: 0.1, // Low temperature for consistent, factual output
+        },
+      });
+
+      const result = response.text;
+      console.log("📝 Raw response received from Gemini");
+
+      if (!result) {
+        throw new Error("Empty response from Gemini API");
+      }
+
+      // Write raw response to file for debugging/backup
+      const timestamp = Date.now();
+      const responseFilePath = join(
+        process.cwd(),
+        "scripts",
+        `master-script-response-${timestamp}.txt`,
+      );
+      await writeFile(responseFilePath, result, "utf-8");
+      console.log(`💾 Raw response saved to: ${responseFilePath}`);
+
+      // Parse JSON response which should be an array of objects
+      let parsedObjectArray: {
+        secondRange: string;
+        transcript: string;
+        frameDescription: string;
+      }[];
+      try {
+        // Extract JSON from response (handle cases where response includes markdown formatting)
+        let jsonStr;
+
+        // First try to extract from markdown code block
+        const markdownMatch = result.match(/```json\s*([\s\S]*?)\s*```/);
+        if (markdownMatch && markdownMatch[1]) {
+          jsonStr = markdownMatch[1];
+        } else {
+          // Fallback to looking for array directly
+          const jsonMatch = result.match(/\[[\s\S]*\]/);
+          jsonStr = jsonMatch ? jsonMatch[0] : result;
+        }
+
+        parsedObjectArray = JSON.parse(jsonStr);
+
+        if (
+          !Array.isArray(parsedObjectArray) ||
+          !parsedObjectArray.every(
+            (item) =>
+              typeof item.secondRange === "string" &&
+              typeof item.transcript === "string" &&
+              typeof item.frameDescription === "string",
+          )
+        ) {
+          throw new Error("Response is not a valid array of objects.");
+        }
+      } catch (parseError) {
+        console.error(
+          "❌ Failed to parse JSON response as an array of objects:",
+          parseError,
+        );
+        console.log("Raw response length:", result.length);
+        console.log("Raw response preview:", result.substring(0, 500) + "...");
+        throw new Error(
+          "Failed to parse master script response as a JSON array of objects",
+        );
+      }
+
+      // Transform the array of objects into the required MasterScriptResponse format
+      const masterScript = parsedObjectArray.map(
+        ({ secondRange, transcript, frameDescription }) => ({
+          secondRange,
+          transcript,
+          frameDescription,
+        }),
+      );
+
+      const responseToValidate = { masterScript };
+
+      // Validate response format
+      const validatedResponse =
+        MasterScriptResponseSchema.parse(responseToValidate);
+
+      console.log("✅ Master script generation completed");
+      console.log(
+        `📊 Generated ${validatedResponse.masterScript.length} time-range-based annotations`,
+      );
+
+      return validatedResponse;
+    } catch (error) {
+      console.error("❌ Error generating master script:", error);
+      throw new Error(
+        `Failed to generate master script: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     } finally {
       // Clean up Gemini file
@@ -423,6 +601,10 @@ export class GeminiVideoService {
           createPartFromUri(videoFile.uri, videoFile.mimeType),
           demoPrompt,
         ],
+        config: {
+          maxOutputTokens: 50000,
+          temperature: 0.1,
+        },
       });
 
       const result = response.text;
