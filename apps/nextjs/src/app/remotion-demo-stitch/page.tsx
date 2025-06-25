@@ -355,7 +355,7 @@ const FileUploadDropzone = () => {
         dropzoneOptions={dropzone}
       >
         <FileInput>
-          <div className="bg-background flex h-32 w-full items-center justify-center rounded-md border">
+          <div className="flex h-32 w-full items-center justify-center rounded-md border bg-background">
             <p className="text-gray-400">Drop video files here</p>
           </div>
         </FileInput>
@@ -492,7 +492,7 @@ const FileUploadDropzone = () => {
                           updateClip(index, "range", e.target.value)
                         }
                         placeholder="01:30-02:00"
-                        className="w-full rounded border p-2 text-sm text-gray-900 focus:ring-2 focus:ring-green-500 focus:outline-hidden"
+                        className="focus:outline-hidden w-full rounded border p-2 text-sm text-gray-900 focus:ring-2 focus:ring-green-500"
                       />
                     </div>
 
@@ -508,7 +508,7 @@ const FileUploadDropzone = () => {
                         }
                         placeholder="Enter caption..."
                         maxLength={200}
-                        className="w-full rounded border p-2 text-sm text-gray-900 focus:ring-2 focus:ring-green-500 focus:outline-hidden"
+                        className="focus:outline-hidden w-full rounded border p-2 text-sm text-gray-900 focus:ring-2 focus:ring-green-500"
                       />
                     </div>
                   </div>
