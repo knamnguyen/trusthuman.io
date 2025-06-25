@@ -49,7 +49,8 @@
 import { existsSync } from "fs";
 import { readdir, readFile, rmdir, unlink, writeFile } from "fs/promises";
 import { basename, dirname, extname, join } from "path";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
+// import { GoogleGenerativeAI } from "@google/generative-ai";
 import chalk from "chalk";
 import { format } from "date-fns";
 import ffmpeg from "fluent-ffmpeg";
@@ -98,7 +99,7 @@ class VideoProcessor {
   private s3Service: S3BucketService;
   private videoVectorStore: VideoVectorStore;
   private replicate?: Replicate;
-  private gemini?: GoogleGenerativeAI;
+  private gemini?: GoogleGenAI;
   private geminiVideoService: any;
   private remotionService: RemotionService;
   private downloadsDir: string;
@@ -123,7 +124,9 @@ class VideoProcessor {
     }
 
     if (process.env.GEMINI_API_KEY) {
-      this.gemini = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+      this.gemini = new GoogleGenAI({
+        apiKey: process.env.GEMINI_API_KEY,
+      });
     }
 
     // Initialize Gemini Video Service for hook extraction
@@ -269,8 +272,9 @@ class VideoProcessor {
     console.log(`🧠 Analyzing transcription with Gemini AI...`);
 
     try {
-      const model = this.gemini.getGenerativeModel({
+      const model = this.gemini.models.generateContent({
         model: "gemini-2.0-flash-exp",
+        contents: [transcription],
       });
 
       const prompt = `
