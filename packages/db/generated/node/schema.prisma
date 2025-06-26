@@ -51,6 +51,8 @@ model DemoVideo {
   id              String      @id @default(cuid())
   s3Url           String
   durationSeconds Int
+  productInfo     String      @default("")
+  colorPalette    Json        @default("[]")
   masterScript    Json        @default("[]")
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
@@ -60,19 +62,15 @@ model DemoVideo {
 }
 
 model ShortDemo {
-  id                    String                 @id @default(cuid())
-  demoVideoId           String
-  durationSeconds       Int
-  colorPaletteEmbedding Unsupported("vector")?
-  createdAt             DateTime               @default(now())
-  updatedAt             DateTime               @updatedAt
-  demoCutUrl            String
-  productInfo           String?
-  productInfoEmbedding  Unsupported("vector")?
-  segments              Json
-  colorPalette          Json?
-  demoVideo             DemoVideo              @relation(fields: [demoVideoId], references: [id], onDelete: Cascade)
-  viralStitches         ViralStitch[]
+  id              String        @id @default(cuid())
+  demoVideoId     String
+  durationSeconds Int
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  demoCutUrl      String
+  segments        Json
+  demoVideo       DemoVideo     @relation(fields: [demoVideoId], references: [id], onDelete: Cascade)
+  viralStitches   ViralStitch[]
 
   @@index([demoVideoId])
   @@index([demoCutUrl])

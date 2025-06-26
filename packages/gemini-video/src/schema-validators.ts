@@ -135,7 +135,15 @@ export const MasterScriptInputSchema = z.object({
 
 // Output schema for master script generation
 export const MasterScriptResponseSchema = z.object({
-  masterScript: z
+  productInfo: z
+    .string()
+    .min(10, "Product info must be at least 10 characters")
+    .max(
+      800,
+      "Product info must be 800 characters or less (approximately 100 words)",
+    ),
+  colorPalette: ColorPaletteSchema,
+  segments: z
     .array(MasterScriptEntrySchema)
     .min(1, "At least one master script entry is required"),
 });

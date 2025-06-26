@@ -60,9 +60,9 @@ export const PostScalarFieldEnumSchema = z.enum(['id','title','content','created
 
 export const UserScalarFieldEnumSchema = z.enum(['id','firstName','lastName','username','primaryEmailAddress','imageUrl','clerkUserProperties','stripeCustomerId','accessType','stripeUserProperties','createdAt','updatedAt']);
 
-export const DemoVideoScalarFieldEnumSchema = z.enum(['id','s3Url','durationSeconds','masterScript','createdAt','updatedAt']);
+export const DemoVideoScalarFieldEnumSchema = z.enum(['id','s3Url','durationSeconds','productInfo','colorPalette','masterScript','createdAt','updatedAt']);
 
-export const ShortDemoScalarFieldEnumSchema = z.enum(['id','demoVideoId','durationSeconds','createdAt','updatedAt','demoCutUrl','productInfo','segments','colorPalette']);
+export const ShortDemoScalarFieldEnumSchema = z.enum(['id','demoVideoId','durationSeconds','createdAt','updatedAt','demoCutUrl','segments']);
 
 export const HookViralVideoScalarFieldEnumSchema = z.enum(['id','webpageUrl','s3Url','hookEndTimestamp','hookCutConfidence','hookCutUrl','hookInfo','title','description','views','comments','likes','durationSeconds','createdAt','updatedAt','colorPalette']);
 
@@ -131,6 +131,8 @@ export const DemoVideoSchema = z.object({
   id: z.string().cuid(),
   s3Url: z.string(),
   durationSeconds: z.number().int(),
+  productInfo: z.string(),
+  colorPalette: JsonValueSchema,
   masterScript: JsonValueSchema,
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
@@ -149,9 +151,7 @@ export const ShortDemoSchema = z.object({
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
   demoCutUrl: z.string(),
-  productInfo: z.string().nullable(),
   segments: JsonValueSchema,
-  colorPalette: JsonValueSchema.nullable(),
 })
 
 export type ShortDemo = z.infer<typeof ShortDemoSchema>
@@ -255,6 +255,8 @@ export const DemoVideoSelectSchema: z.ZodType<Prisma.DemoVideoSelect> = z.object
   id: z.boolean().optional(),
   s3Url: z.boolean().optional(),
   durationSeconds: z.boolean().optional(),
+  productInfo: z.boolean().optional(),
+  colorPalette: z.boolean().optional(),
   masterScript: z.boolean().optional(),
   createdAt: z.boolean().optional(),
   updatedAt: z.boolean().optional(),
@@ -291,9 +293,7 @@ export const ShortDemoSelectSchema: z.ZodType<Prisma.ShortDemoSelect> = z.object
   createdAt: z.boolean().optional(),
   updatedAt: z.boolean().optional(),
   demoCutUrl: z.boolean().optional(),
-  productInfo: z.boolean().optional(),
   segments: z.boolean().optional(),
-  colorPalette: z.boolean().optional(),
   demoVideo: z.union([z.boolean(),z.lazy(() => DemoVideoArgsSchema)]).optional(),
   viralStitches: z.union([z.boolean(),z.lazy(() => ViralStitchFindManyArgsSchema)]).optional(),
   _count: z.union([z.boolean(),z.lazy(() => ShortDemoCountOutputTypeArgsSchema)]).optional(),
@@ -584,6 +584,8 @@ export const DemoVideoWhereInputSchema: z.ZodType<Prisma.DemoVideoWhereInput> = 
   id: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   s3Url: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   durationSeconds: z.union([ z.lazy(() => IntFilterSchema),z.number() ]).optional(),
+  productInfo: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  colorPalette: z.lazy(() => JsonFilterSchema).optional(),
   masterScript: z.lazy(() => JsonFilterSchema).optional(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
@@ -594,6 +596,8 @@ export const DemoVideoOrderByWithRelationInputSchema: z.ZodType<Prisma.DemoVideo
   id: z.lazy(() => SortOrderSchema).optional(),
   s3Url: z.lazy(() => SortOrderSchema).optional(),
   durationSeconds: z.lazy(() => SortOrderSchema).optional(),
+  productInfo: z.lazy(() => SortOrderSchema).optional(),
+  colorPalette: z.lazy(() => SortOrderSchema).optional(),
   masterScript: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
@@ -610,6 +614,8 @@ export const DemoVideoWhereUniqueInputSchema: z.ZodType<Prisma.DemoVideoWhereUni
   NOT: z.union([ z.lazy(() => DemoVideoWhereInputSchema),z.lazy(() => DemoVideoWhereInputSchema).array() ]).optional(),
   s3Url: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   durationSeconds: z.union([ z.lazy(() => IntFilterSchema),z.number().int() ]).optional(),
+  productInfo: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  colorPalette: z.lazy(() => JsonFilterSchema).optional(),
   masterScript: z.lazy(() => JsonFilterSchema).optional(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
@@ -620,6 +626,8 @@ export const DemoVideoOrderByWithAggregationInputSchema: z.ZodType<Prisma.DemoVi
   id: z.lazy(() => SortOrderSchema).optional(),
   s3Url: z.lazy(() => SortOrderSchema).optional(),
   durationSeconds: z.lazy(() => SortOrderSchema).optional(),
+  productInfo: z.lazy(() => SortOrderSchema).optional(),
+  colorPalette: z.lazy(() => SortOrderSchema).optional(),
   masterScript: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
@@ -637,6 +645,8 @@ export const DemoVideoScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.Dem
   id: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
   s3Url: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
   durationSeconds: z.union([ z.lazy(() => IntWithAggregatesFilterSchema),z.number() ]).optional(),
+  productInfo: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
+  colorPalette: z.lazy(() => JsonWithAggregatesFilterSchema).optional(),
   masterScript: z.lazy(() => JsonWithAggregatesFilterSchema).optional(),
   createdAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
@@ -652,9 +662,7 @@ export const ShortDemoWhereInputSchema: z.ZodType<Prisma.ShortDemoWhereInput> = 
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   demoCutUrl: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
-  productInfo: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
   segments: z.lazy(() => JsonFilterSchema).optional(),
-  colorPalette: z.lazy(() => JsonNullableFilterSchema).optional(),
   demoVideo: z.union([ z.lazy(() => DemoVideoScalarRelationFilterSchema),z.lazy(() => DemoVideoWhereInputSchema) ]).optional(),
   viralStitches: z.lazy(() => ViralStitchListRelationFilterSchema).optional()
 }).strict();
@@ -666,9 +674,7 @@ export const ShortDemoOrderByWithRelationInputSchema: z.ZodType<Prisma.ShortDemo
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
   demoCutUrl: z.lazy(() => SortOrderSchema).optional(),
-  productInfo: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   segments: z.lazy(() => SortOrderSchema).optional(),
-  colorPalette: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   demoVideo: z.lazy(() => DemoVideoOrderByWithRelationInputSchema).optional(),
   viralStitches: z.lazy(() => ViralStitchOrderByRelationAggregateInputSchema).optional()
 }).strict();
@@ -686,9 +692,7 @@ export const ShortDemoWhereUniqueInputSchema: z.ZodType<Prisma.ShortDemoWhereUni
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   demoCutUrl: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
-  productInfo: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
   segments: z.lazy(() => JsonFilterSchema).optional(),
-  colorPalette: z.lazy(() => JsonNullableFilterSchema).optional(),
   demoVideo: z.union([ z.lazy(() => DemoVideoScalarRelationFilterSchema),z.lazy(() => DemoVideoWhereInputSchema) ]).optional(),
   viralStitches: z.lazy(() => ViralStitchListRelationFilterSchema).optional()
 }).strict());
@@ -700,9 +704,7 @@ export const ShortDemoOrderByWithAggregationInputSchema: z.ZodType<Prisma.ShortD
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
   demoCutUrl: z.lazy(() => SortOrderSchema).optional(),
-  productInfo: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   segments: z.lazy(() => SortOrderSchema).optional(),
-  colorPalette: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   _count: z.lazy(() => ShortDemoCountOrderByAggregateInputSchema).optional(),
   _avg: z.lazy(() => ShortDemoAvgOrderByAggregateInputSchema).optional(),
   _max: z.lazy(() => ShortDemoMaxOrderByAggregateInputSchema).optional(),
@@ -720,9 +722,7 @@ export const ShortDemoScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.Sho
   createdAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
   demoCutUrl: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
-  productInfo: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema),z.string() ]).optional().nullable(),
-  segments: z.lazy(() => JsonWithAggregatesFilterSchema).optional(),
-  colorPalette: z.lazy(() => JsonNullableWithAggregatesFilterSchema).optional()
+  segments: z.lazy(() => JsonWithAggregatesFilterSchema).optional()
 }).strict();
 
 export const HookViralVideoWhereInputSchema: z.ZodType<Prisma.HookViralVideoWhereInput> = z.object({
@@ -1097,6 +1097,8 @@ export const DemoVideoCreateInputSchema: z.ZodType<Prisma.DemoVideoCreateInput> 
   id: z.string().cuid().optional(),
   s3Url: z.string(),
   durationSeconds: z.number().int(),
+  productInfo: z.string().optional(),
+  colorPalette: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   masterScript: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
@@ -1107,6 +1109,8 @@ export const DemoVideoUncheckedCreateInputSchema: z.ZodType<Prisma.DemoVideoUnch
   id: z.string().cuid().optional(),
   s3Url: z.string(),
   durationSeconds: z.number().int(),
+  productInfo: z.string().optional(),
+  colorPalette: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   masterScript: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
@@ -1117,6 +1121,8 @@ export const DemoVideoUpdateInputSchema: z.ZodType<Prisma.DemoVideoUpdateInput> 
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   s3Url: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   durationSeconds: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  productInfo: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  colorPalette: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   masterScript: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
@@ -1127,6 +1133,8 @@ export const DemoVideoUncheckedUpdateInputSchema: z.ZodType<Prisma.DemoVideoUnch
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   s3Url: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   durationSeconds: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  productInfo: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  colorPalette: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   masterScript: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
@@ -1137,6 +1145,8 @@ export const DemoVideoCreateManyInputSchema: z.ZodType<Prisma.DemoVideoCreateMan
   id: z.string().cuid().optional(),
   s3Url: z.string(),
   durationSeconds: z.number().int(),
+  productInfo: z.string().optional(),
+  colorPalette: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   masterScript: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional()
@@ -1146,6 +1156,8 @@ export const DemoVideoUpdateManyMutationInputSchema: z.ZodType<Prisma.DemoVideoU
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   s3Url: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   durationSeconds: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  productInfo: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  colorPalette: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   masterScript: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
@@ -1155,6 +1167,8 @@ export const DemoVideoUncheckedUpdateManyInputSchema: z.ZodType<Prisma.DemoVideo
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   s3Url: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   durationSeconds: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  productInfo: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  colorPalette: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   masterScript: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
@@ -1166,9 +1180,7 @@ export const ShortDemoCreateInputSchema: z.ZodType<Prisma.ShortDemoCreateInput> 
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   demoCutUrl: z.string(),
-  productInfo: z.string().optional().nullable(),
   segments: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
-  colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   demoVideo: z.lazy(() => DemoVideoCreateNestedOneWithoutShortDemosInputSchema),
   viralStitches: z.lazy(() => ViralStitchCreateNestedManyWithoutShortDemoInputSchema).optional()
 }).strict();
@@ -1180,9 +1192,7 @@ export const ShortDemoUncheckedCreateInputSchema: z.ZodType<Prisma.ShortDemoUnch
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   demoCutUrl: z.string(),
-  productInfo: z.string().optional().nullable(),
   segments: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
-  colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   viralStitches: z.lazy(() => ViralStitchUncheckedCreateNestedManyWithoutShortDemoInputSchema).optional()
 }).strict();
 
@@ -1192,9 +1202,7 @@ export const ShortDemoUpdateInputSchema: z.ZodType<Prisma.ShortDemoUpdateInput> 
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   demoCutUrl: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  productInfo: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   segments: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
-  colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   demoVideo: z.lazy(() => DemoVideoUpdateOneRequiredWithoutShortDemosNestedInputSchema).optional(),
   viralStitches: z.lazy(() => ViralStitchUpdateManyWithoutShortDemoNestedInputSchema).optional()
 }).strict();
@@ -1206,9 +1214,7 @@ export const ShortDemoUncheckedUpdateInputSchema: z.ZodType<Prisma.ShortDemoUnch
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   demoCutUrl: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  productInfo: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   segments: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
-  colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   viralStitches: z.lazy(() => ViralStitchUncheckedUpdateManyWithoutShortDemoNestedInputSchema).optional()
 }).strict();
 
@@ -1219,9 +1225,7 @@ export const ShortDemoCreateManyInputSchema: z.ZodType<Prisma.ShortDemoCreateMan
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   demoCutUrl: z.string(),
-  productInfo: z.string().optional().nullable(),
   segments: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
-  colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
 }).strict();
 
 export const ShortDemoUpdateManyMutationInputSchema: z.ZodType<Prisma.ShortDemoUpdateManyMutationInput> = z.object({
@@ -1230,9 +1234,7 @@ export const ShortDemoUpdateManyMutationInputSchema: z.ZodType<Prisma.ShortDemoU
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   demoCutUrl: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  productInfo: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   segments: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
-  colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
 }).strict();
 
 export const ShortDemoUncheckedUpdateManyInputSchema: z.ZodType<Prisma.ShortDemoUncheckedUpdateManyInput> = z.object({
@@ -1242,9 +1244,7 @@ export const ShortDemoUncheckedUpdateManyInputSchema: z.ZodType<Prisma.ShortDemo
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   demoCutUrl: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  productInfo: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   segments: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
-  colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
 }).strict();
 
 export const HookViralVideoCreateInputSchema: z.ZodType<Prisma.HookViralVideoCreateInput> = z.object({
@@ -1709,6 +1709,8 @@ export const DemoVideoCountOrderByAggregateInputSchema: z.ZodType<Prisma.DemoVid
   id: z.lazy(() => SortOrderSchema).optional(),
   s3Url: z.lazy(() => SortOrderSchema).optional(),
   durationSeconds: z.lazy(() => SortOrderSchema).optional(),
+  productInfo: z.lazy(() => SortOrderSchema).optional(),
+  colorPalette: z.lazy(() => SortOrderSchema).optional(),
   masterScript: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional()
@@ -1722,6 +1724,7 @@ export const DemoVideoMaxOrderByAggregateInputSchema: z.ZodType<Prisma.DemoVideo
   id: z.lazy(() => SortOrderSchema).optional(),
   s3Url: z.lazy(() => SortOrderSchema).optional(),
   durationSeconds: z.lazy(() => SortOrderSchema).optional(),
+  productInfo: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional()
 }).strict();
@@ -1730,6 +1733,7 @@ export const DemoVideoMinOrderByAggregateInputSchema: z.ZodType<Prisma.DemoVideo
   id: z.lazy(() => SortOrderSchema).optional(),
   s3Url: z.lazy(() => SortOrderSchema).optional(),
   durationSeconds: z.lazy(() => SortOrderSchema).optional(),
+  productInfo: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional()
 }).strict();
@@ -1796,9 +1800,7 @@ export const ShortDemoCountOrderByAggregateInputSchema: z.ZodType<Prisma.ShortDe
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
   demoCutUrl: z.lazy(() => SortOrderSchema).optional(),
-  productInfo: z.lazy(() => SortOrderSchema).optional(),
-  segments: z.lazy(() => SortOrderSchema).optional(),
-  colorPalette: z.lazy(() => SortOrderSchema).optional()
+  segments: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const ShortDemoAvgOrderByAggregateInputSchema: z.ZodType<Prisma.ShortDemoAvgOrderByAggregateInput> = z.object({
@@ -1811,8 +1813,7 @@ export const ShortDemoMaxOrderByAggregateInputSchema: z.ZodType<Prisma.ShortDemo
   durationSeconds: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
-  demoCutUrl: z.lazy(() => SortOrderSchema).optional(),
-  productInfo: z.lazy(() => SortOrderSchema).optional()
+  demoCutUrl: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const ShortDemoMinOrderByAggregateInputSchema: z.ZodType<Prisma.ShortDemoMinOrderByAggregateInput> = z.object({
@@ -1821,8 +1822,7 @@ export const ShortDemoMinOrderByAggregateInputSchema: z.ZodType<Prisma.ShortDemo
   durationSeconds: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
-  demoCutUrl: z.lazy(() => SortOrderSchema).optional(),
-  productInfo: z.lazy(() => SortOrderSchema).optional()
+  demoCutUrl: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const ShortDemoSumOrderByAggregateInputSchema: z.ZodType<Prisma.ShortDemoSumOrderByAggregateInput> = z.object({
@@ -2336,9 +2336,7 @@ export const ShortDemoCreateWithoutDemoVideoInputSchema: z.ZodType<Prisma.ShortD
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   demoCutUrl: z.string(),
-  productInfo: z.string().optional().nullable(),
   segments: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
-  colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   viralStitches: z.lazy(() => ViralStitchCreateNestedManyWithoutShortDemoInputSchema).optional()
 }).strict();
 
@@ -2348,9 +2346,7 @@ export const ShortDemoUncheckedCreateWithoutDemoVideoInputSchema: z.ZodType<Pris
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   demoCutUrl: z.string(),
-  productInfo: z.string().optional().nullable(),
   segments: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
-  colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   viralStitches: z.lazy(() => ViralStitchUncheckedCreateNestedManyWithoutShortDemoInputSchema).optional()
 }).strict();
 
@@ -2390,15 +2386,15 @@ export const ShortDemoScalarWhereInputSchema: z.ZodType<Prisma.ShortDemoScalarWh
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   demoCutUrl: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
-  productInfo: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
-  segments: z.lazy(() => JsonFilterSchema).optional(),
-  colorPalette: z.lazy(() => JsonNullableFilterSchema).optional()
+  segments: z.lazy(() => JsonFilterSchema).optional()
 }).strict();
 
 export const DemoVideoCreateWithoutShortDemosInputSchema: z.ZodType<Prisma.DemoVideoCreateWithoutShortDemosInput> = z.object({
   id: z.string().cuid().optional(),
   s3Url: z.string(),
   durationSeconds: z.number().int(),
+  productInfo: z.string().optional(),
+  colorPalette: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   masterScript: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional()
@@ -2408,6 +2404,8 @@ export const DemoVideoUncheckedCreateWithoutShortDemosInputSchema: z.ZodType<Pri
   id: z.string().cuid().optional(),
   s3Url: z.string(),
   durationSeconds: z.number().int(),
+  productInfo: z.string().optional(),
+  colorPalette: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   masterScript: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional()
@@ -2461,6 +2459,8 @@ export const DemoVideoUpdateWithoutShortDemosInputSchema: z.ZodType<Prisma.DemoV
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   s3Url: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   durationSeconds: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  productInfo: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  colorPalette: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   masterScript: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
@@ -2470,6 +2470,8 @@ export const DemoVideoUncheckedUpdateWithoutShortDemosInputSchema: z.ZodType<Pri
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   s3Url: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   durationSeconds: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  productInfo: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  colorPalette: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   masterScript: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
@@ -2554,9 +2556,7 @@ export const ShortDemoCreateWithoutViralStitchesInputSchema: z.ZodType<Prisma.Sh
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   demoCutUrl: z.string(),
-  productInfo: z.string().optional().nullable(),
   segments: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
-  colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   demoVideo: z.lazy(() => DemoVideoCreateNestedOneWithoutShortDemosInputSchema)
 }).strict();
 
@@ -2567,9 +2567,7 @@ export const ShortDemoUncheckedCreateWithoutViralStitchesInputSchema: z.ZodType<
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   demoCutUrl: z.string(),
-  productInfo: z.string().optional().nullable(),
   segments: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
-  colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
 }).strict();
 
 export const ShortDemoCreateOrConnectWithoutViralStitchesInputSchema: z.ZodType<Prisma.ShortDemoCreateOrConnectWithoutViralStitchesInput> = z.object({
@@ -2637,9 +2635,7 @@ export const ShortDemoUpdateWithoutViralStitchesInputSchema: z.ZodType<Prisma.Sh
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   demoCutUrl: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  productInfo: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   segments: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
-  colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   demoVideo: z.lazy(() => DemoVideoUpdateOneRequiredWithoutShortDemosNestedInputSchema).optional()
 }).strict();
 
@@ -2650,9 +2646,7 @@ export const ShortDemoUncheckedUpdateWithoutViralStitchesInputSchema: z.ZodType<
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   demoCutUrl: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  productInfo: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   segments: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
-  colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
 }).strict();
 
 export const HookViralVideoUpsertWithoutViralStitchesInputSchema: z.ZodType<Prisma.HookViralVideoUpsertWithoutViralStitchesInput> = z.object({
@@ -2710,9 +2704,7 @@ export const ShortDemoCreateManyDemoVideoInputSchema: z.ZodType<Prisma.ShortDemo
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   demoCutUrl: z.string(),
-  productInfo: z.string().optional().nullable(),
   segments: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
-  colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
 }).strict();
 
 export const ShortDemoUpdateWithoutDemoVideoInputSchema: z.ZodType<Prisma.ShortDemoUpdateWithoutDemoVideoInput> = z.object({
@@ -2721,9 +2713,7 @@ export const ShortDemoUpdateWithoutDemoVideoInputSchema: z.ZodType<Prisma.ShortD
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   demoCutUrl: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  productInfo: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   segments: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
-  colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   viralStitches: z.lazy(() => ViralStitchUpdateManyWithoutShortDemoNestedInputSchema).optional()
 }).strict();
 
@@ -2733,9 +2723,7 @@ export const ShortDemoUncheckedUpdateWithoutDemoVideoInputSchema: z.ZodType<Pris
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   demoCutUrl: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  productInfo: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   segments: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
-  colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   viralStitches: z.lazy(() => ViralStitchUncheckedUpdateManyWithoutShortDemoNestedInputSchema).optional()
 }).strict();
 
@@ -2745,9 +2733,7 @@ export const ShortDemoUncheckedUpdateManyWithoutDemoVideoInputSchema: z.ZodType<
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   demoCutUrl: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  productInfo: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   segments: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
-  colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
 }).strict();
 
 export const ViralStitchCreateManyShortDemoInputSchema: z.ZodType<Prisma.ViralStitchCreateManyShortDemoInput> = z.object({

@@ -71,32 +71,14 @@ const GenerateMasterScriptFromUriInputSchema = z.object({
   durationSeconds: z.number().int().positive(),
 });
 
-// Helper function to generate master script for a video
-const generateMasterScriptForVideo = async (
-  s3Url: string,
-): Promise<MasterScriptResponse> => {
-  try {
-    console.log("🎬 Generating master script for video:", s3Url);
-    const masterScriptResponse = await geminiVideoService.generateMasterScript({
-      videoUrl: s3Url,
-    });
-    console.log("✅ Master script generated successfully");
-    return masterScriptResponse;
-  } catch (error) {
-    console.error("❌ Failed to generate master script:", error);
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Failed to generate master script for video",
-      cause: error,
-    });
-  }
-};
+// Note: generateMasterScript method was removed - only generateMasterScriptFromUri is available
+// This helper function is no longer used since we deleted the legacy method
 
 // Helper function to save video metadata with master script to database
 const saveDemoVideoToDB = async (
   s3Url: string,
   durationSeconds: number,
-  masterScript: MasterScriptResponse["masterScript"],
+  masterScriptResponse: MasterScriptResponse,
   db: any,
 ) => {
   try {
@@ -104,7 +86,9 @@ const saveDemoVideoToDB = async (
       data: {
         s3Url,
         durationSeconds,
-        masterScript,
+        masterScript: masterScriptResponse.segments,
+        productInfo: masterScriptResponse.productInfo,
+        colorPalette: masterScriptResponse.colorPalette,
       },
     });
   } catch (error) {
@@ -273,24 +257,13 @@ export const videoRouter = createTRPCRouter({
           });
         }
 
-        // Generate master script for the video
-        const masterScriptResponse = await generateMasterScriptForVideo(
-          demoVideo.s3Url,
-        );
-
-        // Update the database record with the new master script
-        const updatedDemoVideo = await ctx.db.demoVideo.update({
-          where: { id: input.demoVideoId },
-          data: {
-            masterScript: masterScriptResponse.masterScript,
-          },
+        // Note: Legacy generateMasterScript method was removed
+        // This endpoint is deprecated in favor of generateMasterScriptFromUri
+        throw new TRPCError({
+          code: "NOT_IMPLEMENTED",
+          message:
+            "This endpoint is deprecated. Use generateMasterScriptFromUri instead.",
         });
-
-        return {
-          success: true,
-          demoVideo: updatedDemoVideo,
-          masterScript: masterScriptResponse.masterScript,
-        };
       } catch (error) {
         console.error("Failed to generate master script:", error);
         throw new TRPCError({
@@ -318,18 +291,20 @@ export const videoRouter = createTRPCRouter({
             input.mimeType,
           );
 
-        // Save to database with the S3 URL and master script
+        // Save to database with the S3 URL and complete master script response
         const demoVideo = await saveDemoVideoToDB(
           input.s3Url,
           input.durationSeconds,
-          masterScriptResponse.masterScript,
+          masterScriptResponse,
           ctx.db,
         );
 
         return {
           success: true,
           demoVideo,
-          masterScript: masterScriptResponse.masterScript,
+          masterScript: masterScriptResponse.segments,
+          productInfo: masterScriptResponse.productInfo,
+          colorPalette: masterScriptResponse.colorPalette,
         };
       } catch (error) {
         console.error("Failed to generate master script from URI:", error);

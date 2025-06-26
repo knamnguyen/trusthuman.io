@@ -1,6 +1,4 @@
-import { serve } from "@hono/node-server";
 import { Hono } from "hono";
-import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 
 import { geminiUploadRoute } from "./routes/gemini-upload";
@@ -10,18 +8,7 @@ const app = new Hono();
 
 // Middleware
 app.use("*", logger());
-app.use(
-  "*",
-  cors({
-    origin: [
-      "http://localhost:3000", // Next.js dev
-      "https://viralcut.app", // Production domain - UPDATE THIS
-    ],
-    allowMethods: ["GET", "POST", "OPTIONS"],
-    allowHeaders: ["Content-Type", "Authorization"],
-    maxAge: 86400,
-  }),
-);
+// Note: CORS is handled by Nginx reverse proxy, not by Hono
 
 // Routes
 app.route("/health", healthRoute);
@@ -48,9 +35,8 @@ const port = Number(process.env.PORT) || 3001;
 
 console.log(`🚀 Upload server starting on port ${port}`);
 
-serve({
+// Use Bun's native server instead of @hono/node-server
+export default {
   fetch: app.fetch,
   port,
-});
-
-export default app;
+};

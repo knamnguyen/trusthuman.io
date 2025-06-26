@@ -1,252 +1,67 @@
 [
   {
-    "transcript": "This is Avatar, and we're going to try to talk to Alan Musk, who is a founder of the Avatar AI digital twin platform.",
-    "secondRange": "00:00-00:06",
-    "frameDescription": "A man is recording a screen showing the ivatar.ai website with three avatars."
+    "transcript": "",
+    "secondRange": "00:00-00:04",
+    "frameDescription": "Website for iVatar.ai is displayed with text overlay: Latency has been cut from video demo"
+  },
+  {
+    "transcript": "This is avatar and we're going to try to talk to Alan Musk, who is a founder of the iVatar AI digital twin platform.",
+    "secondRange": "00:04-00:14",
+    "frameDescription": "Website for iVatar.ai is displayed with three avatars: Ky Nam, Alisa, and Alon Mosk"
   },
   {
     "transcript": "",
-    "secondRange": "00:06-00:15",
-    "frameDescription": "The screen shows a 3D avatar of Alan Musk on the ivatar.ai website."
+    "secondRange": "00:14-00:24",
+    "frameDescription": "3D avatar of Alon Mosk is displayed on a pink background"
   },
   {
-    "transcript": "Let's try to ask him a couple of questions. And we're going to pin this here so we know exactly what we're going to talk about. First one, who are you and what are you doing?",
-    "secondRange": "00:15-00:25",
-    "frameDescription": "The man is recording a screen showing the 3D avatar of Alan Musk on the ivatar.ai website."
+    "transcript": "Let's try to ask him a couple of questions. First one, who are you and what are you doing, Alan Musk?",
+    "secondRange": "00:24-00:37",
+    "frameDescription": "3D avatar of Alon Mosk is displayed on a pink background"
   },
   {
     "transcript": "I'm a startup founder.",
-    "secondRange": "00:25-00:27",
-    "frameDescription": "The 3D avatar of Alan Musk sits down."
+    "secondRange": "00:37-00:39",
+    "frameDescription": "3D avatar of Alon Mosk is displayed on a pink background"
   },
   {
-    "transcript": "Oh, wow, so he's a startup founder and he's sitting down to have a conversation with us, and it's a 3D environment. You can actually see around.",
-    "secondRange": "00:27-00:34",
-    "frameDescription": "The 3D avatar of Alan Musk sits down."
+    "transcript": "Oh wow, so he's a staff founder and he's sitting down to have a conversation with us and it's a 3D environment you can actually see around.",
+    "secondRange": "00:39-00:47",
+    "frameDescription": "3D avatar of Alon Mosk is displayed on a pink background"
   },
   {
-    "transcript": "Let's ask him a second question to see if he can actually perform some physical action and not just talking. Hey, Alan Musk, can you do some sports?",
-    "secondRange": "00:34-00:42",
-    "frameDescription": "The 3D avatar of Alan Musk sits down."
+    "transcript": "So let's ask him a second question to see if he can actually perform some physical action and not just talking. Hey Alan Musk, can you do some sports? Let's play some sports.",
+    "secondRange": "00:47-01:01",
+    "frameDescription": "3D avatar of Alon Mosk is displayed on a pink background"
   },
   {
-    "transcript": "Let's play some sports.",
-    "secondRange": "00:42-00:45",
-    "frameDescription": "The 3D avatar of Alan Musk stands up."
-  },
-  {
-    "transcript": "Oh, wow, that's some very sleek move of Alan Musk. Wow.",
-    "secondRange": "00:45-00:49",
-    "frameDescription": "The 3D avatar of Alan Musk stands up."
-  },
-  {
-    "transcript": "And he just ran closer to me, so maybe let's chill things down a little bit and ask him to sit down. Can you sit down and have some meals with me?",
-    "secondRange": "00:49-00:57",
-    "frameDescription": "The 3D avatar of Alan Musk stands up."
+    "transcript": "Oh wow, that's some very sleek move of Alan Musk. Wow. And he just ran closer to me, so maybe let's chew things down a little bit and ask him to sit down. Can you sit down and have some meals with me?",
+    "secondRange": "01:01-01:16",
+    "frameDescription": "3D avatar of Alon Mosk is displayed on a pink background"
   },
   {
     "transcript": "Sorry, I didn't catch that. Could you try again?",
-    "secondRange": "00:57-00:58",
-    "frameDescription": "The 3D avatar of Alan Musk stands up."
+    "secondRange": "01:16-01:19",
+    "frameDescription": "3D avatar of Alon Mosk is displayed on a pink background"
   },
   {
     "transcript": "Wow, so he's being arrogant and yeah, not wanting to sit down.",
-    "secondRange": "00:58-01:03",
-    "frameDescription": "The 3D avatar of Alan Musk stands up."
+    "secondRange": "01:19-01:24",
+    "frameDescription": "3D avatar of Alon Mosk is displayed on a pink background"
   },
   {
-    "transcript": "Uh, lastly, let's try to ask him what he thinks about young people and artificial intelligence, which is the topic of our Kazan Youth Summit.",
-    "secondRange": "01:03-01:10",
-    "frameDescription": "The 3D avatar of Alan Musk stands up."
+    "transcript": "Uh lastly, let's try to ask him what he thinks about young people and artificial intelligence, which is the topic of our Kazan Youth Summit.",
+    "secondRange": "01:24-01:34",
+    "frameDescription": "3D avatar of Alon Mosk is displayed on a pink background"
   },
   {
-    "transcript": "Young people love artificial intelligence.",
-    "secondRange": "01:10-01:12",
-    "frameDescription": "The 3D avatar of Alan Musk stands up."
+    "transcript": "Oh wow. Young people love artificial intelligence.",
+    "secondRange": "01:34-01:37",
+    "frameDescription": "3D avatar of Alon Mosk is displayed on a pink background"
   },
   {
-    "transcript": "He replied, uh, to what we talk about. So really nice to meet you, Alan Musk. Thank you so much.",
-    "secondRange": "01:12-01:17",
-    "frameDescription": "The 3D avatar of Alan Musk stands up."
-  },
-  {
-    "transcript": "",
-    "secondRange": "01:17-01:18",
-    "frameDescription": "The man stops recording the screen."
-  },
-  {
-    "transcript": "",
-    "secondRange": "01:18-01:21",
-    "frameDescription": "The man is recording a screen showing code."
-  },
-  {
-    "transcript": "Okay, so this is an overview of the demo you just saw.",
-    "secondRange": "01:21-01:24",
-    "frameDescription": "The man is recording a screen showing code."
-  },
-  {
-    "transcript": "Everything is located in this NX mono repo.",
-    "secondRange": "01:24-01:27",
-    "frameDescription": "The man is recording a screen showing code."
-  },
-  {
-    "transcript": "The front end is located in the Nextjs project app right here.",
-    "secondRange": "01:27-01:31",
-    "frameDescription": "The man is recording a screen showing code."
-  },
-  {
-    "transcript": "So it basically handles, you know, a lot of 3js stuff.",
-    "secondRange": "01:31-01:35",
-    "frameDescription": "The man is recording a screen showing code."
-  },
-  {
-    "transcript": "For example, you know, like loading the 3D model, which is the character.",
-    "secondRange": "01:35-01:38",
-    "frameDescription": "The man is recording a screen showing code."
-  },
-  {
-    "transcript": "Right, choosing the character,",
-    "secondRange": "01:38-01:40",
-    "frameDescription": "The man is recording a screen showing code."
-  },
-  {
-    "transcript": "which is quite manual right now and, you know, like accessing the different animations to render them.",
-    "secondRange": "01:40-01:47",
-    "frameDescription": "The man is recording a screen showing code."
-  },
-  {
-    "transcript": "Right? So everything happens mostly in this Avatar component, uh, which load the character.",
-    "secondRange": "01:47-01:50",
-    "frameDescription": "The man is recording a screen showing code."
-  },
-  {
-    "transcript": "And below it also handles animation, facial expression, and lip sinking as well, you know, to play them, uh, when you get the response from the server.",
-    "secondRange": "01:50-01:56",
-    "frameDescription": "The man is recording a screen showing code."
-  },
-  {
-    "transcript": "I guess the most complicated thing that I had to do in this is when you load different 3D characters,",
-    "secondRange": "01:56-02:01",
-    "frameDescription": "The man is recording a screen showing code."
-  },
-  {
-    "transcript": "3D models, the size and the coordinates and the ratio of the bone structure can be different. And right now the animations for the actions that the character is using, uh, is actually from an open source library by Adobe.",
-    "secondRange": "02:01-02:12",
-    "frameDescription": "The man is recording a screen showing code."
-  },
-  {
-    "transcript": "So we need to actually normalize that animation to fit the bone frame of the 3D model that we have.",
-    "secondRange": "02:12-02:24",
-    "frameDescription": "The man is recording a screen showing code."
-  },
-  {
-    "transcript": "So what I did is I wrote this function here, normalize Fbx animation.",
-    "secondRange": "02:24-02:31",
-    "frameDescription": "The man is recording a screen showing code."
-  },
-  {
-    "transcript": "And it's very complicated, but it just basically goes over, you know, different notes in the bone structure.",
-    "secondRange": "02:31-02:37",
-    "frameDescription": "The man is recording a screen showing code."
-  },
-  {
-    "transcript": "Um, and compare them to the, you know, the corresponding notes from the animation and try to normalize them to the same level so that when animation goes into, uh, the character it would actually work, right?",
-    "secondRange": "02:37-02:48",
-    "frameDescription": "The man is recording a screen showing code."
-  },
-  {
-    "transcript": "So that's the front end.",
-    "secondRange": "02:48-02:50",
-    "frameDescription": "The man is recording a screen showing code."
-  },
-  {
-    "transcript": "And then you got like the server, which is, uh, basically just a an express server.",
-    "secondRange": "02:50-02:53",
-    "frameDescription": "The man is recording a screen showing code."
-  },
-  {
-    "transcript": "Um, it's a chain of commands that uses Lang chain to process the user message.",
-    "secondRange": "02:53-03:00",
-    "frameDescription": "The man is recording a screen showing code."
-  },
-  {
-    "transcript": "And then output a series of LM actions that generates the response, generates the actions, generates the audio, and generates the coordinates for lip sinking to be sent back to the 3D model on the front end.",
-    "secondRange": "03:00-03:12",
-    "frameDescription": "The man is recording a screen showing code."
-  },
-  {
-    "transcript": "And it's basically like a bunch of command that does that, but I think like one of the thing that stands out and I don't think anyone has done this before is in my chain, you can kind of see that the character is actually able to not only lip sinking or respond, but also perform actions that correspond to the content of the reply.",
-    "secondRange": "03:12-03:20",
-    "frameDescription": "The man is recording a screen showing code."
-  },
-  {
-    "transcript": "So what's basically happening here is in the handle user message function, right? We're generating audio, we're generating response, right?",
-    "secondRange": "03:20-03:29",
-    "frameDescription": "The man is recording a screen showing code."
-  },
-  {
-    "transcript": "These kinds of stuff, you know, happens in other apps as well, lip sinking, right?",
-    "secondRange": "03:29-03:39",
-    "frameDescription": "The man is recording a screen showing code."
-  },
-  {
-    "transcript": "And there is a function.",
-    "secondRange": "03:39-03:42",
-    "frameDescription": "The man is recording a screen showing code."
-  },
-  {
-    "transcript": "The first thing that's called is get relevant actions, right? And it's the first thing that's called and what it basically does is it, you know,",
-    "secondRange": "03:42-03:47",
-    "frameDescription": "The man is recording a screen showing code."
-  },
-  {
-    "transcript": "adds the user message into, um,",
-    "secondRange": "03:47-03:51",
-    "frameDescription": "The man is recording a screen showing code."
-  },
-  {
-    "transcript": "a ret search, like a vector database search, right? So it initializes a vector database,",
-    "secondRange": "03:51-03:55",
-    "frameDescription": "The man is recording a screen showing code."
-  },
-  {
-    "transcript": "which contains, um, all actions that are available.",
-    "secondRange": "03:55-04:01",
-    "frameDescription": "The man is recording a screen showing code."
-  },
-  {
-    "transcript": "Right? So for example, here we are importing animation names and it's just right now a static file, right? So it's in the asset folder.",
-    "secondRange": "04:01-04:07",
-    "frameDescription": "The man is recording a screen showing code."
-  },
-  {
-    "transcript": "These are all the animation names, which are FBX file and they correspond with, you know, like the the actual FBX file that are so in the database.",
-    "secondRange": "04:07-04:16",
-    "frameDescription": "The man is recording a screen showing code."
-  },
-  {
-    "transcript": "So we perform a similarity search to return about 10 to 15 actions that are similar to the user query, right?",
-    "secondRange": "04:16-04:25",
-    "frameDescription": "The man is recording a screen showing code."
-  },
-  {
-    "transcript": "And then after that, uh, after we get like the names of the relevant actions, um, you know, we combine them.",
-    "secondRange": "04:25-04:30",
-    "frameDescription": "The man is recording a screen showing code."
-  },
-  {
-    "transcript": "And then it's here, right? So it's pretty close as well. So after we get the the relevant actions,",
-    "secondRange": "04:30-04:35",
-    "frameDescription": "The man is recording a screen showing code."
-  },
-  {
-    "transcript": "choose the companion name and then based on the messages, we will just download the animation URL from the database.",
-    "secondRange": "04:35-04:40",
-    "frameDescription": "The man is recording a screen showing code."
-  },
-  {
-    "transcript": "Right? And then load it, uh, the URL into the response, uh, body of the response that the LM returns. A little bit, you know, uh, you know, roundabout, but that's basically how it works. That's how the character can actually perform certain actions.",
-    "secondRange": "04:40-04:55",
-    "frameDescription": "The man is recording a screen showing code."
+    "transcript": "He replied uh to what we spoke about. So really nice to meet you, Alan Musk. Thank you so much.",
+    "secondRange": "01:37-01:44",
+    "frameDescription": "3D avatar of Alon Mosk is displayed on a pink background"
   }
 ]

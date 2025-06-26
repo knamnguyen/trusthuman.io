@@ -147,6 +147,8 @@ exports.Prisma.DemoVideoScalarFieldEnum = {
   id: 'id',
   s3Url: 's3Url',
   durationSeconds: 'durationSeconds',
+  productInfo: 'productInfo',
+  colorPalette: 'colorPalette',
   masterScript: 'masterScript',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -159,9 +161,7 @@ exports.Prisma.ShortDemoScalarFieldEnum = {
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   demoCutUrl: 'demoCutUrl',
-  productInfo: 'productInfo',
-  segments: 'segments',
-  colorPalette: 'colorPalette'
+  segments: 'segments'
 };
 
 exports.Prisma.HookViralVideoScalarFieldEnum = {
