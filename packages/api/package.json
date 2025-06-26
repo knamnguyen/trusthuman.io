@@ -23,6 +23,7 @@
     "@remotion/lambda": "4.0.314",
     "@sassy/db": "workspace:*",
     "@sassy/gemini-video": "workspace:*",
+    "@sassy/langchain": "workspace:*",
     "@sassy/remotion": "workspace:*",
     "@sassy/s3": "workspace:*",
     "@sassy/stripe": "workspace:*",

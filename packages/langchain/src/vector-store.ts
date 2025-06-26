@@ -16,6 +16,7 @@ export interface VideoSearchResult {
   likes: number;
   comments: number;
   durationSeconds: number;
+  hookEndTimestamp?: string | null;
   colorPalette?: ColorPalette | null;
   similarity?: number;
 }

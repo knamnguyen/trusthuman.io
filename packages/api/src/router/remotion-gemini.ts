@@ -15,7 +15,8 @@ const RemotionGeminiInputSchema = z.object({
   exactDuration: z
     .number()
     .positive("Exact duration must be positive")
-    .max(300, "Exact duration cannot exceed 300 seconds"),
+    .max(300, "Exact duration cannot exceed 300 seconds")
+    .default(15), // Default to 15 seconds if not provided
   numSegments: z
     .number()
     .int()

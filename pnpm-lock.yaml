@@ -312,6 +312,9 @@ importers:
       '@sassy/gemini-video':
         specifier: workspace:*
         version: link:../gemini-video
+      '@sassy/langchain':
+        specifier: workspace:*
+        version: link:../langchain
       '@sassy/remotion':
         specifier: workspace:*
         version: link:../remotion

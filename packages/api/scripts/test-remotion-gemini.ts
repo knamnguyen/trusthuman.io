@@ -1,20 +1,25 @@
 #!/usr/bin/env bun
 
 /**
- * REMOTION-GEMINI ROUTER TEST SCRIPT
- * ==================================
+ * REMOTION-GEMINI ROUTER TEST SCRIPT WITH HOOK MATCHING
+ * =====================================================
  *
  * PURPOSE:
- * Tests the new remotion-gemini tRPC router that combines:
- * 1. Gemini master script condensing (text-only, no video upload)
- * 2. Remotion video stitching with generated segments
- * 3. Database storage of ShortDemo records
+ * Tests the remotion-gemini tRPC router and hook similarity matching:
+ * 1. Find best matching viral hook using similarity search
+ * 2. Calculate optimal duration from hook timing
+ * 3. Gemini master script condensing (text-only, no video upload)
+ * 4. Remotion video stitching with generated segments
+ * 5. Database storage of ShortDemo records
  *
  * WORKFLOW TESTING:
- * 1. Call processGeminiDemo endpoint with demo video ID
- * 2. Monitor render progress using polling
- * 3. Retrieve download URL when complete
- * 4. Update ShortDemo with final demoCutUrl
+ * 1. Get demo video productInfo and colorPalette from database
+ * 2. Use similarity search to find best matching viral hook
+ * 3. Calculate optimal duration from hook's timing data
+ * 4. Call processGeminiDemo endpoint with calculated duration
+ * 5. Monitor render progress using polling
+ * 6. Retrieve download URL when complete
+ * 7. Update ShortDemo with final demoCutUrl
  *
  * PARAMETERS (TEST_CONFIG):
  * - demoVideoId: string - Database ID of demo video with master script
@@ -25,21 +30,27 @@
  * - maxPollAttempts: number - Maximum polling attempts before timeout
  *
  * TESTING PHASES:
- * Phase 1: Initial Processing
- * - Validates input parameters
+ * Phase 1: Hook Similarity Matching
+ * - Fetches demo video productInfo and colorPalette
+ * - Uses VideoVectorStore for similarity search
+ * - Calculates optimal duration from best matching hook
+ * - Displays matching results and calculated duration
+ *
+ * Phase 2: Initial Processing
+ * - Validates input parameters with calculated duration
  * - Calls Gemini service for segment generation
  * - Converts segments to VideoStitch format
  * - Starts Remotion Lambda processing
  * - Creates ShortDemo database record
  * - Returns processing IDs
  *
- * Phase 2: Progress Monitoring
+ * Phase 3: Progress Monitoring
  * - Polls render progress every N seconds
  * - Displays current status and completion percentage
  * - Handles various render states (progress, done, error)
  * - Exits on completion or timeout
  *
- * Phase 3: Completion Handling
+ * Phase 4: Completion Handling
  * - Retrieves final download URL
  * - Updates ShortDemo record with demoCutUrl
  * - Displays final results and file locations
@@ -71,6 +82,11 @@
  * - Database connectivity issues
  * - Progress polling timeouts
  */
+import type { ColorPalette } from "@sassy/gemini-video";
+import type { VideoSearchResult } from "@sassy/langchain";
+import { db } from "@sassy/db";
+import { VideoVectorStore } from "@sassy/langchain";
+
 import { createServerClient } from "../src/index";
 
 // Test configuration
@@ -91,6 +107,72 @@ const TEST_CONFIG = {
 // Sleep utility for polling
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+/**
+ * Parse MM:SS timestamp to seconds (using same logic as remotion utils)
+ */
+const parseTimeToSeconds = (timeStr: string): number => {
+  const parts = timeStr.split(":").map(Number);
+
+  if (parts.length === 2) {
+    // MM:SS format
+    const [minutes, seconds] = parts;
+    if (minutes === undefined || seconds === undefined) {
+      throw new Error(`Invalid time format: ${timeStr}`);
+    }
+    return minutes * 60 + seconds;
+  } else if (parts.length === 3) {
+    // HH:MM:SS format
+    const [hours, minutes, seconds] = parts;
+    if (hours === undefined || minutes === undefined || seconds === undefined) {
+      throw new Error(`Invalid time format: ${timeStr}`);
+    }
+    return hours * 3600 + minutes * 60 + seconds;
+  }
+
+  throw new Error(`Invalid time format: ${timeStr}. Use MM:SS or HH:MM:SS`);
+};
+
+/**
+ * Calculate optimal duration from hook viral video
+ */
+const calculateOptimalDuration = (
+  hookViralVideo: VideoSearchResult,
+): number => {
+  const hookEndSeconds = parseTimeToSeconds(
+    hookViralVideo.hookEndTimestamp || "00:05",
+  );
+  const remainingDuration = hookViralVideo.durationSeconds - hookEndSeconds;
+
+  // Apply reasonable bounds
+  const minDuration = 5;
+  const maxDuration = 30;
+
+  return Math.max(minDuration, Math.min(maxDuration, remainingDuration));
+};
+
+/**
+ * Find best matching hook using similarity search
+ */
+const findBestMatchingHook = async (
+  productInfo: string,
+  colorPalette: ColorPalette,
+): Promise<VideoSearchResult> => {
+  const vectorStore = new VideoVectorStore();
+
+  const similarHooks = await vectorStore.findSimilarVideosSequential({
+    textQuery: productInfo,
+    colorPalette: colorPalette,
+    textResultLimit: 50,
+    finalLimit: 3,
+  });
+
+  if (similarHooks.length === 0) {
+    throw new Error("No similar viral hooks found for this demo video");
+  }
+
+  return similarHooks[0]!;
+};
+
 async function main() {
   console.log("🧪 REMOTION-GEMINI ROUTER TEST");
   console.log("==============================");
@@ -105,8 +187,75 @@ async function main() {
     // Create server-side tRPC client
     const trpc = await createServerClient();
 
-    // Phase 1: Initial Processing
-    console.log("🚀 PHASE 1: INITIAL PROCESSING");
+    // Phase 1: Hook Similarity Matching
+    console.log("🔍 PHASE 1: HOOK SIMILARITY MATCHING");
+    console.log("====================================");
+
+    console.log("📊 Fetching demo video data...");
+    const demoVideo = await db.demoVideo.findUnique({
+      where: { id: TEST_CONFIG.demoVideoId },
+      select: {
+        id: true,
+        productInfo: true,
+        colorPalette: true,
+        durationSeconds: true,
+      },
+    });
+
+    if (!demoVideo) {
+      throw new Error(
+        `Demo video with ID ${TEST_CONFIG.demoVideoId} not found`,
+      );
+    }
+
+    console.log("✅ Demo video data retrieved:");
+    console.log(`   Product Info: "${demoVideo.productInfo || "N/A"}"`);
+    console.log(
+      `   Color Palette: ${demoVideo.colorPalette ? "Available" : "N/A"}`,
+    );
+    console.log(`   Duration: ${demoVideo.durationSeconds}s`);
+    console.log("");
+
+    if (!demoVideo.productInfo || !demoVideo.colorPalette) {
+      console.log(
+        "⚠️  Missing productInfo or colorPalette, using default duration",
+      );
+      console.log(
+        `   Using configured duration: ${TEST_CONFIG.exactDuration}s`,
+      );
+    } else {
+      console.log("🎯 Starting similarity search for matching viral hooks...");
+
+      const matchingHook = await findBestMatchingHook(
+        demoVideo.productInfo,
+        demoVideo.colorPalette as ColorPalette,
+      );
+
+      console.log("✅ Best matching hook found:");
+      console.log(`   Hook ID: ${matchingHook.id}`);
+      console.log(`   Title: "${matchingHook.title}"`);
+      console.log(
+        `   Similarity Score: ${(matchingHook.similarity || 0).toFixed(3)}`,
+      );
+      console.log(
+        `   Hook End Timestamp: ${matchingHook.hookEndTimestamp || "N/A"}`,
+      );
+      console.log(`   Video Duration: ${matchingHook.durationSeconds}s`);
+
+      const calculatedDuration = calculateOptimalDuration(matchingHook);
+      console.log(`   🧮 Calculated Optimal Duration: ${calculatedDuration}s`);
+
+      // Override the configured duration with calculated one
+      TEST_CONFIG.exactDuration = calculatedDuration;
+      console.log(
+        `   ✅ Updated target duration to: ${TEST_CONFIG.exactDuration}s`,
+      );
+    }
+
+    console.log("");
+
+    // Phase 2: Initial Processing
+    console.log("🚀 PHASE 2: INITIAL PROCESSING");
     console.log("==============================");
 
     const startTime = Date.now();
