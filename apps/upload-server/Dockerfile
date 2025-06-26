@@ -5,10 +5,10 @@ FROM oven/bun:1 AS base
 WORKDIR /app
 
 # Copy package files
-COPY package.json bun.lockb* ./
+COPY package.production.json ./package.json
 
 # Install dependencies
-RUN bun install --frozen-lockfile --production
+RUN bun install --production
 
 # Copy source code
 COPY src ./src
@@ -25,9 +25,9 @@ USER bunjs
 # Expose port
 EXPOSE 3001
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3001/health || exit 1
+# Health check disabled for t2.micro to avoid curl dependency
+# HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+#   CMD curl -f http://localhost:3001/health || exit 1
 
 # Start the application
 CMD ["bun", "start"] 
