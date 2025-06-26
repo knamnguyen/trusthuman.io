@@ -17,7 +17,7 @@ ENVIRONMENT=${1:-production}
 EC2_USER="ubuntu"
 EC2_HOST="35.93.212.176"  # Set this to your EC2 instance IP
 KEY_PATH="~/.ssh/aws-keys/viralcut-upload-server.pem"  # Your downloaded key
-GEMINI_API_KEY="AIzaSyCui3tGPwRHy4mTpKmKFzJpiJUSxhmU28w"  # Set this in environment or prompt
+GEMINI_API_KEY="AIzaSyBXJpE78o2weG96_gbPf0G1AVghJDBZcCs"  # Set this in environment or prompt
 
 echo -e "${GREEN}🚀 Starting Upload Server Deployment for t2.micro (Free Tier) - ${ENVIRONMENT}${NC}"
 echo -e "${BLUE}💡 Using optimized settings for 1 vCPU, 1GB RAM${NC}"
