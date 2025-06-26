@@ -45,6 +45,15 @@ export interface VideoStitchRequest {
   originalDuration: number;
 }
 
+export interface CombineVideosRequest {
+  shortHookUrl: string;
+  shortDemoUrl: string;
+  originalHookUrl: string;
+  shortHookDuration: number;
+  shortDemoDuration: number;
+  originalHookDuration: number;
+}
+
 export class RemotionService {
   private region: AwsRegion;
 
@@ -416,6 +425,119 @@ export class RemotionService {
       console.error("Error processing video stitch:", error);
       throw new Error(
         `Failed to process video stitch: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    }
+  }
+
+  /**
+   * Start combine videos processing
+   */
+  async processCombineVideos(
+    request: CombineVideosRequest,
+  ): Promise<RemotionRenderResult> {
+    console.log("processCombineVideos triggered");
+    try {
+      // Get deployed functions
+      const functions = await this.getFunctions();
+
+      if (functions.length === 0) {
+        throw new Error(
+          "No Remotion Lambda functions found. Please deploy a function first.",
+        );
+      }
+
+      const functionName = functions[0]?.functionName;
+      if (!functionName) {
+        throw new Error("Function name is undefined");
+      }
+
+      // Get the viralcut demo site
+      const demoSite = await this.getViralCutSite();
+
+      console.log("starting combine videos processing inside service");
+      console.log("functions", functions);
+      console.log("functionName", functionName);
+      console.log("demoSite", demoSite);
+      console.log("request", request);
+      console.log("region", this.region);
+      console.log("serveUrl", demoSite.serveUrl);
+      console.log("composition", "CombineVideos");
+      console.log("inputProps", {
+        shortHookUrl: request.shortHookUrl,
+        shortDemoUrl: request.shortDemoUrl,
+        originalHookUrl: request.originalHookUrl,
+        shortHookDuration: request.shortHookDuration,
+        shortDemoDuration: request.shortDemoDuration,
+        originalHookDuration: request.originalHookDuration,
+      });
+      console.log("codec", "h264");
+
+      // Calculate the total duration from the two video segments
+      const totalDurationSeconds =
+        request.shortHookDuration + request.shortDemoDuration;
+      const fps = 30;
+      const durationInFrames = Math.ceil(totalDurationSeconds * fps);
+
+      // Use Remotion's default optimization for framesPerLambda
+      const practicalFramesPerLambda = undefined;
+
+      console.log("CombineVideos duration calculations:", {
+        shortHookDuration: request.shortHookDuration,
+        shortDemoDuration: request.shortDemoDuration,
+        totalDurationSeconds,
+        fps,
+        durationInFrames,
+        practicalFramesPerLambda: "undefined (using Remotion defaults)",
+        note: "Letting Remotion optimize concurrency automatically",
+      });
+
+      const currentTime = format(new Date(), "yyyy-MM-dd-HH-mm-ss");
+      // Render video on Lambda with optimized settings
+      const renderResult = await renderMediaOnLambda({
+        region: this.region,
+        functionName,
+        serveUrl: demoSite.serveUrl,
+        composition: "CombineVideos",
+        inputProps: {
+          shortHookUrl: request.shortHookUrl,
+          shortDemoUrl: request.shortDemoUrl,
+          originalHookUrl: request.originalHookUrl,
+          shortHookDuration: request.shortHookDuration,
+          shortDemoDuration: request.shortDemoDuration,
+          originalHookDuration: request.originalHookDuration,
+        },
+        codec: "h264",
+        imageFormat: "jpeg",
+        maxRetries: 1,
+        framesPerLambda: practicalFramesPerLambda,
+        concurrencyPerLambda: 1, // Single browser tab for better video processing performance
+        privacy: "public",
+        // Increase timeout for video combining
+        timeoutInMilliseconds: 3000000,
+        // Add verbose logging for debugging
+        logLevel: "verbose",
+        outName: `video-combined-${currentTime}.mp4`,
+      });
+
+      const { renderId, bucketName } = renderResult;
+
+      // Log debugging information
+      console.log("🔍 CombineVideos DEBUGGING INFO:");
+      console.log("CloudWatch Logs:", renderResult.cloudWatchLogs);
+      console.log("S3 Console Folder:", renderResult.folderInS3Console);
+      console.log("Render ID:", renderId);
+      console.log("Bucket Name:", bucketName);
+
+      return {
+        renderId,
+        bucketName,
+        success: true,
+        message: "Video combine processing started successfully",
+      };
+    } catch (error) {
+      console.error("Error processing combine videos:", error);
+      throw new Error(
+        `Failed to process combine videos: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
   }

@@ -27,13 +27,15 @@
     "remotion:render": "pnpm with-env remotion lambda render",
     "remotion:debug": "bun scripts/debug-speed-adjust.ts",
     "remotion:debug-stitch": "bun scripts/debug-video-stitch.ts",
-    "test:metadata": "bun scripts/test-metadata.ts"
+    "test:metadata": "bun scripts/test-metadata.ts",
+    "test:combine-videos": "pnpm with-env bun scripts/test-combine-videos.ts"
   },
   "dependencies": {
     "@remotion/cli": "4.0.314",
     "@remotion/lambda": "4.0.314",
     "@remotion/media-parser": "4.0.314",
     "@remotion/media-utils": "4.0.314",
+    "@sassy/db": "workspace:*",
     "@sassy/validators": "workspace:*",
     "date-fns": "catalog:",
     "react": "catalog:react19",

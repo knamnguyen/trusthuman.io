@@ -7,4 +7,5 @@ export type {
   RemotionRenderResult,
   RemotionProgress,
   VideoStitchRequest,
+  CombineVideosRequest,
 } from "./remotion-service";

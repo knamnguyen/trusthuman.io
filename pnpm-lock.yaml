@@ -511,6 +511,9 @@ importers:
       '@remotion/media-utils':
         specifier: 4.0.314
         version: 4.0.314(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      '@sassy/db':
+        specifier: workspace:*
+        version: link:../db
       '@sassy/validators':
         specifier: workspace:*
         version: link:../validators
