@@ -148,6 +148,29 @@ export const MasterScriptResponseSchema = z.object({
     .min(1, "At least one master script entry is required"),
 });
 
+// Input schema for demo video condensing from master script (database-based)
+export const DemoVideoFromMasterScriptInputSchema = z.object({
+  demoVideoId: z.string().cuid("Valid demo video ID is required"),
+  exactDuration: z
+    .number()
+    .positive("Exact duration must be positive")
+    .max(300, "Exact duration cannot exceed 300 seconds"),
+  numSegments: z
+    .number()
+    .int()
+    .min(1)
+    .max(20, "Number of segments must be between 1 and 20"),
+  contentGuide: z.string().optional(),
+});
+
+// Output schema for demo video condensing from master script (segments only)
+export const DemoVideoFromMasterScriptResponseSchema = z.object({
+  segments: z
+    .array(VideoSegmentSchema)
+    .min(1, "At least one segment is required"),
+  totalDuration: z.number().positive("Total duration must be positive"),
+});
+
 // Type exports
 export type GeminiVideoConfig = z.infer<typeof GeminiVideoConfigSchema>;
 export type Color = z.infer<typeof ColorSchema>;
@@ -162,3 +185,9 @@ export type GeminiFileResponse = z.infer<typeof GeminiFileResponseSchema>;
 export type MasterScriptEntry = z.infer<typeof MasterScriptEntrySchema>;
 export type MasterScriptInput = z.infer<typeof MasterScriptInputSchema>;
 export type MasterScriptResponse = z.infer<typeof MasterScriptResponseSchema>;
+export type DemoVideoFromMasterScriptInput = z.infer<
+  typeof DemoVideoFromMasterScriptInputSchema
+>;
+export type DemoVideoFromMasterScriptResponse = z.infer<
+  typeof DemoVideoFromMasterScriptResponseSchema
+>;

@@ -16,10 +16,12 @@
     "with-env": "dotenv -e ../../.env --",
     "test:viral": "pnpm with-env bun scripts/test-viral-video.ts",
     "test:demo": "pnpm with-env bun scripts/test-demo-video.ts",
-    "test:master-script": "pnpm with-env bun scripts/test-master-script.ts"
+    "test:master-script": "pnpm with-env bun scripts/test-master-script.ts",
+    "test:demo-masterscript": "pnpm with-env bun scripts/test-demo-from-masterscript.ts"
   },
   "dependencies": {
     "@google/genai": "^1.5.1",
+    "@sassy/db": "workspace:*",
     "@sassy/validators": "workspace:*",
     "zod": "catalog:"
   },

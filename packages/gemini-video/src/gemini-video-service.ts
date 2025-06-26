@@ -4,7 +4,11 @@ import { tmpdir } from "os";
 import { join } from "path";
 import { createPartFromUri, GoogleGenAI } from "@google/genai";
 
+import { db } from "@sassy/db";
+
 import type {
+  DemoVideoFromMasterScriptInput,
+  DemoVideoFromMasterScriptResponse,
   DemoVideoInput,
   DemoVideoResponse,
   GeminiFileResponse,
@@ -16,6 +20,8 @@ import type {
   ViralHookResponse,
 } from "./schema-validators";
 import {
+  DemoVideoFromMasterScriptInputSchema,
+  DemoVideoFromMasterScriptResponseSchema,
   DemoVideoInputSchema,
   DemoVideoResponseSchema,
   GeminiVideoConfigSchema,
@@ -617,6 +623,178 @@ export class GeminiVideoService {
       if (videoFile) {
         await this.cleanupGeminiFile(videoFile.name);
       }
+    }
+  }
+
+  /**
+   * Condense demo videos from existing master script data (database-based)
+   * @param input - Demo video ID, exact duration, number of segments, and optional content guide
+   * @returns Array of video segments with captions and timing (no productInfo or colorPalette)
+   */
+  async condenseDemoFromMasterScript(
+    input: DemoVideoFromMasterScriptInput,
+  ): Promise<DemoVideoFromMasterScriptResponse> {
+    // Validate input
+    const validatedInput = DemoVideoFromMasterScriptInputSchema.parse(input);
+
+    try {
+      console.log("🎬 Condensing demo from master script...");
+      console.log(`📊 Demo Video ID: ${validatedInput.demoVideoId}`);
+      console.log(
+        `📊 Target: ${validatedInput.numSegments} segments, exactly ${validatedInput.exactDuration}s total`,
+      );
+      if (validatedInput.contentGuide) {
+        console.log("📝 Content guide provided:", validatedInput.contentGuide);
+      }
+
+      // Fetch demo video from database
+      console.log("🔍 Fetching demo video from database...");
+      const demoVideo = await db.demoVideo.findUnique({
+        where: { id: validatedInput.demoVideoId },
+        select: {
+          id: true,
+          masterScript: true,
+          productInfo: true,
+          colorPalette: true,
+          durationSeconds: true,
+        },
+      });
+
+      if (!demoVideo) {
+        throw new Error(
+          `Demo video with ID ${validatedInput.demoVideoId} not found`,
+        );
+      }
+
+      console.log("✅ Demo video found in database");
+      console.log(`📊 Original duration: ${demoVideo.durationSeconds}s`);
+
+      // Validate that we have master script data
+      if (!demoVideo.masterScript || !Array.isArray(demoVideo.masterScript)) {
+        throw new Error(
+          "Demo video does not have valid master script data. Please generate master script first.",
+        );
+      }
+
+      const masterScript = demoVideo.masterScript as any[];
+      console.log(`📝 Master script contains ${masterScript.length} segments`);
+
+      // Calculate segment length
+      const snippetLength = Math.round(
+        validatedInput.exactDuration / validatedInput.numSegments,
+      );
+
+      // Create specific prompt for demo condensing with master script context
+      const contentGuideInstruction = validatedInput.contentGuide
+        ? `
+        IMPORTANT: Follow this content guide for segment selection and caption direction:
+        "${validatedInput.contentGuide}"
+        
+        Use this guide to determine:
+        - Which parts of the video to prioritize for segments
+        - The style and focus for captions
+        - The overall narrative direction for the condensed version
+        `
+        : `
+        Focus on the most important and engaging parts of the demo that showcase key features and user interactions.
+        `;
+
+      const masterScriptText = masterScript
+        .map((segment) => {
+          return `${segment.secondRange}: ${segment.transcript || "(no audio)"} | Visual: ${segment.frameDescription}`;
+        })
+        .join("\n");
+
+      const demoPrompt = `
+        I have a product demo video with a complete time-based master script. I need to condense it into exactly ${validatedInput.exactDuration} seconds.
+        Create a condensed version that highlights the key steps and features using the master script data below.
+        
+        MASTER SCRIPT DATA:
+        ${masterScriptText}
+        
+        PRODUCT INFO:
+        ${demoVideo.productInfo}
+        
+        ${contentGuideInstruction}
+        
+        The condensed script should:
+        1. Focus on important UI interactions, button clicks, and transitions from the master script
+        2. Capture the essential flow of the demo based on the provided annotations
+        3. Skip repetitive or unnecessary parts identified in the master script
+        4. Be divided into exactly ${validatedInput.numSegments} brief segments of approximately ${snippetLength} seconds each
+        5. Use the timing information from the master script to select the best moments
+        
+        For each segment provide:
+        1. A brief caption (maximum 20 words) that summarizes what happens
+        2. The exact start and end timestamps in whole seconds (based on the master script timing)
+        
+        Format your response as JSON with this structure:
+        {
+          "segments": [
+            {"caption": "Brief caption here", "start": 12, "end": 18}
+          ],
+          "totalDuration": ${validatedInput.exactDuration}
+        }
+        
+        IMPORTANT REQUIREMENTS:
+        - Use whole number values for start and end times (e.g., 12, 18) NOT decimal values
+        - The start and end times must be integers representing whole seconds
+        - Total duration of all segments must equal EXACTLY ${validatedInput.exactDuration} seconds
+        - Select timestamps that exist within the master script time ranges
+        - Choose the most engaging and informative moments from the master script
+        - Ensure segments don't overlap and are in chronological order
+        - Make captions descriptive and action-oriented
+        
+        Analyze the master script carefully and select the ${validatedInput.numSegments} most important moments that best represent the product demo.
+      `;
+
+      // Generate content using text-only prompt (no video upload needed)
+      console.log("🧠 Sending master script data to Gemini for analysis...");
+      const response = await this.client.models.generateContent({
+        model: "gemini-2.0-flash",
+        contents: [demoPrompt],
+        config: {
+          maxOutputTokens: 50000,
+          temperature: 0.1,
+        },
+      });
+
+      const result = response.text;
+      console.log("📝 Raw response received from Gemini");
+
+      if (!result) {
+        throw new Error("Empty response from Gemini API");
+      }
+
+      // Parse JSON response
+      let parsedResponse;
+      try {
+        // Extract JSON from response (handle cases where response includes markdown formatting)
+        const jsonMatch = result.match(/\{[\s\S]*\}/);
+        const jsonStr = jsonMatch ? jsonMatch[0] : result;
+        parsedResponse = JSON.parse(jsonStr);
+      } catch (parseError) {
+        console.error("❌ Failed to parse JSON response:", parseError);
+        console.log("Raw response:", result);
+        throw new Error(
+          "Failed to parse demo condensing from master script response as JSON",
+        );
+      }
+
+      // Validate response format
+      const validatedResponse =
+        DemoVideoFromMasterScriptResponseSchema.parse(parsedResponse);
+
+      console.log("✅ Demo condensing from master script completed");
+      console.log(`📊 Generated ${validatedResponse.segments.length} segments`);
+      console.log(`⏱️ Total duration: ${validatedResponse.totalDuration}s`);
+
+      return validatedResponse;
+    } catch (error) {
+      console.error("❌ Error condensing demo from master script:", error);
+      throw new Error(
+        `Failed to condense demo from master script: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   }
 }
