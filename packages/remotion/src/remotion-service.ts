@@ -4,10 +4,11 @@ import {
   getRenderProgress,
   getSites,
   renderMediaOnLambda,
-  speculateFunctionName,  
+  speculateFunctionName,
 } from "@remotion/lambda/client";
-import { REMOTION_CONFIG } from "@sassy/remotion/config";
 import { format } from "date-fns";
+
+import { REMOTION_CONFIG } from "@sassy/remotion/config";
 
 // Type-safe AWS region with fallback - using Remotion-specific env vars
 const REGION = (process.env.REMOTION_AWS_REGION || "us-west-2") as AwsRegion;
@@ -80,32 +81,31 @@ export class RemotionService {
    */
   async getViralCutSite() {
     const sites = await this.getSites();
-    const demoSite = sites.sites.find(
-      (site) => site.id === "viralcut-demo",
-    );
-    
+    const demoSite = sites.sites.find((site) => site.id === "viralcut-demo");
+
     if (!demoSite) {
       throw new Error(
-        "ViralCut demo site not found. Please deploy the site first using 'pnpm remotion:sites:create'."
+        "ViralCut demo site not found. Please deploy the site first using 'pnpm remotion:sites:create'.",
       );
     }
-    
+
     return demoSite;
   }
 
   /**
    * Start video speed adjustment processing
    */
-  async processVideoSpeed(request: VideoProcessingRequest): Promise<RemotionRenderResult> {
-
+  async processVideoSpeed(
+    request: VideoProcessingRequest,
+  ): Promise<RemotionRenderResult> {
     console.log("process video triggered");
     try {
       // Get deployed functions
       const functions = await this.getFunctions();
-      
+
       if (functions.length === 0) {
         throw new Error(
-          "No Remotion Lambda functions found. Please deploy a function first."
+          "No Remotion Lambda functions found. Please deploy a function first.",
         );
       }
 
@@ -133,18 +133,19 @@ export class RemotionService {
 
       // Calculate the correct duration in frames based on speed multiplier
       const originalDurationInSeconds = request.originalDuration;
-      const adjustedDurationInSeconds = originalDurationInSeconds / request.speedMultiplier;
+      const adjustedDurationInSeconds =
+        originalDurationInSeconds / request.speedMultiplier;
       const fps = 30;
       const durationInFrames = Math.ceil(adjustedDurationInSeconds * fps);
-      
+
       // Use practical framesPerLambda for simple scenarios
       // const practicalFramesPerLambda = this.calculatePracticalFramesPerLambda(durationInFrames);
-      
+
       // Let Remotion choose optimal framesPerLambda based on video length
       // This follows Remotion's built-in concurrency optimization that interpolates
       // between 75-150 concurrency based on frame count and ensures minimum 20 frames per Lambda
       const practicalFramesPerLambda = undefined; // Use Remotion's default optimization
-      
+
       console.log("Duration calculations:", {
         originalDurationInSeconds,
         adjustedDurationInSeconds,
@@ -152,7 +153,7 @@ export class RemotionService {
         durationInFrames,
         speedMultiplier: request.speedMultiplier,
         practicalFramesPerLambda: "undefined (using Remotion defaults)",
-        note: "Letting Remotion optimize concurrency automatically"
+        note: "Letting Remotion optimize concurrency automatically",
       });
 
       // Render video on Lambda with optimized settings for long videos
@@ -173,15 +174,15 @@ export class RemotionService {
         framesPerLambda: practicalFramesPerLambda,
         concurrencyPerLambda: 1, // Single browser tab for better video processing performance
         privacy: "public",
-        // Increase timeout significantly for large video processing  
-        timeoutInMilliseconds: 3000000, 
+        // Increase timeout significantly for large video processing
+        timeoutInMilliseconds: 3000000,
         // Add verbose logging for debugging
         logLevel: "verbose",
-        outName: `video-speed-adjusted-${currentTime}.mp4`
+        outName: `video-speed-adjusted-${currentTime}.mp4`,
       });
 
       const { renderId, bucketName } = renderResult;
-      
+
       // Log debugging information
       console.log("🔍 DEBUGGING INFO:");
       console.log("CloudWatch Logs:", renderResult.cloudWatchLogs);
@@ -198,7 +199,7 @@ export class RemotionService {
     } catch (error) {
       console.error("Error processing video speed:", error);
       throw new Error(
-        `Failed to process video speed: ${error instanceof Error ? error.message : "Unknown error"}`
+        `Failed to process video speed: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
   }
@@ -206,14 +207,24 @@ export class RemotionService {
   /**
    * Get render progress for a video processing job
    */
-  async getRenderProgress(renderId: string, bucketName: string): Promise<RemotionProgress> {
-    console.log("getRenderProgress called with:", { renderId, bucketName, region: this.region });
-    
+  async getRenderProgress(
+    renderId: string,
+    bucketName: string,
+  ): Promise<RemotionProgress> {
+    console.log("getRenderProgress called with:", {
+      renderId,
+      bucketName,
+      region: this.region,
+    });
+
     try {
       // Get deployed functions
       console.log("Getting functions for progress check...");
       const functions = await this.getFunctions();
-      console.log("Functions found for progress:", functions.map(f => ({ name: f.functionName, version: f.version })));
+      console.log(
+        "Functions found for progress:",
+        functions.map((f) => ({ name: f.functionName, version: f.version })),
+      );
 
       if (functions.length === 0) {
         throw new Error("No Remotion Lambda functions found.");
@@ -224,8 +235,13 @@ export class RemotionService {
         throw new Error("Function name is undefined");
       }
 
-      console.log("Calling getRenderProgress with:", { renderId, bucketName, functionName, region: this.region });
-      
+      console.log("Calling getRenderProgress with:", {
+        renderId,
+        bucketName,
+        functionName,
+        region: this.region,
+      });
+
       const progress = await getRenderProgress({
         renderId,
         bucketName,
@@ -243,17 +259,24 @@ export class RemotionService {
         chunks: progress.chunks,
         timeToFinish: progress.timeToFinish,
         renderId: progress.renderId,
-        bucket: progress.bucket
+        bucket: progress.bucket,
       });
 
       // If progress is stuck, log additional debugging info
-      if (!progress.done && progress.overallProgress > 0 && progress.overallProgress < 1) {
+      if (
+        !progress.done &&
+        progress.overallProgress > 0 &&
+        progress.overallProgress < 1
+      ) {
         console.log("🚨 RENDER APPEARS STUCK - DEBUGGING INFO:");
-        console.log("Progress percentage:", (progress.overallProgress * 100).toFixed(1) + "%");
+        console.log(
+          "Progress percentage:",
+          (progress.overallProgress * 100).toFixed(1) + "%",
+        );
         console.log("Chunks info:", progress.chunks);
         console.log("Time to finish estimate:", progress.timeToFinish);
         console.log("Errors so far:", progress.errors);
-        
+
         // Log the full progress object to see all available properties
         console.log("Full progress object:", JSON.stringify(progress, null, 2));
       }
@@ -270,7 +293,7 @@ export class RemotionService {
     } catch (error) {
       console.error("Error getting render progress:", error);
       throw new Error(
-        `Failed to get render progress: ${error instanceof Error ? error.message : "Unknown error"}`
+        `Failed to get render progress: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
   }
@@ -278,15 +301,17 @@ export class RemotionService {
   /**
    * Start video stitch processing
    */
-  async processVideoStitch(request: VideoStitchRequest): Promise<RemotionRenderResult> {
+  async processVideoStitch(
+    request: VideoStitchRequest,
+  ): Promise<RemotionRenderResult> {
     console.log("processVideoStitch triggered");
     try {
       // Get deployed functions
       const functions = await this.getFunctions();
-      
+
       if (functions.length === 0) {
         throw new Error(
-          "No Remotion Lambda functions found. Please deploy a function first."
+          "No Remotion Lambda functions found. Please deploy a function first.",
         );
       }
 
@@ -315,37 +340,37 @@ export class RemotionService {
       // Calculate the total duration based on clip durations inline
       let totalClipDurationSeconds = 0;
       for (const clip of request.clips) {
-        const [startStr, endStr] = clip.range.split('-');
+        const [startStr, endStr] = clip.range.split("-");
         if (startStr && endStr) {
-          const startParts = startStr.trim().split(':').map(Number);
-          const endParts = endStr.trim().split(':').map(Number);
-          
+          const startParts = startStr.trim().split(":").map(Number);
+          const endParts = endStr.trim().split(":").map(Number);
+
           let startSeconds = 0;
           let endSeconds = 0;
-          
+
           if (startParts.length === 2) {
             startSeconds = startParts[0]! * 60 + startParts[1]!;
           }
           if (endParts.length === 2) {
             endSeconds = endParts[0]! * 60 + endParts[1]!;
           }
-          
-          totalClipDurationSeconds += (endSeconds - startSeconds);
+
+          totalClipDurationSeconds += endSeconds - startSeconds;
         }
       }
       const fps = 30;
       const durationInFrames = Math.ceil(totalClipDurationSeconds * fps);
-      
+
       // Use Remotion's default optimization for framesPerLambda
       const practicalFramesPerLambda = undefined;
-      
+
       console.log("VideoStitch duration calculations:", {
         totalClipDurationSeconds,
         fps,
         durationInFrames,
         clipCount: request.clips.length,
         practicalFramesPerLambda: "undefined (using Remotion defaults)",
-        note: "Letting Remotion optimize concurrency automatically"
+        note: "Letting Remotion optimize concurrency automatically",
       });
 
       const currentTime = format(new Date(), "yyyy-MM-dd-HH-mm-ss");
@@ -366,14 +391,14 @@ export class RemotionService {
         concurrencyPerLambda: 1, // Single browser tab for better video processing performance
         privacy: "public",
         // Increase timeout for video stitching
-        timeoutInMilliseconds: 3000000, 
+        timeoutInMilliseconds: 3000000,
         // Add verbose logging for debugging
         logLevel: "verbose",
-        outName: `video-stitched-${currentTime}.mp4`
+        outName: `video-stitched-${currentTime}.mp4`,
       });
 
       const { renderId, bucketName } = renderResult;
-      
+
       // Log debugging information
       console.log("🔍 VideoStitch DEBUGGING INFO:");
       console.log("CloudWatch Logs:", renderResult.cloudWatchLogs);
@@ -390,7 +415,7 @@ export class RemotionService {
     } catch (error) {
       console.error("Error processing video stitch:", error);
       throw new Error(
-        `Failed to process video stitch: ${error instanceof Error ? error.message : "Unknown error"}`
+        `Failed to process video stitch: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
   }
@@ -399,6 +424,12 @@ export class RemotionService {
    * Generate download URL for processed video
    */
   generateDownloadUrl(outputBucket: string, outputFile: string): string {
+    // If outputFile is already a full URL, return it as-is
+    if (outputFile.startsWith("https://")) {
+      return outputFile;
+    }
+
+    // Otherwise, construct the URL from bucket and file path
     return `https://${outputBucket}.s3.${this.region}.amazonaws.com/${outputFile}`;
   }
-} 
+}
