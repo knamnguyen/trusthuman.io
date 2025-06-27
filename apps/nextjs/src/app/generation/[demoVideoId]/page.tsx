@@ -208,7 +208,7 @@ export default function GenerationPage() {
 
         {/* Main Content Grid */}
         <div className="grid gap-8 lg:grid-cols-2">
-          {/* Left Column: Demo Video + Content Guide */}
+          {/* Left Column: Demo Video Only */}
           <div className="space-y-6">
             {/* Demo Video Section */}
             <Card>
@@ -235,16 +235,17 @@ export default function GenerationPage() {
                 )}
               </CardContent>
             </Card>
+          </div>
 
+          {/* Right Column: Content Guide + Viral Stitch Library */}
+          <div className="space-y-6">
             {/* Content Guide Form */}
             <ContentGuideForm
               onGenerate={handleGenerate}
               isGenerating={isGenerating}
             />
-          </div>
 
-          {/* Right Column: Viral Stitch Library */}
-          <div>
+            {/* Viral Stitch Library */}
             <ViralStitchGrid
               stitches={stitches}
               isLoading={isStitchesLoading}
