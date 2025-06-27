@@ -107,11 +107,13 @@ export const useMultipartUpload = ({
 
     const executeUpload = async (item: (typeof uploadQueue)[0]) => {
       try {
+        console.log(`🔧 Uploading S3 part ${item.partNumber}/25`);
         const result = await uploadPart(
           item.uploadUrl,
           item.chunk,
           item.partNumber,
         );
+        console.log(`✅ S3 part ${item.partNumber} completed`);
         results.push(result);
 
         completedParts++;
@@ -237,10 +239,14 @@ export const useMultipartUpload = ({
         }
 
         // Step 4: Upload all parts in parallel
+        console.log(
+          "🚀 Starting S3 part uploads - this should happen in parallel with Gemini!",
+        );
         const uploadedParts = await uploadInParallel(
           chunks,
           partUrlsResult.partUrls,
         );
+        console.log("✅ All S3 parts uploaded, completing multipart upload");
 
         // Step 5: Complete multipart upload with duration
         if (!durationSeconds) {

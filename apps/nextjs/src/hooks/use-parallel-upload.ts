@@ -105,6 +105,7 @@ export const useParallelUpload = ({
         }
 
         // Start both uploads in parallel
+        console.log("🎯 Starting Promise.all for S3 and Gemini uploads");
         const [s3Result, geminiResult] = await Promise.all([
           // S3 upload (with duration for multipart uploads, but we'll disable auto master script in backend)
           s3Upload.uploadFile(file, {
@@ -115,6 +116,7 @@ export const useParallelUpload = ({
           // Gemini upload via streaming
           geminiUpload.uploadToGemini(file),
         ]);
+        console.log("🎉 Promise.all completed - both uploads finished!");
 
         console.log("✅ Both uploads completed successfully");
         console.log("📦 S3 Result:", s3Result);
