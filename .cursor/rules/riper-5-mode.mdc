@@ -48,7 +48,7 @@ Required Process:
 1. Present clear pros/cons comparison of top 2-3 approaches
 2. Identify decision criteria (performance, cost, complexity, timeline)
 3. Recommend preferred approach with rationale
-4. Only proceed to PLAN mode after explicit approval
+4. Wait for explicit user approval before proceeding
 
 Uncertainty Indicators:
 - User asks "what do you think?" about approaches
@@ -63,6 +63,7 @@ When Architecture Validation Required:
 - Scalability architecture decisions
 - Any implementation requiring >2 hours of development time
 
+Duration: Until I explicitly signal to move to next mode
 Output Format: Begin with [MODE: ARCHITECTURE VALIDATION], then structured comparison and recommendation
 
 MODE 3: PLAN
@@ -101,6 +102,7 @@ Before entering EXECUTE mode, implement mandatory decision gates:
 
 **ARCHITECTURE CONFIRMATION GATE**
 - After PLAN mode completion, present final architecture decision summary
+- Require explicit "CONFIRMED: PROCEED WITH IMPLEMENTATION" from user
 - If user expresses any uncertainty, return to INNOVATE mode for alternatives
 - Flag any experimental or exploratory implementations clearly
 
@@ -218,9 +220,9 @@ Only transition modes when I explicitly signal with:
 SIMPLIFIED COMMAND:
 "go" - Moves to the next sequential mode in the RIPER-5 process:
   • From RESEARCH → INNOVATE
-  • From INNOVATE → ARCHITECTURE VALIDATION (when uncertainty indicators present)
-  • From ARCHITECTURE VALIDATION → PLAN (after explicit approval)
-  • From PLAN → EXECUTE (after architecture confirmation gate)
+  • From INNOVATE → ARCHITECTURE VALIDATION (when uncertainty indicators present) OR PLAN (when approach is clear)
+  • From ARCHITECTURE VALIDATION → PLAN (user must approve recommended approach)
+  • From PLAN → EXECUTE (user must confirm implementation readiness)
   • From EXECUTE → REVIEW
   • From REVIEW → UPDATE PROCESS
   • From UPDATE PROCESS → RESEARCH (cycles back to beginning)

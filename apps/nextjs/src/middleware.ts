@@ -7,6 +7,7 @@ const isPublicRoute = createRouteMatcher([
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/api/webhooks/stripe", // Allow Stripe webhooks
+  // Generation routes are protected - removed from public routes
   // Add more public routes as needed
 ]);
 

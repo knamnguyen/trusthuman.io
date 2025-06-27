@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { SignInButton, SignUpButton, useAuth, UserButton } from "@clerk/nextjs";
 import { toast } from "sonner";
 
 import { Button } from "@sassy/ui/button";
@@ -24,6 +25,8 @@ import { VIDEO_CONSTRAINTS } from "@sassy/ui/schema-validators";
 import { useParallelUpload } from "~/hooks/use-parallel-upload";
 
 export default function HomePage() {
+  const { isSignedIn } = useAuth();
+  const signInButtonRef = useRef<HTMLButtonElement>(null);
   const [files, setFiles] = useState<File[] | null>([]);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatus, setUploadStatus] = useState<
@@ -125,10 +128,42 @@ export default function HomePage() {
     setUploadProgress(0);
   };
 
+  const handleUnauthenticatedUploadClick = () => {
+    signInButtonRef.current?.click();
+  };
+
   return (
     <main className="from-background to-muted/20 min-h-screen bg-gradient-to-b">
       <div className="container mx-auto px-4 py-16">
-        {/* Header */}
+        {/* Navigation Header */}
+        <header className="mb-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <h2 className="text-xl font-bold">
+                <span className="text-primary">Viral</span>Cut
+              </h2>
+            </div>
+
+            <div className="flex items-center gap-4">
+              {isSignedIn ? (
+                <UserButton />
+              ) : (
+                <div className="flex gap-2">
+                  <SignInButton mode="modal">
+                    <Button variant="ghost" size="sm">
+                      Sign In
+                    </Button>
+                  </SignInButton>
+                  <SignUpButton mode="modal">
+                    <Button size="sm">Sign Up</Button>
+                  </SignUpButton>
+                </div>
+              )}
+            </div>
+          </div>
+        </header>
+
+        {/* Main Header */}
         <div className="mb-12 text-center">
           <h1 className="mb-4 text-4xl font-bold tracking-tight sm:text-6xl">
             <span className="text-primary">Viral</span>Cut
@@ -150,16 +185,61 @@ export default function HomePage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <FileUploader
-                value={files}
-                onValueChange={setFiles}
-                dropzoneOptions={dropzoneOptions}
-              >
-                <FileInput>
-                  <div className="bg-background flex h-32 w-full items-center justify-center rounded-md border">
+              {isSignedIn ? (
+                <FileUploader
+                  value={files}
+                  onValueChange={setFiles}
+                  dropzoneOptions={dropzoneOptions}
+                >
+                  <FileInput>
+                    <div className="bg-background flex h-32 w-full items-center justify-center rounded-md border">
+                      <div className="text-center">
+                        <p className="text-muted-foreground mb-2">
+                          Drop your video file here
+                        </p>
+                        <p className="text-muted-foreground text-sm">
+                          Supports MP4, MOV, AVI, MKV, WebM (max{" "}
+                          {VIDEO_CONSTRAINTS.MAX_SIZE / 1024 / 1024 / 1024}GB)
+                        </p>
+                      </div>
+                    </div>
+                  </FileInput>
+                  <FileUploaderContent className="flex flex-row items-center gap-2">
+                    {files?.map((file, i) => (
+                      <FileUploaderItem
+                        key={i}
+                        index={i}
+                        className="w-full overflow-hidden rounded-md border p-4"
+                        aria-roledescription={`file ${i + 1} containing ${file.name}`}
+                      >
+                        <div className="space-y-2">
+                          <video
+                            src={URL.createObjectURL(file)}
+                            controls
+                            className="h-40 w-full rounded"
+                            preload="metadata"
+                          />
+                          <div className="text-muted-foreground text-sm">
+                            <p>File: {file.name}</p>
+                            <p>
+                              Size: {(file.size / 1024 / 1024).toFixed(1)} MB
+                            </p>
+                          </div>
+                        </div>
+                      </FileUploaderItem>
+                    ))}
+                  </FileUploaderContent>
+                </FileUploader>
+              ) : (
+                <>
+                  {/* Fake upload area that triggers sign-in */}
+                  <div
+                    onClick={handleUnauthenticatedUploadClick}
+                    className="bg-background hover:bg-muted/50 flex h-32 w-full cursor-pointer items-center justify-center rounded-md border transition-colors"
+                  >
                     <div className="text-center">
                       <p className="text-muted-foreground mb-2">
-                        Drop your video file here
+                        Sign in to drop your video file here
                       </p>
                       <p className="text-muted-foreground text-sm">
                         Supports MP4, MOV, AVI, MKV, WebM (max{" "}
@@ -167,46 +247,56 @@ export default function HomePage() {
                       </p>
                     </div>
                   </div>
-                </FileInput>
-                <FileUploaderContent className="flex flex-row items-center gap-2">
-                  {files?.map((file, i) => (
-                    <FileUploaderItem
-                      key={i}
-                      index={i}
-                      className="w-full overflow-hidden rounded-md border p-4"
-                      aria-roledescription={`file ${i + 1} containing ${file.name}`}
-                    >
-                      <div className="space-y-2">
-                        <video
-                          src={URL.createObjectURL(file)}
-                          controls
-                          className="h-40 w-full rounded"
-                          preload="metadata"
-                        />
-                        <div className="text-muted-foreground text-sm">
-                          <p>File: {file.name}</p>
-                          <p>Size: {(file.size / 1024 / 1024).toFixed(1)} MB</p>
-                        </div>
-                      </div>
-                    </FileUploaderItem>
-                  ))}
-                </FileUploaderContent>
-              </FileUploader>
+
+                  {/* Hidden SignInButton for programmatic triggering */}
+                  <SignInButton mode="modal">
+                    <button ref={signInButtonRef} className="hidden" />
+                  </SignInButton>
+                </>
+              )}
 
               {files && files.length > 0 && uploadStatus === "idle" && (
                 <div className="space-y-4">
-                  <Button
-                    onClick={handleUpload}
-                    disabled={isParallelUploading}
-                    className="w-full"
-                    size="lg"
-                  >
-                    Upload & Generate Master Script
-                  </Button>
-                  <p className="text-muted-foreground text-center text-sm">
-                    This will upload your video and automatically analyze it
-                    with AI
-                  </p>
+                  {isSignedIn ? (
+                    <>
+                      <Button
+                        onClick={handleUpload}
+                        disabled={isParallelUploading}
+                        className="w-full"
+                        size="lg"
+                      >
+                        Upload & Generate Master Script
+                      </Button>
+                      <p className="text-muted-foreground text-center text-sm">
+                        This will upload your video and automatically analyze it
+                        with AI
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="space-y-3">
+                        <p className="text-center text-sm font-medium">
+                          Sign in to upload and generate viral videos
+                        </p>
+                        <div className="flex gap-3">
+                          <SignInButton mode="modal">
+                            <Button size="lg" className="flex-1">
+                              Sign In
+                            </Button>
+                          </SignInButton>
+                          <SignUpButton mode="modal">
+                            <Button
+                              size="lg"
+                              variant="outline"
+                              className="flex-1"
+                            >
+                              Sign Up
+                            </Button>
+                          </SignUpButton>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
 
