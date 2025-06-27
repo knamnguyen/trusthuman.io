@@ -21,7 +21,6 @@
   },
   "dependencies": {
     "@google/genai": "^1.5.1",
-    "@sassy/db": "workspace:*",
     "@sassy/validators": "workspace:*",
     "zod": "catalog:"
   },

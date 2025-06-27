@@ -4,7 +4,7 @@ import { tmpdir } from "os";
 import { join } from "path";
 import { createPartFromUri, GoogleGenAI } from "@google/genai";
 
-import { db } from "@sassy/db";
+// Note: Database operations moved to API layer to avoid cyclic dependencies
 
 import type {
   DemoVideoFromMasterScriptInput,
@@ -627,68 +627,44 @@ export class GeminiVideoService {
   }
 
   /**
-   * Condense demo videos from existing master script data (database-based)
-   * @param input - Demo video ID, exact duration, number of segments, and optional content guide
-   * @returns Array of video segments with captions and timing (no productInfo or colorPalette)
+   * Condense demo videos from master script data (without database dependency)
+   * @param masterScript - Array of master script entries
+   * @param productInfo - Product information string
+   * @param exactDuration - Target duration in seconds
+   * @param numSegments - Number of segments to create
+   * @param contentGuide - Optional content guide
+   * @returns Array of video segments with captions and timing
    */
-  async condenseDemoFromMasterScript(
-    input: DemoVideoFromMasterScriptInput,
-  ): Promise<DemoVideoFromMasterScriptResponse> {
-    // Validate input
-    const validatedInput = DemoVideoFromMasterScriptInputSchema.parse(input);
-
+  async condenseDemoFromMasterScriptData(params: {
+    masterScript: any[];
+    productInfo: string;
+    exactDuration: number;
+    numSegments: number;
+    contentGuide?: string;
+  }): Promise<DemoVideoFromMasterScriptResponse> {
     try {
-      console.log("🎬 Condensing demo from master script...");
-      console.log(`📊 Demo Video ID: ${validatedInput.demoVideoId}`);
+      console.log("🎬 Condensing demo from master script data...");
       console.log(
-        `📊 Target: ${validatedInput.numSegments} segments, exactly ${validatedInput.exactDuration}s total`,
+        `📊 Target: ${params.numSegments} segments, exactly ${params.exactDuration}s total`,
       );
-      if (validatedInput.contentGuide) {
-        console.log("📝 Content guide provided:", validatedInput.contentGuide);
+      if (params.contentGuide) {
+        console.log("📝 Content guide provided:", params.contentGuide);
       }
 
-      // Fetch demo video from database
-      console.log("🔍 Fetching demo video from database...");
-      const demoVideo = await db.demoVideo.findUnique({
-        where: { id: validatedInput.demoVideoId },
-        select: {
-          id: true,
-          masterScript: true,
-          productInfo: true,
-          colorPalette: true,
-          durationSeconds: true,
-        },
-      });
-
-      if (!demoVideo) {
-        throw new Error(
-          `Demo video with ID ${validatedInput.demoVideoId} not found`,
-        );
-      }
-
-      console.log("✅ Demo video found in database");
-      console.log(`📊 Original duration: ${demoVideo.durationSeconds}s`);
-
-      // Validate that we have master script data
-      if (!demoVideo.masterScript || !Array.isArray(demoVideo.masterScript)) {
-        throw new Error(
-          "Demo video does not have valid master script data. Please generate master script first.",
-        );
-      }
-
-      const masterScript = demoVideo.masterScript as any[];
-      console.log(`📝 Master script contains ${masterScript.length} segments`);
+      console.log(
+        `📝 Master script contains ${params.masterScript.length} segments`,
+      );
 
       // Calculate segment length
       const snippetLength = Math.round(
-        validatedInput.exactDuration / validatedInput.numSegments,
+        params.exactDuration / params.numSegments,
       );
 
       // Create specific prompt for demo condensing with master script context
-      const contentGuideInstruction = validatedInput.contentGuide
+      const contentGuideInstruction = params.contentGuide
         ? `
         IMPORTANT: Follow this content guide for segment selection and caption direction:
-        "${validatedInput.contentGuide}"
+        "${params.contentGuide}"
         
         Use this guide to determine:
         - Which parts of the video to prioritize for segments
@@ -699,21 +675,21 @@ export class GeminiVideoService {
         Focus on the most important and engaging parts of the demo that showcase key features and user interactions.
         `;
 
-      const masterScriptText = masterScript
+      const masterScriptText = params.masterScript
         .map((segment) => {
           return `${segment.secondRange}: ${segment.transcript || "(no audio)"} | Visual: ${segment.frameDescription}`;
         })
         .join("\n");
 
       const demoPrompt = `
-        I have a product demo video with a complete time-based master script. I need to condense it into exactly ${validatedInput.exactDuration} seconds.
+        I have a product demo video with a complete time-based master script. I need to condense it into exactly ${params.exactDuration} seconds.
         Create a condensed version that highlights the key steps and features using the master script data below.
         
         MASTER SCRIPT DATA:
         ${masterScriptText}
         
         PRODUCT INFO:
-        ${demoVideo.productInfo}
+        ${params.productInfo}
         
         ${contentGuideInstruction}
         
@@ -721,7 +697,7 @@ export class GeminiVideoService {
         1. Focus on important UI interactions, button clicks, and transitions from the master script
         2. Capture the essential flow of the demo based on the provided annotations
         3. Skip repetitive or unnecessary parts identified in the master script
-        4. Be divided into exactly ${validatedInput.numSegments} brief segments of approximately ${snippetLength} seconds each
+        4. Be divided into exactly ${params.numSegments} brief segments of approximately ${snippetLength} seconds each
         5. Use the timing information from the master script to select the best moments
         
         For each segment provide:
@@ -733,19 +709,19 @@ export class GeminiVideoService {
           "segments": [
             {"caption": "Brief caption here", "start": 12, "end": 18}
           ],
-          "totalDuration": ${validatedInput.exactDuration}
+          "totalDuration": ${params.exactDuration}
         }
         
         IMPORTANT REQUIREMENTS:
         - Use whole number values for start and end times (e.g., 12, 18) NOT decimal values
         - The start and end times must be integers representing whole seconds
-        - Total duration of all segments must equal EXACTLY ${validatedInput.exactDuration} seconds
+        - Total duration of all segments must equal EXACTLY ${params.exactDuration} seconds
         - Select timestamps that exist within the master script time ranges
         - Choose the most engaging and informative moments from the master script
         - Ensure segments don't overlap and are in chronological order
         - Make captions descriptive and action-oriented
         
-        Analyze the master script carefully and select the ${validatedInput.numSegments} most important moments that best represent the product demo.
+        Analyze the master script carefully and select the ${params.numSegments} most important moments that best represent the product demo.
       `;
 
       // Generate content using text-only prompt (no video upload needed)

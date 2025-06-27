@@ -29,7 +29,7 @@
     "@prisma/client": "^6.8.2",
     "@sassy/db-edge": "link:generated/edge",
     "@sassy/db-node": "link:generated/node",
-    "@sassy/gemini-video": "workspace:*",
+    "@sassy/validators": "workspace:*",
     "zod": "catalog:",
     "zod-prisma-types": "^3.2.4"
   },

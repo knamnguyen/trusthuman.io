@@ -1,8 +1,8 @@
-// Import VideoSegment type from gemini-video for segments field validation
+// Import VideoSegment type from validators for segments field validation
 import { z } from "zod";
 
-import type { VideoSegment } from "@sassy/gemini-video";
-import { VideoSegmentSchema } from "@sassy/gemini-video";
+import type { VideoSegment } from "@sassy/validators";
+import { VideoSegmentSchema } from "@sassy/validators";
 
 export * from "../generated/zod-prisma-validators";
 

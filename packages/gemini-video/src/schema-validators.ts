@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { VideoSegmentSchema } from "@sassy/validators";
+
 // Configuration schema for Gemini Video Service
 export const GeminiVideoConfigSchema = z.object({
   apiKey: z.string().min(1, "Gemini API key is required"),
@@ -74,17 +76,7 @@ export const DemoVideoInputSchema = z.object({
   contentGuide: z.string().optional(),
 });
 
-// Individual segment schema (matches VideoStitch clip format)
-export const VideoSegmentSchema = z.object({
-  caption: z
-    .string()
-    .min(1, "Caption is required and should be less than 150 characters"),
-  start: z
-    .number()
-    .int()
-    .nonnegative("Start time must be a non-negative integer"),
-  end: z.number().int().positive("End time must be a positive integer"),
-});
+// Re-export VideoSegmentSchema for API compatibility (already imported above)
 
 // Output schema for demo video condensing
 export const DemoVideoResponseSchema = z.object({
@@ -178,7 +170,7 @@ export type ViralHookInput = z.infer<typeof ViralHookInputSchema>;
 export type ViralHookResponse = z.infer<typeof ViralHookResponseSchema>;
 export type DemoVideoInput = z.infer<typeof DemoVideoInputSchema>;
 export type DemoVideoResponse = z.infer<typeof DemoVideoResponseSchema>;
-export type VideoSegment = z.infer<typeof VideoSegmentSchema>;
+export type { VideoSegment } from "@sassy/validators";
 export type VideoProcessingInput = z.infer<typeof VideoProcessingInputSchema>;
 export type GeminiFileResponse = z.infer<typeof GeminiFileResponseSchema>;
 export type MasterScriptEntry = z.infer<typeof MasterScriptEntrySchema>;

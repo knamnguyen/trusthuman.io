@@ -373,9 +373,9 @@ importers:
       '@sassy/db-node':
         specifier: link:generated/node
         version: link:generated/node
-      '@sassy/gemini-video':
+      '@sassy/validators':
         specifier: workspace:*
-        version: link:../gemini-video
+        version: link:../validators
       zod:
         specifier: 'catalog:'
         version: 3.25.13
@@ -416,9 +416,6 @@ importers:
       '@google/genai':
         specifier: ^1.5.1
         version: 1.5.1
-      '@sassy/db':
-        specifier: workspace:*
-        version: link:../db
       '@sassy/validators':
         specifier: workspace:*
         version: link:../validators
