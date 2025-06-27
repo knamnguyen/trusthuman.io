@@ -55,8 +55,8 @@ export const ViralHookResponseSchema = z.object({
     .string()
     .min(10, "Hook info must be at least 10 characters")
     .max(
-      800,
-      "Hook info must be 800 characters or less (approximately 100 words)",
+      8000,
+      "Hook info must be 2000 characters or less (approximately 250 words)",
     ),
   colorPalette: ColorPaletteSchema,
 });
@@ -78,8 +78,7 @@ export const DemoVideoInputSchema = z.object({
 export const VideoSegmentSchema = z.object({
   caption: z
     .string()
-    .min(1, "Caption is required")
-    .max(100, "Caption must be 100 characters or less"),
+    .min(1, "Caption is required and should be less than 150 characters"),
   start: z
     .number()
     .int()
@@ -97,8 +96,8 @@ export const DemoVideoResponseSchema = z.object({
     .string()
     .min(10, "Product info must be at least 10 characters")
     .max(
-      800,
-      "Product info must be 800 characters or less (approximately 100 words)",
+      8000,
+      "Product info must be 2000 characters or less (approximately 250 words)",
     ),
   colorPalette: ColorPaletteSchema,
 });
@@ -139,8 +138,8 @@ export const MasterScriptResponseSchema = z.object({
     .string()
     .min(10, "Product info must be at least 10 characters")
     .max(
-      800,
-      "Product info must be 800 characters or less (approximately 100 words)",
+      8000,
+      "Product info must be 2000 characters or less (approximately 250 words)",
     ),
   colorPalette: ColorPaletteSchema,
   segments: z

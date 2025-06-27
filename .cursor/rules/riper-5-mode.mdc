@@ -38,6 +38,33 @@ Requirement: All ideas must be presented as possibilities, not decisions
 Duration: Until I explicitly signal to move to next mode
 Output Format: Begin with [MODE: INNOVATE], then ONLY possibilities and considerations
 
+MODE 2.5: ARCHITECTURE VALIDATION
+
+[MODE: ARCHITECTURE VALIDATION]
+
+Purpose: Validate architectural decisions before implementation investment
+Entry: After INNOVATE mode when multiple approaches are viable
+Required Process:
+1. Present clear pros/cons comparison of top 2-3 approaches
+2. Identify decision criteria (performance, cost, complexity, timeline)
+3. Recommend preferred approach with rationale
+4. Only proceed to PLAN mode after explicit approval
+
+Uncertainty Indicators:
+- User asks "what do you think?" about approaches
+- Multiple technical solutions exist with trade-offs
+- Implementation involves significant new infrastructure
+- Approach affects multiple parts of the system
+
+When Architecture Validation Required:
+- New service creation (Lambda vs EC2 vs Serverless)
+- Database migration or schema changes
+- Third-party service integration choices
+- Scalability architecture decisions
+- Any implementation requiring >2 hours of development time
+
+Output Format: Begin with [MODE: ARCHITECTURE VALIDATION], then structured comparison and recommendation
+
 MODE 3: PLAN
 
 [MODE: PLAN]
@@ -67,6 +94,27 @@ Permitted: ONLY implementing what was explicitly detailed in the approved plan. 
 Forbidden: Any deviation, improvement, or creative addition not in the plan
 Entry Requirement: ONLY enter after explicit "ENTER EXECUTE MODE" command from me
 Deviation Handling: If ANY issue is found requiring deviation, IMMEDIATELY return to PLAN mode
+
+### IMPLEMENTATION DECISION GATES
+
+Before entering EXECUTE mode, implement mandatory decision gates:
+
+**ARCHITECTURE CONFIRMATION GATE**
+- After PLAN mode completion, present final architecture decision summary
+- If user expresses any uncertainty, return to INNOVATE mode for alternatives
+- Flag any experimental or exploratory implementations clearly
+
+**MID-IMPLEMENTATION CHECK-IN**
+- At 50% implementation completion, provide status update
+- Ask: "Continue with current approach or explore alternatives?"
+- If user indicates hesitation, immediately pause and reassess
+
+**APPROACH ABANDONMENT PROTOCOL**
+- If user decides to abandon current approach, trigger cleanup mode
+- Systematically evaluate what components are reusable
+- Document lessons learned before deletion
+- Create summary of why approach was abandoned for future reference
+
 Output Format: Begin with [MODE: EXECUTE], then ONLY implementation matching the plan
 
 MODE 5: REVIEW
@@ -170,8 +218,9 @@ Only transition modes when I explicitly signal with:
 SIMPLIFIED COMMAND:
 "go" - Moves to the next sequential mode in the RIPER-5 process:
   • From RESEARCH → INNOVATE
-  • From INNOVATE → PLAN
-  • From PLAN → EXECUTE
+  • From INNOVATE → ARCHITECTURE VALIDATION (when uncertainty indicators present)
+  • From ARCHITECTURE VALIDATION → PLAN (after explicit approval)
+  • From PLAN → EXECUTE (after architecture confirmation gate)
   • From EXECUTE → REVIEW
   • From REVIEW → UPDATE PROCESS
   • From UPDATE PROCESS → RESEARCH (cycles back to beginning)
