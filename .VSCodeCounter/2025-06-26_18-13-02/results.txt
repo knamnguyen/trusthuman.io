@@ -1,0 +1,263 @@
+Date : 2025-06-26 18:13:02
+Directory : /Users/knamnguyen/Documents/0-Programming/viralcut/packages
+Total : 169 files,  63758 codes, 12076 comments, 6072 blanks, all 81906 lines
+
+Languages
++-------------------------+------------+------------+------------+------------+------------+
+| language                | files      | code       | comment    | blank      | total      |
++-------------------------+------------+------------+------------+------------+------------+
+| WebAssembly Text Format |          1 |     30,476 |          0 |        620 |     31,096 |
+| TypeScript              |         73 |     26,633 |     11,727 |      4,451 |     42,811 |
+| JavaScript              |         36 |      2,411 |        286 |        466 |      3,163 |
+| TypeScript JSX          |         22 |      2,073 |         34 |        254 |      2,361 |
+| JSON                    |         16 |        888 |          0 |         12 |        900 |
+| Markdown                |          4 |        741 |          0 |        197 |        938 |
+| Prisma                  |          3 |        336 |          3 |         49 |        388 |
+| JSON with Comments      |         10 |        142 |         16 |          7 |        165 |
+| MS SQL                  |          1 |         49 |         10 |         14 |         73 |
+| CSV                     |          2 |          8 |          0 |          2 |         10 |
+| CSS                     |          1 |          1 |          0 |          0 |          1 |
++-------------------------+------------+------------+------------+------------+------------+
+
+Directories
++--------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                                                     | files      | code       | comment    | blank      | total      |
++--------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                                                        |        169 |     63,758 |     12,076 |      6,072 |     81,906 |
+| api                                                                                                                      |         16 |      1,825 |        350 |        307 |      2,482 |
+| api (Files)                                                                                                              |          3 |         66 |          2 |          4 |         72 |
+| api/scripts                                                                                                              |          1 |        271 |        107 |         51 |        429 |
+| api/src                                                                                                                  |         12 |      1,488 |        241 |        252 |      1,981 |
+| api/src (Files)                                                                                                          |          2 |         64 |         89 |         22 |        175 |
+| api/src/router                                                                                                           |         10 |      1,424 |        152 |        230 |      1,806 |
+| db                                                                                                                       |         56 |     53,365 |     10,530 |      4,363 |     68,258 |
+| db (Files)                                                                                                               |          3 |         64 |          1 |          4 |         69 |
+| db/generated                                                                                                             |         47 |     53,107 |     10,483 |      4,312 |     67,902 |
+| db/generated/edge                                                                                                        |         25 |     40,280 |      5,220 |      2,275 |     47,775 |
+| db/generated/edge (Files)                                                                                                |         17 |     37,435 |      4,310 |      1,657 |     43,402 |
+| db/generated/edge/runtime                                                                                                |          8 |      2,845 |        910 |        618 |      4,373 |
+| db/generated/node                                                                                                        |         21 |      9,772 |      5,213 |      1,651 |     16,636 |
+| db/generated/node (Files)                                                                                                |         13 |      6,927 |      4,303 |      1,033 |     12,263 |
+| db/generated/node/runtime                                                                                                |          8 |      2,845 |        910 |        618 |      4,373 |
+| db/generated/zod-prisma-validators                                                                                       |          1 |      3,055 |         50 |        386 |      3,491 |
+| db/prisma                                                                                                                |          2 |        161 |         11 |         31 |        203 |
+| db/prisma (Files)                                                                                                        |          1 |        112 |          1 |         17 |        130 |
+| db/prisma/migrations                                                                                                     |          1 |         49 |         10 |         14 |         73 |
+| db/prisma/migrations/20250620142959_baseline                                                                             |          1 |         49 |         10 |         14 |         73 |
+| db/src                                                                                                                   |          4 |         33 |         35 |         16 |         84 |
+| db/src (Files)                                                                                                           |          2 |         10 |          3 |          6 |         19 |
+| db/src/client                                                                                                            |          2 |         23 |         32 |         10 |         65 |
+| gemini-video                                                                                                             |          9 |      1,228 |        334 |        183 |      1,745 |
+| gemini-video (Files)                                                                                                     |          2 |         57 |          0 |          1 |         58 |
+| gemini-video/scripts                                                                                                     |          4 |        371 |        218 |         44 |        633 |
+| gemini-video/src                                                                                                         |          3 |        800 |        116 |        138 |      1,054 |
+| langchain                                                                                                                |         10 |        697 |         98 |        116 |        911 |
+| langchain (Files)                                                                                                        |          3 |         60 |          1 |          4 |         65 |
+| langchain/scripts                                                                                                        |          3 |        295 |         46 |         60 |        401 |
+| langchain/src                                                                                                            |          4 |        342 |         51 |         52 |        445 |
+| remotion                                                                                                                 |         21 |      1,672 |        141 |        242 |      2,055 |
+| remotion (Files)                                                                                                         |          6 |        341 |          2 |         43 |        386 |
+| remotion/scripts                                                                                                         |          4 |        297 |         17 |         53 |        367 |
+| remotion/src                                                                                                             |         11 |      1,034 |        122 |        146 |      1,302 |
+| remotion/src (Files)                                                                                                     |          6 |        736 |         78 |        103 |        917 |
+| remotion/src/compositions                                                                                                |          4 |        232 |         13 |         26 |        271 |
+| remotion/src/utils                                                                                                       |          1 |         66 |         31 |         17 |        114 |
+| s3                                                                                                                       |          8 |        777 |        144 |        146 |      1,067 |
+| s3 (Files)                                                                                                               |          6 |        406 |          1 |         84 |        491 |
+| s3/src                                                                                                                   |          2 |        371 |        143 |         62 |        576 |
+| stripe                                                                                                                   |         10 |        602 |        126 |        119 |        847 |
+| stripe (Files)                                                                                                           |          4 |        152 |          6 |         36 |        194 |
+| stripe/assets                                                                                                            |          2 |          8 |          0 |          2 |         10 |
+| stripe/scripts                                                                                                           |          2 |        323 |         58 |         49 |        430 |
+| stripe/src                                                                                                               |          2 |        119 |         62 |         32 |        213 |
+| tiktok-download                                                                                                          |          9 |      1,531 |        293 |        309 |      2,133 |
+| tiktok-download (Files)                                                                                                  |          4 |        176 |          1 |         47 |        224 |
+| tiktok-download/scripts                                                                                                  |          3 |      1,169 |        254 |        222 |      1,645 |
+| tiktok-download/src                                                                                                      |          2 |        186 |         38 |         40 |        264 |
+| ui                                                                                                                       |         26 |      1,992 |         53 |        278 |      2,323 |
+| ui (Files)                                                                                                               |          4 |         99 |          6 |          6 |        111 |
+| ui/src                                                                                                                   |         22 |      1,893 |         47 |        272 |      2,212 |
+| ui/src (Files)                                                                                                           |          2 |         41 |          5 |         12 |         58 |
+| ui/src/components                                                                                                        |          6 |        828 |         11 |         95 |        934 |
+| ui/src/hooks                                                                                                             |          2 |        244 |         31 |         56 |        331 |
+| ui/src/ui                                                                                                                |         12 |        780 |          0 |        109 |        889 |
+| validators                                                                                                               |          4 |         69 |          7 |          9 |         85 |
+| validators (Files)                                                                                                       |          3 |         49 |          6 |          4 |         59 |
+| validators/src                                                                                                           |          1 |         20 |          1 |          5 |         26 |
++--------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++--------------------------------------------------------------------------------------------------------------------------+-------------------------+------------+------------+------------+------------+
+| filename                                                                                                                 | language                | code       | comment    | blank      | total      |
++--------------------------------------------------------------------------------------------------------------------------+-------------------------+------------+------------+------------+------------+
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/api/eslint.config.js                                         | JavaScript              |          7 |          1 |          2 |         10 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/api/package.json                                             | JSON                    |         47 |          0 |          1 |         48 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/api/scripts/test-remotion-gemini.ts                          | TypeScript              |        271 |        107 |         51 |        429 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/api/src/index.ts                                             | TypeScript              |         15 |         28 |          7 |         50 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/api/src/router/post.ts                                       | TypeScript              |         37 |          0 |          7 |         44 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/api/src/router/remotion-demo-stitch.ts                       | TypeScript              |        108 |          6 |         16 |        130 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/api/src/router/remotion-gemini.ts                            | TypeScript              |        215 |         18 |         34 |        267 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/api/src/router/remotion-hello.ts                             | TypeScript              |        115 |          7 |         23 |        145 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/api/src/router/remotion.ts                                   | TypeScript              |         94 |          5 |         15 |        114 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/api/src/router/root.ts                                       | TypeScript              |         20 |          1 |          3 |         24 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/api/src/router/stripe.ts                                     | TypeScript              |         71 |         25 |         18 |        114 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/api/src/router/user.ts                                       | TypeScript              |         99 |         37 |         13 |        149 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/api/src/router/video.ts                                      | TypeScript              |        264 |         20 |         35 |        319 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/api/src/router/viral-stitch.ts                               | TypeScript              |        401 |         33 |         66 |        500 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/api/src/trpc.ts                                              | TypeScript              |         49 |         61 |         15 |        125 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/api/tsconfig.json                                            | JSON with Comments      |         12 |          1 |          1 |         14 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/eslint.config.js                                          | JavaScript              |          7 |          1 |          2 |         10 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/client.d.ts                                | TypeScript              |          1 |          0 |          0 |          1 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/client.js                                  | JavaScript              |          1 |          2 |          1 |          4 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/default.d.ts                               | TypeScript              |          1 |          0 |          0 |          1 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/default.js                                 | JavaScript              |          1 |          2 |          1 |          4 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/edge.d.ts                                  | TypeScript              |          1 |          0 |          0 |          1 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/edge.js                                    | JavaScript              |        231 |         21 |         36 |        288 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/index-browser.js                           | JavaScript              |        216 |         21 |         35 |        272 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/index.d.ts                                 | TypeScript              |      5,734 |      4,212 |        865 |     10,811 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/index.js                                   | JavaScript              |        251 |         26 |         44 |        321 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/package.json                               | JSON                    |        167 |          0 |          0 |        167 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/query_engine_bg.js                         | JavaScript              |          2 |          0 |          1 |          3 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/query_engine_bg.wasm                       | WebAssembly Text Format |     30,476 |          0 |        620 |     31,096 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/runtime/edge-esm.js                        | JavaScript              |         24 |          3 |          8 |         35 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/runtime/edge.js                            | JavaScript              |         24 |          3 |          8 |         35 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/runtime/index-browser.d.ts                 | TypeScript              |        264 |         20 |         87 |        371 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/runtime/index-browser.js                   | JavaScript              |          1 |         14 |          2 |         17 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/runtime/library.d.ts                       | TypeScript              |      2,343 |        846 |        459 |      3,648 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/runtime/library.js                         | JavaScript              |        101 |         16 |         30 |        147 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/runtime/react-native.js                    | JavaScript              |         63 |          5 |         16 |         84 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/runtime/wasm.js                            | JavaScript              |         25 |          3 |          8 |         36 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/schema.prisma                              | Prisma                  |        112 |          1 |         16 |        129 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/wasm-edge-light-loader.mjs                 | JavaScript              |          1 |          2 |          1 |          4 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/wasm-worker-loader.mjs                     | JavaScript              |          1 |          2 |          1 |          4 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/wasm.d.ts                                  | TypeScript              |          1 |          0 |          0 |          1 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/wasm.js                                    | JavaScript              |        238 |         21 |         36 |        295 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/client.d.ts                                | TypeScript              |          1 |          0 |          0 |          1 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/client.js                                  | JavaScript              |          1 |          2 |          1 |          4 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/default.d.ts                               | TypeScript              |          1 |          0 |          0 |          1 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/default.js                                 | JavaScript              |          1 |          2 |          1 |          4 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/edge.d.ts                                  | TypeScript              |          1 |          0 |          0 |          1 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/edge.js                                    | JavaScript              |        242 |         21 |         36 |        299 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/index-browser.js                           | JavaScript              |        216 |         21 |         35 |        272 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/index.d.ts                                 | TypeScript              |      5,733 |      4,209 |        865 |     10,807 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/index.js                                   | JavaScript              |        262 |         26 |         44 |        332 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/package.json                               | JSON                    |        140 |          0 |          0 |        140 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/runtime/edge-esm.js                        | JavaScript              |         24 |          3 |          8 |         35 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/runtime/edge.js                            | JavaScript              |         24 |          3 |          8 |         35 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/runtime/index-browser.d.ts                 | TypeScript              |        264 |         20 |         87 |        371 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/runtime/index-browser.js                   | JavaScript              |          1 |         14 |          2 |         17 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/runtime/library.d.ts                       | TypeScript              |      2,343 |        846 |        459 |      3,648 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/runtime/library.js                         | JavaScript              |        101 |         16 |         30 |        147 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/runtime/react-native.js                    | JavaScript              |         63 |          5 |         16 |         84 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/runtime/wasm.js                            | JavaScript              |         25 |          3 |          8 |         36 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/schema.prisma                              | Prisma                  |        112 |          1 |         16 |        129 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/wasm.d.ts                                  | TypeScript              |          1 |          0 |          0 |          1 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/wasm.js                                    | JavaScript              |        216 |         21 |         35 |        272 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/zod-prisma-validators/index.ts                  | TypeScript              |      3,055 |         50 |        386 |      3,491 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/package.json                                              | JSON                    |         48 |          0 |          1 |         49 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/prisma/migrations/20250620142959_baseline/migration.sql   | MS SQL                  |         49 |         10 |         14 |         73 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/prisma/schema.prisma                                      | Prisma                  |        112 |          1 |         17 |        130 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/src/client/edge.ts                                        | TypeScript              |          2 |          0 |          2 |          4 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/src/client/node.ts                                        | TypeScript              |         21 |         32 |          8 |         61 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/src/index.ts                                              | TypeScript              |          4 |          0 |          1 |          5 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/src/schema-validators.ts                                  | TypeScript              |          6 |          3 |          5 |         14 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/tsconfig.json                                             | JSON with Comments      |          9 |          0 |          1 |         10 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/gemini-video/package.json                                    | JSON                    |         39 |          0 |          1 |         40 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/gemini-video/scripts/master-script-output-1750846636922.json | JSON                    |         67 |          0 |          1 |         68 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/gemini-video/scripts/test-demo-from-masterscript.ts          | TypeScript              |        134 |         75 |         18 |        227 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/gemini-video/scripts/test-demo-video.ts                      | TypeScript              |        105 |         85 |         15 |        205 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/gemini-video/scripts/test-viral-video.ts                     | TypeScript              |         65 |         58 |         10 |        133 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/gemini-video/src/gemini-video-service.ts                     | TypeScript              |        603 |         97 |        118 |        818 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/gemini-video/src/index.ts                                    | TypeScript              |         38 |          1 |          3 |         42 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/gemini-video/src/schema-validators.ts                        | TypeScript              |        159 |         18 |         17 |        194 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/gemini-video/tsconfig.json                                   | JSON with Comments      |         18 |          0 |          0 |         18 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/langchain/eslint.config.js                                   | JavaScript              |          7 |          1 |          2 |         10 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/langchain/package.json                                       | JSON                    |         41 |          0 |          1 |         42 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/langchain/scripts/test-basic-functionality.ts                | TypeScript              |         57 |         10 |         15 |         82 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/langchain/scripts/test-color-functionality.ts                | TypeScript              |         94 |         13 |         12 |        119 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/langchain/scripts/test-similarity-search.ts                  | TypeScript              |        144 |         23 |         33 |        200 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/langchain/src/embeddings.ts                                  | TypeScript              |         11 |          4 |          4 |         19 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/langchain/src/index.ts                                       | TypeScript              |          9 |          0 |          1 |         10 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/langchain/src/schema-validators.ts                           | TypeScript              |         22 |          0 |          5 |         27 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/langchain/src/vector-store.ts                                | TypeScript              |        300 |         47 |         42 |        389 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/langchain/tsconfig.json                                      | JSON with Comments      |         12 |          0 |          1 |         13 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/AWS_SETUP.md                                        | Markdown                |        232 |          0 |         37 |        269 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/package.json                                        | JSON                    |         62 |          0 |          1 |         63 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/postcss.config.mjs                                  | JavaScript              |          5 |          0 |          0 |          5 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/remotion.config.ts                                  | TypeScript              |          8 |          2 |          3 |         13 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/scripts/debug-speed-adjust.ts                       | TypeScript              |         39 |          2 |          5 |         46 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/scripts/debug-video-stitch.ts                       | TypeScript              |         47 |          2 |          5 |         54 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/scripts/test-combine-videos.ts                      | TypeScript              |        165 |         13 |         34 |        212 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/scripts/test-metadata.ts                            | TypeScript              |         46 |          0 |          9 |         55 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/src/Root.tsx                                        | TypeScript JSX          |        243 |         10 |         25 |        278 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/src/compositions/CombineVideos.tsx                  | TypeScript JSX          |         59 |          6 |         10 |         75 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/src/compositions/HelloWorld.tsx                     | TypeScript JSX          |         47 |          3 |          7 |         57 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/src/compositions/VideoSpeedAdjust.tsx               | TypeScript JSX          |         40 |          0 |          3 |         43 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/src/compositions/VideoStitch.tsx                    | TypeScript JSX          |         86 |          4 |          6 |         96 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/src/config.ts                                       | TypeScript              |         19 |          3 |          3 |         25 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/src/index.css                                       | CSS                     |          1 |          0 |          0 |          1 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/src/index.ts                                        | TypeScript              |          9 |          1 |          2 |         12 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/src/remotion-service.ts                             | TypeScript              |        426 |         64 |         68 |        558 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/src/schema-validators.ts                            | TypeScript              |         38 |          0 |          5 |         43 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/src/utils/time-parsing.ts                           | TypeScript              |         66 |         31 |         17 |        114 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/tailwind.config.ts                                  | TypeScript              |         10 |          0 |          1 |         11 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/tsconfig.json                                       | JSON with Comments      |         24 |          0 |          1 |         25 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/s3/README.md                                                 | Markdown                |        302 |          0 |         83 |        385 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/s3/bucket-policy.json                                        | JSON                    |         24 |          0 |          0 |         24 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/s3/cors-config.json                                          | JSON                    |         25 |          0 |          0 |         25 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/s3/eslint.config.js                                          | JavaScript              |          3 |          1 |          1 |          5 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/s3/package.json                                              | JSON                    |         38 |          0 |          0 |         38 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/s3/src/index.ts                                              | TypeScript              |        318 |        136 |         48 |        502 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/s3/src/schema-validators.ts                                  | TypeScript              |         53 |          7 |         14 |         74 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/s3/tsconfig.json                                             | JSON with Comments      |         14 |          0 |          0 |         14 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/stripe/README.md                                             | Markdown                |         95 |          0 |         32 |        127 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/stripe/assets/Sassy Product Catalog Prices.csv               | CSV                     |          4 |          0 |          1 |          5 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/stripe/assets/Sassy Product Catalog.csv                      | CSV                     |          4 |          0 |          1 |          5 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/stripe/eslint.config.js                                      | JavaScript              |          7 |          1 |          2 |         10 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/stripe/package.json                                          | JSON                    |         37 |          0 |          1 |         38 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/stripe/scripts/importProductsAndPrices.ts                    | TypeScript              |        199 |         40 |         32 |        271 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/stripe/scripts/setupCustomerPortal.ts                        | TypeScript              |        124 |         18 |         17 |        159 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/stripe/src/index.ts                                          | TypeScript              |        102 |         61 |         27 |        190 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/stripe/src/schema-validators.ts                              | TypeScript              |         17 |          1 |          5 |         23 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/stripe/tsconfig.json                                         | JSON with Comments      |         13 |          5 |          1 |         19 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/tiktok-download/README.md                                    | Markdown                |        112 |          0 |         45 |        157 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/tiktok-download/eslint.config.js                             | JavaScript              |          3 |          1 |          1 |          5 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/tiktok-download/package.json                                 | JSON                    |         47 |          0 |          1 |         48 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/tiktok-download/scripts/process-videos.ts                    | TypeScript              |        763 |        145 |        126 |      1,034 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/tiktok-download/scripts/test-whisper.ts                      | TypeScript              |        328 |         79 |         77 |        484 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/tiktok-download/scripts/tiktok-download.ts                   | TypeScript              |         78 |         30 |         19 |        127 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/tiktok-download/src/index.ts                                 | TypeScript              |        144 |         32 |         27 |        203 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/tiktok-download/src/schema-validators.ts                     | TypeScript              |         42 |          6 |         13 |         61 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/tiktok-download/tsconfig.json                                | JSON with Comments      |         14 |          0 |          0 |         14 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/components.json                                           | JSON                    |         21 |          0 |          2 |         23 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/eslint.config.js                                          | JavaScript              |          9 |          1 |          2 |         12 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/package.json                                              | JSON                    |         56 |          0 |          1 |         57 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/components/content-guide-form.tsx                     | TypeScript JSX          |        117 |          0 |         14 |        131 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/components/file-uploader.tsx                          | TypeScript JSX          |        376 |         10 |         46 |        432 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/components/index.ts                                   | TypeScript              |         10 |          0 |          1 |         11 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/components/subscription-plan-modal.tsx                | TypeScript JSX          |         42 |          1 |          5 |         48 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/components/video-player.tsx                           | TypeScript JSX          |        111 |          0 |         14 |        125 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/components/viral-stitch-grid.tsx                      | TypeScript JSX          |        172 |          0 |         15 |        187 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/hooks/use-video-adjust-speed.ts                       | TypeScript              |        128 |         18 |         32 |        178 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/hooks/use-video-compression.ts                        | TypeScript              |        116 |         13 |         24 |        153 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/schema-validators.ts                                  | TypeScript              |         37 |          5 |          9 |         51 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/ui/badge.tsx                                          | TypeScript JSX          |         32 |          0 |          6 |         38 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/ui/button.tsx                                         | TypeScript JSX          |         53 |          0 |          6 |         59 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/ui/card.tsx                                           | TypeScript JSX          |         75 |          0 |          9 |         84 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/ui/dialog.tsx                                         | TypeScript JSX          |        109 |          0 |         14 |        123 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/ui/dropdown-menu.tsx                                  | TypeScript JSX          |        187 |          0 |         14 |        201 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/ui/form.tsx                                           | TypeScript JSX          |        177 |          0 |         29 |        206 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/ui/input.tsx                                          | TypeScript JSX          |         20 |          0 |          5 |         25 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/ui/label.tsx                                          | TypeScript JSX          |         21 |          0 |          5 |         26 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/ui/progress.tsx                                       | TypeScript JSX          |         24 |          0 |          5 |         29 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/ui/textarea.tsx                                       | TypeScript JSX          |         19 |          0 |          4 |         23 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/ui/theme.tsx                                          | TypeScript JSX          |         37 |          0 |          6 |         43 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/ui/toast.tsx                                          | TypeScript JSX          |         26 |          0 |          6 |         32 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/utils.ts                                              | TypeScript              |          4 |          0 |          3 |          7 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/tsconfig.json                                             | JSON with Comments      |         13 |          5 |          1 |         19 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/validators/eslint.config.js                                  | JavaScript              |          7 |          1 |          2 |         10 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/validators/package.json                                      | JSON                    |         29 |          0 |          1 |         30 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/validators/src/index.ts                                      | TypeScript              |         20 |          1 |          5 |         26 |
+| /Users/knamnguyen/Documents/0-Programming/viralcut/packages/validators/tsconfig.json                                     | JSON with Comments      |         13 |          5 |          1 |         19 |
+| Total                                                                                                                    |                         |     63,758 |     12,076 |      6,072 |     81,906 |
++--------------------------------------------------------------------------------------------------------------------------+-------------------------+------------+------------+------------+------------+

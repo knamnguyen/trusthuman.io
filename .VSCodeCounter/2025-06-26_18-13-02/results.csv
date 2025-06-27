@@ -1,0 +1,171 @@
+"filename", "language", "JSON with Comments", "JSON", "TypeScript", "JavaScript", "TypeScript JSX", "Markdown", "CSS", "CSV", "MS SQL", "Prisma", "WebAssembly Text Format", "comment", "blank", "total"
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/api/eslint.config.js", "JavaScript", 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 1, 2, 10
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/api/package.json", "JSON", 0, 47, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 48
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/api/scripts/test-remotion-gemini.ts", "TypeScript", 0, 0, 271, 0, 0, 0, 0, 0, 0, 0, 0, 107, 51, 429
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/api/src/index.ts", "TypeScript", 0, 0, 15, 0, 0, 0, 0, 0, 0, 0, 0, 28, 7, 50
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/api/src/router/post.ts", "TypeScript", 0, 0, 37, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 44
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/api/src/router/remotion-demo-stitch.ts", "TypeScript", 0, 0, 108, 0, 0, 0, 0, 0, 0, 0, 0, 6, 16, 130
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/api/src/router/remotion-gemini.ts", "TypeScript", 0, 0, 215, 0, 0, 0, 0, 0, 0, 0, 0, 18, 34, 267
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/api/src/router/remotion-hello.ts", "TypeScript", 0, 0, 115, 0, 0, 0, 0, 0, 0, 0, 0, 7, 23, 145
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/api/src/router/remotion.ts", "TypeScript", 0, 0, 94, 0, 0, 0, 0, 0, 0, 0, 0, 5, 15, 114
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/api/src/router/root.ts", "TypeScript", 0, 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3, 24
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/api/src/router/stripe.ts", "TypeScript", 0, 0, 71, 0, 0, 0, 0, 0, 0, 0, 0, 25, 18, 114
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/api/src/router/user.ts", "TypeScript", 0, 0, 99, 0, 0, 0, 0, 0, 0, 0, 0, 37, 13, 149
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/api/src/router/video.ts", "TypeScript", 0, 0, 264, 0, 0, 0, 0, 0, 0, 0, 0, 20, 35, 319
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/api/src/router/viral-stitch.ts", "TypeScript", 0, 0, 401, 0, 0, 0, 0, 0, 0, 0, 0, 33, 66, 500
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/api/src/trpc.ts", "TypeScript", 0, 0, 49, 0, 0, 0, 0, 0, 0, 0, 0, 61, 15, 125
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/api/tsconfig.json", "JSON with Comments", 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 14
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/eslint.config.js", "JavaScript", 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 1, 2, 10
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/client.d.ts", "TypeScript", 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/client.js", "JavaScript", 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 1, 4
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/default.d.ts", "TypeScript", 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/default.js", "JavaScript", 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 1, 4
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/edge.d.ts", "TypeScript", 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/edge.js", "JavaScript", 0, 0, 0, 231, 0, 0, 0, 0, 0, 0, 0, 21, 36, 288
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/index-browser.js", "JavaScript", 0, 0, 0, 216, 0, 0, 0, 0, 0, 0, 0, 21, 35, 272
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/index.d.ts", "TypeScript", 0, 0, 5734, 0, 0, 0, 0, 0, 0, 0, 0, 4212, 865, 10811
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/index.js", "JavaScript", 0, 0, 0, 251, 0, 0, 0, 0, 0, 0, 0, 26, 44, 321
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/package.json", "JSON", 0, 167, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 167
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/query_engine_bg.js", "JavaScript", 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/query_engine_bg.wasm", "WebAssembly Text Format", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 30476, 0, 620, 31096
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/runtime/edge-esm.js", "JavaScript", 0, 0, 0, 24, 0, 0, 0, 0, 0, 0, 0, 3, 8, 35
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/runtime/edge.js", "JavaScript", 0, 0, 0, 24, 0, 0, 0, 0, 0, 0, 0, 3, 8, 35
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/runtime/index-browser.d.ts", "TypeScript", 0, 0, 264, 0, 0, 0, 0, 0, 0, 0, 0, 20, 87, 371
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/runtime/index-browser.js", "JavaScript", 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 14, 2, 17
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/runtime/library.d.ts", "TypeScript", 0, 0, 2343, 0, 0, 0, 0, 0, 0, 0, 0, 846, 459, 3648
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/runtime/library.js", "JavaScript", 0, 0, 0, 101, 0, 0, 0, 0, 0, 0, 0, 16, 30, 147
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/runtime/react-native.js", "JavaScript", 0, 0, 0, 63, 0, 0, 0, 0, 0, 0, 0, 5, 16, 84
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/runtime/wasm.js", "JavaScript", 0, 0, 0, 25, 0, 0, 0, 0, 0, 0, 0, 3, 8, 36
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/schema.prisma", "Prisma", 0, 0, 0, 0, 0, 0, 0, 0, 0, 112, 0, 1, 16, 129
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/wasm-edge-light-loader.mjs", "JavaScript", 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 1, 4
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/wasm-worker-loader.mjs", "JavaScript", 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 1, 4
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/wasm.d.ts", "TypeScript", 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge/wasm.js", "JavaScript", 0, 0, 0, 238, 0, 0, 0, 0, 0, 0, 0, 21, 36, 295
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/client.d.ts", "TypeScript", 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/client.js", "JavaScript", 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 1, 4
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/default.d.ts", "TypeScript", 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/default.js", "JavaScript", 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 1, 4
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/edge.d.ts", "TypeScript", 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/edge.js", "JavaScript", 0, 0, 0, 242, 0, 0, 0, 0, 0, 0, 0, 21, 36, 299
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/index-browser.js", "JavaScript", 0, 0, 0, 216, 0, 0, 0, 0, 0, 0, 0, 21, 35, 272
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/index.d.ts", "TypeScript", 0, 0, 5733, 0, 0, 0, 0, 0, 0, 0, 0, 4209, 865, 10807
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/index.js", "JavaScript", 0, 0, 0, 262, 0, 0, 0, 0, 0, 0, 0, 26, 44, 332
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/package.json", "JSON", 0, 140, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 140
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/runtime/edge-esm.js", "JavaScript", 0, 0, 0, 24, 0, 0, 0, 0, 0, 0, 0, 3, 8, 35
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/runtime/edge.js", "JavaScript", 0, 0, 0, 24, 0, 0, 0, 0, 0, 0, 0, 3, 8, 35
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/runtime/index-browser.d.ts", "TypeScript", 0, 0, 264, 0, 0, 0, 0, 0, 0, 0, 0, 20, 87, 371
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/runtime/index-browser.js", "JavaScript", 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 14, 2, 17
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/runtime/library.d.ts", "TypeScript", 0, 0, 2343, 0, 0, 0, 0, 0, 0, 0, 0, 846, 459, 3648
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/runtime/library.js", "JavaScript", 0, 0, 0, 101, 0, 0, 0, 0, 0, 0, 0, 16, 30, 147
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/runtime/react-native.js", "JavaScript", 0, 0, 0, 63, 0, 0, 0, 0, 0, 0, 0, 5, 16, 84
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/runtime/wasm.js", "JavaScript", 0, 0, 0, 25, 0, 0, 0, 0, 0, 0, 0, 3, 8, 36
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/schema.prisma", "Prisma", 0, 0, 0, 0, 0, 0, 0, 0, 0, 112, 0, 1, 16, 129
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/wasm.d.ts", "TypeScript", 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/node/wasm.js", "JavaScript", 0, 0, 0, 216, 0, 0, 0, 0, 0, 0, 0, 21, 35, 272
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/zod-prisma-validators/index.ts", "TypeScript", 0, 0, 3055, 0, 0, 0, 0, 0, 0, 0, 0, 50, 386, 3491
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/package.json", "JSON", 0, 48, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 49
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/prisma/migrations/20250620142959_baseline/migration.sql", "MS SQL", 0, 0, 0, 0, 0, 0, 0, 0, 49, 0, 0, 10, 14, 73
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/prisma/schema.prisma", "Prisma", 0, 0, 0, 0, 0, 0, 0, 0, 0, 112, 0, 1, 17, 130
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/src/client/edge.ts", "TypeScript", 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 4
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/src/client/node.ts", "TypeScript", 0, 0, 21, 0, 0, 0, 0, 0, 0, 0, 0, 32, 8, 61
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/src/index.ts", "TypeScript", 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 5
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/src/schema-validators.ts", "TypeScript", 0, 0, 6, 0, 0, 0, 0, 0, 0, 0, 0, 3, 5, 14
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/tsconfig.json", "JSON with Comments", 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 10
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/gemini-video/package.json", "JSON", 0, 39, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 40
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/gemini-video/scripts/master-script-output-1750846636922.json", "JSON", 0, 67, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 68
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/gemini-video/scripts/test-demo-from-masterscript.ts", "TypeScript", 0, 0, 134, 0, 0, 0, 0, 0, 0, 0, 0, 75, 18, 227
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/gemini-video/scripts/test-demo-video.ts", "TypeScript", 0, 0, 105, 0, 0, 0, 0, 0, 0, 0, 0, 85, 15, 205
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/gemini-video/scripts/test-viral-video.ts", "TypeScript", 0, 0, 65, 0, 0, 0, 0, 0, 0, 0, 0, 58, 10, 133
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/gemini-video/src/gemini-video-service.ts", "TypeScript", 0, 0, 603, 0, 0, 0, 0, 0, 0, 0, 0, 97, 118, 818
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/gemini-video/src/index.ts", "TypeScript", 0, 0, 38, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3, 42
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/gemini-video/src/schema-validators.ts", "TypeScript", 0, 0, 159, 0, 0, 0, 0, 0, 0, 0, 0, 18, 17, 194
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/gemini-video/tsconfig.json", "JSON with Comments", 18, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 18
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/langchain/eslint.config.js", "JavaScript", 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 1, 2, 10
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/langchain/package.json", "JSON", 0, 41, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 42
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/langchain/scripts/test-basic-functionality.ts", "TypeScript", 0, 0, 57, 0, 0, 0, 0, 0, 0, 0, 0, 10, 15, 82
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/langchain/scripts/test-color-functionality.ts", "TypeScript", 0, 0, 94, 0, 0, 0, 0, 0, 0, 0, 0, 13, 12, 119
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/langchain/scripts/test-similarity-search.ts", "TypeScript", 0, 0, 144, 0, 0, 0, 0, 0, 0, 0, 0, 23, 33, 200
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/langchain/src/embeddings.ts", "TypeScript", 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 19
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/langchain/src/index.ts", "TypeScript", 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 10
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/langchain/src/schema-validators.ts", "TypeScript", 0, 0, 22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 27
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/langchain/src/vector-store.ts", "TypeScript", 0, 0, 300, 0, 0, 0, 0, 0, 0, 0, 0, 47, 42, 389
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/langchain/tsconfig.json", "JSON with Comments", 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 13
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/AWS_SETUP.md", "Markdown", 0, 0, 0, 0, 0, 232, 0, 0, 0, 0, 0, 0, 37, 269
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/package.json", "JSON", 0, 62, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 63
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/postcss.config.mjs", "JavaScript", 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/remotion.config.ts", "TypeScript", 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 13
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/scripts/debug-speed-adjust.ts", "TypeScript", 0, 0, 39, 0, 0, 0, 0, 0, 0, 0, 0, 2, 5, 46
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/scripts/debug-video-stitch.ts", "TypeScript", 0, 0, 47, 0, 0, 0, 0, 0, 0, 0, 0, 2, 5, 54
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/scripts/test-combine-videos.ts", "TypeScript", 0, 0, 165, 0, 0, 0, 0, 0, 0, 0, 0, 13, 34, 212
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/scripts/test-metadata.ts", "TypeScript", 0, 0, 46, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 55
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/src/Root.tsx", "TypeScript JSX", 0, 0, 0, 0, 243, 0, 0, 0, 0, 0, 0, 10, 25, 278
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/src/compositions/CombineVideos.tsx", "TypeScript JSX", 0, 0, 0, 0, 59, 0, 0, 0, 0, 0, 0, 6, 10, 75
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/src/compositions/HelloWorld.tsx", "TypeScript JSX", 0, 0, 0, 0, 47, 0, 0, 0, 0, 0, 0, 3, 7, 57
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/src/compositions/VideoSpeedAdjust.tsx", "TypeScript JSX", 0, 0, 0, 0, 40, 0, 0, 0, 0, 0, 0, 0, 3, 43
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/src/compositions/VideoStitch.tsx", "TypeScript JSX", 0, 0, 0, 0, 86, 0, 0, 0, 0, 0, 0, 4, 6, 96
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/src/config.ts", "TypeScript", 0, 0, 19, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 25
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/src/index.css", "CSS", 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/src/index.ts", "TypeScript", 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 12
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/src/remotion-service.ts", "TypeScript", 0, 0, 426, 0, 0, 0, 0, 0, 0, 0, 0, 64, 68, 558
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/src/schema-validators.ts", "TypeScript", 0, 0, 38, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 43
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/src/utils/time-parsing.ts", "TypeScript", 0, 0, 66, 0, 0, 0, 0, 0, 0, 0, 0, 31, 17, 114
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/tailwind.config.ts", "TypeScript", 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 11
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/remotion/tsconfig.json", "JSON with Comments", 24, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 25
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/s3/README.md", "Markdown", 0, 0, 0, 0, 0, 302, 0, 0, 0, 0, 0, 0, 83, 385
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/s3/bucket-policy.json", "JSON", 0, 24, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 24
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/s3/cors-config.json", "JSON", 0, 25, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 25
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/s3/eslint.config.js", "JavaScript", 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 1, 1, 5
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/s3/package.json", "JSON", 0, 38, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 38
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/s3/src/index.ts", "TypeScript", 0, 0, 318, 0, 0, 0, 0, 0, 0, 0, 0, 136, 48, 502
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/s3/src/schema-validators.ts", "TypeScript", 0, 0, 53, 0, 0, 0, 0, 0, 0, 0, 0, 7, 14, 74
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/s3/tsconfig.json", "JSON with Comments", 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/stripe/README.md", "Markdown", 0, 0, 0, 0, 0, 95, 0, 0, 0, 0, 0, 0, 32, 127
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/stripe/assets/Sassy Product Catalog Prices.csv", "CSV", 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 1, 5
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/stripe/assets/Sassy Product Catalog.csv", "CSV", 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 1, 5
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/stripe/eslint.config.js", "JavaScript", 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 1, 2, 10
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/stripe/package.json", "JSON", 0, 37, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 38
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/stripe/scripts/importProductsAndPrices.ts", "TypeScript", 0, 0, 199, 0, 0, 0, 0, 0, 0, 0, 0, 40, 32, 271
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/stripe/scripts/setupCustomerPortal.ts", "TypeScript", 0, 0, 124, 0, 0, 0, 0, 0, 0, 0, 0, 18, 17, 159
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/stripe/src/index.ts", "TypeScript", 0, 0, 102, 0, 0, 0, 0, 0, 0, 0, 0, 61, 27, 190
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/stripe/src/schema-validators.ts", "TypeScript", 0, 0, 17, 0, 0, 0, 0, 0, 0, 0, 0, 1, 5, 23
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/stripe/tsconfig.json", "JSON with Comments", 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 1, 19
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/tiktok-download/README.md", "Markdown", 0, 0, 0, 0, 0, 112, 0, 0, 0, 0, 0, 0, 45, 157
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/tiktok-download/eslint.config.js", "JavaScript", 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 1, 1, 5
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/tiktok-download/package.json", "JSON", 0, 47, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 48
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/tiktok-download/scripts/process-videos.ts", "TypeScript", 0, 0, 763, 0, 0, 0, 0, 0, 0, 0, 0, 145, 126, 1034
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/tiktok-download/scripts/test-whisper.ts", "TypeScript", 0, 0, 328, 0, 0, 0, 0, 0, 0, 0, 0, 79, 77, 484
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/tiktok-download/scripts/tiktok-download.ts", "TypeScript", 0, 0, 78, 0, 0, 0, 0, 0, 0, 0, 0, 30, 19, 127
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/tiktok-download/src/index.ts", "TypeScript", 0, 0, 144, 0, 0, 0, 0, 0, 0, 0, 0, 32, 27, 203
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/tiktok-download/src/schema-validators.ts", "TypeScript", 0, 0, 42, 0, 0, 0, 0, 0, 0, 0, 0, 6, 13, 61
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/tiktok-download/tsconfig.json", "JSON with Comments", 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/components.json", "JSON", 0, 21, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 23
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/eslint.config.js", "JavaScript", 0, 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 1, 2, 12
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/package.json", "JSON", 0, 56, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 57
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/components/content-guide-form.tsx", "TypeScript JSX", 0, 0, 0, 0, 117, 0, 0, 0, 0, 0, 0, 0, 14, 131
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/components/file-uploader.tsx", "TypeScript JSX", 0, 0, 0, 0, 376, 0, 0, 0, 0, 0, 0, 10, 46, 432
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/components/index.ts", "TypeScript", 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 11
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/components/subscription-plan-modal.tsx", "TypeScript JSX", 0, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 1, 5, 48
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/components/video-player.tsx", "TypeScript JSX", 0, 0, 0, 0, 111, 0, 0, 0, 0, 0, 0, 0, 14, 125
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/components/viral-stitch-grid.tsx", "TypeScript JSX", 0, 0, 0, 0, 172, 0, 0, 0, 0, 0, 0, 0, 15, 187
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/hooks/use-video-adjust-speed.ts", "TypeScript", 0, 0, 128, 0, 0, 0, 0, 0, 0, 0, 0, 18, 32, 178
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/hooks/use-video-compression.ts", "TypeScript", 0, 0, 116, 0, 0, 0, 0, 0, 0, 0, 0, 13, 24, 153
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/schema-validators.ts", "TypeScript", 0, 0, 37, 0, 0, 0, 0, 0, 0, 0, 0, 5, 9, 51
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/ui/badge.tsx", "TypeScript JSX", 0, 0, 0, 0, 32, 0, 0, 0, 0, 0, 0, 0, 6, 38
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/ui/button.tsx", "TypeScript JSX", 0, 0, 0, 0, 53, 0, 0, 0, 0, 0, 0, 0, 6, 59
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/ui/card.tsx", "TypeScript JSX", 0, 0, 0, 0, 75, 0, 0, 0, 0, 0, 0, 0, 9, 84
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/ui/dialog.tsx", "TypeScript JSX", 0, 0, 0, 0, 109, 0, 0, 0, 0, 0, 0, 0, 14, 123
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/ui/dropdown-menu.tsx", "TypeScript JSX", 0, 0, 0, 0, 187, 0, 0, 0, 0, 0, 0, 0, 14, 201
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/ui/form.tsx", "TypeScript JSX", 0, 0, 0, 0, 177, 0, 0, 0, 0, 0, 0, 0, 29, 206
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/ui/input.tsx", "TypeScript JSX", 0, 0, 0, 0, 20, 0, 0, 0, 0, 0, 0, 0, 5, 25
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/ui/label.tsx", "TypeScript JSX", 0, 0, 0, 0, 21, 0, 0, 0, 0, 0, 0, 0, 5, 26
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/ui/progress.tsx", "TypeScript JSX", 0, 0, 0, 0, 24, 0, 0, 0, 0, 0, 0, 0, 5, 29
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/ui/textarea.tsx", "TypeScript JSX", 0, 0, 0, 0, 19, 0, 0, 0, 0, 0, 0, 0, 4, 23
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/ui/theme.tsx", "TypeScript JSX", 0, 0, 0, 0, 37, 0, 0, 0, 0, 0, 0, 0, 6, 43
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/ui/toast.tsx", "TypeScript JSX", 0, 0, 0, 0, 26, 0, 0, 0, 0, 0, 0, 0, 6, 32
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/src/utils.ts", "TypeScript", 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 7
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/ui/tsconfig.json", "JSON with Comments", 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 1, 19
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/validators/eslint.config.js", "JavaScript", 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 1, 2, 10
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/validators/package.json", "JSON", 0, 29, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 30
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/validators/src/index.ts", "TypeScript", 0, 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 1, 5, 26
+"/Users/knamnguyen/Documents/0-Programming/viralcut/packages/validators/tsconfig.json", "JSON with Comments", 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 1, 19
+"Total", "-", 142, 888, 26633, 2411, 2073, 741, 1, 8, 49, 336, 30476, 12076, 6072, 81906

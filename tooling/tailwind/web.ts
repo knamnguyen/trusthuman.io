@@ -4,7 +4,8 @@ import animate from "tailwindcss-animate";
 import base from "./base";
 
 export default {
-  content: base.content,
+    darkMode: ["class"],
+    content: base.content,
   presets: [base],
   theme: {
     container: {

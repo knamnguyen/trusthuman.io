@@ -1,9 +1,9 @@
 export {
   createGoogleEmbeddings,
   GoogleGenerativeAIEmbeddings,
-} from "./embeddings.js";
+} from "./embeddings";
 export {
   VideoVectorStore,
   PrismaVectorStore,
   type VideoSearchResult,
-} from "./vector-store.js";
+} from "./vector-store";

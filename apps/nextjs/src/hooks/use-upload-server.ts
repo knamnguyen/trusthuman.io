@@ -88,7 +88,9 @@ export const useUploadServer = ({
             reject(new Error("Upload timeout"));
           });
 
-          const uploadServerUrl = "http://35.93.212.176";
+          // const uploadServerUrl = "http://35.93.212.176";
+          // const uploadServerUrl = "http://localhost:3001";
+          const uploadServerUrl = "http://localhost:80";
           // Start the upload
           xhr.open("POST", `${uploadServerUrl}/upload/gemini`);
           xhr.timeout = 300000; // 5 minutes timeout

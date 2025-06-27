@@ -5,12 +5,12 @@ import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { useTRPC } from "~/trpc/react";
+import { useGeminiStreamUpload } from "./use-gemini-stream-upload";
 import { useMultipartUpload } from "./use-multipart-upload";
-import { useUploadServer } from "./use-upload-server";
 
 interface ParallelUploadProgress {
   s3: { loaded: number; total: number; percentage: number };
-  gemini: { percentage: number };
+  gemini: { percentage: number; uploadedBytes: number; totalBytes: number };
   overall: number;
 }
 
@@ -42,7 +42,7 @@ export const useParallelUpload = ({
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState<ParallelUploadProgress>({
     s3: { loaded: 0, total: 0, percentage: 0 },
-    gemini: { percentage: 0 },
+    gemini: { percentage: 0, uploadedBytes: 0, totalBytes: 0 },
     overall: 0,
   });
 
@@ -70,7 +70,7 @@ export const useParallelUpload = ({
     },
   });
 
-  const geminiUpload = useUploadServer({
+  const geminiUpload = useGeminiStreamUpload({
     onProgress: (geminiProgress) => {
       const newProgress = {
         ...progress,
@@ -80,7 +80,7 @@ export const useParallelUpload = ({
       setProgress(newProgress);
       onProgress?.(newProgress);
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       console.error("Gemini upload failed:", error);
       onError?.(error);
     },
@@ -112,7 +112,7 @@ export const useParallelUpload = ({
             prefix: options?.prefix,
             durationSeconds: durationSeconds,
           }),
-          // Gemini upload via upload-server
+          // Gemini upload via streaming
           geminiUpload.uploadToGemini(file),
         ]);
 

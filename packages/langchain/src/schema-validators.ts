@@ -14,6 +14,8 @@ export const VideoSearchResultSchema = z.object({
   likes: z.number().int().min(0),
   comments: z.number().int().min(0),
   durationSeconds: z.number().int().min(0),
+  hookEndTimestamp: z.string().nullable().optional(),
+  hookCutUrl: z.string().nullable().optional(),
   similarity: z.number().min(0).max(1).optional(),
 });
 

@@ -17,6 +17,7 @@ export interface VideoSearchResult {
   comments: number;
   durationSeconds: number;
   hookEndTimestamp?: string | null;
+  hookCutUrl?: string | null;
   colorPalette?: ColorPalette | null;
   similarity?: number;
 }
@@ -198,12 +199,15 @@ export class VideoVectorStore {
         likes: number;
         comments: number;
         durationSeconds: number;
+        hookEndTimestamp: string | null;
+        hookCutUrl: string | null;
         colorPalette: any;
         similarity: number;
       }[]
     >`
       SELECT 
-        id, title, description, "s3Url", views, likes, comments, "durationSeconds", "colorPalette",
+        id, title, description, "s3Url", views, likes, comments, "durationSeconds", 
+        "hookEndTimestamp", "hookCutUrl", "colorPalette",
         1 - ("colorPaletteEmbedding" <=> ${`[${colorVector.join(",")}]`}::vector) as similarity
       FROM "HookViralVideo"
       WHERE "colorPaletteEmbedding" IS NOT NULL
@@ -220,6 +224,8 @@ export class VideoVectorStore {
       likes: result.likes,
       comments: result.comments,
       durationSeconds: result.durationSeconds,
+      hookEndTimestamp: result.hookEndTimestamp,
+      hookCutUrl: result.hookCutUrl,
       colorPalette: result.colorPalette,
       similarity: result.similarity,
     }));
@@ -249,12 +255,15 @@ export class VideoVectorStore {
         likes: number;
         comments: number;
         durationSeconds: number;
+        hookEndTimestamp: string | null;
+        hookCutUrl: string | null;
         colorPalette: any;
         similarity: number;
       }[]
     >`
       SELECT 
-        id, title, description, "s3Url", views, likes, comments, "durationSeconds", "colorPalette",
+        id, title, description, "s3Url", views, likes, comments, "durationSeconds", 
+        "hookEndTimestamp", "hookCutUrl", "colorPalette",
         1 - ("colorPaletteEmbedding" <=> ${`[${colorVector.join(",")}]`}::vector) as similarity
       FROM "HookViralVideo"
       WHERE "colorPaletteEmbedding" IS NOT NULL
@@ -272,6 +281,8 @@ export class VideoVectorStore {
       likes: result.likes,
       comments: result.comments,
       durationSeconds: result.durationSeconds,
+      hookEndTimestamp: result.hookEndTimestamp,
+      hookCutUrl: result.hookCutUrl,
       colorPalette: result.colorPalette,
       similarity: result.similarity,
     }));
@@ -368,6 +379,8 @@ export class VideoVectorStore {
       likes: doc.metadata.likes,
       comments: doc.metadata.comments,
       durationSeconds: doc.metadata.durationSeconds,
+      hookEndTimestamp: doc.metadata.hookEndTimestamp || null,
+      hookCutUrl: doc.metadata.hookCutUrl || null,
     };
   }
 }
