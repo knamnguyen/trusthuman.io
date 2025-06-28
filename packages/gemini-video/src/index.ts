@@ -35,7 +35,6 @@ export {
   MasterScriptInputSchema,
   MasterScriptResponseSchema,
   VideoProcessingInputSchema,
-  VideoSegmentSchema,
   ViralHookInputSchema,
   ViralHookResponseSchema,
 } from "./schema-validators";

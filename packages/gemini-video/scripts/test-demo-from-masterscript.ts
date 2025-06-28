@@ -44,12 +44,11 @@
  * - Database must contain productInfo and colorPalette fields
  * - Environment Variable: GEMINI_API_KEY must be set
  *
- * DATABASE DEPENDENCIES:
- * Requires existing DemoVideo record with:
- * - masterScript: JSON array of time-based annotations
- * - productInfo: String description of the product
- * - colorPalette: JSON array of dominant colors
- * - durationSeconds: Original video duration
+ * TEST DATA:
+ * Uses mock master script and product info for testing:
+ * - masterScript: Array of time-based annotations with transcript and frame descriptions
+ * - productInfo: Product description for context
+ * Note: In production, this data comes from the database via the API layer
  *
  * VIDEOSTITCH INTEGRATION:
  * Output format is designed for seamless integration with @sassy/remotion VideoStitch:
@@ -72,9 +71,6 @@ import { createGeminiVideoService } from "../src/index";
 
 // Test configuration for demo video condensing from master script
 const TEST_CONFIG = {
-  // Using real demo video ID from database
-  demoVideoId: "cmcctzxog00008z0k46s9m1ss",
-
   exactDuration: 12, // Exactly 12 seconds total
   numSegments: 4, // 4 segments of ~3 seconds each
   contentGuide:
@@ -84,39 +80,14 @@ const TEST_CONFIG = {
 async function main() {
   console.log("🎬 Testing Demo Video Condensing from Master Script");
   console.log("===================================================");
-  console.log("📊 Demo Video ID:", TEST_CONFIG.demoVideoId);
   console.log("⏱️ Exact Duration:", TEST_CONFIG.exactDuration, "seconds");
   console.log("📊 Target Segments:", TEST_CONFIG.numSegments);
   console.log("📝 Content Guide:", TEST_CONFIG.contentGuide);
   console.log("");
 
-  // Check if demo video ID looks like a placeholder
-  if (
-    TEST_CONFIG.demoVideoId.includes("placeholder") ||
-    TEST_CONFIG.demoVideoId.includes("xxxx")
-  ) {
-    console.error("❌ CONFIGURATION ERROR");
-    console.error("======================");
-    console.error(
-      "Please update TEST_CONFIG.demoVideoId with a real demo video ID from your database.",
-    );
-    console.error("");
-    console.error("💡 How to find a demo video ID:");
-    console.error(
-      "   1. Check your database DemoVideo table for existing records",
-    );
-    console.error(
-      "   2. Or upload a video and generate master script first using:",
-    );
-    console.error("      - Upload video to S3");
-    console.error("      - Call generateMasterScriptFromUri tRPC endpoint");
-    console.error("      - Use the returned demoVideo.id");
-    console.error("");
-    console.error(
-      "Example valid ID format: cm6abc123-def4-5678-9abc-def123456789",
-    );
-    process.exit(1);
-  }
+  // Note: Using mock data for testing - in production this comes from database
+  console.log("📊 Using mock master script data for testing");
+  console.log("");
 
   try {
     // Create Gemini video service
@@ -125,9 +96,46 @@ async function main() {
     console.log("🚀 Starting demo condensing from master script...");
     console.log("");
 
+    // Mock master script data for testing (normally this would come from database)
+    const mockMasterScript = [
+      {
+        secondRange: "00:00-00:05",
+        transcript: "Welcome to our app, let me show you how it works",
+        frameDescription: "App homepage with logo and main navigation menu",
+      },
+      {
+        secondRange: "00:05-00:10",
+        transcript: "First, click on the create button here",
+        frameDescription:
+          "User clicks on prominent blue 'Create' button in center",
+      },
+      {
+        secondRange: "00:10-00:15",
+        transcript: "You'll see this form where you can enter your details",
+        frameDescription:
+          "Form appears with input fields for name, email, and description",
+      },
+      {
+        secondRange: "00:15-00:20",
+        transcript: "Fill out the information and then save",
+        frameDescription:
+          "User typing in form fields, cursor visible in text inputs",
+      },
+      {
+        secondRange: "00:20-00:25",
+        transcript: "Great! Your project has been created successfully",
+        frameDescription:
+          "Success message appears with green checkmark animation",
+      },
+    ];
+
+    const mockProductInfo =
+      "A productivity app that helps users create and manage projects with an intuitive interface featuring forms, buttons, and real-time feedback";
+
     // Condense demo from master script
     const result = await geminiService.condenseDemoFromMasterScriptData({
-      demoVideoId: TEST_CONFIG.demoVideoId,
+      masterScript: mockMasterScript,
+      productInfo: mockProductInfo,
       exactDuration: TEST_CONFIG.exactDuration,
       numSegments: TEST_CONFIG.numSegments,
       contentGuide: TEST_CONFIG.contentGuide,

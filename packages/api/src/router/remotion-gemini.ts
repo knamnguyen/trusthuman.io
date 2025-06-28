@@ -86,12 +86,48 @@ export const remotionGeminiRouter = createTRPCRouter({
         console.log("🚀 Starting Gemini + Remotion demo processing...");
         console.log("📊 Input:", input);
 
-        // Step 1: Get condensed segments from Gemini using master script
-        console.log("🧠 Step 1: Getting condensed segments from Gemini...");
+        // Step 1: Get original video and master script data from database
+        console.log("🔍 Step 1: Fetching demo video with master script...");
+        const demoVideo = await db.demoVideo.findUnique({
+          where: { id: input.demoVideoId },
+          select: {
+            id: true,
+            s3Url: true,
+            durationSeconds: true,
+            masterScript: true,
+            productInfo: true,
+          },
+        });
+
+        if (!demoVideo) {
+          throw new Error(`Demo video with ID ${input.demoVideoId} not found`);
+        }
+
+        if (!demoVideo.productInfo) {
+          throw new Error(
+            "Demo video missing productInfo. Please regenerate master script.",
+          );
+        }
+
+        // Validate masterScript data
+        if (
+          !Array.isArray(demoVideo.masterScript) ||
+          demoVideo.masterScript.length === 0
+        ) {
+          throw new Error(
+            "Demo video missing masterScript data. Please regenerate master script.",
+          );
+        }
+
+        console.log(`✅ Demo video found: ${demoVideo.s3Url}`);
+
+        // Step 2: Get condensed segments from Gemini using master script
+        console.log("🧠 Step 2: Getting condensed segments from Gemini...");
         const geminiService = getGeminiService();
         const geminiResult =
           await geminiService.condenseDemoFromMasterScriptData({
-            demoVideoId: input.demoVideoId,
+            masterScript: demoVideo.masterScript as any[],
+            productInfo: demoVideo.productInfo,
             exactDuration: input.exactDuration,
             numSegments: input.numSegments,
             contentGuide: input.contentGuide,
@@ -100,23 +136,6 @@ export const remotionGeminiRouter = createTRPCRouter({
         console.log(
           `✅ Gemini processing complete: ${geminiResult.segments.length} segments`,
         );
-
-        // Step 2: Get original video URL from database
-        console.log("🔍 Step 2: Fetching original video S3 URL...");
-        const demoVideo = await db.demoVideo.findUnique({
-          where: { id: input.demoVideoId },
-          select: {
-            id: true,
-            s3Url: true,
-            durationSeconds: true,
-          },
-        });
-
-        if (!demoVideo) {
-          throw new Error(`Demo video with ID ${input.demoVideoId} not found`);
-        }
-
-        console.log(`✅ Original video found: ${demoVideo.s3Url}`);
 
         // Step 3: Convert segments to VideoStitch format
         console.log("🔄 Step 3: Converting segments to VideoStitch format...");

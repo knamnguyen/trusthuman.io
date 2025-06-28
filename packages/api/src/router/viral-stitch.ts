@@ -165,6 +165,16 @@ export const viralStitchRouter = createTRPCRouter({
           );
         }
 
+        // Validate masterScript data
+        if (
+          !Array.isArray(demoVideo.masterScript) ||
+          demoVideo.masterScript.length === 0
+        ) {
+          throw new Error(
+            "Demo video missing masterScript data. Please regenerate master script.",
+          );
+        }
+
         console.log("✅ Demo video found");
 
         // Step 2: Find matching viral hook with randomization
@@ -194,7 +204,8 @@ export const viralStitchRouter = createTRPCRouter({
         const geminiService = getGeminiService();
         const demoResult = await geminiService.condenseDemoFromMasterScriptData(
           {
-            demoVideoId: input.demoVideoId,
+            masterScript: demoVideo.masterScript as any[],
+            productInfo: demoVideo.productInfo,
             exactDuration: optimalDuration,
             numSegments: numSegments,
             contentGuide: input.contentGuide,
