@@ -1,19 +1,11 @@
 {
   "extends": "@sassy/tsconfig/internal-package.json",
-  "include": ["src"],
-  "exclude": ["dist", "node_modules", "deployment"],
   "compilerOptions": {
+    "lib": ["ES2022"],
     "target": "ES2022",
-    "module": "ES2022",
-    "moduleResolution": "node",
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true
-  }
+    "module": "ESNext",
+    "moduleResolution": "bundler"
+  },
+  "include": ["src/**/*", "deployment/**/*", "scripts/**/*"],
+  "exclude": ["dist", "node_modules"]
 }

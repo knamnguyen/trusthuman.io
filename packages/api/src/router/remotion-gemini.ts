@@ -89,12 +89,13 @@ export const remotionGeminiRouter = createTRPCRouter({
         // Step 1: Get condensed segments from Gemini using master script
         console.log("🧠 Step 1: Getting condensed segments from Gemini...");
         const geminiService = getGeminiService();
-        const geminiResult = await geminiService.condenseDemoFromMasterScript({
-          demoVideoId: input.demoVideoId,
-          exactDuration: input.exactDuration,
-          numSegments: input.numSegments,
-          contentGuide: input.contentGuide,
-        });
+        const geminiResult =
+          await geminiService.condenseDemoFromMasterScriptData({
+            demoVideoId: input.demoVideoId,
+            exactDuration: input.exactDuration,
+            numSegments: input.numSegments,
+            contentGuide: input.contentGuide,
+          });
 
         console.log(
           `✅ Gemini processing complete: ${geminiResult.segments.length} segments`,

@@ -1,257 +1,182 @@
-import { GoogleGenAI } from "@google/genai";
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY!;
+const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com";
 
-import type { ChunkBuffer, UploadSession } from "./types";
+if (!GEMINI_API_KEY) {
+  throw new Error("GEMINI_API_KEY environment variable is required");
+}
 
-const GEMINI_CHUNK_SIZE = 8 * 1024 * 1024; // 8MB as required by Gemini Files API
+interface ResumableSession {
+  uploadUrl: string;
+  fileName: string;
+  mimeType: string;
+  fileSize: number;
+  uploadedBytes: number;
+  geminiUploadedBytes: number; // Bytes actually sent to Gemini
+  chunkBuffer: Buffer; // Buffer for accumulating 4MB chunks into 8MB chunks
+}
 
 export class GeminiUploadClient {
-  private genAI: GoogleGenAI;
-  private sessions: Map<string, UploadSession> = new Map();
+  private sessions = new Map<string, ResumableSession>();
 
-  constructor(apiKey: string) {
-    this.genAI = new GoogleGenAI({ apiKey });
-  }
-
-  /**
-   * Create new upload session with Gemini Files API
-   */
-  async createUploadSession(
+  async initiateResumableUpload(
     fileName: string,
     mimeType: string,
     fileSize: number,
   ): Promise<{ sessionId: string; uploadUrl: string }> {
-    try {
-      console.log("🚀 Creating Gemini upload session:", {
-        fileName,
-        mimeType,
-        fileSize,
-      });
+    console.log("🔄 Initiating resumable upload to Gemini:", {
+      fileName,
+      mimeType,
+      fileSize,
+    });
 
-      // Create session identifier for chunked upload
-      const sessionId = this.generateSessionId();
+    // Step 1: Start resumable upload session with Gemini
+    const response = await fetch(
+      `${GEMINI_BASE_URL}/upload/v1beta/files?key=${GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: {
+          "X-Goog-Upload-Protocol": "resumable",
+          "X-Goog-Upload-Command": "start",
+          "X-Goog-Upload-Header-Content-Length": fileSize.toString(),
+          "X-Goog-Upload-Header-Content-Type": mimeType,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          file: {
+            display_name: fileName,
+          },
+        }),
+      },
+    );
 
-      // Store session state - we'll upload to Gemini when we have complete chunks
-      const session: UploadSession = {
-        sessionId,
-        fileName,
-        mimeType,
-        fileSize,
-        uploadUrl: `lambda-session://${sessionId}`, // Internal session URL
-        buffer: [],
-        totalBytesReceived: 0,
-      };
-
-      this.sessions.set(sessionId, session);
-
-      console.log("✅ Gemini upload session created:", {
-        sessionId,
-        uploadUrl: session.uploadUrl,
-      });
-
-      return {
-        sessionId,
-        uploadUrl: session.uploadUrl,
-      };
-    } catch (error) {
-      console.error("❌ Failed to create Gemini upload session:", error);
-      throw new Error(`Failed to create upload session: ${error}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(
+        `Failed to initiate resumable upload: ${response.status} ${errorText}`,
+      );
     }
+
+    const uploadUrl = response.headers.get("X-Goog-Upload-URL");
+    if (!uploadUrl) {
+      throw new Error("No upload URL returned from Gemini");
+    }
+
+    // Create session
+    const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    this.sessions.set(sessionId, {
+      uploadUrl,
+      fileName,
+      mimeType,
+      fileSize,
+      uploadedBytes: 0,
+      geminiUploadedBytes: 0,
+      chunkBuffer: Buffer.alloc(0),
+    });
+
+    console.log("✅ Resumable upload session created:", { sessionId });
+    return { sessionId, uploadUrl };
   }
 
-  /**
-   * Process chunk data and buffer until we have 8MB chunks for Gemini
-   */
-  async processChunk(
+  async uploadChunk(
     sessionId: string,
-    chunkData: string,
+    chunkData: Buffer,
+    chunkOffset: number,
     isLastChunk: boolean,
-  ): Promise<{
-    bytesUploaded: number;
-    totalBytes: number;
-    percentage: number;
-    fileUri?: string;
-  }> {
+  ): Promise<{ success: boolean; fileUri?: string }> {
     const session = this.sessions.get(sessionId);
     if (!session) {
-      throw new Error(`Upload session not found: ${sessionId}`);
+      throw new Error(`Upload session ${sessionId} not found`);
     }
 
-    try {
-      // Convert base64 chunk data to Buffer
-      const chunkBuffer = Buffer.from(chunkData, "base64");
-      session.buffer.push(chunkBuffer);
-      session.totalBytesReceived += chunkBuffer.length;
+    console.log("📤 Processing 4MB chunk for buffering:", {
+      sessionId,
+      chunkSize: chunkData.length,
+      chunkOffset,
+      isLastChunk,
+      currentBufferSize: session.chunkBuffer.length,
+    });
 
-      console.log(`📦 Buffering chunk for session ${sessionId}:`, {
-        chunkSize: chunkBuffer.length,
-        totalBuffered: session.totalBytesReceived,
-        totalFileSize: session.fileSize,
+    // Add this chunk to our buffer
+    session.chunkBuffer = Buffer.concat([session.chunkBuffer, chunkData]);
+    session.uploadedBytes = chunkOffset + chunkData.length;
+
+    const GEMINI_CHUNK_SIZE = 8 * 1024 * 1024; // 8MB chunks for Gemini
+
+    // Check if we have enough data to send to Gemini (8MB) or if this is the last chunk
+    if (session.chunkBuffer.length >= GEMINI_CHUNK_SIZE || isLastChunk) {
+      let dataToSend: Buffer;
+      let remainingBuffer: Buffer;
+
+      if (isLastChunk) {
+        // Send all remaining data
+        dataToSend = session.chunkBuffer;
+        remainingBuffer = Buffer.alloc(0);
+      } else {
+        // Send exactly 8MB and keep the rest in buffer
+        dataToSend = session.chunkBuffer.subarray(0, GEMINI_CHUNK_SIZE);
+        remainingBuffer = session.chunkBuffer.subarray(GEMINI_CHUNK_SIZE);
+      }
+
+      console.log("🚀 Sending buffered chunk to Gemini:", {
+        dataSize: dataToSend.length,
+        remainingBufferSize: remainingBuffer.length,
+        geminiOffset: session.geminiUploadedBytes,
         isLastChunk,
       });
 
-      // Calculate current buffer size
-      const currentBufferSize = session.buffer.reduce(
-        (total, buf) => total + buf.length,
-        0,
-      );
+      const command = isLastChunk ? "upload, finalize" : "upload";
 
-      let fileUri: string | undefined;
+      const uploadResponse = await fetch(session.uploadUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Length": dataToSend.length.toString(),
+          "X-Goog-Upload-Offset": session.geminiUploadedBytes.toString(),
+          "X-Goog-Upload-Command": command,
+        },
+        body: dataToSend,
+      });
 
-      // Upload to Gemini when we have 8MB or it's the last chunk
-      if (currentBufferSize >= GEMINI_CHUNK_SIZE || isLastChunk) {
-        console.log("🚀 Uploading to Gemini:", {
-          bufferSize: currentBufferSize,
-          isLastChunk,
-          meetsMinSize: currentBufferSize >= GEMINI_CHUNK_SIZE,
-        });
-
-        // Combine all buffered chunks
-        const combinedBuffer = Buffer.concat(session.buffer);
-
-        // Upload combined chunk to Gemini
-        const result = await this.uploadToGemini(
-          session,
-          combinedBuffer,
-          isLastChunk,
+      if (!uploadResponse.ok) {
+        const errorText = await uploadResponse.text();
+        throw new Error(
+          `Failed to upload chunk: ${uploadResponse.status} ${errorText}`,
         );
+      }
 
-        if (result.fileUri) {
-          fileUri = result.fileUri;
-          session.geminiFile = {
-            name: session.fileName,
-            uri: result.fileUri,
-          };
+      // Update session
+      session.geminiUploadedBytes += dataToSend.length;
+      session.chunkBuffer = remainingBuffer;
+
+      if (isLastChunk) {
+        const result = (await uploadResponse.json()) as {
+          file?: { uri?: string };
+        };
+        const fileUri = result.file?.uri;
+
+        if (!fileUri) {
+          throw new Error("No file URI returned from Gemini upload");
         }
 
-        // Clear buffer after successful upload
-        session.buffer = [];
+        // Clean up session
+        this.sessions.delete(sessionId);
+
+        console.log("✅ File uploaded to Gemini successfully:", fileUri);
+        return { success: true, fileUri };
       }
 
-      const percentage = Math.round(
-        (session.totalBytesReceived / session.fileSize) * 100,
-      );
-
-      console.log(`📊 Upload progress for session ${sessionId}:`, {
-        bytesUploaded: session.totalBytesReceived,
-        totalBytes: session.fileSize,
-        percentage,
-        fileUri,
-      });
-
-      return {
-        bytesUploaded: session.totalBytesReceived,
-        totalBytes: session.fileSize,
-        percentage,
-        fileUri,
-      };
-    } catch (error) {
-      console.error(
-        `❌ Failed to process chunk for session ${sessionId}:`,
-        error,
-      );
-      throw new Error(`Failed to process chunk: ${error}`);
+      console.log("✅ 8MB chunk uploaded to Gemini successfully");
+    } else {
+      console.log("📦 Chunk buffered, waiting for more data to reach 8MB");
     }
+
+    return { success: true };
   }
 
-  /**
-   * Upload combined buffer to Gemini Files API
-   */
-  private async uploadToGemini(
-    session: UploadSession,
-    data: Buffer,
-    isLastChunk: boolean,
-  ): Promise<{ fileUri?: string }> {
-    try {
-      console.log("🔄 Uploading to Gemini Files API:", {
-        sessionId: session.sessionId,
-        dataSize: data.length,
-        isLastChunk,
-      });
-
-      // Convert Buffer to Blob for Gemini API
-      const blob = new Blob([data], { type: session.mimeType });
-
-      // Upload the file to Gemini using correct API
-      const uploadResult = await this.genAI.files.upload({
-        file: blob,
-        config: {
-          mimeType: session.mimeType,
-          displayName: session.fileName,
-        },
-      });
-
-      console.log("✅ Successfully uploaded to Gemini:", {
-        fileUri: uploadResult.uri,
-        name: uploadResult.name,
-      });
-
-      // Return file URI if this is the final chunk
-      if (isLastChunk) {
-        return { fileUri: uploadResult.uri };
-      }
-
-      return {};
-    } catch (error) {
-      console.error("❌ Failed to upload to Gemini Files API:", error);
-      throw new Error(`Gemini upload failed: ${error}`);
-    }
+  getSession(sessionId: string): ResumableSession | undefined {
+    return this.sessions.get(sessionId);
   }
 
-  /**
-   * Finalize upload and return file metadata
-   */
-  async finalizeUpload(sessionId: string): Promise<{
-    fileUri: string;
-    mimeType: string;
-    name: string;
-  }> {
-    const session = this.sessions.get(sessionId);
-    if (!session) {
-      throw new Error(`Upload session not found: ${sessionId}`);
-    }
-
-    if (!session.geminiFile) {
-      throw new Error(`No Gemini file found for session: ${sessionId}`);
-    }
-
-    try {
-      console.log("🏁 Finalizing upload for session:", sessionId);
-
-      const result = {
-        fileUri: session.geminiFile.uri,
-        mimeType: session.mimeType,
-        name: session.fileName,
-      };
-
-      // Clean up session
-      this.sessions.delete(sessionId);
-
-      console.log("✅ Upload finalized successfully:", result);
-      return result;
-    } catch (error) {
-      console.error(
-        `❌ Failed to finalize upload for session ${sessionId}:`,
-        error,
-      );
-      throw new Error(`Failed to finalize upload: ${error}`);
-    }
-  }
-
-  /**
-   * Clean up session (for error cases)
-   */
-  async cleanupSession(sessionId: string): Promise<void> {
-    const session = this.sessions.get(sessionId);
-    if (session) {
-      console.log(`🧹 Cleaning up session: ${sessionId}`);
-      this.sessions.delete(sessionId);
-    }
-  }
-
-  /**
-   * Generate unique session ID
-   */
-  private generateSessionId(): string {
-    return `gemini-upload-${Date.now()}-${Math.random().toString(36).substring(2)}`;
+  deleteSession(sessionId: string): void {
+    this.sessions.delete(sessionId);
   }
 }

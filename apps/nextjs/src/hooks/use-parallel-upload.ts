@@ -5,7 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { useTRPC } from "~/trpc/react";
-import { useGeminiStreamUpload } from "./use-gemini-stream-upload";
+import { useLambdaUpload } from "./use-lambda-upload";
 import { useMultipartUpload } from "./use-multipart-upload";
 
 interface ParallelUploadProgress {
@@ -70,21 +70,8 @@ export const useParallelUpload = ({
     },
   });
 
-  const geminiUpload = useGeminiStreamUpload({
-    onProgress: (geminiProgress) => {
-      const newProgress = {
-        ...progress,
-        gemini: geminiProgress,
-        overall: (progress.s3.percentage + geminiProgress.percentage) / 2,
-      };
-      setProgress(newProgress);
-      onProgress?.(newProgress);
-    },
-    onError: (error: Error) => {
-      console.error("Gemini upload failed:", error);
-      onError?.(error);
-    },
-  });
+  // Initialize Lambda upload for Gemini
+  const lambdaUpload = useLambdaUpload();
 
   const uploadFile = useCallback(
     async (
@@ -97,36 +84,58 @@ export const useParallelUpload = ({
     ): Promise<ParallelUploadResult> => {
       try {
         setIsUploading(true);
-        console.log("🚀 Starting parallel upload to S3 and Gemini...");
+        console.log(
+          "🚀 Starting parallel upload to S3 and Gemini via Lambda...",
+        );
 
         const durationSeconds = options?.durationSeconds;
         if (!durationSeconds) {
           throw new Error("Duration is required for video uploads");
         }
 
+        // Set initial total bytes for progress calculation
+        setProgress((prev) => ({
+          ...prev,
+          gemini: { ...prev.gemini, totalBytes: file.size },
+        }));
+
         // Start both uploads in parallel
-        console.log("🎯 Starting Promise.all for S3 and Gemini uploads");
-        const [s3Result, geminiResult] = await Promise.all([
+        console.log("🎯 Starting Promise.all for S3 and Lambda uploads");
+        const [s3Result, lambdaResult] = await Promise.all([
           // S3 upload (with duration for multipart uploads, but we'll disable auto master script in backend)
           s3Upload.uploadFile(file, {
             fileName: options?.fileName,
             prefix: options?.prefix,
             durationSeconds: durationSeconds,
           }),
-          // Gemini upload via streaming
-          geminiUpload.uploadToGemini(file),
+          // Gemini upload via Lambda
+          lambdaUpload.uploadFile(file),
         ]);
         console.log("🎉 Promise.all completed - both uploads finished!");
 
         console.log("✅ Both uploads completed successfully");
         console.log("📦 S3 Result:", s3Result);
-        console.log("🧠 Gemini Result:", geminiResult);
+        console.log("🧠 Lambda Result:", lambdaResult);
+
+        // Extract fileUri string from Lambda response object
+        if (!lambdaResult.success || !lambdaResult.fileUri) {
+          throw new Error(lambdaResult.error || "Lambda upload failed");
+        }
+
+        const fileUriString = lambdaResult.fileUri;
+
+        // Create Gemini result object to match expected interface
+        const geminiResult = {
+          fileUri: fileUriString,
+          mimeType: file.type,
+          name: file.name,
+        };
 
         // Now generate master script using Gemini URI
         console.log("🎬 Generating master script from Gemini URI...");
         const masterScriptResult = await generateMasterScript.mutateAsync({
-          fileUri: geminiResult.fileUri,
-          mimeType: geminiResult.mimeType,
+          fileUri: fileUriString,
+          mimeType: file.type,
           s3Url: s3Result.location,
           durationSeconds,
         });
@@ -154,7 +163,7 @@ export const useParallelUpload = ({
     },
     [
       s3Upload,
-      geminiUpload,
+      lambdaUpload,
       generateMasterScript,
       onProgress,
       onSuccess,
@@ -165,7 +174,7 @@ export const useParallelUpload = ({
   return {
     uploadFile,
     isUploading:
-      isUploading || s3Upload.isUploading || geminiUpload.isUploading,
+      isUploading || s3Upload.isUploading || lambdaUpload.isUploading,
     progress,
     s3Progress: progress.s3,
     geminiProgress: progress.gemini,

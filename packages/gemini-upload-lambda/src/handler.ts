@@ -1,235 +1,277 @@
-import type { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-
-import { GeminiUploadClient } from "./gemini-client";
-import {
-  FinalizeUploadRequestSchema,
-  InitiateUploadRequestSchema,
-  UploadChunkRequestSchema,
+import type {
+  InitiateUploadRequest,
+  InitiateUploadResponse,
+  LambdaFunctionUrlEvent,
+  LambdaFunctionUrlResponse,
+  UploadChunkRequest,
+  UploadChunkResponse,
 } from "./types";
+import { GeminiUploadClient } from "./gemini-client";
 
-// Environment variables
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const geminiClient = new GeminiUploadClient();
 
-if (!GEMINI_API_KEY) {
-  throw new Error("GEMINI_API_KEY environment variable is required");
-}
-
-// Initialize Gemini client
-const geminiClient = new GeminiUploadClient(GEMINI_API_KEY);
-
-/**
- * AWS Lambda handler for Gemini file upload operations (Function URL)
- */
 export const handler = async (
-  event: APIGatewayProxyEvent,
-): Promise<APIGatewayProxyResult> => {
-  console.log("🚀 Lambda invocation:", {
-    httpMethod: event.httpMethod,
-    queryStringParameters: event.queryStringParameters,
-    headers: event.headers,
-    body: event.body ? "present" : "empty",
+  event: LambdaFunctionUrlEvent,
+): Promise<LambdaFunctionUrlResponse> => {
+  console.log("🔥 Lambda handler started:", {
+    method: event.requestContext.http.method,
+    path: event.requestContext.http.path,
   });
 
-  // Set CORS headers
-  const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization",
-    "Content-Type": "application/json",
-  };
+  // AWS Function URL handles CORS automatically - no manual headers needed
+
+  // Handle preflight requests (AWS handles this but return empty response just in case)
+  if (event.requestContext.http.method === "OPTIONS") {
+    return {
+      statusCode: 200,
+      body: "",
+    };
+  }
 
   try {
-    // Handle preflight OPTIONS request
-    if (event.httpMethod === "OPTIONS") {
+    const path = event.requestContext.http.path;
+    const method = event.requestContext.http.method;
+
+    // Route to appropriate handler
+    if (method === "POST" && path === "/initiate") {
+      return await handleInitiateUpload(event);
+    } else if (method === "POST" && path === "/upload-chunk") {
+      return await handleUploadChunk(event);
+    } else {
       return {
-        statusCode: 200,
-        headers: corsHeaders,
-        body: "",
+        statusCode: 404,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ error: "Not found" }),
       };
     }
-
-    // Parse request body
-    const body = event.body ? JSON.parse(event.body) : {};
-
-    // Get action from query parameter or request body
-    const action =
-      event.queryStringParameters?.action ||
-      body.action ||
-      body.path?.replace("/", "");
-
-    if (!action) {
-      return {
-        statusCode: 400,
-        headers: corsHeaders,
-        body: JSON.stringify({
-          error: "Missing action",
-          message:
-            "Specify action in query param (?action=initiate-upload) or request body",
-        }),
-      };
-    }
-
-    // Route requests based on action
-    if (action === "initiate-upload" && event.httpMethod === "POST") {
-      return await handleInitiateUpload(body, corsHeaders);
-    }
-
-    if (action === "upload-chunk" && event.httpMethod === "POST") {
-      return await handleUploadChunk(body, corsHeaders);
-    }
-
-    if (action === "finalize-upload" && event.httpMethod === "POST") {
-      return await handleFinalizeUpload(body, corsHeaders);
-    }
-
-    // Route not found
-    return {
-      statusCode: 404,
-      headers: corsHeaders,
-      body: JSON.stringify({
-        error: "Action not found",
-        action: action,
-        supportedActions: [
-          "initiate-upload",
-          "upload-chunk",
-          "finalize-upload",
-        ],
-      }),
-    };
   } catch (error) {
     console.error("❌ Lambda handler error:", error);
-
     return {
       statusCode: 500,
-      headers: corsHeaders,
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        error: "Internal server error",
-        message: error instanceof Error ? error.message : "Unknown error",
+        error: error instanceof Error ? error.message : "Unknown error",
       }),
     };
   }
 };
 
-/**
- * Handle upload session initiation
- */
 async function handleInitiateUpload(
-  body: unknown,
-  headers: Record<string, string>,
-): Promise<APIGatewayProxyResult> {
-  try {
-    console.log("📥 Initiating upload:", body);
-
-    // Validate request
-    const request = InitiateUploadRequestSchema.parse(body);
-
-    // Create upload session
-    const response = await geminiClient.createUploadSession(
-      request.fileName,
-      request.mimeType,
-      request.fileSize,
-    );
-
-    console.log("✅ Upload session created:", response);
-
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify(response),
-    };
-  } catch (error) {
-    console.error("❌ Failed to initiate upload:", error);
-
+  event: LambdaFunctionUrlEvent,
+): Promise<LambdaFunctionUrlResponse> {
+  if (!event.body) {
     return {
       statusCode: 400,
-      headers,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ error: "No body provided" }),
+    };
+  }
+
+  const request: InitiateUploadRequest = JSON.parse(event.body);
+
+  if (!request.fileName || !request.mimeType || !request.fileSize) {
+    return {
+      statusCode: 400,
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        error: "Failed to initiate upload",
-        message: error instanceof Error ? error.message : "Unknown error",
+        error: "Missing required fields: fileName, mimeType, fileSize",
       }),
     };
   }
+
+  console.log("🚀 Initiating resumable upload:", request);
+
+  const { sessionId, uploadUrl } = await geminiClient.initiateResumableUpload(
+    request.fileName,
+    request.mimeType,
+    request.fileSize,
+  );
+
+  const response: InitiateUploadResponse = {
+    success: true,
+    sessionId,
+    uploadUrl,
+    message: "Resumable upload session created",
+  };
+
+  return {
+    statusCode: 200,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(response),
+  };
 }
 
-/**
- * Handle chunk upload
- */
 async function handleUploadChunk(
-  body: unknown,
-  headers: Record<string, string>,
-): Promise<APIGatewayProxyResult> {
-  try {
-    console.log("📤 Processing chunk upload");
-
-    // Validate request
-    const request = UploadChunkRequestSchema.parse(body);
-
-    // Process chunk
-    const response = await geminiClient.processChunk(
-      request.sessionId,
-      request.chunkData,
-      request.isLastChunk,
-    );
-
-    console.log("✅ Chunk processed:", {
-      sessionId: request.sessionId,
-      bytesUploaded: response.bytesUploaded,
-      percentage: response.percentage,
-      hasFileUri: !!response.fileUri,
-    });
-
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify(response),
-    };
-  } catch (error) {
-    console.error("❌ Failed to process chunk:", error);
-
+  event: LambdaFunctionUrlEvent,
+): Promise<LambdaFunctionUrlResponse> {
+  if (!event.body) {
     return {
       statusCode: 400,
-      headers,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ error: "No body provided" }),
+    };
+  }
+
+  // Parse multipart form data for chunk upload
+  const contentType = event.headers["content-type"] || "";
+  if (!contentType.includes("multipart/form-data")) {
+    return {
+      statusCode: 400,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ error: "Expected multipart/form-data" }),
+    };
+  }
+
+  // Extract boundary from content-type header
+  const boundaryMatch = contentType.match(/boundary=([^;]+)/);
+  if (!boundaryMatch) {
+    return {
+      statusCode: 400,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ error: "No boundary found in content-type" }),
+    };
+  }
+
+  const boundary = boundaryMatch[1]!;
+  const body = event.isBase64Encoded
+    ? Buffer.from(event.body!, "base64")
+    : Buffer.from(event.body!, "utf-8");
+
+  // Parse multipart data
+  const parts = parseMultipartData(body, boundary);
+
+  const sessionIdPart = parts.find((part) => part.name === "sessionId");
+  const chunkOffsetPart = parts.find((part) => part.name === "chunkOffset");
+  const isLastChunkPart = parts.find((part) => part.name === "isLastChunk");
+  const chunkPart = parts.find((part) => part.name === "chunk");
+
+  if (!sessionIdPart || !chunkOffsetPart || !isLastChunkPart || !chunkPart) {
+    return {
+      statusCode: 400,
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        error: "Failed to process chunk",
-        message: error instanceof Error ? error.message : "Unknown error",
+        error:
+          "Missing required fields: sessionId, chunkOffset, isLastChunk, chunk",
       }),
     };
   }
+
+  const sessionId = sessionIdPart.data.toString("utf-8").trim();
+  const chunkOffset = parseInt(chunkOffsetPart.data.toString("utf-8").trim());
+  const isLastChunk = isLastChunkPart.data.toString("utf-8").trim() === "true";
+  const chunkData = chunkPart.data;
+
+  console.log("📤 Processing chunk upload:", {
+    sessionId,
+    chunkOffset,
+    chunkSize: chunkData.length,
+    isLastChunk,
+  });
+
+  const result = await geminiClient.uploadChunk(
+    sessionId,
+    chunkData,
+    chunkOffset,
+    isLastChunk,
+  );
+
+  const session = geminiClient.getSession(sessionId);
+
+  const response: UploadChunkResponse = {
+    success: result.success,
+    fileUri: result.fileUri,
+    uploadedBytes: session?.uploadedBytes,
+    message: isLastChunk
+      ? "File upload completed"
+      : "Chunk uploaded successfully",
+  };
+
+  return {
+    statusCode: 200,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(response),
+  };
 }
 
-/**
- * Handle upload finalization
- */
-async function handleFinalizeUpload(
-  body: unknown,
-  headers: Record<string, string>,
-): Promise<APIGatewayProxyResult> {
-  try {
-    console.log("🏁 Finalizing upload:", body);
+// Simple multipart parser
+interface MultipartPart {
+  name: string;
+  filename?: string;
+  contentType?: string;
+  data: Buffer;
+}
 
-    // Validate request
-    const request = FinalizeUploadRequestSchema.parse(body);
+function parseMultipartData(body: Buffer, boundary: string): MultipartPart[] {
+  const parts: MultipartPart[] = [];
+  const boundaryBuffer = Buffer.from(`--${boundary}`);
+  const endBoundaryBuffer = Buffer.from(`--${boundary}--`);
 
-    // Finalize upload
-    const response = await geminiClient.finalizeUpload(request.sessionId);
+  let start = 0;
+  let end = body.indexOf(boundaryBuffer, start);
 
-    console.log("✅ Upload finalized:", response);
+  while (end !== -1) {
+    if (start > 0) {
+      // Extract part between boundaries
+      const partData = body.slice(start, end);
+      const part = parsePart(partData);
+      if (part) {
+        parts.push(part);
+      }
+    }
 
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify(response),
-    };
-  } catch (error) {
-    console.error("❌ Failed to finalize upload:", error);
+    start = end + boundaryBuffer.length;
 
-    return {
-      statusCode: 400,
-      headers,
-      body: JSON.stringify({
-        error: "Failed to finalize upload",
-        message: error instanceof Error ? error.message : "Unknown error",
-      }),
-    };
+    // Check if this is the end boundary
+    if (body.slice(start, start + 2).equals(Buffer.from("--"))) {
+      break;
+    }
+
+    end = body.indexOf(boundaryBuffer, start);
   }
+
+  return parts;
+}
+
+function parsePart(partData: Buffer): MultipartPart | null {
+  // Find the empty line that separates headers from body
+  const headerEndIndex = partData.indexOf("\r\n\r\n");
+  if (headerEndIndex === -1) {
+    return null;
+  }
+
+  const headersBuffer = partData.slice(0, headerEndIndex);
+  let bodyBuffer = partData.slice(headerEndIndex + 4);
+
+  const headers = headersBuffer.toString("utf-8");
+
+  // Parse Content-Disposition header
+  const dispositionMatch = headers.match(
+    /Content-Disposition: form-data; name="([^"]+)"(?:; filename="([^"]+)")?/,
+  );
+  if (!dispositionMatch) {
+    return null;
+  }
+
+  const name = dispositionMatch[1]!;
+  const filename = dispositionMatch[2];
+
+  // Parse Content-Type header if present
+  const contentTypeMatch = headers.match(/Content-Type: ([^\r\n]+)/);
+  const contentType = contentTypeMatch ? contentTypeMatch[1] : undefined;
+
+  // Remove trailing \r\n if present (multipart boundary cleanup)
+  if (
+    bodyBuffer.length >= 2 &&
+    bodyBuffer[bodyBuffer.length - 2] === 0x0d &&
+    bodyBuffer[bodyBuffer.length - 1] === 0x0a
+  ) {
+    bodyBuffer = bodyBuffer.slice(0, -2);
+  }
+
+  return {
+    name,
+    filename,
+    contentType,
+    data: bodyBuffer,
+  };
 }

@@ -17,6 +17,7 @@ import { createTRPCRouter, publicProcedure } from "../trpc";
 // Input schemas
 const GenerateViralStitchInputSchema = z.object({
   demoVideoId: z.string().cuid("Valid demo video ID is required"),
+
   contentGuide: z
     .string()
     .max(500, "Content guide must be 500 characters or less")
@@ -191,12 +192,14 @@ export const viralStitchRouter = createTRPCRouter({
         // Step 4: Generate condensed demo using Gemini
         console.log("🧠 Generating condensed demo...");
         const geminiService = getGeminiService();
-        const demoResult = await geminiService.condenseDemoFromMasterScript({
-          demoVideoId: input.demoVideoId,
-          exactDuration: optimalDuration,
-          numSegments: numSegments,
-          contentGuide: input.contentGuide,
-        });
+        const demoResult = await geminiService.condenseDemoFromMasterScriptData(
+          {
+            demoVideoId: input.demoVideoId,
+            exactDuration: optimalDuration,
+            numSegments: numSegments,
+            contentGuide: input.contentGuide,
+          },
+        );
 
         console.log(
           `✅ Demo condensed: ${demoResult.segments.length} segments`,

@@ -126,7 +126,7 @@ async function main() {
     console.log("");
 
     // Condense demo from master script
-    const result = await geminiService.condenseDemoFromMasterScript({
+    const result = await geminiService.condenseDemoFromMasterScriptData({
       demoVideoId: TEST_CONFIG.demoVideoId,
       exactDuration: TEST_CONFIG.exactDuration,
       numSegments: TEST_CONFIG.numSegments,

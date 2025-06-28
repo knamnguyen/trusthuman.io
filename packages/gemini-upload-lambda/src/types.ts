@@ -1,91 +1,49 @@
 import { z } from "zod";
 
-// Request/Response Schemas
-export const InitiateUploadRequestSchema = z.object({
-  fileName: z.string().min(1, "File name is required"),
-  mimeType: z.string().min(1, "MIME type is required"),
-  fileSize: z.number().positive("File size must be positive"),
-});
-
-export const UploadChunkRequestSchema = z.object({
-  sessionId: z.string().min(1, "Session ID is required"),
-  chunkData: z.string().min(1, "Chunk data is required"), // base64 encoded
-  isLastChunk: z.boolean().default(false),
-});
-
-export const FinalizeUploadRequestSchema = z.object({
-  sessionId: z.string().min(1, "Session ID is required"),
-});
-
-// Response Schemas
-export const InitiateUploadResponseSchema = z.object({
-  sessionId: z.string(),
-  uploadUrl: z.string(),
-});
-
-export const UploadChunkResponseSchema = z.object({
-  sessionId: z.string(),
-  bytesUploaded: z.number(),
-  totalBytes: z.number(),
-  percentage: z.number(),
-  fileUri: z.string().optional(), // Only present on last chunk
-});
-
-export const FinalizeUploadResponseSchema = z.object({
-  fileUri: z.string(),
-  mimeType: z.string(),
-  name: z.string(),
-});
-
-export const ErrorResponseSchema = z.object({
-  error: z.string(),
-  message: z.string(),
-  statusCode: z.number(),
-});
-
-// Type exports
-export type InitiateUploadRequest = z.infer<typeof InitiateUploadRequestSchema>;
-export type UploadChunkRequest = z.infer<typeof UploadChunkRequestSchema>;
-export type FinalizeUploadRequest = z.infer<typeof FinalizeUploadRequestSchema>;
-
-export type InitiateUploadResponse = z.infer<
-  typeof InitiateUploadResponseSchema
->;
-export type UploadChunkResponse = z.infer<typeof UploadChunkResponseSchema>;
-export type FinalizeUploadResponse = z.infer<
-  typeof FinalizeUploadResponseSchema
->;
-export type ErrorResponse = z.infer<typeof ErrorResponseSchema>;
-
-// Internal Types
-export interface UploadSession {
-  sessionId: string;
+// Request to initiate resumable upload
+export interface InitiateUploadRequest {
   fileName: string;
   mimeType: string;
   fileSize: number;
-  uploadUrl: string;
-  buffer: Buffer[];
-  totalBytesReceived: number;
-  geminiFile?: {
-    name: string;
-    uri: string;
-  };
 }
 
-export interface ChunkBuffer {
-  data: Buffer;
+// Response from the /initiate endpoint
+export interface InitiateUploadResponse {
+  success: boolean;
+  sessionId?: string;
+  uploadUrl?: string;
+  message?: string;
+}
+
+// Request to upload a chunk
+export interface UploadChunkRequest {
+  sessionId: string;
+  chunkOffset: number;
   isLastChunk: boolean;
+  // chunk data comes as form data
 }
 
-// Lambda Event Types
-export interface APIGatewayProxyEventV2 {
+// Response from the /upload-chunk endpoint
+export interface UploadChunkResponse {
+  success: boolean;
+  fileUri?: string; // Only present on last chunk
+  uploadedBytes?: number;
+  message?: string;
+}
+
+// Lambda event types
+export interface LambdaFunctionUrlEvent {
   version: string;
   routeKey: string;
   rawPath: string;
   rawQueryString: string;
   headers: Record<string, string>;
+  body: string | null;
+  isBase64Encoded: boolean;
   requestContext: {
-    requestId: string;
+    accountId: string;
+    apiId: string;
+    domainName: string;
     http: {
       method: string;
       path: string;
@@ -93,14 +51,16 @@ export interface APIGatewayProxyEventV2 {
       sourceIp: string;
       userAgent: string;
     };
+    requestId: string;
+    time: string;
+    timeEpoch: number;
   };
-  body?: string;
-  isBase64Encoded: boolean;
 }
 
-export interface APIGatewayProxyResultV2 {
+export interface LambdaFunctionUrlResponse {
   statusCode: number;
   headers?: Record<string, string>;
-  body?: string;
-  isBase64Encoded?: boolean;
+  body: string;
 }
+
+export type { z };

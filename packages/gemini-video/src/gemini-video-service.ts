@@ -353,6 +353,16 @@ export class GeminiVideoService {
       );
       console.log("🔗 File URI:", fileUri);
 
+      // Extract file name from URI for polling file status
+      // URI format: https://generativelanguage.googleapis.com/v1beta/files/FILE_NAME
+      const fileName = fileUri.split("/").pop();
+      if (!fileName) {
+        throw new Error("Invalid file URI format");
+      }
+
+      console.log("⏳ Waiting for file to be active before processing...");
+      await this.waitForFileActive(fileName);
+
       // Create specific prompt for master script generation
       const masterScriptPrompt = `
         You have already processed this video and have access to its full duration.

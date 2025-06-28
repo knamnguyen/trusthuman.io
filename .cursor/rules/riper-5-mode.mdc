@@ -48,7 +48,7 @@ Required Process:
 1. Present clear pros/cons comparison of top 2-3 approaches
 2. Identify decision criteria (performance, cost, complexity, timeline)
 3. Recommend preferred approach with rationale
-4. Wait for explicit user approval before proceeding
+4. Only proceed to PLAN mode after explicit approval
 
 Uncertainty Indicators:
 - User asks "what do you think?" about approaches
