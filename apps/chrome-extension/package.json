@@ -1,0 +1,53 @@
+{
+  "name": "@sassy/chrome-extension",
+  "version": "1.4.0",
+  "description": "EngageKit Chrome Extension - Automatically comment on LinkedIn posts using AI",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "pnpm with-env vite build --config vite.config.chrome.ts",
+    "build:chrome": "pnpm with-env vite build --config vite.config.chrome.ts",
+    "build:firefox": "pnpm with-env vite build --config vite.config.firefox.ts",
+    "dev": "pnpm with-env nodemon --config nodemon.chrome.json",
+    "dev:chrome": "pnpm with-env nodemon --config nodemon.chrome.json",
+    "dev:firefox": "pnpm with-env nodemon --config nodemon.firefox.json",
+    "clean": "git clean -xdf .cache .turbo dist_chrome dist_firefox node_modules",
+    "with-env": "dotenv -e ../../.env --"
+  },
+  "dependencies": {
+    "@clerk/chrome-extension": "^2.5.2",
+    "@clerk/clerk-react": "^5.32.3",
+    "@google/genai": "^1.5.1",
+    "react": "catalog:react19",
+    "react-dom": "catalog:react19",
+    "webextension-polyfill": "^0.12.0"
+  },
+  "devDependencies": {
+    "@crxjs/vite-plugin": "^2.0.0-beta.32",
+    "@tailwindcss/vite": "^4.0.17",
+    "@types/chrome": "^0.0.323",
+    "@types/node": "^22.10.10",
+    "@types/react": "catalog:react19",
+    "@types/react-dom": "catalog:react19",
+    "@types/webextension-polyfill": "^0.12.3",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "@vitejs/plugin-react": "^4.5.0",
+    "dotenv-cli": "^8.0.0",
+    "esbuild": "catalog:",
+    "eslint": "catalog:",
+    "eslint-config-prettier": "^10.1.2",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react": "^7.37.4",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "fs-extra": "^11.3.0",
+    "nodemon": "^3.1.9",
+    "tailwindcss": "catalog:",
+    "ts-node": "^10.9.2",
+    "typescript": "catalog:",
+    "vite": "^6.3.5",
+    "vite-tsconfig-paths": "^5.1.4"
+  }
+}

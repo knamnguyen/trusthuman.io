@@ -22,8 +22,6 @@ import {
 import { Progress } from "@sassy/ui/progress";
 import { VIDEO_CONSTRAINTS } from "@sassy/ui/schema-validators";
 
-import { useParallelUpload } from "~/hooks/use-parallel-upload";
-
 export default function HomePage() {
   const { isSignedIn } = useAuth();
   const signInButtonRef = useRef<HTMLButtonElement>(null);
@@ -34,36 +32,6 @@ export default function HomePage() {
   >("idle");
 
   const router = useRouter();
-
-  // Parallel upload hook (S3 + Gemini)
-  const { uploadFile: uploadFileParallel, isUploading: isParallelUploading } =
-    useParallelUpload({
-      onProgress: (progress) => {
-        setUploadProgress(progress.overall);
-      },
-      onSuccess: (result) => {
-        console.log("Parallel upload successful:", result);
-        setUploadStatus("completed");
-
-        if (result.demoVideo?.id) {
-          toast.success(
-            "Video uploaded successfully! Redirecting to generation page...",
-          );
-          // Redirect to generation page after short delay
-          setTimeout(() => {
-            router.push(`/generation/${result.demoVideo.id}`);
-          }, 1500);
-        } else {
-          toast.error("Upload completed but demo video ID not found");
-          setUploadStatus("failed");
-        }
-      },
-      onError: (error) => {
-        console.error("Parallel upload error:", error);
-        toast.error(`Upload failed: ${error.message}`);
-        setUploadStatus("failed");
-      },
-    });
 
   const dropzoneOptions = {
     accept: {
@@ -90,12 +58,6 @@ export default function HomePage() {
       if (duration <= 0) {
         throw new Error("Unable to determine video duration");
       }
-
-      // Upload to S3 with duration for database save
-      await uploadFileParallel(file, {
-        prefix: "uploads",
-        durationSeconds: Math.round(duration),
-      });
     } catch (error) {
       console.error("Upload error:", error);
       toast.error(
@@ -261,7 +223,7 @@ export default function HomePage() {
                     <>
                       <Button
                         onClick={handleUpload}
-                        disabled={isParallelUploading}
+                        disabled={true}
                         className="w-full"
                         size="lg"
                       >

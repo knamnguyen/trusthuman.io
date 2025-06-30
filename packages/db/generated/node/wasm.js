@@ -20,12 +20,12 @@ exports.Prisma = Prisma
 exports.$Enums = {}
 
 /**
- * Prisma Client JS version: 6.8.2
- * Query Engine version: 2060c79ba17c6bb9f5823312b6f6b7f4a845738e
+ * Prisma Client JS version: 6.10.1
+ * Query Engine version: 9b628578b3b7cae625e8c927178f15a170e74a9c
  */
 Prisma.prismaVersion = {
-  client: "6.8.2",
-  engine: "2060c79ba17c6bb9f5823312b6f6b7f4a845738e"
+  client: "6.10.1",
+  engine: "9b628578b3b7cae625e8c927178f15a170e74a9c"
 }
 
 Prisma.PrismaClientKnownRequestError = () => {
@@ -120,14 +120,6 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   Serializable: 'Serializable'
 });
 
-exports.Prisma.PostScalarFieldEnum = {
-  id: 'id',
-  title: 'title',
-  content: 'content',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-};
-
 exports.Prisma.UserScalarFieldEnum = {
   id: 'id',
   firstName: 'firstName',
@@ -143,56 +135,6 @@ exports.Prisma.UserScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
-exports.Prisma.DemoVideoScalarFieldEnum = {
-  id: 'id',
-  s3Url: 's3Url',
-  durationSeconds: 'durationSeconds',
-  productInfo: 'productInfo',
-  colorPalette: 'colorPalette',
-  masterScript: 'masterScript',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-};
-
-exports.Prisma.ShortDemoScalarFieldEnum = {
-  id: 'id',
-  demoVideoId: 'demoVideoId',
-  durationSeconds: 'durationSeconds',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
-  demoCutUrl: 'demoCutUrl',
-  segments: 'segments'
-};
-
-exports.Prisma.HookViralVideoScalarFieldEnum = {
-  id: 'id',
-  webpageUrl: 'webpageUrl',
-  s3Url: 's3Url',
-  hookEndTimestamp: 'hookEndTimestamp',
-  hookCutConfidence: 'hookCutConfidence',
-  hookCutUrl: 'hookCutUrl',
-  hookInfo: 'hookInfo',
-  title: 'title',
-  description: 'description',
-  views: 'views',
-  comments: 'comments',
-  likes: 'likes',
-  durationSeconds: 'durationSeconds',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
-  colorPalette: 'colorPalette'
-};
-
-exports.Prisma.ViralStitchScalarFieldEnum = {
-  id: 'id',
-  shortDemoId: 'shortDemoId',
-  hookViralVideoId: 'hookViralVideoId',
-  stitchedVideoUrl: 'stitchedVideoUrl',
-  durationSeconds: 'durationSeconds',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-};
-
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -200,10 +142,6 @@ exports.Prisma.SortOrder = {
 
 exports.Prisma.NullableJsonNullValueInput = {
   DbNull: Prisma.DbNull,
-  JsonNull: Prisma.JsonNull
-};
-
-exports.Prisma.JsonNullValueInput = {
   JsonNull: Prisma.JsonNull
 };
 
@@ -231,12 +169,7 @@ exports.AccessType = exports.$Enums.AccessType = {
 };
 
 exports.Prisma.ModelName = {
-  Post: 'Post',
-  User: 'User',
-  DemoVideo: 'DemoVideo',
-  ShortDemo: 'ShortDemo',
-  HookViralVideo: 'HookViralVideo',
-  ViralStitch: 'ViralStitch'
+  User: 'User'
 };
 
 /**

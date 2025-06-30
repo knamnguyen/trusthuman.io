@@ -7,7 +7,7 @@
     },
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".cache/tsbuildinfo.json", "dist/**"]
+      "outputs": [".cache/tsbuildinfo.json", "dist/**", "dist_chrome/**"]
     },
     "dev": {
       "dependsOn": ["^dev"],
@@ -59,12 +59,10 @@
     "STRIPE_WEBHOOK_SECRET",
     "NEXTJS_URL",
     "PORT",
-    "REMOTION_AWS_ACCESS_KEY_ID",
-    "REMOTION_AWS_SECRET_ACCESS_KEY",
-    "REMOTION_AWS_REGION",
-    "REMOTION_LAMBDA_FUNCTION_NAME",
     "GEMINI_API_KEY",
-    "UPLOAD_SERVER_URL"
+    "UPLOAD_SERVER_URL",
+    "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
+    "CLERK_SECRET_KEY"
   ],
   "globalPassThroughEnv": [
     "NODE_ENV",

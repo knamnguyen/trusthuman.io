@@ -13,21 +13,11 @@
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
-    "with-env": "dotenv -e ../../.env --",
-    "test:remotion-gemini": "pnpm with-env bun scripts/test-remotion-gemini.ts",
-    "debug:router": "pnpm with-env bun scripts/debug-router.ts",
-    "test:lambda-direct": "pnpm with-env bun scripts/test-lambda-direct.ts",
-    "test:server-upload": "pnpm with-env bun scripts/test-server-side-upload.ts",
-    "test:gemini-streaming": "pnpm with-env bun scripts/test-gemini-streaming.ts"
+    "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.12.5",
-    "@remotion/lambda": "4.0.314",
     "@sassy/db": "workspace:*",
-    "@sassy/gemini-video": "workspace:*",
-    "@sassy/langchain": "workspace:*",
-    "@sassy/remotion": "workspace:*",
-    "@sassy/s3": "workspace:*",
     "@sassy/stripe": "workspace:*",
     "@sassy/validators": "workspace:*",
     "@trpc/server": "catalog:",

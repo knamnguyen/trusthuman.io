@@ -26,7 +26,7 @@ const {
   Public,
   getRuntime,
   createParam,
-} = require('./runtime/wasm.js')
+} = require('./runtime/wasm-engine-edge.js')
 
 
 const Prisma = {}
@@ -35,12 +35,12 @@ exports.Prisma = Prisma
 exports.$Enums = {}
 
 /**
- * Prisma Client JS version: 6.8.2
- * Query Engine version: 2060c79ba17c6bb9f5823312b6f6b7f4a845738e
+ * Prisma Client JS version: 6.10.1
+ * Query Engine version: 9b628578b3b7cae625e8c927178f15a170e74a9c
  */
 Prisma.prismaVersion = {
-  client: "6.8.2",
-  engine: "2060c79ba17c6bb9f5823312b6f6b7f4a845738e"
+  client: "6.10.1",
+  engine: "9b628578b3b7cae625e8c927178f15a170e74a9c"
 }
 
 Prisma.PrismaClientKnownRequestError = PrismaClientKnownRequestError;
@@ -92,14 +92,6 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   Serializable: 'Serializable'
 });
 
-exports.Prisma.PostScalarFieldEnum = {
-  id: 'id',
-  title: 'title',
-  content: 'content',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-};
-
 exports.Prisma.UserScalarFieldEnum = {
   id: 'id',
   firstName: 'firstName',
@@ -115,56 +107,6 @@ exports.Prisma.UserScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
-exports.Prisma.DemoVideoScalarFieldEnum = {
-  id: 'id',
-  s3Url: 's3Url',
-  durationSeconds: 'durationSeconds',
-  productInfo: 'productInfo',
-  colorPalette: 'colorPalette',
-  masterScript: 'masterScript',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-};
-
-exports.Prisma.ShortDemoScalarFieldEnum = {
-  id: 'id',
-  demoVideoId: 'demoVideoId',
-  durationSeconds: 'durationSeconds',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
-  demoCutUrl: 'demoCutUrl',
-  segments: 'segments'
-};
-
-exports.Prisma.HookViralVideoScalarFieldEnum = {
-  id: 'id',
-  webpageUrl: 'webpageUrl',
-  s3Url: 's3Url',
-  hookEndTimestamp: 'hookEndTimestamp',
-  hookCutConfidence: 'hookCutConfidence',
-  hookCutUrl: 'hookCutUrl',
-  hookInfo: 'hookInfo',
-  title: 'title',
-  description: 'description',
-  views: 'views',
-  comments: 'comments',
-  likes: 'likes',
-  durationSeconds: 'durationSeconds',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
-  colorPalette: 'colorPalette'
-};
-
-exports.Prisma.ViralStitchScalarFieldEnum = {
-  id: 'id',
-  shortDemoId: 'shortDemoId',
-  hookViralVideoId: 'hookViralVideoId',
-  stitchedVideoUrl: 'stitchedVideoUrl',
-  durationSeconds: 'durationSeconds',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-};
-
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -172,10 +114,6 @@ exports.Prisma.SortOrder = {
 
 exports.Prisma.NullableJsonNullValueInput = {
   DbNull: Prisma.DbNull,
-  JsonNull: Prisma.JsonNull
-};
-
-exports.Prisma.JsonNullValueInput = {
   JsonNull: Prisma.JsonNull
 };
 
@@ -203,12 +141,7 @@ exports.AccessType = exports.$Enums.AccessType = {
 };
 
 exports.Prisma.ModelName = {
-  Post: 'Post',
-  User: 'User',
-  DemoVideo: 'DemoVideo',
-  ShortDemo: 'ShortDemo',
-  HookViralVideo: 'HookViralVideo',
-  ViralStitch: 'ViralStitch'
+  User: 'User'
 };
 /**
  * Create the Client
@@ -221,7 +154,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/generated/edge",
+      "value": "/Users/knamnguyen/Documents/0-Programming/engagekit-turborepo/packages/db/generated/edge",
       "fromEnvVar": null
     },
     "config": {
@@ -238,15 +171,15 @@ const config = {
       "driverAdapters",
       "postgresqlExtensions"
     ],
-    "sourceFilePath": "/Users/knamnguyen/Documents/0-Programming/viralcut/packages/db/prisma/schema.prisma",
+    "sourceFilePath": "/Users/knamnguyen/Documents/0-Programming/engagekit-turborepo/packages/db/prisma/schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
     "rootEnvPath": null
   },
   "relativePath": "../../prisma",
-  "clientVersion": "6.8.2",
-  "engineVersion": "2060c79ba17c6bb9f5823312b6f6b7f4a845738e",
+  "clientVersion": "6.10.1",
+  "engineVersion": "9b628578b3b7cae625e8c927178f15a170e74a9c",
   "datasourceNames": [
     "db"
   ],
@@ -260,13 +193,13 @@ const config = {
       }
     }
   },
-  "inlineSchema": "generator client {\n  provider        = \"prisma-client-js\"\n  output          = \"../generated/node\"\n  previewFeatures = [\"postgresqlExtensions\"]\n  binaryTargets   = [\"native\", \"rhel-openssl-3.0.x\", \"linux-arm64-openssl-3.0.x\", \"linux-musl-arm64-openssl-3.0.x\"]\n}\n\ngenerator edge {\n  provider        = \"prisma-client-js\"\n  output          = \"../generated/edge\"\n  previewFeatures = [\"driverAdapters\", \"postgresqlExtensions\"]\n  binaryTargets   = [\"native\"]\n}\n\ngenerator zod {\n  provider = \"zod-prisma-types\"\n  output   = \"../generated/zod-prisma-validators\"\n}\n\ndatasource db {\n  provider   = \"postgresql\"\n  url        = env(\"DATABASE_URL\")\n  directUrl  = env(\"DIRECT_URL\")\n  extensions = [uuid_ossp(map: \"uuid-ossp\", schema: \"extensions\"), vector]\n}\n\nmodel Post {\n  id        String   @id @default(uuid())\n  title     String   @db.VarChar(256)\n  content   String\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n}\n\nmodel User {\n  id                   String     @id\n  firstName            String?\n  lastName             String?\n  username             String?    @unique\n  primaryEmailAddress  String?    @unique\n  imageUrl             String?\n  clerkUserProperties  Json?\n  stripeCustomerId     String?    @unique\n  accessType           AccessType @default(FREE)\n  stripeUserProperties Json?\n  createdAt            DateTime   @default(now())\n  updatedAt            DateTime   @updatedAt\n}\n\nmodel DemoVideo {\n  id              String      @id @default(cuid())\n  s3Url           String\n  durationSeconds Int\n  productInfo     String      @default(\"\")\n  colorPalette    Json        @default(\"[]\")\n  masterScript    Json        @default(\"[]\")\n  createdAt       DateTime    @default(now())\n  updatedAt       DateTime    @updatedAt\n  shortDemos      ShortDemo[]\n\n  @@index([s3Url])\n}\n\nmodel ShortDemo {\n  id              String        @id @default(cuid())\n  demoVideoId     String\n  durationSeconds Int\n  createdAt       DateTime      @default(now())\n  updatedAt       DateTime      @updatedAt\n  demoCutUrl      String\n  segments        Json\n  demoVideo       DemoVideo     @relation(fields: [demoVideoId], references: [id], onDelete: Cascade)\n  viralStitches   ViralStitch[]\n\n  @@index([demoVideoId])\n  @@index([demoCutUrl])\n}\n\nmodel HookViralVideo {\n  id                    String                 @id @default(cuid())\n  webpageUrl            String                 @unique\n  s3Url                 String\n  hookEndTimestamp      String\n  hookCutConfidence     String?\n  hookCutUrl            String?\n  hookInfo              String?\n  title                 String\n  description           String?\n  viralInfoEmbedding    Unsupported(\"vector\")?\n  views                 Int                    @default(0)\n  comments              Int                    @default(0)\n  likes                 Int                    @default(0)\n  durationSeconds       Int\n  createdAt             DateTime               @default(now())\n  updatedAt             DateTime               @updatedAt\n  colorPaletteEmbedding Unsupported(\"vector\")?\n  colorPalette          Json?\n  viralStitches         ViralStitch[]\n\n  @@index([webpageUrl])\n}\n\nmodel ViralStitch {\n  id               String   @id @default(cuid())\n  shortDemoId      String\n  hookViralVideoId String\n  stitchedVideoUrl String\n  durationSeconds  Int\n  createdAt        DateTime @default(now())\n  updatedAt        DateTime @updatedAt\n\n  // Relationships\n  shortDemo      ShortDemo      @relation(fields: [shortDemoId], references: [id], onDelete: Cascade)\n  hookViralVideo HookViralVideo @relation(fields: [hookViralVideoId], references: [id], onDelete: Cascade)\n\n  @@unique([shortDemoId, hookViralVideoId])\n  @@index([shortDemoId])\n  @@index([hookViralVideoId])\n  @@index([stitchedVideoUrl])\n}\n\nenum AccessType {\n  TRIAL\n  FREE\n  LIFETIME\n  MONTHLY\n  YEARLY\n}\n",
-  "inlineSchemaHash": "ecd669a95908df7db08c548d17e6e9d236e6da1cc5bf0a9a5d6f292f9ad37583",
+  "inlineSchema": "generator client {\n  provider        = \"prisma-client-js\"\n  output          = \"../generated/node\"\n  previewFeatures = [\"postgresqlExtensions\"]\n  binaryTargets   = [\"native\", \"rhel-openssl-3.0.x\", \"linux-arm64-openssl-3.0.x\", \"linux-musl-arm64-openssl-3.0.x\"]\n}\n\ngenerator edge {\n  provider        = \"prisma-client-js\"\n  output          = \"../generated/edge\"\n  previewFeatures = [\"driverAdapters\", \"postgresqlExtensions\"]\n  binaryTargets   = [\"native\"]\n}\n\ngenerator zod {\n  provider = \"zod-prisma-types\"\n  output   = \"../generated/zod-prisma-validators\"\n}\n\ndatasource db {\n  provider   = \"postgresql\"\n  url        = env(\"DATABASE_URL\")\n  directUrl  = env(\"DIRECT_URL\")\n  extensions = [uuid_ossp(map: \"uuid-ossp\", schema: \"extensions\"), vector]\n}\n\nmodel User {\n  id                   String     @id\n  firstName            String?\n  lastName             String?\n  username             String?    @unique\n  primaryEmailAddress  String     @unique\n  imageUrl             String?\n  clerkUserProperties  Json?\n  stripeCustomerId     String?    @unique\n  accessType           AccessType @default(FREE)\n  stripeUserProperties Json?\n  createdAt            DateTime   @default(now())\n  updatedAt            DateTime   @updatedAt\n}\n\nenum AccessType {\n  TRIAL\n  FREE\n  LIFETIME\n  MONTHLY\n  YEARLY\n}\n",
+  "inlineSchemaHash": "6326e0b1a9082f5eadffc6e3f235110b19fabd1aa460e1580b14e184bf113e9d",
   "copyEngine": true
 }
 config.dirname = '/'
 
-config.runtimeDataModel = JSON.parse("{\"models\":{\"Post\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"title\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"content\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"User\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"firstName\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"lastName\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"username\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"primaryEmailAddress\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"imageUrl\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"clerkUserProperties\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"stripeCustomerId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"accessType\",\"kind\":\"enum\",\"type\":\"AccessType\"},{\"name\":\"stripeUserProperties\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"DemoVideo\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"s3Url\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"durationSeconds\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"productInfo\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"colorPalette\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"masterScript\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"shortDemos\",\"kind\":\"object\",\"type\":\"ShortDemo\",\"relationName\":\"DemoVideoToShortDemo\"}],\"dbName\":null},\"ShortDemo\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"demoVideoId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"durationSeconds\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"demoCutUrl\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"segments\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"demoVideo\",\"kind\":\"object\",\"type\":\"DemoVideo\",\"relationName\":\"DemoVideoToShortDemo\"},{\"name\":\"viralStitches\",\"kind\":\"object\",\"type\":\"ViralStitch\",\"relationName\":\"ShortDemoToViralStitch\"}],\"dbName\":null},\"HookViralVideo\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"webpageUrl\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"s3Url\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"hookEndTimestamp\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"hookCutConfidence\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"hookCutUrl\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"hookInfo\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"title\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"description\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"views\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"comments\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"likes\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"durationSeconds\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"colorPalette\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"viralStitches\",\"kind\":\"object\",\"type\":\"ViralStitch\",\"relationName\":\"HookViralVideoToViralStitch\"}],\"dbName\":null},\"ViralStitch\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"shortDemoId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"hookViralVideoId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"stitchedVideoUrl\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"durationSeconds\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"shortDemo\",\"kind\":\"object\",\"type\":\"ShortDemo\",\"relationName\":\"ShortDemoToViralStitch\"},{\"name\":\"hookViralVideo\",\"kind\":\"object\",\"type\":\"HookViralVideo\",\"relationName\":\"HookViralVideoToViralStitch\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
+config.runtimeDataModel = JSON.parse("{\"models\":{\"User\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"firstName\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"lastName\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"username\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"primaryEmailAddress\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"imageUrl\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"clerkUserProperties\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"stripeCustomerId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"accessType\",\"kind\":\"enum\",\"type\":\"AccessType\"},{\"name\":\"stripeUserProperties\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
 defineDmmfProperty(exports.Prisma, config.runtimeDataModel)
 config.engineWasm = {
   getRuntime: async () => require('./query_engine_bg.js'),
