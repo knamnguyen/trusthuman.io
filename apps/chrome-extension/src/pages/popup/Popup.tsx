@@ -495,6 +495,38 @@ export default function Popup() {
                 ⏭️ Posts skipped (author filter)
               </div>
             </div>
+            <div className="rounded-lg border border-purple-200 bg-purple-50 p-3 text-center">
+              <div className="text-lg font-bold text-purple-700">
+                {recentAuthorsDetected}
+              </div>
+              <div className="text-xs leading-tight text-purple-600">
+                👥 Recent authors detected
+              </div>
+            </div>
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-center">
+              <div className="text-lg font-bold text-emerald-700">
+                {postsSkippedAlreadyCommented}
+              </div>
+              <div className="text-xs leading-tight text-emerald-600">
+                🔒 Posts skipped (already commented)
+              </div>
+            </div>
+            <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-center">
+              <div className="text-lg font-bold text-yellow-700">
+                {duplicatePostsDetected}
+              </div>
+              <div className="text-xs leading-tight text-yellow-600">
+                🔍 Duplicate posts detected
+              </div>
+            </div>
+            <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-center">
+              <div className="text-lg font-bold text-red-700">
+                {postsSkippedTimeFilter}
+              </div>
+              <div className="text-xs leading-tight text-red-600">
+                ⏰ Posts skipped (time filter)
+              </div>
+            </div>
           </div>
         </div>
 
