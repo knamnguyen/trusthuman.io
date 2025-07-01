@@ -1,9 +1,7 @@
 import { createTRPCRouter } from "../trpc";
-import { postRouter } from "./post";
 import { stripeRouter } from "./stripe";
 
 export const appRouter = createTRPCRouter({
-  post: postRouter,
   stripe: stripeRouter,
 });
 
