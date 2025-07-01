@@ -52,7 +52,8 @@ export default function Popup() {
   const [lastError, setLastError] = useState<any>(null);
 
   // Simple auth state tracking
-  const [hasEverSignedIn, setHasEverSignedIn] = useState(false);
+  const [hasEverSignedIn, setHasEverSignedIn] = useState<boolean>(false);
+  const [isSigningOut, setIsSigningOut] = useState<boolean>(false);
 
   // Load simple auth state on mount
   useEffect(() => {
@@ -825,15 +826,43 @@ export default function Popup() {
                 </div>
               </div>
               <button
-                onClick={() => {
-                  // Clear auth state and sign out
-                  chrome.storage.local.set({ hasEverSignedIn: false });
-                  setHasEverSignedIn(false);
-                  clerk.signOut();
+                onClick={async () => {
+                  try {
+                    // Set signing out state immediately
+                    setIsSigningOut(true);
+
+                    // Clear local auth state immediately (show sign-in UI right away)
+                    chrome.storage.local.set({ hasEverSignedIn: false });
+                    setHasEverSignedIn(false);
+
+                    // Small delay to ensure local state is processed
+                    setTimeout(async () => {
+                      try {
+                        // Attempt to sign out from Clerk to sync with web app
+                        await clerk.signOut();
+                        console.log("Successfully signed out from Clerk");
+                      } catch (clerkError) {
+                        // If Clerk sign-out fails, log but don't break the UI
+                        console.warn(
+                          "Clerk sign-out failed, but local state cleared:",
+                          clerkError,
+                        );
+                      } finally {
+                        setIsSigningOut(false);
+                      }
+                    }, 150);
+                  } catch (error) {
+                    // Fallback: ensure user sees sign-in UI even if everything fails
+                    console.error("Sign-out process failed:", error);
+                    chrome.storage.local.set({ hasEverSignedIn: false });
+                    setHasEverSignedIn(false);
+                    setIsSigningOut(false);
+                  }
                 }}
-                className="rounded-md bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-200"
+                disabled={isSigningOut}
+                className="rounded-md bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Sign Out
+                {isSigningOut ? "Signing Out..." : "Sign Out"}
               </button>
             </div>
           </div>

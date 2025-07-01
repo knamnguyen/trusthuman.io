@@ -25,7 +25,9 @@ const getSyncHost = () => {
 };
 
 const SYNC_HOST = getSyncHost();
+const EXTENSION_URL = chrome.runtime.getURL(".");
 console.log("Clerk sync host configured:", SYNC_HOST);
+console.log("Extension URL configured:", EXTENSION_URL);
 
 if (!publishableKey) {
   throw new Error(
@@ -35,7 +37,13 @@ if (!publishableKey) {
 
 export const ClerkProvider = ({ children }: ClerkProviderProps) => {
   return (
-    <BaseClerkProvider publishableKey={publishableKey} syncHost={SYNC_HOST}>
+    <BaseClerkProvider
+      publishableKey={publishableKey}
+      syncHost={SYNC_HOST}
+      afterSignOutUrl={`${EXTENSION_URL}src/pages/popup/index.html`}
+      signInFallbackRedirectUrl={`${EXTENSION_URL}src/pages/popup/index.html`}
+      signUpFallbackRedirectUrl={`${EXTENSION_URL}src/pages/popup/index.html`}
+    >
       {children}
     </BaseClerkProvider>
   );
