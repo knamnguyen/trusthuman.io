@@ -7,6 +7,12 @@ import {
   useUser,
 } from "@clerk/chrome-extension";
 
+import Auth from "./components/auth";
+import ErrorDisplay from "./components/error-display";
+import RunningStatusBanner from "./components/running-status-banner";
+import SettingsForm from "./components/settings-form";
+import StatisticsDashboard from "./components/statistics-dashboard";
+
 // Default comment style guide
 const DEFAULT_STYLE_GUIDE = `You are about to write a LinkedIn comment. Imagine you are a young professional or ambitious student (Gen Z), scrolling through your LinkedIn feed during a quick break – maybe between classes, on your commute, or while grabbing a coffee. You're sharp, interested in tech, business, career growth, personal development, social impact, product, marketing, or entrepreneurship. You appreciate authentic, slightly edgy, and insightful content.
 
@@ -313,17 +319,6 @@ export default function Popup() {
     chrome.storage.local.set({ apiKey: DEFAULT_API_KEY });
   };
 
-  const handleSignInClick = () => {
-    const syncHostUrl = getSyncHostUrl();
-    const authUrl = `${syncHostUrl}/extension-auth`;
-    chrome.tabs.create({ url: authUrl });
-  };
-
-  const handleRefreshAuth = () => {
-    // Force a refresh of the authentication state
-    window.location.reload();
-  };
-
   const handleStart = async () => {
     if (!styleGuide.trim()) {
       setStatus("Please enter a style guide for your comments.");
@@ -392,65 +387,7 @@ export default function Popup() {
   };
 
   // If user has never signed in, show sign-in UI (skip loading entirely)
-  if (!hasEverSignedIn) {
-    return (
-      <div className="h-[800px] w-[500px] overflow-y-auto bg-white">
-        <div className="flex h-full items-center justify-center">
-          <div className="p-6 text-center">
-            <div className="mb-6">
-              <h2 className="mb-3 text-2xl font-bold text-gray-800">
-                EngageKit
-              </h2>
-              <p className="text-sm text-gray-600">
-                Automatically comment on LinkedIn posts using AI
-              </p>
-            </div>
-
-            <div className="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-4">
-              <h3 className="mb-2 text-lg font-semibold text-gray-800">
-                🔐 Authentication Required
-              </h3>
-              <p className="mb-4 text-sm text-gray-600">
-                Sign in to your EngageKit account to start using the extension
-              </p>
-
-              <div className="space-y-3">
-                <button
-                  onClick={handleSignInClick}
-                  className="w-full rounded-md bg-blue-600 px-4 py-3 font-medium text-white transition-colors hover:bg-blue-700"
-                >
-                  Sign In to EngageKit
-                </button>
-
-                <button
-                  onClick={handleRefreshAuth}
-                  className="w-full rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200"
-                >
-                  Already signed in? Refresh
-                </button>
-              </div>
-
-              <p className="mt-3 text-xs text-gray-500">
-                This will open the EngageKit web app for secure authentication
-              </p>
-            </div>
-
-            <div className="text-xs text-gray-500">
-              <p className="mb-1 font-medium text-gray-600">
-                ✨ Features available after sign in:
-              </p>
-              <ul className="text-left">
-                <li>• AI-powered LinkedIn commenting</li>
-                <li>• Customizable comment styles</li>
-                <li>• Usage analytics and tracking</li>
-                <li>• Smart duplicate detection</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  if (!hasEverSignedIn) return <Auth />;
 
   // If user has signed in before, show the authenticated UI immediately
   return (
@@ -470,273 +407,45 @@ export default function Popup() {
             LinkedIn posts using AI
           </p>
 
-          <div className="mt-3 grid grid-cols-3 gap-2">
-            <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-center">
-              <div className="text-lg font-bold text-green-700">
-                {totalAllTimeComments}
-              </div>
-              <div className="text-xs leading-tight text-green-600">
-                🎉 Total comments all-time
-              </div>
-            </div>
-            <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-center">
-              <div className="text-lg font-bold text-blue-700">
-                {totalTodayComments}
-              </div>
-              <div className="text-xs leading-tight text-blue-600">
-                📅 Comments posted today
-              </div>
-            </div>
-            <div className="rounded-lg border border-orange-200 bg-orange-50 p-3 text-center">
-              <div className="text-lg font-bold text-orange-700">
-                {postsSkippedDuplicate}
-              </div>
-              <div className="text-xs leading-tight text-orange-600">
-                ⏭️ Posts skipped (author filter)
-              </div>
-            </div>
-            <div className="rounded-lg border border-purple-200 bg-purple-50 p-3 text-center">
-              <div className="text-lg font-bold text-purple-700">
-                {recentAuthorsDetected}
-              </div>
-              <div className="text-xs leading-tight text-purple-600">
-                👥 Recent authors detected
-              </div>
-            </div>
-            <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-center">
-              <div className="text-lg font-bold text-emerald-700">
-                {postsSkippedAlreadyCommented}
-              </div>
-              <div className="text-xs leading-tight text-emerald-600">
-                🔒 Posts skipped (already commented)
-              </div>
-            </div>
-            <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-center">
-              <div className="text-lg font-bold text-yellow-700">
-                {duplicatePostsDetected}
-              </div>
-              <div className="text-xs leading-tight text-yellow-600">
-                🔍 Duplicate posts detected
-              </div>
-            </div>
-            <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-center">
-              <div className="text-lg font-bold text-red-700">
-                {postsSkippedTimeFilter}
-              </div>
-              <div className="text-xs leading-tight text-red-600">
-                ⏰ Posts skipped (time filter)
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {isRunning && (
-          <div className="mb-4 rounded-md border border-blue-200 bg-blue-50 p-4">
-            <div className="mb-2 flex items-center justify-between">
-              <span className="text-sm font-medium text-blue-800">
-                🚀 LinkedIn commenting running
-              </span>
-              <div className="flex items-center space-x-3">
-                <span className="text-sm font-medium text-blue-600">
-                  📝 {commentCount}/{maxPosts}
-                </span>
-              </div>
-            </div>
-            <div className="mb-2 text-xs text-blue-700">{status}</div>
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-blue-600">
-                This session: {commentCount}
-              </span>
-              <span className="text-blue-600">Target: {maxPosts} posts</span>
-            </div>
-          </div>
-        )}
-
-        <div className="mb-4">
-          <label className="mb-2 block text-sm font-medium text-gray-700">
-            Google AI Studio API Key:
-          </label>
-          <input
-            type="password"
-            value={apiKey}
-            onChange={(e) => handleApiKeyChange(e.target.value)}
-            placeholder="Enter your Google AI Studio API key"
-            className="w-full rounded-md border border-gray-300 p-3 text-sm focus:border-transparent focus:ring-2 focus:ring-blue-500"
-            disabled={isRunning}
+          <StatisticsDashboard
+            totalAllTimeComments={totalAllTimeComments}
+            totalTodayComments={totalTodayComments}
+            postsSkippedDuplicate={postsSkippedDuplicate}
+            recentAuthorsDetected={recentAuthorsDetected}
+            postsSkippedAlreadyCommented={postsSkippedAlreadyCommented}
+            duplicatePostsDetected={duplicatePostsDetected}
+            postsSkippedTimeFilter={postsSkippedTimeFilter}
           />
-          <div className="mt-2 flex items-center justify-between">
-            <p className="text-xs text-gray-500">
-              Get your API key from{" "}
-              <a
-                href="https://aistudio.google.com/app/apikey"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-500 hover:underline"
-              >
-                Google AI Studio
-              </a>
-            </p>
-            <button
-              onClick={handleSetDefaultApiKey}
-              disabled={isRunning}
-              className="rounded-md bg-gray-100 px-3 py-1 text-xs text-gray-700 transition-colors hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Use Default API Key
-            </button>
-          </div>
         </div>
 
-        <div className="mb-4">
-          <label className="mb-2 block text-sm font-medium text-gray-700">
-            Comment Style Guide:
-          </label>
-          <textarea
-            value={styleGuide}
-            onChange={(e) => handleStyleGuideChange(e.target.value)}
-            placeholder="Describe your commenting style... e.g., 'Professional but friendly, ask thoughtful questions, share relevant insights, keep responses under 50 words, add value to the conversation'"
-            className="h-20 w-full resize-none rounded-md border border-gray-300 p-3 text-sm focus:border-transparent focus:ring-2 focus:ring-blue-500"
-            disabled={isRunning}
-          />
-          <div className="mt-2 flex justify-end">
-            <button
-              onClick={handleSetDefaultStyleGuide}
-              disabled={isRunning}
-              className="rounded-md bg-gray-100 px-3 py-1 text-xs text-gray-700 transition-colors hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Use Default Style
-            </button>
-          </div>
-        </div>
+        <RunningStatusBanner
+          isRunning={isRunning}
+          status={status}
+          commentCount={commentCount}
+          maxPosts={maxPosts}
+        />
 
-        <div className="mb-4">
-          <label className="mb-2 block text-sm font-medium text-gray-700">
-            Feed Scroll Duration:
-          </label>
-          <div className="flex items-center space-x-2">
-            <input
-              type="range"
-              min="5"
-              max="30"
-              value={scrollDuration}
-              onChange={(e) =>
-                handleScrollDurationChange(parseInt(e.target.value))
-              }
-              disabled={isRunning}
-              className="flex-1"
-            />
-            <span className="w-16 text-sm font-medium">{scrollDuration}s</span>
-          </div>
-          <p className="mt-1 text-xs text-gray-500">
-            Time to scroll the feed to load more posts
-          </p>
-        </div>
-
-        <div className="mb-4">
-          <label className="mb-2 block text-sm font-medium text-gray-700">
-            Max Posts to Comment On:
-          </label>
-          <div className="flex items-center space-x-2">
-            <input
-              type="range"
-              min="5"
-              max="50"
-              value={maxPosts}
-              onChange={(e) => handleMaxPostsChange(parseInt(e.target.value))}
-              disabled={isRunning}
-              className="flex-1"
-            />
-            <span className="w-16 text-sm font-medium">{maxPosts}</span>
-          </div>
-          <p className="mt-1 text-xs text-gray-500">
-            Maximum number of posts to comment on in one session
-          </p>
-        </div>
-
-        <div className="mb-4">
-          <label className="mb-2 block text-sm font-medium text-gray-700">
-            Seconds Between Each Comment:
-          </label>
-          <div className="flex items-center space-x-2">
-            <input
-              type="range"
-              min="5"
-              max="60"
-              value={commentDelay}
-              onChange={(e) =>
-                handleCommentDelayChange(parseInt(e.target.value))
-              }
-              disabled={isRunning}
-              className="flex-1"
-            />
-            <span className="w-16 text-sm font-medium">{commentDelay}s</span>
-          </div>
-          <p className="mt-1 text-xs text-gray-500">
-            Delay between processing each post to avoid being flagged
-          </p>
-        </div>
-
-        <div className="mb-4">
-          <label className="mb-2 block text-sm font-medium text-gray-700">
-            Duplicate Check Window:
-          </label>
-          <div className="flex items-center space-x-2">
-            <input
-              type="range"
-              min="1"
-              max="72"
-              value={duplicateWindow}
-              onChange={(e) =>
-                handleDuplicateWindowChange(parseInt(e.target.value))
-              }
-              disabled={isRunning}
-              className="flex-1"
-            />
-            <span className="w-16 text-sm font-medium">{duplicateWindow}h</span>
-          </div>
-          <p className="mt-1 text-xs text-gray-500">
-            Skip authors you've commented on within this time window
-          </p>
-        </div>
-
-        <div className="mb-4">
-          <label className="mb-2 block text-sm font-medium text-gray-700">
-            Post Age Filter:
-          </label>
-          <div className="mb-2 flex items-center space-x-3">
-            <input
-              type="checkbox"
-              id="timeFilterEnabled"
-              checked={timeFilterEnabled}
-              onChange={(e) => handleTimeFilterEnabledChange(e.target.checked)}
-              disabled={isRunning}
-              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-            />
-            <label
-              htmlFor="timeFilterEnabled"
-              className="text-sm text-gray-700"
-            >
-              Only comment on posts made within:
-            </label>
-            <div className="flex flex-1 items-center space-x-2">
-              <input
-                type="range"
-                min="1"
-                max="24"
-                value={minPostAge}
-                onChange={(e) =>
-                  handleMinPostAgeChange(parseInt(e.target.value))
-                }
-                disabled={isRunning || !timeFilterEnabled}
-                className="flex-1"
-              />
-              <span className="w-12 text-sm font-medium">{minPostAge}h</span>
-            </div>
-          </div>
-          <p className="text-xs text-gray-500">
-            When enabled, skips posts older than the specified time and promoted
-            posts
-          </p>
-        </div>
+        <SettingsForm
+          apiKey={apiKey}
+          styleGuide={styleGuide}
+          scrollDuration={scrollDuration}
+          commentDelay={commentDelay}
+          maxPosts={maxPosts}
+          duplicateWindow={duplicateWindow}
+          timeFilterEnabled={timeFilterEnabled}
+          minPostAge={minPostAge}
+          isRunning={isRunning}
+          onApiKeyChange={handleApiKeyChange}
+          onStyleGuideChange={handleStyleGuideChange}
+          onScrollDurationChange={handleScrollDurationChange}
+          onCommentDelayChange={handleCommentDelayChange}
+          onMaxPostsChange={handleMaxPostsChange}
+          onDuplicateWindowChange={handleDuplicateWindowChange}
+          onTimeFilterEnabledChange={handleTimeFilterEnabledChange}
+          onMinPostAgeChange={handleMinPostAgeChange}
+          onSetDefaultApiKey={handleSetDefaultApiKey}
+          onSetDefaultStyleGuide={handleSetDefaultStyleGuide}
+        />
 
         <div className="mb-4">
           {isRunning ? (
@@ -763,140 +472,68 @@ export default function Popup() {
           </div>
         )}
 
-        {lastError && (
-          <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-3">
-            <div className="mb-2 flex items-center justify-between">
-              <span className="text-sm font-medium text-red-800">
-                🐛 Debug Info
-              </span>
-              <button
-                onClick={() => setLastError(null)}
-                className="text-xs text-red-600 hover:text-red-800"
-              >
-                ✕ Clear
-              </button>
-            </div>
-            <div className="space-y-1 text-xs text-red-700">
-              <div>
-                <strong>Message:</strong> {lastError.message}
+        <ErrorDisplay
+          lastError={lastError}
+          onClearError={() => setLastError(null)}
+        />
+
+        {/* User Profile Section */}
+        <div className="mt-4 border-t border-gray-200 pt-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
+                <span className="text-sm font-medium text-blue-600">
+                  {user?.firstName?.charAt(0)?.toUpperCase() || "U"}
+                </span>
               </div>
-              {lastError.status && (
-                <div>
-                  <strong>Status:</strong> {lastError.status} -{" "}
-                  {lastError.statusText}
-                </div>
-              )}
-              {lastError.apiKey && (
-                <div>
-                  <strong>API Key:</strong> {lastError.apiKey}
-                </div>
-              )}
-              {lastError.styleGuide && (
-                <div>
-                  <strong>Style Guide:</strong> {lastError.styleGuide}
-                </div>
-              )}
-              {lastError.postContentLength !== undefined && (
-                <div>
-                  <strong>Post Length:</strong> {lastError.postContentLength}{" "}
-                  chars
-                </div>
-              )}
-              {lastError.body && (
-                <div className="mt-2">
-                  <strong>Response:</strong>
-                  <pre className="mt-1 max-h-20 overflow-x-auto rounded bg-red-100 p-2 text-xs">
-                    {typeof lastError.body === "string"
-                      ? lastError.body
-                      : JSON.stringify(lastError.body, null, 2)}
-                  </pre>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        <div className="border-t border-gray-200 pt-4">
-          <h3 className="mb-2 text-sm font-medium text-gray-700">
-            Settings Summary:
-          </h3>
-          <ul className="mb-3 space-y-1 text-xs text-gray-600">
-            <li>• Feed scroll: {scrollDuration}s</li>
-            <li>• Max posts: {maxPosts}</li>
-            <li>• Comment delay: {commentDelay}s between posts</li>
-            <li>• Duplicate window: {duplicateWindow}h</li>
-            <li>
-              • Time filter:{" "}
-              {timeFilterEnabled ? `${minPostAge}h max age` : "disabled"}
-            </li>
-          </ul>
-          <div className="text-xs text-gray-500">
-            <p className="mb-1 font-medium text-gray-600">
-              ⚠️ Use responsibly:
-            </p>
-            <p className="mb-2">
-              Monitor posted comments and ensure they add value to conversations
-            </p>
-          </div>
-
-          {/* User Profile Section */}
-          <div className="mt-4 border-t border-gray-200 pt-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
-                  <span className="text-sm font-medium text-blue-600">
-                    {user?.firstName?.charAt(0)?.toUpperCase() || "U"}
-                  </span>
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">
-                    {user?.firstName || "User"} {user?.lastName || ""}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {user?.primaryEmailAddress?.emailAddress || "Loading..."}
-                  </p>
-                </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900">
+                  {user?.firstName || "User"} {user?.lastName || ""}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {user?.primaryEmailAddress?.emailAddress || "Loading..."}
+                </p>
               </div>
-              <button
-                onClick={async () => {
-                  try {
-                    // Set signing out state immediately
-                    setIsSigningOut(true);
-
-                    // Clear local auth state immediately (show sign-in UI right away)
-                    chrome.storage.local.set({ hasEverSignedIn: false });
-                    setHasEverSignedIn(false);
-
-                    // Small delay to ensure local state is processed
-                    setTimeout(async () => {
-                      try {
-                        // Attempt to sign out from Clerk to sync with web app
-                        await clerk.signOut();
-                        console.log("Successfully signed out from Clerk");
-                      } catch (clerkError) {
-                        // If Clerk sign-out fails, log but don't break the UI
-                        console.warn(
-                          "Clerk sign-out failed, but local state cleared:",
-                          clerkError,
-                        );
-                      } finally {
-                        setIsSigningOut(false);
-                      }
-                    }, 150);
-                  } catch (error) {
-                    // Fallback: ensure user sees sign-in UI even if everything fails
-                    console.error("Sign-out process failed:", error);
-                    chrome.storage.local.set({ hasEverSignedIn: false });
-                    setHasEverSignedIn(false);
-                    setIsSigningOut(false);
-                  }
-                }}
-                disabled={isSigningOut}
-                className="rounded-md bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {isSigningOut ? "Signing Out..." : "Sign Out"}
-              </button>
             </div>
+            <button
+              onClick={async () => {
+                try {
+                  // Set signing out state immediately
+                  setIsSigningOut(true);
+
+                  // Clear local auth state immediately (show sign-in UI right away)
+                  chrome.storage.local.set({ hasEverSignedIn: false });
+                  setHasEverSignedIn(false);
+
+                  // Small delay to ensure local state is processed
+                  setTimeout(async () => {
+                    try {
+                      // Attempt to sign out from Clerk to sync with web app
+                      await clerk.signOut();
+                      console.log("Successfully signed out from Clerk");
+                    } catch (clerkError) {
+                      // If Clerk sign-out fails, log but don't break the UI
+                      console.warn(
+                        "Clerk sign-out failed, but local state cleared:",
+                        clerkError,
+                      );
+                    } finally {
+                      setIsSigningOut(false);
+                    }
+                  }, 150);
+                } catch (error) {
+                  // Fallback: ensure user sees sign-in UI even if everything fails
+                  console.error("Sign-out process failed:", error);
+                  chrome.storage.local.set({ hasEverSignedIn: false });
+                  setHasEverSignedIn(false);
+                  setIsSigningOut(false);
+                }
+              }}
+              disabled={isSigningOut}
+              className="rounded-md bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isSigningOut ? "Signing Out..." : "Sign Out"}
+            </button>
           </div>
         </div>
       </div>
