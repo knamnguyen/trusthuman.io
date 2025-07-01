@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   SignedIn,
   SignedOut,
@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@sassy/ui/card";
 export default function ExtensionAuthPage() {
   const { isSignedIn, user } = useUser();
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const signInButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (isSignedIn) {
@@ -25,6 +26,17 @@ export default function ExtensionAuthPage() {
       const timer = setTimeout(() => {
         window.close();
       }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isSignedIn]);
+
+  // Auto-trigger sign-in modal when page loads
+  useEffect(() => {
+    if (!isSignedIn) {
+      const timer = setTimeout(() => {
+        signInButtonRef.current?.click();
+      }, 100);
 
       return () => clearTimeout(timer);
     }
@@ -54,11 +66,18 @@ export default function ExtensionAuthPage() {
               </p>
 
               <div className="space-y-3">
+                {/* Hidden SignInButton for auto-triggering */}
                 <SignInButton mode="modal">
-                  <Button size="lg" className="w-full">
-                    Sign In
-                  </Button>
+                  <button ref={signInButtonRef} className="hidden" />
                 </SignInButton>
+
+                <p className="text-sm font-medium text-blue-600">
+                  Sign-in modal should appear automatically...
+                </p>
+
+                <div className="text-sm text-gray-500">
+                  <p>Or create a new account:</p>
+                </div>
 
                 <SignUpButton mode="modal">
                   <Button size="lg" variant="outline" className="w-full">
