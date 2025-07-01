@@ -396,18 +396,18 @@ export default function Popup() {
       <div className="p-6">
         <div className="mb-6">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-gray-800">EngageKit hoho</h2>
+            <h2 className="text-2xl font-bold text-gray-800">EngageKit</h2>
             <div className="flex items-center space-x-2">
               <div className="h-2 w-2 rounded-full bg-green-500"></div>
               <span className="text-sm text-green-600">Connected</span>
             </div>
           </div>
           <p className="text-sm text-gray-600">
-            Welcome {user?.firstName || "User"}! Automatically comment on
-            LinkedIn posts using AI
+            Hi boss {user?.firstName || "User"}! Let your AI intern engage on
+            LinkedIn for you
           </p>
 
-          <div className="mb-4">
+          <div className="mt-4 mb-4">
             {isRunning ? (
               <button
                 onClick={handleStop}
