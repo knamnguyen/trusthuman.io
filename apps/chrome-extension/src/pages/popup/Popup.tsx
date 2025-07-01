@@ -396,7 +396,7 @@ export default function Popup() {
       <div className="p-6">
         <div className="mb-6">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-gray-800">EngageKit</h2>
+            <h2 className="text-2xl font-bold text-gray-800">EngageKit hoho</h2>
             <div className="flex items-center space-x-2">
               <div className="h-2 w-2 rounded-full bg-green-500"></div>
               <span className="text-sm text-green-600">Connected</span>
@@ -406,6 +406,25 @@ export default function Popup() {
             Welcome {user?.firstName || "User"}! Automatically comment on
             LinkedIn posts using AI
           </p>
+
+          <div className="mb-4">
+            {isRunning ? (
+              <button
+                onClick={handleStop}
+                className="w-full rounded-md bg-red-600 px-4 py-3 font-medium text-white transition-colors hover:bg-red-700"
+              >
+                Stop Auto Commenting
+              </button>
+            ) : (
+              <button
+                onClick={handleStart}
+                className="w-full rounded-md bg-blue-600 px-4 py-3 font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+                disabled={!styleGuide.trim() || !apiKey.trim()}
+              >
+                Start Auto Commenting
+              </button>
+            )}
+          </div>
 
           <StatisticsDashboard
             totalAllTimeComments={totalAllTimeComments}
@@ -446,25 +465,6 @@ export default function Popup() {
           onSetDefaultApiKey={handleSetDefaultApiKey}
           onSetDefaultStyleGuide={handleSetDefaultStyleGuide}
         />
-
-        <div className="mb-4">
-          {isRunning ? (
-            <button
-              onClick={handleStop}
-              className="w-full rounded-md bg-red-600 px-4 py-3 font-medium text-white transition-colors hover:bg-red-700"
-            >
-              Stop Auto Commenting
-            </button>
-          ) : (
-            <button
-              onClick={handleStart}
-              className="w-full rounded-md bg-blue-600 px-4 py-3 font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
-              disabled={!styleGuide.trim() || !apiKey.trim()}
-            >
-              Start Auto Commenting
-            </button>
-          )}
-        </div>
 
         {status && !isRunning && (
           <div className="mb-4 rounded-md border-l-4 border-blue-500 bg-gray-100 p-3 text-sm text-gray-700">

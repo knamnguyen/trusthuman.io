@@ -268,14 +268,14 @@ function showStartButton() {
 
           if (!apiKey) {
             backgroundError(
-              "❌ No API key found in storage! Cannot start commenting."
+              "❌ No API key found in storage! Cannot start commenting.",
             );
             return;
           }
 
           if (!styleGuide) {
             backgroundError(
-              "❌ No style guide found in storage! Cannot start commenting."
+              "❌ No style guide found in storage! Cannot start commenting.",
             );
             return;
           }
@@ -302,7 +302,7 @@ function showStartButton() {
         `;
 
           const initialPosts = document.querySelectorAll(
-            ".feed-shared-update-v2__control-menu-container"
+            ".feed-shared-update-v2__control-menu-container",
           ).length;
 
           statusPanel.innerHTML = `
@@ -350,9 +350,9 @@ function showStartButton() {
             overlay,
             startButton,
             subtitle,
-            statusPanel
+            statusPanel,
           );
-        }
+        },
       );
 
       // Don't remove overlay here - let the commenting flow handle it
@@ -393,7 +393,7 @@ async function injectAndPlayContinuousSound(): Promise<void> {
       // Check if Web Audio API is supported
       if (!AudioContext) {
         throw new Error(
-          "Web Audio API is not supported in this browser. Cannot play audio."
+          "Web Audio API is not supported in this browser. Cannot play audio.",
         );
       }
 
@@ -490,8 +490,8 @@ async function injectAndPlayContinuousSound(): Promise<void> {
               // Autoplay started successfully.
               console.log(
                 `✅ Playing a ${oscillator.type} wave at ${frequency.toFixed(
-                  2
-                )} Hz. Audio element injected and playing.`
+                  2,
+                )} Hz. Audio element injected and playing.`,
               );
               resolve();
             })
@@ -533,7 +533,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       null as any, // overlay not available from this path
       null as any, // startButton not available from this path
       null as any, // subtitle not available from this path
-      null as any // statusPanel not available from this path
+      null as any, // statusPanel not available from this path
     );
     sendResponse({ success: true });
   } else if (request.action === "stopCommentingFlow") {
@@ -551,14 +551,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     console.error(
       "🔥 Post Content Length:",
       request.error.postContentLength,
-      "characters"
+      "characters",
     );
     console.error("🔥 Timestamp:", request.error.timestamp);
     if (request.error.stack) {
       console.error("🔥 Stack Trace:", request.error.stack);
     }
     console.error(
-      '🔥 This is why the comment defaulted to "Great post! Thanks for sharing."'
+      '🔥 This is why the comment defaulted to "Great post! Thanks for sharing."',
     );
     console.groupEnd();
 
@@ -622,7 +622,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         "HTTP Status:",
         request.error.status,
         "-",
-        request.error.statusText
+        request.error.statusText,
       );
     }
     if (request.error.body) {
@@ -637,7 +637,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       console.error(
         "Post Content Length:",
         request.error.postContentLength,
-        "characters"
+        "characters",
       );
     }
     if (request.error.stack) {
@@ -720,8 +720,8 @@ async function loadCommentedAuthorsWithTimestamps(): Promise<
           Object.entries(authorTimestamps).map(([name, timestamp]) => [
             name,
             Number(timestamp),
-          ])
-        )
+          ]),
+        ),
       );
     });
   });
@@ -729,7 +729,7 @@ async function loadCommentedAuthorsWithTimestamps(): Promise<
 
 // Function to save commented author with timestamp to local storage
 async function saveCommentedAuthorWithTimestamp(
-  authorName: string
+  authorName: string,
 ): Promise<void> {
   const storageKey = "commented_authors_timestamps";
   const now = Date.now();
@@ -740,7 +740,7 @@ async function saveCommentedAuthorWithTimestamp(
       authorTimestamps[authorName] = now;
       chrome.storage.local.set({ [storageKey]: authorTimestamps }, () => {
         console.log(
-          `Saved commented author: ${authorName} at timestamp: ${now}`
+          `Saved commented author: ${authorName} at timestamp: ${now}`,
         );
         resolve();
       });
@@ -752,7 +752,7 @@ async function saveCommentedAuthorWithTimestamp(
 function hasCommentedOnAuthorRecently(
   authorName: string,
   commentedAuthors: Map<string, number>,
-  hoursWindow: number
+  hoursWindow: number,
 ): boolean {
   const timestamp = commentedAuthors.get(authorName);
   if (!timestamp) return false;
@@ -814,10 +814,10 @@ async function loadCounters(): Promise<void> {
           result.postsSkippedAlreadyCommented || 0;
         duplicatePostsDetectedCount = result.duplicatePostsDetected || 0;
         console.log(
-          `Loaded counters - Posts skipped: ${postsSkippedDuplicateCount}, Recent authors: ${recentAuthorsDetectedCount}, Posts already commented: ${postsSkippedAlreadyCommentedCount}, Duplicate posts detected: ${duplicatePostsDetectedCount}`
+          `Loaded counters - Posts skipped: ${postsSkippedDuplicateCount}, Recent authors: ${recentAuthorsDetectedCount}, Posts already commented: ${postsSkippedAlreadyCommentedCount}, Duplicate posts detected: ${duplicatePostsDetectedCount}`,
         );
         resolve();
-      }
+      },
     );
   });
 }
@@ -837,7 +837,7 @@ async function updateSkippedPostCounter(): Promise<void> {
       },
       () => {
         console.log(
-          `Updated counters - Posts skipped: ${postsSkippedDuplicateCount}, Recent authors: ${recentAuthorsDetectedCount}, Duplicate posts detected: ${duplicatePostsDetectedCount}`
+          `Updated counters - Posts skipped: ${postsSkippedDuplicateCount}, Recent authors: ${recentAuthorsDetectedCount}, Duplicate posts detected: ${duplicatePostsDetectedCount}`,
         );
 
         // Send real-time update to popup
@@ -849,7 +849,7 @@ async function updateSkippedPostCounter(): Promise<void> {
         });
 
         resolve();
-      }
+      },
     );
   });
 }
@@ -863,10 +863,10 @@ async function loadCommentedPostUrns(): Promise<void> {
         Object.entries(storedUrns).map(([urn, timestamp]) => [
           urn,
           Number(timestamp),
-        ])
+        ]),
       );
       console.log(
-        `Loaded ${commentedPostUrns.size} commented post URNs from storage`
+        `Loaded ${commentedPostUrns.size} commented post URNs from storage`,
       );
       resolve();
     });
@@ -882,7 +882,7 @@ async function saveCommentedPostUrn(urn: string): Promise<void> {
     const urnsObject = Object.fromEntries(commentedPostUrns);
     chrome.storage.local.set({ commented_post_urns: urnsObject }, () => {
       console.log(
-        `Saved commented post URN: ${urn} at timestamp: ${timestamp}`
+        `Saved commented post URN: ${urn} at timestamp: ${timestamp}`,
       );
       resolve();
     });
@@ -945,10 +945,10 @@ async function updatePostAlreadyCommentedCounter(): Promise<void> {
       },
       () => {
         console.log(
-          `Updated post already commented counter: ${postsSkippedAlreadyCommentedCount}`
+          `Updated post already commented counter: ${postsSkippedAlreadyCommentedCount}`,
         );
         console.log(
-          `Updated duplicate posts detected counter: ${duplicatePostsDetectedCount}`
+          `Updated duplicate posts detected counter: ${duplicatePostsDetectedCount}`,
         );
 
         // Send real-time update to popup
@@ -959,7 +959,7 @@ async function updatePostAlreadyCommentedCounter(): Promise<void> {
         });
 
         resolve();
-      }
+      },
     );
   });
 }
@@ -986,7 +986,7 @@ async function cleanupOldPostUrns(): Promise<void> {
       const urnsObject = Object.fromEntries(commentedPostUrns);
       chrome.storage.local.set({ commented_post_urns: urnsObject }, () => {
         console.log(
-          `Cleaned up ${removedCount} old post URNs (older than 1 year)`
+          `Cleaned up ${removedCount} old post URNs (older than 1 year)`,
         );
         resolve();
       });
@@ -1017,7 +1017,7 @@ async function updateCommentCounts(): Promise<void> {
         },
         () => {
           console.log(
-            `Updated counts - Today: ${newTodayCount}, All-time: ${newAllTimeCount}`
+            `Updated counts - Today: ${newTodayCount}, All-time: ${newAllTimeCount}`,
           );
 
           // Send real-time update to popup
@@ -1028,7 +1028,7 @@ async function updateCommentCounts(): Promise<void> {
           });
 
           resolve();
-        }
+        },
       );
     });
   });
@@ -1045,7 +1045,7 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
   overlay: HTMLDivElement,
   startButton: HTMLButtonElement,
   subtitle: HTMLParagraphElement,
-  statusPanel: HTMLDivElement
+  statusPanel: HTMLDivElement,
 ) {
   isCommentingActive = true;
   console.log(`🚀 Starting new commenting flow with parameters:`);
@@ -1055,7 +1055,7 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
   console.log(`   - maxPosts: ${maxPosts}`);
   console.log(`   - isCommentingActive: ${isCommentingActive}`);
   backgroundLog(
-    `   - scrollDuration: ${scrollDuration}, commentDelay: ${commentDelay}, maxPosts: ${maxPosts}, isCommentingActive: ${isCommentingActive}`
+    `   - scrollDuration: ${scrollDuration}, commentDelay: ${commentDelay}, maxPosts: ${maxPosts}, isCommentingActive: ${isCommentingActive}`,
   );
 
   // Apply tab active state spoofing immediately to prevent LinkedIn from detecting background tab
@@ -1066,7 +1066,7 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
   // keepTabActiveAudio();
 
   //starts the always active core
-  window.alwaysActive.enable();
+  // window.alwaysActive.enable();
 
   // Load commented authors with timestamps, post URNs, and counters from local storage
   commentedAuthorsWithTimestamps = await loadCommentedAuthorsWithTimestamps();
@@ -1080,16 +1080,16 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
   // For backward compatibility, also load today's authors
   commentedAuthors = await loadTodayCommentedAuthors();
   console.log(
-    `Loaded ${commentedAuthorsWithTimestamps.size} authors with timestamps and ${commentedAuthors.size} authors for today`
+    `Loaded ${commentedAuthorsWithTimestamps.size} authors with timestamps and ${commentedAuthors.size} authors for today`,
   );
   console.log(
-    `Loaded counters - Posts skipped: ${postsSkippedDuplicateCount}, Recent authors: ${recentAuthorsDetectedCount}`
+    `Loaded counters - Posts skipped: ${postsSkippedDuplicateCount}, Recent authors: ${recentAuthorsDetectedCount}`,
   );
   backgroundLog(
-    `Loaded ${commentedAuthorsWithTimestamps.size} authors with timestamps and ${commentedAuthors.size} authors for today`
+    `Loaded ${commentedAuthorsWithTimestamps.size} authors with timestamps and ${commentedAuthors.size} authors for today`,
   );
   backgroundLog(
-    `Loaded counters - Posts skipped: ${postsSkippedDuplicateCount}, Recent authors: ${recentAuthorsDetectedCount}`
+    `Loaded counters - Posts skipped: ${postsSkippedDuplicateCount}, Recent authors: ${recentAuthorsDetectedCount}`,
   );
 
   try {
@@ -1103,10 +1103,10 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
 
     // IMPORTANT: Only move to original tab AFTER scrolling is completely finished
     console.log(
-      "📜 Step 1.5: Scrolling completed, now moving back to original tab..."
+      "📜 Step 1.5: Scrolling completed, now moving back to original tab...",
     );
     backgroundLog(
-      "📜 Step 1.5: Scrolling completed, now moving back to original tab..."
+      "📜 Step 1.5: Scrolling completed, now moving back to original tab...",
     );
     chrome.runtime.sendMessage({
       action: "moveToOriginalTab",
@@ -1155,10 +1155,10 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
     console.log(`   - maxPosts parameter: ${maxPosts}`);
     console.log(`   - commentDelay parameter: ${commentDelay}`);
     console.log(
-      `   - isCommentingActive before processing: ${isCommentingActive}`
+      `   - isCommentingActive before processing: ${isCommentingActive}`,
     );
     backgroundLog(
-      `📜 Step 3: Processing all posts on feed... maxPosts: ${maxPosts}, commentDelay: ${commentDelay}, isCommentingActive: ${isCommentingActive}`
+      `📜 Step 3: Processing all posts on feed... maxPosts: ${maxPosts}, commentDelay: ${commentDelay}, isCommentingActive: ${isCommentingActive}`,
     );
 
     await processAllPostsOnFeed(commentDelay, maxPosts, duplicateWindow);
@@ -1166,7 +1166,7 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
     console.log(`📜 Step 3 completed. Final state:`);
     console.log(`   - isCommentingActive: ${isCommentingActive}`);
     backgroundLog(
-      `📜 Step 3 completed. Final isCommentingActive: ${isCommentingActive}`
+      `📜 Step 3 completed. Final isCommentingActive: ${isCommentingActive}`,
     );
 
     // Stop anti-throttling mechanisms
@@ -1181,10 +1181,10 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
       });
     } else {
       console.log(
-        "🛑 Not sending completion message because commenting was stopped"
+        "🛑 Not sending completion message because commenting was stopped",
       );
       backgroundLog(
-        "🛑 Not sending completion message because commenting was stopped"
+        "🛑 Not sending completion message because commenting was stopped",
       );
     }
   } catch (error) {
@@ -1218,7 +1218,7 @@ async function requestNotificationPermissionForAntiThrottling(): Promise<boolean
 
     if (permission === "granted") {
       backgroundLog(
-        "📜 🔔 ✅ Notification permission granted - should help with anti-throttling"
+        "📜 🔔 ✅ Notification permission granted - should help with anti-throttling",
       );
 
       // Show a brief notification to confirm it works
@@ -1236,7 +1236,7 @@ async function requestNotificationPermissionForAntiThrottling(): Promise<boolean
   } catch (error) {
     backgroundWarn(
       "📜 🔔 ⚠️ Failed to request notification permission:",
-      error
+      error,
     );
     return false;
   }
@@ -1270,7 +1270,7 @@ async function forceTabActiveState() {
     document.addEventListener = function (
       type: string,
       listener: EventListenerOrEventListenerObject | null,
-      options?: boolean | AddEventListenerOptions
+      options?: boolean | AddEventListenerOptions,
     ) {
       if (type === "visibilitychange") {
         // Don't add visibility change listeners
@@ -1309,18 +1309,18 @@ function forceTriggerLinkedInLoading() {
 
     // PRIORITY: Click LinkedIn's infinite scroll load button
     const infiniteScrollButton = document.querySelector(
-      ".scaffold-finite-scroll__load-button"
+      ".scaffold-finite-scroll__load-button",
     ) as HTMLButtonElement;
     if (infiniteScrollButton && !infiniteScrollButton.disabled) {
       infiniteScrollButton.click();
       backgroundLog(
-        "📜 🎯 Clicked LinkedIn infinite scroll load button (.scaffold-finite-scroll__load-button)"
+        "📜 🎯 Clicked LinkedIn infinite scroll load button (.scaffold-finite-scroll__load-button)",
       );
     } else if (infiniteScrollButton && infiniteScrollButton.disabled) {
       backgroundLog("📜 ⚠️ Infinite scroll button found but disabled");
     } else {
       backgroundLog(
-        "📜 ℹ️ No infinite scroll button found (.scaffold-finite-scroll__load-button)"
+        "📜 ℹ️ No infinite scroll button found (.scaffold-finite-scroll__load-button)",
       );
     }
   } catch (error) {
@@ -1376,7 +1376,7 @@ function triggerScrollEvents() {
 
     // Trigger wheel events on main containers too
     const mainContainer = document.querySelector(
-      ".scaffold-layout__main, .feed-container-theme"
+      ".scaffold-layout__main, .feed-container-theme",
     );
     if (mainContainer) {
       mainContainer.dispatchEvent(wheelEvent);
@@ -1390,13 +1390,13 @@ function triggerScrollEvents() {
 // Function to scroll feed and load posts - Aggressive scrolling to bottom
 async function scrollFeedToLoadPosts(
   duration: number,
-  statusPanel?: HTMLDivElement
+  statusPanel?: HTMLDivElement,
 ): Promise<void> {
   console.log(
-    `Aggressively scrolling feed for ${duration} seconds to load posts...`
+    `Aggressively scrolling feed for ${duration} seconds to load posts...`,
   );
   backgroundLog(
-    `📜 Starting aggressive scroll-to-bottom for ${duration} seconds...`
+    `📜 Starting aggressive scroll-to-bottom for ${duration} seconds...`,
   );
 
   // Apply tab active state spoofing immediately
@@ -1412,7 +1412,7 @@ async function scrollFeedToLoadPosts(
 
   // Get initial post count
   const initialPosts = document.querySelectorAll(
-    ".feed-shared-update-v2__control-menu-container"
+    ".feed-shared-update-v2__control-menu-container",
   );
   postCountBefore = initialPosts.length;
   lastPostCount = postCountBefore;
@@ -1433,23 +1433,23 @@ async function scrollFeedToLoadPosts(
     backgroundLog(
       `📜 Aggressive scroll attempt ${
         scrollAttempts + 1
-      }, ${timeRemaining}s remaining`
+      }, ${timeRemaining}s remaining`,
     );
 
     // Update status panel if available
     if (statusPanel) {
       const currentPosts = document.querySelectorAll(
-        ".feed-shared-update-v2__control-menu-container"
+        ".feed-shared-update-v2__control-menu-container",
       ).length;
       const newPostsThisSession = currentPosts - postCountBefore;
 
       const timeRemainingElement = statusPanel.querySelector(
-        "#time-remaining span"
+        "#time-remaining span",
       );
       const postsLoadedElement =
         statusPanel.querySelector("#posts-loaded span");
       const scrollProgressElement = statusPanel.querySelector(
-        "#scroll-progress span"
+        "#scroll-progress span",
       );
 
       if (timeRemainingElement) {
@@ -1486,26 +1486,26 @@ async function scrollFeedToLoadPosts(
     const newDocumentHeight = document.body.scrollHeight;
 
     backgroundLog(
-      `📜 Scrolled from ${beforeScroll} to ${afterScroll}, doc height: ${documentHeight} → ${newDocumentHeight}`
+      `📜 Scrolled from ${beforeScroll} to ${afterScroll}, doc height: ${documentHeight} → ${newDocumentHeight}`,
     );
 
     // Check for new content after each scroll
     const currentPosts = document.querySelectorAll(
-      ".feed-shared-update-v2__control-menu-container"
+      ".feed-shared-update-v2__control-menu-container",
     );
     const newPostCount = currentPosts.length;
 
     if (newPostCount > lastPostCount) {
       const newPosts = newPostCount - lastPostCount;
       backgroundLog(
-        `📜 ✅ Content loaded! Found ${newPosts} new posts (total: ${newPostCount})`
+        `📜 ✅ Content loaded! Found ${newPosts} new posts (total: ${newPostCount})`,
       );
       lastPostCount = newPostCount;
 
       // Update status panel with success indicator
       if (statusPanel) {
         const scrollProgressElement = statusPanel.querySelector(
-          "#scroll-progress span"
+          "#scroll-progress span",
         );
         if (scrollProgressElement) {
           scrollProgressElement.textContent = `✅ Loaded ${newPosts} new posts! (Total: ${newPostCount})`;
@@ -1513,13 +1513,13 @@ async function scrollFeedToLoadPosts(
       }
     } else {
       backgroundLog(
-        `📜 ⚠️ No new posts detected. Still at ${newPostCount} posts`
+        `📜 ⚠️ No new posts detected. Still at ${newPostCount} posts`,
       );
 
       // Update status panel with no new content indicator
       if (statusPanel) {
         const scrollProgressElement = statusPanel.querySelector(
-          "#scroll-progress span"
+          "#scroll-progress span",
         );
         if (scrollProgressElement) {
           scrollProgressElement.textContent = `⏳ Waiting for new content... (${newPostCount} posts)`;
@@ -1536,7 +1536,7 @@ async function scrollFeedToLoadPosts(
       // Update status panel with anti-throttling indicator
       if (statusPanel) {
         const scrollProgressElement = statusPanel.querySelector(
-          "#scroll-progress span"
+          "#scroll-progress span",
         );
         if (scrollProgressElement) {
           scrollProgressElement.textContent = `🎭 Applied anti-throttling techniques`;
@@ -1550,7 +1550,7 @@ async function scrollFeedToLoadPosts(
       newPostCount === lastPostCount
     ) {
       backgroundLog(
-        `📜 📊 No height or post changes detected - continuing for full duration`
+        `📜 📊 No height or post changes detected - continuing for full duration`,
       );
     }
   }
@@ -1558,15 +1558,15 @@ async function scrollFeedToLoadPosts(
   // Final status update
   if (statusPanel) {
     const finalPosts = document.querySelectorAll(
-      ".feed-shared-update-v2__control-menu-container"
+      ".feed-shared-update-v2__control-menu-container",
     );
     const totalNewPosts = finalPosts.length - postCountBefore;
 
     const timeRemainingElement = statusPanel.querySelector(
-      "#time-remaining span"
+      "#time-remaining span",
     );
     const scrollProgressElement = statusPanel.querySelector(
-      "#scroll-progress span"
+      "#scroll-progress span",
     );
 
     if (timeRemainingElement) {
@@ -1580,24 +1580,24 @@ async function scrollFeedToLoadPosts(
 
   // Final metrics
   const finalPosts = document.querySelectorAll(
-    ".feed-shared-update-v2__control-menu-container"
+    ".feed-shared-update-v2__control-menu-container",
   );
   const totalNewPosts = finalPosts.length - initialPosts.length;
   const actualDuration = Math.round((Date.now() - startTime) / 1000);
 
   console.log("Finished aggressive scrolling to load posts");
   backgroundLog(
-    `📜 Aggressive scroll completed! Duration: ${actualDuration}s, Scroll attempts: ${scrollAttempts}, New posts loaded: ${totalNewPosts} (${initialPosts.length} → ${finalPosts.length})`
+    `📜 Aggressive scroll completed! Duration: ${actualDuration}s, Scroll attempts: ${scrollAttempts}, New posts loaded: ${totalNewPosts} (${initialPosts.length} → ${finalPosts.length})`,
   );
 
   // Alert if we didn't load many posts
   if (totalNewPosts < 15 && actualDuration > 15) {
     backgroundWarn(
-      `📜 ⚠️ Only loaded ${totalNewPosts} posts in ${actualDuration}s. LinkedIn might be throttling or has limited content.`
+      `📜 ⚠️ Only loaded ${totalNewPosts} posts in ${actualDuration}s. LinkedIn might be throttling or has limited content.`,
     );
   } else if (totalNewPosts >= 20) {
     backgroundLog(
-      `📜 🎉 Excellent! Loaded ${totalNewPosts} posts using aggressive scrolling.`
+      `📜 🎉 Excellent! Loaded ${totalNewPosts} posts using aggressive scrolling.`,
     );
   }
 }
@@ -1606,59 +1606,59 @@ async function scrollFeedToLoadPosts(
 async function processAllPostsOnFeed(
   commentDelay: number,
   maxPosts: number,
-  duplicateWindow: number
+  duplicateWindow: number,
 ): Promise<void> {
   console.group("🎯 PROCESSING ALL POSTS - DETAILED DEBUG");
   backgroundGroup("🎯 PROCESSING ALL POSTS - DETAILED DEBUG");
   console.log(
-    `🎯 Starting to process posts on feed (max ${maxPosts} posts)...`
+    `🎯 Starting to process posts on feed (max ${maxPosts} posts)...`,
   );
   backgroundLog(
-    `🎯 Starting to process posts on feed (max ${maxPosts} posts)...`
+    `🎯 Starting to process posts on feed (max ${maxPosts} posts)...`,
   );
 
   // Find all post containers using the top-level div[data-id] structure
   const postContainers = document.querySelectorAll("div[data-id]");
   console.log(
-    `🎯 Found ${postContainers.length} post containers with selector: div[data-id]`
+    `🎯 Found ${postContainers.length} post containers with selector: div[data-id]`,
   );
   backgroundLog(
-    `🎯 Found ${postContainers.length} post containers with selector: div[data-id]`
+    `🎯 Found ${postContainers.length} post containers with selector: div[data-id]`,
   );
 
   // Let's also try alternative selectors to see what we find
   const altSelector1 = document.querySelectorAll(".feed-shared-update-v2");
   const altSelector2 = document.querySelectorAll(
-    '[data-urn*="urn:li:activity"]'
+    '[data-urn*="urn:li:activity"]',
   );
   const altSelector3 = document.querySelectorAll(
-    ".feed-shared-update-v2__content"
+    ".feed-shared-update-v2__content",
   );
 
   console.log(`🎯 Alternative selector results:`);
   console.log(`   - .feed-shared-update-v2: ${altSelector1.length} elements`);
   console.log(
-    `   - [data-urn*="urn:li:activity"]: ${altSelector2.length} elements`
+    `   - [data-urn*="urn:li:activity"]: ${altSelector2.length} elements`,
   );
   console.log(
-    `   - .feed-shared-update-v2__content: ${altSelector3.length} elements`
+    `   - .feed-shared-update-v2__content: ${altSelector3.length} elements`,
   );
   backgroundLog(
-    `🎯 Alternative selector results: .feed-shared-update-v2: ${altSelector1.length}, [data-urn*="urn:li:activity"]: ${altSelector2.length}, .feed-shared-update-v2__content: ${altSelector3.length}`
+    `🎯 Alternative selector results: .feed-shared-update-v2: ${altSelector1.length}, [data-urn*="urn:li:activity"]: ${altSelector2.length}, .feed-shared-update-v2__content: ${altSelector3.length}`,
   );
 
   if (postContainers.length === 0) {
     console.error(
-      "🚨 NO POSTS FOUND! This is why the automation stops immediately."
+      "🚨 NO POSTS FOUND! This is why the automation stops immediately.",
     );
     console.error(
-      "🚨 The page might not be fully loaded or the selector is wrong."
+      "🚨 The page might not be fully loaded or the selector is wrong.",
     );
     backgroundError(
-      "🚨 NO POSTS FOUND! This is why the automation stops immediately."
+      "🚨 NO POSTS FOUND! This is why the automation stops immediately.",
     );
     backgroundError(
-      "🚨 The page might not be fully loaded or the selector is wrong."
+      "🚨 The page might not be fully loaded or the selector is wrong.",
     );
     console.groupEnd();
     backgroundGroupEnd();
@@ -1667,10 +1667,10 @@ async function processAllPostsOnFeed(
 
   let commentCount = 0;
   console.log(
-    `🎯 Starting loop: commentCount=${commentCount}, maxPosts=${maxPosts}, isActive=${isCommentingActive}`
+    `🎯 Starting loop: commentCount=${commentCount}, maxPosts=${maxPosts}, isActive=${isCommentingActive}`,
   );
   backgroundLog(
-    `🎯 Starting loop: commentCount=${commentCount}, maxPosts=${maxPosts}, isActive=${isCommentingActive}`
+    `🎯 Starting loop: commentCount=${commentCount}, maxPosts=${maxPosts}, isActive=${isCommentingActive}`,
   );
 
   for (
@@ -1679,7 +1679,7 @@ async function processAllPostsOnFeed(
     i++
   ) {
     console.group(
-      `🔄 POST ${i + 1}/${postContainers.length} - DETAILED PROCESSING`
+      `🔄 POST ${i + 1}/${postContainers.length} - DETAILED PROCESSING`,
     );
     console.log(`🔄 Loop iteration ${i + 1}:`);
     console.log(`   - commentCount: ${commentCount}/${maxPosts}`);
@@ -1687,22 +1687,22 @@ async function processAllPostsOnFeed(
     console.log(
       `   - Loop condition: i(${i}) < postContainers.length(${
         postContainers.length
-      }) = ${i < postContainers.length}`
+      }) = ${i < postContainers.length}`,
     );
     console.log(
-      `   - Active condition: isCommentingActive = ${isCommentingActive}`
+      `   - Active condition: isCommentingActive = ${isCommentingActive}`,
     );
     console.log(
       `   - Count condition: commentCount(${commentCount}) < maxPosts(${maxPosts}) = ${
         commentCount < maxPosts
-      }`
+      }`,
     );
     console.log(
       `   - Overall loop should continue: ${
         i < postContainers.length &&
         isCommentingActive &&
         commentCount < maxPosts
-      }`
+      }`,
     );
 
     // Check if we should stop at the beginning of each iteration
@@ -1718,7 +1718,7 @@ async function processAllPostsOnFeed(
       console.log(
         `🔍 Processing post ${i + 1}/${
           postContainers.length
-        } (commented: ${commentCount}/${maxPosts})`
+        } (commented: ${commentCount}/${maxPosts})`,
       );
 
       // Scroll to the post
@@ -1728,7 +1728,7 @@ async function processAllPostsOnFeed(
       // Check again after scroll
       if (!isCommentingActive) {
         console.log(
-          "❌ STOPPING: isCommentingActive became false after scroll"
+          "❌ STOPPING: isCommentingActive became false after scroll",
         );
         console.groupEnd();
         break;
@@ -1747,7 +1747,7 @@ async function processAllPostsOnFeed(
       for (const urn of postUrns) {
         if (hasCommentedOnPostUrn(urn)) {
           console.log(
-            `⏭️ SKIPPING post ${i + 1} - already commented on post URN: ${urn}`
+            `⏭️ SKIPPING post ${i + 1} - already commented on post URN: ${urn}`,
           );
           hasCommentedOnThisPost = true;
           break;
@@ -1765,7 +1765,7 @@ async function processAllPostsOnFeed(
       const authorInfo = extractAuthorInfo(postContainer);
       if (!authorInfo) {
         console.log(
-          `⏭️ SKIPPING post ${i + 1} - could not extract author info`
+          `⏭️ SKIPPING post ${i + 1} - could not extract author info`,
         );
         console.groupEnd();
         continue;
@@ -1776,13 +1776,13 @@ async function processAllPostsOnFeed(
         hasCommentedOnAuthorRecently(
           authorInfo.name,
           commentedAuthorsWithTimestamps,
-          duplicateWindow
+          duplicateWindow,
         )
       ) {
         console.log(
           `⏭️ SKIPPING post ${i + 1} - already commented on ${
             authorInfo.name
-          } within ${duplicateWindow} hours`
+          } within ${duplicateWindow} hours`,
         );
 
         // Update counters
@@ -1796,7 +1796,7 @@ async function processAllPostsOnFeed(
       const postContent = extractPostContent(postContainer);
       if (!postContent) {
         console.log(
-          `⏭️ SKIPPING post ${i + 1} - could not extract post content`
+          `⏭️ SKIPPING post ${i + 1} - could not extract post content`,
         );
         console.groupEnd();
         continue;
@@ -1805,13 +1805,13 @@ async function processAllPostsOnFeed(
       const postAuthorContent = authorInfo.name + postContent;
 
       console.log(
-        `📝 Post content preview: ${postContent.substring(0, 100)}...`
+        `📝 Post content preview: ${postContent.substring(0, 100)}...`,
       );
 
       // Check again before generating comment
       if (!isCommentingActive) {
         console.log(
-          "❌ STOPPING: isCommentingActive became false before comment generation"
+          "❌ STOPPING: isCommentingActive became false before comment generation",
         );
         console.groupEnd();
         break;
@@ -1822,7 +1822,7 @@ async function processAllPostsOnFeed(
       const comment = await generateComment(postAuthorContent);
       console.log(
         `🤖 Comment generation result for post ${i + 1}:`,
-        comment ? "SUCCESS" : "FAILED"
+        comment ? "SUCCESS" : "FAILED",
       );
 
       if (!comment) {
@@ -1833,13 +1833,13 @@ async function processAllPostsOnFeed(
 
       console.log(
         `✅ Generated comment for post ${i + 1}:`,
-        comment.substring(0, 50) + "..."
+        comment.substring(0, 50) + "...",
       );
 
       // Check again before posting comment
       if (!isCommentingActive) {
         console.log(
-          "❌ STOPPING: isCommentingActive became false before posting comment"
+          "❌ STOPPING: isCommentingActive became false before posting comment",
         );
         console.groupEnd();
         break;
@@ -1849,13 +1849,13 @@ async function processAllPostsOnFeed(
       console.log(
         `📝 Attempting to post comment on post ${i + 1} by ${
           authorInfo.name
-        }...`
+        }...`,
       );
       const success = await postCommentOnPost(postContainer, comment);
       console.log(
         `📝 Comment posting result for post ${i + 1}: ${
           success ? "SUCCESS" : "FAILED"
-        }`
+        }`,
       );
 
       if (success) {
@@ -1875,36 +1875,36 @@ async function processAllPostsOnFeed(
         await updateCommentCounts();
 
         console.log(
-          `🎉 Successfully posted comment ${commentCount}/${maxPosts} on post by ${authorInfo.name}`
+          `🎉 Successfully posted comment ${commentCount}/${maxPosts} on post by ${authorInfo.name}`,
         );
         backgroundLog(
-          `🎉 Successfully posted comment ${commentCount}/${maxPosts} on post by ${authorInfo.name}`
+          `🎉 Successfully posted comment ${commentCount}/${maxPosts} on post by ${authorInfo.name}`,
         );
         console.group(`📊 Progress Update After Successful Comment`);
         console.log(
-          `Comments posted this session: ${commentCount}/${maxPosts}`
+          `Comments posted this session: ${commentCount}/${maxPosts}`,
         );
         console.log(
           `Authors commented on today:`,
-          Array.from(commentedAuthors)
+          Array.from(commentedAuthors),
         );
         console.log(
-          `Remaining posts to process: ${postContainers.length - i - 1}`
+          `Remaining posts to process: ${postContainers.length - i - 1}`,
         );
         console.log(
           `Should continue? commentCount(${commentCount}) < maxPosts(${maxPosts}) = ${
             commentCount < maxPosts
-          }`
+          }`,
         );
         console.log(
           `Next iteration will be: ${i + 1} < ${postContainers.length} = ${
             i + 1 < postContainers.length
-          }`
+          }`,
         );
         backgroundLog(
           `📊 Progress Update: ${commentCount}/${maxPosts} comments posted. Remaining posts: ${
             postContainers.length - i - 1
-          }. Should continue: ${commentCount < maxPosts}`
+          }. Should continue: ${commentCount < maxPosts}`,
         );
         console.groupEnd();
 
@@ -1918,10 +1918,10 @@ async function processAllPostsOnFeed(
         // Check if we've reached the max posts limit
         if (commentCount >= maxPosts) {
           console.log(
-            `✅ REACHED MAX POSTS LIMIT: commentCount(${commentCount}) >= maxPosts(${maxPosts}). Stopping...`
+            `✅ REACHED MAX POSTS LIMIT: commentCount(${commentCount}) >= maxPosts(${maxPosts}). Stopping...`,
           );
           backgroundLog(
-            `✅ REACHED MAX POSTS LIMIT: commentCount(${commentCount}) >= maxPosts(${maxPosts}). Stopping...`
+            `✅ REACHED MAX POSTS LIMIT: commentCount(${commentCount}) >= maxPosts(${maxPosts}). Stopping...`,
           );
           console.groupEnd();
           break;
@@ -1930,17 +1930,17 @@ async function processAllPostsOnFeed(
         // Wait between comments with stop checking
         if (i < postContainers.length - 1 && commentCount < maxPosts) {
           console.log(
-            `⏳ Waiting ${commentDelay} seconds before next comment...`
+            `⏳ Waiting ${commentDelay} seconds before next comment...`,
           );
           console.log(
             `⏳ Delay conditions: i(${i}) < postContainers.length-1(${
               postContainers.length - 1
-            }) = ${i < postContainers.length - 1}`
+            }) = ${i < postContainers.length - 1}`,
           );
           console.log(
             `⏳ Delay conditions: commentCount(${commentCount}) < maxPosts(${maxPosts}) = ${
               commentCount < maxPosts
-            }`
+            }`,
           );
 
           // Break the delay into smaller chunks to check for stop signal
@@ -1953,7 +1953,7 @@ async function processAllPostsOnFeed(
             await wait(1000);
             if (!isCommentingActive) {
               console.log(
-                "❌ STOPPING during comment delay due to stop signal"
+                "❌ STOPPING during comment delay due to stop signal",
               );
               console.groupEnd();
               break;
@@ -1968,22 +1968,22 @@ async function processAllPostsOnFeed(
           console.log(`✅ Delay completed, continuing to next post...`);
         } else {
           console.log(
-            `🔚 No delay needed - this was the last post or we've reached max comments`
+            `🔚 No delay needed - this was the last post or we've reached max comments`,
           );
           console.log(
             `   - i(${i}) < postContainers.length-1(${
               postContainers.length - 1
-            }): ${i < postContainers.length - 1}`
+            }): ${i < postContainers.length - 1}`,
           );
           console.log(
             `   - commentCount(${commentCount}) < maxPosts(${maxPosts}): ${
               commentCount < maxPosts
-            }`
+            }`,
           );
         }
       } else {
         console.log(
-          `❌ Failed to post comment on post ${i + 1} by ${authorInfo.name}`
+          `❌ Failed to post comment on post ${i + 1} by ${authorInfo.name}`,
         );
       }
 
@@ -2005,7 +2005,7 @@ async function processAllPostsOnFeed(
         i + 1 < postContainers.length &&
         isCommentingActive &&
         commentCount < maxPosts
-      }`
+      }`,
     );
   }
 
@@ -2018,14 +2018,14 @@ async function processAllPostsOnFeed(
   console.log(`     - Lost active status? ${!isCommentingActive}`);
   console.log(`     - Ran out of posts? ${postContainers.length === 0}`);
   backgroundLog(
-    `🏁 LOOP COMPLETED. Final stats: Posted ${commentCount}/${maxPosts} comments total. Final isCommentingActive: ${isCommentingActive}. Processed ${postContainers.length} total posts.`
+    `🏁 LOOP COMPLETED. Final stats: Posted ${commentCount}/${maxPosts} comments total. Final isCommentingActive: ${isCommentingActive}. Processed ${postContainers.length} total posts.`,
   );
   backgroundLog(
     `🏁 Loop exit reason: Reached max posts? ${
       commentCount >= maxPosts
     }, Lost active status? ${!isCommentingActive}, Ran out of posts? ${
       postContainers.length === 0
-    }`
+    }`,
   );
   console.groupEnd();
   backgroundGroupEnd();
@@ -2079,7 +2079,7 @@ function extractPostTime(postContainer: HTMLElement): number | null {
   try {
     // Look for the time span with the specific classes
     const timeSpan = postContainer.querySelector(
-      ".update-components-actor__sub-description.text-body-xsmall"
+      ".update-components-actor__sub-description.text-body-xsmall",
     );
 
     if (!timeSpan || !timeSpan.textContent) {
@@ -2108,7 +2108,7 @@ async function updateTimeFilterSkippedCounter(): Promise<void> {
       },
       () => {
         console.log(
-          `Updated time filter skipped counter: ${postsSkippedTimeFilterCount}`
+          `Updated time filter skipped counter: ${postsSkippedTimeFilterCount}`,
         );
 
         // Send real-time update to popup
@@ -2118,19 +2118,19 @@ async function updateTimeFilterSkippedCounter(): Promise<void> {
         });
 
         resolve();
-      }
+      },
     );
   });
 }
 
 // Function to extract author info from post container
 function extractAuthorInfo(
-  postContainer: HTMLElement
+  postContainer: HTMLElement,
 ): { name: string } | null {
   try {
     // Look for author container within the post
     const authorContainer = postContainer.querySelector(
-      ".update-components-actor__container"
+      ".update-components-actor__container",
     );
     if (!authorContainer) {
       console.log("Author container not found");
@@ -2174,7 +2174,7 @@ function extractPostContent(postContainer: HTMLElement): string {
     // Look for the content container within the post
     // const contentContainer = postContainer.querySelector('.fie-impression-container');
     const contentContainer = postContainer.querySelector(
-      ".feed-shared-inline-show-more-text"
+      ".feed-shared-inline-show-more-text",
     );
     if (!contentContainer) {
       console.log("Content container not found");
@@ -2208,16 +2208,16 @@ async function generateComment(postContent: string): Promise<string> {
   return new Promise((resolve) => {
     console.log(
       "🤖 Requesting comment generation for post content:",
-      postContent.substring(0, 200) + "..."
+      postContent.substring(0, 200) + "...",
     );
 
     // Set up a 30-second timeout
     const timeout = setTimeout(() => {
       console.error(
-        "⏰ FALLBACK REASON: Comment generation timed out after 30 seconds"
+        "⏰ FALLBACK REASON: Comment generation timed out after 30 seconds",
       );
       console.error(
-        "⏰ TIMEOUT - No response from background script within 30 seconds"
+        "⏰ TIMEOUT - No response from background script within 30 seconds",
       );
       resolve("Great post! Thanks for sharing.");
     }, 30000);
@@ -2225,7 +2225,7 @@ async function generateComment(postContent: string): Promise<string> {
     // Retry mechanism for connection issues
     const attemptGeneration = (attempt: number = 1): void => {
       console.log(
-        `🔄 Attempt ${attempt}/3: Sending comment generation request...`
+        `🔄 Attempt ${attempt}/3: Sending comment generation request...`,
       );
 
       chrome.runtime.sendMessage(
@@ -2239,20 +2239,20 @@ async function generateComment(postContent: string): Promise<string> {
           if (chrome.runtime.lastError) {
             console.error(
               `💥 ATTEMPT ${attempt} FAILED - Chrome runtime error:`,
-              chrome.runtime.lastError
+              chrome.runtime.lastError,
             );
 
             // Check if it's a connection error and retry
             if (
               chrome.runtime.lastError.message?.includes(
-                "Could not establish connection"
+                "Could not establish connection",
               ) &&
               attempt < 3
             ) {
               console.log(
                 `🔄 Connection error detected, retrying in 2 seconds... (attempt ${
                   attempt + 1
-                }/3)`
+                }/3)`,
               );
               setTimeout(() => {
                 attemptGeneration(attempt + 1);
@@ -2261,16 +2261,16 @@ async function generateComment(postContent: string): Promise<string> {
             }
 
             console.error(
-              "💥 FALLBACK REASON: Chrome runtime error during comment generation"
+              "💥 FALLBACK REASON: Chrome runtime error during comment generation",
             );
             console.error("💥 CHROME ERROR:", chrome.runtime.lastError);
             console.error(
-              "💥 This usually means the background script crashed or message passing failed"
+              "💥 This usually means the background script crashed or message passing failed",
             );
             resolve("Great post! Thanks for sharing.");
           } else if (!response) {
             console.error(
-              `❌ ATTEMPT ${attempt} FAILED - No response received from background script`
+              `❌ ATTEMPT ${attempt} FAILED - No response received from background script`,
             );
 
             // Retry if no response
@@ -2278,7 +2278,7 @@ async function generateComment(postContent: string): Promise<string> {
               console.log(
                 `🔄 No response received, retrying in 2 seconds... (attempt ${
                   attempt + 1
-                }/3)`
+                }/3)`,
               );
               setTimeout(() => {
                 attemptGeneration(attempt + 1);
@@ -2287,28 +2287,28 @@ async function generateComment(postContent: string): Promise<string> {
             }
 
             console.error(
-              "❌ FALLBACK REASON: No response received from background script after 3 attempts"
+              "❌ FALLBACK REASON: No response received from background script after 3 attempts",
             );
             console.error(
-              "❌ RESPONSE NULL - Background script may have failed silently"
+              "❌ RESPONSE NULL - Background script may have failed silently",
             );
             resolve("Great post! Thanks for sharing.");
           } else if (!response.comment) {
             console.error(
-              "⚠️ FALLBACK REASON: Response received but no comment field"
+              "⚠️ FALLBACK REASON: Response received but no comment field",
             );
             console.error("⚠️ INVALID RESPONSE STRUCTURE:", response);
             console.error(
               "⚠️ Expected response.comment but got:",
-              Object.keys(response)
+              Object.keys(response),
             );
             resolve("Great post! Thanks for sharing.");
           } else if (response.comment === "Great post! Thanks for sharing.") {
             console.error(
-              "🚨 FALLBACK REASON: Background script returned the default fallback comment"
+              "🚨 FALLBACK REASON: Background script returned the default fallback comment",
             );
             console.error(
-              "🚨 This means the AI API failed and background script used fallback"
+              "🚨 This means the AI API failed and background script used fallback",
             );
 
             // Check if error details were provided in the response
@@ -2319,12 +2319,12 @@ async function generateComment(postContent: string): Promise<string> {
               console.error("🔥 API Key Status:", response.error.apiKey);
               console.error(
                 "🔥 Style Guide Status:",
-                response.error.styleGuide
+                response.error.styleGuide,
               );
               console.error(
                 "🔥 Post Content Length:",
                 response.error.postContentLength,
-                "characters"
+                "characters",
               );
               if (response.error.stack) {
                 console.error("🔥 Stack Trace:", response.error.stack);
@@ -2332,7 +2332,7 @@ async function generateComment(postContent: string): Promise<string> {
               console.groupEnd();
             } else {
               console.error(
-                "🚨 No error details provided - check background script console"
+                "🚨 No error details provided - check background script console",
               );
             }
 
@@ -2340,11 +2340,11 @@ async function generateComment(postContent: string): Promise<string> {
           } else {
             console.log(
               "✅ Successfully received generated comment:",
-              response.comment.substring(0, 100) + "..."
+              response.comment.substring(0, 100) + "...",
             );
             resolve(response.comment);
           }
-        }
+        },
       );
     };
 
@@ -2356,7 +2356,7 @@ async function generateComment(postContent: string): Promise<string> {
 // Function to post comment on a specific post
 async function postCommentOnPost(
   postContainer: HTMLElement,
-  comment: string
+  comment: string,
 ): Promise<boolean> {
   try {
     console.group("📝 Comment Posting Process");
@@ -2372,7 +2372,7 @@ async function postCommentOnPost(
     // Step 1: Find and click the comment button
     console.log("🔍 Looking for comment button...");
     const commentButton = postContainer.querySelector(
-      'button[aria-label="Comment"]'
+      'button[aria-label="Comment"]',
     ) as HTMLButtonElement;
     if (!commentButton) {
       console.error("❌ Comment button not found");
@@ -2397,7 +2397,7 @@ async function postCommentOnPost(
     // Step 2: Find the comment editor
     console.log("🔍 Looking for comment editor...");
     const commentEditor = postContainer.querySelector(
-      ".comments-comment-box-comment__text-editor"
+      ".comments-comment-box-comment__text-editor",
     );
     if (!commentEditor) {
       console.error("❌ Comment editor not found");
@@ -2408,7 +2408,7 @@ async function postCommentOnPost(
     // Step 3: Find the editable field within the editor
     console.log("🔍 Looking for editable field...");
     const editableField = commentEditor.querySelector(
-      'div[contenteditable="true"]'
+      'div[contenteditable="true"]',
     ) as HTMLElement;
     if (!editableField) {
       console.error("❌ Editable field not found");
@@ -2476,7 +2476,7 @@ async function postCommentOnPost(
     // Step 5: Find and click the submit button
     console.log("🔍 Looking for submit button...");
     const submitButton = postContainer.querySelector(
-      ".comments-comment-box__submit-button--cr"
+      ".comments-comment-box__submit-button--cr",
     ) as HTMLButtonElement;
     if (!submitButton || submitButton.disabled) {
       console.error("❌ Submit button not found or disabled");

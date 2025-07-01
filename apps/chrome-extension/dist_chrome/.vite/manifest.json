@@ -17,9 +17,9 @@
     "file": "assets/modulepreload-polyfill-B5Qt9EMX.js",
     "name": "modulepreload-polyfill"
   },
-  "_tailwind-BfKDMzHS.css": {
-    "file": "assets/tailwind-BfKDMzHS.css",
-    "src": "_tailwind-BfKDMzHS.css"
+  "_tailwind-Bdp1hZvV.css": {
+    "file": "assets/tailwind-Bdp1hZvV.css",
+    "src": "_tailwind-Bdp1hZvV.css"
   },
   "src/pages/background/index.ts": {
     "file": "assets/index.ts-Ck1L1ibu.js",
@@ -28,13 +28,13 @@
     "isEntry": true
   },
   "src/pages/content/always-active-core.ts": {
-    "file": "assets/always-active-core.ts-DOrNw5Wi.js",
+    "file": "assets/always-active-core.ts-l0sNRNKZ.js",
     "name": "always-active-core.ts",
     "src": "src/pages/content/always-active-core.ts",
     "isEntry": true
   },
   "src/pages/content/index.tsx": {
-    "file": "assets/index.tsx-CQSNFbvr.js",
+    "file": "assets/index.tsx-BahIhFFC.js",
     "name": "index.tsx",
     "src": "src/pages/content/index.tsx",
     "isEntry": true
@@ -50,7 +50,7 @@
     ]
   },
   "src/pages/newtab/index.html": {
-    "file": "assets/index.html-CSQV6riA.js",
+    "file": "assets/index.html-n0hmhIQ9.js",
     "name": "index.html",
     "src": "src/pages/newtab/index.html",
     "isEntry": true,
@@ -60,7 +60,7 @@
     ],
     "css": [
       "assets/index-BarpStXw.css",
-      "assets/tailwind-BfKDMzHS.css"
+      "assets/tailwind-Bdp1hZvV.css"
     ]
   },
   "src/pages/options/index.html": {
@@ -77,7 +77,7 @@
     ]
   },
   "src/pages/popup/index.html": {
-    "file": "assets/index.html-CRMNZRC5.js",
+    "file": "assets/index.html-Cy0qD3vb.js",
     "name": "index.html",
     "src": "src/pages/popup/index.html",
     "isEntry": true,
@@ -88,7 +88,7 @@
     ],
     "css": [
       "assets/index-CDOOmCA7.css",
-      "assets/tailwind-BfKDMzHS.css"
+      "assets/tailwind-Bdp1hZvV.css"
     ]
   }
 }

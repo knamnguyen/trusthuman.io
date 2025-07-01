@@ -42,8 +42,8 @@
   "content_scripts": [
     {
       "js": [
-        "assets/index.tsx-CQSNFbvr.js",
-        "assets/always-active-core.ts-DOrNw5Wi.js"
+        "assets/index.tsx-BahIhFFC.js",
+        "assets/always-active-core.ts-l0sNRNKZ.js"
       ],
       "matches": [
         "http://*/*",
@@ -73,8 +73,8 @@
         "https://*/*"
       ],
       "resources": [
-        "assets/index.tsx-CQSNFbvr.js",
-        "assets/always-active-core.ts-DOrNw5Wi.js"
+        "assets/index.tsx-BahIhFFC.js",
+        "assets/always-active-core.ts-l0sNRNKZ.js"
       ],
       "use_dynamic_url": false
     }
