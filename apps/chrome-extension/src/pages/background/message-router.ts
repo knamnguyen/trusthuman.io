@@ -330,7 +330,10 @@ export class MessageRouter {
       "LinkedIn feed loaded. Showing start button...",
     );
 
-    if (this.dependencies.autoCommentingState.feedTabId) {
+    if (
+      this.dependencies.autoCommentingState.feedTabId &&
+      this.dependencies.autoCommentingState.isRunning
+    ) {
       chrome.tabs.sendMessage(this.dependencies.autoCommentingState.feedTabId, {
         action: "showStartButton",
       });
