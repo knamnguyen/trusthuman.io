@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^6.12.5",
+    "@google/genai": "^1.5.1",
     "@sassy/db": "workspace:*",
     "@sassy/stripe": "workspace:*",
     "@sassy/validators": "workspace:*",

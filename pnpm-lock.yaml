@@ -81,15 +81,21 @@ importers:
       '@clerk/clerk-react':
         specifier: ^5.32.3
         version: 5.32.3(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
-      '@google/genai':
-        specifier: ^1.5.1
-        version: 1.7.0
+      '@sassy/api':
+        specifier: workspace:*
+        version: link:../../packages/api
+      '@trpc/client':
+        specifier: 'catalog:'
+        version: 11.4.3(@trpc/server@11.4.3(typescript@5.8.3))(typescript@5.8.3)
       react:
         specifier: catalog:react19
         version: 19.0.0
       react-dom:
         specifier: catalog:react19
         version: 19.0.0(react@19.0.0)
+      superjson:
+        specifier: 2.2.2
+        version: 2.2.2
       webextension-polyfill:
         specifier: ^0.12.0
         version: 0.12.0
@@ -284,6 +290,9 @@ importers:
       '@clerk/nextjs':
         specifier: ^6.12.5
         version: 6.23.2(next@15.3.4(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      '@google/genai':
+        specifier: ^1.5.1
+        version: 1.7.0
       '@sassy/db':
         specifier: workspace:*
         version: link:../db

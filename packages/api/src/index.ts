@@ -47,3 +47,11 @@ type RouterOutputs = inferRouterOutputs<AppRouter>;
 
 export { createTRPCContext, appRouter, createCaller };
 export type { AppRouter, RouterInputs, RouterOutputs };
+
+// Export schema validator types for use in other packages
+export type {
+  CommentGenerationInput,
+  CommentGenerationOutput,
+  CommentGeneratorConfig,
+  CommentGeneratorError,
+} from "./schema-validators";

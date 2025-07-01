@@ -95,12 +95,22 @@ export class MessageRouter {
       maxPosts: request.maxPosts,
       duplicateWindow: request.duplicateWindow,
       styleGuide: request.styleGuide?.substring(0, 50) + "...",
-      hasApiKey: !!request.apiKey,
+      hasClerkToken: !!request.clerkToken,
+      tokenLength: request.clerkToken?.length || 0,
     });
+
+    // Validate that we have a Clerk token
+    if (!request.clerkToken) {
+      console.error("MessageRouter: No Clerk token provided!");
+      sendResponse({
+        success: false,
+        error: "No authentication token provided",
+      });
+      return false;
+    }
 
     // Save the current settings to storage for persistence
     const settingsToSave = {
-      apiKey: request.apiKey,
       styleGuide: request.styleGuide,
       scrollDuration: request.scrollDuration,
       commentDelay: request.commentDelay,
@@ -113,7 +123,7 @@ export class MessageRouter {
 
     this.dependencies.startAutoCommenting(
       request.styleGuide,
-      request.apiKey,
+      request.clerkToken, // Pass token instead of API key
       request.scrollDuration,
       request.commentDelay,
       request.maxPosts,
@@ -140,11 +150,11 @@ export class MessageRouter {
       });
 
       // Close the LinkedIn tab
-      chrome.tabs
-        .remove(this.dependencies.autoCommentingState.feedTabId)
-        .catch(() => {
-          // Tab might already be closed, that's okay
-        });
+      //   chrome.tabs
+      //     .remove(this.dependencies.autoCommentingState.feedTabId)
+      //     .catch(() => {
+      //       // Tab might already be closed, that's okay
+      //     });
     }
 
     // Clear current run state from storage
@@ -217,7 +227,7 @@ export class MessageRouter {
         if (this.dependencies.autoCommentingState.feedTabId) {
           chrome.tabs
             .sendMessage(this.dependencies.autoCommentingState.feedTabId, {
-              action: "openrouter_error",
+              action: "ai_generation_error",
               error: errorDetails,
             })
             .catch((msgError) => {

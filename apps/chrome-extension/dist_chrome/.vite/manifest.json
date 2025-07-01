@@ -17,12 +17,12 @@
     "file": "assets/modulepreload-polyfill-B5Qt9EMX.js",
     "name": "modulepreload-polyfill"
   },
-  "_tailwind-Bdp1hZvV.css": {
-    "file": "assets/tailwind-Bdp1hZvV.css",
-    "src": "_tailwind-Bdp1hZvV.css"
+  "_tailwind-Kb9Aezq_.css": {
+    "file": "assets/tailwind-Kb9Aezq_.css",
+    "src": "_tailwind-Kb9Aezq_.css"
   },
   "src/pages/background/index.ts": {
-    "file": "assets/index.ts-Ck1L1ibu.js",
+    "file": "assets/index.ts-MJ0vp8Ri.js",
     "name": "index.ts",
     "src": "src/pages/background/index.ts",
     "isEntry": true
@@ -34,7 +34,7 @@
     "isEntry": true
   },
   "src/pages/content/index.tsx": {
-    "file": "assets/index.tsx-BahIhFFC.js",
+    "file": "assets/index.tsx-CfXneUvD.js",
     "name": "index.tsx",
     "src": "src/pages/content/index.tsx",
     "isEntry": true
@@ -50,7 +50,7 @@
     ]
   },
   "src/pages/newtab/index.html": {
-    "file": "assets/index.html-n0hmhIQ9.js",
+    "file": "assets/index.html-ckTAqZQV.js",
     "name": "index.html",
     "src": "src/pages/newtab/index.html",
     "isEntry": true,
@@ -60,7 +60,7 @@
     ],
     "css": [
       "assets/index-BarpStXw.css",
-      "assets/tailwind-Bdp1hZvV.css"
+      "assets/tailwind-Kb9Aezq_.css"
     ]
   },
   "src/pages/options/index.html": {
@@ -77,7 +77,7 @@
     ]
   },
   "src/pages/popup/index.html": {
-    "file": "assets/index.html-CaOMBIfl.js",
+    "file": "assets/index.html-F8amnvEB.js",
     "name": "index.html",
     "src": "src/pages/popup/index.html",
     "isEntry": true,
@@ -88,7 +88,7 @@
     ],
     "css": [
       "assets/index-CDOOmCA7.css",
-      "assets/tailwind-Bdp1hZvV.css"
+      "assets/tailwind-Kb9Aezq_.css"
     ]
   }
 }

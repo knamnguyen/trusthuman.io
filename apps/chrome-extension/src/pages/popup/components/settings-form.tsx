@@ -11,7 +11,6 @@ import React from "react";
  */
 
 interface SettingsFormProps {
-  apiKey: string;
   styleGuide: string;
   scrollDuration: number;
   commentDelay: number;
@@ -20,7 +19,6 @@ interface SettingsFormProps {
   timeFilterEnabled: boolean;
   minPostAge: number;
   isRunning: boolean;
-  onApiKeyChange: (value: string) => void;
   onStyleGuideChange: (value: string) => void;
   onScrollDurationChange: (value: number) => void;
   onCommentDelayChange: (value: number) => void;
@@ -28,12 +26,10 @@ interface SettingsFormProps {
   onDuplicateWindowChange: (value: number) => void;
   onTimeFilterEnabledChange: (value: boolean) => void;
   onMinPostAgeChange: (value: number) => void;
-  onSetDefaultApiKey: () => void;
   onSetDefaultStyleGuide: () => void;
 }
 
 export default function SettingsForm({
-  apiKey,
   styleGuide,
   scrollDuration,
   commentDelay,
@@ -42,7 +38,6 @@ export default function SettingsForm({
   timeFilterEnabled,
   minPostAge,
   isRunning,
-  onApiKeyChange,
   onStyleGuideChange,
   onScrollDurationChange,
   onCommentDelayChange,
@@ -50,44 +45,11 @@ export default function SettingsForm({
   onDuplicateWindowChange,
   onTimeFilterEnabledChange,
   onMinPostAgeChange,
-  onSetDefaultApiKey,
   onSetDefaultStyleGuide,
 }: SettingsFormProps) {
   return (
     <>
-      <div className="mb-4">
-        <label className="mb-2 block text-sm font-medium text-gray-700">
-          Google AI Studio API Key:
-        </label>
-        <input
-          type="password"
-          value={apiKey}
-          onChange={(e) => onApiKeyChange(e.target.value)}
-          placeholder="Enter your Google AI Studio API key"
-          className="w-full rounded-md border border-gray-300 p-3 text-sm focus:border-transparent focus:ring-2 focus:ring-blue-500"
-          disabled={isRunning}
-        />
-        <div className="mt-2 flex items-center justify-between">
-          <p className="text-xs text-gray-500">
-            Get your API key from{" "}
-            <a
-              href="https://aistudio.google.com/app/apikey"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-500 hover:underline"
-            >
-              Google AI Studio
-            </a>
-          </p>
-          <button
-            onClick={onSetDefaultApiKey}
-            disabled={isRunning}
-            className="rounded-md bg-gray-100 px-3 py-1 text-xs text-gray-700 transition-colors hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            Use Default API Key
-          </button>
-        </div>
-      </div>
+      {/* API Key input removed - using server-side tRPC API now */}
 
       <div className="mb-4">
         <label className="mb-2 block text-sm font-medium text-gray-700">

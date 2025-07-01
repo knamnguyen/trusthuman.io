@@ -157,7 +157,11 @@ export default function Popup() {
     loadTodayComments();
 
     // Listen for status updates from background script
-    const messageListener = (request: any, sender: any, sendResponse: any) => {
+    const messageListener = async (
+      request: any,
+      sender: any,
+      sendResponse: any,
+    ) => {
       if (request.action === "statusUpdate") {
         setStatus(request.status);
 
@@ -325,8 +329,29 @@ export default function Popup() {
       return;
     }
 
-    if (!apiKey.trim()) {
-      setStatus("Please enter your Google AI Studio API key.");
+    // Get Clerk token once and pass it to background script
+    let clerkToken = null;
+    try {
+      if (isLoaded && isSignedIn && clerk?.session) {
+        console.log("Popup: Getting Clerk token for background script...");
+        clerkToken = await clerk.session.getToken();
+        console.log(
+          "Popup: Successfully got token, length:",
+          clerkToken?.length || 0,
+        );
+        if (clerkToken) {
+          console.log("Popup: Token parts:", clerkToken.split(".").length);
+        }
+      } else {
+        console.warn("Popup: Cannot get token - not signed in or no session");
+        setStatus("Please sign in to start commenting.");
+        return;
+      }
+    } catch (error) {
+      console.error("Popup: Failed to get Clerk token:", error);
+      setStatus(
+        "Failed to get authentication token. Please try signing in again.",
+      );
       return;
     }
 
@@ -336,7 +361,7 @@ export default function Popup() {
       maxPosts,
       duplicateWindow,
       styleGuide: styleGuide.substring(0, 50) + "...",
-      hasApiKey: !!apiKey,
+      hasToken: !!clerkToken,
     });
 
     setIsRunning(true);
@@ -347,16 +372,16 @@ export default function Popup() {
       const message = {
         action: "startAutoCommenting",
         styleGuide: styleGuide.trim(),
-        apiKey: apiKey.trim(),
         scrollDuration,
         commentDelay,
         maxPosts,
         duplicateWindow,
         timeFilterEnabled,
         minPostAge,
+        clerkToken, // Pass token with settings - more efficient!
       };
 
-      console.log("Popup: Sending message to background:", message);
+      console.log("Popup: Sending message to background with token");
       await chrome.runtime.sendMessage(message);
     } catch (error) {
       console.error("Error starting auto-commenting:", error);
@@ -419,7 +444,7 @@ export default function Popup() {
               <button
                 onClick={handleStart}
                 className="w-full rounded-md bg-blue-600 px-4 py-3 font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
-                disabled={!styleGuide.trim() || !apiKey.trim()}
+                disabled={!styleGuide.trim()}
               >
                 Start Auto Commenting
               </button>
@@ -445,7 +470,6 @@ export default function Popup() {
         />
 
         <SettingsForm
-          apiKey={apiKey}
           styleGuide={styleGuide}
           scrollDuration={scrollDuration}
           commentDelay={commentDelay}
@@ -454,7 +478,6 @@ export default function Popup() {
           timeFilterEnabled={timeFilterEnabled}
           minPostAge={minPostAge}
           isRunning={isRunning}
-          onApiKeyChange={handleApiKeyChange}
           onStyleGuideChange={handleStyleGuideChange}
           onScrollDurationChange={handleScrollDurationChange}
           onCommentDelayChange={handleCommentDelayChange}
@@ -462,7 +485,6 @@ export default function Popup() {
           onDuplicateWindowChange={handleDuplicateWindowChange}
           onTimeFilterEnabledChange={handleTimeFilterEnabledChange}
           onMinPostAgeChange={handleMinPostAgeChange}
-          onSetDefaultApiKey={handleSetDefaultApiKey}
           onSetDefaultStyleGuide={handleSetDefaultStyleGuide}
         />
 

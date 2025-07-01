@@ -19,8 +19,38 @@ export default function ExtensionAuthPage() {
   const signInButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    if (isSignedIn) {
+    if (isSignedIn && user) {
       setShowSuccessMessage(true);
+
+      // Get the session token and store it for the chrome extension
+      const storeSessionToken = async () => {
+        try {
+          // Get the session token from Clerk
+          const session = await (window as any).Clerk?.session?.getToken();
+
+          if (session) {
+            // Store the token in chrome storage for the extension to use
+            if (typeof chrome !== "undefined" && chrome.storage) {
+              await chrome.storage.local.set({
+                __clerk_session_token: session,
+                clerk_user_id: user.id,
+                hasEverSignedIn: true,
+              });
+              console.log(
+                "Successfully stored Clerk session token for extension",
+              );
+            } else {
+              console.warn(
+                "Chrome storage not available - this should only happen in development",
+              );
+            }
+          }
+        } catch (error) {
+          console.error("Failed to store session token:", error);
+        }
+      };
+
+      storeSessionToken();
 
       // Auto-close tab after success message is shown (optional)
       const timer = setTimeout(() => {
@@ -29,7 +59,7 @@ export default function ExtensionAuthPage() {
 
       return () => clearTimeout(timer);
     }
-  }, [isSignedIn]);
+  }, [isSignedIn, user]);
 
   // Auto-trigger sign-in modal when page loads
   useEffect(() => {

@@ -1,5 +1,6 @@
 import type { AutoCommentingState } from "./background-types";
-import { AICommentGenerator } from "./ai-comment-generator";
+import { AIService } from "../../utils/ai-service";
+import { setCachedClerkToken } from "../../utils/trpc-client";
 import { MessageRouter } from "./message-router";
 
 console.log("background script loaded");
@@ -67,31 +68,35 @@ const updateTodayComments = (newCount: number) => {
 };
 
 // Initialize services
-const aiCommentGenerator = new AICommentGenerator();
+const aiService = new AIService();
 
 // Function to generate comment using AI service
 const generateCommentBackground = async (
   postContent: string,
 ): Promise<string> => {
-  return aiCommentGenerator.generateComment(postContent, {
+  return aiService.generateComment(postContent, {
     apiKey: autoCommentingState.apiKey,
     styleGuide: autoCommentingState.styleGuide,
   });
 };
 
-// Main function to start auto-commenting with background window support
+// Main function to start auto-commenting with cached token
 const startAutoCommenting = async (
   styleGuide: string,
-  apiKey: string,
+  clerkToken: string,
   scrollDuration: number,
   commentDelay: number,
   maxPosts: number,
   duplicateWindow: number,
 ): Promise<void> => {
   try {
+    // Set the cached token for tRPC client (much more efficient!)
+    setCachedClerkToken(clerkToken);
+    console.log("Background: Cached Clerk token for tRPC client");
+
     // Reset and initialize state
     autoCommentingState.styleGuide = styleGuide;
-    autoCommentingState.apiKey = apiKey;
+    autoCommentingState.apiKey = ""; // No longer needed - using server-side auth
     autoCommentingState.scrollDuration = scrollDuration;
     autoCommentingState.commentDelay = commentDelay;
     autoCommentingState.maxPosts = maxPosts;

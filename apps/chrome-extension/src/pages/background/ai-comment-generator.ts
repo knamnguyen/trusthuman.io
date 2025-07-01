@@ -1,3 +1,8 @@
+// DEPRECATED: This file is no longer used
+// The AI comment generation has been moved to server-side tRPC API
+// See: src/utils/ai-service.ts for the new implementation
+
+/*
 import { GoogleGenAI } from "@google/genai";
 
 import type {
@@ -15,6 +20,7 @@ import type {
  * - Centralizes AI-related logic separate from background script
  */
 
+/*
 export class AICommentGenerator {
   /**
    * Generate a comment using Google GenAI based on post content and configuration
@@ -22,6 +28,7 @@ export class AICommentGenerator {
    * @param config API key and style guide configuration
    * @returns Promise resolving to generated comment string
    */
+/*
   async generateComment(
     postContent: string,
     config: CommentGeneratorConfig,
@@ -118,3 +125,4 @@ export class AICommentGenerator {
     }
   }
 }
+*/

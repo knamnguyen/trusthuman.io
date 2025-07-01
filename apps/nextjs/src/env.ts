@@ -17,6 +17,7 @@ export const env = createEnv({
     DATABASE_URL: z.string().url(),
     DIRECT_URL: z.string().url(),
     CLERK_WEBHOOK_SECRET: z.string(),
+    GOOGLE_GENAI_API_KEY: z.string(),
     // STRIPE_SECRET_KEY: z.string(),
     // STRIPE_WEBHOOK_SECRET: z.string()
   },

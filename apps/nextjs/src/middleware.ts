@@ -4,6 +4,7 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 const isPublicRoute = createRouteMatcher([
   "/",
   "/api/trpc/post.all",
+  "/api/trpc(.*)", // Allow all tRPC routes - authentication is handled in tRPC context
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/api/webhooks/stripe", // Allow Stripe webhooks

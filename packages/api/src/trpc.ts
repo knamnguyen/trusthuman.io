@@ -8,6 +8,7 @@
  */
 
 import type { User } from "@clerk/nextjs/server";
+import { createClerkClient, verifyToken } from "@clerk/backend";
 import { currentUser } from "@clerk/nextjs/server";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
@@ -31,14 +32,18 @@ import { db } from "@sassy/db";
 export interface TRPCContext {
   db: typeof db;
   user?: User;
+  headers: Headers;
 }
 
 export const createTRPCContext = async (opts: {
   headers: Headers;
 }): Promise<TRPCContext> => {
-  console.log(">>> tRPC Request from", "by");
+  const source = opts.headers.get("x-trpc-source");
+  console.log(">>> tRPC Request from", source || "nextjs");
+
   return {
     db,
+    headers: opts.headers,
     // Note: User will be added by the auth middleware when needed
   };
 };
@@ -62,11 +67,99 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
 
 /**
  * Clerk authentication middleware
- * This middleware checks if the user is authenticated using Clerk's currentUser() function
- * and adds the user to the context if authenticated
+ * This middleware handles authentication for both Next.js and Chrome extension requests
+ * - Next.js requests: Uses currentUser() from @clerk/nextjs/server
+ * - Chrome extension requests: Uses Backend SDK to verify Authorization header
  */
 const isAuthed = t.middleware(async ({ ctx, next }) => {
-  const user = await currentUser();
+  const source = ctx.headers.get("x-trpc-source");
+  let user: User | null = null;
+
+  if (source === "chrome-extension") {
+    // Handle Chrome extension authentication using Backend SDK
+    const authHeader = ctx.headers.get("authorization");
+
+    if (!authHeader?.startsWith("Bearer ")) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "Missing or invalid authorization header",
+      });
+    }
+
+    const token = authHeader.substring(7); // Remove "Bearer " prefix
+    console.log(
+      "Chrome extension token received - length:",
+      token.length,
+      "dots:",
+      token.split(".").length,
+    );
+
+    try {
+      // Create Clerk client
+      const clerkClient = createClerkClient({
+        secretKey: process.env.CLERK_SECRET_KEY,
+      });
+
+      // Check if this is a JWT (3 parts separated by dots) or a session ID
+      if (token.split(".").length === 3) {
+        // This is a JWT - use verifyToken
+        console.log("Attempting JWT verification...");
+        const verifiedToken = await verifyToken(token, {
+          secretKey: process.env.CLERK_SECRET_KEY,
+        });
+
+        if (verifiedToken.sub) {
+          user = await clerkClient.users.getUser(verifiedToken.sub);
+          console.log("Chrome extension JWT auth success for user:", user.id);
+        }
+      } else {
+        // This is likely a session ID - use Clerk client directly
+        console.log("Attempting session ID verification...");
+
+        try {
+          // Try to get session information using the token as a session ID
+          const session = await clerkClient.sessions.getSession(token);
+
+          if (session.userId) {
+            user = await clerkClient.users.getUser(session.userId);
+            console.log(
+              "Chrome extension session auth success for user:",
+              user.id,
+            );
+          }
+        } catch (sessionError: unknown) {
+          const errorMessage =
+            sessionError instanceof Error
+              ? sessionError.message
+              : String(sessionError);
+          console.log("Session verification failed:", errorMessage);
+
+          // If session lookup fails, try to verify as a JWT anyway (fallback)
+          console.log("Falling back to JWT verification...");
+          const verifiedToken = await verifyToken(token, {
+            secretKey: process.env.CLERK_SECRET_KEY,
+          });
+
+          if (verifiedToken.sub) {
+            user = await clerkClient.users.getUser(verifiedToken.sub);
+            console.log(
+              "Chrome extension fallback JWT auth success for user:",
+              user.id,
+            );
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Chrome extension auth error:", error);
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "Invalid session token",
+      });
+    }
+  } else {
+    // Handle Next.js authentication using currentUser()
+    user = await currentUser();
+  }
 
   if (!user) {
     throw new TRPCError({
@@ -77,7 +170,7 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
 
   return next({
     ctx: {
-      ...ctx, // Keep existing context with db
+      ...ctx, // Keep existing context with db and headers
       user, // Add the user to the context
     },
   });

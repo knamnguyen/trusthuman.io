@@ -50,5 +50,7 @@ export default defineConfig({
     "import.meta.env.VITE_NGROK_URL": JSON.stringify(
       process.env.VITE_NGROK_URL,
     ),
+    // Expose Next.js URL (which could be ngrok or localhost)
+    "import.meta.env.VITE_NEXTJS_URL": JSON.stringify(process.env.NEXTJS_URL),
   },
 });

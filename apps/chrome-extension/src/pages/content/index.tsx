@@ -266,12 +266,7 @@ function showStartButton() {
             hasApiKey: !!apiKey,
           });
 
-          if (!apiKey) {
-            backgroundError(
-              "❌ No API key found in storage! Cannot start commenting.",
-            );
-            return;
-          }
+          // API key check removed - using server-side tRPC API now
 
           if (!styleGuide) {
             backgroundError(
@@ -345,7 +340,6 @@ function showStartButton() {
             commentDelay,
             maxPosts,
             styleGuide,
-            apiKey,
             duplicateWindow,
             overlay,
             startButton,
@@ -1040,7 +1034,6 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
   commentDelay: number,
   maxPosts: number,
   styleGuide: string,
-  apiKey: string,
   duplicateWindow: number,
   overlay: HTMLDivElement,
   startButton: HTMLButtonElement,
