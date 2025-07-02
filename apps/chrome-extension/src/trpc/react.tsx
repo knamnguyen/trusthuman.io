@@ -101,6 +101,14 @@ const getTrpcClient = () => {
   }));
 };
 
+/**
+ * Get standalone tRPC client for use outside React context
+ * This is useful for services that need to make tRPC calls without React Query
+ */
+export const getStandaloneTRPCClient = () => {
+  return getTrpcClient();
+};
+
 export function TRPCReactProvider(props: { children: React.ReactNode }) {
   const queryClient = getQueryClient();
   const [trpcClient] = useState(getTrpcClient);

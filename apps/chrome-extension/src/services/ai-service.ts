@@ -1,4 +1,4 @@
-import { createExtensionTRPCClient } from "./trpc-client";
+import { getStandaloneTRPCClient } from "../trpc/react";
 
 /**
  * AI Service for Chrome Extension
@@ -13,7 +13,7 @@ export interface AICommentConfig {
 }
 
 export class AIService {
-  private trpcClient = createExtensionTRPCClient();
+  private trpcClient = getStandaloneTRPCClient();
 
   /**
    * Generate AI comment using server-side tRPC API

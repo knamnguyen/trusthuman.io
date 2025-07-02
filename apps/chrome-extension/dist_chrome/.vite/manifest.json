@@ -1,6 +1,6 @@
 {
   "../../../../../../../@crx/manifest": {
-    "file": "assets/crx-manifest.js-wL5CjbxW.js",
+    "file": "assets/crx-manifest.js-aDbeN65s.js",
     "name": "crx-manifest.js",
     "src": "../../../../../../../@crx/manifest",
     "isEntry": true
@@ -24,8 +24,8 @@
     "file": "assets/modulepreload-polyfill-B5Qt9EMX.js",
     "name": "modulepreload-polyfill"
   },
-  "_react-CDqlPKk1.js": {
-    "file": "assets/react-CDqlPKk1.js",
+  "_react-DaFN64P5.js": {
+    "file": "assets/react-DaFN64P5.js",
     "name": "react",
     "imports": [
       "_index-CqyD2INw.js",
@@ -37,12 +37,12 @@
     "src": "_tailwind-5Jl4cbeD.css"
   },
   "src/pages/background/index.ts": {
-    "file": "assets/index.ts-CTmf3oAt.js",
+    "file": "assets/index.ts-DE-yqVFf.js",
     "name": "index.ts",
     "src": "src/pages/background/index.ts",
     "isEntry": true,
     "imports": [
-      "_react-CDqlPKk1.js",
+      "_react-DaFN64P5.js",
       "_index-CqyD2INw.js",
       "__commonjsHelpers-gnU0ypJ3.js"
     ]
@@ -99,7 +99,7 @@
     ]
   },
   "src/pages/popup/index.html": {
-    "file": "assets/index.html-JHhXvVxE.js",
+    "file": "assets/index.html-CGfcl5gJ.js",
     "name": "index.html",
     "src": "src/pages/popup/index.html",
     "isEntry": true,
@@ -107,7 +107,7 @@
       "_modulepreload-polyfill-B5Qt9EMX.js",
       "_index-CqyD2INw.js",
       "_client-Q4vOSbiR.js",
-      "_react-CDqlPKk1.js",
+      "_react-DaFN64P5.js",
       "__commonjsHelpers-gnU0ypJ3.js"
     ],
     "css": [
