@@ -1,4 +1,44 @@
-// Function to generate comment using background script
+// Function to generate comment using direct tRPC call
+import { getStandaloneTRPCClient } from "@src/trpc/react";
+
+export default async function generateComment(
+  postContent: string,
+  styleGuide: string,
+): Promise<string> {
+  try {
+    console.log(
+      "🤖 Requesting comment generation via tRPC for post content:",
+      postContent.substring(0, 200) + "...",
+    );
+
+    // Direct tRPC call to aiComments.generateComment
+    const response =
+      await getStandaloneTRPCClient().aiComments.generateComment.mutate({
+        postContent,
+        styleGuide,
+      });
+
+    if (response && response.comment) {
+      console.log(
+        "✅ Successfully received generated comment:",
+        response.comment.substring(0, 100) + "...",
+      );
+      return response.comment;
+    } else {
+      console.error(
+        "⚠️ tRPC response missing comment field, using fallback. Response:",
+        response,
+      );
+      return "Great post! Thanks for sharing.";
+    }
+  } catch (error) {
+    console.error("💥 Error during tRPC comment generation:", error);
+    return "Great post! Thanks for sharing.";
+  }
+}
+
+// --- Old message-passing logic commented out for reference ---
+/*
 export default async function generateComment(
   postContent: string,
 ): Promise<string> {
@@ -149,3 +189,4 @@ export default async function generateComment(
     attemptGeneration(1);
   });
 }
+*/

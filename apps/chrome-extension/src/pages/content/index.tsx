@@ -817,7 +817,12 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
       `📜 Step 3: Processing all posts on feed... maxPosts: ${maxPosts}, commentDelay: ${commentDelay}, isCommentingActive: ${isCommentingActive}`,
     );
 
-    await processAllPostsFeed(commentDelay, maxPosts, duplicateWindow);
+    await processAllPostsFeed(
+      commentDelay,
+      maxPosts,
+      duplicateWindow,
+      styleGuide,
+    );
 
     console.log(`📜 Step 3 completed. Final state:`);
     console.log(`   - isCommentingActive: ${isCommentingActive}`);
@@ -856,6 +861,7 @@ async function processAllPostsFeed(
   commentDelay: number,
   maxPosts: number,
   duplicateWindow: number,
+  styleGuide: string,
 ): Promise<void> {
   console.group("🎯 PROCESSING ALL POSTS - DETAILED DEBUG");
   backgroundGroup("🎯 PROCESSING ALL POSTS - DETAILED DEBUG");
@@ -1066,9 +1072,9 @@ async function processAllPostsFeed(
         break;
       }
 
-      // Generate comment using background script
+      // Generate comment using direct tRPC call
       console.log(`🤖 Generating comment for post ${i + 1}...`);
-      const comment = await generateComment(postAuthorContent);
+      const comment = await generateComment(postAuthorContent, styleGuide);
       console.log(
         `🤖 Comment generation result for post ${i + 1}:`,
         comment ? "SUCCESS" : "FAILED",

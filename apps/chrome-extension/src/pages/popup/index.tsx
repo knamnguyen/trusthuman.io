@@ -5,6 +5,7 @@ import "@pages/popup/index.css";
 import "@assets/styles/tailwind.css";
 
 import Popup from "@pages/popup/Popup";
+import { ClerkProvider } from "@src/components/clerk-provider";
 
 import { TRPCReactProvider } from "../../trpc/react";
 
@@ -13,9 +14,11 @@ function init() {
   if (!rootContainer) throw new Error("Can't find Popup root element");
   const root = createRoot(rootContainer);
   root.render(
-    <TRPCReactProvider>
-      <Popup />
-    </TRPCReactProvider>,
+    <ClerkProvider>
+      <TRPCReactProvider>
+        <Popup />
+      </TRPCReactProvider>
+    </ClerkProvider>,
   );
 }
 

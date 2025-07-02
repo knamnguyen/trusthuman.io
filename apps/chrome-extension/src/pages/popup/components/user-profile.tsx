@@ -1,4 +1,5 @@
 import React from "react";
+import { UserButton } from "@clerk/chrome-extension";
 
 import type { AuthUser } from "../../../services/auth-service";
 import { formatAccessType, useUserData } from "../../../hooks/use-user-data";
@@ -80,17 +81,10 @@ const UserProfile = ({
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
           {/* Custom user avatar/button */}
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600">
-            <span className="text-sm font-semibold text-white">
-              {user?.firstName?.charAt(0) || "U"}
-            </span>
-          </div>
+          <UserButton />
           <div className="flex-1">
             <p className="text-sm font-medium text-gray-900">
               {user?.firstName || "User"} {user?.lastName || ""}
-            </p>
-            <p className="text-xs text-gray-500">
-              {user?.primaryEmailAddress?.emailAddress || "Loading..."}
             </p>
             <div className="mt-1">{renderPlanStatus()}</div>
           </div>
