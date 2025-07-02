@@ -20,6 +20,9 @@ export default function parseTimeStringToHours(timeStr: string): number | null {
   }
 
   const [, numberStr, unit] = match;
+  if (!numberStr) {
+    return null;
+  }
   const number = parseInt(numberStr, 10);
 
   if (isNaN(number)) {

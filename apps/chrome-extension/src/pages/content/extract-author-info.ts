@@ -22,12 +22,13 @@ export default function extractAuthorInfo(
 
     for (const selector of nameSelectors) {
       const nameElement = authorContainer.querySelector(selector);
-      if (nameElement && nameElement.textContent) {
-        const name = nameElement!
-          .textContent!.replace(/<!---->/g, "")
+      if (nameElement?.textContent) {
+        const textContent = nameElement.textContent;
+        const name = textContent
+          .replace(/<!---->/g, "")
           .trim()
           .split("•")[0]
-          .trim();
+          ?.trim();
         if (name) {
           console.log(`Extracted author name: ${name}`);
           return { name };

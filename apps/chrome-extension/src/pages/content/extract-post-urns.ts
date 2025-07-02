@@ -23,7 +23,7 @@ export default function extractPostUrns(postContainer: HTMLElement): string[] {
   if (dataId.startsWith("urn:li:aggregate:")) {
     // Handle aggregate format - extract URNs from within parentheses
     const match = dataId.match(/urn:li:aggregate:\((.*)\)/);
-    if (match) {
+    if (match?.[1]) {
       const innerUrns = match[1].split(",").map((urn) => urn.trim());
       urns.push(...innerUrns);
     }

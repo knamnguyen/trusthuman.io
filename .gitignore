@@ -47,6 +47,9 @@ secrets.json
 .vercel
 
 # typescript
+dist_chrome/
+dist_firefox/
+dist_opera/
 dist/
 .cache
 
