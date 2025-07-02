@@ -391,7 +391,7 @@ export default function Popup() {
 
   // If user has signed in before, show the authenticated UI immediately
   return (
-    <div className="h-[800px] w-[500px] overflow-y-auto bg-white">
+    <div className="w-[500px] overflow-y-auto bg-white">
       {/* Show authenticated UI for returning users */}
       <div className="p-6">
         <div className="mb-6">

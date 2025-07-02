@@ -59,7 +59,7 @@ export default function SettingsForm({
           value={styleGuide}
           onChange={(e) => onStyleGuideChange(e.target.value)}
           placeholder="Describe your commenting style... e.g., 'Professional but friendly, ask thoughtful questions, share relevant insights, keep responses under 50 words, add value to the conversation'"
-          className="h-20 w-full resize-none rounded-md border border-gray-300 p-3 text-sm focus:border-transparent focus:ring-2 focus:ring-blue-500"
+          className="h-60 w-full rounded-md border border-gray-300 p-3 text-sm focus:border-transparent focus:ring-2 focus:ring-blue-500"
           disabled={isRunning}
         />
         <div className="mt-2 flex justify-end">
