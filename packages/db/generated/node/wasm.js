@@ -131,6 +131,7 @@ exports.Prisma.UserScalarFieldEnum = {
   stripeCustomerId: 'stripeCustomerId',
   accessType: 'accessType',
   stripeUserProperties: 'stripeUserProperties',
+  dailyAIcomments: 'dailyAIcomments',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -161,9 +162,8 @@ exports.Prisma.NullsOrder = {
   last: 'last'
 };
 exports.AccessType = exports.$Enums.AccessType = {
-  TRIAL: 'TRIAL',
   FREE: 'FREE',
-  LIFETIME: 'LIFETIME',
+  WEEKLY: 'WEEKLY',
   MONTHLY: 'MONTHLY',
   YEARLY: 'YEARLY'
 };

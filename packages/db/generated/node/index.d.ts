@@ -24,9 +24,8 @@ export type User = $Result.DefaultSelection<Prisma.$UserPayload>
  */
 export namespace $Enums {
   export const AccessType: {
-  TRIAL: 'TRIAL',
   FREE: 'FREE',
-  LIFETIME: 'LIFETIME',
+  WEEKLY: 'WEEKLY',
   MONTHLY: 'MONTHLY',
   YEARLY: 'YEARLY'
 };
@@ -895,8 +894,18 @@ export namespace Prisma {
 
   export type AggregateUser = {
     _count: UserCountAggregateOutputType | null
+    _avg: UserAvgAggregateOutputType | null
+    _sum: UserSumAggregateOutputType | null
     _min: UserMinAggregateOutputType | null
     _max: UserMaxAggregateOutputType | null
+  }
+
+  export type UserAvgAggregateOutputType = {
+    dailyAIcomments: number | null
+  }
+
+  export type UserSumAggregateOutputType = {
+    dailyAIcomments: number | null
   }
 
   export type UserMinAggregateOutputType = {
@@ -908,6 +917,7 @@ export namespace Prisma {
     imageUrl: string | null
     stripeCustomerId: string | null
     accessType: $Enums.AccessType | null
+    dailyAIcomments: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -921,6 +931,7 @@ export namespace Prisma {
     imageUrl: string | null
     stripeCustomerId: string | null
     accessType: $Enums.AccessType | null
+    dailyAIcomments: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -936,11 +947,20 @@ export namespace Prisma {
     stripeCustomerId: number
     accessType: number
     stripeUserProperties: number
+    dailyAIcomments: number
     createdAt: number
     updatedAt: number
     _all: number
   }
 
+
+  export type UserAvgAggregateInputType = {
+    dailyAIcomments?: true
+  }
+
+  export type UserSumAggregateInputType = {
+    dailyAIcomments?: true
+  }
 
   export type UserMinAggregateInputType = {
     id?: true
@@ -951,6 +971,7 @@ export namespace Prisma {
     imageUrl?: true
     stripeCustomerId?: true
     accessType?: true
+    dailyAIcomments?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -964,6 +985,7 @@ export namespace Prisma {
     imageUrl?: true
     stripeCustomerId?: true
     accessType?: true
+    dailyAIcomments?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -979,6 +1001,7 @@ export namespace Prisma {
     stripeCustomerId?: true
     accessType?: true
     stripeUserProperties?: true
+    dailyAIcomments?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -1022,6 +1045,18 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
+     * Select which fields to average
+    **/
+    _avg?: UserAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: UserSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: UserMinAggregateInputType
@@ -1052,6 +1087,8 @@ export namespace Prisma {
     take?: number
     skip?: number
     _count?: UserCountAggregateInputType | true
+    _avg?: UserAvgAggregateInputType
+    _sum?: UserSumAggregateInputType
     _min?: UserMinAggregateInputType
     _max?: UserMaxAggregateInputType
   }
@@ -1067,9 +1104,12 @@ export namespace Prisma {
     stripeCustomerId: string | null
     accessType: $Enums.AccessType
     stripeUserProperties: JsonValue | null
+    dailyAIcomments: number
     createdAt: Date
     updatedAt: Date
     _count: UserCountAggregateOutputType | null
+    _avg: UserAvgAggregateOutputType | null
+    _sum: UserSumAggregateOutputType | null
     _min: UserMinAggregateOutputType | null
     _max: UserMaxAggregateOutputType | null
   }
@@ -1099,6 +1139,7 @@ export namespace Prisma {
     stripeCustomerId?: boolean
     accessType?: boolean
     stripeUserProperties?: boolean
+    dailyAIcomments?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["user"]>
@@ -1114,6 +1155,7 @@ export namespace Prisma {
     stripeCustomerId?: boolean
     accessType?: boolean
     stripeUserProperties?: boolean
+    dailyAIcomments?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["user"]>
@@ -1129,6 +1171,7 @@ export namespace Prisma {
     stripeCustomerId?: boolean
     accessType?: boolean
     stripeUserProperties?: boolean
+    dailyAIcomments?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["user"]>
@@ -1144,11 +1187,12 @@ export namespace Prisma {
     stripeCustomerId?: boolean
     accessType?: boolean
     stripeUserProperties?: boolean
+    dailyAIcomments?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "firstName" | "lastName" | "username" | "primaryEmailAddress" | "imageUrl" | "clerkUserProperties" | "stripeCustomerId" | "accessType" | "stripeUserProperties" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "firstName" | "lastName" | "username" | "primaryEmailAddress" | "imageUrl" | "clerkUserProperties" | "stripeCustomerId" | "accessType" | "stripeUserProperties" | "dailyAIcomments" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
 
   export type $UserPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "User"
@@ -1164,6 +1208,7 @@ export namespace Prisma {
       stripeCustomerId: string | null
       accessType: $Enums.AccessType
       stripeUserProperties: Prisma.JsonValue | null
+      dailyAIcomments: number
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["user"]>
@@ -1599,6 +1644,7 @@ export namespace Prisma {
     readonly stripeCustomerId: FieldRef<"User", 'String'>
     readonly accessType: FieldRef<"User", 'AccessType'>
     readonly stripeUserProperties: FieldRef<"User", 'Json'>
+    readonly dailyAIcomments: FieldRef<"User", 'Int'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
     readonly updatedAt: FieldRef<"User", 'DateTime'>
   }
@@ -1992,6 +2038,7 @@ export namespace Prisma {
     stripeCustomerId: 'stripeCustomerId',
     accessType: 'accessType',
     stripeUserProperties: 'stripeUserProperties',
+    dailyAIcomments: 'dailyAIcomments',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -2088,6 +2135,20 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'Int'
+   */
+  export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
+    
+
+
+  /**
+   * Reference to a field of type 'Int[]'
+   */
+  export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+
+  /**
    * Reference to a field of type 'DateTime'
    */
   export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>
@@ -2102,16 +2163,16 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'Int'
+   * Reference to a field of type 'Float'
    */
-  export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
+  export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
     
 
 
   /**
-   * Reference to a field of type 'Int[]'
+   * Reference to a field of type 'Float[]'
    */
-  export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+  export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
     
   /**
    * Deep Input Types
@@ -2132,6 +2193,7 @@ export namespace Prisma {
     stripeCustomerId?: StringNullableFilter<"User"> | string | null
     accessType?: EnumAccessTypeFilter<"User"> | $Enums.AccessType
     stripeUserProperties?: JsonNullableFilter<"User">
+    dailyAIcomments?: IntFilter<"User"> | number
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
   }
@@ -2147,6 +2209,7 @@ export namespace Prisma {
     stripeCustomerId?: SortOrderInput | SortOrder
     accessType?: SortOrder
     stripeUserProperties?: SortOrderInput | SortOrder
+    dailyAIcomments?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -2165,6 +2228,7 @@ export namespace Prisma {
     clerkUserProperties?: JsonNullableFilter<"User">
     accessType?: EnumAccessTypeFilter<"User"> | $Enums.AccessType
     stripeUserProperties?: JsonNullableFilter<"User">
+    dailyAIcomments?: IntFilter<"User"> | number
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
   }, "id" | "username" | "primaryEmailAddress" | "stripeCustomerId">
@@ -2180,11 +2244,14 @@ export namespace Prisma {
     stripeCustomerId?: SortOrderInput | SortOrder
     accessType?: SortOrder
     stripeUserProperties?: SortOrderInput | SortOrder
+    dailyAIcomments?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: UserCountOrderByAggregateInput
+    _avg?: UserAvgOrderByAggregateInput
     _max?: UserMaxOrderByAggregateInput
     _min?: UserMinOrderByAggregateInput
+    _sum?: UserSumOrderByAggregateInput
   }
 
   export type UserScalarWhereWithAggregatesInput = {
@@ -2201,6 +2268,7 @@ export namespace Prisma {
     stripeCustomerId?: StringNullableWithAggregatesFilter<"User"> | string | null
     accessType?: EnumAccessTypeWithAggregatesFilter<"User"> | $Enums.AccessType
     stripeUserProperties?: JsonNullableWithAggregatesFilter<"User">
+    dailyAIcomments?: IntWithAggregatesFilter<"User"> | number
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
   }
@@ -2216,6 +2284,7 @@ export namespace Prisma {
     stripeCustomerId?: string | null
     accessType?: $Enums.AccessType
     stripeUserProperties?: NullableJsonNullValueInput | InputJsonValue
+    dailyAIcomments?: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -2231,6 +2300,7 @@ export namespace Prisma {
     stripeCustomerId?: string | null
     accessType?: $Enums.AccessType
     stripeUserProperties?: NullableJsonNullValueInput | InputJsonValue
+    dailyAIcomments?: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -2246,6 +2316,7 @@ export namespace Prisma {
     stripeCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
     accessType?: EnumAccessTypeFieldUpdateOperationsInput | $Enums.AccessType
     stripeUserProperties?: NullableJsonNullValueInput | InputJsonValue
+    dailyAIcomments?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -2261,6 +2332,7 @@ export namespace Prisma {
     stripeCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
     accessType?: EnumAccessTypeFieldUpdateOperationsInput | $Enums.AccessType
     stripeUserProperties?: NullableJsonNullValueInput | InputJsonValue
+    dailyAIcomments?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -2276,6 +2348,7 @@ export namespace Prisma {
     stripeCustomerId?: string | null
     accessType?: $Enums.AccessType
     stripeUserProperties?: NullableJsonNullValueInput | InputJsonValue
+    dailyAIcomments?: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -2291,6 +2364,7 @@ export namespace Prisma {
     stripeCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
     accessType?: EnumAccessTypeFieldUpdateOperationsInput | $Enums.AccessType
     stripeUserProperties?: NullableJsonNullValueInput | InputJsonValue
+    dailyAIcomments?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -2306,6 +2380,7 @@ export namespace Prisma {
     stripeCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
     accessType?: EnumAccessTypeFieldUpdateOperationsInput | $Enums.AccessType
     stripeUserProperties?: NullableJsonNullValueInput | InputJsonValue
+    dailyAIcomments?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -2370,6 +2445,17 @@ export namespace Prisma {
     not?: NestedEnumAccessTypeFilter<$PrismaModel> | $Enums.AccessType
   }
 
+  export type IntFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntFilter<$PrismaModel> | number
+  }
+
   export type DateTimeFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
@@ -2397,8 +2483,13 @@ export namespace Prisma {
     stripeCustomerId?: SortOrder
     accessType?: SortOrder
     stripeUserProperties?: SortOrder
+    dailyAIcomments?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+  }
+
+  export type UserAvgOrderByAggregateInput = {
+    dailyAIcomments?: SortOrder
   }
 
   export type UserMaxOrderByAggregateInput = {
@@ -2410,6 +2501,7 @@ export namespace Prisma {
     imageUrl?: SortOrder
     stripeCustomerId?: SortOrder
     accessType?: SortOrder
+    dailyAIcomments?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -2423,8 +2515,13 @@ export namespace Prisma {
     imageUrl?: SortOrder
     stripeCustomerId?: SortOrder
     accessType?: SortOrder
+    dailyAIcomments?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+  }
+
+  export type UserSumOrderByAggregateInput = {
+    dailyAIcomments?: SortOrder
   }
 
   export type StringWithAggregatesFilter<$PrismaModel = never> = {
@@ -2499,6 +2596,22 @@ export namespace Prisma {
     _max?: NestedEnumAccessTypeFilter<$PrismaModel>
   }
 
+  export type IntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedIntFilter<$PrismaModel>
+    _min?: NestedIntFilter<$PrismaModel>
+    _max?: NestedIntFilter<$PrismaModel>
+  }
+
   export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
@@ -2523,6 +2636,14 @@ export namespace Prisma {
 
   export type EnumAccessTypeFieldUpdateOperationsInput = {
     set?: $Enums.AccessType
+  }
+
+  export type IntFieldUpdateOperationsInput = {
+    set?: number
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
   }
 
   export type DateTimeFieldUpdateOperationsInput = {
@@ -2564,6 +2685,17 @@ export namespace Prisma {
     not?: NestedEnumAccessTypeFilter<$PrismaModel> | $Enums.AccessType
   }
 
+  export type NestedIntFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntFilter<$PrismaModel> | number
+  }
+
   export type NestedDateTimeFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
@@ -2590,17 +2722,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedStringFilter<$PrismaModel>
     _max?: NestedStringFilter<$PrismaModel>
-  }
-
-  export type NestedIntFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntFilter<$PrismaModel> | number
   }
 
   export type NestedStringNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -2662,6 +2783,33 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumAccessTypeFilter<$PrismaModel>
     _max?: NestedEnumAccessTypeFilter<$PrismaModel>
+  }
+
+  export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedIntFilter<$PrismaModel>
+    _min?: NestedIntFilter<$PrismaModel>
+    _max?: NestedIntFilter<$PrismaModel>
+  }
+
+  export type NestedFloatFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatFilter<$PrismaModel> | number
   }
 
   export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {

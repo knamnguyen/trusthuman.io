@@ -35,14 +35,14 @@ model User {
   stripeCustomerId     String?    @unique
   accessType           AccessType @default(FREE)
   stripeUserProperties Json?
+  dailyAIcomments      Int        @default(0)
   createdAt            DateTime   @default(now())
   updatedAt            DateTime   @updatedAt
 }
 
 enum AccessType {
-  TRIAL
   FREE
-  LIFETIME
+  WEEKLY
   MONTHLY
   YEARLY
 }

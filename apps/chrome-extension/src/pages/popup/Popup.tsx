@@ -7,6 +7,7 @@ import {
   useUser,
 } from "@clerk/chrome-extension";
 
+import { clearCachedUserData } from "../../hooks/use-user-data";
 import Auth from "./components/auth";
 import ErrorDisplay from "./components/error-display";
 import RunningStatusBanner from "./components/running-status-banner";
@@ -71,6 +72,9 @@ export default function Popup() {
       console.log("Clerk loaded but user not signed in, resetting auth state");
       setHasEverSignedIn(false);
       chrome.storage.local.set({ hasEverSignedIn: false });
+
+      // Clear cached user data when signing out
+      clearCachedUserData();
     }
   }, [isLoaded, isSignedIn, hasEverSignedIn]);
 

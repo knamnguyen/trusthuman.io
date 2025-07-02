@@ -103,6 +103,7 @@ exports.Prisma.UserScalarFieldEnum = {
   stripeCustomerId: 'stripeCustomerId',
   accessType: 'accessType',
   stripeUserProperties: 'stripeUserProperties',
+  dailyAIcomments: 'dailyAIcomments',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -133,9 +134,8 @@ exports.Prisma.NullsOrder = {
   last: 'last'
 };
 exports.AccessType = exports.$Enums.AccessType = {
-  TRIAL: 'TRIAL',
   FREE: 'FREE',
-  LIFETIME: 'LIFETIME',
+  WEEKLY: 'WEEKLY',
   MONTHLY: 'MONTHLY',
   YEARLY: 'YEARLY'
 };
@@ -193,13 +193,13 @@ const config = {
       }
     }
   },
-  "inlineSchema": "generator client {\n  provider        = \"prisma-client-js\"\n  output          = \"../generated/node\"\n  previewFeatures = [\"postgresqlExtensions\"]\n  binaryTargets   = [\"native\", \"rhel-openssl-3.0.x\", \"linux-arm64-openssl-3.0.x\", \"linux-musl-arm64-openssl-3.0.x\"]\n}\n\ngenerator edge {\n  provider        = \"prisma-client-js\"\n  output          = \"../generated/edge\"\n  previewFeatures = [\"driverAdapters\", \"postgresqlExtensions\"]\n  binaryTargets   = [\"native\"]\n}\n\ngenerator zod {\n  provider = \"zod-prisma-types\"\n  output   = \"../generated/zod-prisma-validators\"\n}\n\ndatasource db {\n  provider   = \"postgresql\"\n  url        = env(\"DATABASE_URL\")\n  directUrl  = env(\"DIRECT_URL\")\n  extensions = [uuid_ossp(map: \"uuid-ossp\", schema: \"extensions\"), vector]\n}\n\nmodel User {\n  id                   String     @id\n  firstName            String?\n  lastName             String?\n  username             String?    @unique\n  primaryEmailAddress  String     @unique\n  imageUrl             String?\n  clerkUserProperties  Json?\n  stripeCustomerId     String?    @unique\n  accessType           AccessType @default(FREE)\n  stripeUserProperties Json?\n  createdAt            DateTime   @default(now())\n  updatedAt            DateTime   @updatedAt\n}\n\nenum AccessType {\n  TRIAL\n  FREE\n  LIFETIME\n  MONTHLY\n  YEARLY\n}\n",
-  "inlineSchemaHash": "6326e0b1a9082f5eadffc6e3f235110b19fabd1aa460e1580b14e184bf113e9d",
+  "inlineSchema": "generator client {\n  provider        = \"prisma-client-js\"\n  output          = \"../generated/node\"\n  previewFeatures = [\"postgresqlExtensions\"]\n  binaryTargets   = [\"native\", \"rhel-openssl-3.0.x\", \"linux-arm64-openssl-3.0.x\", \"linux-musl-arm64-openssl-3.0.x\"]\n}\n\ngenerator edge {\n  provider        = \"prisma-client-js\"\n  output          = \"../generated/edge\"\n  previewFeatures = [\"driverAdapters\", \"postgresqlExtensions\"]\n  binaryTargets   = [\"native\"]\n}\n\ngenerator zod {\n  provider = \"zod-prisma-types\"\n  output   = \"../generated/zod-prisma-validators\"\n}\n\ndatasource db {\n  provider   = \"postgresql\"\n  url        = env(\"DATABASE_URL\")\n  directUrl  = env(\"DIRECT_URL\")\n  extensions = [uuid_ossp(map: \"uuid-ossp\", schema: \"extensions\"), vector]\n}\n\nmodel User {\n  id                   String     @id\n  firstName            String?\n  lastName             String?\n  username             String?    @unique\n  primaryEmailAddress  String     @unique\n  imageUrl             String?\n  clerkUserProperties  Json?\n  stripeCustomerId     String?    @unique\n  accessType           AccessType @default(FREE)\n  stripeUserProperties Json?\n  dailyAIcomments      Int        @default(0)\n  createdAt            DateTime   @default(now())\n  updatedAt            DateTime   @updatedAt\n}\n\nenum AccessType {\n  FREE\n  WEEKLY\n  MONTHLY\n  YEARLY\n}\n",
+  "inlineSchemaHash": "bb4e3a1d26213fbbaf623db6a99b2ce3b4f502a414bff73b69bdf4ea2fa6ea1b",
   "copyEngine": true
 }
 config.dirname = '/'
 
-config.runtimeDataModel = JSON.parse("{\"models\":{\"User\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"firstName\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"lastName\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"username\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"primaryEmailAddress\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"imageUrl\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"clerkUserProperties\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"stripeCustomerId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"accessType\",\"kind\":\"enum\",\"type\":\"AccessType\"},{\"name\":\"stripeUserProperties\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
+config.runtimeDataModel = JSON.parse("{\"models\":{\"User\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"firstName\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"lastName\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"username\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"primaryEmailAddress\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"imageUrl\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"clerkUserProperties\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"stripeCustomerId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"accessType\",\"kind\":\"enum\",\"type\":\"AccessType\"},{\"name\":\"stripeUserProperties\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"dailyAIcomments\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
 defineDmmfProperty(exports.Prisma, config.runtimeDataModel)
 config.engineWasm = {
   getRuntime: async () => require('./query_engine_bg.js'),

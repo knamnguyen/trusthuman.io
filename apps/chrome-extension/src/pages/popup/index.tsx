@@ -7,6 +7,7 @@ import "@assets/styles/tailwind.css";
 import Popup from "@pages/popup/Popup";
 
 import { ClerkProvider } from "../../components/clerk-provider";
+import { TRPCReactProvider } from "../../trpc/react";
 
 function init() {
   const rootContainer = document.querySelector("#__root");
@@ -14,7 +15,9 @@ function init() {
   const root = createRoot(rootContainer);
   root.render(
     <ClerkProvider>
-      <Popup />
+      <TRPCReactProvider>
+        <Popup />
+      </TRPCReactProvider>
     </ClerkProvider>,
   );
 }

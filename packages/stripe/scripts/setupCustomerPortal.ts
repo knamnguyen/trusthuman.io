@@ -57,8 +57,8 @@ async function setupCustomerPortal(): Promise<void> {
     const portalConfig = await stripe.billingPortal.configurations.create({
       business_profile: {
         headline: "Manage your subscription",
-        privacy_policy_url: "https://your-domain.com/privacy", // Update with your actual URL
-        terms_of_service_url: "https://your-domain.com/terms", // Update with your actual URL
+        privacy_policy_url: "https://engagekit.iot/privacy", // Update with your actual URL
+        terms_of_service_url: "https://engagekit.io/terms", // Update with your actual URL
       },
       features: {
         customer_update: {
@@ -95,17 +95,21 @@ async function setupCustomerPortal(): Promise<void> {
           proration_behavior: "create_prorations",
           products: [
             {
+              product: "prod_SbbGTzwkeyTyPY", // Weekly product
+              prices: ["price_1RgO4IIeOImcBhu6i3t8slGo"], // Weekl price
+            },
+            {
               product: "prod_RxVyOOcNMLC1Sk", // Monthly product
-              prices: ["price_1R3awyRQf2ptbFsn64UnVAmI"], // Monthly price
+              prices: ["price_1RgO2AIeOImcBhu6rV6M9PmD"], // Monthly price
             },
             {
               product: "prod_RxWTt3Py1f7gvF", // Yearly product
-              prices: ["price_1R3bQuRQf2ptbFsnsuVDyAnt"], // Yearly price
+              prices: ["price_1RgO29IeOImcBhu6KnZqFvZK"], // Yearly price
             },
           ],
         },
       },
-      default_return_url: "https://your-domain.com/subscription", // Update with your actual URL
+      default_return_url: "https://engagekit.io/account", // Update with your actual URL
     });
 
     console.log("✅ Customer Portal configuration created successfully!");
