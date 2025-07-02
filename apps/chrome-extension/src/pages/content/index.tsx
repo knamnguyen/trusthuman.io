@@ -1,3 +1,5 @@
+import wait from "@src/utils/wait";
+
 import {
   backgroundError,
   backgroundGroup,
@@ -5,6 +7,15 @@ import {
   backgroundLog,
   backgroundWarn,
 } from "./background-log";
+import cleanupOldPostUrns from "./clean-old-post-urns";
+import cleanupOldTimestampsAuthor from "./clean-old-timestamp-author";
+import extractAuthorInfo from "./extract-author-info";
+import extractPostContent from "./extract-post-content";
+import extractPostUrns from "./extract-post-urns";
+import generateComment from "./generate-comment";
+import postCommentOnPost from "./post-comment-on-post";
+import scrollFeedLoadPosts from "./scroll-feed-load-post";
+import updateCommentCounts from "./update-comment-counts";
 
 // Content script for EngageKit - Background Window Mode
 // This script processes posts directly on the feed page
@@ -464,7 +475,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       request.commentDelay,
       request.maxPosts,
       request.styleGuide,
-      request.apiKey,
       request.duplicateWindow || 24, // default to 24 hours if not provided
       null as any, // overlay not available from this path
       null as any, // startButton not available from this path
@@ -477,170 +487,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     isCommentingActive = false;
     stopTabActiveAudio();
     sendResponse({ success: true });
-  } else if (request.action === "openrouter_error") {
-    // Handle OpenRouter API errors specifically
-    console.group("🚨 OPENROUTER API ERROR - WHY FALLBACK COMMENT WAS USED");
-    console.error("🔥 OpenRouter API Error Message:", request.error.message);
-    console.error("🔥 Error Type:", request.error.name);
-    console.error("🔥 API Key Status:", request.error.apiKey);
-    console.error("🔥 Style Guide Status:", request.error.styleGuide);
-    console.error(
-      "🔥 Post Content Length:",
-      request.error.postContentLength,
-      "characters",
-    );
-    console.error("🔥 Timestamp:", request.error.timestamp);
-    if (request.error.stack) {
-      console.error("🔥 Stack Trace:", request.error.stack);
-    }
-    console.error(
-      '🔥 This is why the comment defaulted to "Great post! Thanks for sharing."',
-    );
-    console.groupEnd();
-
-    // Create a prominent visual alert
-    const errorDiv = document.createElement("div");
-    errorDiv.style.cssText = `
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: #ff4444;
-      color: white;
-      border: 3px solid #fff;
-      padding: 20px;
-      border-radius: 12px;
-      z-index: 99999;
-      max-width: 500px;
-      font-family: Arial, sans-serif;
-      font-size: 14px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-      text-align: center;
-    `;
-    errorDiv.innerHTML = `
-      <div style="font-weight: bold; font-size: 18px; margin-bottom: 12px;">
-        🚨 OpenRouter API Error Detected
-      </div>
-      <div style="margin-bottom: 10px; font-size: 16px;">
-        ${request.error.message}
-      </div>
-      <div style="font-size: 12px; margin-bottom: 15px; opacity: 0.9;">
-        This is why the comment defaulted to "Great post! Thanks for sharing."
-      </div>
-      <div style="font-size: 12px; margin-bottom: 15px; opacity: 0.9;">
-        API Key: ${request.error.apiKey} | Content Length: ${request.error.postContentLength} chars
-      </div>
-      <button onclick="this.parentElement.remove()" style="
-        background: white;
-        color: #ff4444;
-        border: none;
-        padding: 8px 16px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-weight: bold;
-        font-size: 12px;
-      ">Close & Check Console</button>
-    `;
-    document.body.appendChild(errorDiv);
-
-    // Auto-remove after 15 seconds
-    setTimeout(() => {
-      if (errorDiv.parentElement) {
-        errorDiv.remove();
-      }
-    }, 15000);
   } else if (request.action === "statusUpdate" && request.error) {
     // Log error details to the website console for debugging
     console.group("🚨 EngageKit Error Details");
     console.error("Error Message:", request.error.message);
-    if (request.error.status) {
-      console.error(
-        "HTTP Status:",
-        request.error.status,
-        "-",
-        request.error.statusText,
-      );
-    }
-    if (request.error.body) {
-      console.error("API Response Body:", request.error.body);
-    }
-    if (request.error.headers) {
-      console.error("Response Headers:", request.error.headers);
-    }
-    console.error("API Key Status:", request.error.apiKey || "Unknown");
-    console.error("Style Guide Status:", request.error.styleGuide || "Unknown");
-    if (request.error.postContentLength !== undefined) {
-      console.error(
-        "Post Content Length:",
-        request.error.postContentLength,
-        "characters",
-      );
-    }
-    if (request.error.stack) {
-      console.error("Stack Trace:", request.error.stack);
-    }
-    if (request.error.data) {
-      console.error("Additional Data:", request.error.data);
-    }
-    console.groupEnd();
-
-    // Also create a visual alert in the page
-    const errorDiv = document.createElement("div");
-    errorDiv.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: #fee;
-      border: 2px solid #f00;
-      padding: 15px;
-      border-radius: 8px;
-      z-index: 10000;
-      max-width: 400px;
-      font-family: Arial, sans-serif;
-      font-size: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    `;
-    errorDiv.innerHTML = `
-      <div style="font-weight: bold; color: #d00; margin-bottom: 8px;">
-        🚨 EngageKit Error
-      </div>
-      <div style="color: #800; margin-bottom: 5px;">
-        ${request.error.message || "Unknown error occurred"}
-      </div>
-      ${
-        request.error.status
-          ? `<div style="color: #600; font-size: 11px;">HTTP ${request.error.status}: ${request.error.statusText}</div>`
-          : ""
-      }
-      <div style="color: #600; font-size: 11px; margin-top: 5px;">
-        Check console for full details (F12)
-      </div>
-      <button onclick="this.parentElement.remove()" style="
-        background: #d00;
-        color: white;
-        border: none;
-        padding: 4px 8px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 10px;
-        margin-top: 8px;
-      ">Close</button>
-    `;
-    document.body.appendChild(errorDiv);
-
-    // Auto-remove after 10 seconds
-    setTimeout(() => {
-      if (errorDiv.parentElement) {
-        errorDiv.remove();
-      }
-    }, 10000);
   }
 });
-
-// Function to get today's date string
-function getTodayDateString(): string {
-  return new Date().toDateString();
-}
 
 // Function to load commented authors with timestamps from local storage
 async function loadCommentedAuthorsWithTimestamps(): Promise<
@@ -701,34 +553,13 @@ function hasCommentedOnAuthorRecently(
 
 // Function to load today's commented authors from local storage (for backward compatibility)
 async function loadTodayCommentedAuthors(): Promise<Set<string>> {
-  const today = getTodayDateString();
+  const today = new Date().toDateString();
   const storageKey = `commented_authors_${today}`;
 
   return new Promise((resolve) => {
     chrome.storage.local.get([storageKey], (result) => {
       const todayAuthors = result[storageKey] || [];
       resolve(new Set(todayAuthors));
-    });
-  });
-}
-
-// Function to save commented author to local storage (for backward compatibility)
-async function saveCommentedAuthor(authorName: string): Promise<void> {
-  const today = getTodayDateString();
-  const storageKey = `commented_authors_${today}`;
-
-  return new Promise((resolve) => {
-    chrome.storage.local.get([storageKey], (result) => {
-      const todayAuthors = result[storageKey] || [];
-      if (!todayAuthors.includes(authorName)) {
-        todayAuthors.push(authorName);
-        chrome.storage.local.set({ [storageKey]: todayAuthors }, () => {
-          console.log(`Saved commented author: ${authorName} for ${today}`);
-          resolve();
-        });
-      } else {
-        resolve();
-      }
     });
   });
 }
@@ -830,44 +661,6 @@ function hasCommentedOnPostUrn(urn: string): boolean {
   return commentedPostUrns.has(urn);
 }
 
-// Function to extract post URNs from data-id attribute
-function extractPostUrns(postContainer: HTMLElement): string[] {
-  // Look for the top-level div with data-id attribute
-  const topLevelPost = postContainer.closest("div[data-id]") as HTMLElement;
-  if (!topLevelPost) {
-    console.log("No div[data-id] found for this post container");
-    return [];
-  }
-
-  const dataId = topLevelPost.getAttribute("data-id");
-  if (!dataId) {
-    console.log("No data-id attribute found");
-    return [];
-  }
-
-  console.log(`Found data-id: ${dataId}`);
-
-  // Extract URNs - handle both single and aggregate format
-  // Single: "urn:li:activity:7341086723700936704"
-  // Aggregate: "urn:li:aggregate:(urn:li:activity:7341090533815087104,urn:li:activity:7341089862118244355)"
-  const urns: string[] = [];
-
-  if (dataId.startsWith("urn:li:aggregate:")) {
-    // Handle aggregate format - extract URNs from within parentheses
-    const match = dataId.match(/urn:li:aggregate:\((.*)\)/);
-    if (match) {
-      const innerUrns = match[1].split(",").map((urn) => urn.trim());
-      urns.push(...innerUrns);
-    }
-  } else if (dataId.startsWith("urn:li:activity:")) {
-    // Handle single activity format
-    urns.push(dataId);
-  }
-
-  console.log(`Extracted URNs: ${urns.join(", ")}`);
-  return urns;
-}
-
 // Function to update the post already commented counter
 async function updatePostAlreadyCommentedCounter(): Promise<void> {
   postsSkippedAlreadyCommentedCount++;
@@ -900,76 +693,6 @@ async function updatePostAlreadyCommentedCounter(): Promise<void> {
   });
 }
 
-// Function to clean up old post URNs (older than 1 year)
-async function cleanupOldPostUrns(): Promise<void> {
-  const oneYearInMs = 365 * 24 * 60 * 60 * 1000;
-  const now = Date.now();
-
-  return new Promise((resolve) => {
-    let removedCount = 0;
-    const cleanedUrns = new Map<string, number>();
-
-    for (const [urn, timestamp] of commentedPostUrns) {
-      if (now - timestamp < oneYearInMs) {
-        cleanedUrns.set(urn, timestamp);
-      } else {
-        removedCount++;
-      }
-    }
-
-    if (removedCount > 0) {
-      commentedPostUrns = cleanedUrns;
-      const urnsObject = Object.fromEntries(commentedPostUrns);
-      chrome.storage.local.set({ commented_post_urns: urnsObject }, () => {
-        console.log(
-          `Cleaned up ${removedCount} old post URNs (older than 1 year)`,
-        );
-        resolve();
-      });
-    } else {
-      console.log("No old post URNs to clean up");
-      resolve();
-    }
-  });
-}
-
-// Function to update comment counts in local storage
-async function updateCommentCounts(): Promise<void> {
-  const today = getTodayDateString();
-  const todayKey = `comments_today_${today}`;
-
-  return new Promise((resolve) => {
-    chrome.storage.local.get([todayKey, "totalAllTimeComments"], (result) => {
-      const currentTodayCount = result[todayKey] || 0;
-      const currentAllTimeCount = result["totalAllTimeComments"] || 0;
-
-      const newTodayCount = currentTodayCount + 1;
-      const newAllTimeCount = currentAllTimeCount + 1;
-
-      chrome.storage.local.set(
-        {
-          [todayKey]: newTodayCount,
-          totalAllTimeComments: newAllTimeCount,
-        },
-        () => {
-          console.log(
-            `Updated counts - Today: ${newTodayCount}, All-time: ${newAllTimeCount}`,
-          );
-
-          // Send real-time update to popup
-          chrome.runtime.sendMessage({
-            action: "realTimeCountUpdate",
-            todayCount: newTodayCount,
-            allTimeCount: newAllTimeCount,
-          });
-
-          resolve();
-        },
-      );
-    });
-  });
-}
-
 // Main function to start the new commenting flow with delayed tab switching
 async function startNewCommentingFlowWithDelayedTabSwitch(
   scrollDuration: number,
@@ -993,8 +716,6 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
     `   - scrollDuration: ${scrollDuration}, commentDelay: ${commentDelay}, maxPosts: ${maxPosts}, isCommentingActive: ${isCommentingActive}`,
   );
 
-  // Apply tab active state spoofing immediately to prevent LinkedIn from detecting background tab
-  await forceTabActiveState();
   backgroundLog("🎭 Applied LinkedIn background tab bypass techniques");
 
   // // Start anti-throttling mechanisms to prevent tab throttling
@@ -1009,8 +730,8 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
   await loadCounters();
 
   // Clean up old timestamp entries and post URNs to prevent storage bloat
-  await cleanupOldTimestamps();
-  await cleanupOldPostUrns();
+  await cleanupOldTimestampsAuthor();
+  await cleanupOldPostUrns(commentedPostUrns);
 
   // For backward compatibility, also load today's authors
   commentedAuthors = await loadTodayCommentedAuthors();
@@ -1034,7 +755,7 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
     // Step 1: Scroll down for specified duration to load posts
     console.log(`📜 Step 1: Scrolling feed for ${scrollDuration} seconds...`);
     backgroundLog(`📜 Step 1: Scrolling feed for ${scrollDuration} seconds...`);
-    await scrollFeedToLoadPosts(scrollDuration, statusPanel);
+    await scrollFeedLoadPosts(scrollDuration, isCommentingActive, statusPanel);
 
     // IMPORTANT: Only move to original tab AFTER scrolling is completely finished
     console.log(
@@ -1096,7 +817,7 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
       `📜 Step 3: Processing all posts on feed... maxPosts: ${maxPosts}, commentDelay: ${commentDelay}, isCommentingActive: ${isCommentingActive}`,
     );
 
-    await processAllPostsOnFeed(commentDelay, maxPosts, duplicateWindow);
+    await processAllPostsFeed(commentDelay, maxPosts, duplicateWindow);
 
     console.log(`📜 Step 3 completed. Final state:`);
     console.log(`   - isCommentingActive: ${isCommentingActive}`);
@@ -1130,415 +851,8 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
   }
 }
 
-// Helper function to request notification permission for anti-throttling
-async function requestNotificationPermissionForAntiThrottling(): Promise<boolean> {
-  try {
-    if (!("Notification" in window)) {
-      backgroundLog("📜 🔔 Notifications not supported in this browser");
-      return false;
-    }
-
-    if (Notification.permission === "granted") {
-      backgroundLog("📜 🔔 Notification permission already granted");
-      return true;
-    }
-
-    if (Notification.permission === "denied") {
-      backgroundLog("📜 🔔 Notification permission previously denied");
-      return false;
-    }
-
-    // Request notification permission
-    const permission = await Notification.requestPermission();
-
-    if (permission === "granted") {
-      backgroundLog(
-        "📜 🔔 ✅ Notification permission granted - should help with anti-throttling",
-      );
-
-      // Show a brief notification to confirm it works
-      new Notification("EngageKit", {
-        body: "Notification permission granted for better performance",
-        icon: "https://static.licdn.com/sc/h/3m6veb8kxx0k7v4c6u7q6z8hm",
-        silent: true,
-      });
-
-      return true;
-    } else {
-      backgroundLog("📜 🔔 ❌ Notification permission denied");
-      return false;
-    }
-  } catch (error) {
-    backgroundWarn(
-      "📜 🔔 ⚠️ Failed to request notification permission:",
-      error,
-    );
-    return false;
-  }
-}
-
-// Helper function to force LinkedIn to think tab is active
-async function forceTabActiveState() {
-  try {
-    // Step 1: Request notification permission for anti-throttling
-    await requestNotificationPermissionForAntiThrottling();
-
-    // Step 2: Override document.hidden and document.visibilityState
-    Object.defineProperty(document, "hidden", {
-      value: false,
-      writable: false,
-    });
-
-    Object.defineProperty(document, "visibilityState", {
-      value: "visible",
-      writable: false,
-    });
-
-    // Step 3: Override document.hasFocus to return true
-    const originalHasFocus = document.hasFocus;
-    document.hasFocus = function () {
-      return true;
-    };
-
-    // Step 4: Prevent visibility change events
-    const originalAddEventListener = document.addEventListener;
-    document.addEventListener = function (
-      type: string,
-      listener: EventListenerOrEventListenerObject | null,
-      options?: boolean | AddEventListenerOptions,
-    ) {
-      if (type === "visibilitychange") {
-        // Don't add visibility change listeners
-        return;
-      }
-      if (listener === null) {
-        return;
-      }
-      return originalAddEventListener.call(this, type, listener, options);
-    };
-
-    backgroundLog("📜 🎭 Applied comprehensive tab active state spoofing");
-  } catch (error) {
-    backgroundWarn("📜 ⚠️ Failed to apply tab active state spoofing:", error);
-  }
-}
-
-// Helper function to manually trigger LinkedIn's content loading
-function forceTriggerLinkedInLoading() {
-  try {
-    // Trigger visibility change event to "visible"
-    const visibilityEvent = new Event("visibilitychange", { bubbles: true });
-    document.dispatchEvent(visibilityEvent);
-
-    // Trigger focus events
-    const focusEvent = new Event("focus", { bubbles: true });
-    window.dispatchEvent(focusEvent);
-    document.dispatchEvent(focusEvent);
-
-    // Trigger page show event
-    const pageShowEvent = new PageTransitionEvent("pageshow", {
-      bubbles: true,
-      persisted: false,
-    });
-    window.dispatchEvent(pageShowEvent);
-
-    // PRIORITY: Click LinkedIn's infinite scroll load button
-    const infiniteScrollButton = document.querySelector(
-      ".scaffold-finite-scroll__load-button",
-    ) as HTMLButtonElement;
-    if (infiniteScrollButton && !infiniteScrollButton.disabled) {
-      infiniteScrollButton.click();
-      backgroundLog(
-        "📜 🎯 Clicked LinkedIn infinite scroll load button (.scaffold-finite-scroll__load-button)",
-      );
-    } else if (infiniteScrollButton && infiniteScrollButton.disabled) {
-      backgroundLog("📜 ⚠️ Infinite scroll button found but disabled");
-    } else {
-      backgroundLog(
-        "📜 ℹ️ No infinite scroll button found (.scaffold-finite-scroll__load-button)",
-      );
-    }
-  } catch (error) {
-    backgroundWarn("📜 ⚠️ Failed to trigger LinkedIn loading:", error);
-  }
-}
-
-// Helper function to manually trigger scroll events for better LinkedIn compatibility
-function triggerScrollEvents() {
-  try {
-    // Create scroll event (following the 10-year-old solution approach)
-    const scrollEvent = new Event("scroll", {
-      bubbles: true,
-      cancelable: true,
-    });
-
-    // Method 1: Traditional window/document events
-    window.dispatchEvent(scrollEvent);
-    document.dispatchEvent(scrollEvent);
-
-    // Method 2: Target LinkedIn's specific feed containers (key insight from old solution)
-    const linkedInFeedSelectors = [
-      ".scaffold-layout__main", // Main content area
-      ".feed-container-theme", // Feed container
-      ".scaffold-finite-scroll", // Infinite scroll container
-      ".feed-shared-update-v2", // Individual post containers
-      ".application-outlet", // Main app container
-      ".feed-outlet", // Feed outlet
-      "#main", // Main element
-      '[role="main"]', // ARIA main role
-      ".ember-application", // Ember app container
-    ];
-
-    // Dispatch scroll events to each LinkedIn container we can find
-    linkedInFeedSelectors.forEach((selector) => {
-      const elements = document.querySelectorAll(selector);
-      elements.forEach((element) => {
-        if (element) {
-          element.dispatchEvent(scrollEvent);
-          backgroundLog(`📜 🎯 Triggered scroll event on: ${selector}`);
-        }
-      });
-    });
-
-    // Method 3: Also trigger wheel events (some sites listen for these)
-    const wheelEvent = new WheelEvent("wheel", {
-      bubbles: true,
-      cancelable: true,
-      deltaY: 100,
-      deltaMode: WheelEvent.DOM_DELTA_PIXEL,
-    });
-    window.dispatchEvent(wheelEvent);
-
-    // Trigger wheel events on main containers too
-    const mainContainer = document.querySelector(
-      ".scaffold-layout__main, .feed-container-theme",
-    );
-    if (mainContainer) {
-      mainContainer.dispatchEvent(wheelEvent);
-      backgroundLog("📜 🎯 Triggered wheel event on main LinkedIn container");
-    }
-  } catch (error) {
-    backgroundWarn("📜 ⚠️ Failed to trigger scroll events:", error);
-  }
-}
-
-// Function to scroll feed and load posts - Aggressive scrolling to bottom
-async function scrollFeedToLoadPosts(
-  duration: number,
-  statusPanel?: HTMLDivElement,
-): Promise<void> {
-  console.log(
-    `Aggressively scrolling feed for ${duration} seconds to load posts...`,
-  );
-  backgroundLog(
-    `📜 Starting aggressive scroll-to-bottom for ${duration} seconds...`,
-  );
-
-  // Apply tab active state spoofing immediately
-  await forceTabActiveState();
-
-  const startTime = Date.now();
-  const endTime = startTime + duration * 1000;
-
-  // Track metrics for debugging
-  let scrollAttempts = 0;
-  let postCountBefore = 0;
-  let lastPostCount = 0;
-
-  // Get initial post count
-  const initialPosts = document.querySelectorAll(
-    ".feed-shared-update-v2__control-menu-container",
-  );
-  postCountBefore = initialPosts.length;
-  lastPostCount = postCountBefore;
-  backgroundLog(`📜 Initial post count: ${postCountBefore}`);
-
-  // Use aggressive scrolling - just go to bottom repeatedly
-  const pauseBetweenScrolls = 2000; // 2 second pause to allow content loading
-
-  while (Date.now() < endTime && isCommentingActive) {
-    // Check if we should stop
-    if (!isCommentingActive) {
-      backgroundLog("❌ Stopping scroll due to stop signal");
-      break;
-    }
-
-    const currentTime = Date.now();
-    const timeRemaining = Math.round((endTime - currentTime) / 1000);
-    backgroundLog(
-      `📜 Aggressive scroll attempt ${
-        scrollAttempts + 1
-      }, ${timeRemaining}s remaining`,
-    );
-
-    // Update status panel if available
-    if (statusPanel) {
-      const currentPosts = document.querySelectorAll(
-        ".feed-shared-update-v2__control-menu-container",
-      ).length;
-      const newPostsThisSession = currentPosts - postCountBefore;
-
-      const timeRemainingElement = statusPanel.querySelector(
-        "#time-remaining span",
-      );
-      const postsLoadedElement =
-        statusPanel.querySelector("#posts-loaded span");
-      const scrollProgressElement = statusPanel.querySelector(
-        "#scroll-progress span",
-      );
-
-      if (timeRemainingElement) {
-        timeRemainingElement.textContent = `${timeRemaining}s`;
-      }
-
-      if (postsLoadedElement) {
-        postsLoadedElement.textContent = `${currentPosts} posts (+${newPostsThisSession} this session)`;
-      }
-
-      if (scrollProgressElement) {
-        scrollProgressElement.textContent = `Scroll attempt ${
-          scrollAttempts + 1
-        } - Loading content...`;
-      }
-    }
-
-    scrollAttempts++;
-
-    // Record current scroll position
-    const beforeScroll = window.scrollY;
-    const documentHeight = document.body.scrollHeight;
-
-    // Aggressive scroll: Go straight to bottom
-    window.scrollTo({ top: documentHeight, behavior: "smooth" });
-
-    // Trigger scroll events on LinkedIn's specific containers
-    triggerScrollEvents();
-
-    // Wait for scroll to complete and content to load
-    await wait(pauseBetweenScrolls);
-
-    const afterScroll = window.scrollY;
-    const newDocumentHeight = document.body.scrollHeight;
-
-    backgroundLog(
-      `📜 Scrolled from ${beforeScroll} to ${afterScroll}, doc height: ${documentHeight} → ${newDocumentHeight}`,
-    );
-
-    // Check for new content after each scroll
-    const currentPosts = document.querySelectorAll(
-      ".feed-shared-update-v2__control-menu-container",
-    );
-    const newPostCount = currentPosts.length;
-
-    if (newPostCount > lastPostCount) {
-      const newPosts = newPostCount - lastPostCount;
-      backgroundLog(
-        `📜 ✅ Content loaded! Found ${newPosts} new posts (total: ${newPostCount})`,
-      );
-      lastPostCount = newPostCount;
-
-      // Update status panel with success indicator
-      if (statusPanel) {
-        const scrollProgressElement = statusPanel.querySelector(
-          "#scroll-progress span",
-        );
-        if (scrollProgressElement) {
-          scrollProgressElement.textContent = `✅ Loaded ${newPosts} new posts! (Total: ${newPostCount})`;
-        }
-      }
-    } else {
-      backgroundLog(
-        `📜 ⚠️ No new posts detected. Still at ${newPostCount} posts`,
-      );
-
-      // Update status panel with no new content indicator
-      if (statusPanel) {
-        const scrollProgressElement = statusPanel.querySelector(
-          "#scroll-progress span",
-        );
-        if (scrollProgressElement) {
-          scrollProgressElement.textContent = `⏳ Waiting for new content... (${newPostCount} posts)`;
-        }
-      }
-    }
-
-    // Apply anti-throttling techniques periodically
-    if (scrollAttempts % 3 === 0) {
-      await forceTabActiveState();
-      forceTriggerLinkedInLoading();
-      backgroundLog(`📜 🎭 Reapplied anti-throttling techniques`);
-
-      // Update status panel with anti-throttling indicator
-      if (statusPanel) {
-        const scrollProgressElement = statusPanel.querySelector(
-          "#scroll-progress span",
-        );
-        if (scrollProgressElement) {
-          scrollProgressElement.textContent = `🎭 Applied anti-throttling techniques`;
-        }
-      }
-    }
-
-    // If document height didn't change, we might be done
-    if (
-      newDocumentHeight === documentHeight &&
-      newPostCount === lastPostCount
-    ) {
-      backgroundLog(
-        `📜 📊 No height or post changes detected - continuing for full duration`,
-      );
-    }
-  }
-
-  // Final status update
-  if (statusPanel) {
-    const finalPosts = document.querySelectorAll(
-      ".feed-shared-update-v2__control-menu-container",
-    );
-    const totalNewPosts = finalPosts.length - postCountBefore;
-
-    const timeRemainingElement = statusPanel.querySelector(
-      "#time-remaining span",
-    );
-    const scrollProgressElement = statusPanel.querySelector(
-      "#scroll-progress span",
-    );
-
-    if (timeRemainingElement) {
-      timeRemainingElement.textContent = `0s - COMPLETE!`;
-    }
-
-    if (scrollProgressElement) {
-      scrollProgressElement.textContent = `🎉 Scrolling complete! Loaded ${totalNewPosts} new posts`;
-    }
-  }
-
-  // Final metrics
-  const finalPosts = document.querySelectorAll(
-    ".feed-shared-update-v2__control-menu-container",
-  );
-  const totalNewPosts = finalPosts.length - initialPosts.length;
-  const actualDuration = Math.round((Date.now() - startTime) / 1000);
-
-  console.log("Finished aggressive scrolling to load posts");
-  backgroundLog(
-    `📜 Aggressive scroll completed! Duration: ${actualDuration}s, Scroll attempts: ${scrollAttempts}, New posts loaded: ${totalNewPosts} (${initialPosts.length} → ${finalPosts.length})`,
-  );
-
-  // Alert if we didn't load many posts
-  if (totalNewPosts < 15 && actualDuration > 15) {
-    backgroundWarn(
-      `📜 ⚠️ Only loaded ${totalNewPosts} posts in ${actualDuration}s. LinkedIn might be throttling or has limited content.`,
-    );
-  } else if (totalNewPosts >= 20) {
-    backgroundLog(
-      `📜 🎉 Excellent! Loaded ${totalNewPosts} posts using aggressive scrolling.`,
-    );
-  }
-}
-
 // Function to process all posts on the feed
-async function processAllPostsOnFeed(
+async function processAllPostsFeed(
   commentDelay: number,
   maxPosts: number,
   duplicateWindow: number,
@@ -1786,7 +1100,11 @@ async function processAllPostsOnFeed(
           authorInfo.name
         }...`,
       );
-      const success = await postCommentOnPost(postContainer, comment);
+      const success = await postCommentOnPost(
+        postContainer,
+        comment,
+        isCommentingActive,
+      );
       console.log(
         `📝 Comment posting result for post ${i + 1}: ${
           success ? "SUCCESS" : "FAILED"
@@ -1798,7 +1116,6 @@ async function processAllPostsOnFeed(
         commentedAuthors.add(authorInfo.name);
 
         // Save author with timestamp and update counts
-        await saveCommentedAuthor(authorInfo.name); // for backward compatibility
         await saveCommentedAuthorWithTimestamp(authorInfo.name); // new timestamp-based storage
         commentedAuthorsWithTimestamps.set(authorInfo.name, Date.now()); // update in-memory data
 
@@ -1966,72 +1283,6 @@ async function processAllPostsOnFeed(
   backgroundGroupEnd();
 }
 
-// Function to parse time strings like "15h", "5m", "2d" into hours
-function parseTimeStringToHours(timeStr: string): number | null {
-  if (!timeStr || typeof timeStr !== "string") {
-    return null;
-  }
-
-  // Remove any extra whitespace and convert to lowercase
-  const cleaned = timeStr.trim().toLowerCase();
-
-  // Handle "Promoted" posts
-  if (cleaned === "promoted" || cleaned.includes("promoted")) {
-    return null;
-  }
-
-  // Extract number and unit using regex
-  const match = cleaned.match(/^(\d+)([mhdw])$/);
-  if (!match) {
-    console.log(`Could not parse time string: "${timeStr}"`);
-    return null;
-  }
-
-  const [, numberStr, unit] = match;
-  const number = parseInt(numberStr, 10);
-
-  if (isNaN(number)) {
-    return null;
-  }
-
-  // Convert to hours
-  switch (unit) {
-    case "m": // minutes
-      return number / 60;
-    case "h": // hours
-      return number;
-    case "d": // days
-      return number * 24;
-    case "w": // weeks
-      return number * 24 * 7;
-    default:
-      return null;
-  }
-}
-
-// Function to extract post time from post container
-function extractPostTime(postContainer: HTMLElement): number | null {
-  try {
-    // Look for the time span with the specific classes
-    const timeSpan = postContainer.querySelector(
-      ".update-components-actor__sub-description.text-body-xsmall",
-    );
-
-    if (!timeSpan || !timeSpan.textContent) {
-      console.log("Time span not found or has no text content");
-      return null;
-    }
-
-    const timeText = timeSpan.textContent.trim();
-    console.log(`Found time text: "${timeText}"`);
-
-    return parseTimeStringToHours(timeText);
-  } catch (error) {
-    console.error("Error extracting post time:", error);
-    return null;
-  }
-}
-
 // Function to update time filter skipped counter
 async function updateTimeFilterSkippedCounter(): Promise<void> {
   postsSkippedTimeFilterCount++;
@@ -2058,412 +1309,6 @@ async function updateTimeFilterSkippedCounter(): Promise<void> {
   });
 }
 
-// Function to extract author info from post container
-function extractAuthorInfo(
-  postContainer: HTMLElement,
-): { name: string } | null {
-  try {
-    // Look for author container within the post
-    const authorContainer = postContainer.querySelector(
-      ".update-components-actor__container",
-    );
-    if (!authorContainer) {
-      console.log("Author container not found");
-      return null;
-    }
-
-    // Try different selectors for author name
-    const nameSelectors = [
-      '.update-components-actor__title span[dir="ltr"] span[aria-hidden="true"]',
-      '.update-components-actor__title span[aria-hidden="true"]',
-      ".update-components-actor__title",
-      ".update-components-actor__name",
-    ];
-
-    for (const selector of nameSelectors) {
-      const nameElement = authorContainer.querySelector(selector);
-      if (nameElement && nameElement.textContent) {
-        const name = nameElement.textContent
-          .replace(/<!---->/g, "")
-          .trim()
-          .split("•")[0]
-          .trim();
-        if (name) {
-          console.log(`Extracted author name: ${name}`);
-          return { name };
-        }
-      }
-    }
-
-    console.log("Could not extract author name");
-    return null;
-  } catch (error) {
-    console.error("Error extracting author info:", error);
-    return null;
-  }
-}
-
-// Function to extract post content from post container
-function extractPostContent(postContainer: HTMLElement): string {
-  try {
-    // Look for the content container within the post
-    // const contentContainer = postContainer.querySelector('.fie-impression-container');
-    const contentContainer = postContainer.querySelector(
-      ".feed-shared-inline-show-more-text",
-    );
-    if (!contentContainer) {
-      console.log("Content container not found");
-      return "";
-    }
-
-    // Extract text content recursively
-    function extractText(node: Node): string {
-      let text = "";
-      node.childNodes.forEach((child) => {
-        if (child.nodeType === Node.TEXT_NODE) {
-          text += child.textContent?.trim() + " ";
-        } else if (child.nodeType === Node.ELEMENT_NODE) {
-          text += extractText(child);
-        }
-      });
-      return text;
-    }
-
-    const content = extractText(contentContainer).replace(/\s+/g, " ").trim();
-    console.log(`Extracted post content: ${content.substring(0, 100)}...`);
-    return content;
-  } catch (error) {
-    console.error("Error extracting post content:", error);
-    return "";
-  }
-}
-
-// Function to generate comment using background script
-async function generateComment(postContent: string): Promise<string> {
-  return new Promise((resolve) => {
-    console.log(
-      "🤖 Requesting comment generation for post content:",
-      postContent.substring(0, 200) + "...",
-    );
-
-    // Set up a 30-second timeout
-    const timeout = setTimeout(() => {
-      console.error(
-        "⏰ FALLBACK REASON: Comment generation timed out after 30 seconds",
-      );
-      console.error(
-        "⏰ TIMEOUT - No response from background script within 30 seconds",
-      );
-      resolve("Great post! Thanks for sharing.");
-    }, 30000);
-
-    // Retry mechanism for connection issues
-    const attemptGeneration = (attempt: number = 1): void => {
-      console.log(
-        `🔄 Attempt ${attempt}/3: Sending comment generation request...`,
-      );
-
-      chrome.runtime.sendMessage(
-        {
-          action: "generateComment",
-          postContent: postContent,
-        },
-        (response) => {
-          clearTimeout(timeout); // Clear the timeout since we got a response
-
-          if (chrome.runtime.lastError) {
-            console.error(
-              `💥 ATTEMPT ${attempt} FAILED - Chrome runtime error:`,
-              chrome.runtime.lastError,
-            );
-
-            // Check if it's a connection error and retry
-            if (
-              chrome.runtime.lastError.message?.includes(
-                "Could not establish connection",
-              ) &&
-              attempt < 3
-            ) {
-              console.log(
-                `🔄 Connection error detected, retrying in 2 seconds... (attempt ${
-                  attempt + 1
-                }/3)`,
-              );
-              setTimeout(() => {
-                attemptGeneration(attempt + 1);
-              }, 2000);
-              return;
-            }
-
-            console.error(
-              "💥 FALLBACK REASON: Chrome runtime error during comment generation",
-            );
-            console.error("💥 CHROME ERROR:", chrome.runtime.lastError);
-            console.error(
-              "💥 This usually means the background script crashed or message passing failed",
-            );
-            resolve("Great post! Thanks for sharing.");
-          } else if (!response) {
-            console.error(
-              `❌ ATTEMPT ${attempt} FAILED - No response received from background script`,
-            );
-
-            // Retry if no response
-            if (attempt < 3) {
-              console.log(
-                `🔄 No response received, retrying in 2 seconds... (attempt ${
-                  attempt + 1
-                }/3)`,
-              );
-              setTimeout(() => {
-                attemptGeneration(attempt + 1);
-              }, 2000);
-              return;
-            }
-
-            console.error(
-              "❌ FALLBACK REASON: No response received from background script after 3 attempts",
-            );
-            console.error(
-              "❌ RESPONSE NULL - Background script may have failed silently",
-            );
-            resolve("Great post! Thanks for sharing.");
-          } else if (!response.comment) {
-            console.error(
-              "⚠️ FALLBACK REASON: Response received but no comment field",
-            );
-            console.error("⚠️ INVALID RESPONSE STRUCTURE:", response);
-            console.error(
-              "⚠️ Expected response.comment but got:",
-              Object.keys(response),
-            );
-            resolve("Great post! Thanks for sharing.");
-          } else if (response.comment === "Great post! Thanks for sharing.") {
-            console.error(
-              "🚨 FALLBACK REASON: Background script returned the default fallback comment",
-            );
-            console.error(
-              "🚨 This means the AI API failed and background script used fallback",
-            );
-
-            // Check if error details were provided in the response
-            if (response.error) {
-              console.group("🔥 AI API ERROR DETAILS FROM RESPONSE");
-              console.error("🔥 Error Message:", response.error.message);
-              console.error("🔥 Error Type:", response.error.name);
-              console.error("🔥 API Key Status:", response.error.apiKey);
-              console.error(
-                "🔥 Style Guide Status:",
-                response.error.styleGuide,
-              );
-              console.error(
-                "🔥 Post Content Length:",
-                response.error.postContentLength,
-                "characters",
-              );
-              if (response.error.stack) {
-                console.error("🔥 Stack Trace:", response.error.stack);
-              }
-              console.groupEnd();
-            } else {
-              console.error(
-                "🚨 No error details provided - check background script console",
-              );
-            }
-
-            resolve(response.comment);
-          } else {
-            console.log(
-              "✅ Successfully received generated comment:",
-              response.comment.substring(0, 100) + "...",
-            );
-            resolve(response.comment);
-          }
-        },
-      );
-    };
-
-    // Start the first attempt
-    attemptGeneration(1);
-  });
-}
-
-// Function to post comment on a specific post
-async function postCommentOnPost(
-  postContainer: HTMLElement,
-  comment: string,
-): Promise<boolean> {
-  try {
-    console.group("📝 Comment Posting Process");
-    console.log("Starting to post comment:", comment.substring(0, 100) + "...");
-
-    // Check if we should stop before starting
-    if (!isCommentingActive) {
-      console.log("❌ Stopping comment posting due to stop signal");
-      console.groupEnd();
-      return false;
-    }
-
-    // Step 1: Find and click the comment button
-    console.log("🔍 Looking for comment button...");
-    const commentButton = postContainer.querySelector(
-      'button[aria-label="Comment"]',
-    ) as HTMLButtonElement;
-    if (!commentButton) {
-      console.error("❌ Comment button not found");
-      console.groupEnd();
-      return false;
-    }
-
-    console.log("👆 Clicking comment button...");
-    commentButton.click();
-
-    // Wait for comment editor to appear
-    console.log("⏳ Waiting for comment editor to appear...");
-    await wait(2000);
-
-    // Check again after wait
-    if (!isCommentingActive) {
-      console.log("❌ Stopping during comment editor wait due to stop signal");
-      console.groupEnd();
-      return false;
-    }
-
-    // Step 2: Find the comment editor
-    console.log("🔍 Looking for comment editor...");
-    const commentEditor = postContainer.querySelector(
-      ".comments-comment-box-comment__text-editor",
-    );
-    if (!commentEditor) {
-      console.error("❌ Comment editor not found");
-      console.groupEnd();
-      return false;
-    }
-
-    // Step 3: Find the editable field within the editor
-    console.log("🔍 Looking for editable field...");
-    const editableField = commentEditor.querySelector(
-      'div[contenteditable="true"]',
-    ) as HTMLElement;
-    if (!editableField) {
-      console.error("❌ Editable field not found");
-      console.groupEnd();
-      return false;
-    }
-
-    console.log("✅ Found editable field, inputting comment...");
-
-    // Check again before inputting
-    if (!isCommentingActive) {
-      console.log("❌ Stopping during comment input due to stop signal");
-      console.groupEnd();
-      return false;
-    }
-
-    // Step 4: Click on the editable field and input the comment
-    editableField.focus();
-    editableField.click();
-    editableField.innerHTML = "";
-
-    // Input the comment text
-    const lines = comment.split("\n");
-    lines.forEach((lineText) => {
-      const p = document.createElement("p");
-      if (lineText === "") {
-        p.appendChild(document.createElement("br"));
-      } else {
-        p.textContent = lineText;
-      }
-      editableField.appendChild(p);
-    });
-
-    // Set cursor position and trigger input event
-    const selection = window.getSelection();
-    if (selection) {
-      const range = document.createRange();
-      if (editableField.lastChild) {
-        range.setStartAfter(editableField.lastChild);
-      } else {
-        range.selectNodeContents(editableField);
-      }
-      range.collapse(true);
-      selection.removeAllRanges();
-      selection.addRange(range);
-    }
-    editableField.focus();
-
-    const inputEvent = new Event("input", { bubbles: true, cancelable: true });
-    editableField.dispatchEvent(inputEvent);
-
-    console.log("✅ Comment text inputted successfully");
-
-    // Wait for submit button to become enabled
-    console.log("⏳ Waiting for submit button to become enabled...");
-    await wait(1000);
-
-    // Check again before submitting
-    if (!isCommentingActive) {
-      console.log("❌ Stopping during submit button wait due to stop signal");
-      console.groupEnd();
-      return false;
-    }
-
-    // Step 5: Find and click the submit button
-    console.log("🔍 Looking for submit button...");
-    const submitButton = postContainer.querySelector(
-      ".comments-comment-box__submit-button--cr",
-    ) as HTMLButtonElement;
-    if (!submitButton || submitButton.disabled) {
-      console.error("❌ Submit button not found or disabled");
-      console.groupEnd();
-      return false;
-    }
-
-    console.log("🚀 Clicking submit button...");
-    submitButton.click();
-
-    // Wait for comment to be posted
-    console.log("⏳ Waiting for comment to be posted...");
-    await wait(2000);
-
-    console.log("🎉 Comment posted successfully");
-    console.groupEnd();
-    return true;
-  } catch (error) {
-    console.error("💥 Error posting comment:", error);
-    console.groupEnd();
-    return false;
-  }
-}
-
-// Utility function to wait
-function wait(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-// // Updated audio functions to work with the new Web Audio API approach
-// function keepTabActiveAudio() {
-//   try {
-//     console.log('🔊 Continuous audio is already running from user interaction...');
-
-//     // Audio is already started by the start button click
-//     // This function now just ensures it keeps running
-//     if (!audioContext || !currentOscillator || !audioElement) {
-//       console.log('🔊 Audio not running, starting fresh...');
-//       // If audio isn't running for some reason, try to start it
-//       // Note: This might fail without user gesture
-//       injectAndPlayContinuousSound().catch(error => {
-//         console.warn('⚠️ Failed to restart audio without user gesture:', error);
-//       });
-//     } else {
-//       console.log('🔊 Audio already active and continuous');
-//     }
-
-//   } catch (error) {
-//     console.warn('⚠️ Audio check failed:', error);
-//   }
-// }
-
 function stopTabActiveAudio() {
   try {
     console.log("🔇 Stopping continuous audio...");
@@ -2488,38 +1333,6 @@ function stopTabActiveAudio() {
   } catch (error) {
     console.warn("⚠️ Error stopping audio:", error);
   }
-}
-
-// Function to clean up old timestamp entries (older than 7 days)
-async function cleanupOldTimestamps(): Promise<void> {
-  const storageKey = "commented_authors_timestamps";
-  const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
-  const now = Date.now();
-
-  return new Promise((resolve) => {
-    chrome.storage.local.get([storageKey], (result) => {
-      const authorTimestamps = result[storageKey] || {};
-      const cleanedTimestamps: { [key: string]: number } = {};
-
-      let removedCount = 0;
-      for (const [authorName, timestamp] of Object.entries(authorTimestamps)) {
-        if (typeof timestamp === "number" && now - timestamp < sevenDaysInMs) {
-          cleanedTimestamps[authorName] = timestamp;
-        } else {
-          removedCount++;
-        }
-      }
-
-      if (removedCount > 0) {
-        chrome.storage.local.set({ [storageKey]: cleanedTimestamps }, () => {
-          console.log(`Cleaned up ${removedCount} old timestamp entries`);
-          resolve();
-        });
-      } else {
-        resolve();
-      }
-    });
-  });
 }
 
 console.log("EngageKit content script loaded - Background Window Mode");

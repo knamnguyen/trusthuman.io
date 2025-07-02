@@ -1,6 +1,6 @@
 import type { AutoCommentingState } from "./background-types";
-import { AIService } from "../../utils/ai-service";
-import { setCachedClerkToken } from "../../utils/trpc-client";
+import { AIService } from "../../services/ai-service";
+import { setCachedClerkToken } from "../../services/trpc-client";
 import { MessageRouter } from "./message-router";
 
 console.log("background script loaded");

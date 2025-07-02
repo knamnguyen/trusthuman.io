@@ -42,7 +42,7 @@
   "content_scripts": [
     {
       "js": [
-        "assets/index.tsx-CfXneUvD.js",
+        "assets/index.tsx-B7AKN2-S.js",
         "assets/always-active-core.ts-l0sNRNKZ.js"
       ],
       "matches": [
@@ -73,7 +73,7 @@
         "https://*/*"
       ],
       "resources": [
-        "assets/index.tsx-CfXneUvD.js",
+        "assets/index.tsx-B7AKN2-S.js",
         "assets/always-active-core.ts-l0sNRNKZ.js"
       ],
       "use_dynamic_url": false

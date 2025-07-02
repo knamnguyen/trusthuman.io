@@ -12,32 +12,18 @@ import ErrorDisplay from "./components/error-display";
 import RunningStatusBanner from "./components/running-status-banner";
 import SettingsForm from "./components/settings-form";
 import StatisticsDashboard from "./components/statistics-dashboard";
+import UserProfile from "./components/user-profile";
 
 // Default comment style guide
 const DEFAULT_STYLE_GUIDE = `You are about to write a LinkedIn comment. Imagine you are a young professional or ambitious student (Gen Z), scrolling through your LinkedIn feed during a quick break – maybe between classes, on your commute, or while grabbing a coffee. You're sharp, interested in tech, business, career growth, personal development, social impact, product, marketing, or entrepreneurship. You appreciate authentic, slightly edgy, and insightful content.
 
 IMPORTANT: Only respond with the comment, no other text.`;
 
-// Default API key
-const DEFAULT_API_KEY = "AIzaSyBFpuCTgTgJ7PqfYvl3S29mTc1B1oHe1wI";
-
-// Determine sync host URL for opening auth
-const getSyncHostUrl = () => {
-  // For development
-  if (import.meta.env.VITE_NGROK_URL) {
-    return import.meta.env.VITE_NGROK_URL;
-  }
-
-  // Default to localhost for development
-  return "http://localhost:3000";
-};
-
 export default function Popup() {
   const { user } = useUser();
   const { isLoaded, isSignedIn } = useAuth();
   const clerk = useClerk();
   const [styleGuide, setStyleGuide] = useState("");
-  const [apiKey, setApiKey] = useState("");
   const [scrollDuration, setScrollDuration] = useState(5);
   const [commentDelay, setCommentDelay] = useState(5);
   const [maxPosts, setMaxPosts] = useState(5);
@@ -112,7 +98,6 @@ export default function Popup() {
       (result) => {
         console.log("Popup: Loading settings from storage:", result);
 
-        if (result.apiKey !== undefined) setApiKey(result.apiKey);
         if (result.styleGuide !== undefined) setStyleGuide(result.styleGuide);
         if (result.scrollDuration !== undefined)
           setScrollDuration(result.scrollDuration);
@@ -269,11 +254,6 @@ export default function Popup() {
     chrome.storage.local.set({ [todayKey]: count });
   };
 
-  const handleApiKeyChange = (value: string) => {
-    setApiKey(value);
-    chrome.storage.local.set({ apiKey: value });
-  };
-
   const handleStyleGuideChange = (value: string) => {
     setStyleGuide(value);
     chrome.storage.local.set({ styleGuide: value });
@@ -316,11 +296,6 @@ export default function Popup() {
   const handleSetDefaultStyleGuide = () => {
     setStyleGuide(DEFAULT_STYLE_GUIDE);
     chrome.storage.local.set({ styleGuide: DEFAULT_STYLE_GUIDE });
-  };
-
-  const handleSetDefaultApiKey = () => {
-    setApiKey(DEFAULT_API_KEY);
-    chrome.storage.local.set({ apiKey: DEFAULT_API_KEY });
   };
 
   const handleStart = async () => {
@@ -500,64 +475,13 @@ export default function Popup() {
         />
 
         {/* User Profile Section */}
-        <div className="mt-4 border-t border-gray-200 pt-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
-                <span className="text-sm font-medium text-blue-600">
-                  {user?.firstName?.charAt(0)?.toUpperCase() || "U"}
-                </span>
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">
-                  {user?.firstName || "User"} {user?.lastName || ""}
-                </p>
-                <p className="text-xs text-gray-500">
-                  {user?.primaryEmailAddress?.emailAddress || "Loading..."}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={async () => {
-                try {
-                  // Set signing out state immediately
-                  setIsSigningOut(true);
-
-                  // Clear local auth state immediately (show sign-in UI right away)
-                  chrome.storage.local.set({ hasEverSignedIn: false });
-                  setHasEverSignedIn(false);
-
-                  // Small delay to ensure local state is processed
-                  setTimeout(async () => {
-                    try {
-                      // Attempt to sign out from Clerk to sync with web app
-                      await clerk.signOut();
-                      console.log("Successfully signed out from Clerk");
-                    } catch (clerkError) {
-                      // If Clerk sign-out fails, log but don't break the UI
-                      console.warn(
-                        "Clerk sign-out failed, but local state cleared:",
-                        clerkError,
-                      );
-                    } finally {
-                      setIsSigningOut(false);
-                    }
-                  }, 150);
-                } catch (error) {
-                  // Fallback: ensure user sees sign-in UI even if everything fails
-                  console.error("Sign-out process failed:", error);
-                  chrome.storage.local.set({ hasEverSignedIn: false });
-                  setHasEverSignedIn(false);
-                  setIsSigningOut(false);
-                }
-              }}
-              disabled={isSigningOut}
-              className="rounded-md bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {isSigningOut ? "Signing Out..." : "Sign Out"}
-            </button>
-          </div>
-        </div>
+        <UserProfile
+          user={user}
+          isSigningOut={isSigningOut}
+          setIsSigningOut={setIsSigningOut}
+          setHasEverSignedIn={setHasEverSignedIn}
+          clerk={clerk}
+        />
       </div>
     </div>
   );
