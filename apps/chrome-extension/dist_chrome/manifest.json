@@ -24,7 +24,8 @@
     "windows",
     "scripting",
     "storage",
-    "cookies"
+    "cookies",
+    "alarms"
   ],
   "host_permissions": [
     "https://*.linkedin.com/*",

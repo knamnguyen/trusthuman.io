@@ -95,19 +95,7 @@ export class MessageRouter {
       maxPosts: request.maxPosts,
       duplicateWindow: request.duplicateWindow,
       styleGuide: request.styleGuide?.substring(0, 50) + "...",
-      hasClerkToken: !!request.clerkToken,
-      tokenLength: request.clerkToken?.length || 0,
     });
-
-    // Validate that we have a Clerk token
-    if (!request.clerkToken) {
-      console.error("MessageRouter: No Clerk token provided!");
-      sendResponse({
-        success: false,
-        error: "No authentication token provided",
-      });
-      return false;
-    }
 
     // Save the current settings to storage for persistence
     const settingsToSave = {
@@ -123,7 +111,6 @@ export class MessageRouter {
 
     this.dependencies.startAutoCommenting(
       request.styleGuide,
-      request.clerkToken, // Pass token instead of API key
       request.scrollDuration,
       request.commentDelay,
       request.maxPosts,

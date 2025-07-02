@@ -1,12 +1,6 @@
 import React, { useEffect, useState } from "react";
-import {
-  SignedIn,
-  SignedOut,
-  useAuth,
-  useClerk,
-  useUser,
-} from "@clerk/chrome-extension";
 
+import { useBackgroundAuth } from "../../hooks/use-background-auth";
 import { clearCachedUserData } from "../../hooks/use-user-data";
 import Auth from "./components/auth";
 import ErrorDisplay from "./components/error-display";
@@ -21,9 +15,8 @@ const DEFAULT_STYLE_GUIDE = `You are about to write a LinkedIn comment. Imagine 
 IMPORTANT: Only respond with the comment, no other text.`;
 
 export default function Popup() {
-  const { user } = useUser();
-  const { isLoaded, isSignedIn } = useAuth();
-  const clerk = useClerk();
+  const { user, isLoaded, isSignedIn, signOut, isSigningOut } =
+    useBackgroundAuth();
   const [styleGuide, setStyleGuide] = useState("");
   const [scrollDuration, setScrollDuration] = useState(5);
   const [commentDelay, setCommentDelay] = useState(5);
@@ -46,15 +39,51 @@ export default function Popup() {
 
   // Simple auth state tracking
   const [hasEverSignedIn, setHasEverSignedIn] = useState<boolean>(false);
-  const [isSigningOut, setIsSigningOut] = useState<boolean>(false);
 
-  // Load simple auth state on mount
+  // Load simple auth state on mount and check background auth status
   useEffect(() => {
-    chrome.storage.local.get(["hasEverSignedIn"], (result) => {
-      if (result.hasEverSignedIn) {
-        setHasEverSignedIn(true);
+    const loadAuthState = async () => {
+      try {
+        // First load from storage (for immediate UI response)
+        chrome.storage.local.get(["hasEverSignedIn"], async (result) => {
+          if (result.hasEverSignedIn) {
+            setHasEverSignedIn(true);
+          }
+
+          // Then check with background service (in case user signed in via web)
+          if (!result.hasEverSignedIn) {
+            console.log(
+              "Popup: Checking auth status with background service...",
+            );
+            try {
+              const response = await chrome.runtime.sendMessage({
+                action: "getAuthStatus",
+              });
+
+              console.log("Popup: Background auth check result:", response);
+
+              // If user is signed in according to background, update local state
+              if (response?.isSignedIn && response?.user) {
+                console.log(
+                  "Popup: User is signed in according to background, updating state",
+                );
+                setHasEverSignedIn(true);
+                chrome.storage.local.set({ hasEverSignedIn: true });
+              }
+            } catch (error) {
+              console.error(
+                "Popup: Error checking auth status with background:",
+                error,
+              );
+            }
+          }
+        });
+      } catch (error) {
+        console.error("Popup: Error loading auth state:", error);
       }
-    });
+    };
+
+    loadAuthState();
   }, []);
 
   // Update auth state when user signs in
@@ -308,29 +337,10 @@ export default function Popup() {
       return;
     }
 
-    // Get Clerk token once and pass it to background script
-    let clerkToken = null;
-    try {
-      if (isLoaded && isSignedIn && clerk?.session) {
-        console.log("Popup: Getting Clerk token for background script...");
-        clerkToken = await clerk.session.getToken();
-        console.log(
-          "Popup: Successfully got token, length:",
-          clerkToken?.length || 0,
-        );
-        if (clerkToken) {
-          console.log("Popup: Token parts:", clerkToken.split(".").length);
-        }
-      } else {
-        console.warn("Popup: Cannot get token - not signed in or no session");
-        setStatus("Please sign in to start commenting.");
-        return;
-      }
-    } catch (error) {
-      console.error("Popup: Failed to get Clerk token:", error);
-      setStatus(
-        "Failed to get authentication token. Please try signing in again.",
-      );
+    // Verify user is signed in (tokens will be fetched fresh by background service)
+    if (!isLoaded || !isSignedIn) {
+      console.warn("Popup: Cannot start - not signed in");
+      setStatus("Please sign in to start commenting.");
       return;
     }
 
@@ -340,7 +350,7 @@ export default function Popup() {
       maxPosts,
       duplicateWindow,
       styleGuide: styleGuide.substring(0, 50) + "...",
-      hasToken: !!clerkToken,
+      isSignedIn,
     });
 
     setIsRunning(true);
@@ -357,10 +367,11 @@ export default function Popup() {
         duplicateWindow,
         timeFilterEnabled,
         minPostAge,
-        clerkToken, // Pass token with settings - more efficient!
       };
 
-      console.log("Popup: Sending message to background with token");
+      console.log(
+        "Popup: Sending message to background (tokens fetched on-demand)",
+      );
       await chrome.runtime.sendMessage(message);
     } catch (error) {
       console.error("Error starting auto-commenting:", error);
@@ -415,9 +426,8 @@ export default function Popup() {
           <UserProfile
             user={user}
             isSigningOut={isSigningOut}
-            setIsSigningOut={setIsSigningOut}
+            onSignOut={signOut}
             setHasEverSignedIn={setHasEverSignedIn}
-            clerk={clerk}
           />
 
           <div className="mt-4 mb-4">

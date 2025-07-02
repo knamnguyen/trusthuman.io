@@ -51,7 +51,6 @@ export interface MessageRouterDependencies {
   updateTodayComments: (newCount: number) => void;
   startAutoCommenting: (
     styleGuide: string,
-    apiKey: string,
     scrollDuration: number,
     commentDelay: number,
     maxPosts: number,

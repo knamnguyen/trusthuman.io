@@ -1,16 +1,17 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "@clerk/chrome-extension";
 import { useQuery } from "@tanstack/react-query";
 
 import { useTRPC } from "../trpc/react";
+import { useBackgroundAuth } from "./use-background-auth";
 
 /**
  * Custom hook to fetch user data using tRPC with React Query
  * Uses local storage for immediate display and background sync for accuracy
- * Similar pattern to hasEverSignedIn in Popup.tsx
+ * Now uses background authentication service instead of Clerk directly
  */
 export const useUserData = () => {
-  const { isSignedIn, isLoaded, userId } = useAuth();
+  const { isSignedIn, isLoaded, user } = useBackgroundAuth();
+  const userId = user?.id;
   const trpc = useTRPC();
   const [cachedAccessType, setCachedAccessType] = useState<string | null>(null);
   const [isLoadingFromStorage, setIsLoadingFromStorage] = useState(true);

@@ -1,9 +1,130 @@
+import { createClerkClient } from "@clerk/chrome-extension/background";
+
 import type { AutoCommentingState } from "./background-types";
 import { AIService } from "../../services/ai-service";
-import { setCachedClerkToken } from "../../trpc/react";
 import { MessageRouter } from "./message-router";
 
 console.log("background script loaded");
+
+const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+// Determine the host to sync the session with, essential for session sharing.
+const syncHost = import.meta.env.VITE_NGROK_URL || "http://localhost:3000";
+
+if (!publishableKey) {
+  throw new Error("Please add the VITE_CLERK_PUBLISHABLE_KEY to the .env file");
+}
+
+/**
+ * Initialize or get existing Clerk client instance.
+ * This is called on-demand to ensure the latest session state is loaded from cookies.
+ */
+const getClerkClient = async () => {
+  console.log(
+    `Background: Creating new Clerk client on-demand, syncing with ${syncHost}`,
+  );
+  // Always create a new instance to load the latest session state from cookies.
+  return createClerkClient({
+    publishableKey,
+    syncHost: syncHost,
+  });
+};
+
+/**
+ * Authentication Service - handles all auth operations in background
+ */
+const authService = {
+  /**
+   * Get fresh token from Clerk session
+   */
+  async getToken(): Promise<string | null> {
+    try {
+      console.log("Background: Getting fresh token from Clerk...");
+
+      const clerk = await getClerkClient();
+
+      if (!clerk.session) {
+        console.warn("Background: No valid Clerk session found");
+        return null;
+      }
+
+      const token = await clerk.session.getToken();
+      console.log(
+        "Background: Successfully got fresh token, length:",
+        token?.length || 0,
+      );
+
+      return token;
+    } catch (error) {
+      console.error("Background: Error getting fresh token:", error);
+      return null;
+    }
+  },
+
+  /**
+   * Get authentication status and user info
+   */
+  async getAuthStatus(): Promise<{
+    isSignedIn: boolean;
+    user: any;
+    session: any;
+  }> {
+    try {
+      const clerk = await getClerkClient();
+
+      return {
+        isSignedIn: !!clerk.session,
+        user: clerk.user || null,
+        session: clerk.session || null,
+      };
+    } catch (error) {
+      console.error("Background: Error getting auth status:", error);
+      return { isSignedIn: false, user: null, session: null };
+    }
+  },
+
+  /**
+   * Sign out user and cleanup session
+   */
+  async signOut(): Promise<{ success: boolean }> {
+    try {
+      const clerk = await getClerkClient();
+
+      if (clerk.session) {
+        await clerk.signOut();
+      }
+
+      console.log("Background: User signed out successfully");
+      return { success: true };
+    } catch (error) {
+      console.error("Background: Error signing out:", error);
+      return { success: false };
+    }
+  },
+
+  /**
+   * Check if session is valid
+   */
+  async checkSession(): Promise<{ isValid: boolean; expiresAt?: number }> {
+    try {
+      const clerk = await getClerkClient();
+
+      if (!clerk.session) {
+        return { isValid: false };
+      }
+
+      // Try to get a token to validate session
+      const token = await clerk.session.getToken();
+
+      return {
+        isValid: !!token,
+        expiresAt: clerk.session.expireAt.getTime(),
+      };
+    } catch (error) {
+      console.error("Background: Error checking session:", error);
+      return { isValid: false };
+    }
+  },
+};
 
 let autoCommentingState: AutoCommentingState = {
   isRunning: false,
@@ -80,19 +201,18 @@ const generateCommentBackground = async (
   });
 };
 
-// Main function to start auto-commenting with cached token
+// Main function to start auto-commenting (tokens now fetched fresh on-demand)
 const startAutoCommenting = async (
   styleGuide: string,
-  clerkToken: string,
   scrollDuration: number,
   commentDelay: number,
   maxPosts: number,
   duplicateWindow: number,
 ): Promise<void> => {
   try {
-    // Set the cached token for tRPC client (much more efficient!)
-    setCachedClerkToken(clerkToken);
-    console.log("Background: Cached Clerk token for tRPC client");
+    console.log(
+      "Background: Starting auto-commenting with fresh token service",
+    );
 
     // Reset and initialize state
     autoCommentingState.styleGuide = styleGuide;
@@ -166,8 +286,77 @@ const messageRouter = new MessageRouter({
   generateComment: generateCommentBackground,
 });
 
-// Message listener
-chrome.runtime.onMessage.addListener(messageRouter.handleMessage);
+// Message listener with comprehensive authentication service
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  // Handle authentication requests directly in background
+  switch (request.action) {
+    case "getFreshToken":
+      console.log("Background: Received getFreshToken request");
+      authService
+        .getToken()
+        .then((token) => {
+          console.log(
+            "Background: Sending fresh token response, hasToken:",
+            !!token,
+          );
+          sendResponse({ token });
+        })
+        .catch((error) => {
+          console.error("Background: Error getting fresh token:", error);
+          sendResponse({ token: null });
+        });
+      return true;
+
+    case "getAuthStatus":
+      console.log("Background: Received getAuthStatus request");
+      authService
+        .getAuthStatus()
+        .then((status) => {
+          console.log(
+            "Background: Sending auth status response, isSignedIn:",
+            status.isSignedIn,
+          );
+          sendResponse(status);
+        })
+        .catch((error) => {
+          console.error("Background: Error getting auth status:", error);
+          sendResponse({ isSignedIn: false, user: null, session: null });
+        });
+      return true;
+
+    case "signOut":
+      console.log("Background: Received signOut request");
+      authService
+        .signOut()
+        .then((result) => {
+          console.log("Background: Sign out result:", result);
+          sendResponse(result);
+        })
+        .catch((error) => {
+          console.error("Background: Error during sign out:", error);
+          sendResponse({ success: false });
+        });
+      return true;
+
+    case "checkSession":
+      console.log("Background: Received checkSession request");
+      authService
+        .checkSession()
+        .then((result) => {
+          console.log("Background: Session check result:", result);
+          sendResponse(result);
+        })
+        .catch((error) => {
+          console.error("Background: Error checking session:", error);
+          sendResponse({ isValid: false });
+        });
+      return true;
+
+    default:
+      // Route other messages to message router
+      return messageRouter.handleMessage(request, sender, sendResponse);
+  }
+});
 
 // Handle LinkedIn tab being manually closed
 chrome.tabs.onRemoved.addListener((tabId) => {
@@ -199,3 +388,106 @@ chrome.tabs.onRemoved.addListener((tabId) => {
 });
 
 console.log("EngageKit background script loaded");
+
+// === SERVICE WORKER LIFECYCLE & AUTH STATE MANAGEMENT ===
+
+/**
+ * Keep service worker alive and monitor authentication state changes
+ * This ensures we detect when users sign in via the web app
+ */
+
+// Add chrome.runtime.onStartup listener to detect extension startup
+chrome.runtime.onStartup.addListener(() => {
+  console.log("Background: Extension startup detected");
+  // Force auth status check on startup
+  authService.getAuthStatus().then((status) => {
+    console.log("Background: Startup auth check:", status.isSignedIn);
+  });
+});
+
+// Add chrome.runtime.onInstalled listener for installation/updates
+chrome.runtime.onInstalled.addListener((details) => {
+  console.log("Background: Extension installed/updated:", details.reason);
+  // Force auth status check on install/update
+  authService.getAuthStatus().then((status) => {
+    console.log("Background: Install/update auth check:", status.isSignedIn);
+  });
+});
+
+// Monitor tab navigation to detect auth-related page visits
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  // Check if this is a completed navigation to an auth-related URL
+  if (changeInfo.status === "complete" && tab.url) {
+    const authDomains = [
+      "clerk.accounts.dev",
+      "clerk.dev",
+      "tolerant-hagfish-1.clerk.accounts.dev",
+      "localhost:3000",
+      "ngrok-free.app",
+      "engagekit.io",
+    ];
+
+    const isAuthUrl = authDomains.some((domain) => tab.url?.includes(domain));
+
+    if (isAuthUrl) {
+      console.log("Background: Detected navigation to auth URL:", tab.url);
+      // Wait a moment for auth to complete, then check status
+      setTimeout(() => {
+        authService.getAuthStatus().then((status) => {
+          console.log(
+            "Background: Auth URL visit - session check:",
+            status.isSignedIn,
+          );
+        });
+      }, 2000);
+    }
+  }
+});
+
+// Periodic auth state checking (every 30 seconds when extension is active)
+let authCheckInterval: NodeJS.Timeout | null = null;
+
+const startAuthMonitoring = () => {
+  if (authCheckInterval) {
+    clearInterval(authCheckInterval);
+  }
+
+  authCheckInterval = setInterval(async () => {
+    try {
+      const status = await authService.getAuthStatus();
+      console.log(
+        "Background: Periodic auth check - isSignedIn:",
+        status.isSignedIn,
+      );
+    } catch (error) {
+      console.warn("Background: Error in periodic auth check:", error);
+    }
+  }, 30000); // Check every 30 seconds
+};
+
+const stopAuthMonitoring = () => {
+  if (authCheckInterval) {
+    clearInterval(authCheckInterval);
+    authCheckInterval = null;
+  }
+};
+
+// Start monitoring when background script loads
+startAuthMonitoring();
+
+// Add alarm for periodic wake-ups (Chrome extensions best practice)
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === "authCheck") {
+    console.log("Background: Alarm-triggered auth check");
+    authService.getAuthStatus().then((status) => {
+      console.log("Background: Alarm auth check result:", status.isSignedIn);
+    });
+  }
+});
+
+// Create recurring alarm for auth checks (every 2 minutes)
+chrome.alarms.create("authCheck", { periodInMinutes: 2 });
+
+console.log(
+  "Background: Auth monitoring and service worker lifecycle handlers initialized",
+);

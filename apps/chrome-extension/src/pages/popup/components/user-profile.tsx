@@ -1,17 +1,21 @@
 import React from "react";
-import { useClerk, UserButton, useUser } from "@clerk/chrome-extension";
 
+import type { AuthUser } from "../../../services/auth-service";
 import { formatAccessType, useUserData } from "../../../hooks/use-user-data";
 
 interface UserProfileProps {
-  user: ReturnType<typeof useUser>["user"];
+  user: AuthUser | null;
   isSigningOut: boolean;
-  setIsSigningOut: (isSigningOut: boolean) => void;
+  onSignOut: () => Promise<boolean>;
   setHasEverSignedIn: (hasEverSignedIn: boolean) => void;
-  clerk: ReturnType<typeof useClerk>;
 }
 
-const UserProfile = ({ user }: UserProfileProps) => {
+const UserProfile = ({
+  user,
+  isSigningOut,
+  onSignOut,
+  setHasEverSignedIn,
+}: UserProfileProps) => {
   const {
     data: userData,
     isLoading,
@@ -19,6 +23,19 @@ const UserProfile = ({ user }: UserProfileProps) => {
     hasCachedData,
     isFetching,
   } = useUserData();
+
+  const handleSignOut = async () => {
+    try {
+      const success = await onSignOut();
+      if (success) {
+        setHasEverSignedIn(false);
+        // Clear cached user data when signing out
+        // clearCachedUserData(); // Will be called by clearCachedUserData from useUserData
+      }
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
 
   const renderPlanStatus = () => {
     if (isLoading) {
@@ -62,7 +79,12 @@ const UserProfile = ({ user }: UserProfileProps) => {
     <div className="mt-4 border-t border-gray-200 pt-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <UserButton />
+          {/* Custom user avatar/button */}
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600">
+            <span className="text-sm font-semibold text-white">
+              {user?.firstName?.charAt(0) || "U"}
+            </span>
+          </div>
           <div className="flex-1">
             <p className="text-sm font-medium text-gray-900">
               {user?.firstName || "User"} {user?.lastName || ""}
@@ -73,6 +95,13 @@ const UserProfile = ({ user }: UserProfileProps) => {
             <div className="mt-1">{renderPlanStatus()}</div>
           </div>
         </div>
+        <button
+          onClick={handleSignOut}
+          disabled={isSigningOut}
+          className="text-xs text-gray-500 hover:text-red-600 disabled:opacity-50"
+        >
+          {isSigningOut ? "Signing out..." : "Sign out"}
+        </button>
       </div>
     </div>
   );

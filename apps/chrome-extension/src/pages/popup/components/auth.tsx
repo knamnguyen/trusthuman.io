@@ -5,9 +5,29 @@ export default function Auth() {
     chrome.tabs.create({ url: authUrl });
   };
 
-  const handleRefreshAuth = () => {
-    // Force a refresh of the authentication state
-    window.location.reload();
+  const handleRefreshAuth = async () => {
+    // Force background service to check auth status
+    try {
+      console.log("Auth: Forcing background auth status check...");
+      const response = await chrome.runtime.sendMessage({
+        action: "getAuthStatus",
+      });
+      console.log("Auth: Background auth check result:", response?.isSignedIn);
+
+      // If signed in, reload the popup to show authenticated state
+      if (response?.isSignedIn) {
+        window.location.reload();
+      } else {
+        // Show feedback that user is still not signed in
+        alert(
+          "Still not signed in. Please complete sign-in in the web app first, then try again.",
+        );
+      }
+    } catch (error) {
+      console.error("Auth: Error checking auth status:", error);
+      // Fallback to full reload
+      window.location.reload();
+    }
   };
 
   // Determine sync host URL for opening auth
@@ -57,6 +77,69 @@ export default function Auth() {
                 >
                   Already signed in? Refresh
                 </button>
+
+                {/* Debug buttons - only visible in development */}
+                {import.meta.env.DEV && (
+                  <>
+                    <button
+                      onClick={async () => {
+                        try {
+                          console.log(
+                            "Auth: Debug - Checking service worker status",
+                          );
+                          const response = await chrome.runtime.sendMessage({
+                            action: "getAuthStatus",
+                          });
+                          console.log(
+                            "Auth: Debug - Service worker response:",
+                            response,
+                          );
+                          alert(
+                            JSON.stringify(
+                              {
+                                isSignedIn: response?.isSignedIn,
+                                hasUser: !!response?.user,
+                                userId: response?.user?.id,
+                                firstName: response?.user?.firstName,
+                              },
+                              null,
+                              2,
+                            ),
+                          );
+                        } catch (error) {
+                          console.error("Auth: Debug - Error:", error);
+                          alert("Error: " + String(error));
+                        }
+                      }}
+                      className="w-full rounded-md bg-red-100 px-4 py-2 text-xs font-medium text-red-700 transition-colors hover:bg-red-200"
+                    >
+                      Debug: Check Service Worker
+                    </button>
+
+                    <button
+                      onClick={async () => {
+                        try {
+                          // Force auth state to true for testing
+                          chrome.storage.local.set(
+                            { hasEverSignedIn: true },
+                            () => {
+                              console.log(
+                                "Auth: Debug - Set hasEverSignedIn to true",
+                              );
+                              window.location.reload();
+                            },
+                          );
+                        } catch (error) {
+                          console.error("Auth: Debug - Error:", error);
+                          alert("Error: " + String(error));
+                        }
+                      }}
+                      className="w-full rounded-md bg-orange-100 px-4 py-2 text-xs font-medium text-orange-700 transition-colors hover:bg-orange-200"
+                    >
+                      Debug: Force Sign In State
+                    </button>
+                  </>
+                )}
               </div>
 
               <p className="mt-3 text-xs text-gray-500">

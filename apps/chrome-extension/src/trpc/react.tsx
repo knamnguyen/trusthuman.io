@@ -37,34 +37,26 @@ const getServerUrl = (): string => {
 };
 
 /**
- * Cached Clerk session token - set once when needed
- */
-let cachedClerkToken: string | null = null;
-
-/**
- * Set the cached Clerk token (called when needed)
- */
-export const setCachedClerkToken = (token: string | null) => {
-  cachedClerkToken = token;
-};
-
-/**
- * Get Clerk session token - uses cached token for efficiency
+ * Get fresh Clerk session token exclusively from background service
+ * This follows Clerk's recommended pattern for Chrome extensions
  */
 const getClerkToken = async (): Promise<string | null> => {
-  if (cachedClerkToken) {
-    return cachedClerkToken;
-  } else {
-    // Try to get token from Clerk if available
-    if (typeof window !== "undefined" && (window as any).Clerk?.session) {
-      try {
-        const token = await (window as any).Clerk.session.getToken();
-        setCachedClerkToken(token);
-        return token;
-      } catch (error) {
-        console.warn("Failed to get Clerk token:", error);
-      }
+  try {
+    console.log("tRPC: Requesting fresh token from background service...");
+
+    const response = await chrome.runtime.sendMessage({
+      action: "getFreshToken",
+    });
+
+    if (response?.token) {
+      console.log("tRPC: Received fresh token, length:", response.token.length);
+      return response.token;
     }
+
+    console.warn("tRPC: No token received from background service");
+    return null;
+  } catch (error) {
+    console.error("tRPC: Error getting token from background:", error);
     return null;
   }
 };

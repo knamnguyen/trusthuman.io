@@ -1,6 +1,6 @@
 {
   "../../../../../../../@crx/manifest": {
-    "file": "assets/crx-manifest.js-aDbeN65s.js",
+    "file": "assets/crx-manifest.js-Dx6hiwbV.js",
     "name": "crx-manifest.js",
     "src": "../../../../../../../@crx/manifest",
     "isEntry": true
@@ -9,42 +9,42 @@
     "file": "assets/_commonjsHelpers-gnU0ypJ3.js",
     "name": "_commonjsHelpers"
   },
-  "_client-Q4vOSbiR.js": {
-    "file": "assets/client-Q4vOSbiR.js",
+  "_client-BCu0mVV5.js": {
+    "file": "assets/client-BCu0mVV5.js",
     "name": "client",
     "imports": [
-      "_index-CqyD2INw.js"
+      "_jsx-runtime-B0O3vDDX.js"
     ]
   },
-  "_index-CqyD2INw.js": {
-    "file": "assets/index-CqyD2INw.js",
-    "name": "index"
+  "_jsx-runtime-B0O3vDDX.js": {
+    "file": "assets/jsx-runtime-B0O3vDDX.js",
+    "name": "jsx-runtime"
   },
   "_modulepreload-polyfill-B5Qt9EMX.js": {
     "file": "assets/modulepreload-polyfill-B5Qt9EMX.js",
     "name": "modulepreload-polyfill"
   },
-  "_react-DaFN64P5.js": {
-    "file": "assets/react-DaFN64P5.js",
+  "_react-8C46siT9.js": {
+    "file": "assets/react-8C46siT9.js",
     "name": "react",
     "imports": [
-      "_index-CqyD2INw.js",
+      "_jsx-runtime-B0O3vDDX.js",
       "__commonjsHelpers-gnU0ypJ3.js"
     ]
   },
-  "_tailwind-5Jl4cbeD.css": {
-    "file": "assets/tailwind-5Jl4cbeD.css",
-    "src": "_tailwind-5Jl4cbeD.css"
+  "_tailwind-BnDv822H.css": {
+    "file": "assets/tailwind-BnDv822H.css",
+    "src": "_tailwind-BnDv822H.css"
   },
   "src/pages/background/index.ts": {
-    "file": "assets/index.ts-DE-yqVFf.js",
+    "file": "assets/index.ts-DpPbz7ef.js",
     "name": "index.ts",
     "src": "src/pages/background/index.ts",
     "isEntry": true,
     "imports": [
-      "_react-DaFN64P5.js",
-      "_index-CqyD2INw.js",
-      "__commonjsHelpers-gnU0ypJ3.js"
+      "_react-8C46siT9.js",
+      "__commonjsHelpers-gnU0ypJ3.js",
+      "_jsx-runtime-B0O3vDDX.js"
     ]
   },
   "src/pages/content/always-active-core.ts": {
@@ -70,49 +70,49 @@
     ]
   },
   "src/pages/newtab/index.html": {
-    "file": "assets/index.html-1PKDS9jj.js",
+    "file": "assets/index.html-B5JJUSIV.js",
     "name": "index.html",
     "src": "src/pages/newtab/index.html",
     "isEntry": true,
     "imports": [
       "_modulepreload-polyfill-B5Qt9EMX.js",
-      "_index-CqyD2INw.js",
-      "_client-Q4vOSbiR.js"
+      "_jsx-runtime-B0O3vDDX.js",
+      "_client-BCu0mVV5.js"
     ],
     "css": [
       "assets/index-BarpStXw.css",
-      "assets/tailwind-5Jl4cbeD.css"
+      "assets/tailwind-BnDv822H.css"
     ]
   },
   "src/pages/options/index.html": {
-    "file": "assets/index.html-Cp9kWopP.js",
+    "file": "assets/index.html-DNDjFYBQ.js",
     "name": "index.html",
     "src": "src/pages/options/index.html",
     "isEntry": true,
     "imports": [
       "_modulepreload-polyfill-B5Qt9EMX.js",
-      "_index-CqyD2INw.js",
-      "_client-Q4vOSbiR.js"
+      "_jsx-runtime-B0O3vDDX.js",
+      "_client-BCu0mVV5.js"
     ],
     "css": [
       "assets/index-tNvtlvL0.css"
     ]
   },
   "src/pages/popup/index.html": {
-    "file": "assets/index.html-CGfcl5gJ.js",
+    "file": "assets/index.html-Cgy1eeO0.js",
     "name": "index.html",
     "src": "src/pages/popup/index.html",
     "isEntry": true,
     "imports": [
       "_modulepreload-polyfill-B5Qt9EMX.js",
-      "_index-CqyD2INw.js",
-      "_client-Q4vOSbiR.js",
-      "_react-DaFN64P5.js",
+      "_jsx-runtime-B0O3vDDX.js",
+      "_client-BCu0mVV5.js",
+      "_react-8C46siT9.js",
       "__commonjsHelpers-gnU0ypJ3.js"
     ],
     "css": [
       "assets/index-addibwyn.css",
-      "assets/tailwind-5Jl4cbeD.css"
+      "assets/tailwind-BnDv822H.css"
     ]
   }
 }
