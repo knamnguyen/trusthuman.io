@@ -407,6 +407,15 @@ export default function Popup() {
             LinkedIn for you
           </p>
 
+          {/* User Profile Section */}
+          <UserProfile
+            user={user}
+            isSigningOut={isSigningOut}
+            setIsSigningOut={setIsSigningOut}
+            setHasEverSignedIn={setHasEverSignedIn}
+            clerk={clerk}
+          />
+
           <div className="mt-4 mb-4">
             {isRunning ? (
               <button
@@ -472,15 +481,6 @@ export default function Popup() {
         <ErrorDisplay
           lastError={lastError}
           onClearError={() => setLastError(null)}
-        />
-
-        {/* User Profile Section */}
-        <UserProfile
-          user={user}
-          isSigningOut={isSigningOut}
-          setIsSigningOut={setIsSigningOut}
-          setHasEverSignedIn={setHasEverSignedIn}
-          clerk={clerk}
         />
       </div>
     </div>
