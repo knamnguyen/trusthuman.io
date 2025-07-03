@@ -44,9 +44,9 @@
       "__commonjsHelpers-gnU0ypJ3.js"
     ]
   },
-  "_tailwind-CHnXFSz8.css": {
-    "file": "assets/tailwind-CHnXFSz8.css",
-    "src": "_tailwind-CHnXFSz8.css"
+  "_tailwind-CmU0IV4Z.css": {
+    "file": "assets/tailwind-CmU0IV4Z.css",
+    "src": "_tailwind-CmU0IV4Z.css"
   },
   "src/pages/background/index.ts": {
     "file": "assets/index.ts-CKGw8iMV.js",
@@ -88,7 +88,7 @@
     ]
   },
   "src/pages/newtab/index.html": {
-    "file": "assets/index.html-BsTmTmFb.js",
+    "file": "assets/index.html-DzgUvZ4c.js",
     "name": "index.html",
     "src": "src/pages/newtab/index.html",
     "isEntry": true,
@@ -99,7 +99,7 @@
     ],
     "css": [
       "assets/index-BarpStXw.css",
-      "assets/tailwind-CHnXFSz8.css"
+      "assets/tailwind-CmU0IV4Z.css"
     ]
   },
   "src/pages/options/index.html": {
@@ -117,7 +117,7 @@
     ]
   },
   "src/pages/popup/index.html": {
-    "file": "assets/index.html-4egY7Hip.js",
+    "file": "assets/index.html-DitjEHwF.js",
     "name": "index.html",
     "src": "src/pages/popup/index.html",
     "isEntry": true,
@@ -131,7 +131,7 @@
     ],
     "css": [
       "assets/index-addibwyn.css",
-      "assets/tailwind-CHnXFSz8.css"
+      "assets/tailwind-CmU0IV4Z.css"
     ]
   }
 }

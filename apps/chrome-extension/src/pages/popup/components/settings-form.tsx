@@ -1,5 +1,7 @@
 import React from "react";
 
+import { FEATURE_CONFIG } from "../../../config/features";
+
 /**
  * SettingsForm Component
  *
@@ -19,6 +21,8 @@ interface SettingsFormProps {
   timeFilterEnabled: boolean;
   minPostAge: number;
   isRunning: boolean;
+  isPremium: boolean;
+  maxPostsLimit: number;
   onStyleGuideChange: (value: string) => void;
   onScrollDurationChange: (value: number) => void;
   onCommentDelayChange: (value: number) => void;
@@ -38,6 +42,8 @@ export default function SettingsForm({
   timeFilterEnabled,
   minPostAge,
   isRunning,
+  isPremium,
+  maxPostsLimit,
   onStyleGuideChange,
   onScrollDurationChange,
   onCommentDelayChange,
@@ -102,7 +108,7 @@ export default function SettingsForm({
           <input
             type="range"
             min="5"
-            max="50"
+            max={maxPostsLimit}
             value={maxPosts}
             onChange={(e) => onMaxPostsChange(parseInt(e.target.value))}
             disabled={isRunning}
@@ -113,6 +119,12 @@ export default function SettingsForm({
         <p className="mt-1 text-xs text-gray-500">
           Maximum number of posts to comment on in one session
         </p>
+        {!isPremium && maxPosts >= maxPostsLimit && (
+          <p className="mt-1 text-xs font-bold text-red-600">
+            Upgrade to premium for up to{" "}
+            {FEATURE_CONFIG.maxPosts.premiumTierLimit} posts per session.
+          </p>
+        )}
       </div>
 
       <div className="mb-4">
@@ -137,59 +149,90 @@ export default function SettingsForm({
       </div>
 
       <div className="mb-4">
-        <label className="mb-2 block text-sm font-medium text-gray-700">
-          Duplicate Check Window:
-        </label>
-        <div className="flex items-center space-x-2">
-          <input
-            type="range"
-            min="1"
-            max="72"
-            value={duplicateWindow}
-            onChange={(e) => onDuplicateWindowChange(parseInt(e.target.value))}
-            disabled={isRunning}
-            className="flex-1"
-          />
-          <span className="w-16 text-sm font-medium">{duplicateWindow}h</span>
-        </div>
-        <p className="mt-1 text-xs text-gray-500">
-          Skip authors you've commented on within this time window
-        </p>
-      </div>
-
-      <div className="mb-4">
-        <label className="mb-2 block text-sm font-medium text-gray-700">
-          Post Age Filter:
-        </label>
-        <div className="mb-2 flex items-center space-x-3">
-          <input
-            type="checkbox"
-            id="timeFilterEnabled"
-            checked={timeFilterEnabled}
-            onChange={(e) => onTimeFilterEnabledChange(e.target.checked)}
-            disabled={isRunning}
-            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-          />
-          <label htmlFor="timeFilterEnabled" className="text-sm text-gray-700">
-            Only comment on posts made within:
+        <div className="flex items-center gap-2">
+          <label className="block text-sm font-medium text-gray-700">
+            Duplicate Check Window:
           </label>
-          <div className="flex flex-1 items-center space-x-2">
+          {!isPremium && (
+            <span className="rounded-full bg-yellow-400 px-2 py-0.5 text-xs font-bold text-yellow-900 shadow-sm">
+              Premium
+            </span>
+          )}
+        </div>
+        <div
+          className={
+            !isPremium ? "pointer-events-none mt-2 opacity-50" : "mt-2"
+          }
+        >
+          <div className="flex items-center space-x-2">
             <input
               type="range"
               min="1"
-              max="24"
-              value={minPostAge}
-              onChange={(e) => onMinPostAgeChange(parseInt(e.target.value))}
-              disabled={isRunning || !timeFilterEnabled}
+              max="72"
+              value={duplicateWindow}
+              onChange={(e) =>
+                onDuplicateWindowChange(parseInt(e.target.value))
+              }
+              disabled={isRunning || !isPremium}
               className="flex-1"
             />
-            <span className="w-12 text-sm font-medium">{minPostAge}h</span>
+            <span className="w-16 text-sm font-medium">{duplicateWindow}h</span>
           </div>
+          <p className="mt-1 text-xs text-gray-500">
+            Skip authors you've commented on within this time window
+          </p>
         </div>
-        <p className="text-xs text-gray-500">
-          When enabled, skips posts older than the specified time and promoted
-          posts
-        </p>
+      </div>
+
+      <div className="mb-4">
+        <div className="flex items-center gap-2">
+          <label className="block text-sm font-medium text-gray-700">
+            Post Age Filter:
+          </label>
+          {!isPremium && (
+            <span className="rounded-full bg-yellow-400 px-2 py-0.5 text-xs font-bold text-yellow-900 shadow-sm">
+              Premium
+            </span>
+          )}
+        </div>
+        <div
+          className={
+            !isPremium ? "pointer-events-none mt-2 opacity-50" : "mt-2"
+          }
+        >
+          <div className="mb-2 flex items-center space-x-3">
+            <input
+              type="checkbox"
+              id="timeFilterEnabled"
+              checked={timeFilterEnabled}
+              onChange={(e) => onTimeFilterEnabledChange(e.target.checked)}
+              disabled={isRunning || !isPremium}
+              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <label
+              htmlFor="timeFilterEnabled"
+              className="text-sm text-gray-700"
+            >
+              Only comment on posts made within:
+            </label>
+            <div className="flex flex-1 items-center space-x-2">
+              <input
+                type="range"
+                min="1"
+                max="24"
+                value={minPostAge}
+                onChange={(e) => onMinPostAgeChange(parseInt(e.target.value))}
+                disabled={isRunning || !isPremium || !timeFilterEnabled}
+                className="flex-1"
+              />
+              <span className="w-12 text-sm font-medium">{minPostAge}h</span>
+            </div>
+          </div>
+          <p className="text-xs text-gray-500">
+            When enabled, skips posts older than the specified time and promoted
+            posts
+          </p>
+        </div>
       </div>
     </>
   );

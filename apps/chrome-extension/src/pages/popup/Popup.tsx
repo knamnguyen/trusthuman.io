@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 
+import { FEATURE_CONFIG } from "../../config/features";
 import { useBackgroundAuth } from "../../hooks/use-background-auth";
+import { usePremiumStatus } from "../../hooks/use-premium-status";
 import { clearCachedUserData } from "../../hooks/use-user-data";
 import Auth from "./components/auth";
 import ErrorDisplay from "./components/error-display";
@@ -17,6 +19,7 @@ IMPORTANT: Only respond with the comment, no other text.`;
 export default function Popup() {
   const { user, isLoaded, isSignedIn, signOut, isSigningOut } =
     useBackgroundAuth();
+  const { isPremium } = usePremiumStatus();
   const [styleGuide, setStyleGuide] = useState("");
   const [scrollDuration, setScrollDuration] = useState(5);
   const [commentDelay, setCommentDelay] = useState(5);
@@ -36,6 +39,11 @@ export default function Popup() {
   const [duplicatePostsDetected, setDuplicatePostsDetected] = useState(0);
   const [postsSkippedTimeFilter, setPostsSkippedTimeFilter] = useState(0);
   const [lastError, setLastError] = useState<any>(null);
+
+  // Determine max posts limit based on plan
+  const maxPostsLimit = isPremium
+    ? FEATURE_CONFIG.maxPosts.premiumTierLimit
+    : FEATURE_CONFIG.maxPosts.freeTierLimit;
 
   // Simple auth state tracking
   const [hasEverSignedIn, setHasEverSignedIn] = useState<boolean>(false);
@@ -103,9 +111,9 @@ export default function Popup() {
       chrome.storage.local.set({ hasEverSignedIn: false });
 
       // Clear cached user data when signing out
-      clearCachedUserData();
+      clearCachedUserData(user?.id);
     }
-  }, [isLoaded, isSignedIn, hasEverSignedIn]);
+  }, [isLoaded, isSignedIn, hasEverSignedIn, user?.id]);
 
   // Load saved data from storage on component mount
   useEffect(() => {
@@ -136,7 +144,15 @@ export default function Popup() {
           setScrollDuration(result.scrollDuration);
         if (result.commentDelay !== undefined)
           setCommentDelay(result.commentDelay);
-        if (result.maxPosts !== undefined) setMaxPosts(result.maxPosts);
+        if (result.maxPosts !== undefined) {
+          // Cap maxPosts based on the user's plan
+          if (!isPremium && result.maxPosts > maxPostsLimit) {
+            setMaxPosts(maxPostsLimit);
+            chrome.storage.local.set({ maxPosts: maxPostsLimit });
+          } else {
+            setMaxPosts(result.maxPosts);
+          }
+        }
         if (result.duplicateWindow !== undefined)
           setDuplicateWindow(result.duplicateWindow);
         if (result.timeFilterEnabled !== undefined)
@@ -305,9 +321,9 @@ export default function Popup() {
   };
 
   const handleMaxPostsChange = (value: number) => {
-    console.log("Popup: Saving maxPosts:", value);
-    setMaxPosts(value);
-    chrome.storage.local.set({ maxPosts: value });
+    const cappedValue = Math.min(value, maxPostsLimit);
+    setMaxPosts(cappedValue);
+    chrome.storage.local.set({ maxPosts: cappedValue });
   };
 
   const handleDuplicateWindowChange = (value: number) => {
@@ -471,6 +487,8 @@ export default function Popup() {
           timeFilterEnabled={timeFilterEnabled}
           minPostAge={minPostAge}
           isRunning={isRunning}
+          isPremium={isPremium}
+          maxPostsLimit={maxPostsLimit}
           onStyleGuideChange={handleStyleGuideChange}
           onScrollDurationChange={handleScrollDurationChange}
           onCommentDelayChange={handleCommentDelayChange}
