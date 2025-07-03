@@ -1,15 +1,15 @@
 import z from "zod";
 
 export enum STRIPE_ID_PRICES {
-  WEEKLY = "price_1RgO4IIeOImcBhu6i3t8slGo",
-  MONTHLY = "price_1RgO2AIeOImcBhu6rV6M9PmD",
-  YEARLY = "price_1RgO29IeOImcBhu6KnZqFvZK",
+  WEEKLY = "price_1Rgu3rIeOImcBhu69gt6ATT5",
+  MONTHLY = "price_1Rgu3tIeOImcBhu6hGtPbqkx",
+  YEARLY = "price_1Rgu3vIeOImcBhu6Xy4JW0ue",
 }
 
 export enum STRIPE_ID_PRODUCTS {
-  WEEKLY = "prod_SbbGTzwkeyTyPY",
-  MONTHLY = "prod_RxVyOOcNMLC1Sk",
-  YEARLY = "prod_RxWTt3Py1f7gvF",
+  WEEKLY = "prod_Sc8KmHeAXogWmV",
+  MONTHLY = "prod_Sc8KDu938GBww2",
+  YEARLY = "prod_Sc8KT6PYPewOkS",
 }
 
 //createCheckoutSchema

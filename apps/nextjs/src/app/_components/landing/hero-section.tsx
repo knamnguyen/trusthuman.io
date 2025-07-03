@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import { Button } from "@sassy/ui/button";
 
 import { RotatingTitles } from "./rotating-titles";
@@ -29,6 +31,13 @@ export function HeroSection() {
 
   return (
     <section className="container flex flex-col items-center gap-6 py-24 text-center sm:py-32">
+      <Image
+        src="/engagekit-logo.svg"
+        alt="EngageKit Logo"
+        width={120}
+        height={120}
+        className="mt-[-50px] mb-[-50px] h-80 w-80"
+      />
       <h1 className="flex flex-wrap items-center justify-center gap-x-4 text-5xl font-extrabold tracking-tighter sm:text-7xl">
         <span>AI Intern that works 24/7 for </span>
         <RotatingTitles titles={titles} />

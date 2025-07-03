@@ -18,18 +18,23 @@ export const metadata: Metadata = {
       ? "https://turbo.t3.gg"
       : "http://localhost:3000",
   ),
-  title: "Create T3 Turbo",
-  description: "Simple monorepo with shared backend for web & mobile apps",
+  title: "EngageKit",
+  description: "The ultimate AI-powered LinkedIn outreach assistant",
   openGraph: {
-    title: "Create T3 Turbo",
-    description: "Simple monorepo with shared backend for web & mobile apps",
-    url: "https://create-t3-turbo.vercel.app",
-    siteName: "Create T3 Turbo",
+    title: "EngageKit",
+    description: "The ultimate AI-powered LinkedIn outreach assistant",
+    url: "https://engagekit.co",
+    siteName: "EngageKit",
   },
   twitter: {
     card: "summary_large_image",
-    site: "@jullerino",
-    creator: "@jullerino",
+    site: "@engagekit",
+    creator: "@knam_nguyen",
+  },
+  icons: {
+    icon: "/engagekit-logo.svg",
+    shortcut: "/engagekit-logo.svg",
+    apple: "/engagekit-logo.svg",
   },
 };
 
