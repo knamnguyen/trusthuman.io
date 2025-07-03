@@ -1,6 +1,6 @@
 import React from "react";
 
-import { FEATURE_CONFIG } from "../../../config/features";
+import { DEFAULT_STYLE_GUIDES, FEATURE_CONFIG } from "../../../config/features";
 
 /**
  * SettingsForm Component
@@ -22,7 +22,9 @@ interface SettingsFormProps {
   minPostAge: number;
   isRunning: boolean;
   isPremium: boolean;
+  isPremiumLoading: boolean;
   maxPostsLimit: number;
+  selectedDefaultStyle: keyof typeof DEFAULT_STYLE_GUIDES;
   onStyleGuideChange: (value: string) => void;
   onScrollDurationChange: (value: number) => void;
   onCommentDelayChange: (value: number) => void;
@@ -31,7 +33,14 @@ interface SettingsFormProps {
   onTimeFilterEnabledChange: (value: boolean) => void;
   onMinPostAgeChange: (value: number) => void;
   onSetDefaultStyleGuide: () => void;
+  onSelectedDefaultStyleChange: (
+    value: keyof typeof DEFAULT_STYLE_GUIDES,
+  ) => void;
 }
+
+const FeaturePlaceholder = () => (
+  <div className="mb-4 h-24 w-full animate-pulse rounded-lg bg-gray-200" />
+);
 
 export default function SettingsForm({
   styleGuide,
@@ -43,7 +52,9 @@ export default function SettingsForm({
   minPostAge,
   isRunning,
   isPremium,
+  isPremiumLoading,
   maxPostsLimit,
+  selectedDefaultStyle,
   onStyleGuideChange,
   onScrollDurationChange,
   onCommentDelayChange,
@@ -52,32 +63,75 @@ export default function SettingsForm({
   onTimeFilterEnabledChange,
   onMinPostAgeChange,
   onSetDefaultStyleGuide,
+  onSelectedDefaultStyleChange,
 }: SettingsFormProps) {
   return (
     <>
       {/* API Key input removed - using server-side tRPC API now */}
 
-      <div className="mb-4">
-        <label className="mb-2 block text-sm font-medium text-gray-700">
-          Comment Style Guide:
-        </label>
-        <textarea
-          value={styleGuide}
-          onChange={(e) => onStyleGuideChange(e.target.value)}
-          placeholder="Describe your commenting style... e.g., 'Professional but friendly, ask thoughtful questions, share relevant insights, keep responses under 50 words, add value to the conversation'"
-          className="h-60 w-full rounded-md border border-gray-300 p-3 text-sm focus:border-transparent focus:ring-2 focus:ring-blue-500"
-          disabled={isRunning}
-        />
-        <div className="mt-2 flex justify-end">
-          <button
-            onClick={onSetDefaultStyleGuide}
-            disabled={isRunning}
-            className="rounded-md bg-gray-100 px-3 py-1 text-xs text-gray-700 transition-colors hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            Use Default Style
-          </button>
+      {isPremiumLoading ? (
+        <FeaturePlaceholder />
+      ) : (
+        <div className="mb-4">
+          <div className="mb-2 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Comment Style Guide:
+              </label>
+              {!isPremium && (
+                <span className="rounded-full bg-yellow-400 px-2 py-0.5 text-xs font-bold text-yellow-900 shadow-sm">
+                  Premium
+                </span>
+              )}
+            </div>
+            {isPremium && (
+              <button
+                onClick={onSetDefaultStyleGuide}
+                disabled={isRunning}
+                className="rounded-md bg-gray-100 px-3 py-1 text-xs text-gray-700 transition-colors hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Use Default Style
+              </button>
+            )}
+          </div>
+
+          {!isPremium && (
+            <div className="mt-2 mb-2">
+              <select
+                id="default-style-select"
+                value={selectedDefaultStyle}
+                onChange={(e) =>
+                  onSelectedDefaultStyleChange(
+                    e.target.value as keyof typeof DEFAULT_STYLE_GUIDES,
+                  )
+                }
+                disabled={isRunning}
+                className="w-full rounded-md border border-gray-300 py-2 pr-10 pl-3 text-base focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none sm:text-sm"
+              >
+                {Object.entries(DEFAULT_STYLE_GUIDES).map(([key, value]) => (
+                  <option key={key} value={key}>
+                    {value.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <textarea
+            value={styleGuide}
+            onChange={(e) => onStyleGuideChange(e.target.value)}
+            placeholder="Describe your commenting style..."
+            className="h-60 w-full rounded-md border border-gray-300 p-3 text-sm focus:border-transparent focus:ring-2 focus:ring-blue-500 disabled:text-gray-400"
+            disabled={isRunning || !isPremium}
+          />
+          {!isPremium && (
+            <p className="mt-2 text-xs text-gray-500">
+              On a free plan, you can choose a style in the dropdown. Premium
+              users can write their own custom style guide.
+            </p>
+          )}
         </div>
-      </div>
+      )}
 
       <div className="mb-4">
         <label className="mb-2 block text-sm font-medium text-gray-700">
@@ -148,92 +202,102 @@ export default function SettingsForm({
         </p>
       </div>
 
-      <div className="mb-4">
-        <div className="flex items-center gap-2">
-          <label className="block text-sm font-medium text-gray-700">
-            Duplicate Check Window:
-          </label>
-          {!isPremium && (
-            <span className="rounded-full bg-yellow-400 px-2 py-0.5 text-xs font-bold text-yellow-900 shadow-sm">
-              Premium
-            </span>
-          )}
-        </div>
-        <div
-          className={
-            !isPremium ? "pointer-events-none mt-2 opacity-50" : "mt-2"
-          }
-        >
-          <div className="flex items-center space-x-2">
-            <input
-              type="range"
-              min="1"
-              max="72"
-              value={duplicateWindow}
-              onChange={(e) =>
-                onDuplicateWindowChange(parseInt(e.target.value))
-              }
-              disabled={isRunning || !isPremium}
-              className="flex-1"
-            />
-            <span className="w-16 text-sm font-medium">{duplicateWindow}h</span>
-          </div>
-          <p className="mt-1 text-xs text-gray-500">
-            Skip authors you've commented on within this time window
-          </p>
-        </div>
-      </div>
-
-      <div className="mb-4">
-        <div className="flex items-center gap-2">
-          <label className="block text-sm font-medium text-gray-700">
-            Post Age Filter:
-          </label>
-          {!isPremium && (
-            <span className="rounded-full bg-yellow-400 px-2 py-0.5 text-xs font-bold text-yellow-900 shadow-sm">
-              Premium
-            </span>
-          )}
-        </div>
-        <div
-          className={
-            !isPremium ? "pointer-events-none mt-2 opacity-50" : "mt-2"
-          }
-        >
-          <div className="mb-2 flex items-center space-x-3">
-            <input
-              type="checkbox"
-              id="timeFilterEnabled"
-              checked={timeFilterEnabled}
-              onChange={(e) => onTimeFilterEnabledChange(e.target.checked)}
-              disabled={isRunning || !isPremium}
-              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-            />
-            <label
-              htmlFor="timeFilterEnabled"
-              className="text-sm text-gray-700"
-            >
-              Only comment on posts made within:
+      {isPremiumLoading ? (
+        <FeaturePlaceholder />
+      ) : (
+        <div className="mb-4">
+          <div className="flex items-center gap-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Duplicate Check Window:
             </label>
-            <div className="flex flex-1 items-center space-x-2">
+            {!isPremium && (
+              <span className="rounded-full bg-yellow-400 px-2 py-0.5 text-xs font-bold text-yellow-900 shadow-sm">
+                Premium
+              </span>
+            )}
+          </div>
+          <div
+            className={
+              !isPremium ? "pointer-events-none mt-2 opacity-50" : "mt-2"
+            }
+          >
+            <div className="flex items-center space-x-2">
               <input
                 type="range"
                 min="1"
-                max="24"
-                value={minPostAge}
-                onChange={(e) => onMinPostAgeChange(parseInt(e.target.value))}
-                disabled={isRunning || !isPremium || !timeFilterEnabled}
+                max="72"
+                value={duplicateWindow}
+                onChange={(e) =>
+                  onDuplicateWindowChange(parseInt(e.target.value))
+                }
+                disabled={isRunning || !isPremium}
                 className="flex-1"
               />
-              <span className="w-12 text-sm font-medium">{minPostAge}h</span>
+              <span className="w-16 text-sm font-medium">
+                {duplicateWindow}h
+              </span>
             </div>
+            <p className="mt-1 text-xs text-gray-500">
+              Skip authors you've commented on within this time window
+            </p>
           </div>
-          <p className="text-xs text-gray-500">
-            When enabled, skips posts older than the specified time and promoted
-            posts
-          </p>
         </div>
-      </div>
+      )}
+
+      {isPremiumLoading ? (
+        <FeaturePlaceholder />
+      ) : (
+        <div className="mb-4">
+          <div className="flex items-center gap-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Post Age Filter:
+            </label>
+            {!isPremium && (
+              <span className="rounded-full bg-yellow-400 px-2 py-0.5 text-xs font-bold text-yellow-900 shadow-sm">
+                Premium
+              </span>
+            )}
+          </div>
+          <div
+            className={
+              !isPremium ? "pointer-events-none mt-2 opacity-50" : "mt-2"
+            }
+          >
+            <div className="mb-2 flex items-center space-x-3">
+              <input
+                type="checkbox"
+                id="timeFilterEnabled"
+                checked={timeFilterEnabled}
+                onChange={(e) => onTimeFilterEnabledChange(e.target.checked)}
+                disabled={isRunning || !isPremium}
+                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <label
+                htmlFor="timeFilterEnabled"
+                className="text-sm text-gray-700"
+              >
+                Only comment on posts made within:
+              </label>
+              <div className="flex flex-1 items-center space-x-2">
+                <input
+                  type="range"
+                  min="1"
+                  max="24"
+                  value={minPostAge}
+                  onChange={(e) => onMinPostAgeChange(parseInt(e.target.value))}
+                  disabled={isRunning || !isPremium || !timeFilterEnabled}
+                  className="flex-1"
+                />
+                <span className="w-12 text-sm font-medium">{minPostAge}h</span>
+              </div>
+            </div>
+            <p className="text-xs text-gray-500">
+              When enabled, skips posts older than the specified time and
+              promoted posts
+            </p>
+          </div>
+        </div>
+      )}
     </>
   );
 }

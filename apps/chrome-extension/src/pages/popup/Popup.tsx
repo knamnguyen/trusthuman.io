@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-import { FEATURE_CONFIG } from "../../config/features";
+import { DEFAULT_STYLE_GUIDES, FEATURE_CONFIG } from "../../config/features";
 import { useBackgroundAuth } from "../../hooks/use-background-auth";
 import { usePremiumStatus } from "../../hooks/use-premium-status";
 import { clearCachedUserData } from "../../hooks/use-user-data";
@@ -19,8 +19,10 @@ IMPORTANT: Only respond with the comment, no other text.`;
 export default function Popup() {
   const { user, isLoaded, isSignedIn, signOut, isSigningOut } =
     useBackgroundAuth();
-  const { isPremium } = usePremiumStatus();
+  const { isPremium, isLoading: isPremiumLoading } = usePremiumStatus();
   const [styleGuide, setStyleGuide] = useState("");
+  const [selectedDefaultStyle, setSelectedDefaultStyle] =
+    useState<keyof typeof DEFAULT_STYLE_GUIDES>("PROFESSIONAL");
   const [scrollDuration, setScrollDuration] = useState(5);
   const [commentDelay, setCommentDelay] = useState(5);
   const [maxPosts, setMaxPosts] = useState(5);
@@ -135,11 +137,22 @@ export default function Popup() {
         "postsSkippedAlreadyCommented",
         "duplicatePostsDetected",
         "postsSkippedTimeFilter",
+        "selectedDefaultStyle",
       ],
       (result) => {
         console.log("Popup: Loading settings from storage:", result);
 
-        if (result.styleGuide !== undefined) setStyleGuide(result.styleGuide);
+        if (result.selectedDefaultStyle) {
+          setSelectedDefaultStyle(result.selectedDefaultStyle);
+        }
+        if (result.styleGuide !== undefined) {
+          setStyleGuide(result.styleGuide);
+        } else {
+          setStyleGuide(
+            DEFAULT_STYLE_GUIDES[result.selectedDefaultStyle ?? "PROFESSIONAL"]
+              .prompt,
+          );
+        }
         if (result.scrollDuration !== undefined)
           setScrollDuration(result.scrollDuration);
         if (result.commentDelay !== undefined)
@@ -308,6 +321,18 @@ export default function Popup() {
     chrome.storage.local.set({ styleGuide: value });
   };
 
+  const handleSelectedDefaultStyleChange = (
+    value: keyof typeof DEFAULT_STYLE_GUIDES,
+  ) => {
+    setSelectedDefaultStyle(value);
+    chrome.storage.local.set({ selectedDefaultStyle: value });
+    if (!isPremium) {
+      const newPrompt = DEFAULT_STYLE_GUIDES[value].prompt;
+      setStyleGuide(newPrompt);
+      chrome.storage.local.set({ styleGuide: newPrompt });
+    }
+  };
+
   const handleScrollDurationChange = (value: number) => {
     console.log("Popup: Saving scrollDuration:", value);
     setScrollDuration(value);
@@ -343,8 +368,11 @@ export default function Popup() {
   };
 
   const handleSetDefaultStyleGuide = () => {
-    setStyleGuide(DEFAULT_STYLE_GUIDE);
-    chrome.storage.local.set({ styleGuide: DEFAULT_STYLE_GUIDE });
+    const defaultPrompt = DEFAULT_STYLE_GUIDES.PROFESSIONAL.prompt;
+    setStyleGuide(defaultPrompt);
+    chrome.storage.local.set({ styleGuide: defaultPrompt });
+    setSelectedDefaultStyle("PROFESSIONAL");
+    chrome.storage.local.set({ selectedDefaultStyle: "PROFESSIONAL" });
   };
 
   const handleStart = async () => {
@@ -479,7 +507,11 @@ export default function Popup() {
         />
 
         <SettingsForm
-          styleGuide={styleGuide}
+          styleGuide={
+            isPremium
+              ? styleGuide
+              : DEFAULT_STYLE_GUIDES[selectedDefaultStyle].prompt
+          }
           scrollDuration={scrollDuration}
           commentDelay={commentDelay}
           maxPosts={maxPosts}
@@ -488,7 +520,9 @@ export default function Popup() {
           minPostAge={minPostAge}
           isRunning={isRunning}
           isPremium={isPremium}
+          isPremiumLoading={isPremiumLoading}
           maxPostsLimit={maxPostsLimit}
+          selectedDefaultStyle={selectedDefaultStyle}
           onStyleGuideChange={handleStyleGuideChange}
           onScrollDurationChange={handleScrollDurationChange}
           onCommentDelayChange={handleCommentDelayChange}
@@ -497,6 +531,7 @@ export default function Popup() {
           onTimeFilterEnabledChange={handleTimeFilterEnabledChange}
           onMinPostAgeChange={handleMinPostAgeChange}
           onSetDefaultStyleGuide={handleSetDefaultStyleGuide}
+          onSelectedDefaultStyleChange={handleSelectedDefaultStyleChange}
         />
 
         {status && !isRunning && (

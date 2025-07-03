@@ -95,27 +95,37 @@ const UserProfile = ({ user }: UserProfileProps) => {
     if (!userData || isLoading) return null;
     if (userData.accessType === "FREE") {
       return (
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            const url = `${getSyncHostUrl()}/subscription`;
-            chrome.tabs.create({ url });
-          }}
-          className="ml-auto inline-block rounded bg-blue-600 px-3 py-1 text-xs font-semibold text-white shadow transition hover:bg-blue-700"
-        >
-          Upgrade Premium
-        </button>
+        <div className="ml-auto flex items-center gap-2">
+          <span className="inline-block rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600">
+            Free User
+          </span>
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              const url = `${getSyncHostUrl()}/subscription`;
+              chrome.tabs.create({ url });
+            }}
+            className="inline-block rounded bg-blue-600 px-3 py-1 text-xs font-semibold text-white shadow transition hover:bg-blue-700"
+          >
+            Upgrade Premium
+          </button>
+        </div>
       );
     }
     if (["WEEKLY", "MONTHLY", "YEARLY"].includes(userData.accessType)) {
       return (
-        <button
-          onClick={handleManageSubscription}
-          className="ml-auto inline-block rounded bg-green-600 px-3 py-1 text-xs font-semibold text-white shadow transition hover:bg-green-700"
-          disabled={isPending}
-        >
-          {isPending ? "Loading..." : "Manage Subscription"}
-        </button>
+        <div className="ml-auto flex items-center gap-2">
+          <span className="inline-block rounded-full bg-yellow-400 px-3 py-1 text-xs font-bold text-yellow-900 shadow-sm">
+            Premium Creator
+          </span>
+          <button
+            onClick={handleManageSubscription}
+            className="inline-block rounded bg-green-600 px-3 py-1 text-xs font-semibold text-white shadow transition hover:bg-green-700"
+            disabled={isPending}
+          >
+            {isPending ? "Loading..." : "Manage Subscription"}
+          </button>
+        </div>
       );
     }
     return null;
