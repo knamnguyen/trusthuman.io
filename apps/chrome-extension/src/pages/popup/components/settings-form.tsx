@@ -21,7 +21,7 @@ interface SettingsFormProps {
   timeFilterEnabled: boolean;
   minPostAge: number;
   isRunning: boolean;
-  isPremium: boolean;
+  isPremium: boolean | null;
   isPremiumLoading: boolean;
   maxPostsLimit: number;
   selectedDefaultStyle: keyof typeof DEFAULT_STYLE_GUIDES;
@@ -65,6 +65,19 @@ export default function SettingsForm({
   onSetDefaultStyleGuide,
   onSelectedDefaultStyleChange,
 }: SettingsFormProps) {
+  // Helper function to determine if features should be disabled
+  const isFeatureDisabled = (featureIsPremium: boolean) => {
+    if (isPremiumLoading) return true; // Disabled during loading
+    if (isPremium === null) return true; // Disabled when status unknown
+    return featureIsPremium && !isPremium; // Disabled if it's premium feature and user is not premium
+  };
+
+  // Helper function to determine if premium badge should be shown
+  const shouldShowPremiumBadge = (featureIsPremium: boolean) => {
+    if (isPremiumLoading || isPremium === null) return false; // Don't show during loading
+    return featureIsPremium && !isPremium; // Show if it's premium feature and user is not premium
+  };
+
   return (
     <>
       {/* API Key input removed - using server-side tRPC API now */}
@@ -78,7 +91,9 @@ export default function SettingsForm({
               <label className="block text-sm font-medium text-gray-700">
                 Comment Style Guide:
               </label>
-              {!isPremium && (
+              {shouldShowPremiumBadge(
+                FEATURE_CONFIG.customStyleGuide.isPremium,
+              ) && (
                 <span className="rounded-full bg-yellow-400 px-2 py-0.5 text-xs font-bold text-yellow-900 shadow-sm">
                   Premium
                 </span>
@@ -95,7 +110,7 @@ export default function SettingsForm({
             )}
           </div>
 
-          {!isPremium && (
+          {!isPremium && isPremium !== null && (
             <div className="mt-2 mb-2">
               <select
                 id="default-style-select"
@@ -121,13 +136,18 @@ export default function SettingsForm({
             value={styleGuide}
             onChange={(e) => onStyleGuideChange(e.target.value)}
             placeholder="Describe your commenting style..."
-            className="h-60 w-full rounded-md border border-gray-300 p-3 text-sm focus:border-transparent focus:ring-2 focus:ring-blue-500 disabled:text-gray-400"
-            disabled={isRunning || !isPremium}
+            className="h-40 w-full rounded-md border border-gray-300 p-3 text-sm focus:border-transparent focus:ring-2 focus:ring-blue-500 disabled:text-gray-400"
+            disabled={
+              isRunning ||
+              isFeatureDisabled(FEATURE_CONFIG.customStyleGuide.isPremium)
+            }
           />
-          {!isPremium && (
-            <p className="mt-2 text-xs text-gray-500">
-              On a free plan, you can choose a style in the dropdown. Premium
-              users can write their own custom style guide.
+          {shouldShowPremiumBadge(
+            FEATURE_CONFIG.customStyleGuide.isPremium,
+          ) && (
+            <p className="mt-2 text-xs font-bold text-red-600">
+              On a free plan, you can choose a style in the dropdown. Upgrade
+              now to write your own custom style guide.
             </p>
           )}
         </div>
@@ -173,7 +193,7 @@ export default function SettingsForm({
         <p className="mt-1 text-xs text-gray-500">
           Maximum number of posts to comment on in one session
         </p>
-        {!isPremium && maxPosts >= maxPostsLimit && (
+        {isPremium === false && (
           <p className="mt-1 text-xs font-bold text-red-600">
             Upgrade to premium for up to{" "}
             {FEATURE_CONFIG.maxPosts.premiumTierLimit} posts per session.
@@ -210,7 +230,9 @@ export default function SettingsForm({
             <label className="block text-sm font-medium text-gray-700">
               Duplicate Check Window:
             </label>
-            {!isPremium && (
+            {shouldShowPremiumBadge(
+              FEATURE_CONFIG.duplicateAuthorCheck.isPremium,
+            ) && (
               <span className="rounded-full bg-yellow-400 px-2 py-0.5 text-xs font-bold text-yellow-900 shadow-sm">
                 Premium
               </span>
@@ -218,7 +240,9 @@ export default function SettingsForm({
           </div>
           <div
             className={
-              !isPremium ? "pointer-events-none mt-2 opacity-50" : "mt-2"
+              isFeatureDisabled(FEATURE_CONFIG.duplicateAuthorCheck.isPremium)
+                ? "pointer-events-none mt-2 opacity-50"
+                : "mt-2"
             }
           >
             <div className="flex items-center space-x-2">
@@ -230,7 +254,12 @@ export default function SettingsForm({
                 onChange={(e) =>
                   onDuplicateWindowChange(parseInt(e.target.value))
                 }
-                disabled={isRunning || !isPremium}
+                disabled={
+                  isRunning ||
+                  isFeatureDisabled(
+                    FEATURE_CONFIG.duplicateAuthorCheck.isPremium,
+                  )
+                }
                 className="flex-1"
               />
               <span className="w-16 text-sm font-medium">
@@ -252,7 +281,7 @@ export default function SettingsForm({
             <label className="block text-sm font-medium text-gray-700">
               Post Age Filter:
             </label>
-            {!isPremium && (
+            {shouldShowPremiumBadge(FEATURE_CONFIG.postAgeFilter.isPremium) && (
               <span className="rounded-full bg-yellow-400 px-2 py-0.5 text-xs font-bold text-yellow-900 shadow-sm">
                 Premium
               </span>
@@ -260,7 +289,9 @@ export default function SettingsForm({
           </div>
           <div
             className={
-              !isPremium ? "pointer-events-none mt-2 opacity-50" : "mt-2"
+              isFeatureDisabled(FEATURE_CONFIG.postAgeFilter.isPremium)
+                ? "pointer-events-none mt-2 opacity-50"
+                : "mt-2"
             }
           >
             <div className="mb-2 flex items-center space-x-3">
@@ -269,7 +300,10 @@ export default function SettingsForm({
                 id="timeFilterEnabled"
                 checked={timeFilterEnabled}
                 onChange={(e) => onTimeFilterEnabledChange(e.target.checked)}
-                disabled={isRunning || !isPremium}
+                disabled={
+                  isRunning ||
+                  isFeatureDisabled(FEATURE_CONFIG.postAgeFilter.isPremium)
+                }
                 className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
               <label
@@ -285,7 +319,11 @@ export default function SettingsForm({
                   max="24"
                   value={minPostAge}
                   onChange={(e) => onMinPostAgeChange(parseInt(e.target.value))}
-                  disabled={isRunning || !isPremium || !timeFilterEnabled}
+                  disabled={
+                    isRunning ||
+                    isFeatureDisabled(FEATURE_CONFIG.postAgeFilter.isPremium) ||
+                    !timeFilterEnabled
+                  }
                   className="flex-1"
                 />
                 <span className="w-12 text-sm font-medium">{minPostAge}h</span>

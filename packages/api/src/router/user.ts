@@ -23,6 +23,42 @@ export const userRouter = {
     return access;
   }),
 
+  /**
+   * Get the current user's daily AI comment count
+   * Used by extension to display daily limits
+   */
+  getDailyCommentCount: protectedProcedure.query(async ({ ctx }) => {
+    if (!ctx.user?.id) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "User ID not found in context",
+      });
+    }
+
+    try {
+      const user = await ctx.db.user.findUnique({
+        where: { id: ctx.user.id },
+        select: { dailyAIcomments: true },
+      });
+
+      if (!user) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "User not found",
+        });
+      }
+
+      return user.dailyAIcomments;
+    } catch (error) {
+      console.error("Error fetching daily comment count:", error);
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to fetch daily comment count",
+        cause: error,
+      });
+    }
+  }),
+
   create: publicProcedure
     .input(UserCreateInputSchema)
     .mutation(async ({ ctx, input }) => {

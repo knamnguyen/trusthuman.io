@@ -9,6 +9,13 @@ import {
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 /**
+ * Check if two dates are on different days in user's local timezone
+ */
+const isDifferentDay = (date1: Date, date2: Date): boolean => {
+  return date1.toDateString() !== date2.toDateString();
+};
+
+/**
  * AI Comments Router
  *
  * Handles AI-powered comment generation using Google GenAI
@@ -23,13 +30,62 @@ export const aiCommentsRouter = createTRPCRouter({
   generateComment: protectedProcedure
     .input(commentGenerationInputSchema)
     .output(commentGenerationOutputSchema)
-    .mutation(async ({ input }): Promise<CommentGenerationOutput> => {
+    .mutation(async ({ input, ctx }): Promise<CommentGenerationOutput> => {
       const { postContent, styleGuide } = input;
 
       console.log(
         "AI Comments Router: Starting comment generation for content length:",
         postContent?.length || 0,
       );
+
+      // First, update the user's daily comment count
+      if (!ctx.user?.id) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "User ID not found in context",
+        });
+      }
+
+      try {
+        // Get current user to check last update timestamp
+        const currentUser = await ctx.db.user.findUnique({
+          where: { id: ctx.user.id },
+        });
+
+        if (!currentUser) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "User not found",
+          });
+        }
+
+        const now = new Date();
+        const needsReset = isDifferentDay(currentUser.updatedAt, now);
+
+        // Update daily comment count (reset if different day, otherwise increment)
+        await ctx.db.user.update({
+          where: { id: ctx.user.id },
+          data: {
+            dailyAIcomments: needsReset ? 1 : currentUser.dailyAIcomments + 1,
+            updatedAt: now,
+          },
+        });
+
+        console.log(
+          `AI Comments Router: Updated daily comment count for user ${ctx.user.id}`,
+          `Reset: ${needsReset}, New count: ${needsReset ? 1 : currentUser.dailyAIcomments + 1}`,
+        );
+      } catch (error) {
+        console.error(
+          "AI Comments Router: Error updating user comment count:",
+          error,
+        );
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update comment count",
+          cause: error,
+        });
+      }
 
       // Get Google GenAI API key from environment
       const apiKey = process.env.GOOGLE_GENAI_API_KEY;

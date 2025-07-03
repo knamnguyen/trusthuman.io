@@ -29,8 +29,8 @@ export const DEFAULT_STYLE_GUIDES = {
 export const FEATURE_CONFIG = {
   maxPosts: {
     isPremium: false,
-    freeTierLimit: 20,
-    premiumTierLimit: 50,
+    freeTierLimit: 15,
+    premiumTierLimit: 100,
   },
   duplicateAuthorCheck: {
     isPremium: true,

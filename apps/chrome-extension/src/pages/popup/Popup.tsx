@@ -2,9 +2,11 @@ import React, { useEffect, useState } from "react";
 
 import { DEFAULT_STYLE_GUIDES, FEATURE_CONFIG } from "../../config/features";
 import { useBackgroundAuth } from "../../hooks/use-background-auth";
+import { useDailyCommentCount } from "../../hooks/use-daily-comment-count";
 import { usePremiumStatus } from "../../hooks/use-premium-status";
 import { clearCachedUserData } from "../../hooks/use-user-data";
 import Auth from "./components/auth";
+import { CommentLimitStatus } from "./components/comment-limit-status";
 import ErrorDisplay from "./components/error-display";
 import RunningStatusBanner from "./components/running-status-banner";
 import SettingsForm from "./components/settings-form";
@@ -19,7 +21,26 @@ IMPORTANT: Only respond with the comment, no other text.`;
 export default function Popup() {
   const { user, isLoaded, isSignedIn, signOut, isSigningOut } =
     useBackgroundAuth();
-  const { isPremium, isLoading: isPremiumLoading } = usePremiumStatus();
+  const {
+    isPremium,
+    isLoading: isPremiumLoading,
+    status: premiumStatus,
+  } = usePremiumStatus();
+  const {
+    data: dailyCommentCount,
+    isLoading: isDailyCountLoading,
+    status: dailyCountStatus,
+  } = useDailyCommentCount();
+
+  // Add comprehensive logging for debugging
+  console.log("Popup render - Premium Status:", {
+    isPremium,
+    isPremiumLoading,
+    userId: user?.id,
+    isLoaded,
+    isSignedIn,
+  });
+
   const [styleGuide, setStyleGuide] = useState("");
   const [selectedDefaultStyle, setSelectedDefaultStyle] =
     useState<keyof typeof DEFAULT_STYLE_GUIDES>("PROFESSIONAL");
@@ -42,13 +63,44 @@ export default function Popup() {
   const [postsSkippedTimeFilter, setPostsSkippedTimeFilter] = useState(0);
   const [lastError, setLastError] = useState<any>(null);
 
-  // Determine max posts limit based on plan
-  const maxPostsLimit = isPremium
+  // Determine max posts limit based on plan - handle null case during loading
+  const maxPostsLimit =
+    isPremium === null
+      ? FEATURE_CONFIG.maxPosts.premiumTierLimit // Default to premium limit during loading
+      : isPremium
+        ? FEATURE_CONFIG.maxPosts.premiumTierLimit
+        : FEATURE_CONFIG.maxPosts.freeTierLimit;
+
+  console.log("maxPostsLimit calculation:", {
+    isPremium,
+    maxPostsLimit,
+    premiumLimit: FEATURE_CONFIG.maxPosts.premiumTierLimit,
+    freeLimit: FEATURE_CONFIG.maxPosts.freeTierLimit,
+  });
+
+  // Calculate daily limit for comment status
+  const dailyLimit = isPremium
     ? FEATURE_CONFIG.maxPosts.premiumTierLimit
     : FEATURE_CONFIG.maxPosts.freeTierLimit;
 
+  // Check if daily limit is reached
+  const isDailyLimitReached = (dailyCommentCount ?? 0) >= dailyLimit;
+
+  // Combine all loading states to prevent premature actions
+  const isInitialDataLoading =
+    !isLoaded || premiumStatus === "pending" || dailyCountStatus === "pending";
+
   // Simple auth state tracking
   const [hasEverSignedIn, setHasEverSignedIn] = useState<boolean>(false);
+
+  // Track premium status changes
+  useEffect(() => {
+    console.log("Premium status changed:", {
+      isPremium,
+      isPremiumLoading,
+      timestamp: new Date().toISOString(),
+    });
+  }, [isPremium, isPremiumLoading]);
 
   // Load simple auth state on mount and check background auth status
   useEffect(() => {
@@ -119,6 +171,12 @@ export default function Popup() {
 
   // Load saved data from storage on component mount
   useEffect(() => {
+    console.log("Settings loading effect triggered - Premium status:", {
+      isPremium,
+      isPremiumLoading,
+      maxPostsLimit,
+    });
+
     chrome.storage.local.get(
       [
         "apiKey",
@@ -141,6 +199,11 @@ export default function Popup() {
       ],
       (result) => {
         console.log("Popup: Loading settings from storage:", result);
+        console.log("Premium status during settings load:", {
+          isPremium,
+          isPremiumLoading,
+          maxPostsLimit,
+        });
 
         if (result.selectedDefaultStyle) {
           setSelectedDefaultStyle(result.selectedDefaultStyle);
@@ -148,23 +211,23 @@ export default function Popup() {
         if (result.styleGuide !== undefined) {
           setStyleGuide(result.styleGuide);
         } else {
-          setStyleGuide(
-            DEFAULT_STYLE_GUIDES[result.selectedDefaultStyle ?? "PROFESSIONAL"]
-              .prompt,
-          );
+          const styleKey = (result.selectedDefaultStyle ??
+            "PROFESSIONAL") as keyof typeof DEFAULT_STYLE_GUIDES;
+          setStyleGuide(DEFAULT_STYLE_GUIDES[styleKey].prompt);
         }
         if (result.scrollDuration !== undefined)
           setScrollDuration(result.scrollDuration);
         if (result.commentDelay !== undefined)
           setCommentDelay(result.commentDelay);
         if (result.maxPosts !== undefined) {
-          // Cap maxPosts based on the user's plan
-          if (!isPremium && result.maxPosts > maxPostsLimit) {
-            setMaxPosts(maxPostsLimit);
-            chrome.storage.local.set({ maxPosts: maxPostsLimit });
-          } else {
-            setMaxPosts(result.maxPosts);
-          }
+          // Validate max posts against the current limit
+          const validMaxPosts = Math.min(result.maxPosts, maxPostsLimit);
+          setMaxPosts(validMaxPosts);
+          console.log("Popup: Validated maxPosts:", {
+            stored: result.maxPosts,
+            limit: maxPostsLimit,
+            final: validMaxPosts,
+          });
         }
         if (result.duplicateWindow !== undefined)
           setDuplicateWindow(result.duplicateWindow);
@@ -173,6 +236,9 @@ export default function Popup() {
         if (result.minPostAge !== undefined) setMinPostAge(result.minPostAge);
         if (result.totalAllTimeComments !== undefined)
           setTotalAllTimeComments(result.totalAllTimeComments);
+        if (result.isRunning !== undefined) setIsRunning(result.isRunning);
+        if (result.currentCommentCount !== undefined)
+          setCommentCount(result.currentCommentCount);
         if (result.postsSkippedDuplicate !== undefined)
           setPostsSkippedDuplicate(result.postsSkippedDuplicate);
         if (result.recentAuthorsDetected !== undefined)
@@ -184,26 +250,13 @@ export default function Popup() {
         if (result.postsSkippedTimeFilter !== undefined)
           setPostsSkippedTimeFilter(result.postsSkippedTimeFilter);
 
-        if (result.isRunning !== undefined) setIsRunning(result.isRunning);
-        if (result.currentCommentCount !== undefined)
-          setCommentCount(result.currentCommentCount);
-
-        console.log(
-          "Popup: Settings loaded - maxPosts:",
-          result.maxPosts,
-          "scrollDuration:",
-          result.scrollDuration,
-          "commentDelay:",
-          result.commentDelay,
-          "duplicateWindow:",
-          result.duplicateWindow,
-        );
+        loadTodayComments();
       },
     );
+  }, [isPremium, isPremiumLoading, maxPostsLimit]);
 
-    loadTodayComments();
-
-    // Listen for status updates from background script
+  // Listen for messages from background script
+  useEffect(() => {
     const messageListener = async (
       request: any,
       sender: any,
@@ -252,7 +305,8 @@ export default function Popup() {
           setTotalTodayComments(request.newTodayTotal);
           saveTodayComments(request.newTodayTotal);
         }
-      } else if (request.action === "realTimeCountUpdate") {
+      }
+      if (request.action === "realTimeCountUpdate") {
         if (request.todayCount !== undefined) {
           setTotalTodayComments(request.todayCount);
           saveTodayComments(request.todayCount);
@@ -301,19 +355,21 @@ export default function Popup() {
 
     chrome.runtime.onMessage.addListener(messageListener);
     return () => chrome.runtime.onMessage.removeListener(messageListener);
-  }, [totalAllTimeComments, totalTodayComments]);
+  }, [isPremium, isPremiumLoading, maxPostsLimit]);
 
   const loadTodayComments = () => {
-    const todayKey = `comments_today_${new Date().toDateString()}`;
-    chrome.storage.local.get([todayKey], (result) => {
-      const todayCount = result[todayKey] || 0;
+    const today = new Date().toDateString();
+    const storageKey = `comments_today_${today}`;
+    chrome.storage.local.get([storageKey], (result) => {
+      const todayCount = result[storageKey] || 0;
       setTotalTodayComments(todayCount);
     });
   };
 
   const saveTodayComments = (count: number) => {
-    const todayKey = `comments_today_${new Date().toDateString()}`;
-    chrome.storage.local.set({ [todayKey]: count });
+    const today = new Date().toDateString();
+    const storageKey = `comments_today_${today}`;
+    chrome.storage.local.set({ [storageKey]: count });
   };
 
   const handleStyleGuideChange = (value: string) => {
@@ -326,29 +382,26 @@ export default function Popup() {
   ) => {
     setSelectedDefaultStyle(value);
     chrome.storage.local.set({ selectedDefaultStyle: value });
-    if (!isPremium) {
-      const newPrompt = DEFAULT_STYLE_GUIDES[value].prompt;
-      setStyleGuide(newPrompt);
-      chrome.storage.local.set({ styleGuide: newPrompt });
-    }
+
+    // Update the style guide to match the selected default
+    const newStyleGuide = DEFAULT_STYLE_GUIDES[value].prompt;
+    setStyleGuide(newStyleGuide);
+    chrome.storage.local.set({ styleGuide: newStyleGuide });
   };
 
   const handleScrollDurationChange = (value: number) => {
-    console.log("Popup: Saving scrollDuration:", value);
     setScrollDuration(value);
     chrome.storage.local.set({ scrollDuration: value });
   };
 
   const handleCommentDelayChange = (value: number) => {
-    console.log("Popup: Saving commentDelay:", value);
     setCommentDelay(value);
     chrome.storage.local.set({ commentDelay: value });
   };
 
   const handleMaxPostsChange = (value: number) => {
-    const cappedValue = Math.min(value, maxPostsLimit);
-    setMaxPosts(cappedValue);
-    chrome.storage.local.set({ maxPosts: cappedValue });
+    setMaxPosts(value);
+    chrome.storage.local.set({ maxPosts: value });
   };
 
   const handleDuplicateWindowChange = (value: number) => {
@@ -385,6 +438,14 @@ export default function Popup() {
     if (!isLoaded || !isSignedIn) {
       console.warn("Popup: Cannot start - not signed in");
       setStatus("Please sign in to start commenting.");
+      return;
+    }
+
+    // Check if daily limit is reached
+    if (isDailyLimitReached) {
+      setStatus(
+        "Daily comment limit reached. Please upgrade or wait until tomorrow.",
+      );
       return;
     }
 
@@ -469,6 +530,14 @@ export default function Popup() {
           {/* User Profile Section */}
           <UserProfile user={user} />
 
+          {/* Comment Limit Status */}
+          <CommentLimitStatus
+            isPremium={isPremium}
+            dailyCount={dailyCommentCount ?? 0}
+            limit={dailyLimit}
+            isLoading={isPremiumLoading || isDailyCountLoading}
+          />
+
           <div className="mt-4 mb-4">
             {isRunning ? (
               <button
@@ -481,7 +550,11 @@ export default function Popup() {
               <button
                 onClick={handleStart}
                 className="w-full rounded-md bg-blue-600 px-4 py-3 font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
-                disabled={!styleGuide.trim()}
+                disabled={
+                  isInitialDataLoading ||
+                  !styleGuide.trim() ||
+                  isDailyLimitReached
+                }
               >
                 Start Auto Commenting
               </button>
