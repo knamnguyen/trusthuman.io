@@ -6,7 +6,10 @@ import { useDailyCommentCount } from "../../hooks/use-daily-comment-count";
 import { usePremiumStatus } from "../../hooks/use-premium-status";
 import { clearCachedUserData } from "../../hooks/use-user-data";
 import Auth from "./components/auth";
-import { CommentLimitStatus } from "./components/comment-limit-status";
+import {
+  CommentLimitStatus,
+  UpgradeLink,
+} from "./components/comment-limit-status";
 import ErrorDisplay from "./components/error-display";
 import RunningStatusBanner from "./components/running-status-banner";
 import SettingsForm from "./components/settings-form";
@@ -429,6 +432,28 @@ export default function Popup() {
   };
 
   const handleStart = async () => {
+    // Prevent starting if critical data is still loading
+    if (isInitialDataLoading) {
+      setLastError({ message: "Data is still loading, please wait." });
+      return;
+    }
+
+    // Check if daily limit is reached before starting
+    if (isDailyLimitReached) {
+      setLastError({
+        message: (
+          <>
+            Daily comment limit reached. Please <UpgradeLink /> or wait until
+            tomorrow.
+          </>
+        ),
+      });
+      return;
+    }
+
+    setStatus("Starting...");
+    setLastError(null);
+
     if (!styleGuide.trim()) {
       setStatus("Please enter a style guide for your comments.");
       return;
@@ -438,14 +463,6 @@ export default function Popup() {
     if (!isLoaded || !isSignedIn) {
       console.warn("Popup: Cannot start - not signed in");
       setStatus("Please sign in to start commenting.");
-      return;
-    }
-
-    // Check if daily limit is reached
-    if (isDailyLimitReached) {
-      setStatus(
-        "Daily comment limit reached. Please upgrade or wait until tomorrow.",
-      );
       return;
     }
 

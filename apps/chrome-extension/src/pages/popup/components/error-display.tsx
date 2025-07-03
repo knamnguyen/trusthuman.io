@@ -11,7 +11,7 @@ import React from "react";
  */
 
 interface ErrorDisplayProps {
-  lastError: any | null;
+  lastError: { message: React.ReactNode; [key: string]: any } | null;
   onClearError: () => void;
 }
 

@@ -48,4 +48,4 @@ export const videoProcessingStatusSchema = z.object({
   error: z.string().optional(),
 });
 
-export type VideoProcessingStatus = z.infer<typeof videoProcessingStatusSchema>; 
+export type VideoProcessingStatus = z.infer<typeof videoProcessingStatusSchema>;

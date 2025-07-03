@@ -2,6 +2,17 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { BadgeCheck } from "lucide-react";
+
+import { Button } from "@sassy/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@sassy/ui/card";
 
 import { useSubscription } from "~/hooks/use-subscription";
 
@@ -19,34 +30,36 @@ export default function SubscriptionSuccessPage() {
   }, []);
 
   return (
-    <div className="container mx-auto flex min-h-[60vh] flex-col items-center justify-center px-4 py-16">
-      <div className="w-full max-w-md rounded-lg bg-green-100 p-8 text-center">
-        <h1 className="mb-4 text-3xl font-bold text-green-800">
-          Payment Successful!
-        </h1>
-
-        {isLoading ? (
-          <p className="mb-8 text-gray-600">
-            Verifying your subscription status...
-          </p>
-        ) : hasAccess ? (
-          <p className="mb-8 text-green-700">
-            {`Your ${accessType} access is now active!`}
-          </p>
-        ) : (
-          <p className="mb-8 text-yellow-600">
-            Payment received. Your access should be activated soon. It may take
-            a few moments to update.
-          </p>
-        )}
-
-        <Link
-          href="/subscription"
-          className="inline-block rounded-lg bg-green-600 px-6 py-3 font-bold text-white hover:bg-green-700"
-        >
-          Return to Subscription Page
-        </Link>
-      </div>
+    <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
+      <Card className="w-full max-w-md text-center shadow-lg">
+        <CardHeader>
+          <BadgeCheck className="mx-auto h-16 w-16 text-green-500" />
+          <CardTitle className="mt-4 text-2xl font-bold text-gray-800">
+            Payment Successful!
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <CardDescription>
+              Verifying your subscription status...
+            </CardDescription>
+          ) : hasAccess ? (
+            <CardDescription>
+              {`Your ${accessType} access is now active!`}
+            </CardDescription>
+          ) : (
+            <CardDescription>
+              Payment received. Your access should be activated soon. It may
+              take a few moments to update.
+            </CardDescription>
+          )}
+        </CardContent>
+        <CardFooter>
+          <Button asChild className="w-full">
+            <Link href="/subscription">Return to Subscription Page</Link>
+          </Button>
+        </CardFooter>
+      </Card>
     </div>
   );
 }

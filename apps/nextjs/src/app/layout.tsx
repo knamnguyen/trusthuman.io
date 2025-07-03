@@ -1,9 +1,8 @@
 import type { Metadata, Viewport } from "next";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
-import { GeistMono } from "geist/font/mono";
-import { GeistSans } from "geist/font/sans";
 
-import { ThemeProvider, ThemeToggle } from "@sassy/ui/theme";
+import { ThemeProvider } from "@sassy/ui/theme";
 import { Toaster } from "@sassy/ui/toast";
 import { cn } from "@sassy/ui/utils";
 
@@ -34,6 +33,11 @@ export const metadata: Metadata = {
   },
 };
 
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-sans",
+});
+
 export const viewport: Viewport = {
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "white" },
@@ -47,8 +51,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
       <body
         className={cn(
           "bg-background text-foreground min-h-screen font-sans antialiased",
-          GeistSans.variable,
-          GeistMono.variable,
+          plusJakartaSans.variable,
         )}
       >
         <ClerkProvider
@@ -56,11 +59,8 @@ export default function RootLayout(props: { children: React.ReactNode }) {
           afterSignInUrl="/extension-auth"
           afterSignUpUrl="/extension-auth"
         >
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <ThemeProvider attribute="class" defaultTheme="light">
             <TRPCReactProvider>{props.children}</TRPCReactProvider>
-            <div className="absolute right-4 bottom-4">
-              <ThemeToggle />
-            </div>
             <Toaster />
           </ThemeProvider>
         </ClerkProvider>

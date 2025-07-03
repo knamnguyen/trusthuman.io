@@ -11,7 +11,13 @@ import {
 import { ArrowLeft, CheckCircle, Chrome } from "lucide-react";
 
 import { Button } from "@sassy/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@sassy/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@sassy/ui/card";
 
 export default function ExtensionAuthPage() {
   const { isSignedIn, user } = useUser();
@@ -77,86 +83,64 @@ export default function ExtensionAuthPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <Card className="w-full max-w-md">
+    <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
+      <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
-            <Chrome className="h-8 w-8 text-blue-600" />
-          </div>
-          <CardTitle className="text-2xl font-bold">
-            EngageKit Extension
+          <Chrome className="mx-auto h-12 w-12 text-blue-600" />
+          <CardTitle className="mt-4 text-2xl font-bold">
+            Connect to EngageKit
           </CardTitle>
+          <CardDescription>
+            Sign in to link your Chrome extension and start engaging.
+          </CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-6">
           <SignedOut>
             <div className="space-y-4 text-center">
-              <p className="text-gray-600">
-                Sign in to connect your EngageKit Chrome extension
+              <p className="text-muted-foreground">
+                The sign-in window should open automatically.
               </p>
-
-              <div className="space-y-3">
-                {/* Hidden SignInButton for auto-triggering */}
-                <SignInButton mode="modal">
-                  <button ref={signInButtonRef} className="hidden" />
-                </SignInButton>
-
-                <p className="text-sm font-medium text-blue-600">
-                  Sign-in modal should appear automatically...
-                </p>
-
-                <div className="text-sm text-gray-500">
-                  <p>Or create a new account:</p>
-                </div>
-
-                <SignUpButton mode="modal">
-                  <Button size="lg" variant="outline" className="w-full">
-                    Create Account
-                  </Button>
-                </SignUpButton>
-              </div>
-
-              <div className="text-sm text-gray-500">
-                <p>
-                  After signing in, return to your extension to start using
-                  EngageKit
-                </p>
-              </div>
+              {/* Hidden SignInButton for auto-triggering */}
+              <SignInButton mode="modal">
+                <button ref={signInButtonRef} className="hidden" />
+              </SignInButton>
+              <p className="text-muted-foreground text-sm">
+                Don&apos;t have an account?
+              </p>
+              <SignUpButton mode="modal">
+                <Button variant="outline" className="w-full">
+                  Create Account
+                </Button>
+              </SignUpButton>
             </div>
           </SignedOut>
 
           <SignedIn>
             {showSuccessMessage ? (
-              <div className="space-y-4 text-center">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-                  <CheckCircle className="h-8 w-8 text-green-600" />
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-semibold text-green-800">
+              <div className="flex flex-col items-center space-y-4 text-center">
+                <CheckCircle className="h-16 w-16 text-green-500" />
+                <div className="space-y-1">
+                  <h3 className="text-xl font-semibold">
                     Successfully Connected!
                   </h3>
-                  <p className="mt-2 text-sm text-gray-600">
-                    Welcome {user?.firstName}! Your extension is now connected.
+                  <p className="text-muted-foreground">
+                    Welcome, {user?.firstName}! Your extension is ready.
                   </p>
                 </div>
-
-                <Button
-                  onClick={handleReturnToExtension}
-                  className="w-full"
-                  size="lg"
-                >
+                <Button onClick={handleReturnToExtension} className="w-full">
                   <ArrowLeft className="mr-2 h-4 w-4" />
-                  Return to Extension
+                  Close this window
                 </Button>
-
-                <p className="text-xs text-gray-500">
-                  This window will close automatically in a few seconds
+                <p className="text-muted-foreground text-xs">
+                  This window will close automatically.
                 </p>
               </div>
             ) : (
               <div className="text-center">
-                <p className="text-gray-600">Connecting your extension...</p>
+                <p className="text-muted-foreground">
+                  Connecting your extension...
+                </p>
               </div>
             )}
           </SignedIn>

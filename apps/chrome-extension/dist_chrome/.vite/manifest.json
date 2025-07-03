@@ -44,9 +44,9 @@
       "__commonjsHelpers-gnU0ypJ3.js"
     ]
   },
-  "_tailwind-ChUlb-RU.css": {
-    "file": "assets/tailwind-ChUlb-RU.css",
-    "src": "_tailwind-ChUlb-RU.css"
+  "_tailwind-C9BGW5fO.css": {
+    "file": "assets/tailwind-C9BGW5fO.css",
+    "src": "_tailwind-C9BGW5fO.css"
   },
   "src/pages/background/index.ts": {
     "file": "assets/index.ts-CKGw8iMV.js",
@@ -88,7 +88,7 @@
     ]
   },
   "src/pages/newtab/index.html": {
-    "file": "assets/index.html-GZSetZdV.js",
+    "file": "assets/index.html-CQcW3NFR.js",
     "name": "index.html",
     "src": "src/pages/newtab/index.html",
     "isEntry": true,
@@ -99,7 +99,7 @@
     ],
     "css": [
       "assets/index-BarpStXw.css",
-      "assets/tailwind-ChUlb-RU.css"
+      "assets/tailwind-C9BGW5fO.css"
     ]
   },
   "src/pages/options/index.html": {
@@ -117,7 +117,7 @@
     ]
   },
   "src/pages/popup/index.html": {
-    "file": "assets/index.html-lbToA69t.js",
+    "file": "assets/index.html-D7TcYQcx.js",
     "name": "index.html",
     "src": "src/pages/popup/index.html",
     "isEntry": true,
@@ -131,7 +131,7 @@
     ],
     "css": [
       "assets/index-addibwyn.css",
-      "assets/tailwind-ChUlb-RU.css"
+      "assets/tailwind-C9BGW5fO.css"
     ]
   }
 }

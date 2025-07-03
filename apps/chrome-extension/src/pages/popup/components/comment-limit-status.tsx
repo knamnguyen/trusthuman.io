@@ -1,11 +1,29 @@
 import React from "react";
 
+import { getSyncHostUrl } from "../../../utils/url";
+
 interface CommentLimitStatusProps {
   isPremium: boolean | null;
   dailyCount: number;
   limit: number;
   isLoading: boolean;
 }
+
+export const UpgradeLink = () => {
+  const url = `${getSyncHostUrl()}/subscription`;
+  return (
+    <a
+      href={url}
+      onClick={(e) => {
+        e.preventDefault();
+        chrome.tabs.create({ url });
+      }}
+      className="font-bold text-blue-600 underline hover:text-blue-700"
+    >
+      Upgrade
+    </a>
+  );
+};
 
 export const CommentLimitStatus: React.FC<CommentLimitStatusProps> = ({
   isPremium,
@@ -26,17 +44,26 @@ export const CommentLimitStatus: React.FC<CommentLimitStatusProps> = ({
   const isAtLimit = dailyCount >= limit;
 
   // Determine message and color
-  let message: string;
+  let message: React.ReactNode;
   let colorClass: string;
 
   if (!isPremium) {
     // Free plan
     if (isAtLimit) {
-      message =
-        "You have used up all free comments today out of 15. Upgrade now to get 100 comments/day";
+      message = (
+        <>
+          You have used up all free comments today out of 15. <UpgradeLink />{" "}
+          now to get 100 comments/day
+        </>
+      );
       colorClass = "text-red-600";
     } else {
-      message = `Your free plan has ${remaining} comments left today out of 15. Upgrade to get 100 comments per day`;
+      message = (
+        <>
+          Your free plan has {remaining} comments left today out of 15.{" "}
+          <UpgradeLink /> to get 100 comments per day
+        </>
+      );
       colorClass = "text-red-600";
     }
   } else {

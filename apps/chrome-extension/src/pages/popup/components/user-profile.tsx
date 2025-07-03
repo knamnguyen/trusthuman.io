@@ -5,6 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import type { AuthUser } from "../../../services/auth-service";
 import { formatAccessType, useUserData } from "../../../hooks/use-user-data";
 import { useTRPC } from "../../../trpc/react";
+import { getSyncHostUrl } from "../../../utils/url";
 
 interface UserProfileProps {
   user: AuthUser | null;
@@ -74,20 +75,6 @@ const UserProfile = ({ user }: UserProfileProps) => {
 
     // Only show default if we have no data at all (not even cached)
     return null;
-  };
-
-  // Add getSyncHostUrl utility (copied from auth.tsx)
-  const getSyncHostUrl = () => {
-    if (import.meta.env.VITE_NGROK_URL) {
-      return import.meta.env.VITE_NGROK_URL;
-    }
-    if (import.meta.env.VITE_NEXTJS_URL) {
-      return import.meta.env.VITE_NEXTJS_URL;
-    }
-    if (import.meta.env.DEV) {
-      return "http://localhost:3000";
-    }
-    return "https://engagekit.io";
   };
 
   // New: Render badge/button on the right

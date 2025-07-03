@@ -1,31 +1,34 @@
 "use client";
- 
-import { Input } from "@sassy/ui/input";
-import { cn } from "@sassy/ui/utils";
+
 import {
-  Dispatch,
-  SetStateAction,
   createContext,
+  Dispatch,
   forwardRef,
+  SetStateAction,
   useCallback,
   useContext,
   useEffect,
   useRef,
   useState,
 } from "react";
+import { Trash2 as RemoveIcon } from "lucide-react";
 import {
-  useDropzone,
+  DropzoneOptions,
   DropzoneState,
   FileRejection,
-  DropzoneOptions,
+  useDropzone,
 } from "react-dropzone";
 import { toast } from "sonner";
-import { Trash2 as RemoveIcon } from "lucide-react";
+
 import { buttonVariants } from "@sassy/ui/button";
-import { VIDEO_CONSTRAINTS, type VideoMetadata } from "../schema-validators";
- 
+import { Input } from "@sassy/ui/input";
+import { cn } from "@sassy/ui/utils";
+
+import type { VideoMetadata } from "../schema-validators";
+import { VIDEO_CONSTRAINTS } from "../schema-validators";
+
 type DirectionOptions = "rtl" | "ltr" | undefined;
- 
+
 type FileUploaderContextType = {
   dropzoneState: DropzoneState;
   isLOF: boolean;
@@ -36,9 +39,9 @@ type FileUploaderContextType = {
   orientation: "horizontal" | "vertical";
   direction: DirectionOptions;
 };
- 
+
 const FileUploaderContext = createContext<FileUploaderContextType | null>(null);
- 
+
 export const useFileUpload = () => {
   const context = useContext(FileUploaderContext);
   if (!context) {
@@ -46,13 +49,13 @@ export const useFileUpload = () => {
   }
   return context;
 };
- 
+
 // Video validation utility functions
 const getVideoMetadata = async (file: File): Promise<VideoMetadata> => {
   return new Promise((resolve, reject) => {
     const video = document.createElement("video");
     video.preload = "metadata";
-    
+
     video.onloadedmetadata = () => {
       resolve({
         duration: video.duration,
@@ -63,12 +66,12 @@ const getVideoMetadata = async (file: File): Promise<VideoMetadata> => {
       });
       URL.revokeObjectURL(video.src);
     };
-    
+
     video.onerror = () => {
       reject(new Error("Failed to load video metadata"));
       URL.revokeObjectURL(video.src);
     };
-    
+
     video.src = URL.createObjectURL(file);
   });
 };
@@ -82,7 +85,7 @@ const validateVideoDuration = async (file: File): Promise<boolean> => {
     return false;
   }
 };
- 
+
 type FileUploaderProps = {
   value: File[] | null;
   reSelect?: boolean;
@@ -90,11 +93,11 @@ type FileUploaderProps = {
   dropzoneOptions: DropzoneOptions;
   orientation?: "horizontal" | "vertical";
 };
- 
+
 /**
  * File upload Docs: {@link: https://localhost:3000/docs/file-upload}
  */
- 
+
 export const FileUploader = forwardRef<
   HTMLDivElement,
   FileUploaderProps & React.HTMLAttributes<HTMLDivElement>
@@ -124,10 +127,10 @@ export const FileUploader = forwardRef<
       maxSize = 4 * 1024 * 1024,
       multiple = true,
     } = dropzoneOptions;
- 
+
     const reSelectAll = maxFiles === 1 ? true : reSelect;
     const direction: DirectionOptions = dir === "rtl" ? "rtl" : "ltr";
- 
+
     const removeFileFromSet = useCallback(
       (i: number) => {
         if (!value) return;
@@ -136,38 +139,38 @@ export const FileUploader = forwardRef<
       },
       [value, onValueChange],
     );
- 
+
     const handleKeyDown = useCallback(
       (e: React.KeyboardEvent<HTMLDivElement>) => {
         e.preventDefault();
         e.stopPropagation();
- 
+
         if (!value) return;
- 
+
         const moveNext = () => {
           const nextIndex = activeIndex + 1;
           setActiveIndex(nextIndex > value.length - 1 ? 0 : nextIndex);
         };
- 
+
         const movePrev = () => {
           const nextIndex = activeIndex - 1;
           setActiveIndex(nextIndex < 0 ? value.length - 1 : nextIndex);
         };
- 
+
         const prevKey =
           orientation === "horizontal"
             ? direction === "ltr"
               ? "ArrowLeft"
               : "ArrowRight"
             : "ArrowUp";
- 
+
         const nextKey =
           orientation === "horizontal"
             ? direction === "ltr"
               ? "ArrowRight"
               : "ArrowLeft"
             : "ArrowDown";
- 
+
         if (e.key === nextKey) {
           moveNext();
         } else if (e.key === prevKey) {
@@ -192,11 +195,11 @@ export const FileUploader = forwardRef<
       // eslint-disable-next-line react-hooks/exhaustive-deps
       [value, activeIndex, removeFileFromSet],
     );
- 
+
     const onDrop = useCallback(
       async (acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
         const files = acceptedFiles;
- 
+
         if (!files) {
           toast.error("File error, probably too big");
           return;
@@ -204,49 +207,49 @@ export const FileUploader = forwardRef<
 
         // Validate video files immediately
         const validatedFiles: File[] = [];
-        
+
         for (const file of files) {
           // Check if it's a video file
           if (file.type.startsWith("video/")) {
             // Check file size first
             if (file.size > VIDEO_CONSTRAINTS.MAX_SIZE) {
               toast.error(
-                `Video file "${file.name}" is too large. Maximum size is ${VIDEO_CONSTRAINTS.MAX_SIZE / 1024 / 1024 / 1024}GB`
+                `Video file "${file.name}" is too large. Maximum size is ${VIDEO_CONSTRAINTS.MAX_SIZE / 1024 / 1024 / 1024}GB`,
               );
               continue;
             }
-            
+
             // Check video duration
             const isValidDuration = await validateVideoDuration(file);
             if (!isValidDuration) {
               toast.error(
-                `Video "${file.name}" is too long. Maximum duration is ${VIDEO_CONSTRAINTS.MAX_DURATION / 60} minutes`
+                `Video "${file.name}" is too long. Maximum duration is ${VIDEO_CONSTRAINTS.MAX_DURATION / 60} minutes`,
               );
               continue;
             }
           }
-          
+
           validatedFiles.push(file);
         }
 
         if (validatedFiles.length === 0) {
           return; // All files were rejected
         }
- 
+
         const newValues: File[] = value ? [...value] : [];
- 
+
         if (reSelectAll) {
           newValues.splice(0, newValues.length);
         }
- 
+
         validatedFiles.forEach((file) => {
           if (newValues.length < maxFiles) {
             newValues.push(file);
           }
         });
- 
+
         onValueChange(newValues);
- 
+
         if (rejectedFiles.length > 0) {
           for (let i = 0; i < rejectedFiles.length; i++) {
             if (rejectedFiles[i]?.errors[0]?.code === "file-too-large") {
@@ -265,7 +268,7 @@ export const FileUploader = forwardRef<
       // eslint-disable-next-line react-hooks/exhaustive-deps
       [reSelectAll, value, maxFiles, maxSize],
     );
- 
+
     useEffect(() => {
       if (!value) return;
       if (value.length === maxFiles) {
@@ -274,18 +277,18 @@ export const FileUploader = forwardRef<
       }
       setIsLOF(false);
     }, [value, maxFiles]);
- 
+
     const opts = dropzoneOptions
       ? dropzoneOptions
       : { accept, maxFiles, maxSize, multiple };
- 
+
     const dropzoneState = useDropzone({
       ...opts,
       onDrop,
       onDropRejected: () => setIsFileTooBig(true),
       onDropAccepted: () => setIsFileTooBig(false),
     });
- 
+
     return (
       <FileUploaderContext.Provider
         value={{
@@ -304,7 +307,7 @@ export const FileUploader = forwardRef<
           tabIndex={0}
           onKeyDownCapture={handleKeyDown}
           className={cn(
-            "grid w-full focus:outline-hidden overflow-hidden ",
+            "grid w-full overflow-hidden focus:outline-hidden",
             className,
             {
               "gap-2": value && value.length > 0,
@@ -319,16 +322,16 @@ export const FileUploader = forwardRef<
     );
   },
 );
- 
+
 FileUploader.displayName = "FileUploader";
- 
+
 export const FileUploaderContent = forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ children, className, ...props }, ref) => {
   const { orientation } = useFileUpload();
   const containerRef = useRef<HTMLDivElement>(null);
- 
+
   return (
     <div
       className={cn("w-full px-1")}
@@ -339,7 +342,7 @@ export const FileUploaderContent = forwardRef<
         {...props}
         ref={ref}
         className={cn(
-          "flex rounded-xl gap-1",
+          "flex gap-1 rounded-xl",
           orientation === "horizontal" ? "flex-raw flex-wrap" : "flex-col",
           className,
         )}
@@ -349,9 +352,9 @@ export const FileUploaderContent = forwardRef<
     </div>
   );
 });
- 
+
 FileUploaderContent.displayName = "FileUploaderContent";
- 
+
 export const FileUploaderItem = forwardRef<
   HTMLDivElement,
   { index: number } & React.HTMLAttributes<HTMLDivElement>
@@ -363,13 +366,13 @@ export const FileUploaderItem = forwardRef<
       ref={ref}
       className={cn(
         buttonVariants({ variant: "ghost" }),
-        "h-6 p-1 justify-between cursor-pointer relative",
+        "relative h-6 cursor-pointer justify-between p-1",
         className,
         isSelected ? "bg-muted" : "",
       )}
       {...props}
     >
-      <div className="font-medium leading-none tracking-tight flex items-center gap-1.5 h-full w-full">
+      <div className="flex h-full w-full items-center gap-1.5 leading-none font-medium tracking-tight">
         {children}
       </div>
       <button
@@ -381,14 +384,14 @@ export const FileUploaderItem = forwardRef<
         onClick={() => removeFileFromSet(index)}
       >
         <span className="sr-only">remove item {index}</span>
-        <RemoveIcon className="w-4 h-4 hover:stroke-destructive duration-200 ease-in-out" />
+        <RemoveIcon className="hover:stroke-destructive h-4 w-4 duration-200 ease-in-out" />
       </button>
     </div>
   );
 });
- 
+
 FileUploaderItem.displayName = "FileUploaderItem";
- 
+
 export const FileInput = forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
@@ -400,19 +403,18 @@ export const FileInput = forwardRef<
       ref={ref}
       {...props}
       className={`relative w-full ${
-        isLOF ? "opacity-50 cursor-not-allowed " : "cursor-pointer "
+        isLOF ? "cursor-not-allowed opacity-50" : "cursor-pointer"
       }`}
     >
       <div
         className={cn(
-          `w-full rounded-lg duration-300 ease-in-out
-         ${
-           dropzoneState.isDragAccept
-             ? "border-green-500"
-             : dropzoneState.isDragReject || isFileTooBig
-               ? "border-red-500"
-               : "border-gray-300"
-         }`,
+          `w-full rounded-lg duration-300 ease-in-out ${
+            dropzoneState.isDragAccept
+              ? "border-green-500"
+              : dropzoneState.isDragReject || isFileTooBig
+                ? "border-red-500"
+                : "border-gray-300"
+          }`,
           className,
         )}
         {...rootProps}
@@ -428,5 +430,5 @@ export const FileInput = forwardRef<
     </div>
   );
 });
- 
+
 FileInput.displayName = "FileInput";

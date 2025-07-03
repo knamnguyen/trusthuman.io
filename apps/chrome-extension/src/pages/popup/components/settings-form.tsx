@@ -1,6 +1,7 @@
 import React from "react";
 
 import { DEFAULT_STYLE_GUIDES, FEATURE_CONFIG } from "../../../config/features";
+import { UpgradeLink } from "./comment-limit-status";
 
 /**
  * SettingsForm Component
@@ -146,8 +147,8 @@ export default function SettingsForm({
             FEATURE_CONFIG.customStyleGuide.isPremium,
           ) && (
             <p className="mt-2 text-xs font-bold text-red-600">
-              On a free plan, you can choose a style in the dropdown. Upgrade
-              now to write your own custom style guide.
+              On a free plan, you can choose a style in the dropdown.{" "}
+              <UpgradeLink /> now to write your own custom style guide.
             </p>
           )}
         </div>
@@ -161,7 +162,7 @@ export default function SettingsForm({
           <input
             type="range"
             min="5"
-            max="30"
+            max="60"
             value={scrollDuration}
             onChange={(e) => onScrollDurationChange(parseInt(e.target.value))}
             disabled={isRunning}
@@ -195,7 +196,7 @@ export default function SettingsForm({
         </p>
         {isPremium === false && (
           <p className="mt-1 text-xs font-bold text-red-600">
-            Upgrade to premium for up to{" "}
+            <UpgradeLink /> to premium for up to{" "}
             {FEATURE_CONFIG.maxPosts.premiumTierLimit} posts per session.
           </p>
         )}
