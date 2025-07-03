@@ -34,10 +34,10 @@ export function HeroSection() {
         <RotatingTitles titles={titles} />
       </h1>
       <p className="max-w-2xl text-lg text-gray-600">
-        Do 100 human-like comments a day for you, on auto-pilot. <br /> S Get
-        your profile reach 100k+ people. <br />
+        Do 100 human-like comments a day for you, on auto-pilot. <br />
+        Get your profile reach 100k+ people. <br />
         Thousands of new followers. <br />
-        ave 30 hours a month. <br />
+        Save 30 hours a month. <br />
         Free to get started.
       </p>
       <div>
