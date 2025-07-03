@@ -45,12 +45,10 @@ export const stripeRouter = {
       if (!ctx.user) throw new Error("User not authenticated");
       //if user already has lifetime subscription, don't allow config or checkout
       const access = await checkAccessType(ctx);
-      if (access === "MONTHLY" || access === "YEARLY")
+      if (access === "MONTHLY" || access === "WEEKLY" || access === "YEARLY")
         throw new Error(
           "User already has a subscription, click manage subscription to change plan",
         );
-      if (access === "LIFETIME")
-        throw new Error("User already has lifetime subscription");
 
       const userId = ctx.user.id;
       const email = ctx.user.emailAddresses[0]?.emailAddress;
@@ -61,7 +59,6 @@ export const stripeRouter = {
         input.purchaseType,
         email,
       );
-
       return checkoutUrl;
     }),
 

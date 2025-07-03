@@ -7,7 +7,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useTRPC } from "~/trpc/react"; // Correct TRPC import
 
 interface SubscribeButtonProps {
-  purchaseType: "MONTHLY" | "YEARLY" | "LIFETIME";
+  purchaseType: "WEEKLY" | "MONTHLY" | "YEARLY";
   buttonText?: string; // Custom button text
   className?: string; // CSS class for styling
 }
@@ -18,7 +18,11 @@ interface SubscribeButtonProps {
  */
 export function SubscribeButton({
   purchaseType,
-  buttonText = purchaseType === "LIFETIME" ? "Buy Lifetime" : "Subscribe",
+  buttonText = purchaseType === "WEEKLY"
+    ? "Subscribe Weekly"
+    : purchaseType === "MONTHLY"
+      ? "Subscribe Monthly"
+      : "Subscribe Yearly",
   className = "py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-300",
 }: SubscribeButtonProps) {
   const trpc = useTRPC();

@@ -1,22 +1,16 @@
 import React from "react";
 import { UserButton } from "@clerk/chrome-extension";
+import { useMutation } from "@tanstack/react-query";
 
 import type { AuthUser } from "../../../services/auth-service";
 import { formatAccessType, useUserData } from "../../../hooks/use-user-data";
+import { useTRPC } from "../../../trpc/react";
 
 interface UserProfileProps {
   user: AuthUser | null;
-  isSigningOut: boolean;
-  onSignOut: () => Promise<boolean>;
-  setHasEverSignedIn: (hasEverSignedIn: boolean) => void;
 }
 
-const UserProfile = ({
-  user,
-  isSigningOut,
-  onSignOut,
-  setHasEverSignedIn,
-}: UserProfileProps) => {
+const UserProfile = ({ user }: UserProfileProps) => {
   const {
     data: userData,
     isLoading,
@@ -24,17 +18,23 @@ const UserProfile = ({
     hasCachedData,
     isFetching,
   } = useUserData();
+  const trpc = useTRPC();
+  const { mutateAsync: createCustomerPortal, isPending } = useMutation(
+    trpc.stripe.createCustomerPortal.mutationOptions({}),
+  );
 
-  const handleSignOut = async () => {
+  // Handler for Manage Subscription
+  const handleManageSubscription = async () => {
     try {
-      const success = await onSignOut();
-      if (success) {
-        setHasEverSignedIn(false);
-        // Clear cached user data when signing out
-        // clearCachedUserData(); // Will be called by clearCachedUserData from useUserData
+      const result = await createCustomerPortal({});
+      const url = result?.url;
+      if (url) {
+        window.open(url, "_blank");
+      } else {
+        alert("Failed to open customer portal.");
       }
-    } catch (error) {
-      console.error("Error signing out:", error);
+    } catch (err) {
+      alert("Error opening customer portal.");
     }
   };
 
@@ -76,6 +76,51 @@ const UserProfile = ({
     return null;
   };
 
+  // Add getSyncHostUrl utility (copied from auth.tsx)
+  const getSyncHostUrl = () => {
+    if (import.meta.env.VITE_NGROK_URL) {
+      return import.meta.env.VITE_NGROK_URL;
+    }
+    if (import.meta.env.VITE_NEXTJS_URL) {
+      return import.meta.env.VITE_NEXTJS_URL;
+    }
+    if (import.meta.env.DEV) {
+      return "http://localhost:3000";
+    }
+    return "https://engagekit.io";
+  };
+
+  // New: Render badge/button on the right
+  const renderSubscriptionButton = () => {
+    if (!userData || isLoading) return null;
+    if (userData.accessType === "FREE") {
+      return (
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            const url = `${getSyncHostUrl()}/subscription`;
+            chrome.tabs.create({ url });
+          }}
+          className="ml-auto inline-block rounded bg-blue-600 px-3 py-1 text-xs font-semibold text-white shadow transition hover:bg-blue-700"
+        >
+          Upgrade Premium
+        </button>
+      );
+    }
+    if (["WEEKLY", "MONTHLY", "YEARLY"].includes(userData.accessType)) {
+      return (
+        <button
+          onClick={handleManageSubscription}
+          className="ml-auto inline-block rounded bg-green-600 px-3 py-1 text-xs font-semibold text-white shadow transition hover:bg-green-700"
+          disabled={isPending}
+        >
+          {isPending ? "Loading..." : "Manage Subscription"}
+        </button>
+      );
+    }
+    return null;
+  };
+
   return (
     <div className="mt-4 border-t border-gray-200 pt-4">
       <div className="flex items-center justify-between">
@@ -89,13 +134,8 @@ const UserProfile = ({
             <div className="mt-1">{renderPlanStatus()}</div>
           </div>
         </div>
-        <button
-          onClick={handleSignOut}
-          disabled={isSigningOut}
-          className="text-xs text-gray-500 hover:text-red-600 disabled:opacity-50"
-        >
-          {isSigningOut ? "Signing out..." : "Sign out"}
-        </button>
+        {/* Subscription badge/button on the right */}
+        {renderSubscriptionButton()}
       </div>
     </div>
   );

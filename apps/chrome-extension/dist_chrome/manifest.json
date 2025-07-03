@@ -43,7 +43,7 @@
   "content_scripts": [
     {
       "js": [
-        "assets/index.tsx-loader-CMktgAmP.js",
+        "assets/index.tsx-loader-CCBwXIC3.js",
         "assets/always-active-core.ts-l0sNRNKZ.js"
       ],
       "matches": [
@@ -74,10 +74,10 @@
         "https://*/*"
       ],
       "resources": [
-        "assets/react-15L98h0B.js",
+        "assets/react-BREabPrs.js",
         "assets/index-CqyD2INw.js",
         "assets/_commonjsHelpers-gnU0ypJ3.js",
-        "assets/index.tsx-DAIb4-A2.js",
+        "assets/index.tsx-CYFyBdvk.js",
         "assets/always-active-core.ts-l0sNRNKZ.js"
       ],
       "use_dynamic_url": false

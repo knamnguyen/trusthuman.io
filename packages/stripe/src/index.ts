@@ -186,4 +186,42 @@ export class StripeService {
 
     return customer.id;
   }
+
+  /**
+   * Handle Stripe webhook event
+   * @param signature Stripe signature from headers
+   * @param body Raw request body as Buffer
+   * @returns WebhookResult with event and clerkUserId
+   */
+  async handleWebhookEvent(
+    signature: string,
+    body: Buffer,
+  ): Promise<WebhookResult> {
+    try {
+      const event = this.stripe.webhooks.constructEvent(
+        body,
+        signature,
+        this.webhookSecret,
+      );
+      // Try to extract clerkUserId from event metadata (if present)
+      let clerkUserId: string | undefined = undefined;
+      if (event.data?.object?.metadata?.clerkUserId) {
+        clerkUserId = event.data.object.metadata.clerkUserId;
+      } else if (event.data?.object?.customer) {
+        // Optionally, fetch the customer to get metadata
+        const customerId = event.data.object.customer;
+        try {
+          const customer = await this.stripe.customers.retrieve(customerId);
+          if (typeof customer === "object" && customer.metadata?.clerkUserId) {
+            clerkUserId = customer.metadata.clerkUserId;
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+      return { received: true, event, clerkUserId };
+    } catch (error) {
+      return { received: false };
+    }
+  }
 }

@@ -9,11 +9,11 @@
     "file": "assets/_commonjsHelpers-gnU0ypJ3.js",
     "name": "_commonjsHelpers"
   },
-  "_chunk-I2H3TVZK-KYTa2MFV.js": {
-    "file": "assets/chunk-I2H3TVZK-KYTa2MFV.js",
+  "_chunk-I2H3TVZK-CTwr76W8.js": {
+    "file": "assets/chunk-I2H3TVZK-CTwr76W8.js",
     "name": "chunk-I2H3TVZK",
     "imports": [
-      "_react-15L98h0B.js",
+      "_react-BREabPrs.js",
       "__commonjsHelpers-gnU0ypJ3.js"
     ]
   },
@@ -28,34 +28,34 @@
     "file": "assets/index-CqyD2INw.js",
     "name": "index"
   },
-  "_index.tsx-loader-CMktgAmP.js": {
-    "file": "assets/index.tsx-loader-CMktgAmP.js",
-    "src": "_index.tsx-loader-CMktgAmP.js"
+  "_index.tsx-loader-CCBwXIC3.js": {
+    "file": "assets/index.tsx-loader-CCBwXIC3.js",
+    "src": "_index.tsx-loader-CCBwXIC3.js"
   },
   "_modulepreload-polyfill-B5Qt9EMX.js": {
     "file": "assets/modulepreload-polyfill-B5Qt9EMX.js",
     "name": "modulepreload-polyfill"
   },
-  "_react-15L98h0B.js": {
-    "file": "assets/react-15L98h0B.js",
+  "_react-BREabPrs.js": {
+    "file": "assets/react-BREabPrs.js",
     "name": "react",
     "imports": [
       "_index-CqyD2INw.js",
       "__commonjsHelpers-gnU0ypJ3.js"
     ]
   },
-  "_tailwind-CKQxKAGx.css": {
-    "file": "assets/tailwind-CKQxKAGx.css",
-    "src": "_tailwind-CKQxKAGx.css"
+  "_tailwind-CHnXFSz8.css": {
+    "file": "assets/tailwind-CHnXFSz8.css",
+    "src": "_tailwind-CHnXFSz8.css"
   },
   "src/pages/background/index.ts": {
-    "file": "assets/index.ts-DtXWrlnJ.js",
+    "file": "assets/index.ts-CKGw8iMV.js",
     "name": "index.ts",
     "src": "src/pages/background/index.ts",
     "isEntry": true,
     "imports": [
-      "_chunk-I2H3TVZK-KYTa2MFV.js",
-      "_react-15L98h0B.js",
+      "_chunk-I2H3TVZK-CTwr76W8.js",
+      "_react-BREabPrs.js",
       "__commonjsHelpers-gnU0ypJ3.js",
       "_index-CqyD2INw.js"
     ]
@@ -67,12 +67,12 @@
     "isEntry": true
   },
   "src/pages/content/index.tsx": {
-    "file": "assets/index.tsx-DAIb4-A2.js",
+    "file": "assets/index.tsx-CYFyBdvk.js",
     "name": "index.tsx",
     "src": "src/pages/content/index.tsx",
     "isEntry": true,
     "imports": [
-      "_react-15L98h0B.js",
+      "_react-BREabPrs.js",
       "_index-CqyD2INw.js",
       "__commonjsHelpers-gnU0ypJ3.js"
     ]
@@ -88,7 +88,7 @@
     ]
   },
   "src/pages/newtab/index.html": {
-    "file": "assets/index.html-DQs6NDTY.js",
+    "file": "assets/index.html-BsTmTmFb.js",
     "name": "index.html",
     "src": "src/pages/newtab/index.html",
     "isEntry": true,
@@ -99,7 +99,7 @@
     ],
     "css": [
       "assets/index-BarpStXw.css",
-      "assets/tailwind-CKQxKAGx.css"
+      "assets/tailwind-CHnXFSz8.css"
     ]
   },
   "src/pages/options/index.html": {
@@ -117,7 +117,7 @@
     ]
   },
   "src/pages/popup/index.html": {
-    "file": "assets/index.html-R5zMVgkZ.js",
+    "file": "assets/index.html-4egY7Hip.js",
     "name": "index.html",
     "src": "src/pages/popup/index.html",
     "isEntry": true,
@@ -125,13 +125,13 @@
       "_modulepreload-polyfill-B5Qt9EMX.js",
       "_index-CqyD2INw.js",
       "_client-Q4vOSbiR.js",
-      "_react-15L98h0B.js",
-      "_chunk-I2H3TVZK-KYTa2MFV.js",
+      "_react-BREabPrs.js",
+      "_chunk-I2H3TVZK-CTwr76W8.js",
       "__commonjsHelpers-gnU0ypJ3.js"
     ],
     "css": [
       "assets/index-addibwyn.css",
-      "assets/tailwind-CKQxKAGx.css"
+      "assets/tailwind-CHnXFSz8.css"
     ]
   }
 }

@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": "../../../../../../.."
+		},
+		{
+			"path": "../../../../../../../../0 - notes"
+		}
+	],
+	"settings": {
+		"tailwindCSS.experimental.configFile": "./tooling/tailwind/web.ts",
+		"typescript.enablePromptUseWorkspaceTsdk": true,
+		"typescript.tsdk": "node_modules/typescript/lib",
+		"workbench.colorTheme": "Cursor Dark"
+	}
+}

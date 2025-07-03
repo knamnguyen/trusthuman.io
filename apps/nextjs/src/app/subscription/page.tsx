@@ -7,15 +7,15 @@ import { SubscribeButton } from "~/_components/subscribe-button";
 import { useSubscription } from "~/hooks/use-subscription";
 
 /**
- * Example subscription page showing how to use the Stripe integration
+ * Subscription page showing how to use the Stripe integration
  */
 export default function SubscriptionPage() {
   const { isSignedIn } = useUser();
   const { hasAccess, accessType, isLoading } = useSubscription();
 
-  // Whether to show the manage subscription button (only for subscription users, not lifetime)
+  // Whether to show the manage subscription button (only for subscription users)
   const showManageSubscription =
-    hasAccess && (accessType === "MONTHLY" || accessType === "YEARLY");
+    hasAccess && ["WEEKLY", "MONTHLY", "YEARLY"].includes(accessType);
 
   return (
     <div className="container mx-auto px-4 py-16">
@@ -42,6 +42,28 @@ export default function SubscriptionPage() {
         </div>
       ) : (
         <div className="grid gap-8 md:grid-cols-3">
+          {/* Weekly subscription */}
+          <div className="rounded-lg bg-black p-8 text-gray-100">
+            <h2 className="mb-4 text-2xl font-bold">Weekly Plan</h2>
+            <p className="mb-4 text-4xl font-bold">$2.99/week</p>
+            <ul className="mb-8 space-y-2">
+              <li>✓ Full access to all features</li>
+              <li>✓ Premium support</li>
+              <li>✓ Regular updates</li>
+            </ul>
+            {isSignedIn ? (
+              <SubscribeButton
+                purchaseType="WEEKLY"
+                buttonText="Subscribe Weekly"
+                className="w-full rounded-lg bg-blue-600 px-4 py-2 font-bold text-white hover:bg-blue-700"
+              />
+            ) : (
+              <p className="text-center text-sm text-gray-500">
+                Please sign in to subscribe
+              </p>
+            )}
+          </div>
+
           {/* Monthly subscription */}
           <div className="rounded-lg bg-black p-8 text-gray-100">
             <h2 className="mb-4 text-2xl font-bold">Monthly Plan</h2>
@@ -64,10 +86,10 @@ export default function SubscriptionPage() {
             )}
           </div>
 
-          {/* Yearly Plan - Modified from Lifetime access */}
+          {/* Yearly subscription */}
           <div className="rounded-lg bg-black p-8 text-gray-100">
             <h2 className="mb-4 text-2xl font-bold">Yearly Plan</h2>
-            <p className="mb-4 text-4xl font-bold">$99.99/year</p>
+            <p className="mb-4 text-4xl font-bold">$89.00/year</p>
             <ul className="mb-8 space-y-2">
               <li>✓ Full access to all features</li>
               <li>✓ Premium support</li>
@@ -83,29 +105,6 @@ export default function SubscriptionPage() {
             ) : (
               <p className="text-center text-sm text-gray-500">
                 Please sign in to subscribe
-              </p>
-            )}
-          </div>
-
-          {/* Lifetime Access - Modified from Lifetime Plus */}
-          <div className="rounded-lg bg-black p-8 text-gray-100">
-            <h2 className="mb-4 text-2xl font-bold">Lifetime Access</h2>
-            <p className="mb-4 text-4xl font-bold">$99.99</p>
-            <ul className="mb-8 space-y-2">
-              <li>✓ One-time payment</li>
-              <li>✓ All features forever</li>
-              <li>✓ Premium support</li>
-              <li>✓ All future updates</li>
-            </ul>
-            {isSignedIn ? (
-              <SubscribeButton
-                purchaseType="LIFETIME"
-                buttonText="Buy Lifetime Access"
-                className="w-full rounded-lg bg-indigo-600 px-4 py-2 font-bold text-white hover:bg-indigo-700"
-              />
-            ) : (
-              <p className="text-center text-sm text-gray-500">
-                Please sign in to purchase
               </p>
             )}
           </div>

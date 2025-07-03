@@ -423,12 +423,7 @@ export default function Popup() {
           </p>
 
           {/* User Profile Section */}
-          <UserProfile
-            user={user}
-            isSigningOut={isSigningOut}
-            onSignOut={signOut}
-            setHasEverSignedIn={setHasEverSignedIn}
-          />
+          <UserProfile user={user} />
 
           <div className="mt-4 mb-4">
             {isRunning ? (
