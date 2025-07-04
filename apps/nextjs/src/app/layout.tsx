@@ -50,6 +50,8 @@ export const viewport: Viewport = {
   ],
 };
 
+const publishableKey = env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
 export default function RootLayout(props: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
@@ -60,6 +62,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
         )}
       >
         <ClerkProvider
+          publishableKey={publishableKey}
           afterSignOutUrl="/"
           afterSignInUrl="/extension-auth"
           afterSignUpUrl="/extension-auth"

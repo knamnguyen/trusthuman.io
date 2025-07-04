@@ -13,18 +13,11 @@ const isPublicRoute = createRouteMatcher([
   // Add more public routes as needed
 ]);
 
-export default clerkMiddleware(
-  async (auth, request) => {
-    if (!isPublicRoute(request)) {
-      await auth.protect();
-    }
-  },
-  {
-    proxyUrl: process.env.NEXTJS_URL,
-    domain: process.env.NEXT_PUBLIC_CLERK_DOMAIN,
-    isSatellite: false,
-  },
-);
+export default clerkMiddleware(async (auth, request) => {
+  if (!isPublicRoute(request)) {
+    await auth.protect();
+  }
+});
 
 export const config = {
   matcher: [
