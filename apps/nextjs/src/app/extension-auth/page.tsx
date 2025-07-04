@@ -24,6 +24,23 @@ export default function ExtensionAuthPage() {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const signInButtonRef = useRef<HTMLButtonElement>(null);
 
+  // Debug: Log environment variables
+  useEffect(() => {
+    console.log("DEBUG: Environment variables in production:");
+    console.log(
+      "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:",
+      process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+    );
+    console.log(
+      "NEXT_PUBLIC_CLERK_FRONTEND_API:",
+      process.env.NEXT_PUBLIC_CLERK_FRONTEND_API,
+    );
+    console.log(
+      "NEXT_PUBLIC_CLERK_DOMAIN:",
+      process.env.NEXT_PUBLIC_CLERK_DOMAIN,
+    );
+  }, []);
+
   useEffect(() => {
     if (isSignedIn && user) {
       setShowSuccessMessage(true);
