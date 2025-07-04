@@ -1,3 +1,5 @@
+import { getSyncHostUrl } from "../../../utils/url";
+
 export default function Auth() {
   const handleSignInClick = () => {
     const syncHostUrl = getSyncHostUrl();
@@ -28,17 +30,6 @@ export default function Auth() {
       // Fallback to full reload
       window.location.reload();
     }
-  };
-
-  // Determine sync host URL for opening auth
-  const getSyncHostUrl = () => {
-    // For development
-    if (import.meta.env.VITE_NGROK_URL) {
-      return import.meta.env.VITE_NGROK_URL;
-    }
-
-    // Default to localhost for development
-    return "http://localhost:3000";
   };
 
   return (

@@ -22,7 +22,7 @@ export const FinalCTASection = () => {
         <div className="mt-8">
           <Button
             onClick={handleRedirect}
-            className="h-20 rounded-full bg-pink-500 px-16 text-2xl font-bold text-white shadow-lg transition-transform hover:scale-105 hover:bg-pink-600"
+            className="h-20 cursor-pointer rounded-md border-2 border-black bg-pink-500 px-16 text-2xl font-bold text-white shadow-[8px_8px_0px_#000] transition-all hover:translate-x-[6px] hover:translate-y-[6px] hover:shadow-none"
           >
             I want this!
           </Button>

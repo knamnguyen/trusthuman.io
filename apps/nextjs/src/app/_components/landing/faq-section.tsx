@@ -34,7 +34,7 @@ const faqs = [
   {
     question: "How can I contact support?",
     answer:
-      "Any support request please send via email at knamnguyen.work@gmail.com",
+      "Any support request please send via email at knamnguyen.work@gmail.com. Priority support is avaialble for paid users via dm on the creator's Whatsapp exclusiveprivate group chat.",
   },
 ];
 

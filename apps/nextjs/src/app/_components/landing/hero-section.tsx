@@ -7,13 +7,17 @@ import { Button } from "@sassy/ui/button";
 import { RotatingTitles } from "./rotating-titles";
 
 const titles = [
+  "You :)",
   "Solopreneurs",
   "Content Creators",
   "Job Applicants",
   "Startup Founders",
   "Students",
   "Marketers",
-  "Sales Professionals",
+  "Salespeople",
+  "Indie Builders",
+  "Thought Leaders",
+  "Influencers",
   "Recruiters",
   "Consultants",
   "Freelancers",
@@ -36,21 +40,27 @@ export function HeroSection() {
         alt="EngageKit Logo"
         width={120}
         height={120}
-        className="mt-[-50px] mb-[-50px] h-80 w-80"
+        className="mt-[-50px] mb-[-50px] h-70 w-70"
       />
-      <h1 className="flex flex-wrap items-center justify-center gap-x-4 text-5xl font-extrabold tracking-tighter sm:text-7xl">
-        <span>AI Intern that works 24/7 for </span>
+      <h1 className="flex flex-wrap items-center justify-center gap-x-4 text-5xl font-extrabold tracking-tighter [word-spacing:0.15em] sm:text-7xl">
+        <span>
+          AI LinkedIn Engagement Intern <br />
+          that works 24/7 for
+        </span>
         <RotatingTitles titles={titles} />
       </h1>
       <p className="max-w-2xl text-lg text-gray-600">
-        Do 100 human-like comments a day for you, on auto-pilot. <br />
-        Get your profile reach 100k+ people. <br />
-        Thousands of new followers. <br />
-        Save 30 hours a month. <br />
-        Free to get started.
+        Do 100 human-like comments a day on auto-pilot <br />
+        Get your LinkedIn profile reach 100k+ <br />
+        Thousands of new followers <br />
+        Save 30 hours a month <br />
+        Free to get started
       </p>
       <div>
-        <Button size="lg" className="bg-pink-500 text-white hover:bg-pink-600">
+        <Button
+          size="lg"
+          className="cursor-pointer rounded-md border-2 border-black bg-pink-500 font-bold text-white shadow-[4px_4px_0px_#000] transition-all hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-none"
+        >
           Get Started for Free
         </Button>
       </div>

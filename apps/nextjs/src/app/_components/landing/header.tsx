@@ -12,7 +12,7 @@ export const Header = () => {
   };
 
   return (
-    <header className="fixed top-0 z-50 w-full border-b border-zinc-200 bg-zinc-50/90 backdrop-blur-lg">
+    <header className="fixed top-0 z-50 w-full border-b-2 border-black bg-zinc-50/90 backdrop-blur-lg">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-2">
           <Image
@@ -24,10 +24,14 @@ export const Header = () => {
           />
           <h1 className="text-xl font-bold tracking-tight">EngageKit</h1>
         </div>
-        <h1>AI Intern that engage on LinkedIn for you 24/7</h1>
+        <h1>
+          <span className="hidden sm:inline">
+            AI Intern that engage on LinkedIn for you 24/7
+          </span>
+        </h1>
         <Button
           onClick={handleScrollToCTA}
-          className="bg-black text-white hover:bg-zinc-800"
+          className="cursor-pointer rounded-md border-2 border-black bg-pink-500 font-bold text-white shadow-[4px_4px_0px_#000] transition-all hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-none"
           size="sm"
         >
           Add to Chrome

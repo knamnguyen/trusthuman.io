@@ -113,7 +113,7 @@ export function GumroadCarousel() {
             Join Thousands of Power Users
           </h2>
           <h2 className="pt-2 text-xl font-bold tracking-tight sm:text-2xl">
-            Just for a cup of coffee, you save a full-working day per week.
+            For a cup of coffee, you save a full work day per week
           </h2>
           <p className="text-muted-foreground mt-2 text-lg">
             See what people are achieving with our app.

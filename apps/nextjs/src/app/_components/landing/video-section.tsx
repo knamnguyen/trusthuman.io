@@ -3,8 +3,18 @@ export const VideoSection = () => {
     <section className="bg-zinc-50 py-20">
       <div className="container mx-auto px-4">
         <div className="mx-auto max-w-4xl">
+          <div className="mb-12 text-center">
+            <h2 className="text-4xl font-extrabold tracking-tight sm:text-5xl">
+              In 1 minute, here's how it f*cking works
+            </h2>
+            <h2 className="pt-2 text-xl font-bold tracking-tight sm:text-2xl">
+              All it takes is a couple clicks to comment on 100 posts/day
+            </h2>
+            <p className="text-muted-foreground mt-2 text-lg">
+              Completely organic and natural, undetectable by LinkedIn.
+            </p>
+          </div>
           <div className="aspect-video w-full overflow-hidden rounded-2xl border-4 border-black bg-black shadow-[8px_8px_0px_#000]">
-            {/* Placeholder for video player */}
             <div className="flex h-full items-center justify-center bg-zinc-800">
               <iframe
                 width="100%"

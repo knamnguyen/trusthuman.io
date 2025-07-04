@@ -39,7 +39,7 @@ export const FloatingCTA = () => {
     >
       <Button
         onClick={handleRedirect}
-        className="h-16 rounded-full bg-pink-500 px-8 text-xl font-bold text-white shadow-2xl transition-transform hover:scale-105 hover:bg-pink-600"
+        className="h-16 cursor-pointer rounded-md border-2 border-black bg-pink-500 px-8 text-xl font-bold text-white shadow-[6px_6px_0px_#000] transition-all hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none"
       >
         Download Extension
       </Button>
