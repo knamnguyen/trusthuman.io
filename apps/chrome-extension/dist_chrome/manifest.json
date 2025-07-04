@@ -1,20 +1,22 @@
 {
   "manifest_version": 3,
-  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAjJ8hFJ/0VNPdjWqURUdXdRQ/43ZJIiwCFu/74e/WSb2x2E6c9+VUl+Jvo3zBYMh8dlP6MBG2L3EVJ406bmj7r+sjZt66NFgdmTOb25725c2pJTIPU/V/3As1IGwgQ2dsxdg4zjsntaxsb1hPT5wVECWU11Y5EN5/aixPSUZ9Jj1+W7QtBUS2aS4B3lPrq6nMTwzLXeQ6Zm2FKwPX7LoR1o08gid3JgFoeWcv+PXn6vca0IGXaOxCSUKqYENKLbYxjucFEnYuErQESvNOOcFvSdWPorjI0pWDpMy0doIbWO4yvmvCA5D2FT2PkVP8IHWI/tyFhSQ0hitWUDBR3HX8NwIDAQAB",
-  "name": "EngageKit Turbo",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyKYRvdvPgvOBYpH6rRqQz3K8HMIm9AQs9h8IkF0xG7YpM2kKwJz6r1F9ZIb+2dT8Q3nE4cJ5HhF0gH2mJ8vN7wK9pL3oR5uS1xV6yW8z9nA0bC1d2eF3g4h5i6j7k8l9m0n1o2p3q4r5s6t7u8v9w0x1y2z3",
+  "name": "EngageKit",
   "description": "Automatically comment on LinkedIn posts using AI",
   "options_ui": {
     "page": "src/pages/options/index.html"
   },
   "action": {
-    "default_icon": "public/dev-icon-32.png",
-    "default_popup": "src/pages/popup/index.html"
+    "default_popup": "src/pages/popup/index.html",
+    "default_icon": {
+      "32": "icon-32.png"
+    }
   },
   "chrome_url_overrides": {
     "newtab": "src/pages/newtab/index.html"
   },
   "icons": {
-    "128": "public/dev-icon-128.png"
+    "128": "icon-128.png"
   },
   "permissions": [
     "activeTab",
@@ -43,7 +45,7 @@
   "content_scripts": [
     {
       "js": [
-        "assets/index.tsx-loader-CCBwXIC3.js",
+        "assets/index.tsx-loader-cXl5d07O.js",
         "assets/always-active-core.ts-l0sNRNKZ.js"
       ],
       "matches": [
@@ -62,8 +64,8 @@
       "matches": [],
       "resources": [
         "contentStyle.css",
-        "dev-icon-128.png",
-        "dev-icon-32.png"
+        "icon-128.png",
+        "icon-32.png"
       ],
       "use_dynamic_url": false
     },
@@ -74,10 +76,10 @@
         "https://*/*"
       ],
       "resources": [
-        "assets/react-BREabPrs.js",
+        "assets/react-Yfr06tc4.js",
         "assets/index-CqyD2INw.js",
         "assets/_commonjsHelpers-gnU0ypJ3.js",
-        "assets/index.tsx-CYFyBdvk.js",
+        "assets/index.tsx-Bc6ZX0Fg.js",
         "assets/always-active-core.ts-l0sNRNKZ.js"
       ],
       "use_dynamic_url": false

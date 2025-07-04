@@ -42,6 +42,8 @@ export default defineConfig({
   ],
   publicDir: resolve(__dirname, "public"),
   define: {
+    // Expose production app URL
+    "import.meta.env.VITE_APP_URL": JSON.stringify(process.env.VITE_APP_URL),
     // Explicitly expose Clerk environment variable
     "import.meta.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY": JSON.stringify(
       process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,

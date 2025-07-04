@@ -21,6 +21,8 @@ export default clerkMiddleware(
   },
   {
     proxyUrl: process.env.NEXTJS_URL,
+    domain: process.env.NEXT_PUBLIC_CLERK_DOMAIN,
+    isSatellite: false,
   },
 );
 

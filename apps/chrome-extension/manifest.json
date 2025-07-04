@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyKYRvdvPgvOBYpH6rRqQz3K8HMIm9AQs9h8IkF0xG7YpM2kKwJz6r1F9ZIb+2dT8Q3nE4cJ5HhF0gH2mJ8vN7wK9pL3oR5uS1xV6yW8z9nA0bC1d2eF3g4h5i6j7k8l9m0n1o2p3q4r5s6t7u8v9w0x1y2z3",
-  "name": "EngageKit Turbo",
+  "name": "EngageKit",
   "description": "Automatically comment on LinkedIn posts using AI",
   "options_ui": {
     "page": "src/pages/options/index.html"

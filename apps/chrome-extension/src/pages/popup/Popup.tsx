@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 
+import engageKitLogo from "../../../public/icon-128.png";
 import { DEFAULT_STYLE_GUIDES, FEATURE_CONFIG } from "../../config/features";
 import { useBackgroundAuth } from "../../hooks/use-background-auth";
 import { useDailyCommentCount } from "../../hooks/use-daily-comment-count";
@@ -533,7 +534,14 @@ export default function Popup() {
       <div className="p-6">
         <div className="mb-6">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-gray-800">EngageKit</h2>
+            <div className="flex items-center gap-2">
+              <img
+                src={engageKitLogo}
+                alt="EngageKit Logo"
+                className="h-8 w-8"
+              />
+              <h2 className="text-2xl font-bold text-gray-800">EngageKit</h2>
+            </div>
             <div className="flex items-center space-x-2">
               <div className="h-2 w-2 rounded-full bg-green-500"></div>
               <span className="text-sm text-green-600">Connected</span>
