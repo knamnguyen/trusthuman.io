@@ -29,13 +29,18 @@ export const Header = () => {
             AI Intern that engage on LinkedIn for you 24/7
           </span>
         </h1>
-        <Button
-          onClick={handleScrollToCTA}
-          className="cursor-pointer rounded-md border-2 border-black bg-pink-500 font-bold text-white shadow-[4px_4px_0px_#000] transition-all hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-none"
-          size="sm"
+        <a
+          href="https://chrome.google.com/webstore/detail/inobbppddbakbhhfkfkinmicnbpeekok"
+          target="_blank"
+          rel="noopener noreferrer"
         >
-          Add to Chrome
-        </Button>
+          <Button
+            className="cursor-pointer rounded-md border-2 border-black bg-pink-500 font-bold text-white shadow-[4px_4px_0px_#000] transition-all hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-none"
+            size="sm"
+          >
+            Add to Chrome
+          </Button>
+        </a>
       </div>
     </header>
   );

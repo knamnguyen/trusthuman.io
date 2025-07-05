@@ -1,6 +1,5 @@
 {
   "manifest_version": 3,
-  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyKYRvdvPgvOBYpH6rRqQz3K8HMIm9AQs9h8IkF0xG7YpM2kKwJz6r1F9ZIb+2dT8Q3nE4cJ5HhF0gH2mJ8vN7wK9pL3oR5uS1xV6yW8z9nA0bC1d2eF3g4h5i6j7k8l9m0n1o2p3q4r5s6t7u8v9w0x1y2z3",
   "name": "EngageKit",
   "description": "Automatically comment on LinkedIn posts using AI",
   "options_ui": {
@@ -27,13 +26,22 @@
     "cookies",
     "alarms"
   ],
-  "host_permissions": ["<all_urls>"],
+  "host_permissions": [
+    "https://*.linkedin.com/*",
+    "https://aistudio.google.com/*",
+    "https://*.clerk.accounts.dev/*",
+    "https://*.clerk.dev/*",
+    "https://engagekit.io/*",
+    "https://accounts.engagekit.io/*",
+    "https://clerk.engagekit.io/*"
+  ],
+
   "background": {
     "service_worker": "src/pages/background/index.ts"
   },
   "content_scripts": [
     {
-      "matches": ["http://*/*", "https://*/*", "<all_urls>"],
+      "matches": ["https://*.linkedin.com/*"],
       "js": [
         "src/pages/content/index.tsx",
         "src/pages/content/always-active-core.ts"

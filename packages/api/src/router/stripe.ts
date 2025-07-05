@@ -73,9 +73,6 @@ export const stripeRouter = {
       if (!ctx.user) throw new Error("User not authenticated");
       //if user already has lifetime subscription, don't allow config or checkout
       const access = await checkAccessType(ctx);
-      if (access === "LIFETIME")
-        throw new Error("User already has lifetime subscription");
-
       const userId = ctx.user.id;
 
       // Get origin for redirect URL if not provided

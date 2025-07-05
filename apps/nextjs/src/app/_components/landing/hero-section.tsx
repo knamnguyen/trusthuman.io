@@ -57,12 +57,18 @@ export function HeroSection() {
         Free to get started
       </p>
       <div>
-        <Button
-          size="lg"
-          className="cursor-pointer rounded-md border-2 border-black bg-pink-500 font-bold text-white shadow-[4px_4px_0px_#000] transition-all hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-none"
+        <a
+          href="https://chrome.google.com/webstore/detail/inobbppddbakbhhfkfkinmicnbpeekok"
+          target="_blank"
+          rel="noopener noreferrer"
         >
-          Get Started for Free
-        </Button>
+          <Button
+            size="lg"
+            className="cursor-pointer rounded-md border-2 border-black bg-pink-500 font-bold text-white shadow-[4px_4px_0px_#000] transition-all hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-none"
+          >
+            Get Started for Free
+          </Button>
+        </a>
       </div>
     </section>
   );

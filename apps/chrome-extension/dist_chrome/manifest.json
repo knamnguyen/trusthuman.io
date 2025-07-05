@@ -1,6 +1,5 @@
 {
   "manifest_version": 3,
-  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyKYRvdvPgvOBYpH6rRqQz3K8HMIm9AQs9h8IkF0xG7YpM2kKwJz6r1F9ZIb+2dT8Q3nE4cJ5HhF0gH2mJ8vN7wK9pL3oR5uS1xV6yW8z9nA0bC1d2eF3g4h5i6j7k8l9m0n1o2p3q4r5s6t7u8v9w0x1y2z3",
   "name": "EngageKit",
   "description": "Automatically comment on LinkedIn posts using AI",
   "options_ui": {
@@ -28,7 +27,13 @@
     "alarms"
   ],
   "host_permissions": [
-    "<all_urls>"
+    "https://*.linkedin.com/*",
+    "https://aistudio.google.com/*",
+    "https://*.clerk.accounts.dev/*",
+    "https://*.clerk.dev/*",
+    "https://engagekit.io/*",
+    "https://accounts.engagekit.io/*",
+    "https://clerk.engagekit.io/*"
   ],
   "background": {
     "service_worker": "service-worker-loader.js",
@@ -37,13 +42,11 @@
   "content_scripts": [
     {
       "js": [
-        "assets/index.tsx-loader-cXl5d07O.js",
+        "assets/index.tsx-loader-D2Epu3nn.js",
         "assets/always-active-core.ts-l0sNRNKZ.js"
       ],
       "matches": [
-        "http://*/*",
-        "https://*/*",
-        "<all_urls>"
+        "https://*.linkedin.com/*"
       ],
       "css": [
         "contentStyle.css"
@@ -63,15 +66,13 @@
     },
     {
       "matches": [
-        "<all_urls>",
-        "http://*/*",
-        "https://*/*"
+        "https://*.linkedin.com/*"
       ],
       "resources": [
-        "assets/react-Yfr06tc4.js",
+        "assets/react-CyMwB-ya.js",
         "assets/index-CqyD2INw.js",
         "assets/_commonjsHelpers-gnU0ypJ3.js",
-        "assets/index.tsx-Bc6ZX0Fg.js",
+        "assets/index.tsx-D3GIAyKc.js",
         "assets/always-active-core.ts-l0sNRNKZ.js"
       ],
       "use_dynamic_url": false

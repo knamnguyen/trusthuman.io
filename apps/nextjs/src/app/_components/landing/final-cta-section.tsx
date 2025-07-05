@@ -5,7 +5,7 @@ import { Button } from "@sassy/ui/button";
 export const FinalCTASection = () => {
   const handleRedirect = () => {
     window.open(
-      "https://chromewebstore.google.com/detail/engagekit/your-extension-id",
+      "https://chrome.google.com/webstore/detail/inobbppddbakbhhfkfkinmicnbpeekok",
       "_blank",
     );
   };
