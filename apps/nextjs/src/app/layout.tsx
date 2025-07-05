@@ -59,11 +59,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
           plusJakartaSans.variable,
         )}
       >
-        <ClerkProvider
-          afterSignOutUrl="/"
-          afterSignInUrl="/extension-auth"
-          afterSignUpUrl="/extension-auth"
-        >
+        <ClerkProvider afterSignOutUrl="/" redirectUrl="/extension-auth">
           <ThemeProvider attribute="class" defaultTheme="light">
             <TRPCReactProvider>{props.children}</TRPCReactProvider>
             <Toaster />
