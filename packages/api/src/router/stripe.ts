@@ -102,8 +102,8 @@ export const stripeRouter = {
     if (!ctx.user) throw new Error("User not authenticated");
     const access = await checkAccessType(ctx);
 
-    const hasAccess = access !== "FREE";
-    return { hasAccess, accessType: access };
+    if (access === "FREE") return { hasAccess: false, accessType: "FREE" };
+    return { hasAccess: true, accessType: access };
   }),
 } satisfies TRPCRouterRecord;
 

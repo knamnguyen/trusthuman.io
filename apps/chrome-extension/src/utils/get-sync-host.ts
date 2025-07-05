@@ -1,4 +1,4 @@
-const PROD_SYNC_HOST = "https://engagekit.io";
+const PROD_SYNC_HOST = "https://clerk.engagekit.io";
 const DEV_SYNC_HOST = "http://localhost:3000";
 
 /**

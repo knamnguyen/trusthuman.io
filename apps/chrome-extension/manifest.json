@@ -27,19 +27,7 @@
     "cookies",
     "alarms"
   ],
-  "host_permissions": [
-    "https://*.linkedin.com/*",
-    "https://openrouter.ai/*",
-    "https://aistudio.google.com/*",
-    "https://*.clerk.accounts.dev/*",
-    "https://*.clerk.dev/*",
-    "https://tolerant-hagfish-1.clerk.accounts.dev/*",
-    "http://localhost:3000/*",
-    "https://*.ngrok-free.app/*",
-    "https://engagekit.io/*",
-    "https://accounts.engagekit.io/*",
-    "https://clerk.engagekit.io/*"
-  ],
+  "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "src/pages/background/index.ts"
   },

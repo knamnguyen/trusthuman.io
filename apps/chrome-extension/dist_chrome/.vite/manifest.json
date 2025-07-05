@@ -1,6 +1,6 @@
 {
   "../../../../../../../@crx/manifest": {
-    "file": "assets/crx-manifest.js-Cdy2uTTU.js",
+    "file": "assets/crx-manifest.js-CmkjvzUa.js",
     "name": "crx-manifest.js",
     "src": "../../../../../../../@crx/manifest",
     "isEntry": true
@@ -16,11 +16,11 @@
       "_index-CqyD2INw.js"
     ]
   },
-  "_get-sync-host-BAxqzQaH.js": {
-    "file": "assets/get-sync-host-BAxqzQaH.js",
+  "_get-sync-host-Cx0JWzTZ.js": {
+    "file": "assets/get-sync-host-Cx0JWzTZ.js",
     "name": "get-sync-host",
     "imports": [
-      "_react-Yfr06tc4.js",
+      "_react-CyMwB-ya.js",
       "__commonjsHelpers-gnU0ypJ3.js"
     ]
   },
@@ -28,16 +28,16 @@
     "file": "assets/index-CqyD2INw.js",
     "name": "index"
   },
-  "_index.tsx-loader-cXl5d07O.js": {
-    "file": "assets/index.tsx-loader-cXl5d07O.js",
-    "src": "_index.tsx-loader-cXl5d07O.js"
+  "_index.tsx-loader-D2Epu3nn.js": {
+    "file": "assets/index.tsx-loader-D2Epu3nn.js",
+    "src": "_index.tsx-loader-D2Epu3nn.js"
   },
   "_modulepreload-polyfill-B5Qt9EMX.js": {
     "file": "assets/modulepreload-polyfill-B5Qt9EMX.js",
     "name": "modulepreload-polyfill"
   },
-  "_react-Yfr06tc4.js": {
-    "file": "assets/react-Yfr06tc4.js",
+  "_react-CyMwB-ya.js": {
+    "file": "assets/react-CyMwB-ya.js",
     "name": "react",
     "imports": [
       "_index-CqyD2INw.js",
@@ -53,13 +53,13 @@
     "src": "public/icon-128.png"
   },
   "src/pages/background/index.ts": {
-    "file": "assets/index.ts-Cp6c2W1T.js",
+    "file": "assets/index.ts-C-DPoy4z.js",
     "name": "index.ts",
     "src": "src/pages/background/index.ts",
     "isEntry": true,
     "imports": [
-      "_get-sync-host-BAxqzQaH.js",
-      "_react-Yfr06tc4.js",
+      "_get-sync-host-Cx0JWzTZ.js",
+      "_react-CyMwB-ya.js",
       "__commonjsHelpers-gnU0ypJ3.js",
       "_index-CqyD2INw.js"
     ]
@@ -71,12 +71,12 @@
     "isEntry": true
   },
   "src/pages/content/index.tsx": {
-    "file": "assets/index.tsx-Bc6ZX0Fg.js",
+    "file": "assets/index.tsx-D3GIAyKc.js",
     "name": "index.tsx",
     "src": "src/pages/content/index.tsx",
     "isEntry": true,
     "imports": [
-      "_react-Yfr06tc4.js",
+      "_react-CyMwB-ya.js",
       "_index-CqyD2INw.js",
       "__commonjsHelpers-gnU0ypJ3.js"
     ]
@@ -121,7 +121,7 @@
     ]
   },
   "src/pages/popup/index.html": {
-    "file": "assets/index.html-C6E0T9tg.js",
+    "file": "assets/index.html-D_J3_5ll.js",
     "name": "index.html",
     "src": "src/pages/popup/index.html",
     "isEntry": true,
@@ -129,8 +129,8 @@
       "_modulepreload-polyfill-B5Qt9EMX.js",
       "_index-CqyD2INw.js",
       "_client-Q4vOSbiR.js",
-      "_react-Yfr06tc4.js",
-      "_get-sync-host-BAxqzQaH.js",
+      "_react-CyMwB-ya.js",
+      "_get-sync-host-Cx0JWzTZ.js",
       "__commonjsHelpers-gnU0ypJ3.js"
     ],
     "css": [
