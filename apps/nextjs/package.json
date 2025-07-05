@@ -28,6 +28,7 @@
     "@trpc/react-query": "^11.1.2",
     "@trpc/server": "catalog:",
     "@trpc/tanstack-react-query": "catalog:",
+    "embla-carousel-autoplay": "^8.6.0",
     "geist": "^1.3.1",
     "next": "^15.2.2",
     "react": "catalog:react19",

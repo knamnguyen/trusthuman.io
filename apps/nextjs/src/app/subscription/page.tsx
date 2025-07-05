@@ -1,45 +1,20 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
-import { BadgeCheck, BarChart, Check, Clock, Star, Users } from "lucide-react";
+import { BadgeCheck, Check } from "lucide-react";
 
 import { Badge } from "@sassy/ui/badge";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
 } from "@sassy/ui/card";
 
-import { ManageSubscriptionButton } from "~/_components/manage-subscription-button";
-import { SubscribeButton } from "~/_components/subscribe-button";
 import { GumroadCarousel } from "~/app/_components/landing/gumroad-carousel";
 import { useSubscription } from "~/hooks/use-subscription";
-
-const benefits = [
-  {
-    icon: <Clock className="mx-auto h-8 w-8 text-pink-500" />,
-    title: "Save 30 Hours/Month",
-    description: "Automate 3000+ comments",
-  },
-  {
-    icon: <Users className="mx-auto h-8 w-8 text-pink-500" />,
-    title: "Gain 300-1000+ Followers",
-    description: "With increased engagement",
-  },
-  {
-    icon: <BarChart className="mx-auto h-8 w-8 text-pink-500" />,
-    title: "300% More Post Reach",
-    description: "On every single post",
-  },
-  {
-    icon: <Star className="mx-auto h-8 w-8 text-pink-500" />,
-    title: "Go from 1k to 400k+",
-    description: "In profile appearances",
-  },
-];
+import { FeaturesSection } from "../_components/landing/features-section";
 
 const freeFeatures = [
   "15 free comments per day",
@@ -62,11 +37,16 @@ const premiumFeatures = [
  */
 export default function SubscriptionPage() {
   const { isSignedIn } = useUser();
-  const { hasAccess, accessType, isLoading } = useSubscription();
+  let { hasAccess, accessType, isLoading } = useSubscription();
+
+  if (accessType === "FREE") hasAccess = false;
 
   // Whether to show the manage subscription button (only for subscription users)
   const showManageSubscription =
     hasAccess && ["WEEKLY", "MONTHLY", "YEARLY"].includes(accessType);
+  console.log("hasAccess", hasAccess);
+  console.log("accessType", accessType);
+  console.log("isLoading", isLoading);
 
   return (
     <div className="min-h-screen bg-white text-black">
@@ -90,30 +70,15 @@ export default function SubscriptionPage() {
             </CardContent>
             {showManageSubscription && (
               <CardFooter className="flex justify-center">
-                <ManageSubscriptionButton className="rounded-md border-2 border-black bg-black px-6 py-2 font-semibold text-white shadow-[4px_4px_0px_#000] hover:bg-gray-800 hover:shadow-none" />
+                <button className="rounded-md border-2 border-black bg-black px-6 py-2 font-semibold text-white shadow-[4px_4px_0px_#000] hover:bg-gray-800 hover:shadow-none">
+                  Manage Subscription
+                </button>
               </CardFooter>
             )}
           </Card>
         ) : (
           <div className="space-y-10">
-            <header className="text-center">
-              <h1 className="text-5xl font-extrabold tracking-tighter">
-                Boss, let your AI intern engage LinkedIn for you
-              </h1>
-              <p className="mx-auto mt-2 max-w-2xl text-lg text-gray-600">
-                Start for free, upgrade when you&apos;re ready to grow faster.
-              </p>
-            </header>
-
-            <div className="grid grid-cols-2 gap-8 text-center md:grid-cols-4">
-              {benefits.map((benefit) => (
-                <div key={benefit.title}>
-                  {benefit.icon}
-                  <h3 className="mt-2 text-lg font-bold">{benefit.title}</h3>
-                  <p className="text-sm text-gray-600">{benefit.description}</p>
-                </div>
-              ))}
-            </div>
+            <FeaturesSection />
 
             <div className="flex flex-col items-stretch gap-8 lg:flex-row">
               <Card className="w-full rounded-lg border-2 border-black p-6 shadow-[8px_8px_0px_#000] lg:w-1/4">
@@ -166,11 +131,9 @@ export default function SubscriptionPage() {
                   </p>
                 </CardContent>
                 <CardFooter>
-                  <SubscribeButton
-                    purchaseType="WEEKLY"
-                    buttonText="Start Weekly"
-                    className="w-full cursor-pointer rounded-md border-2 border-black bg-gray-200 py-2 font-bold text-black shadow-[4px_4px_0px_#000] hover:bg-gray-300 hover:shadow-none"
-                  />
+                  <button className="w-full cursor-pointer rounded-md border-2 border-black bg-gray-200 py-2 font-bold text-black shadow-[4px_4px_0px_#000] hover:bg-gray-300 hover:shadow-none">
+                    Start Weekly
+                  </button>
                 </CardFooter>
               </Card>
 
@@ -199,11 +162,9 @@ export default function SubscriptionPage() {
                   </p>
                 </CardContent>
                 <CardFooter>
-                  <SubscribeButton
-                    purchaseType="MONTHLY"
-                    buttonText="Go Monthly"
-                    className="w-full cursor-pointer rounded-md border-2 border-black bg-pink-500 py-2 font-bold text-white shadow-[4px_4px_0px_#000] hover:bg-pink-600 hover:shadow-none"
-                  />
+                  <button className="w-full cursor-pointer rounded-md border-2 border-black bg-pink-500 py-2 font-bold text-white shadow-[4px_4px_0px_#000] hover:bg-pink-600 hover:shadow-none">
+                    Go Monthly
+                  </button>
                 </CardFooter>
               </Card>
 
@@ -232,11 +193,9 @@ export default function SubscriptionPage() {
                   </p>
                 </CardContent>
                 <CardFooter>
-                  <SubscribeButton
-                    purchaseType="YEARLY"
-                    buttonText="Go Yearly"
-                    className="w-full cursor-pointer rounded-md border-2 border-black bg-gray-200 py-2 font-bold text-black shadow-[4px_4px_0px_#000] hover:bg-gray-300 hover:shadow-none"
-                  />
+                  <button className="w-full cursor-pointer rounded-md border-2 border-black bg-gray-200 py-2 font-bold text-black shadow-[4px_4px_0px_#000] hover:bg-gray-300 hover:shadow-none">
+                    Go Yearly
+                  </button>
                 </CardFooter>
               </Card>
             </div>

@@ -1,4 +1,5 @@
 import { FaqSection } from "./_components/landing/faq-section";
+import { FeaturesSection } from "./_components/landing/features-section";
 import { FinalCTASection } from "./_components/landing/final-cta-section";
 import { FloatingCTA } from "./_components/landing/floating-cta";
 import { Footer } from "./_components/landing/footer";
@@ -14,7 +15,10 @@ export default function HomePage() {
       <Header />
       <main>
         <HeroSection />
-        <GumroadCarousel />
+        <FeaturesSection />
+        <div className="container mx-auto max-w-7xl px-20 py-12">
+          <GumroadCarousel />
+        </div>
         <VideoSection />
         <TestimonialsSection />
         <FinalCTASection />

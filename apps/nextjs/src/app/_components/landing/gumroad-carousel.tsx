@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Image from "next/image";
+import Autoplay from "embla-carousel-autoplay";
 
 import type { CarouselApi } from "@sassy/ui/carousel";
 import { Card, CardContent } from "@sassy/ui/card";
@@ -22,8 +23,6 @@ const HighlightWords = ({ text }: { text: string }) => {
     "180k",
     "150k",
     "Attract",
-    "Connections",
-    "Influential",
     "Network",
     "Recruiters",
     "Investors",
@@ -43,7 +42,7 @@ const HighlightWords = ({ text }: { text: string }) => {
   let styleIndex = 0;
 
   // Split by spaces to handle words individually
-  const parts = text.split(/(\\s+)/);
+  const parts = text.split(/(\s+)/);
 
   return (
     <>
@@ -76,9 +75,14 @@ export function GumroadCarousel() {
   const [current, setCurrent] = React.useState(0);
   const [count, setCount] = React.useState(0);
 
+  // Create autoplay plugin instance
+  const autoplay = React.useRef(
+    Autoplay({ delay: 3000, stopOnInteraction: false }),
+  );
+
   const images = [
     "boost profile appearances 180k.png",
-    "attract connections from influential network, recruiters, investors, founders.png",
+    "attract network of recruiters, investors, founders.png",
     "boost profile appearances 150k.png",
     "get people like Jasmine the LinkedIn guru to reply to you.png",
     "many people reply organically to comments.png",
@@ -105,63 +109,83 @@ export function GumroadCarousel() {
       .replace(/\b\w/g, (l) => l.toUpperCase());
   };
 
+  const handleMouseEnter = () => {
+    autoplay.current.stop();
+  };
+
+  const handleMouseLeave = () => {
+    autoplay.current.play();
+  };
+
   return (
-    <div className="w-full bg-zinc-50 py-20">
-      <div className="container mx-auto max-w-5xl">
-        <div className="mb-12 text-center">
-          <h2 className="text-4xl font-extrabold tracking-tight sm:text-5xl">
+    <div className="flex min-h-screen w-full flex-col bg-zinc-50">
+      {/* Header Section - 20% of viewport height */}
+      <div className="flex h-[20vh] items-center justify-center">
+        <div className="px-4 text-center">
+          <h2 className="text-4xl font-extrabold tracking-tight md:text-5xl lg:text-6xl">
             Join Thousands of Power Users
           </h2>
-          <h2 className="pt-2 text-xl font-bold tracking-tight sm:text-2xl">
+          <h2 className="pt-2 text-xl font-bold tracking-tight md:text-2xl lg:text-3xl">
             For a cup of coffee, you save a full work day per week
           </h2>
-          <p className="text-muted-foreground mt-2 text-lg">
-            See what people are achieving with our app.
-          </p>
         </div>
-        <Carousel
-          setApi={setApi}
-          opts={{
-            align: "center",
-            loop: true,
-          }}
-          className="w-full"
+      </div>
+
+      {/* Carousel Section - 80% of viewport height */}
+      <div className="flex h-[80vh] items-center justify-center px-4">
+        <div
+          className="w-full max-w-none"
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
         >
-          <CarouselContent>
-            {images.map((image, index) => (
-              <CarouselItem key={index}>
-                <div className="p-1">
-                  <Card className="overflow-hidden rounded-xl border-2 border-black bg-white shadow-[8px_8px_0px_#000]">
-                    <CardContent
-                      className={cn(
-                        "flex h-[28rem] items-center gap-x-8 p-6",
-                        index % 2 === 0 ? "flex-row" : "flex-row-reverse",
-                      )}
-                    >
-                      <div className="relative h-full w-3/5 overflow-hidden rounded-lg bg-pink-100">
-                        <Image
-                          src={`/pictures/${image}`}
-                          alt={formatTitle(image)}
-                          fill
-                          className="object-contain p-4"
-                        />
-                      </div>
-                      <div className="flex w-2/5 items-center justify-center">
-                        <p className="text-center text-3xl leading-tight font-bold">
-                          <HighlightWords text={formatTitle(image)} />
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselPrevious className="-left-12 border-2 border-black bg-white text-black hover:bg-gray-200" />
-          <CarouselNext className="-right-12 border-2 border-black bg-white text-black hover:bg-gray-200" />
-        </Carousel>
-        <div className="text-muted-foreground py-4 text-center text-sm">
-          {current} of {count}
+          <Carousel
+            setApi={setApi}
+            opts={{
+              align: "center",
+              loop: true,
+            }}
+            plugins={[autoplay.current]}
+            className="w-full"
+          >
+            <CarouselContent>
+              {images.map((image, index) => (
+                <CarouselItem key={index}>
+                  <div className="p-2">
+                    <Card className="overflow-hidden rounded-xl border-2 border-black bg-white shadow-[8px_8px_0px_#000]">
+                      <CardContent
+                        className={cn(
+                          "flex h-[70vh] flex-col-reverse items-center gap-4 p-8 md:gap-8",
+                          index % 2 === 0
+                            ? "md:flex-row"
+                            : "md:flex-row-reverse",
+                        )}
+                      >
+                        <div className="relative h-4/5 w-full overflow-hidden rounded-lg md:h-full md:w-1/2">
+                          <Image
+                            src={`/pictures/${image}`}
+                            alt={formatTitle(image)}
+                            fill
+                            priority={index === 0}
+                            className="object-contain p-0"
+                          />
+                        </div>
+                        <div className="flex h-1/5 w-full items-center justify-center px-4 md:h-full md:w-1/2">
+                          <p className="text-center text-3xl leading-tight font-bold md:text-4xl lg:text-6xl">
+                            <HighlightWords text={formatTitle(image)} />
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="-left-16 h-12 w-12 border-2 border-black bg-white text-black hover:bg-gray-200" />
+            <CarouselNext className="-right-16 h-12 w-12 border-2 border-black bg-white text-black hover:bg-gray-200" />
+          </Carousel>
+          <div className="text-muted-foreground py-6 text-center text-lg">
+            {current} of {count}
+          </div>
         </div>
       </div>
     </div>

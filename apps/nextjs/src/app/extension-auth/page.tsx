@@ -122,16 +122,15 @@ export default function ExtensionAuthPage() {
                     Successfully Connected!
                   </h3>
                   <p className="text-muted-foreground">
-                    Welcome, {user?.firstName}! Your extension is ready.
+                    Welcome, boss {user?.firstName}! Your extension is ready.
+                    <br />
+                    Please pin the extension and open the popup to get started!
                   </p>
                 </div>
                 <Button onClick={handleReturnToExtension} className="w-full">
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Close this window
                 </Button>
-                <p className="text-muted-foreground text-xs">
-                  This window will close automatically.
-                </p>
               </div>
             ) : (
               <div className="text-center">
