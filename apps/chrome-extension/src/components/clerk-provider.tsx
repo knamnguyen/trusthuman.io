@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { ClerkProvider as BaseClerkProvider } from "@clerk/chrome-extension";
+import { getSyncHost } from "@src/utils/get-sync-host";
 
 interface ClerkProviderProps {
   children: ReactNode;
@@ -8,22 +9,7 @@ interface ClerkProviderProps {
 // Use environment variables from Vite
 const publishableKey = import.meta.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
-// Determine sync host based on environment
-const getSyncHost = () => {
-  // For ngrok testing (you can update this with your specific ngrok URL)
-  if (import.meta.env.VITE_NGROK_URL) {
-    console.log(
-      "Using ngrok URL for sync host:",
-      import.meta.env.VITE_NGROK_URL,
-    );
-    return import.meta.env.VITE_NGROK_URL;
-  }
-
-  // Default to localhost for development
-  console.log("Using localhost for sync host");
-  return "http://localhost:3000";
-};
-
+// Get the correct sync host from our centralized utility
 const SYNC_HOST = getSyncHost();
 const EXTENSION_URL = chrome.runtime.getURL(".");
 console.log("Clerk sync host configured:", SYNC_HOST);
@@ -31,7 +17,7 @@ console.log("Extension URL configured:", EXTENSION_URL);
 
 if (!publishableKey) {
   throw new Error(
-    "Please add the NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY to your environment variables",
+    "Please add the NEXT_PUBLIC_CLERK_PUBpLISHABLE_KEY to your environment variables",
   );
 }
 

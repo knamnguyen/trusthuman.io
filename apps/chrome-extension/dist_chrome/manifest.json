@@ -36,7 +36,8 @@
     "https://tolerant-hagfish-1.clerk.accounts.dev/*",
     "http://localhost:3000/*",
     "https://*.ngrok-free.app/*",
-    "https://engagekit.io/*"
+    "https://engagekit.io/*",
+    "https://*.engagekit.io/*"
   ],
   "background": {
     "service_worker": "service-worker-loader.js",

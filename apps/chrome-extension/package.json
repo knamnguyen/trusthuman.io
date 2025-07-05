@@ -6,12 +6,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "pnpm with-env vite build --config vite.config.chrome.ts",
-    "build:chrome": "pnpm with-env vite build --config vite.config.chrome.ts",
-    "build:firefox": "pnpm with-env vite build --config vite.config.firefox.ts",
-    "dev": "pnpm with-env nodemon --config nodemon.chrome.json",
-    "dev:chrome": "pnpm with-env nodemon --config nodemon.chrome.json",
-    "dev:firefox": "pnpm with-env nodemon --config nodemon.firefox.json",
+    "build": "pnpm build:chrome",
+    "build:chrome": "pnpm with-env vite build --mode production --config vite.config.chrome.ts",
+    "build:firefox": "pnpm with-env vite build --mode production --config vite.config.firefox.ts",
+    "dev": "pnpm dev:chrome",
+    "dev:chrome": "pnpm with-env vite --mode development --config vite.config.chrome.ts",
+    "dev:firefox": "pnpm with-env vite --mode development --config vite.config.firefox.ts",
     "clean": "git clean -xdf .cache .turbo dist_chrome dist_firefox node_modules",
     "with-env": "dotenv -e ../../.env --"
   },

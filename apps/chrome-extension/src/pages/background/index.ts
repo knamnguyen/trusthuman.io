@@ -2,24 +2,13 @@ import { createClerkClient } from "@clerk/chrome-extension/background";
 
 import type { AutoCommentingState } from "./background-types";
 import { AIService } from "../../services/ai-service";
+import { getSyncHost } from "../../utils/get-sync-host";
 import { MessageRouter } from "./message-router";
 
 console.log("background script loaded");
 
 const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-// Determine the host to sync the session with, essential for session sharing.
-let syncHost: string;
-
-if (import.meta.env.PROD) {
-  syncHost = import.meta.env.VITE_APP_URL;
-  if (!syncHost) {
-    throw new Error(
-      "VITE_APP_URL is not set for production. Please set it in your .env file.",
-    );
-  }
-} else {
-  syncHost = import.meta.env.VITE_NGROK_URL || "http://localhost:3000";
-}
+const syncHost = getSyncHost();
 
 if (!publishableKey) {
   throw new Error("Please add the VITE_CLERK_PUBLISHABLE_KEY to the .env file");
