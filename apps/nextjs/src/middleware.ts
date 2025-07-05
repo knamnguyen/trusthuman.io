@@ -7,6 +7,7 @@ const isPublicRoute = createRouteMatcher([
   "/api/trpc(.*)", // Allow all tRPC routes - authentication is handled in tRPC context
   "/sign-in(.*)",
   "/sign-up(.*)",
+  "/extension-auth(.*)", // Allow extension auth page to be public
   "/api/webhooks/stripe", // Allow Stripe webhooks
   "/api/webhooks/clerk", // Allow Clerk webhooks
   // Generation routes are protected - removed from public routes
