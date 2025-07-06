@@ -33,7 +33,7 @@ export function FeaturesSection() {
               Boss, let your AI intern engage LinkedIn for you
             </h1>
             <p className="pt-2 text-xl font-bold tracking-tight md:text-2xl lg:text-3xl">
-              Start for free, upgrade when you&apos;re ready to grow faster.
+              this is the fastest way to grow on LinkedIn
             </p>
           </div>
         </div>

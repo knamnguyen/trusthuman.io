@@ -68,7 +68,10 @@ export function TestimonialsSection() {
         </div>
         <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-2">
           {testimonials.map((testimonial) => (
-            <Card key={testimonial.name} className="overflow-hidden shadow-lg">
+            <Card
+              key={testimonial.name}
+              className="overflow-hidden bg-white shadow-lg"
+            >
               <div className="flex h-full">
                 <div className="relative w-1/3">
                   <Image

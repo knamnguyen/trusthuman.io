@@ -11,12 +11,12 @@ import { VideoSection } from "./_components/landing/video-section";
 
 export default function HomePage() {
   return (
-    <div className="bg-zinc-50 text-black">
+    <div className="overflow-x-hidden bg-zinc-50 text-black">
       <Header />
       <main>
         <HeroSection />
         <FeaturesSection />
-        <div className="container mx-auto max-w-7xl px-20 py-12">
+        <div className="container mx-auto max-w-7xl px-4 py-12 md:px-20">
           <GumroadCarousel />
         </div>
         <VideoSection />

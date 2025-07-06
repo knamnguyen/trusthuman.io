@@ -50,7 +50,7 @@ export function HeroSection() {
         <RotatingTitles titles={titles} />
       </h1>
       <p className="max-w-2xl text-lg text-gray-600">
-        Do 100 human-like comments a day on auto-pilot <br />
+        100 human-like comments/day on auto-pilot <br />
         Get your LinkedIn profile reach 100k+ <br />
         Thousands of new followers <br />
         Save 30 hours a month <br />
@@ -64,9 +64,9 @@ export function HeroSection() {
         >
           <Button
             size="lg"
-            className="cursor-pointer rounded-md border-2 border-black bg-pink-500 font-bold text-white shadow-[4px_4px_0px_#000] transition-all hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-none"
+            className="cursor-pointer rounded-md border-2 border-black bg-pink-500 p-6 text-lg font-bold text-white shadow-[4px_4px_0px_#000] transition-all hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-none sm:p-8 sm:text-xl"
           >
-            Get Started for Free
+            I want to grow my f*cking LinkedIn
           </Button>
         </a>
       </div>
