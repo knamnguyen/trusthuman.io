@@ -42,7 +42,7 @@
   "content_scripts": [
     {
       "js": [
-        "assets/index.tsx-loader-D2Epu3nn.js",
+        "assets/index.tsx-loader-cXl5d07O.js",
         "assets/always-active-core.ts-l0sNRNKZ.js"
       ],
       "matches": [
@@ -69,10 +69,10 @@
         "https://*.linkedin.com/*"
       ],
       "resources": [
-        "assets/react-CyMwB-ya.js",
+        "assets/react-Yfr06tc4.js",
         "assets/index-CqyD2INw.js",
         "assets/_commonjsHelpers-gnU0ypJ3.js",
-        "assets/index.tsx-D3GIAyKc.js",
+        "assets/index.tsx-Bc6ZX0Fg.js",
         "assets/always-active-core.ts-l0sNRNKZ.js"
       ],
       "use_dynamic_url": false
