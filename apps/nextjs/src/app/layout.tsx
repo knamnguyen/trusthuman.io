@@ -20,10 +20,10 @@ export const metadata: Metadata = {
       : "http://localhost:3000",
   ),
   title: "EngageKit",
-  description: "The ultimate AI-powered LinkedIn outreach assistant",
+  description: "The ultimate AI-powered LinkedIn engagement assistant",
   openGraph: {
     title: "EngageKit",
-    description: "The ultimate AI-powered LinkedIn outreach assistant",
+    description: "The ultimate AI-powered LinkedIn engagement assistant",
     url: "https://engagekit.co",
     siteName: "EngageKit",
   },
