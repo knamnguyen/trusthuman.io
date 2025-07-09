@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
+import { Analytics } from "@vercel/analytics/next";
 
 import { ThemeProvider } from "@sassy/ui/theme";
 import { Toaster } from "@sassy/ui/toast";
@@ -63,6 +64,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
           <ThemeProvider attribute="class" defaultTheme="light">
             <TRPCReactProvider>{props.children}</TRPCReactProvider>
             <Toaster />
+            {env.VERCEL_ENV === "production" && <Analytics />}
           </ThemeProvider>
         </ClerkProvider>
       </body>
