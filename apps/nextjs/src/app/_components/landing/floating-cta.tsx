@@ -8,11 +8,13 @@ import { cn } from "@sassy/ui/utils";
 export const FloatingCTA = () => {
   const [isVisible, setIsVisible] = useState(false);
 
-  const handleRedirect = () => {
-    window.open(
-      "https://chrome.google.com/webstore/detail/inobbppddbakbhhfkfkinmicnbpeekok",
-      "_blank",
-    );
+  const handleOpenPopup = () => {
+    if (typeof window !== "undefined" && (window as any).Tally) {
+      (window as any).Tally.openPopup("woN0Re", {
+        layout: "modal",
+        width: 700,
+      });
+    }
   };
 
   useEffect(() => {
@@ -37,8 +39,9 @@ export const FloatingCTA = () => {
         isVisible ? "translate-y-0" : "translate-y-24",
       )}
     >
+      {/* Original redirect preserved - https://chrome.google.com/webstore/detail/inobbppddbakbhhfkfkinmicnbpeekok */}
       <Button
-        onClick={handleRedirect}
+        onClick={handleOpenPopup}
         className="h-16 cursor-pointer rounded-md border-2 border-black bg-pink-500 px-8 text-xl font-bold text-white shadow-[6px_6px_0px_#000] transition-all hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none"
       >
         Grow your LinkedIn now

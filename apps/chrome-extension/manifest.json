@@ -2,30 +2,16 @@
   "manifest_version": 3,
   "name": "EngageKit",
   "description": "Automatically comment on LinkedIn posts using AI",
-  "options_ui": {
-    "page": "src/pages/options/index.html"
-  },
   "action": {
     "default_popup": "src/pages/popup/index.html",
     "default_icon": {
       "32": "icon-32.png"
     }
   },
-  "chrome_url_overrides": {
-    "newtab": "src/pages/newtab/index.html"
-  },
   "icons": {
     "128": "icon-128.png"
   },
-  "permissions": [
-    "activeTab",
-    "tabs",
-    "windows",
-    "scripting",
-    "storage",
-    "cookies",
-    "alarms"
-  ],
+  "permissions": ["activeTab", "tabs", "storage", "cookies", "alarms"],
   "host_permissions": [
     "https://*.linkedin.com/*",
     "https://aistudio.google.com/*",
@@ -49,7 +35,7 @@
       "css": ["contentStyle.css"]
     }
   ],
-  "devtools_page": "src/pages/devtools/index.html",
+
   "web_accessible_resources": [
     {
       "resources": ["contentStyle.css", "icon-128.png", "icon-32.png"],

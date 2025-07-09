@@ -1,67 +1,37 @@
 {
   "../../../../../../../@crx/manifest": {
-    "file": "assets/crx-manifest.js-CEqL17Wi.js",
+    "file": "assets/crx-manifest.js-C0RzEMmP.js",
     "name": "crx-manifest.js",
     "src": "../../../../../../../@crx/manifest",
     "isEntry": true
   },
-  "__commonjsHelpers-gnU0ypJ3.js": {
-    "file": "assets/_commonjsHelpers-gnU0ypJ3.js",
-    "name": "_commonjsHelpers"
-  },
-  "_client-Q4vOSbiR.js": {
-    "file": "assets/client-Q4vOSbiR.js",
-    "name": "client",
-    "imports": [
-      "_index-CqyD2INw.js"
-    ]
-  },
-  "_get-sync-host-BfVgwYTZ.js": {
-    "file": "assets/get-sync-host-BfVgwYTZ.js",
+  "_get-sync-host-iq2MgCbV.js": {
+    "file": "assets/get-sync-host-iq2MgCbV.js",
     "name": "get-sync-host",
     "imports": [
-      "_react-Yfr06tc4.js",
-      "__commonjsHelpers-gnU0ypJ3.js"
+      "_react-CbemlBy2.js"
     ]
   },
-  "_index-CqyD2INw.js": {
-    "file": "assets/index-CqyD2INw.js",
-    "name": "index"
+  "_index.tsx-loader-P8uqo-e7.js": {
+    "file": "assets/index.tsx-loader-P8uqo-e7.js",
+    "src": "_index.tsx-loader-P8uqo-e7.js"
   },
-  "_index.tsx-loader-cXl5d07O.js": {
-    "file": "assets/index.tsx-loader-cXl5d07O.js",
-    "src": "_index.tsx-loader-cXl5d07O.js"
-  },
-  "_modulepreload-polyfill-B5Qt9EMX.js": {
-    "file": "assets/modulepreload-polyfill-B5Qt9EMX.js",
-    "name": "modulepreload-polyfill"
-  },
-  "_react-Yfr06tc4.js": {
-    "file": "assets/react-Yfr06tc4.js",
-    "name": "react",
-    "imports": [
-      "_index-CqyD2INw.js",
-      "__commonjsHelpers-gnU0ypJ3.js"
-    ]
-  },
-  "_tailwind-B6Roj7oo.css": {
-    "file": "assets/tailwind-B6Roj7oo.css",
-    "src": "_tailwind-B6Roj7oo.css"
+  "_react-CbemlBy2.js": {
+    "file": "assets/react-CbemlBy2.js",
+    "name": "react"
   },
   "public/icon-128.png": {
     "file": "assets/icon-128-C-YV5z2v.png",
     "src": "public/icon-128.png"
   },
   "src/pages/background/index.ts": {
-    "file": "assets/index.ts-DaOnATtZ.js",
+    "file": "assets/index.ts-_JqqujXr.js",
     "name": "index.ts",
     "src": "src/pages/background/index.ts",
     "isEntry": true,
     "imports": [
-      "_get-sync-host-BfVgwYTZ.js",
-      "_react-Yfr06tc4.js",
-      "__commonjsHelpers-gnU0ypJ3.js",
-      "_index-CqyD2INw.js"
+      "_get-sync-host-iq2MgCbV.js",
+      "_react-CbemlBy2.js"
     ]
   },
   "src/pages/content/always-active-core.ts": {
@@ -71,71 +41,25 @@
     "isEntry": true
   },
   "src/pages/content/index.tsx": {
-    "file": "assets/index.tsx-Bc6ZX0Fg.js",
+    "file": "assets/index.tsx-Cl9v2XVm.js",
     "name": "index.tsx",
     "src": "src/pages/content/index.tsx",
     "isEntry": true,
     "imports": [
-      "_react-Yfr06tc4.js",
-      "_index-CqyD2INw.js",
-      "__commonjsHelpers-gnU0ypJ3.js"
-    ]
-  },
-  "src/pages/devtools/index.html": {
-    "file": "assets/index.html-BEetHurz.js",
-    "name": "index.html",
-    "src": "src/pages/devtools/index.html",
-    "isEntry": true,
-    "imports": [
-      "_modulepreload-polyfill-B5Qt9EMX.js",
-      "__commonjsHelpers-gnU0ypJ3.js"
-    ]
-  },
-  "src/pages/newtab/index.html": {
-    "file": "assets/index.html-C1LmMtBC.js",
-    "name": "index.html",
-    "src": "src/pages/newtab/index.html",
-    "isEntry": true,
-    "imports": [
-      "_modulepreload-polyfill-B5Qt9EMX.js",
-      "_index-CqyD2INw.js",
-      "_client-Q4vOSbiR.js"
-    ],
-    "css": [
-      "assets/index-BarpStXw.css",
-      "assets/tailwind-B6Roj7oo.css"
-    ]
-  },
-  "src/pages/options/index.html": {
-    "file": "assets/index.html-Cp9kWopP.js",
-    "name": "index.html",
-    "src": "src/pages/options/index.html",
-    "isEntry": true,
-    "imports": [
-      "_modulepreload-polyfill-B5Qt9EMX.js",
-      "_index-CqyD2INw.js",
-      "_client-Q4vOSbiR.js"
-    ],
-    "css": [
-      "assets/index-tNvtlvL0.css"
+      "_react-CbemlBy2.js"
     ]
   },
   "src/pages/popup/index.html": {
-    "file": "assets/index.html-DLkk_xRR.js",
+    "file": "assets/index.html-DP6qpx3g.js",
     "name": "index.html",
     "src": "src/pages/popup/index.html",
     "isEntry": true,
     "imports": [
-      "_modulepreload-polyfill-B5Qt9EMX.js",
-      "_index-CqyD2INw.js",
-      "_client-Q4vOSbiR.js",
-      "_react-Yfr06tc4.js",
-      "_get-sync-host-BfVgwYTZ.js",
-      "__commonjsHelpers-gnU0ypJ3.js"
+      "_react-CbemlBy2.js",
+      "_get-sync-host-iq2MgCbV.js"
     ],
     "css": [
-      "assets/index-addibwyn.css",
-      "assets/tailwind-B6Roj7oo.css"
+      "assets/index-BYH3U6sb.css"
     ],
     "assets": [
       "assets/icon-128-C-YV5z2v.png"
