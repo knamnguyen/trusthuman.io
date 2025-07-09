@@ -62,12 +62,14 @@ export function HeroSection() {
         <Button
           size="lg"
           onClick={() => {
-            if (typeof window !== "undefined" && (window as any).Tally) {
-              (window as any).Tally.openPopup("woN0Re", {
-                layout: "modal",
-                width: 700,
-              });
-            }
+            window.open(
+              "https://chromewebstore.google.com/detail/engagekit/gnaedgbedhaolekeffieinkehccpaiii",
+              "_blank",
+            );
+            // To revert to Tally popup:
+            // if (typeof window !== "undefined" && (window as any).Tally) {
+            //   (window as any).Tally.openPopup("woN0Re", { layout: "modal", width: 700 });
+            // }
           }}
           className="cursor-pointer rounded-md border-2 border-black bg-pink-500 p-6 text-lg font-bold text-white shadow-[4px_4px_0px_#000] transition-all hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-none sm:p-8 sm:text-xl"
         >

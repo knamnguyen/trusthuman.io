@@ -8,13 +8,15 @@ import { cn } from "@sassy/ui/utils";
 export const FloatingCTA = () => {
   const [isVisible, setIsVisible] = useState(false);
 
-  const handleOpenPopup = () => {
-    if (typeof window !== "undefined" && (window as any).Tally) {
-      (window as any).Tally.openPopup("woN0Re", {
-        layout: "modal",
-        width: 700,
-      });
-    }
+  const handleRedirect = () => {
+    window.open(
+      "https://chromewebstore.google.com/detail/engagekit/gnaedgbedhaolekeffieinkehccpaiii",
+      "_blank",
+    );
+    // To revert to Tally popup:
+    // if (typeof window !== "undefined" && (window as any).Tally) {
+    //   (window as any).Tally.openPopup("woN0Re", { layout: "modal", width: 700 });
+    // }
   };
 
   useEffect(() => {
@@ -41,7 +43,7 @@ export const FloatingCTA = () => {
     >
       {/* Original redirect preserved - https://chrome.google.com/webstore/detail/inobbppddbakbhhfkfkinmicnbpeekok */}
       <Button
-        onClick={handleOpenPopup}
+        onClick={handleRedirect}
         className="h-16 cursor-pointer rounded-md border-2 border-black bg-pink-500 px-8 text-xl font-bold text-white shadow-[6px_6px_0px_#000] transition-all hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none"
       >
         Grow your LinkedIn now

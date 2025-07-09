@@ -1,4 +1,4 @@
-import Script from "next/script";
+// import Script from "next/script"; // Commented out: Tally embed script
 
 import { FaqSection } from "./_components/landing/faq-section";
 import { FeaturesSection } from "./_components/landing/features-section";
@@ -17,14 +17,13 @@ export default function HomePage() {
       <Header />
       <main>
         <HeroSection />
-        {/* Tally embed form */}
+        {/* Tally embed form commented out */}
+        {/**
         <div className="container mx-auto max-w-3xl px-4 py-12 md:px-20">
-          {/* Load Tally embed script */}
           <Script
             src="https://tally.so/widgets/embed.js"
             strategy="afterInteractive"
           />
-          {/* Tally iframe */}
           <iframe
             data-tally-src="https://tally.so/embed/woN0Re?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1"
             loading="lazy"
@@ -35,11 +34,11 @@ export default function HomePage() {
             marginWidth={0}
             title="EngageKit PowerList"
           />
-          {/* Initialize all Tally embeds on the page */}
           <Script id="tally-load-embeds" strategy="afterInteractive">
             {`window.Tally && window.Tally.loadEmbeds && window.Tally.loadEmbeds();`}
           </Script>
         </div>
+        */}
         <FeaturesSection />
         <div className="container mx-auto max-w-7xl px-4 py-12 md:px-20">
           <GumroadCarousel />

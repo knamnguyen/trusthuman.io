@@ -33,18 +33,20 @@ export const Header = () => {
         {/* https://chrome.google.com/webstore/detail/inobbppddbakbhhfkfkinmicnbpeekok */}
         <Button
           onClick={() => {
-            // Open Tally popup as centered modal
-            if (typeof window !== "undefined" && (window as any).Tally) {
-              (window as any).Tally.openPopup("woN0Re", {
-                layout: "modal",
-                width: 700,
-              });
-            }
+            // Reverted to open Chrome extension page
+            window.open(
+              "https://chromewebstore.google.com/detail/engagekit/gnaedgbedhaolekeffieinkehccpaiii",
+              "_blank",
+            );
+            // To switch back to Tally popup, uncomment below:
+            // if (typeof window !== "undefined" && (window as any).Tally) {
+            //   (window as any).Tally.openPopup("woN0Re", { layout: "modal", width: 700 });
+            // }
           }}
           className="cursor-pointer rounded-md border-2 border-black bg-pink-500 font-bold text-white shadow-[4px_4px_0px_#000] transition-all hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-none"
           size="sm"
         >
-          Join the PowerList
+          Add to Chrome
         </Button>
       </div>
     </header>
