@@ -3,7 +3,7 @@ import { BarChart, Clock, Star, Users } from "lucide-react";
 const features = [
   {
     icon: <Clock className="h-8 w-8 text-pink-500" />,
-    title: "Save 30 Hours/Month",
+    title: "Save 100 Hours/Month",
     description: "Automate 3000+ comments",
   },
   {

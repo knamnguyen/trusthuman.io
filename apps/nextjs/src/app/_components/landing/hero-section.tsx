@@ -53,7 +53,7 @@ export function HeroSection() {
         100 human-like comments/day on auto-pilot <br />
         Get your LinkedIn profile reach 100k+ <br />
         Thousands of new followers <br />
-        Save 30 hours a month <br />
+        Save 100 hours a month <br />
         Free to get started
       </p>
       <div>
