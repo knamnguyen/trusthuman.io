@@ -13,7 +13,7 @@
     "dev": "pnpm dev:chrome",
     "dev:firefox": "pnpm with-env vite --mode development --config vite.config.firefox.ts",
     "clean": "git clean -xdf .cache .turbo dist_chrome dist_firefox node_modules",
-    "with-env": "dotenv -e ../../.env --"
+    "with-env": "dotenv --override -e ../../.env --"
   },
   "dependencies": {
     "@clerk/chrome-extension": "^2.5.2",

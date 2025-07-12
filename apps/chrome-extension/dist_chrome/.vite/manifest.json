@@ -1,23 +1,23 @@
 {
   "../../../../../../../@crx/manifest": {
-    "file": "assets/crx-manifest.js-C0RzEMmP.js",
+    "file": "assets/crx-manifest.js-xoAvb3Sh.js",
     "name": "crx-manifest.js",
     "src": "../../../../../../../@crx/manifest",
     "isEntry": true
   },
-  "_get-sync-host-iq2MgCbV.js": {
-    "file": "assets/get-sync-host-iq2MgCbV.js",
+  "_get-sync-host-DG02k0mV.js": {
+    "file": "assets/get-sync-host-DG02k0mV.js",
     "name": "get-sync-host",
     "imports": [
-      "_react-CbemlBy2.js"
+      "_react-ELs9A1IF.js"
     ]
   },
-  "_index.tsx-loader-P8uqo-e7.js": {
-    "file": "assets/index.tsx-loader-P8uqo-e7.js",
-    "src": "_index.tsx-loader-P8uqo-e7.js"
+  "_index.tsx-loader-CnrQsnxT.js": {
+    "file": "assets/index.tsx-loader-CnrQsnxT.js",
+    "src": "_index.tsx-loader-CnrQsnxT.js"
   },
-  "_react-CbemlBy2.js": {
-    "file": "assets/react-CbemlBy2.js",
+  "_react-ELs9A1IF.js": {
+    "file": "assets/react-ELs9A1IF.js",
     "name": "react"
   },
   "public/icon-128.png": {
@@ -25,13 +25,13 @@
     "src": "public/icon-128.png"
   },
   "src/pages/background/index.ts": {
-    "file": "assets/index.ts-_JqqujXr.js",
+    "file": "assets/index.ts-D7NkEjYn.js",
     "name": "index.ts",
     "src": "src/pages/background/index.ts",
     "isEntry": true,
     "imports": [
-      "_get-sync-host-iq2MgCbV.js",
-      "_react-CbemlBy2.js"
+      "_get-sync-host-DG02k0mV.js",
+      "_react-ELs9A1IF.js"
     ]
   },
   "src/pages/content/always-active-core.ts": {
@@ -41,22 +41,22 @@
     "isEntry": true
   },
   "src/pages/content/index.tsx": {
-    "file": "assets/index.tsx-Cl9v2XVm.js",
+    "file": "assets/index.tsx-BHDuGd3w.js",
     "name": "index.tsx",
     "src": "src/pages/content/index.tsx",
     "isEntry": true,
     "imports": [
-      "_react-CbemlBy2.js"
+      "_react-ELs9A1IF.js"
     ]
   },
   "src/pages/popup/index.html": {
-    "file": "assets/index.html-DP6qpx3g.js",
+    "file": "assets/index.html-2fFl76Mt.js",
     "name": "index.html",
     "src": "src/pages/popup/index.html",
     "isEntry": true,
     "imports": [
-      "_react-CbemlBy2.js",
-      "_get-sync-host-iq2MgCbV.js"
+      "_react-ELs9A1IF.js",
+      "_get-sync-host-DG02k0mV.js"
     ],
     "css": [
       "assets/index-BYH3U6sb.css"

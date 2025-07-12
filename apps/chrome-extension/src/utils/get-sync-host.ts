@@ -6,6 +6,8 @@ const DEV_SYNC_HOST = "http://localhost:3000";
  * @returns The sync host URL.
  */
 export const getSyncHost = (): string => {
+  console.log("GET SYNC HOST", import.meta.env);
+  console.log("MODE IS:", import.meta.env.MODE);
   if (import.meta.env.MODE === "production") {
     return PROD_SYNC_HOST;
   }

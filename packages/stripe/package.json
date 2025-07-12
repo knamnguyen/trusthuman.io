@@ -14,7 +14,7 @@
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
-    "with-env": "dotenv -e ../../.env --",
+    "with-env": "dotenv --override -e ../../.env --",
     "stripe:prices": "pnpm with-env bun ./scripts/importProductsAndPrices.ts",
     "stripe:portal": "pnpm with-env bun ./scripts/setupCustomerPortal.ts"
   },
