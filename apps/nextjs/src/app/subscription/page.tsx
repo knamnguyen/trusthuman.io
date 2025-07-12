@@ -15,6 +15,7 @@ import {
 import { GumroadCarousel } from "~/app/_components/landing/gumroad-carousel";
 import { useSubscription } from "~/hooks/use-subscription";
 import { FeaturesSection } from "../_components/landing/features-section";
+import { SubscribeButton } from "../../_components/subscribe-button";
 
 const freeFeatures = [
   "15 free comments per day",
@@ -131,9 +132,11 @@ export default function SubscriptionPage() {
                   </p>
                 </CardContent>
                 <CardFooter>
-                  <button className="w-full cursor-pointer rounded-md border-2 border-black bg-gray-200 py-2 font-bold text-black shadow-[4px_4px_0px_#000] hover:bg-gray-300 hover:shadow-none">
-                    Start Weekly
-                  </button>
+                  <SubscribeButton
+                    purchaseType="WEEKLY"
+                    buttonText="Start Weekly"
+                    className="w-full cursor-pointer rounded-md border-2 border-black bg-gray-200 py-2 font-bold text-black shadow-[4px_4px_0px_#000] hover:bg-gray-300 hover:shadow-none"
+                  />
                 </CardFooter>
               </Card>
 
@@ -162,9 +165,11 @@ export default function SubscriptionPage() {
                   </p>
                 </CardContent>
                 <CardFooter>
-                  <button className="w-full cursor-pointer rounded-md border-2 border-black bg-pink-500 py-2 font-bold text-white shadow-[4px_4px_0px_#000] hover:bg-pink-600 hover:shadow-none">
-                    Go Monthly
-                  </button>
+                  <SubscribeButton
+                    purchaseType="MONTHLY"
+                    buttonText="Go Monthly"
+                    className="w-full cursor-pointer rounded-md border-2 border-black bg-pink-500 py-2 font-bold text-white shadow-[4px_4px_0px_#000] hover:bg-pink-600 hover:shadow-none"
+                  />
                 </CardFooter>
               </Card>
 
@@ -193,9 +198,11 @@ export default function SubscriptionPage() {
                   </p>
                 </CardContent>
                 <CardFooter>
-                  <button className="w-full cursor-pointer rounded-md border-2 border-black bg-gray-200 py-2 font-bold text-black shadow-[4px_4px_0px_#000] hover:bg-gray-300 hover:shadow-none">
-                    Go Yearly
-                  </button>
+                  <SubscribeButton
+                    purchaseType="YEARLY"
+                    buttonText="Go Yearly"
+                    className="w-full cursor-pointer rounded-md border-2 border-black bg-gray-200 py-2 font-bold text-black shadow-[4px_4px_0px_#000] hover:bg-gray-300 hover:shadow-none"
+                  />
                 </CardFooter>
               </Card>
             </div>
