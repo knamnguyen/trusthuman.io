@@ -65,6 +65,7 @@ export default function Popup() {
     useState(0);
   const [duplicatePostsDetected, setDuplicatePostsDetected] = useState(0);
   const [postsSkippedTimeFilter, setPostsSkippedTimeFilter] = useState(0);
+  const [commentProfileName, setCommentProfileName] = useState("");
   const [lastError, setLastError] = useState<any>(null);
 
   // Determine max posts limit based on plan - handle null case during loading
@@ -199,6 +200,7 @@ export default function Popup() {
         "postsSkippedAlreadyCommented",
         "duplicatePostsDetected",
         "postsSkippedTimeFilter",
+        "commentProfileName",
         "selectedDefaultStyle",
       ],
       (result) => {
@@ -253,6 +255,10 @@ export default function Popup() {
           setDuplicatePostsDetected(result.duplicatePostsDetected);
         if (result.postsSkippedTimeFilter !== undefined)
           setPostsSkippedTimeFilter(result.postsSkippedTimeFilter);
+
+        if (result.commentProfileName !== undefined) {
+          setCommentProfileName(result.commentProfileName);
+        }
 
         loadTodayComments();
       },
@@ -422,6 +428,11 @@ export default function Popup() {
   const handleMinPostAgeChange = (value: number) => {
     setMinPostAge(value);
     chrome.storage.local.set({ minPostAge: value });
+  };
+
+  const handleCommentProfileNameChange = (value: string) => {
+    setCommentProfileName(value);
+    chrome.storage.local.set({ commentProfileName: value });
   };
 
   const handleSetDefaultStyleGuide = () => {
@@ -621,6 +632,8 @@ export default function Popup() {
           isPremiumLoading={isPremiumLoading}
           maxPostsLimit={maxPostsLimit}
           selectedDefaultStyle={selectedDefaultStyle}
+          commentProfileName={commentProfileName}
+          onCommentProfileNameChange={handleCommentProfileNameChange}
           onStyleGuideChange={handleStyleGuideChange}
           onScrollDurationChange={handleScrollDurationChange}
           onCommentDelayChange={handleCommentDelayChange}

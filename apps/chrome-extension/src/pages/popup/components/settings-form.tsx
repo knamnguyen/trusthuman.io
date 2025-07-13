@@ -26,6 +26,8 @@ interface SettingsFormProps {
   isPremiumLoading: boolean;
   maxPostsLimit: number;
   selectedDefaultStyle: keyof typeof DEFAULT_STYLE_GUIDES;
+  commentProfileName: string;
+  onCommentProfileNameChange: (value: string) => void;
   onStyleGuideChange: (value: string) => void;
   onScrollDurationChange: (value: number) => void;
   onCommentDelayChange: (value: number) => void;
@@ -56,6 +58,8 @@ export default function SettingsForm({
   isPremiumLoading,
   maxPostsLimit,
   selectedDefaultStyle,
+  commentProfileName,
+  onCommentProfileNameChange,
   onStyleGuideChange,
   onScrollDurationChange,
   onCommentDelayChange,
@@ -153,6 +157,25 @@ export default function SettingsForm({
           )}
         </div>
       )}
+
+      {/* Company profile name input */}
+      <div className="mb-4">
+        <label className="mb-2 block text-sm font-medium text-gray-700">
+          Name of profile to comment as:
+        </label>
+        <input
+          type="text"
+          value={commentProfileName}
+          onChange={(e) => onCommentProfileNameChange(e.target.value)}
+          placeholder="e.g. 'ivatar' (leave blank for personal profile)"
+          disabled={isRunning}
+          className="w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
+        />
+        <p className="mt-1 text-xs text-gray-500">
+          Provide part of the company name (case-insensitive). Leave blank to
+          use your personal profile.
+        </p>
+      </div>
 
       <div className="mb-4">
         <label className="mb-2 block text-sm font-medium text-gray-700">

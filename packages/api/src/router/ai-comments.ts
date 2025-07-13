@@ -16,6 +16,50 @@ const isDifferentDay = (date1: Date, date2: Date): boolean => {
 };
 
 /**
+ * Sanitise AI-generated comment by stripping common AI artefacts:
+ * - Leading/trailing quotation marks
+ * - Place-holders wrapped in [], {}, <> (e.g. [Author's Name])
+ * - Back-ticks and markdown bold / italic markers (** __ * _)
+ * - Parenthetical placeholders containing keywords like Author, Company, Name, insert, placeholder
+ *
+ * The goal is to leave a natural-looking comment while never stripping legitimate
+ * human text beyond these obvious artefacts.
+ */
+const sanitizeGeneratedComment = (raw: string): string => {
+  if (!raw) return "";
+  let result = raw.trim();
+
+  // 1. Remove leading/trailing quotes (straight or curly)
+  result = result.replace(/^(["'“”‘’]+)/, "").replace(/(["'“”‘’]+)$/, "");
+
+  // 2. Remove wrapping backticks (single or triple) and any isolated backticks
+  result = result
+    .replace(/^`{1,3}/, "")
+    .replace(/`{1,3}$/, "")
+    .replace(/`+/g, "");
+
+  // 3. Remove markdown bold/italic markers
+  result = result.replace(/\*\*|__|\*|_/g, "");
+
+  // 4. Remove anything inside square, curly, or angle brackets – typically AI placeholders
+  result = result
+    .replace(/\[[^\]]*?\]/g, "")
+    .replace(/\{[^}]*?\}/g, "")
+    .replace(/<[^>]*?>/g, "");
+
+  // 5. Remove parenthetical placeholders containing specific keywords
+  result = result.replace(
+    /\(([^)]*(author|company|name|insert|placeholder)[^)]*)\)/gi,
+    "",
+  );
+
+  // Collapse multiple spaces and trim again
+  result = result.replace(/\s{2,}/g, " ").trim();
+
+  return result;
+};
+
+/**
  * AI Comments Router
  *
  * Handles AI-powered comment generation using Google GenAI
@@ -126,6 +170,28 @@ Super Importantly, do not return any artefacts that might imply that the comment
 The postContent above likely starts with the author's name. Address the author's name somewhere in your comment. If you can't find a name, don't try to put in placeholder, just don't address them.
 
 It's important that you think very hard to make sure that what you return is as natural and human sounding/looking as possible without raising any red flags.
+
+**This is the most important rule. There are no exceptions.**
+
+Your final output must be only the raw text of the comment, ready to be copied and pasted.
+
+Under **NO CIRCUMSTANCES** should your response contain any placeholders, brackets, or meta-text. These are forbidden AI artifacts.
+
+FORBIDDEN ARTIFACTS INCLUDE:
+
+[Author's Name]
+[insert specific detail here]
+[Company Name]
+
+Quotation marks around concepts you are referencing (e.g., the "trust" issue)
+Any text inside [...] or {...}
+
+The Correct Process:
+
+You will be given the author's name and the post content. You must **use the actual name provided** in your response. If no name can be identified, don’t address the name in your comment.
+
+Remember, your generated response will be posted directly with no processing, so it MUST NOT contain any redundant text like “here is the comment” or quotes or syntaxs of the like that might raise suspicion that this was ak generated.
+
 `;
 
       try {
@@ -142,15 +208,24 @@ It's important that you think very hard to make sure that what you return is as 
           response.text || "Great post! Thanks for sharing.";
         const isFallback = !response.text;
 
+        // Sanitize the comment to remove any residual AI artefacts.
+        // If sanitisation results in an empty string, fall back to a safe generic comment.
+        const cleanComment = sanitizeGeneratedComment(generatedComment);
+        const finalComment =
+          cleanComment.length > 0
+            ? cleanComment
+            : "Great post! Thanks for sharing.";
+
         console.log(
           "AI Comments Router: Successfully generated comment:",
-          generatedComment.substring(0, 100) + "...",
+          finalComment.substring(0, 100) + "...",
         );
 
         return {
-          comment: generatedComment,
+          comment: finalComment,
           success: true,
-          fallback: isFallback,
+          // Mark as fallback if the AI failed or if sanitisation stripped everything
+          fallback: isFallback || cleanComment.length === 0,
         };
       } catch (error) {
         console.error("AI Comments Router: Error generating comment:", error);

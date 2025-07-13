@@ -1,10 +1,13 @@
 import wait from "@src/utils/wait";
 
+import switchCommentProfile from "./switch-comment-profile";
+
 // Function to post comment on a specific post
 export default async function postCommentOnPost(
   postContainer: HTMLElement,
   comment: string,
   isCommentingActive: boolean,
+  profileName: string,
 ): Promise<boolean> {
   try {
     console.group("📝 Comment Posting Process");
@@ -34,6 +37,15 @@ export default async function postCommentOnPost(
     // Wait for comment editor to appear
     console.log("⏳ Waiting for comment editor to appear...");
     await wait(2000);
+
+    // After editor appears, attempt to switch profile if needed
+    const switched = await switchCommentProfile(postContainer, profileName);
+    if (!switched) {
+      console.error(
+        `switchCommentProfile failed – profile \"${profileName}\" not found.`,
+      );
+      return false;
+    }
 
     // Check again after wait
     if (!isCommentingActive) {

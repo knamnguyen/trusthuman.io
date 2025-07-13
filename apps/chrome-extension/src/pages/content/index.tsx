@@ -15,6 +15,7 @@ import extractPostUrns from "./extract-post-urns";
 import generateComment from "./generate-comment";
 import postCommentOnPost from "./post-comment-on-post";
 import scrollFeedLoadPosts from "./scroll-feed-load-post";
+import switchCommentProfile from "./switch-comment-profile";
 import updateCommentCounts from "./update-comment-counts";
 
 // Content script for EngageKit - Background Window Mode
@@ -729,6 +730,13 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
   await loadCommentedPostUrns();
   await loadCounters();
 
+  // Retrieve desired company profile name (if any) from storage once per session
+  const commentProfileName: string = await new Promise((resolve) => {
+    chrome.storage.local.get(["commentProfileName"], (r) => {
+      resolve((r.commentProfileName as string) || "");
+    });
+  });
+
   // Clean up old timestamp entries and post URNs to prevent storage bloat
   await cleanupOldTimestampsAuthor();
   await cleanupOldPostUrns(commentedPostUrns);
@@ -822,6 +830,7 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
       maxPosts,
       duplicateWindow,
       styleGuide,
+      commentProfileName,
     );
 
     console.log(`📜 Step 3 completed. Final state:`);
@@ -862,6 +871,7 @@ async function processAllPostsFeed(
   maxPosts: number,
   duplicateWindow: number,
   styleGuide: string,
+  commentProfileName: string,
 ): Promise<void> {
   console.group("🎯 PROCESSING ALL POSTS - DETAILED DEBUG");
   backgroundGroup("🎯 PROCESSING ALL POSTS - DETAILED DEBUG");
@@ -1110,6 +1120,7 @@ async function processAllPostsFeed(
         postContainer,
         comment,
         isCommentingActive,
+        commentProfileName,
       );
       console.log(
         `📝 Comment posting result for post ${i + 1}: ${

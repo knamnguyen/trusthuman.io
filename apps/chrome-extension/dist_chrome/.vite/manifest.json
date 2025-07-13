@@ -12,9 +12,9 @@
       "_react-ELs9A1IF.js"
     ]
   },
-  "_index.tsx-loader-CnrQsnxT.js": {
-    "file": "assets/index.tsx-loader-CnrQsnxT.js",
-    "src": "_index.tsx-loader-CnrQsnxT.js"
+  "_index.tsx-loader-CO1qrXHa.js": {
+    "file": "assets/index.tsx-loader-CO1qrXHa.js",
+    "src": "_index.tsx-loader-CO1qrXHa.js"
   },
   "_react-ELs9A1IF.js": {
     "file": "assets/react-ELs9A1IF.js",
@@ -41,7 +41,7 @@
     "isEntry": true
   },
   "src/pages/content/index.tsx": {
-    "file": "assets/index.tsx-BHDuGd3w.js",
+    "file": "assets/index.tsx-C2HL1rkW.js",
     "name": "index.tsx",
     "src": "src/pages/content/index.tsx",
     "isEntry": true,
@@ -50,7 +50,7 @@
     ]
   },
   "src/pages/popup/index.html": {
-    "file": "assets/index.html-2fFl76Mt.js",
+    "file": "assets/index.html-GrUWAbIo.js",
     "name": "index.html",
     "src": "src/pages/popup/index.html",
     "isEntry": true,
@@ -59,7 +59,7 @@
       "_get-sync-host-DG02k0mV.js"
     ],
     "css": [
-      "assets/index-BYH3U6sb.css"
+      "assets/index-BjSCyTmI.css"
     ],
     "assets": [
       "assets/icon-128-C-YV5z2v.png"
