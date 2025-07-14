@@ -15,7 +15,6 @@ import extractPostUrns from "./extract-post-urns";
 import generateComment from "./generate-comment";
 import postCommentOnPost from "./post-comment-on-post";
 import scrollFeedLoadPosts from "./scroll-feed-load-post";
-import switchCommentProfile from "./switch-comment-profile";
 import updateCommentCounts from "./update-comment-counts";
 
 // Content script for EngageKit - Background Window Mode
