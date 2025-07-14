@@ -5,7 +5,7 @@ export const VideoSection = () => {
         <div className="mx-auto max-w-4xl">
           <div className="mb-12 text-center">
             <h2 className="text-4xl font-extrabold tracking-tight sm:text-5xl">
-              Yes, it f*cking works. <br />
+              Yes, it works. <br />
               Here's how in 1 minute
             </h2>
             <h2 className="pt-2 text-xl font-bold tracking-tight sm:text-2xl">

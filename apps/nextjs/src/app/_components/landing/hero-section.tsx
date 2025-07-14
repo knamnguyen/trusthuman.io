@@ -73,7 +73,7 @@ export function HeroSection() {
           }}
           className="cursor-pointer rounded-md border-2 border-black bg-pink-500 p-6 text-lg font-bold text-white shadow-[4px_4px_0px_#000] transition-all hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-none sm:p-8 sm:text-xl"
         >
-          I want to grow my f*cking LinkedIn
+          I want to grow my LinkedIn
         </Button>
       </div>
     </section>
