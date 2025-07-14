@@ -76,25 +76,6 @@ export class StripeService {
       },
     } as Stripe.Checkout.SessionCreateParams;
 
-    // // Add mode-specific metadata directly
-    // if (mode === "subscription") {
-    //   // This metadata will be copied to the Subscription object
-    //   sessionConfig.subscription_data = {
-    //     metadata: {
-    //       clerkUserId,
-    //       purchaseType,
-    //     },
-    //   };
-    // } else if (mode === "payment") {
-    //   // This metadata will be copied to the PaymentIntent object
-    //   sessionConfig.payment_intent_data = {
-    //     metadata: {
-    //       clerkUserId,
-    //       purchaseType,
-    //     },
-    //   };
-    // }
-
     const session = await this.stripe.checkout.sessions.create(sessionConfig);
 
     //return url to redirect to stripe checkout
