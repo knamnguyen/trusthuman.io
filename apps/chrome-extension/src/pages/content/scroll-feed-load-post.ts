@@ -41,7 +41,7 @@ function triggerScrollEvents() {
     const wheelEvent = new WheelEvent("wheel", {
       bubbles: true,
       cancelable: true,
-      deltaY: 100,
+      deltaY: 200,
       deltaMode: WheelEvent.DOM_DELTA_PIXEL,
     });
     window.dispatchEvent(wheelEvent);
@@ -85,7 +85,7 @@ export default async function scrollFeedLoadPosts(
   lastPostCount = postCountBefore;
 
   // Use aggressive scrolling - just go to bottom repeatedly
-  const pauseBetweenScrolls = 2000; // 2 second pause to allow content loading
+  const pauseBetweenScrolls = 1500; // 2 second pause to allow content loading
 
   while (Date.now() < endTime && isCommentingActive) {
     // Check if we should stop

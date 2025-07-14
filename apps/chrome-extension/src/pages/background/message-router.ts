@@ -280,6 +280,7 @@ export class MessageRouter {
     return false;
   };
 
+  //TODO: not being used, consider removing in the future
   private handleMoveToOriginalTab = (
     request: any,
     sender: chrome.runtime.MessageSender,

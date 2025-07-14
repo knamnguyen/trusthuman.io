@@ -764,16 +764,17 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
     backgroundLog(`📜 Step 1: Scrolling feed for ${scrollDuration} seconds...`);
     await scrollFeedLoadPosts(scrollDuration, isCommentingActive, statusPanel);
 
-    // IMPORTANT: Only move to original tab AFTER scrolling is completely finished
     console.log(
       "📜 Step 1.5: Scrolling completed, now moving back to original tab...",
     );
     backgroundLog(
       "📜 Step 1.5: Scrolling completed, now moving back to original tab...",
     );
-    chrome.runtime.sendMessage({
-      action: "moveToOriginalTab",
-    });
+
+    //TODO: not being used, consider removing in the future
+    // chrome.runtime.sendMessage({
+    //   action: "moveToOriginalTab",
+    // });
 
     // Wait a moment for tab switch to complete
     await wait(2000);
