@@ -29,8 +29,19 @@ export default function StatisticsDashboard({
   duplicatePostsDetected,
   postsSkippedTimeFilter,
 }: StatisticsDashboardProps) {
+  // Handler: Open the current user's LinkedIn comment history in a new tab
+  const handleOpenCommentsHistory = () => {
+    chrome.storage.local.get(["usernameUrl"], (data) => {
+      const usernameUrl = data.usernameUrl as string | undefined;
+      if (!usernameUrl) return; // Not available yet
+      const url = `https://www.linkedin.com${usernameUrl}recent-activity/comments/`;
+      window.open(url, "_blank");
+    });
+  };
+
   return (
     <div className="mt-3 grid grid-cols-3 gap-2">
+      {/* Total all-time comments */}
       <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-center">
         <div className="text-lg font-bold text-green-700">
           {totalAllTimeComments}
@@ -39,6 +50,7 @@ export default function StatisticsDashboard({
           🎉 Total comments all-time
         </div>
       </div>
+      {/* Comments posted today */}
       <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-center">
         <div className="text-lg font-bold text-blue-700">
           {totalTodayComments}
@@ -47,6 +59,20 @@ export default function StatisticsDashboard({
           📅 Comments posted today
         </div>
       </div>
+      {/* Button to open past comments */}
+      <button
+        type="button"
+        onClick={handleOpenCommentsHistory}
+        className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-center hover:bg-gray-100"
+      >
+        <div className="text-lg font-bold text-gray-700">↗️</div>
+        <div className="text-xs leading-tight text-gray-600">
+          View past comments
+        </div>
+      </button>
+
+      {/* The following statistic cards are commented out as per new UI requirements */}
+      {/*
       <div className="rounded-lg border border-orange-200 bg-orange-50 p-3 text-center">
         <div className="text-lg font-bold text-orange-700">
           {postsSkippedDuplicate}
@@ -87,6 +113,7 @@ export default function StatisticsDashboard({
           ⏰ Posts skipped (time filter)
         </div>
       </div>
+      */}
     </div>
   );
 }

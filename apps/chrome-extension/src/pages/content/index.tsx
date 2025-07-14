@@ -14,6 +14,7 @@ import extractPostContent from "./extract-post-content";
 import extractPostUrns from "./extract-post-urns";
 import generateComment from "./generate-comment";
 import postCommentOnPost from "./post-comment-on-post";
+import saveCurrentUsernameUrl from "./save-current-username-url";
 import scrollFeedLoadPosts from "./scroll-feed-load-post";
 import updateCommentCounts from "./update-comment-counts";
 
@@ -717,6 +718,9 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
   statusPanel: HTMLDivElement,
   commentAsCompanyEnabled: boolean = false,
 ) {
+  // ➡️ Persist the current LinkedIn username path for later usage in popup
+  saveCurrentUsernameUrl();
+
   isCommentingActive = true;
   console.log(`🚀 Starting new commenting flow with parameters:`);
   backgroundLog(`🚀 Starting new commenting flow with parameters:`);
