@@ -39,6 +39,8 @@ interface SettingsFormProps {
   onSelectedDefaultStyleChange: (
     value: keyof typeof DEFAULT_STYLE_GUIDES,
   ) => void;
+  commentAsCompanyEnabled: boolean;
+  onCommentAsCompanyEnabledChange: (value: boolean) => void;
 }
 
 const FeaturePlaceholder = () => (
@@ -69,6 +71,8 @@ export default function SettingsForm({
   onMinPostAgeChange,
   onSetDefaultStyleGuide,
   onSelectedDefaultStyleChange,
+  commentAsCompanyEnabled,
+  onCommentAsCompanyEnabledChange,
 }: SettingsFormProps) {
   // Helper function to determine if features should be disabled
   const isFeatureDisabled = (featureIsPremium: boolean) => {
@@ -158,23 +162,53 @@ export default function SettingsForm({
         </div>
       )}
 
-      {/* Company profile name input */}
+      {/* Comment as company page (premium) */}
       <div className="mb-4">
-        <label className="mb-2 block text-sm font-medium text-gray-700">
-          Name of profile to comment as:
-        </label>
-        <input
-          type="text"
-          value={commentProfileName}
-          onChange={(e) => onCommentProfileNameChange(e.target.value)}
-          placeholder="e.g. 'ivatar' (leave blank for personal profile)"
-          disabled={isRunning}
-          className="w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
-        />
-        <p className="mt-1 text-xs text-gray-500">
-          Provide part of the company name (case-insensitive). Leave blank to
-          use your personal profile.
-        </p>
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700">
+              Comment as company page:
+            </label>
+            {shouldShowPremiumBadge(
+              FEATURE_CONFIG.commentAsCompanyPage.isPremium,
+            ) && (
+              <span className="rounded-full bg-yellow-400 px-2 py-0.5 text-xs font-bold text-yellow-900 shadow-sm">
+                Premium
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={commentAsCompanyEnabled}
+              onChange={(e) =>
+                onCommentAsCompanyEnabledChange(e.target.checked)
+              }
+              disabled={
+                isRunning ||
+                isFeatureDisabled(FEATURE_CONFIG.commentAsCompanyPage.isPremium)
+              }
+              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+
+            <input
+              type="text"
+              value={commentProfileName}
+              onChange={(e) => onCommentProfileNameChange(e.target.value)}
+              disabled={
+                isRunning ||
+                !commentAsCompanyEnabled ||
+                isFeatureDisabled(FEATURE_CONFIG.commentAsCompanyPage.isPremium)
+              }
+              placeholder="Page name"
+              className="ml-2 flex-1 rounded-md border border-gray-300 p-1 text-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+          <p className="mt-1 text-xs text-gray-500">
+            Please type the page name exactly and make sure it exists, otherwise
+            the comment flow will break.
+          </p>
+        </div>
       </div>
 
       <div className="mb-4">

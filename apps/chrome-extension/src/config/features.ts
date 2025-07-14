@@ -41,4 +41,7 @@ export const FEATURE_CONFIG = {
   customStyleGuide: {
     isPremium: true,
   },
+  commentAsCompanyPage: {
+    isPremium: true,
+  },
 } as const;

@@ -33,7 +33,7 @@
   "content_scripts": [
     {
       "js": [
-        "assets/index.tsx-loader-CsFmgH99.js",
+        "assets/index.tsx-loader-DlHKPDLz.js",
         "assets/always-active-core.ts-l0sNRNKZ.js"
       ],
       "matches": [
@@ -60,7 +60,7 @@
       ],
       "resources": [
         "assets/react-ELs9A1IF.js",
-        "assets/index.tsx-D2Qb3ONC.js",
+        "assets/index.tsx-BZOtN_6a.js",
         "assets/always-active-core.ts-l0sNRNKZ.js"
       ],
       "use_dynamic_url": false

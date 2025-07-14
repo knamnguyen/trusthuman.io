@@ -17,6 +17,9 @@ import postCommentOnPost from "./post-comment-on-post";
 import scrollFeedLoadPosts from "./scroll-feed-load-post";
 import updateCommentCounts from "./update-comment-counts";
 
+// Pronoun rule for company mode
+const COMPANY_PRONOUN_RULE =
+  "IMPORTANT: You are in company page mode, not individual mode anymore. You're speaking on behalf of a company. ALWAYS use We/we pronouns; NEVER use I/i. This is the rule first and foremost you must follow before looking at any other rules or guide. Again, always use We/we pronouns when referring to yourself instead of I/i";
 // Content script for EngageKit - Background Window Mode
 // This script processes posts directly on the feed page
 
@@ -193,6 +196,7 @@ function showStartButton() {
           "duplicateWindow",
           "styleGuide",
           "apiKey",
+          "commentAsCompanyEnabled",
         ],
         (result) => {
           backgroundLog("Content: Retrieved settings from storage:", result);
@@ -210,6 +214,10 @@ function showStartButton() {
               ? result.styleGuide
               : "Be engaging and professional";
           const apiKey = result.apiKey !== undefined ? result.apiKey : "";
+          const commentAsCompanyEnabled =
+            result.commentAsCompanyEnabled !== undefined
+              ? result.commentAsCompanyEnabled
+              : false;
 
           backgroundLog("🎯 Starting commenting flow with settings:", {
             scrollDuration,
@@ -217,6 +225,7 @@ function showStartButton() {
             maxPosts,
             styleGuide: styleGuide?.substring(0, 50) + "...",
             hasApiKey: !!apiKey,
+            commentAsCompanyEnabled,
           });
 
           // API key check removed - using server-side tRPC API now
@@ -298,6 +307,7 @@ function showStartButton() {
             startButton,
             subtitle,
             statusPanel,
+            commentAsCompanyEnabled,
           );
         },
       );
@@ -403,7 +413,8 @@ async function injectAndPlayContinuousSound(): Promise<void> {
 
       // Set the audio to loop continuously
       audioElement.loop = true;
-
+      // Mute the audio so it is inaudible but still considered active by the browser
+      audioElement.muted = true;
       // Hide the default audio controls for background audio
       audioElement.controls = false;
 
@@ -704,6 +715,7 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
   startButton: HTMLButtonElement,
   subtitle: HTMLParagraphElement,
   statusPanel: HTMLDivElement,
+  commentAsCompanyEnabled: boolean = false,
 ) {
   isCommentingActive = true;
   console.log(`🚀 Starting new commenting flow with parameters:`);
@@ -777,7 +789,7 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
     // });
 
     // Wait a moment for tab switch to complete
-    await wait(2000);
+    // await wait(2000);
 
     if (!isCommentingActive) {
       console.log("❌ Commenting stopped during scroll phase");
@@ -830,7 +842,8 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
       maxPosts,
       duplicateWindow,
       styleGuide,
-      commentProfileName,
+      commentAsCompanyEnabled ? commentProfileName : "",
+      commentAsCompanyEnabled,
     );
 
     console.log(`📜 Step 3 completed. Final state:`);
@@ -872,6 +885,7 @@ async function processAllPostsFeed(
   duplicateWindow: number,
   styleGuide: string,
   commentProfileName: string,
+  commentAsCompanyEnabled: boolean,
 ): Promise<void> {
   console.group("🎯 PROCESSING ALL POSTS - DETAILED DEBUG");
   backgroundGroup("🎯 PROCESSING ALL POSTS - DETAILED DEBUG");
@@ -1082,9 +1096,17 @@ async function processAllPostsFeed(
         break;
       }
 
+      // Build style guide (add pronoun rule when company mode enabled)
+      const effectiveStyleGuide = commentAsCompanyEnabled
+        ? `${COMPANY_PRONOUN_RULE}\n\n${styleGuide}\n\n${COMPANY_PRONOUN_RULE}`
+        : styleGuide;
+
       // Generate comment using direct tRPC call
       console.log(`🤖 Generating comment for post ${i + 1}...`);
-      const comment = await generateComment(postAuthorContent, styleGuide);
+      const comment = await generateComment(
+        postAuthorContent,
+        effectiveStyleGuide,
+      );
       console.log(
         `🤖 Comment generation result for post ${i + 1}:`,
         comment ? "SUCCESS" : "FAILED",
@@ -1116,11 +1138,14 @@ async function processAllPostsFeed(
           authorInfo.name
         }...`,
       );
+      const profileNameToUse = commentAsCompanyEnabled
+        ? commentProfileName
+        : "";
       const success = await postCommentOnPost(
         postContainer,
         comment,
         isCommentingActive,
-        commentProfileName,
+        profileNameToUse,
       );
       console.log(
         `📝 Comment posting result for post ${i + 1}: ${

@@ -66,6 +66,7 @@ export default function Popup() {
   const [duplicatePostsDetected, setDuplicatePostsDetected] = useState(0);
   const [postsSkippedTimeFilter, setPostsSkippedTimeFilter] = useState(0);
   const [commentProfileName, setCommentProfileName] = useState("");
+  const [commentAsCompanyEnabled, setCommentAsCompanyEnabled] = useState(false);
   const [lastError, setLastError] = useState<any>(null);
 
   // Determine max posts limit based on plan - handle null case during loading
@@ -201,6 +202,7 @@ export default function Popup() {
         "duplicatePostsDetected",
         "postsSkippedTimeFilter",
         "commentProfileName",
+        "commentAsCompanyEnabled",
         "selectedDefaultStyle",
       ],
       (result) => {
@@ -258,6 +260,9 @@ export default function Popup() {
 
         if (result.commentProfileName !== undefined) {
           setCommentProfileName(result.commentProfileName);
+        }
+        if (result.commentAsCompanyEnabled !== undefined) {
+          setCommentAsCompanyEnabled(result.commentAsCompanyEnabled);
         }
 
         loadTodayComments();
@@ -433,6 +438,11 @@ export default function Popup() {
   const handleCommentProfileNameChange = (value: string) => {
     setCommentProfileName(value);
     chrome.storage.local.set({ commentProfileName: value });
+  };
+
+  const handleCommentAsCompanyEnabledChange = (value: boolean) => {
+    setCommentAsCompanyEnabled(value);
+    chrome.storage.local.set({ commentAsCompanyEnabled: value });
   };
 
   const handleSetDefaultStyleGuide = () => {
@@ -634,6 +644,8 @@ export default function Popup() {
           selectedDefaultStyle={selectedDefaultStyle}
           commentProfileName={commentProfileName}
           onCommentProfileNameChange={handleCommentProfileNameChange}
+          commentAsCompanyEnabled={commentAsCompanyEnabled}
+          onCommentAsCompanyEnabledChange={handleCommentAsCompanyEnabledChange}
           onStyleGuideChange={handleStyleGuideChange}
           onScrollDurationChange={handleScrollDurationChange}
           onCommentDelayChange={handleCommentDelayChange}

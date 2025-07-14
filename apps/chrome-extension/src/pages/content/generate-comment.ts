@@ -11,6 +11,8 @@ export default async function generateComment(
       postContent.substring(0, 200) + "...",
     );
 
+    console.log("🤖 Style guide:", styleGuide);
+
     // Direct tRPC call to aiComments.generateComment
     const response =
       await getStandaloneTRPCClient().aiComments.generateComment.mutate({
