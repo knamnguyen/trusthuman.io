@@ -44,4 +44,8 @@ export const FEATURE_CONFIG = {
   commentAsCompanyPage: {
     isPremium: true,
   },
+
+  languageAwareComment: {
+    isPremium: true,
+  },
 } as const;

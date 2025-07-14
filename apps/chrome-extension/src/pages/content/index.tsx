@@ -18,9 +18,14 @@ import saveCurrentUsernameUrl from "./save-current-username-url";
 import scrollFeedLoadPosts from "./scroll-feed-load-post";
 import updateCommentCounts from "./update-comment-counts";
 
+import "./attach-engage-button";
+
 // Pronoun rule for company mode
 const COMPANY_PRONOUN_RULE =
   "IMPORTANT: You are in company page mode, not individual mode anymore. You're speaking on behalf of a company. ALWAYS use We/we pronouns; NEVER use I/i. This is the rule first and foremost you must follow before looking at any other rules or guide. Again, always use We/we pronouns when referring to yourself instead of I/i";
+
+const LANGUAGE_AWARE_RULE =
+  "IMPORTANT: When commenting, detect the language of the original post and comment in the same language. If the post is in English, comment in English; otherwise, switch to that language. Always respect grammar and tone. This rule is mandatory. If the post is in a language other than English, you must try as hard as possible to comment in the same tone and style as the post. If you can't, comment in English.";
 // Content script for EngageKit - Background Window Mode
 // This script processes posts directly on the feed page
 
@@ -745,11 +750,20 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
   await loadCommentedPostUrns();
   await loadCounters();
 
-  // Retrieve desired company profile name (if any) from storage once per session
-  const commentProfileName: string = await new Promise((resolve) => {
-    chrome.storage.local.get(["commentProfileName"], (r) => {
-      resolve((r.commentProfileName as string) || "");
-    });
+  // Retrieve desired company profile name (if any) and language flag from storage once per session
+  const { commentProfileName, languageAwareEnabled } = await new Promise<{
+    commentProfileName: string;
+    languageAwareEnabled: boolean;
+  }>((resolve) => {
+    chrome.storage.local.get(
+      ["commentProfileName", "languageAwareEnabled"],
+      (r) => {
+        resolve({
+          commentProfileName: (r.commentProfileName as string) || "",
+          languageAwareEnabled: r.languageAwareEnabled || false,
+        });
+      },
+    );
   });
 
   // Clean up old timestamp entries and post URNs to prevent storage bloat
@@ -848,6 +862,7 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
       styleGuide,
       commentAsCompanyEnabled ? commentProfileName : "",
       commentAsCompanyEnabled,
+      languageAwareEnabled,
     );
 
     console.log(`📜 Step 3 completed. Final state:`);
@@ -890,6 +905,7 @@ async function processAllPostsFeed(
   styleGuide: string,
   commentProfileName: string,
   commentAsCompanyEnabled: boolean,
+  languageAwareEnabled: boolean,
 ): Promise<void> {
   console.group("🎯 PROCESSING ALL POSTS - DETAILED DEBUG");
   backgroundGroup("🎯 PROCESSING ALL POSTS - DETAILED DEBUG");
@@ -1101,9 +1117,15 @@ async function processAllPostsFeed(
       }
 
       // Build style guide (add pronoun rule when company mode enabled)
-      const effectiveStyleGuide = commentAsCompanyEnabled
-        ? `${COMPANY_PRONOUN_RULE}\n\n${styleGuide}\n\n${COMPANY_PRONOUN_RULE}`
-        : styleGuide;
+      var effectiveStyleGuide = styleGuide;
+
+      if (commentAsCompanyEnabled) {
+        effectiveStyleGuide = `${COMPANY_PRONOUN_RULE}\n\n${effectiveStyleGuide}\n\n${COMPANY_PRONOUN_RULE}`;
+      }
+
+      if (languageAwareEnabled) {
+        effectiveStyleGuide = `${LANGUAGE_AWARE_RULE}\n\n${effectiveStyleGuide}`;
+      }
 
       // Generate comment using direct tRPC call
       console.log(`🤖 Generating comment for post ${i + 1}...`);

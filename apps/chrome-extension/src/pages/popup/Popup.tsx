@@ -67,6 +67,7 @@ export default function Popup() {
   const [postsSkippedTimeFilter, setPostsSkippedTimeFilter] = useState(0);
   const [commentProfileName, setCommentProfileName] = useState("");
   const [commentAsCompanyEnabled, setCommentAsCompanyEnabled] = useState(false);
+  const [languageAwareEnabled, setLanguageAwareEnabled] = useState(false);
   const [lastError, setLastError] = useState<any>(null);
 
   // Determine max posts limit based on plan - handle null case during loading
@@ -203,6 +204,7 @@ export default function Popup() {
         "postsSkippedTimeFilter",
         "commentProfileName",
         "commentAsCompanyEnabled",
+        "languageAwareEnabled",
         "selectedDefaultStyle",
       ],
       (result) => {
@@ -263,6 +265,9 @@ export default function Popup() {
         }
         if (result.commentAsCompanyEnabled !== undefined) {
           setCommentAsCompanyEnabled(result.commentAsCompanyEnabled);
+        }
+        if (result.languageAwareEnabled !== undefined) {
+          setLanguageAwareEnabled(result.languageAwareEnabled);
         }
 
         loadTodayComments();
@@ -443,6 +448,11 @@ export default function Popup() {
   const handleCommentAsCompanyEnabledChange = (value: boolean) => {
     setCommentAsCompanyEnabled(value);
     chrome.storage.local.set({ commentAsCompanyEnabled: value });
+  };
+
+  const handleLanguageAwareEnabledChange = (value: boolean) => {
+    setLanguageAwareEnabled(value);
+    chrome.storage.local.set({ languageAwareEnabled: value });
   };
 
   const handleSetDefaultStyleGuide = () => {
@@ -646,6 +656,8 @@ export default function Popup() {
           onCommentProfileNameChange={handleCommentProfileNameChange}
           commentAsCompanyEnabled={commentAsCompanyEnabled}
           onCommentAsCompanyEnabledChange={handleCommentAsCompanyEnabledChange}
+          languageAwareEnabled={languageAwareEnabled}
+          onLanguageAwareEnabledChange={handleLanguageAwareEnabledChange}
           onStyleGuideChange={handleStyleGuideChange}
           onScrollDurationChange={handleScrollDurationChange}
           onCommentDelayChange={handleCommentDelayChange}
