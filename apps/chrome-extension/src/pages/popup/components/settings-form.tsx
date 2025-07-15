@@ -47,6 +47,8 @@ interface SettingsFormProps {
   onCommentAsCompanyEnabledChange: (value: boolean) => void;
   languageAwareEnabled: boolean;
   onLanguageAwareEnabledChange: (value: boolean) => void;
+  skipCompanyPagesEnabled: boolean;
+  onSkipCompanyPagesEnabledChange: (value: boolean) => void;
 }
 
 const FeaturePlaceholder = () => (
@@ -81,6 +83,8 @@ export default function SettingsForm({
   onCommentAsCompanyEnabledChange,
   languageAwareEnabled,
   onLanguageAwareEnabledChange,
+  skipCompanyPagesEnabled,
+  onSkipCompanyPagesEnabledChange,
   blacklistEnabled,
   blacklistAuthors,
   onBlacklistEnabledChange,
@@ -304,6 +308,41 @@ export default function SettingsForm({
           <p className="mt-1 text-xs text-gray-500">
             Automatically comment in the same language detected in the post when
             it is not English.
+          </p>
+        </div>
+      )}
+
+      {/* Skip company pages (premium) */}
+      {isPremiumLoading ? (
+        <FeaturePlaceholder />
+      ) : (
+        <div className="mb-4">
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={skipCompanyPagesEnabled}
+              onChange={(e) =>
+                onSkipCompanyPagesEnabledChange(e.target.checked)
+              }
+              disabled={
+                isRunning ||
+                isFeatureDisabled(FEATURE_CONFIG.skipCompanyPages.isPremium)
+              }
+              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <label className="text-sm font-medium text-gray-700">
+              Skip company pages:
+            </label>
+            {shouldShowPremiumBadge(
+              FEATURE_CONFIG.skipCompanyPages.isPremium,
+            ) && (
+              <span className="rounded-full bg-yellow-400 px-2 py-0.5 text-xs font-bold text-yellow-900 shadow-sm">
+                Premium
+              </span>
+            )}
+          </div>
+          <p className="mt-1 text-xs text-gray-500">
+            Skip commenting on company pages to avoid duplicate comments.
           </p>
         </div>
       )}

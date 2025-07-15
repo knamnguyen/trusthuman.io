@@ -10,6 +10,7 @@ import {
 import cleanupOldPostUrns from "./clean-old-post-urns";
 import cleanupOldTimestampsAuthor from "./clean-old-timestamp-author";
 import extractAuthorInfo from "./extract-author-info";
+import extractBioAuthor from "./extract-bio-author";
 import extractPostContent from "./extract-post-content";
 import extractPostTime from "./extract-post-time";
 import extractPostUrns from "./extract-post-urns";
@@ -770,20 +771,28 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
   await loadCounters();
 
   // Retrieve desired company profile name (if any) and language flag from storage once per session
-  const { commentProfileName, languageAwareEnabled } = await new Promise<{
-    commentProfileName: string;
-    languageAwareEnabled: boolean;
-  }>((resolve) => {
-    chrome.storage.local.get(
-      ["commentProfileName", "languageAwareEnabled"],
-      (r) => {
-        resolve({
-          commentProfileName: (r.commentProfileName as string) || "",
-          languageAwareEnabled: r.languageAwareEnabled || false,
-        });
-      },
-    );
-  });
+  const { commentProfileName, languageAwareEnabled, skipCompanyPagesEnabled } =
+    await new Promise<{
+      commentProfileName: string;
+      languageAwareEnabled: boolean;
+      skipCompanyPagesEnabled: boolean;
+    }>((resolve) => {
+      chrome.storage.local.get(
+        [
+          "commentProfileName",
+          "languageAwareEnabled",
+          "skipCompanyPagesEnabled",
+        ],
+        (r) => {
+          resolve({
+            commentProfileName: (r.commentProfileName as string) || "",
+            languageAwareEnabled: r.languageAwareEnabled || false,
+            skipCompanyPagesEnabled: r.skipCompanyPagesEnabled || false,
+          });
+        },
+      );
+    });
+  const skipCompanyPages = skipCompanyPagesEnabled;
   // Retrieve blacklist settings once per session
   const { blacklistEnabled: blacklistEnabled, blacklistAuthors } =
     await new Promise<{
@@ -907,6 +916,7 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
       minPostAge,
       blacklistEnabled,
       blacklistList,
+      skipCompanyPages,
     );
 
     console.log(`📜 Step 3 completed. Final state:`);
@@ -954,6 +964,7 @@ async function processAllPostsFeed(
   minPostAge: number,
   blacklistEnabled: boolean,
   blacklistList: string[],
+  skipCompanyPages: boolean,
 ): Promise<void> {
   console.group("🎯 PROCESSING ALL POSTS - DETAILED DEBUG");
   backgroundGroup("🎯 PROCESSING ALL POSTS - DETAILED DEBUG");
@@ -1060,6 +1071,19 @@ async function processAllPostsFeed(
     }
 
     const postContainer = postContainers[i] as HTMLElement;
+
+    // Check company page skip
+    if (skipCompanyPages) {
+      const bioText = extractBioAuthor(postContainer) ?? "";
+      const companyRegex = /^\d[\d\s,.]*followers$/i;
+      if (companyRegex.test(bioText.trim())) {
+        console.log(
+          "🚫 Skipping company page post based on bio text:",
+          bioText,
+        );
+        continue;
+      }
+    }
 
     // STEP 0: Time filter check (skip if older than limit or age unknown)
     const ageHours = extractPostTime(postContainer);

@@ -68,6 +68,7 @@ export default function Popup() {
   const [commentProfileName, setCommentProfileName] = useState("");
   const [commentAsCompanyEnabled, setCommentAsCompanyEnabled] = useState(false);
   const [languageAwareEnabled, setLanguageAwareEnabled] = useState(false);
+  const [skipCompanyPagesEnabled, setSkipCompanyPagesEnabled] = useState(false);
   const [lastError, setLastError] = useState<any>(null);
   const [blacklistEnabled, setBlacklistEnabled] = useState(false);
   const [blacklistAuthors, setBlacklistAuthors] = useState("");
@@ -207,6 +208,7 @@ export default function Popup() {
         "commentProfileName",
         "commentAsCompanyEnabled",
         "languageAwareEnabled",
+        "skipCompanyPagesEnabled",
         "selectedDefaultStyle",
         "blacklistEnabled",
         "blacklistAuthors",
@@ -273,6 +275,9 @@ export default function Popup() {
         if (result.languageAwareEnabled !== undefined) {
           setLanguageAwareEnabled(result.languageAwareEnabled);
         }
+        if (result.skipCompanyPagesEnabled !== undefined)
+          setSkipCompanyPagesEnabled(result.skipCompanyPagesEnabled);
+
         const commentAsCompanyEnabled =
           result.commentAsCompanyEnabled !== undefined
             ? result.commentAsCompanyEnabled
@@ -390,6 +395,42 @@ export default function Popup() {
     return () => chrome.runtime.onMessage.removeListener(messageListener);
   }, [isPremium, isPremiumLoading, maxPostsLimit]);
 
+  // Reset premium-only features when user is not premium
+  useEffect(() => {
+    if (!isPremiumLoading && isPremium === false) {
+      const updates: Record<string, any> = {};
+
+      if (commentAsCompanyEnabled) {
+        setCommentAsCompanyEnabled(false);
+        updates.commentAsCompanyEnabled = false;
+      }
+
+      if (languageAwareEnabled) {
+        setLanguageAwareEnabled(false);
+        updates.languageAwareEnabled = false;
+      }
+
+      if (skipCompanyPagesEnabled) {
+        setSkipCompanyPagesEnabled(false);
+        updates.skipCompanyPagesEnabled = false;
+      }
+
+      if (blacklistEnabled) {
+        setBlacklistEnabled(false);
+        updates.blacklistEnabled = false;
+      }
+
+      if (timeFilterEnabled) {
+        setTimeFilterEnabled(false);
+        updates.timeFilterEnabled = false;
+      }
+
+      if (Object.keys(updates).length > 0) {
+        chrome.storage.local.set(updates);
+      }
+    }
+  }, [isPremium, isPremiumLoading]);
+
   const loadTodayComments = () => {
     const today = new Date().toDateString();
     const storageKey = `comments_today_${today}`;
@@ -466,6 +507,11 @@ export default function Popup() {
   const handleLanguageAwareEnabledChange = (value: boolean) => {
     setLanguageAwareEnabled(value);
     chrome.storage.local.set({ languageAwareEnabled: value });
+  };
+
+  const handleSkipCompanyPagesEnabledChange = (value: boolean) => {
+    setSkipCompanyPagesEnabled(value);
+    chrome.storage.local.set({ skipCompanyPagesEnabled: value });
   };
 
   const handleBlacklistEnabledChange = (value: boolean) => {
@@ -681,6 +727,8 @@ export default function Popup() {
           onCommentAsCompanyEnabledChange={handleCommentAsCompanyEnabledChange}
           languageAwareEnabled={languageAwareEnabled}
           onLanguageAwareEnabledChange={handleLanguageAwareEnabledChange}
+          skipCompanyPagesEnabled={skipCompanyPagesEnabled}
+          onSkipCompanyPagesEnabledChange={handleSkipCompanyPagesEnabledChange}
           onStyleGuideChange={handleStyleGuideChange}
           onScrollDurationChange={handleScrollDurationChange}
           onCommentDelayChange={handleCommentDelayChange}

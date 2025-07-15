@@ -51,4 +51,7 @@ export const FEATURE_CONFIG = {
   languageAwareComment: {
     isPremium: true,
   },
+  skipCompanyPages: {
+    isPremium: true,
+  },
 } as const;
