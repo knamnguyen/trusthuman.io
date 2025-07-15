@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 
 import engageKitLogo from "../../../public/icon-128.png";
-import { DEFAULT_STYLE_GUIDES, FEATURE_CONFIG } from "../../config/features";
+import { DEFAULT_STYLE_GUIDES_FREE } from "../../config/default-style-guides-free";
+import { DEFAULT_STYLE_GUIDES_PREMIUM } from "../../config/default-style-guides-premium";
+import { FEATURE_CONFIG } from "../../config/features";
 import { useBackgroundAuth } from "../../hooks/use-background-auth";
 import { useDailyCommentCount } from "../../hooks/use-daily-comment-count";
 import { usePremiumStatus } from "../../hooks/use-premium-status";
@@ -21,6 +23,27 @@ import UserProfile from "./components/user-profile";
 const DEFAULT_STYLE_GUIDE = `You are about to write a LinkedIn comment. Imagine you are a young professional or ambitious student (Gen Z), scrolling through your LinkedIn feed during a quick break – maybe between classes, on your commute, or while grabbing a coffee. You're sharp, interested in tech, business, career growth, personal development, social impact, product, marketing, or entrepreneurship. You appreciate authentic, slightly edgy, and insightful content.
 
 IMPORTANT: Only respond with the comment, no other text.`;
+
+// Helper function to get style guide prompt based on key and premium status
+const getStyleGuidePrompt = (
+  key:
+    | keyof typeof DEFAULT_STYLE_GUIDES_FREE
+    | keyof typeof DEFAULT_STYLE_GUIDES_PREMIUM,
+  isPremium: boolean | null,
+): string => {
+  if (isPremium && key in DEFAULT_STYLE_GUIDES_PREMIUM) {
+    return DEFAULT_STYLE_GUIDES_PREMIUM[
+      key as keyof typeof DEFAULT_STYLE_GUIDES_PREMIUM
+    ].prompt;
+  }
+  if (key in DEFAULT_STYLE_GUIDES_FREE) {
+    return DEFAULT_STYLE_GUIDES_FREE[
+      key as keyof typeof DEFAULT_STYLE_GUIDES_FREE
+    ].prompt;
+  }
+  // Fallback to PROFESSIONAL from free guides
+  return DEFAULT_STYLE_GUIDES_FREE.PROFESSIONAL.prompt;
+};
 
 export default function Popup() {
   const { user, isLoaded, isSignedIn, signOut, isSigningOut } =
@@ -46,8 +69,10 @@ export default function Popup() {
   });
 
   const [styleGuide, setStyleGuide] = useState("");
-  const [selectedDefaultStyle, setSelectedDefaultStyle] =
-    useState<keyof typeof DEFAULT_STYLE_GUIDES>("PROFESSIONAL");
+  const [selectedDefaultStyle, setSelectedDefaultStyle] = useState<
+    | keyof typeof DEFAULT_STYLE_GUIDES_FREE
+    | keyof typeof DEFAULT_STYLE_GUIDES_PREMIUM
+  >("PROFESSIONAL");
   const [scrollDuration, setScrollDuration] = useState(5);
   const [commentDelay, setCommentDelay] = useState(5);
   const [maxPosts, setMaxPosts] = useState(5);
@@ -88,10 +113,20 @@ export default function Popup() {
     freeLimit: FEATURE_CONFIG.maxPosts.freeTierLimit,
   });
 
-  // Calculate daily limit for comment status
+  // Daily comment limit (same 100 for both plans)
   const dailyLimit = isPremium
-    ? FEATURE_CONFIG.maxPosts.premiumTierLimit
-    : FEATURE_CONFIG.maxPosts.freeTierLimit;
+    ? FEATURE_CONFIG.dailyComments.premiumTierLimit
+    : FEATURE_CONFIG.dailyComments.freeTierLimit;
+
+  // Free-plan custom style guide length enforcement (≤100 words)
+  const styleGuideWordCount = styleGuide
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean).length;
+  const styleGuideCharCount = styleGuide.replace(/\s+/g, "").length;
+  const styleGuideTooLong =
+    isPremium === false &&
+    (styleGuideWordCount > 100 || styleGuideCharCount > 600);
 
   // Check if daily limit is reached
   const isDailyLimitReached = (dailyCommentCount ?? 0) >= dailyLimit;
@@ -227,9 +262,8 @@ export default function Popup() {
         if (result.styleGuide !== undefined) {
           setStyleGuide(result.styleGuide);
         } else {
-          const styleKey = (result.selectedDefaultStyle ??
-            "PROFESSIONAL") as keyof typeof DEFAULT_STYLE_GUIDES;
-          setStyleGuide(DEFAULT_STYLE_GUIDES[styleKey].prompt);
+          const styleKey = result.selectedDefaultStyle ?? "PROFESSIONAL";
+          setStyleGuide(getStyleGuidePrompt(styleKey, isPremium));
         }
         if (result.scrollDuration !== undefined)
           setScrollDuration(result.scrollDuration);
@@ -452,15 +486,18 @@ export default function Popup() {
   };
 
   const handleSelectedDefaultStyleChange = (
-    value: keyof typeof DEFAULT_STYLE_GUIDES,
+    value:
+      | keyof typeof DEFAULT_STYLE_GUIDES_FREE
+      | keyof typeof DEFAULT_STYLE_GUIDES_PREMIUM,
   ) => {
-    setSelectedDefaultStyle(value);
-    chrome.storage.local.set({ selectedDefaultStyle: value });
-
-    // Update the style guide to match the selected default
-    const newStyleGuide = DEFAULT_STYLE_GUIDES[value].prompt;
+    const styleKey = value;
+    const newStyleGuide = getStyleGuidePrompt(styleKey, isPremium);
     setStyleGuide(newStyleGuide);
-    chrome.storage.local.set({ styleGuide: newStyleGuide });
+    setSelectedDefaultStyle(styleKey);
+    chrome.storage.local.set({
+      selectedDefaultStyle: value,
+      styleGuide: newStyleGuide,
+    });
   };
 
   const handleScrollDurationChange = (value: number) => {
@@ -524,13 +561,7 @@ export default function Popup() {
     chrome.storage.local.set({ blacklistAuthors: value });
   };
 
-  const handleSetDefaultStyleGuide = () => {
-    const defaultPrompt = DEFAULT_STYLE_GUIDES.PROFESSIONAL.prompt;
-    setStyleGuide(defaultPrompt);
-    chrome.storage.local.set({ styleGuide: defaultPrompt });
-    setSelectedDefaultStyle("PROFESSIONAL");
-    chrome.storage.local.set({ selectedDefaultStyle: "PROFESSIONAL" });
-  };
+  // Removed handleSetDefaultStyleGuide – dropdown applies style directly
 
   const handleStart = async () => {
     // Prevent starting if critical data is still loading
@@ -678,7 +709,8 @@ export default function Popup() {
                 disabled={
                   isInitialDataLoading ||
                   !styleGuide.trim() ||
-                  isDailyLimitReached
+                  isDailyLimitReached ||
+                  styleGuideTooLong
                 }
               >
                 Start Auto Commenting
@@ -705,11 +737,7 @@ export default function Popup() {
         />
 
         <SettingsForm
-          styleGuide={
-            isPremium
-              ? styleGuide
-              : DEFAULT_STYLE_GUIDES[selectedDefaultStyle].prompt
-          }
+          styleGuide={styleGuide}
           scrollDuration={scrollDuration}
           commentDelay={commentDelay}
           maxPosts={maxPosts}
@@ -736,7 +764,6 @@ export default function Popup() {
           onDuplicateWindowChange={handleDuplicateWindowChange}
           onTimeFilterEnabledChange={handleTimeFilterEnabledChange}
           onMinPostAgeChange={handleMinPostAgeChange}
-          onSetDefaultStyleGuide={handleSetDefaultStyleGuide}
           onSelectedDefaultStyleChange={handleSelectedDefaultStyleChange}
           blacklistEnabled={blacklistEnabled}
           blacklistAuthors={blacklistAuthors}

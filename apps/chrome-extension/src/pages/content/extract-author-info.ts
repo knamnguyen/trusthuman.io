@@ -1,45 +1,35 @@
 // Function to extract author info from post container
-export default function extractAuthorInfo(
-  postContainer: HTMLElement,
-): { name: string } | null {
+const FALLBACK_NAME =
+  "No author name available, please do not refer to author when making comment" as const;
+
+export default function extractAuthorInfo(postContainer: HTMLElement): {
+  name: string;
+} {
   try {
-    // Look for author container within the post
-    const authorContainer = postContainer.querySelector(
-      ".update-components-actor__container",
-    );
-    if (!authorContainer) {
-      console.log("Author container not found");
-      return null;
-    }
-
-    // Try different selectors for author name
-    const nameSelectors = [
-      '.update-components-actor__title span[dir="ltr"] span[aria-hidden="true"]',
-      '.update-components-actor__title span[aria-hidden="true"]',
+    // Primary selector: element with class update-components-actor__title
+    const primary = postContainer.querySelector(
       ".update-components-actor__title",
-      ".update-components-actor__name",
-    ];
-
-    for (const selector of nameSelectors) {
-      const nameElement = authorContainer.querySelector(selector);
-      if (nameElement?.textContent) {
-        const textContent = nameElement.textContent;
-        const name = textContent
-          .replace(/<!---->/g, "")
-          .trim()
-          .split("•")[0]
-          ?.trim();
-        if (name) {
-          console.log(`Extracted author name: ${name}`);
-          return { name };
-        }
-      }
+    );
+    if (primary?.textContent?.trim()) {
+      const name = primary.textContent.trim();
+      console.log(`Extracted author name (primary): ${name}`);
+      return { name };
     }
 
-    console.log("Could not extract author name");
-    return null;
+    // Secondary selector: first span[aria-hidden="true"] inside actor container
+    const secondary = postContainer.querySelector(
+      '.update-components-actor__container span[aria-hidden="true"]',
+    );
+    if (secondary?.textContent?.trim()) {
+      const name = secondary.textContent.trim();
+      console.log(`Extracted author name (secondary): ${name}`);
+      return { name };
+    }
+
+    console.log("Author name not found, using fallback");
+    return { name: FALLBACK_NAME };
   } catch (error) {
     console.error("Error extracting author info:", error);
-    return null;
+    return { name: FALLBACK_NAME };
   }
 }

@@ -51,17 +51,14 @@ export const CommentLimitStatus: React.FC<CommentLimitStatusProps> = ({
     // Free plan
     if (isAtLimit) {
       message = (
-        <>
-          You have used up all free comments today out of 15. <UpgradeLink />{" "}
-          now to get 100 comments/day
-        </>
+        <>You have used up all comments today out of 100 allowed by LinkedIn.</>
       );
       colorClass = "text-red-600";
     } else {
       message = (
         <>
-          Your free plan has {remaining} comments left today out of 15.{" "}
-          <UpgradeLink /> to get 100 comments per day
+          Your free plan has {remaining} comments left today out of 100 allowed
+          by LinkedIn.
         </>
       );
       colorClass = "text-red-600";

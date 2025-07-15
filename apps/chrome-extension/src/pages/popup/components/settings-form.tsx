@@ -1,6 +1,8 @@
 import React from "react";
 
-import { DEFAULT_STYLE_GUIDES, FEATURE_CONFIG } from "../../../config/features";
+import { DEFAULT_STYLE_GUIDES_FREE } from "../../../config/default-style-guides-free";
+import { DEFAULT_STYLE_GUIDES_PREMIUM } from "../../../config/default-style-guides-premium";
+import { FEATURE_CONFIG } from "../../../config/features";
 import { UpgradeLink } from "./comment-limit-status";
 
 /**
@@ -25,7 +27,9 @@ interface SettingsFormProps {
   isPremium: boolean | null;
   isPremiumLoading: boolean;
   maxPostsLimit: number;
-  selectedDefaultStyle: keyof typeof DEFAULT_STYLE_GUIDES;
+  selectedDefaultStyle:
+    | keyof typeof DEFAULT_STYLE_GUIDES_FREE
+    | keyof typeof DEFAULT_STYLE_GUIDES_PREMIUM;
   commentProfileName: string;
   onCommentProfileNameChange: (value: string) => void;
   onStyleGuideChange: (value: string) => void;
@@ -35,9 +39,10 @@ interface SettingsFormProps {
   onDuplicateWindowChange: (value: number) => void;
   onTimeFilterEnabledChange: (value: boolean) => void;
   onMinPostAgeChange: (value: number) => void;
-  onSetDefaultStyleGuide: () => void;
   onSelectedDefaultStyleChange: (
-    value: keyof typeof DEFAULT_STYLE_GUIDES,
+    value:
+      | keyof typeof DEFAULT_STYLE_GUIDES_FREE
+      | keyof typeof DEFAULT_STYLE_GUIDES_PREMIUM,
   ) => void;
   blacklistEnabled: boolean;
   blacklistAuthors: string;
@@ -77,7 +82,6 @@ export default function SettingsForm({
   onDuplicateWindowChange,
   onTimeFilterEnabledChange,
   onMinPostAgeChange,
-  onSetDefaultStyleGuide,
   onSelectedDefaultStyleChange,
   commentAsCompanyEnabled,
   onCommentAsCompanyEnabledChange,
@@ -124,42 +128,69 @@ export default function SettingsForm({
                 </span>
               )}
             </div>
-            {isPremium && (
-              <button
-                onClick={onSetDefaultStyleGuide}
-                disabled={isRunning}
-                className="rounded-md bg-gray-100 px-3 py-1 text-xs text-gray-700 transition-colors hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Use Default Style
-              </button>
-            )}
+            {/* Removed 'Use Default Style' button */}
           </div>
 
-          {!isPremium && isPremium !== null && (
-            <div className="mt-2 mb-2">
-              <select
-                id="default-style-select"
-                value={selectedDefaultStyle}
-                onChange={(e) =>
-                  onSelectedDefaultStyleChange(
-                    e.target.value as keyof typeof DEFAULT_STYLE_GUIDES,
+          <div className="mt-2 mb-2">
+            <select
+              id="default-style-select"
+              value={selectedDefaultStyle}
+              onChange={(e) =>
+                onSelectedDefaultStyleChange(
+                  e.target.value as
+                    | keyof typeof DEFAULT_STYLE_GUIDES_FREE
+                    | keyof typeof DEFAULT_STYLE_GUIDES_PREMIUM,
+                )
+              }
+              disabled={isRunning}
+              className="w-full rounded-md border border-gray-300 py-2 pr-10 pl-3 text-base focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none sm:text-sm"
+            >
+              {isPremium
+                ? Object.entries(DEFAULT_STYLE_GUIDES_PREMIUM).map(
+                    ([key, value]) => (
+                      <option key={key} value={key}>
+                        {value.label}
+                      </option>
+                    ),
                   )
-                }
-                disabled={isRunning}
-                className="w-full rounded-md border border-gray-300 py-2 pr-10 pl-3 text-base focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none sm:text-sm"
-              >
-                {Object.entries(DEFAULT_STYLE_GUIDES).map(([key, value]) => (
-                  <option key={key} value={key}>
-                    {value.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
+                : Object.entries(DEFAULT_STYLE_GUIDES_FREE).map(
+                    ([key, value]) => (
+                      <option key={key} value={key}>
+                        {value.label}
+                      </option>
+                    ),
+                  )}
+            </select>
+          </div>
 
           <textarea
             value={styleGuide}
-            onChange={(e) => onStyleGuideChange(e.target.value)}
+            onChange={(e) => {
+              let text = e.target.value;
+              // For free users, enforce 100-word cap live (typing & paste)
+              if (isPremium === false) {
+                const words = text.trim().split(/\s+/).filter(Boolean);
+                if (words.length > 100) {
+                  text = words.slice(0, 100).join(" ");
+                }
+                // Enforce 600-character cap (excluding spaces)
+                const charLimit = 600;
+                const charsNoSpace = text.replace(/\s+/g, "").length;
+                if (charsNoSpace > charLimit) {
+                  // Build text up to 600 chars (excluding spaces)
+                  let accumulated = 0;
+                  const truncatedWords: string[] = [];
+                  for (const w of text.split(/\s+/)) {
+                    if (w === "") continue;
+                    if (accumulated + w.length > charLimit) break;
+                    truncatedWords.push(w);
+                    accumulated += w.length;
+                  }
+                  text = truncatedWords.join(" ");
+                }
+              }
+              onStyleGuideChange(text);
+            }}
             placeholder="Describe your commenting style..."
             className="h-40 w-full rounded-md border border-gray-300 p-3 text-sm focus:border-transparent focus:ring-2 focus:ring-blue-500 disabled:text-gray-400"
             disabled={
@@ -167,14 +198,27 @@ export default function SettingsForm({
               isFeatureDisabled(FEATURE_CONFIG.customStyleGuide.isPremium)
             }
           />
-          {shouldShowPremiumBadge(
-            FEATURE_CONFIG.customStyleGuide.isPremium,
-          ) && (
-            <p className="mt-2 text-xs font-bold text-red-600">
-              On a free plan, you can choose a style in the dropdown.{" "}
-              <UpgradeLink /> now to write your own custom style guide.
-            </p>
-          )}
+          {/* Free plan word count indicator */}
+          {isPremium === false &&
+            (() => {
+              const wordCount = styleGuide
+                .trim()
+                .split(/\s+/)
+                .filter(Boolean).length;
+              const charCount = styleGuide.replace(/\s+/g, "").length;
+              const overLimit = wordCount > 100 || charCount > 600;
+              return (
+                <p
+                  className={`mt-2 text-xs font-bold ${
+                    overLimit ? "text-red-600" : "text-gray-600"
+                  }`}
+                >
+                  Your free plan can have {wordCount}/100 words and {charCount}
+                  /600 characters for comment guide. <UpgradeLink /> to have
+                  unlimited length guide.
+                </p>
+              );
+            })()}
         </div>
       )}
 
@@ -347,6 +391,70 @@ export default function SettingsForm({
         </div>
       )}
 
+      {isPremiumLoading ? (
+        <FeaturePlaceholder />
+      ) : (
+        <div className="mb-4">
+          <div className="flex items-center gap-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Post Age Filter:
+            </label>
+            {shouldShowPremiumBadge(FEATURE_CONFIG.postAgeFilter.isPremium) && (
+              <span className="rounded-full bg-yellow-400 px-2 py-0.5 text-xs font-bold text-yellow-900 shadow-sm">
+                Premium
+              </span>
+            )}
+          </div>
+          <div
+            className={
+              isFeatureDisabled(FEATURE_CONFIG.postAgeFilter.isPremium)
+                ? "pointer-events-none mt-2 opacity-50"
+                : "mt-2"
+            }
+          >
+            <div className="mb-2 flex items-center space-x-3">
+              <input
+                type="checkbox"
+                id="timeFilterEnabled"
+                checked={timeFilterEnabled}
+                onChange={(e) => onTimeFilterEnabledChange(e.target.checked)}
+                disabled={
+                  isRunning ||
+                  isFeatureDisabled(FEATURE_CONFIG.postAgeFilter.isPremium)
+                }
+                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <label
+                htmlFor="timeFilterEnabled"
+                className="text-sm text-gray-700"
+              >
+                Only comment on posts made within:
+              </label>
+              <div className="flex flex-1 items-center space-x-2">
+                <input
+                  type="range"
+                  min="1"
+                  max="24"
+                  value={minPostAge}
+                  onChange={(e) => onMinPostAgeChange(parseInt(e.target.value))}
+                  disabled={
+                    isRunning ||
+                    isFeatureDisabled(FEATURE_CONFIG.postAgeFilter.isPremium) ||
+                    !timeFilterEnabled
+                  }
+                  className="flex-1"
+                />
+                <span className="w-12 text-sm font-medium">{minPostAge}h</span>
+              </div>
+            </div>
+            <p className="text-xs text-gray-500">
+              When enabled, skips posts older than the specified time and
+              promoted posts
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="mb-4">
         <label className="mb-2 block text-sm font-medium text-gray-700">
           Feed Scroll Duration:
@@ -462,70 +570,6 @@ export default function SettingsForm({
             </div>
             <p className="mt-1 text-xs text-gray-500">
               Skip authors you've commented on within this time window
-            </p>
-          </div>
-        </div>
-      )}
-
-      {isPremiumLoading ? (
-        <FeaturePlaceholder />
-      ) : (
-        <div className="mb-4">
-          <div className="flex items-center gap-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Post Age Filter:
-            </label>
-            {shouldShowPremiumBadge(FEATURE_CONFIG.postAgeFilter.isPremium) && (
-              <span className="rounded-full bg-yellow-400 px-2 py-0.5 text-xs font-bold text-yellow-900 shadow-sm">
-                Premium
-              </span>
-            )}
-          </div>
-          <div
-            className={
-              isFeatureDisabled(FEATURE_CONFIG.postAgeFilter.isPremium)
-                ? "pointer-events-none mt-2 opacity-50"
-                : "mt-2"
-            }
-          >
-            <div className="mb-2 flex items-center space-x-3">
-              <input
-                type="checkbox"
-                id="timeFilterEnabled"
-                checked={timeFilterEnabled}
-                onChange={(e) => onTimeFilterEnabledChange(e.target.checked)}
-                disabled={
-                  isRunning ||
-                  isFeatureDisabled(FEATURE_CONFIG.postAgeFilter.isPremium)
-                }
-                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
-              <label
-                htmlFor="timeFilterEnabled"
-                className="text-sm text-gray-700"
-              >
-                Only comment on posts made within:
-              </label>
-              <div className="flex flex-1 items-center space-x-2">
-                <input
-                  type="range"
-                  min="1"
-                  max="24"
-                  value={minPostAge}
-                  onChange={(e) => onMinPostAgeChange(parseInt(e.target.value))}
-                  disabled={
-                    isRunning ||
-                    isFeatureDisabled(FEATURE_CONFIG.postAgeFilter.isPremium) ||
-                    !timeFilterEnabled
-                  }
-                  className="flex-1"
-                />
-                <span className="w-12 text-sm font-medium">{minPostAge}h</span>
-              </div>
-            </div>
-            <p className="text-xs text-gray-500">
-              When enabled, skips posts older than the specified time and
-              promoted posts
             </p>
           </div>
         </div>
