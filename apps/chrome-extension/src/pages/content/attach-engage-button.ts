@@ -3,6 +3,7 @@
 // populates the comment editor. Clicking again regenerates/replaces the text.
 // important: at this moment, there is no limit client or server side to limit how many comments the user can generate
 
+import extractAuthorInfo from "./extract-author-info";
 import extractPostContent from "./extract-post-content";
 import generateComment from "./generate-comment";
 
@@ -86,13 +87,30 @@ function addEngageButton(form: HTMLFormElement): void {
     setLoading(btn, true);
     try {
       // Locate surrounding post container to obtain context text.
-      const postContainer = form.closest("div[data-id]") as HTMLElement | null;
+
+      let postContainer = form.closest("div[data-id]") as HTMLElement | null;
       if (!postContainer) {
-        console.warn("Engage button: parent post container not found");
+        postContainer = form.closest(
+          "article[role='article']",
+        ) as HTMLElement | null;
+      }
+      if (!postContainer) {
+        postContainer = document.querySelector("main") as HTMLElement | null;
+      }
+
+      if (!postContainer) {
+        console.warn(
+          "Engage button: unable to locate surrounding post container",
+        );
         return;
       }
 
-      const postContent = extractPostContent(postContainer);
+      let postContent = extractPostContent(postContainer);
+      // Fallback: If extraction failed, attempt to use innerText of first paragraph within postContainer
+      if (!postContent) {
+        const fallbackPara = postContainer.querySelector("p");
+        postContent = fallbackPara?.textContent?.trim() || "";
+      }
       if (!postContent) {
         console.warn("Engage button: unable to extract post content");
         return;
@@ -125,8 +143,17 @@ function addEngageButton(form: HTMLFormElement): void {
         effectiveStyleGuide = `${LANGUAGE_AWARE_RULE}\n\n${effectiveStyleGuide}`;
       }
 
+      // Prepend author name if available, mirroring bulk-comment logic
+      const authorInfo = extractAuthorInfo(postContainer);
+      const combinedContent = authorInfo?.name
+        ? authorInfo.name + postContent
+        : postContent;
+
       // Generate comment via existing tRPC helper.
-      const generated = await generateComment(postContent, effectiveStyleGuide);
+      const generated = await generateComment(
+        combinedContent,
+        effectiveStyleGuide,
+      );
 
       // Find editable field inside form.
       const editableField = form.querySelector<HTMLElement>(
