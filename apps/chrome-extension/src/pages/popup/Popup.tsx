@@ -69,6 +69,8 @@ export default function Popup() {
   const [commentAsCompanyEnabled, setCommentAsCompanyEnabled] = useState(false);
   const [languageAwareEnabled, setLanguageAwareEnabled] = useState(false);
   const [lastError, setLastError] = useState<any>(null);
+  const [blacklistEnabled, setBlacklistEnabled] = useState(false);
+  const [blacklistAuthors, setBlacklistAuthors] = useState("");
 
   // Determine max posts limit based on plan - handle null case during loading
   const maxPostsLimit =
@@ -206,6 +208,8 @@ export default function Popup() {
         "commentAsCompanyEnabled",
         "languageAwareEnabled",
         "selectedDefaultStyle",
+        "blacklistEnabled",
+        "blacklistAuthors",
       ],
       (result) => {
         console.log("Popup: Loading settings from storage:", result);
@@ -269,6 +273,15 @@ export default function Popup() {
         if (result.languageAwareEnabled !== undefined) {
           setLanguageAwareEnabled(result.languageAwareEnabled);
         }
+        const commentAsCompanyEnabled =
+          result.commentAsCompanyEnabled !== undefined
+            ? result.commentAsCompanyEnabled
+            : false;
+
+        const blacklistEnabledLoaded = result.blacklistEnabled ?? false;
+        const blacklistAuthorsLoaded = result.blacklistAuthors ?? "";
+        setBlacklistEnabled(blacklistEnabledLoaded);
+        setBlacklistAuthors(blacklistAuthorsLoaded);
 
         loadTodayComments();
       },
@@ -453,6 +466,16 @@ export default function Popup() {
   const handleLanguageAwareEnabledChange = (value: boolean) => {
     setLanguageAwareEnabled(value);
     chrome.storage.local.set({ languageAwareEnabled: value });
+  };
+
+  const handleBlacklistEnabledChange = (value: boolean) => {
+    setBlacklistEnabled(value);
+    chrome.storage.local.set({ blacklistEnabled: value });
+  };
+
+  const handleBlacklistAuthorsChange = (value: string) => {
+    setBlacklistAuthors(value);
+    chrome.storage.local.set({ blacklistAuthors: value });
   };
 
   const handleSetDefaultStyleGuide = () => {
@@ -667,6 +690,10 @@ export default function Popup() {
           onMinPostAgeChange={handleMinPostAgeChange}
           onSetDefaultStyleGuide={handleSetDefaultStyleGuide}
           onSelectedDefaultStyleChange={handleSelectedDefaultStyleChange}
+          blacklistEnabled={blacklistEnabled}
+          blacklistAuthors={blacklistAuthors}
+          onBlacklistEnabledChange={handleBlacklistEnabledChange}
+          onBlacklistAuthorsChange={handleBlacklistAuthorsChange}
         />
 
         {status && !isRunning && (

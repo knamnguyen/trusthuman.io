@@ -237,40 +237,73 @@ const startAutoCommenting = async (
     console.log(`Starting LinkedIn auto-commenting process...`);
     sendStatusUpdate(`Starting LinkedIn auto-commenting...`);
 
-    // Get the current active tab to remember as the original tab
+    // Get the current active tab to decide whether we need a new LinkedIn feed tab
     const currentTabs = await chrome.tabs.query({
       active: true,
       currentWindow: true,
     });
-    if (currentTabs.length > 0 && currentTabs[0]?.id) {
-      autoCommentingState.originalTabId = currentTabs[0].id;
-      console.log(
-        `Captured original tab ID: ${autoCommentingState.originalTabId}`,
-      );
-    }
 
     let feedTab: chrome.tabs.Tab | undefined;
 
-    // Create LinkedIn tab in current window instead of new background window
-    console.log("Creating LinkedIn tab in current window...");
-    sendStatusUpdate("Creating LinkedIn tab for automation...");
+    // Check if the active tab is already the LinkedIn feed page (exact match)
+    if (
+      currentTabs.length > 0 &&
+      currentTabs[0]?.url?.startsWith("https://www.linkedin.com/feed/")
+    ) {
+      // Re-use the current tab as the feed tab
+      feedTab = currentTabs[0];
+      autoCommentingState.feedTabId = feedTab.id!;
+      autoCommentingState.originalTabId = undefined; // Staying on the same tab
 
-    feedTab = await chrome.tabs.create({
-      url: "https://www.linkedin.com/feed/",
-      active: true, // Start with focus so user can see it
-      pinned: true, // Pin the tab to provide exemption from throttling
-    });
+      console.log("Using existing LinkedIn feed tab:", feedTab.id);
+      sendStatusUpdate(
+        "Using current LinkedIn feed tab for automation (anti-throttling)...",
+      );
 
-    if (!feedTab || !feedTab.id) {
-      throw new Error("Failed to create LinkedIn feed tab");
+      // Ensure the tab is pinned to minimise throttling
+      if (!feedTab.pinned) {
+        await chrome.tabs.update(feedTab.id!, { pinned: true, active: true });
+        console.log("Pinned existing LinkedIn feed tab for anti-throttling");
+      }
+
+      // In an already-open feed tab, the content script is loaded and has
+      // likely already fired its initial `pageReady` signal earlier. Send the
+      // instruction directly so the overlay/start button appears immediately.
+      try {
+        chrome.tabs.sendMessage(feedTab.id!, { action: "showStartButton" });
+        console.log("Sent showStartButton message to existing feed tab");
+      } catch (err) {
+        console.warn("Could not send showStartButton message:", err);
+      }
+    } else {
+      // Remember the original tab so we can return to it later
+      if (currentTabs.length > 0 && currentTabs[0]?.id) {
+        autoCommentingState.originalTabId = currentTabs[0].id;
+        console.log(
+          `Captured original tab ID: ${autoCommentingState.originalTabId}`,
+        );
+      }
+
+      console.log("Creating LinkedIn tab in current window...");
+      sendStatusUpdate("Creating LinkedIn tab for automation...");
+
+      feedTab = await chrome.tabs.create({
+        url: "https://www.linkedin.com/feed/",
+        active: true,
+        pinned: true,
+      });
+
+      if (!feedTab || !feedTab.id) {
+        throw new Error("Failed to create LinkedIn feed tab");
+      }
+
+      autoCommentingState.feedTabId = feedTab.id;
+      console.log(`LinkedIn tab created with ID: ${feedTab.id}`);
+      console.log(`LinkedIn tab pinned status: ${feedTab.pinned}`);
+      sendStatusUpdate(
+        "LinkedIn tab created successfully as pinned tab (anti-throttling)...",
+      );
     }
-
-    autoCommentingState.feedTabId = feedTab.id;
-    console.log(`LinkedIn tab created with ID: ${feedTab.id}`);
-    console.log(`LinkedIn tab pinned status: ${feedTab.pinned}`);
-    sendStatusUpdate(
-      "LinkedIn tab created successfully as pinned tab (anti-throttling)...",
-    );
 
     sendStatusUpdate("Waiting for LinkedIn page to load...");
 

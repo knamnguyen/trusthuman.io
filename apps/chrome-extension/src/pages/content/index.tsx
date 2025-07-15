@@ -784,6 +784,27 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
       },
     );
   });
+  // Retrieve blacklist settings once per session
+  const { blacklistEnabled: blacklistEnabled, blacklistAuthors } =
+    await new Promise<{
+      blacklistEnabled: boolean;
+      blacklistAuthors: string;
+    }>((resolve) => {
+      chrome.storage.local.get(
+        ["blacklistEnabled", "blacklistAuthors"],
+        (r) => {
+          resolve({
+            blacklistEnabled: r.blacklistEnabled ?? false,
+            blacklistAuthors: (r.blacklistAuthors as string) ?? "",
+          });
+        },
+      );
+    });
+
+  const blacklistList = blacklistAuthors
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
 
   // Clean up old timestamp entries and post URNs to prevent storage bloat
   await cleanupOldTimestampsAuthor();
@@ -884,6 +905,8 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
       languageAwareEnabled,
       timeFilterEnabled,
       minPostAge,
+      blacklistEnabled,
+      blacklistList,
     );
 
     console.log(`📜 Step 3 completed. Final state:`);
@@ -929,6 +952,8 @@ async function processAllPostsFeed(
   languageAwareEnabled: boolean,
   timeFilterEnabled: boolean,
   minPostAge: number,
+  blacklistEnabled: boolean,
+  blacklistList: string[],
 ): Promise<void> {
   console.group("🎯 PROCESSING ALL POSTS - DETAILED DEBUG");
   backgroundGroup("🎯 PROCESSING ALL POSTS - DETAILED DEBUG");
@@ -1094,7 +1119,7 @@ async function processAllPostsFeed(
         continue;
       }
 
-      // STEP 2: Check for author duplicate (within time window)
+      // STEP 2: Extract author info
       const authorInfo = extractAuthorInfo(postContainer);
       if (!authorInfo) {
         console.log(
@@ -1104,26 +1129,22 @@ async function processAllPostsFeed(
         continue;
       }
 
-      // Check if we've commented on this author within the time window
+      // Blacklist author check
       if (
-        hasCommentedOnAuthorRecently(
-          authorInfo.name,
-          commentedAuthorsWithTimestamps,
-          duplicateWindow,
+        blacklistEnabled &&
+        blacklistList.some((blacklistedName) =>
+          authorInfo.name.trim().toLowerCase().includes(blacklistedName),
         )
       ) {
         console.log(
-          `⏭️ SKIPPING post ${i + 1} - already commented on ${
-            authorInfo.name
-          } within ${duplicateWindow} hours`,
+          `⏭️ SKIPPING post ${i + 1} - author ${authorInfo.name} is blacklisted`,
         );
-
-        // Update counters
         await updateSkippedPostCounter();
-
         console.groupEnd();
         continue;
       }
+
+      // STEP 3: Check for author duplicate (within time window)
 
       // Extract post content
       const postContent = extractPostContent(postContainer);

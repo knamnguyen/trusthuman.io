@@ -39,6 +39,10 @@ interface SettingsFormProps {
   onSelectedDefaultStyleChange: (
     value: keyof typeof DEFAULT_STYLE_GUIDES,
   ) => void;
+  blacklistEnabled: boolean;
+  blacklistAuthors: string;
+  onBlacklistEnabledChange: (value: boolean) => void;
+  onBlacklistAuthorsChange: (value: string) => void;
   commentAsCompanyEnabled: boolean;
   onCommentAsCompanyEnabledChange: (value: boolean) => void;
   languageAwareEnabled: boolean;
@@ -77,6 +81,10 @@ export default function SettingsForm({
   onCommentAsCompanyEnabledChange,
   languageAwareEnabled,
   onLanguageAwareEnabledChange,
+  blacklistEnabled,
+  blacklistAuthors,
+  onBlacklistEnabledChange,
+  onBlacklistAuthorsChange,
 }: SettingsFormProps) {
   // Helper function to determine if features should be disabled
   const isFeatureDisabled = (featureIsPremium: boolean) => {
@@ -166,21 +174,57 @@ export default function SettingsForm({
         </div>
       )}
 
-      {/* Comment as company page (premium) */}
-      <div className="mb-4">
-        <div className="flex flex-col gap-2">
+      {/* Blacklist author */}
+      {isPremiumLoading ? (
+        <FeaturePlaceholder />
+      ) : (
+        <div className="mb-4">
           <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={blacklistEnabled}
+              onChange={(e) => onBlacklistEnabledChange(e.target.checked)}
+              disabled={
+                isRunning ||
+                isFeatureDisabled(FEATURE_CONFIG.blacklistAuthor.isPremium)
+              }
+              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
             <label className="text-sm font-medium text-gray-700">
-              Comment as company page:
+              Blacklist author – never comment on
             </label>
             {shouldShowPremiumBadge(
-              FEATURE_CONFIG.commentAsCompanyPage.isPremium,
+              FEATURE_CONFIG.blacklistAuthor.isPremium,
             ) && (
               <span className="rounded-full bg-yellow-400 px-2 py-0.5 text-xs font-bold text-yellow-900 shadow-sm">
                 Premium
               </span>
             )}
           </div>
+          <input
+            type="text"
+            value={blacklistAuthors}
+            onChange={(e) => onBlacklistAuthorsChange(e.target.value)}
+            placeholder="e.g., Alice Smith, Bob Jones"
+            disabled={
+              !blacklistEnabled ||
+              isRunning ||
+              isFeatureDisabled(FEATURE_CONFIG.blacklistAuthor.isPremium)
+            }
+            className="mt-2 w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
+          />
+          <p className="mt-1 text-xs text-gray-500">
+            Type in the profile names of accounts you never want to comment on,
+            separated by commas.
+          </p>
+        </div>
+      )}
+
+      {/* Comment as company page (premium) */}
+      {isPremiumLoading ? (
+        <FeaturePlaceholder />
+      ) : (
+        <div className="mb-4">
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
@@ -194,62 +238,75 @@ export default function SettingsForm({
               }
               className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
-
-            <input
-              type="text"
-              value={
-                shouldShowPremiumBadge(
-                  FEATURE_CONFIG.commentAsCompanyPage.isPremium,
-                )
-                  ? ""
-                  : commentProfileName
-              }
-              onChange={(e) => onCommentProfileNameChange(e.target.value)}
-              disabled={
-                isRunning ||
-                !commentAsCompanyEnabled ||
-                isFeatureDisabled(FEATURE_CONFIG.commentAsCompanyPage.isPremium)
-              }
-              placeholder="Page name"
-              className="ml-2 flex-1 rounded-md border border-gray-300 p-1 text-sm focus:border-blue-500 focus:ring-blue-500"
-            />
+            <label className="text-sm font-medium text-gray-700">
+              Comment as company page:
+            </label>
+            {shouldShowPremiumBadge(
+              FEATURE_CONFIG.commentAsCompanyPage.isPremium,
+            ) && (
+              <span className="rounded-full bg-yellow-400 px-2 py-0.5 text-xs font-bold text-yellow-900 shadow-sm">
+                Premium
+              </span>
+            )}
           </div>
+          <input
+            type="text"
+            value={
+              shouldShowPremiumBadge(
+                FEATURE_CONFIG.commentAsCompanyPage.isPremium,
+              )
+                ? ""
+                : commentProfileName
+            }
+            onChange={(e) => onCommentProfileNameChange(e.target.value)}
+            disabled={
+              isRunning ||
+              !commentAsCompanyEnabled ||
+              isFeatureDisabled(FEATURE_CONFIG.commentAsCompanyPage.isPremium)
+            }
+            placeholder="Page name"
+            className="mt-2 w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
+          />
           <p className="mt-1 text-xs text-gray-500">
             Please type the page name exactly and make sure it exists, otherwise
             the comment flow will break.
           </p>
         </div>
-      </div>
+      )}
 
       {/* Language aware comment (premium) */}
-      <div className="mb-4">
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={languageAwareEnabled}
-            onChange={(e) => onLanguageAwareEnabledChange(e.target.checked)}
-            disabled={
-              isRunning ||
-              isFeatureDisabled(FEATURE_CONFIG.languageAwareComment.isPremium)
-            }
-            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-          />
-          <label className="text-sm font-medium text-gray-700">
-            Language aware comment:
-          </label>
-          {shouldShowPremiumBadge(
-            FEATURE_CONFIG.languageAwareComment.isPremium,
-          ) && (
-            <span className="rounded-full bg-yellow-400 px-2 py-0.5 text-xs font-bold text-yellow-900 shadow-sm">
-              Premium
-            </span>
-          )}
+      {isPremiumLoading ? (
+        <FeaturePlaceholder />
+      ) : (
+        <div className="mb-4">
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={languageAwareEnabled}
+              onChange={(e) => onLanguageAwareEnabledChange(e.target.checked)}
+              disabled={
+                isRunning ||
+                isFeatureDisabled(FEATURE_CONFIG.languageAwareComment.isPremium)
+              }
+              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <label className="text-sm font-medium text-gray-700">
+              Language aware comment:
+            </label>
+            {shouldShowPremiumBadge(
+              FEATURE_CONFIG.languageAwareComment.isPremium,
+            ) && (
+              <span className="rounded-full bg-yellow-400 px-2 py-0.5 text-xs font-bold text-yellow-900 shadow-sm">
+                Premium
+              </span>
+            )}
+          </div>
+          <p className="mt-1 text-xs text-gray-500">
+            Automatically comment in the same language detected in the post when
+            it is not English.
+          </p>
         </div>
-        <p className="mt-1 text-xs text-gray-500">
-          Automatically comment in the same language detected in the post when
-          it is not English.
-        </p>
-      </div>
+      )}
 
       <div className="mb-4">
         <label className="mb-2 block text-sm font-medium text-gray-700">

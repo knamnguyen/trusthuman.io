@@ -38,6 +38,9 @@ export const FEATURE_CONFIG = {
   postAgeFilter: {
     isPremium: true,
   },
+  blacklistAuthor: {
+    isPremium: true,
+  },
   customStyleGuide: {
     isPremium: true,
   },
