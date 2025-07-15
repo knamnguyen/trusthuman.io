@@ -25,15 +25,31 @@ const LANGUAGE_AWARE_RULE =
   if (document.getElementById("engage-spin-style")) return;
   const styleTag = document.createElement("style");
   styleTag.id = "engage-spin-style";
-  styleTag.textContent = `@keyframes engageSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}} .engage-btn--loading{animation:engageSpin 1s linear infinite!important;opacity:.6!important;}`;
+  styleTag.textContent = `@keyframes engageSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+  .engage-btn--loading{animation:engageSpin 1s linear infinite!important;opacity:.6!important;box-shadow:none!important;}
+
+  /* Wiggle animation (subtle) */
+  @keyframes engageWiggle{0%{transform:rotate(0deg)}25%{transform:rotate(3deg)}75%{transform:rotate(-3deg)}100%{transform:rotate(0deg)}}
+  .engage-btn--wiggle{animation:engageWiggle 1s ease-in-out infinite;}
+
+  /* Letter slide animation */
+  @keyframes engageLetterSlide{0%{transform:translateX(-2px)}100%{transform:translateX(2px)}}
+  .engage-btn--wiggle .engage-btn-letter{display:inline-block;animation:engageLetterSlide 2s ease-in-out infinite alternate;}
+
+  /* Push-down state */
+  .engage-btn--down{transform:translate(2px,2px)!important;box-shadow:none!important;}`;
   document.head.appendChild(styleTag);
 })();
 
 function setLoading(btn: HTMLButtonElement, isLoading: boolean) {
   if (isLoading) {
     btn.classList.add("engage-btn--loading");
+    btn.classList.remove("engage-btn--wiggle");
   } else {
     btn.classList.remove("engage-btn--loading");
+    if (!btn.matches(":hover") && !btn.classList.contains("engage-btn--down")) {
+      btn.classList.add("engage-btn--wiggle");
+    }
   }
 }
 
@@ -55,7 +71,11 @@ function addEngageButton(form: HTMLFormElement): void {
   // Create styled circular button.
   const btn = document.createElement("button");
   btn.type = "button";
-  btn.textContent = "E";
+  // Wrap letter in span for independent animation
+  const letterSpan = document.createElement("span");
+  letterSpan.className = "engage-btn-letter";
+  letterSpan.textContent = "E";
+  btn.appendChild(letterSpan);
   btn.className = "engage-btn";
   Object.assign(btn.style, {
     background: "#e6007a",
@@ -71,12 +91,48 @@ function addEngageButton(form: HTMLFormElement): void {
     fontSize: "18px",
     cursor: "pointer",
     position: "absolute",
-    right: "4px",
-    bottom: "4px",
+    right: "6px",
+    bottom: "4.5px",
     top: "auto",
     transform: "none",
     zIndex: "2",
+    boxShadow: "2px 2px 0 #000",
+    transition: "transform 0.1s, box-shadow 0.1s",
   } as CSSStyleDeclaration);
+
+  // Default wiggle animation
+  btn.classList.add("engage-btn--wiggle");
+
+  /* Interaction listeners to toggle wiggle and push-down states */
+  btn.addEventListener("mouseenter", () => {
+    if (!btn.classList.contains("engage-btn--loading")) {
+      btn.classList.remove("engage-btn--wiggle");
+    }
+  });
+
+  btn.addEventListener("mouseleave", () => {
+    if (
+      !btn.classList.contains("engage-btn--loading") &&
+      !btn.classList.contains("engage-btn--down")
+    ) {
+      btn.classList.add("engage-btn--wiggle");
+    }
+  });
+
+  btn.addEventListener("mousedown", () => {
+    btn.classList.add("engage-btn--down");
+    btn.classList.remove("engage-btn--wiggle");
+  });
+
+  btn.addEventListener("mouseup", () => {
+    btn.classList.remove("engage-btn--down");
+    if (
+      !btn.classList.contains("engage-btn--loading") &&
+      !btn.matches(":hover")
+    ) {
+      btn.classList.add("engage-btn--wiggle");
+    }
+  });
 
   // Click handler – generate/replace comment text.
   btn.addEventListener("click", async (e) => {

@@ -12,9 +12,9 @@
       "_react-uyIGR6pV.js"
     ]
   },
-  "_index.tsx-loader-kErCiWGb.js": {
-    "file": "assets/index.tsx-loader-kErCiWGb.js",
-    "src": "_index.tsx-loader-kErCiWGb.js"
+  "_index.tsx-loader-BR6jZDps.js": {
+    "file": "assets/index.tsx-loader-BR6jZDps.js",
+    "src": "_index.tsx-loader-BR6jZDps.js"
   },
   "_react-uyIGR6pV.js": {
     "file": "assets/react-uyIGR6pV.js",
@@ -35,7 +35,7 @@
     ]
   },
   "src/pages/content/index.tsx": {
-    "file": "assets/index.tsx-DY4FFsDX.js",
+    "file": "assets/index.tsx-C-5rfPu5.js",
     "name": "index.tsx",
     "src": "src/pages/content/index.tsx",
     "isEntry": true,
@@ -44,7 +44,7 @@
     ]
   },
   "src/pages/popup/index.html": {
-    "file": "assets/index.html-DQOMw7KU.js",
+    "file": "assets/index.html-C4sZfa1Y.js",
     "name": "index.html",
     "src": "src/pages/popup/index.html",
     "isEntry": true,
@@ -53,7 +53,7 @@
       "_get-sync-host-C75YJRdb.js"
     ],
     "css": [
-      "assets/index-BHwfBuWJ.css"
+      "assets/index-BP1ujhe-.css"
     ],
     "assets": [
       "assets/icon-128-C-YV5z2v.png"
