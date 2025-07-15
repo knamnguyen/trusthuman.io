@@ -1,23 +1,23 @@
 {
   "../../../../../../../@crx/manifest": {
-    "file": "assets/crx-manifest.js-xoAvb3Sh.js",
+    "file": "assets/crx-manifest.js-ChOfHdXO.js",
     "name": "crx-manifest.js",
     "src": "../../../../../../../@crx/manifest",
     "isEntry": true
   },
-  "_get-sync-host-DG02k0mV.js": {
-    "file": "assets/get-sync-host-DG02k0mV.js",
+  "_get-sync-host-C75YJRdb.js": {
+    "file": "assets/get-sync-host-C75YJRdb.js",
     "name": "get-sync-host",
     "imports": [
-      "_react-ELs9A1IF.js"
+      "_react-uyIGR6pV.js"
     ]
   },
-  "_index.tsx-loader-vbJvV8YN.js": {
-    "file": "assets/index.tsx-loader-vbJvV8YN.js",
-    "src": "_index.tsx-loader-vbJvV8YN.js"
+  "_index.tsx-loader-BcuuV1aG.js": {
+    "file": "assets/index.tsx-loader-BcuuV1aG.js",
+    "src": "_index.tsx-loader-BcuuV1aG.js"
   },
-  "_react-ELs9A1IF.js": {
-    "file": "assets/react-ELs9A1IF.js",
+  "_react-uyIGR6pV.js": {
+    "file": "assets/react-uyIGR6pV.js",
     "name": "react"
   },
   "public/icon-128.png": {
@@ -25,41 +25,35 @@
     "src": "public/icon-128.png"
   },
   "src/pages/background/index.ts": {
-    "file": "assets/index.ts-D7NkEjYn.js",
+    "file": "assets/index.ts-DxYHJowS.js",
     "name": "index.ts",
     "src": "src/pages/background/index.ts",
     "isEntry": true,
     "imports": [
-      "_get-sync-host-DG02k0mV.js",
-      "_react-ELs9A1IF.js"
+      "_get-sync-host-C75YJRdb.js",
+      "_react-uyIGR6pV.js"
     ]
   },
-  "src/pages/content/always-active-core.ts": {
-    "file": "assets/always-active-core.ts-l0sNRNKZ.js",
-    "name": "always-active-core.ts",
-    "src": "src/pages/content/always-active-core.ts",
-    "isEntry": true
-  },
   "src/pages/content/index.tsx": {
-    "file": "assets/index.tsx-D7oLTchl.js",
+    "file": "assets/index.tsx-U0dxaWS1.js",
     "name": "index.tsx",
     "src": "src/pages/content/index.tsx",
     "isEntry": true,
     "imports": [
-      "_react-ELs9A1IF.js"
+      "_react-uyIGR6pV.js"
     ]
   },
   "src/pages/popup/index.html": {
-    "file": "assets/index.html-C76psvQe.js",
+    "file": "assets/index.html-BbQalD8X.js",
     "name": "index.html",
     "src": "src/pages/popup/index.html",
     "isEntry": true,
     "imports": [
-      "_react-ELs9A1IF.js",
-      "_get-sync-host-DG02k0mV.js"
+      "_react-uyIGR6pV.js",
+      "_get-sync-host-C75YJRdb.js"
     ],
     "css": [
-      "assets/index-CO34vPSZ.css"
+      "assets/index-DlqbOfIr.css"
     ],
     "assets": [
       "assets/icon-128-C-YV5z2v.png"

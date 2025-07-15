@@ -259,15 +259,15 @@ export class MessageRouter {
     // Handle completion notification from content script
     this.dependencies.autoCommentingState.isRunning = false;
 
-    // Close the LinkedIn tab when automation completes
-    if (this.dependencies.autoCommentingState.feedTabId) {
-      chrome.tabs
-        .remove(this.dependencies.autoCommentingState.feedTabId)
-        .catch(() => {
-          // Tab might already be closed, that's okay
-          console.log("LinkedIn tab was already closed or could not be closed");
-        });
-    }
+    // // Close the LinkedIn tab when automation completes
+    // if (this.dependencies.autoCommentingState.feedTabId) {
+    //   chrome.tabs
+    //     .remove(this.dependencies.autoCommentingState.feedTabId)
+    //     .catch(() => {
+    //       // Tab might already be closed, that's okay
+    //       console.log("LinkedIn tab was already closed or could not be closed");
+    //     });
+    // }
 
     // Clear original tab reference
     this.dependencies.autoCommentingState.originalTabId = undefined;

@@ -33,8 +33,7 @@
   "content_scripts": [
     {
       "js": [
-        "assets/index.tsx-loader-vbJvV8YN.js",
-        "assets/always-active-core.ts-l0sNRNKZ.js"
+        "assets/index.tsx-loader-BcuuV1aG.js"
       ],
       "matches": [
         "https://*.linkedin.com/*"
@@ -59,9 +58,8 @@
         "https://*.linkedin.com/*"
       ],
       "resources": [
-        "assets/react-ELs9A1IF.js",
-        "assets/index.tsx-D7oLTchl.js",
-        "assets/always-active-core.ts-l0sNRNKZ.js"
+        "assets/react-uyIGR6pV.js",
+        "assets/index.tsx-U0dxaWS1.js"
       ],
       "use_dynamic_url": false
     }

@@ -11,6 +11,7 @@ import cleanupOldPostUrns from "./clean-old-post-urns";
 import cleanupOldTimestampsAuthor from "./clean-old-timestamp-author";
 import extractAuthorInfo from "./extract-author-info";
 import extractPostContent from "./extract-post-content";
+import extractPostTime from "./extract-post-time";
 import extractPostUrns from "./extract-post-urns";
 import generateComment from "./generate-comment";
 import postCommentOnPost from "./post-comment-on-post";
@@ -187,9 +188,9 @@ function showStartButton() {
       console.log("🎵 Step 1: Starting continuous audio...");
       await injectAndPlayContinuousSound();
 
-      startButton.textContent = "🎵 Audio Started";
+      // startButton.textContent = "🎵 Audio Started";
 
-      await wait(1000);
+      // await wait(1000);
       startButton.textContent = "💬 Starting flow";
       //step 2: move back to the original tab
 
@@ -203,6 +204,8 @@ function showStartButton() {
           "styleGuide",
           "apiKey",
           "commentAsCompanyEnabled",
+          "timeFilterEnabled",
+          "minPostAge",
         ],
         (result) => {
           backgroundLog("Content: Retrieved settings from storage:", result);
@@ -225,6 +228,9 @@ function showStartButton() {
               ? result.commentAsCompanyEnabled
               : false;
 
+          const timeFilterEnabled = result.timeFilterEnabled ?? false;
+          const minPostAge = result.minPostAge ?? 1;
+
           backgroundLog("🎯 Starting commenting flow with settings:", {
             scrollDuration,
             commentDelay,
@@ -232,6 +238,8 @@ function showStartButton() {
             styleGuide: styleGuide?.substring(0, 50) + "...",
             hasApiKey: !!apiKey,
             commentAsCompanyEnabled,
+            timeFilterEnabled,
+            minPostAge,
           });
 
           // API key check removed - using server-side tRPC API now
@@ -314,6 +322,8 @@ function showStartButton() {
             subtitle,
             statusPanel,
             commentAsCompanyEnabled,
+            timeFilterEnabled,
+            minPostAge,
           );
         },
       );
@@ -487,17 +497,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     showStartButton();
     sendResponse({ success: true });
   } else if (request.action === "startNewCommentingFlow") {
-    startNewCommentingFlowWithDelayedTabSwitch(
-      request.scrollDuration,
-      request.commentDelay,
-      request.maxPosts,
-      request.styleGuide,
-      request.duplicateWindow || 24, // default to 24 hours if not provided
-      null as any, // overlay not available from this path
-      null as any, // startButton not available from this path
-      null as any, // subtitle not available from this path
-      null as any, // statusPanel not available from this path
-    );
+    chrome.storage.local.get(["timeFilterEnabled", "minPostAge"], (r) => {
+      const timeFilterEnabled = r.timeFilterEnabled ?? false;
+      const minPostAge = r.minPostAge ?? 1;
+      startNewCommentingFlowWithDelayedTabSwitch(
+        request.scrollDuration,
+        request.commentDelay,
+        request.maxPosts,
+        request.styleGuide,
+        request.duplicateWindow || 24,
+        null as any,
+        null as any,
+        null as any,
+        null as any,
+        false,
+        timeFilterEnabled,
+        minPostAge,
+      );
+    });
     sendResponse({ success: true });
   } else if (request.action === "stopCommentingFlow") {
     console.log("Received stop signal - stopping commenting flow");
@@ -722,6 +739,8 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
   subtitle: HTMLParagraphElement,
   statusPanel: HTMLDivElement,
   commentAsCompanyEnabled: boolean = false,
+  timeFilterEnabled: boolean = false,
+  minPostAge: number = 1,
 ) {
   // ➡️ Persist the current LinkedIn username path for later usage in popup
   saveCurrentUsernameUrl();
@@ -820,7 +839,7 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
     console.log("📜 Step 2: Scrolling back to top...");
     backgroundLog("📜 Step 2: Scrolling back to top...");
     window.scrollTo({ top: 0, behavior: "smooth" });
-    await wait(2000);
+    await wait(1000);
 
     // Update overlay status after scrolling is complete (if overlay elements exist)
     if (overlay && startButton && subtitle) {
@@ -832,7 +851,7 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
         "All posts have been loaded. Switching to automation mode...";
 
       // Wait a moment to show the message, then remove overlay
-      await wait(3000);
+      await wait(1000);
       overlay.remove();
       backgroundLog("📜 🎭 Overlay removed after successful post loading");
     }
@@ -863,6 +882,8 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
       commentAsCompanyEnabled ? commentProfileName : "",
       commentAsCompanyEnabled,
       languageAwareEnabled,
+      timeFilterEnabled,
+      minPostAge,
     );
 
     console.log(`📜 Step 3 completed. Final state:`);
@@ -906,6 +927,8 @@ async function processAllPostsFeed(
   commentProfileName: string,
   commentAsCompanyEnabled: boolean,
   languageAwareEnabled: boolean,
+  timeFilterEnabled: boolean,
+  minPostAge: number,
 ): Promise<void> {
   console.group("🎯 PROCESSING ALL POSTS - DETAILED DEBUG");
   backgroundGroup("🎯 PROCESSING ALL POSTS - DETAILED DEBUG");
@@ -1013,6 +1036,17 @@ async function processAllPostsFeed(
 
     const postContainer = postContainers[i] as HTMLElement;
 
+    // STEP 0: Time filter check (skip if older than limit or age unknown)
+    const ageHours = extractPostTime(postContainer);
+    if (timeFilterEnabled && (ageHours === null || ageHours > minPostAge)) {
+      console.log(
+        `⏭️ SKIPPING post ${i + 1} due to age (${ageHours ?? "unknown"}h) > limit ${minPostAge}h`,
+      );
+      await updateTimeFilterSkippedCounter();
+      console.groupEnd();
+      continue;
+    }
+
     try {
       console.log(
         `🔍 Processing post ${i + 1}/${
@@ -1022,7 +1056,7 @@ async function processAllPostsFeed(
 
       // Scroll to the post
       postContainer.scrollIntoView({ behavior: "smooth", block: "center" });
-      await wait(1000);
+      await wait(500);
 
       // Check again after scroll
       if (!isCommentingActive) {

@@ -29,10 +29,7 @@
   "content_scripts": [
     {
       "matches": ["https://*.linkedin.com/*"],
-      "js": [
-        "src/pages/content/index.tsx",
-        "src/pages/content/always-active-core.ts"
-      ],
+      "js": ["src/pages/content/index.tsx"],
       "css": ["contentStyle.css"]
     }
   ],

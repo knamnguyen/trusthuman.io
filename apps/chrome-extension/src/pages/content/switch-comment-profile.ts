@@ -84,7 +84,7 @@ export default async function switchCommentProfile(
     }
 
     saveButton.click();
-    await wait(300); // brief wait for modal to close / LinkedIn to apply change
+    await wait(500); // brief wait for modal to close / LinkedIn to apply change
 
     return true;
   } catch (err) {

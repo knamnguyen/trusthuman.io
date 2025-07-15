@@ -20,6 +20,9 @@ export default function parseTimeStringToHours(timeStr: string): number | null {
   }
 
   const [, numberStr, unit] = match;
+  if (!unit) {
+    return null;
+  }
   if (!numberStr) {
     return null;
   }

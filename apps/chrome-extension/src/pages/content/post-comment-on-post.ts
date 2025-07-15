@@ -47,6 +47,8 @@ export default async function postCommentOnPost(
       return false;
     }
 
+    await wait(500);
+
     // Check again after wait
     if (!isCommentingActive) {
       console.log("❌ Stopping during comment editor wait due to stop signal");

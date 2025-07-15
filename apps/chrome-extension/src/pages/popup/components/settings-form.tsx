@@ -224,16 +224,6 @@ export default function SettingsForm({
       {/* Language aware comment (premium) */}
       <div className="mb-4">
         <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-gray-700">
-            Language aware comment:
-          </label>
-          {shouldShowPremiumBadge(
-            FEATURE_CONFIG.languageAwareComment.isPremium,
-          ) && (
-            <span className="rounded-full bg-yellow-400 px-2 py-0.5 text-xs font-bold text-yellow-900 shadow-sm">
-              Premium
-            </span>
-          )}
           <input
             type="checkbox"
             checked={languageAwareEnabled}
@@ -244,6 +234,16 @@ export default function SettingsForm({
             }
             className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
           />
+          <label className="text-sm font-medium text-gray-700">
+            Language aware comment:
+          </label>
+          {shouldShowPremiumBadge(
+            FEATURE_CONFIG.languageAwareComment.isPremium,
+          ) && (
+            <span className="rounded-full bg-yellow-400 px-2 py-0.5 text-xs font-bold text-yellow-900 shadow-sm">
+              Premium
+            </span>
+          )}
         </div>
         <p className="mt-1 text-xs text-gray-500">
           Automatically comment in the same language detected in the post when
