@@ -238,6 +238,9 @@ importers:
       geist:
         specifier: ^1.3.1
         version: 1.4.2(next@15.3.4(react-dom@19.0.0(react@19.0.0))(react@19.0.0))
+      loops:
+        specifier: ^5.0.1
+        version: 5.0.1
       next:
         specifier: ^15.2.2
         version: 15.3.4(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -4459,6 +4462,10 @@ packages:
   log-symbols@4.1.0:
     resolution: {integrity: sha512-8XPvpAA8uyhfteu8pIvQxpJZ7SYYdpUivZpGy6sFsBuKRY/7rQGavedeB8aK+Zkyq6upMFVL/9AW6vOYzfRyLg==}
     engines: {node: '>=10'}
+
+  loops@5.0.1:
+    resolution: {integrity: sha512-xM1c9mnlr8Hr4cHW944TQoK6ApynjinUWOgYZd9/B0/3lwTThq24BQ7+XLjgbFAP5kJzqDTRDQi3t+Diy51Udw==}
+    engines: {node: '>=18'}
 
   loose-envify@1.4.0:
     resolution: {integrity: sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q==}
@@ -10318,6 +10325,8 @@ snapshots:
     dependencies:
       chalk: 4.1.2
       is-unicode-supported: 0.1.0
+
+  loops@5.0.1: {}
 
   loose-envify@1.4.0:
     dependencies:
