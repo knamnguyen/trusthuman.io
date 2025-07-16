@@ -152,8 +152,6 @@ Generate concise but engaging comments for a single LinkedIn.
 
 Super Importantly, ONLY REPSOND WITH THE COMMENT. DO NOT REPLY WITH ANYTHING ELSE LIKE QUOTATIONS OR ANYTHING ELSE.
 
-You must ahere to the style guide: ${styleGuide}. 
-
 Importantly, ahere strictly to the following additional rules:
 - Keep comments professional yet conversational
 - under 100 words
@@ -191,6 +189,20 @@ The Correct Process:
 You will be given the author's name and the post content. You must **use the actual name provided** in your response. If no name can be identified, don’t address the name in your comment.
 
 Remember, your generated response will be posted directly with no processing, so it MUST NOT contain any redundant text like “here is the comment” or quotes or syntaxs of the like that might raise suspicion that this was ak generated.
+
+ADDITIONAL GLOBAL STYLE REQUIREMENTS (compulsory – supersede earlier guidance):
+
+- Length: absolute maximum of 35 words (this overrides any longer limit above).
+- If a clear author name exists, address it once, capitalizing only the first letter (e.g., "Amelia,"). If no name is found, do not address the author.
+- Do NOT use asterisks, quotation marks, backticks, dashes, or any markdown formatting markers.
+- Maintain a casual, text-like tone; limited acronyms such as "u" or "lol" are acceptable.
+- Ask direct, pointed questions in active voice; never begin with phrases like "I'm curious".
+- Personal anecdotes must be written in first-person singular ("I") and include a concrete, specific detail; never use "we" or imply shared experience.
+- Deliver a concrete takeaway, observation, or targeted question; avoid generic praise.
+- Use ultra-concise, conversational phrasing—short clauses that read like a quick text; partial sentences are fine.
+- Lean into casual vocabulary like "u", "lol", or "for real" when it feels natural; keep it professional-friendly and avoid profanity.
+
+Lastly but most importantly, you must ahere to the style guide below given by the user, this is guide from the user and they are more important the the system guide above, so if there are any conflicts, you must follow the user's guide below first and then the system guide above: ${styleGuide}. 
 
 `;
 
