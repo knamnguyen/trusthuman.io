@@ -5,52 +5,64 @@ import { Card } from "@sassy/ui/card";
 
 const testimonials = [
   {
-    name: "Sarah L.",
-    title: "Solopreneur",
+    name: "Lisa Thompson",
+    title: "Operations Manager",
     quote:
-      "This tool is a game-changer. I'm saving at least 10 hours a week and my LinkedIn engagement has never been better. It's like having a dedicated marketing intern!",
-    image:
-      "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=400&h=400&auto=format&fit=crop",
+      "EngageKit has my LinkedIn buzzing while I'm buried in spreadsheets. I save at least 10 hours a week and my network keeps growing without lifting a finger.",
+    image: "/testimonials/american middle aged women business professional.jpg",
   },
   {
-    name: "David C.",
-    title: "Content Creator",
+    name: "Jamal Brooks",
+    title: "Computer Science Student",
     quote:
-      "As a creator, consistency is key. This AI helps me stay active and engage with my community even when I'm busy creating. My follower count has grown by 30% in two months.",
+      "Recruiters started DM-ing me after EngageKit kept me active in tech conversations. Landed two internship offers already!",
     image:
-      "https://images.unsplash.com/photo-1557862921-37829c790f19?q=80&w=400&h=400&auto=format&fit=crop",
+      "/testimonials/black student in america building a personal brand for recruiting.jpg",
   },
   {
-    name: "Michael T.",
-    title: "Job Applicant",
+    name: "Li Mei",
+    title: "High School Senior",
     quote:
-      "I was struggling to get noticed by recruiters. By consistently engaging on relevant posts, I landed three interviews in a week. This was the edge I needed.",
+      "I needed to stand out for university apps. EngageKit helped me share insights and connect with alumni—my acceptance emails are rolling in.",
     image:
-      "https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?q=80&w=400&h=400&auto=format&fit=crop",
+      "/testimonials/chinese student applying to university from high school girl.jpg",
   },
   {
-    name: "Jessica P.",
-    title: "Startup Founder",
+    name: "Sofía García",
+    title: "Graphic Designer",
     quote:
-      "We have a lean team, so every minute counts. This automates our LinkedIn presence, warming up leads and building our brand authority while we focus on building the product.",
-    image:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=400&h=400&auto=format&fit=crop",
+      "As a freelancer, visibility is everything. EngageKit keeps me in the design chatter and I've booked three new clients this month.",
+    image: "/testimonials/creative professional european 27 years old.jpg",
   },
   {
-    name: "Alex J.",
-    title: "Sales Professional",
+    name: "Thomas Müller",
+    title: "Sales Director",
     quote:
-      "My social selling index has skyrocketed. I'm building relationships at scale and starting conversations that lead to real revenue. It's an essential part of my toolkit now.",
-    image:
-      "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?q=80&w=400&h=400&auto=format&fit=crop",
+      "My pipeline was dry until EngageKit warmed up leads for me. Calls feel warmer and quotas look smaller now.",
+    image: "/testimonials/german business man middle age in office setting.jpg",
   },
   {
-    name: "Maria G.",
-    title: "C-Suite Executive",
+    name: "Chloe Wong",
+    title: "Marketing Manager",
     quote:
-      "Maintaining an executive presence on LinkedIn is demanding. This tool allows me to share insights and engage with industry leaders efficiently, reinforcing my position as a thought leader.",
+      "EngageKit comments in my tone so well that my boss thought I hired an assistant. Our brand reach jumped 3x in a week.",
     image:
-      "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=400&h=400&auto=format&fit=crop",
+      "/testimonials/hong kong girl professional 30 years old marketing.jpg",
+  },
+  {
+    name: "Marek Novak",
+    title: "Animation Storyteller",
+    quote:
+      "Keeping up on LinkedIn used to drain me. EngageKit keeps conversations alive while I focus on storyboards.",
+    image:
+      "/testimonials/storyteller animation 40 somthing man from europe.jpg",
+  },
+  {
+    name: "Aisha Khan",
+    title: "Law Student",
+    quote:
+      "Between classes and moot court I had zero time. EngageKit helped me build a professional presence and connect with mentors worldwide.",
+    image: "/testimonials/young muslim girl from south asia studying law.jpg",
   },
 ];
 

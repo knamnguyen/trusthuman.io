@@ -1,23 +1,23 @@
 {
   "../../../../../../../@crx/manifest": {
-    "file": "assets/crx-manifest.js-D8GyHycb.js",
+    "file": "assets/crx-manifest.js-siKCpWjs.js",
     "name": "crx-manifest.js",
     "src": "../../../../../../../@crx/manifest",
     "isEntry": true
   },
-  "_get-sync-host-B5RmJOK5.js": {
-    "file": "assets/get-sync-host-B5RmJOK5.js",
+  "_get-sync-host-Dli9oAfi.js": {
+    "file": "assets/get-sync-host-Dli9oAfi.js",
     "name": "get-sync-host",
     "imports": [
-      "_react-BnOV-IHs.js"
+      "_react-uyIGR6pV.js"
     ]
   },
-  "_index.tsx-loader-ePYsooez.js": {
-    "file": "assets/index.tsx-loader-ePYsooez.js",
-    "src": "_index.tsx-loader-ePYsooez.js"
+  "_index.tsx-loader-BuXvPcOk.js": {
+    "file": "assets/index.tsx-loader-BuXvPcOk.js",
+    "src": "_index.tsx-loader-BuXvPcOk.js"
   },
-  "_react-BnOV-IHs.js": {
-    "file": "assets/react-BnOV-IHs.js",
+  "_react-uyIGR6pV.js": {
+    "file": "assets/react-uyIGR6pV.js",
     "name": "react"
   },
   "public/icon-128.png": {
@@ -25,32 +25,32 @@
     "src": "public/icon-128.png"
   },
   "src/pages/background/index.ts": {
-    "file": "assets/index.ts-CHNP0ru6.js",
+    "file": "assets/index.ts-B0gMYyN6.js",
     "name": "index.ts",
     "src": "src/pages/background/index.ts",
     "isEntry": true,
     "imports": [
-      "_get-sync-host-B5RmJOK5.js",
-      "_react-BnOV-IHs.js"
+      "_get-sync-host-Dli9oAfi.js",
+      "_react-uyIGR6pV.js"
     ]
   },
   "src/pages/content/index.tsx": {
-    "file": "assets/index.tsx-vVnNjceM.js",
+    "file": "assets/index.tsx-afAQgx6q.js",
     "name": "index.tsx",
     "src": "src/pages/content/index.tsx",
     "isEntry": true,
     "imports": [
-      "_react-BnOV-IHs.js"
+      "_react-uyIGR6pV.js"
     ]
   },
   "src/pages/popup/index.html": {
-    "file": "assets/index.html-mzLli2Lm.js",
+    "file": "assets/index.html-BHj7LMyO.js",
     "name": "index.html",
     "src": "src/pages/popup/index.html",
     "isEntry": true,
     "imports": [
-      "_react-BnOV-IHs.js",
-      "_get-sync-host-B5RmJOK5.js"
+      "_react-uyIGR6pV.js",
+      "_get-sync-host-Dli9oAfi.js"
     ],
     "css": [
       "assets/index-DvLg63QS.css"

@@ -17,9 +17,9 @@ const faqs = [
       "No, especially when you add really good style guide that helps EngageKit intern creates quality, human-like comments. This not only benefits you but also the authors of the posts receiving these comments, because they get more reach. It's a win-win.",
   },
   {
-    question: "Is this free to use?",
+    question: "Is this free to use? What is the pricing?",
     answer:
-      "Yes, you can use EngageKit to make 15 free comments daily. You can consider upgrading to make 100 comments per day and maximize your engagement and reach",
+      "Yes, you can use EngageKit to make 100 free comments daily. You can consider upgrading to have advanced features like deep custom guide for the best comments, custom filters, and autopilot commeting fully.",
   },
   {
     question: "What results can I expect from using the upgraded plan?",
