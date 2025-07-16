@@ -21,6 +21,7 @@ export const env = createEnv({
     CRON_SECRET: z.string(),
     STRIPE_SECRET_KEY: z.string(),
     STRIPE_WEBHOOK_SECRET: z.string(),
+    LOOPS_API_KEY: z.string(),
   },
 
   /**

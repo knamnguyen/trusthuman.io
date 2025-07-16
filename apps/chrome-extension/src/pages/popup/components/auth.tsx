@@ -4,8 +4,8 @@ import { getSyncHostUrl } from "../../../utils/url";
 
 export default function Auth() {
   const handleSignInClick = () => {
-    // const syncHostUrl = getSyncHostUrl();
-    const syncHostUrl = getSyncHost();
+    const syncHostUrl = getSyncHostUrl();
+    // const syncHostUrl = getSyncHost();
     console.log("HANDLE SIGN IN CLICK", syncHostUrl);
 
     console.log("syncHostUrl clicked button", syncHostUrl);
