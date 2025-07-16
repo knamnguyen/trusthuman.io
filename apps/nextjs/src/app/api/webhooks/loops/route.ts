@@ -1,11 +1,20 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { verifyWebhook } from "@clerk/nextjs/webhooks";
-// @ts-expect-error - 'loops' has no type declarations yet
 import { LoopsClient } from "loops";
 
-// Create a single Loops client instance (server-side only)
-const loops = new LoopsClient(process.env.LOOPS_API_KEY!);
+// Lazy-initialised client to avoid build-time failures when the env var may be absent
+let _loops: LoopsClient | null = null;
+
+const getLoopsClient = (): LoopsClient => {
+  if (_loops) return _loops;
+  const apiKey = process.env.LOOPS_API_KEY;
+  if (!apiKey) {
+    throw new Error("LOOPS_API_KEY env variable is not set");
+  }
+  _loops = new LoopsClient(apiKey);
+  return _loops;
+};
 
 /**
  * Clerk → Loops sync webhook
@@ -39,10 +48,11 @@ export async function POST(req: NextRequest) {
     }
 
     // Upsert the contact in Loops – `updateContact` will create if missing
-    const resp = await loops.updateContact(primaryEmail, {
+    const resp = await getLoopsClient().updateContact(primaryEmail, {
       userId: data.id,
-      firstName: data.first_name ?? undefined,
-      lastName: data.last_name ?? undefined,
+      // Loops SDK contact properties accept string|number|boolean|null
+      firstName: data.first_name ?? null,
+      lastName: data.last_name ?? null,
       source: "clerk-signup",
     });
 
