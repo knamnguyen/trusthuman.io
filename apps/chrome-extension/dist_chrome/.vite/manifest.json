@@ -5,8 +5,8 @@
     "src": "../../../../../../../@crx/manifest",
     "isEntry": true
   },
-  "_get-sync-host-B-5f03kH.js": {
-    "file": "assets/get-sync-host-B-5f03kH.js",
+  "_get-sync-host-B5RmJOK5.js": {
+    "file": "assets/get-sync-host-B5RmJOK5.js",
     "name": "get-sync-host",
     "imports": [
       "_react-BnOV-IHs.js"
@@ -25,12 +25,12 @@
     "src": "public/icon-128.png"
   },
   "src/pages/background/index.ts": {
-    "file": "assets/index.ts-DI_mOnqp.js",
+    "file": "assets/index.ts-CHNP0ru6.js",
     "name": "index.ts",
     "src": "src/pages/background/index.ts",
     "isEntry": true,
     "imports": [
-      "_get-sync-host-B-5f03kH.js",
+      "_get-sync-host-B5RmJOK5.js",
       "_react-BnOV-IHs.js"
     ]
   },
@@ -44,13 +44,13 @@
     ]
   },
   "src/pages/popup/index.html": {
-    "file": "assets/index.html-8BA7cDz6.js",
+    "file": "assets/index.html-mzLli2Lm.js",
     "name": "index.html",
     "src": "src/pages/popup/index.html",
     "isEntry": true,
     "imports": [
       "_react-BnOV-IHs.js",
-      "_get-sync-host-B-5f03kH.js"
+      "_get-sync-host-B5RmJOK5.js"
     ],
     "css": [
       "assets/index-DvLg63QS.css"
