@@ -48,13 +48,25 @@ export async function POST(req: NextRequest) {
     }
 
     // Upsert the contact in Loops – `updateContact` will create if missing
-    const resp = await getLoopsClient().updateContact(primaryEmail, {
+    const contactProps: Record<string, string | number | boolean> = {
       userId: data.id,
-      // Loops SDK contact properties accept string|number|boolean|null
-      firstName: data.first_name ?? null,
-      lastName: data.last_name ?? null,
       source: "clerk-signup",
+    };
+
+    if (data.first_name) contactProps.firstName = data.first_name;
+    if (data.last_name) contactProps.lastName = data.last_name;
+
+    console.log("📧 Syncing contact to Loops:", {
+      email: primaryEmail,
+      props: contactProps,
     });
+
+    const resp = await getLoopsClient().updateContact(
+      primaryEmail,
+      contactProps,
+    );
+
+    console.log("🔄 Loops response", resp);
 
     if (!resp.success) {
       console.error("Loops updateContact failed", resp);
