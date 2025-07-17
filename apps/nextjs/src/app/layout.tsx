@@ -27,11 +27,20 @@ export const metadata: Metadata = {
     description: "The ultimate AI-powered LinkedIn engagement assistant",
     url: "https://engagekit.co",
     siteName: "EngageKit",
+    images: [
+      {
+        url: "/pictures/meta-link-preview.png",
+        width: 1200,
+        height: 630,
+        alt: "EngageKit preview image",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     site: "@engagekit",
     creator: "@knam_nguyen",
+    images: ["/pictures/meta-link-preview.png"],
   },
   icons: {
     icon: "/engagekit-logo.svg",
