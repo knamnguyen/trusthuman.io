@@ -35,4 +35,7 @@ export const FEATURE_CONFIG = {
   skipCompanyPages: {
     isPremium: true,
   },
+  skipPromotedPosts: {
+    isPremium: true,
+  },
 } as const;

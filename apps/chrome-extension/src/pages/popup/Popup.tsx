@@ -94,6 +94,8 @@ export default function Popup() {
   const [commentAsCompanyEnabled, setCommentAsCompanyEnabled] = useState(false);
   const [languageAwareEnabled, setLanguageAwareEnabled] = useState(false);
   const [skipCompanyPagesEnabled, setSkipCompanyPagesEnabled] = useState(false);
+  const [skipPromotedPostsEnabled, setSkipPromotedPostsEnabled] =
+    useState(false);
   const [lastError, setLastError] = useState<any>(null);
   const [blacklistEnabled, setBlacklistEnabled] = useState(false);
   const [blacklistAuthors, setBlacklistAuthors] = useState("");
@@ -244,6 +246,7 @@ export default function Popup() {
         "commentAsCompanyEnabled",
         "languageAwareEnabled",
         "skipCompanyPagesEnabled",
+        "skipPromotedPostsEnabled",
         "selectedDefaultStyle",
         "blacklistEnabled",
         "blacklistAuthors",
@@ -311,6 +314,8 @@ export default function Popup() {
         }
         if (result.skipCompanyPagesEnabled !== undefined)
           setSkipCompanyPagesEnabled(result.skipCompanyPagesEnabled);
+        if (result.skipPromotedPostsEnabled !== undefined)
+          setSkipPromotedPostsEnabled(result.skipPromotedPostsEnabled);
 
         const commentAsCompanyEnabled =
           result.commentAsCompanyEnabled !== undefined
@@ -449,6 +454,11 @@ export default function Popup() {
         updates.skipCompanyPagesEnabled = false;
       }
 
+      if (skipPromotedPostsEnabled) {
+        setSkipPromotedPostsEnabled(false);
+        updates.skipPromotedPostsEnabled = false;
+      }
+
       if (blacklistEnabled) {
         setBlacklistEnabled(false);
         updates.blacklistEnabled = false;
@@ -549,6 +559,11 @@ export default function Popup() {
   const handleSkipCompanyPagesEnabledChange = (value: boolean) => {
     setSkipCompanyPagesEnabled(value);
     chrome.storage.local.set({ skipCompanyPagesEnabled: value });
+  };
+
+  const handleSkipPromotedPostsEnabledChange = (value: boolean) => {
+    setSkipPromotedPostsEnabled(value);
+    chrome.storage.local.set({ skipPromotedPostsEnabled: value });
   };
 
   const handleBlacklistEnabledChange = (value: boolean) => {
@@ -757,6 +772,10 @@ export default function Popup() {
           onLanguageAwareEnabledChange={handleLanguageAwareEnabledChange}
           skipCompanyPagesEnabled={skipCompanyPagesEnabled}
           onSkipCompanyPagesEnabledChange={handleSkipCompanyPagesEnabledChange}
+          skipPromotedPostsEnabled={skipPromotedPostsEnabled}
+          onSkipPromotedPostsEnabledChange={
+            handleSkipPromotedPostsEnabledChange
+          }
           onStyleGuideChange={handleStyleGuideChange}
           onScrollDurationChange={handleScrollDurationChange}
           onCommentDelayChange={handleCommentDelayChange}

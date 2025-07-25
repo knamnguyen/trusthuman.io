@@ -54,6 +54,8 @@ interface SettingsFormProps {
   onLanguageAwareEnabledChange: (value: boolean) => void;
   skipCompanyPagesEnabled: boolean;
   onSkipCompanyPagesEnabledChange: (value: boolean) => void;
+  skipPromotedPostsEnabled: boolean;
+  onSkipPromotedPostsEnabledChange: (value: boolean) => void;
 }
 
 const FeaturePlaceholder = () => (
@@ -89,6 +91,8 @@ export default function SettingsForm({
   onLanguageAwareEnabledChange,
   skipCompanyPagesEnabled,
   onSkipCompanyPagesEnabledChange,
+  skipPromotedPostsEnabled,
+  onSkipPromotedPostsEnabledChange,
   blacklistEnabled,
   blacklistAuthors,
   onBlacklistEnabledChange,
@@ -387,6 +391,42 @@ export default function SettingsForm({
           </div>
           <p className="mt-1 text-xs text-gray-500">
             Skip commenting on company pages to avoid duplicate comments.
+          </p>
+        </div>
+      )}
+
+      {/* Skip promoted posts (premium) */}
+      {isPremiumLoading ? (
+        <FeaturePlaceholder />
+      ) : (
+        <div className="mb-4">
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={skipPromotedPostsEnabled}
+              onChange={(e) =>
+                onSkipPromotedPostsEnabledChange(e.target.checked)
+              }
+              disabled={
+                isRunning ||
+                isFeatureDisabled(FEATURE_CONFIG.skipPromotedPosts.isPremium)
+              }
+              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <label className="text-sm font-medium text-gray-700">
+              Skip promoted posts:
+            </label>
+            {shouldShowPremiumBadge(
+              FEATURE_CONFIG.skipPromotedPosts.isPremium,
+            ) && (
+              <span className="rounded-full bg-yellow-400 px-2 py-0.5 text-xs font-bold text-yellow-900 shadow-sm">
+                Premium
+              </span>
+            )}
+          </div>
+          <p className="mt-1 text-xs text-gray-500">
+            When enabled, sponsored/promoted posts will be skipped
+            automatically.
           </p>
         </div>
       )}

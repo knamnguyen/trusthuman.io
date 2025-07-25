@@ -12,7 +12,7 @@ import cleanupOldTimestampsAuthor from "./clean-old-timestamp-author";
 import extractAuthorInfo from "./extract-author-info";
 import extractBioAuthor from "./extract-bio-author";
 import extractPostContent from "./extract-post-content";
-import extractPostTime from "./extract-post-time";
+import extractPostTimePromoteState from "./extract-post-time-promote-state";
 import extractPostUrns from "./extract-post-urns";
 import generateComment from "./generate-comment";
 import postCommentOnPost from "./post-comment-on-post";
@@ -771,28 +771,36 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
   await loadCounters();
 
   // Retrieve desired company profile name (if any) and language flag from storage once per session
-  const { commentProfileName, languageAwareEnabled, skipCompanyPagesEnabled } =
-    await new Promise<{
-      commentProfileName: string;
-      languageAwareEnabled: boolean;
-      skipCompanyPagesEnabled: boolean;
-    }>((resolve) => {
-      chrome.storage.local.get(
-        [
-          "commentProfileName",
-          "languageAwareEnabled",
-          "skipCompanyPagesEnabled",
-        ],
-        (r) => {
-          resolve({
-            commentProfileName: (r.commentProfileName as string) || "",
-            languageAwareEnabled: r.languageAwareEnabled || false,
-            skipCompanyPagesEnabled: r.skipCompanyPagesEnabled || false,
-          });
-        },
-      );
-    });
+  const {
+    commentProfileName,
+    languageAwareEnabled,
+    skipCompanyPagesEnabled,
+    skipPromotedPostsEnabled,
+  } = await new Promise<{
+    commentProfileName: string;
+    languageAwareEnabled: boolean;
+    skipCompanyPagesEnabled: boolean;
+    skipPromotedPostsEnabled: boolean;
+  }>((resolve) => {
+    chrome.storage.local.get(
+      [
+        "commentProfileName",
+        "languageAwareEnabled",
+        "skipCompanyPagesEnabled",
+        "skipPromotedPostsEnabled",
+      ],
+      (r) => {
+        resolve({
+          commentProfileName: (r.commentProfileName as string) || "",
+          languageAwareEnabled: r.languageAwareEnabled || false,
+          skipCompanyPagesEnabled: r.skipCompanyPagesEnabled || false,
+          skipPromotedPostsEnabled: r.skipPromotedPostsEnabled || false,
+        });
+      },
+    );
+  });
   const skipCompanyPages = skipCompanyPagesEnabled;
+  const skipPromotedPosts = skipPromotedPostsEnabled;
   // Retrieve blacklist settings once per session
   const { blacklistEnabled: blacklistEnabled, blacklistAuthors } =
     await new Promise<{
@@ -909,7 +917,7 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
       maxPosts,
       duplicateWindow,
       styleGuide,
-      commentAsCompanyEnabled ? commentProfileName : "",
+      commentProfileName,
       commentAsCompanyEnabled,
       languageAwareEnabled,
       timeFilterEnabled,
@@ -917,6 +925,7 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
       blacklistEnabled,
       blacklistList,
       skipCompanyPages,
+      skipPromotedPosts,
     );
 
     console.log(`📜 Step 3 completed. Final state:`);
@@ -965,6 +974,7 @@ async function processAllPostsFeed(
   blacklistEnabled: boolean,
   blacklistList: string[],
   skipCompanyPages: boolean,
+  skipPromotedPosts: boolean,
 ): Promise<void> {
   console.group("🎯 PROCESSING ALL POSTS - DETAILED DEBUG");
   backgroundGroup("🎯 PROCESSING ALL POSTS - DETAILED DEBUG");
@@ -1085,8 +1095,14 @@ async function processAllPostsFeed(
       }
     }
 
-    // STEP 0: Time filter check (skip if older than limit or age unknown)
-    const ageHours = extractPostTime(postContainer);
+    // STEP 0: Promoted & Time filter check
+    const { ageHours, isPromoted } = extractPostTimePromoteState(postContainer);
+
+    if (skipPromotedPosts && isPromoted) {
+      console.log("⏭️ SKIPPING promoted post");
+      continue;
+    }
+
     if (timeFilterEnabled && (ageHours === null || ageHours > minPostAge)) {
       console.log(
         `⏭️ SKIPPING post ${i + 1} due to age (${ageHours ?? "unknown"}h) > limit ${minPostAge}h`,
