@@ -7,6 +7,12 @@ import {
   backgroundLog,
   backgroundWarn,
 } from "./background-log";
+import {
+  commentedPostUrns,
+  hasCommentedOnPostUrn,
+  loadCommentedPostUrns,
+  saveCommentedPostUrn,
+} from "./check-duplicate-commented-post-urns";
 import cleanupOldPostUrns from "./clean-old-post-urns";
 import cleanupOldTimestampsAuthor from "./clean-old-timestamp-author";
 import extractAuthorInfo from "./extract-author-info";
@@ -36,7 +42,7 @@ let commentedAuthors = new Set<string>();
 let commentedAuthorsWithTimestamps = new Map<string, number>();
 let postsSkippedDuplicateCount = 0;
 let recentAuthorsDetectedCount = 0;
-let commentedPostUrns = new Map<string, number>(); // URN -> timestamp
+// commentedPostUrns map is now provided by check-duplicate-commented-post-urns.ts
 let postsSkippedAlreadyCommentedCount = 0;
 let duplicatePostsDetectedCount = 0;
 let postsSkippedTimeFilterCount = 0;
@@ -656,45 +662,11 @@ async function updateSkippedPostCounter(): Promise<void> {
   });
 }
 
-// Function to load commented post URNs from storage
-async function loadCommentedPostUrns(): Promise<void> {
-  return new Promise((resolve) => {
-    chrome.storage.local.get(["commented_post_urns"], (result) => {
-      const storedUrns = result.commented_post_urns || {};
-      commentedPostUrns = new Map(
-        Object.entries(storedUrns).map(([urn, timestamp]) => [
-          urn,
-          Number(timestamp),
-        ]),
-      );
-      console.log(
-        `Loaded ${commentedPostUrns.size} commented post URNs from storage`,
-      );
-      resolve();
-    });
-  });
-}
-
-// Function to save a commented post URN with timestamp
-async function saveCommentedPostUrn(urn: string): Promise<void> {
-  const timestamp = Date.now();
-  commentedPostUrns.set(urn, timestamp);
-
-  return new Promise((resolve) => {
-    const urnsObject = Object.fromEntries(commentedPostUrns);
-    chrome.storage.local.set({ commented_post_urns: urnsObject }, () => {
-      console.log(
-        `Saved commented post URN: ${urn} at timestamp: ${timestamp}`,
-      );
-      resolve();
-    });
-  });
-}
-
-// Function to check if we've already commented on a post URN
-function hasCommentedOnPostUrn(urn: string): boolean {
-  return commentedPostUrns.has(urn);
-}
+/*
+ * The commented-post-URN helper logic has been extracted to
+ * check-duplicate-commented-post-urns.ts. The original in-file
+ * implementations have been removed to avoid duplication.
+ */
 
 // Function to update the post already commented counter
 async function updatePostAlreadyCommentedCounter(): Promise<void> {

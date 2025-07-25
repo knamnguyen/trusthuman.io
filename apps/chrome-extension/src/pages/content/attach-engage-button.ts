@@ -3,8 +3,10 @@
 // populates the comment editor. Clicking again regenerates/replaces the text.
 // important: at this moment, there is no limit client or server side to limit how many comments the user can generate
 
+import { saveCommentedPostUrn } from "./check-duplicate-commented-post-urns";
 import extractAuthorInfo from "./extract-author-info";
 import extractPostContent from "./extract-post-content";
+import extractPostUrns from "./extract-post-urns";
 import generateComment from "./generate-comment";
 
 /*****************************
@@ -231,6 +233,12 @@ function addEngageButton(form: HTMLFormElement): void {
         }
         editableField.appendChild(p);
       });
+
+      // Save post URNs to avoid duplicate comments in future automated runs.
+      const postUrns = extractPostUrns(postContainer);
+      for (const urn of postUrns) {
+        await saveCommentedPostUrn(urn);
+      }
 
       // Dispatch input event so LinkedIn recognises changes.
       const inputEvent = new Event("input", {
