@@ -38,4 +38,7 @@ export const FEATURE_CONFIG = {
   skipPromotedPosts: {
     isPremium: true,
   },
+  skipFriendsActivities: {
+    isPremium: true,
+  },
 } as const;

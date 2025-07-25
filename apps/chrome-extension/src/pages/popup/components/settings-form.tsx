@@ -56,6 +56,8 @@ interface SettingsFormProps {
   onSkipCompanyPagesEnabledChange: (value: boolean) => void;
   skipPromotedPostsEnabled: boolean;
   onSkipPromotedPostsEnabledChange: (value: boolean) => void;
+  skipFriendsActivitiesEnabled: boolean;
+  onSkipFriendsActivitiesEnabledChange: (value: boolean) => void;
 }
 
 const FeaturePlaceholder = () => (
@@ -93,6 +95,8 @@ export default function SettingsForm({
   onSkipCompanyPagesEnabledChange,
   skipPromotedPostsEnabled,
   onSkipPromotedPostsEnabledChange,
+  skipFriendsActivitiesEnabled,
+  onSkipFriendsActivitiesEnabledChange,
   blacklistEnabled,
   blacklistAuthors,
   onBlacklistEnabledChange,
@@ -427,6 +431,44 @@ export default function SettingsForm({
           <p className="mt-1 text-xs text-gray-500">
             When enabled, sponsored/promoted posts will be skipped
             automatically.
+          </p>
+        </div>
+      )}
+
+      {/* Skip friends' activities (premium) */}
+      {isPremiumLoading ? (
+        <FeaturePlaceholder />
+      ) : (
+        <div className="mb-4">
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={skipFriendsActivitiesEnabled}
+              onChange={(e) =>
+                onSkipFriendsActivitiesEnabledChange(e.target.checked)
+              }
+              disabled={
+                isRunning ||
+                isFeatureDisabled(
+                  FEATURE_CONFIG.skipFriendsActivities.isPremium,
+                )
+              }
+              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <label className="text-sm font-medium text-gray-700">
+              Skip posts from friends' activities:
+            </label>
+            {shouldShowPremiumBadge(
+              FEATURE_CONFIG.skipFriendsActivities.isPremium,
+            ) && (
+              <span className="rounded-full bg-yellow-400 px-2 py-0.5 text-xs font-bold text-yellow-900 shadow-sm">
+                Premium
+              </span>
+            )}
+          </div>
+          <p className="mt-1 text-xs text-gray-500">
+            When enabled, posts shown because your connections interacted with
+            them will be skipped.
           </p>
         </div>
       )}

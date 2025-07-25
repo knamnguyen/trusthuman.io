@@ -96,6 +96,8 @@ export default function Popup() {
   const [skipCompanyPagesEnabled, setSkipCompanyPagesEnabled] = useState(false);
   const [skipPromotedPostsEnabled, setSkipPromotedPostsEnabled] =
     useState(false);
+  const [skipFriendsActivitiesEnabled, setSkipFriendsActivitiesEnabled] =
+    useState(false);
   const [lastError, setLastError] = useState<any>(null);
   const [blacklistEnabled, setBlacklistEnabled] = useState(false);
   const [blacklistAuthors, setBlacklistAuthors] = useState("");
@@ -247,6 +249,7 @@ export default function Popup() {
         "languageAwareEnabled",
         "skipCompanyPagesEnabled",
         "skipPromotedPostsEnabled",
+        "skipFriendsActivitiesEnabled",
         "selectedDefaultStyle",
         "blacklistEnabled",
         "blacklistAuthors",
@@ -316,6 +319,8 @@ export default function Popup() {
           setSkipCompanyPagesEnabled(result.skipCompanyPagesEnabled);
         if (result.skipPromotedPostsEnabled !== undefined)
           setSkipPromotedPostsEnabled(result.skipPromotedPostsEnabled);
+        if (result.skipFriendsActivitiesEnabled !== undefined)
+          setSkipFriendsActivitiesEnabled(result.skipFriendsActivitiesEnabled);
 
         const commentAsCompanyEnabled =
           result.commentAsCompanyEnabled !== undefined
@@ -459,6 +464,11 @@ export default function Popup() {
         updates.skipPromotedPostsEnabled = false;
       }
 
+      if (skipFriendsActivitiesEnabled) {
+        setSkipFriendsActivitiesEnabled(false);
+        updates.skipFriendsActivitiesEnabled = false;
+      }
+
       if (blacklistEnabled) {
         setBlacklistEnabled(false);
         updates.blacklistEnabled = false;
@@ -564,6 +574,11 @@ export default function Popup() {
   const handleSkipPromotedPostsEnabledChange = (value: boolean) => {
     setSkipPromotedPostsEnabled(value);
     chrome.storage.local.set({ skipPromotedPostsEnabled: value });
+  };
+
+  const handleSkipFriendsActivitiesEnabledChange = (value: boolean) => {
+    setSkipFriendsActivitiesEnabled(value);
+    chrome.storage.local.set({ skipFriendsActivitiesEnabled: value });
   };
 
   const handleBlacklistEnabledChange = (value: boolean) => {
@@ -775,6 +790,10 @@ export default function Popup() {
           skipPromotedPostsEnabled={skipPromotedPostsEnabled}
           onSkipPromotedPostsEnabledChange={
             handleSkipPromotedPostsEnabledChange
+          }
+          skipFriendsActivitiesEnabled={skipFriendsActivitiesEnabled}
+          onSkipFriendsActivitiesEnabledChange={
+            handleSkipFriendsActivitiesEnabledChange
           }
           onStyleGuideChange={handleStyleGuideChange}
           onScrollDurationChange={handleScrollDurationChange}

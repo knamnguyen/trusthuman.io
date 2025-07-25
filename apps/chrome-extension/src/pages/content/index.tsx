@@ -13,6 +13,7 @@ import {
   loadCommentedPostUrns,
   saveCommentedPostUrn,
 } from "./check-duplicate-commented-post-urns";
+import checkFriendsActivity from "./check-friends-activity";
 import cleanupOldPostUrns from "./clean-old-post-urns";
 import cleanupOldTimestampsAuthor from "./clean-old-timestamp-author";
 import extractAuthorInfo from "./extract-author-info";
@@ -748,11 +749,13 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
     languageAwareEnabled,
     skipCompanyPagesEnabled,
     skipPromotedPostsEnabled,
+    skipFriendsActivitiesEnabled,
   } = await new Promise<{
     commentProfileName: string;
     languageAwareEnabled: boolean;
     skipCompanyPagesEnabled: boolean;
     skipPromotedPostsEnabled: boolean;
+    skipFriendsActivitiesEnabled: boolean;
   }>((resolve) => {
     chrome.storage.local.get(
       [
@@ -760,6 +763,7 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
         "languageAwareEnabled",
         "skipCompanyPagesEnabled",
         "skipPromotedPostsEnabled",
+        "skipFriendsActivitiesEnabled",
       ],
       (r) => {
         resolve({
@@ -767,12 +771,14 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
           languageAwareEnabled: r.languageAwareEnabled || false,
           skipCompanyPagesEnabled: r.skipCompanyPagesEnabled || false,
           skipPromotedPostsEnabled: r.skipPromotedPostsEnabled || false,
+          skipFriendsActivitiesEnabled: r.skipFriendsActivitiesEnabled || false,
         });
       },
     );
   });
   const skipCompanyPages = skipCompanyPagesEnabled;
   const skipPromotedPosts = skipPromotedPostsEnabled;
+  const skipFriendsActivities = skipFriendsActivitiesEnabled;
   // Retrieve blacklist settings once per session
   const { blacklistEnabled: blacklistEnabled, blacklistAuthors } =
     await new Promise<{
@@ -898,6 +904,7 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
       blacklistList,
       skipCompanyPages,
       skipPromotedPosts,
+      skipFriendsActivities,
     );
 
     console.log(`📜 Step 3 completed. Final state:`);
@@ -947,6 +954,7 @@ async function processAllPostsFeed(
   blacklistList: string[],
   skipCompanyPages: boolean,
   skipPromotedPosts: boolean,
+  skipFriendsActivities: boolean,
 ): Promise<void> {
   console.group("🎯 PROCESSING ALL POSTS - DETAILED DEBUG");
   backgroundGroup("🎯 PROCESSING ALL POSTS - DETAILED DEBUG");
@@ -1053,6 +1061,12 @@ async function processAllPostsFeed(
     }
 
     const postContainer = postContainers[i] as HTMLElement;
+
+    // STEP 0.1: Friend activity skip check
+    if (skipFriendsActivities && checkFriendsActivity(postContainer)) {
+      console.log("⏭️ SKIPPING friend activity post");
+      continue;
+    }
 
     // Check company page skip
     if (skipCompanyPages) {
