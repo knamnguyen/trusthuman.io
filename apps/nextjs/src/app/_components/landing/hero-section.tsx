@@ -58,13 +58,13 @@ export function HeroSection() {
         Free to get started
       </p>
       <div className="w-full max-w-md">
-        {/* Mobile: Show signup form */}
-        <div className="block sm:hidden">
+        {/* Mobile & iPad: Show signup form */}
+        <div className="block lg:hidden">
           <MobileSignupForm />
         </div>
 
         {/* Desktop: Show button */}
-        <div className="hidden sm:block">
+        <div className="hidden lg:block">
           {/* Original Chrome extension link preserved for reference: */}
           {/* https://chrome.google.com/webstore/detail/inobbppddbakbhhfkfkinmicnbpeekok */}
           <Button
