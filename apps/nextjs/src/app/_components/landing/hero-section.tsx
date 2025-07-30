@@ -4,7 +4,9 @@ import Image from "next/image";
 
 import { Button } from "@sassy/ui/button";
 
+import { useMobileSignupModal } from "~/hooks/use-mobile-signup-modal";
 import { MobileSignupForm } from "./mobile-signup-form";
+import { MobileSignupModal } from "./mobile-signup-modal";
 import { RotatingTitles } from "./rotating-titles";
 
 const titles = [
@@ -28,6 +30,8 @@ const titles = [
 ];
 
 export function HeroSection() {
+  const { isOpen, closeModal } = useMobileSignupModal();
+
   const handleScrollToCTA = () => {
     document
       .getElementById("final-cta")
@@ -85,6 +89,9 @@ export function HeroSection() {
           </Button>
         </div>
       </div>
+
+      {/* Mobile Signup Modal */}
+      <MobileSignupModal isOpen={isOpen} onClose={closeModal} />
     </section>
   );
 }

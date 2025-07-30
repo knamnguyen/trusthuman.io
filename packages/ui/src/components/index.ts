@@ -11,6 +11,18 @@ export { SubscriptionPlanModal } from "./subscription-plan-modal";
 export { Skeleton } from "../ui/skeleton";
 export { Button, buttonVariants } from "../ui/button";
 export {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogOverlay,
+  DialogPortal,
+  DialogTitle,
+  DialogTrigger,
+} from "../ui/dialog";
+export {
   Card,
   CardContent,
   CardDescription,

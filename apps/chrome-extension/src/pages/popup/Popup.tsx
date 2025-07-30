@@ -24,6 +24,12 @@ const DEFAULT_STYLE_GUIDE = `You are about to write a LinkedIn comment. Imagine 
 
 IMPORTANT: Only respond with the comment, no other text.`;
 
+// New type for user-defined custom styles
+type CustomStyle = {
+  name: string; // unique (case-insensitive)
+  prompt: string;
+};
+
 // Helper function to get style guide prompt based on key and premium status
 const getStyleGuidePrompt = (
   key:
@@ -69,10 +75,12 @@ export default function Popup() {
   });
 
   const [styleGuide, setStyleGuide] = useState("");
-  const [selectedDefaultStyle, setSelectedDefaultStyle] = useState<
-    | keyof typeof DEFAULT_STYLE_GUIDES_FREE
-    | keyof typeof DEFAULT_STYLE_GUIDES_PREMIUM
-  >("PROFESSIONAL");
+  // Selected style key can be a default style key or the name of a custom style
+  const [selectedStyleKey, setSelectedStyleKey] =
+    useState<string>("PROFESSIONAL");
+
+  // Array of user-saved custom styles
+  const [customStyles, setCustomStyles] = useState<CustomStyle[]>([]);
   const [scrollDuration, setScrollDuration] = useState(5);
   const [commentDelay, setCommentDelay] = useState(5);
   const [maxPosts, setMaxPosts] = useState(5);
@@ -250,7 +258,8 @@ export default function Popup() {
         "skipCompanyPagesEnabled",
         "skipPromotedPostsEnabled",
         "skipFriendsActivitiesEnabled",
-        "selectedDefaultStyle",
+        "selectedStyleKey",
+        "customStyleGuides",
         "blacklistEnabled",
         "blacklistAuthors",
       ],
@@ -262,14 +271,20 @@ export default function Popup() {
           maxPostsLimit,
         });
 
-        if (result.selectedDefaultStyle) {
-          setSelectedDefaultStyle(result.selectedDefaultStyle);
+        if (Array.isArray(result.customStyleGuides)) {
+          setCustomStyles(result.customStyleGuides as CustomStyle[]);
+        }
+
+        if (result.selectedStyleKey) {
+          setSelectedStyleKey(result.selectedStyleKey as string);
         }
         if (result.styleGuide !== undefined) {
-          setStyleGuide(result.styleGuide);
+          const styleKey =
+            (result.selectedStyleKey as string) ?? "PROFESSIONAL";
+          setStyleGuide(getPromptForKey(styleKey));
         } else {
-          const styleKey = result.selectedDefaultStyle ?? "PROFESSIONAL";
-          setStyleGuide(getStyleGuidePrompt(styleKey, isPremium));
+          const styleKey = result.selectedStyleKey ?? "PROFESSIONAL";
+          setStyleGuide(getPromptForKey(styleKey));
         }
         if (result.scrollDuration !== undefined)
           setScrollDuration(result.scrollDuration);
@@ -500,24 +515,88 @@ export default function Popup() {
     chrome.storage.local.set({ [storageKey]: count });
   };
 
+  // Utility helpers -----------------------------------------------------
+  const isDefaultStyle = (key: string): boolean =>
+    key in DEFAULT_STYLE_GUIDES_FREE || key in DEFAULT_STYLE_GUIDES_PREMIUM;
+
+  const findCustomStyle = (name: string) =>
+    customStyles.find((s) => s.name.toLowerCase() === name.toLowerCase());
+
+  const getPromptForKey = (key: string): string => {
+    if (isDefaultStyle(key)) {
+      if (isPremium && key in DEFAULT_STYLE_GUIDES_PREMIUM) {
+        const entry = (
+          DEFAULT_STYLE_GUIDES_PREMIUM as Record<string, { prompt: string }>
+        )[key];
+        return entry?.prompt ?? DEFAULT_STYLE_GUIDES_FREE.PROFESSIONAL.prompt;
+      }
+      const freeEntry = (
+        DEFAULT_STYLE_GUIDES_FREE as Record<string, { prompt: string }>
+      )[key];
+      return freeEntry?.prompt ?? DEFAULT_STYLE_GUIDES_FREE.PROFESSIONAL.prompt;
+    }
+    const cs = findCustomStyle(key);
+    if (cs) return cs.prompt;
+    // Fallback
+    return DEFAULT_STYLE_GUIDES_FREE.PROFESSIONAL.prompt;
+  };
+
+  // --------------------------------------------------------------------
+
   const handleStyleGuideChange = (value: string) => {
     setStyleGuide(value);
+
+    // Persist change for custom style if editing one
+    if (!isDefaultStyle(selectedStyleKey)) {
+      const updated = customStyles.map((s) =>
+        s.name === selectedStyleKey ? { ...s, prompt: value } : s,
+      );
+      setCustomStyles(updated);
+      chrome.storage.local.set({ customStyleGuides: updated });
+    }
+
     chrome.storage.local.set({ styleGuide: value });
   };
 
-  const handleSelectedDefaultStyleChange = (
-    value:
-      | keyof typeof DEFAULT_STYLE_GUIDES_FREE
-      | keyof typeof DEFAULT_STYLE_GUIDES_PREMIUM,
-  ) => {
-    const styleKey = value;
-    const newStyleGuide = getStyleGuidePrompt(styleKey, isPremium);
-    setStyleGuide(newStyleGuide);
-    setSelectedDefaultStyle(styleKey);
-    chrome.storage.local.set({
-      selectedDefaultStyle: value,
-      styleGuide: newStyleGuide,
-    });
+  const handleSelectedStyleChange = (value: string) => {
+    const newGuide = getPromptForKey(value);
+    setSelectedStyleKey(value);
+    setStyleGuide(newGuide);
+    chrome.storage.local.set({ selectedStyleKey: value, styleGuide: newGuide });
+  };
+
+  // Add & delete custom styles -----------------------------------------
+  const saveCustomStyles = (styles: CustomStyle[]) => {
+    chrome.storage.local.set({ customStyleGuides: styles });
+  };
+
+  const addCustomStyle = () => {
+    const nameRaw = prompt("Name your new style (≤50 characters)") ?? "";
+    const name = nameRaw.trim();
+    if (!name) return;
+    if (name.length > 50) {
+      alert("Style name too long (max 50)");
+      return;
+    }
+    if (isDefaultStyle(name) || findCustomStyle(name)) {
+      alert("Style name already exists. Choose another name.");
+      return;
+    }
+    const newStyle: CustomStyle = { name, prompt: styleGuide };
+    const updated = [...customStyles, newStyle];
+    setCustomStyles(updated);
+    setSelectedStyleKey(name);
+    saveCustomStyles(updated);
+  };
+
+  const deleteCustomStyle = () => {
+    if (isDefaultStyle(selectedStyleKey)) return;
+    if (!confirm(`Delete style "${selectedStyleKey}"?`)) return;
+    const updated = customStyles.filter((s) => s.name !== selectedStyleKey);
+    setCustomStyles(updated);
+    saveCustomStyles(updated);
+    setSelectedStyleKey("PROFESSIONAL");
+    setStyleGuide(getPromptForKey("PROFESSIONAL"));
   };
 
   const handleScrollDurationChange = (value: number) => {
@@ -778,7 +857,12 @@ export default function Popup() {
           isPremium={isPremium}
           isPremiumLoading={isPremiumLoading}
           maxPostsLimit={maxPostsLimit}
-          selectedDefaultStyle={selectedDefaultStyle}
+          selectedStyleKey={selectedStyleKey}
+          customStyles={customStyles}
+          onSelectedStyleChange={handleSelectedStyleChange}
+          onAddCustomStyle={addCustomStyle}
+          onDeleteCustomStyle={deleteCustomStyle}
+          isDefaultStyleSelected={isDefaultStyle(selectedStyleKey)}
           commentProfileName={commentProfileName}
           onCommentProfileNameChange={handleCommentProfileNameChange}
           commentAsCompanyEnabled={commentAsCompanyEnabled}
@@ -802,7 +886,6 @@ export default function Popup() {
           onDuplicateWindowChange={handleDuplicateWindowChange}
           onTimeFilterEnabledChange={handleTimeFilterEnabledChange}
           onMinPostAgeChange={handleMinPostAgeChange}
-          onSelectedDefaultStyleChange={handleSelectedDefaultStyleChange}
           blacklistEnabled={blacklistEnabled}
           blacklistAuthors={blacklistAuthors}
           onBlacklistEnabledChange={handleBlacklistEnabledChange}

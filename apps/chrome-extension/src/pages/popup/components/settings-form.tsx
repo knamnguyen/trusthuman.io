@@ -1,4 +1,5 @@
 import React from "react";
+import { PlusIcon, TrashIcon } from "@radix-ui/react-icons";
 
 import { DEFAULT_STYLE_GUIDES_FREE } from "../../../config/default-style-guides-free";
 import { DEFAULT_STYLE_GUIDES_PREMIUM } from "../../../config/default-style-guides-premium";
@@ -15,6 +16,11 @@ import { UpgradeLink } from "./comment-limit-status";
  * - This component only renders the form inputs and calls provided handlers
  */
 
+interface CustomStyle {
+  name: string;
+  prompt: string;
+}
+
 interface SettingsFormProps {
   styleGuide: string;
   scrollDuration: number;
@@ -27,9 +33,13 @@ interface SettingsFormProps {
   isPremium: boolean | null;
   isPremiumLoading: boolean;
   maxPostsLimit: number;
-  selectedDefaultStyle:
-    | keyof typeof DEFAULT_STYLE_GUIDES_FREE
-    | keyof typeof DEFAULT_STYLE_GUIDES_PREMIUM;
+  selectedStyleKey: string;
+  customStyles: CustomStyle[];
+  isDefaultStyleSelected: boolean;
+  onSelectedStyleChange: (value: string) => void;
+  onAddCustomStyle: () => void;
+  onDeleteCustomStyle: () => void;
+
   commentProfileName: string;
   onCommentProfileNameChange: (value: string) => void;
   onStyleGuideChange: (value: string) => void;
@@ -39,11 +49,6 @@ interface SettingsFormProps {
   onDuplicateWindowChange: (value: number) => void;
   onTimeFilterEnabledChange: (value: boolean) => void;
   onMinPostAgeChange: (value: number) => void;
-  onSelectedDefaultStyleChange: (
-    value:
-      | keyof typeof DEFAULT_STYLE_GUIDES_FREE
-      | keyof typeof DEFAULT_STYLE_GUIDES_PREMIUM,
-  ) => void;
   blacklistEnabled: boolean;
   blacklistAuthors: string;
   onBlacklistEnabledChange: (value: boolean) => void;
@@ -76,7 +81,12 @@ export default function SettingsForm({
   isPremium,
   isPremiumLoading,
   maxPostsLimit,
-  selectedDefaultStyle,
+  selectedStyleKey,
+  customStyles,
+  isDefaultStyleSelected,
+  onSelectedStyleChange,
+  onAddCustomStyle,
+  onDeleteCustomStyle,
   commentProfileName,
   onCommentProfileNameChange,
   onStyleGuideChange,
@@ -86,7 +96,6 @@ export default function SettingsForm({
   onDuplicateWindowChange,
   onTimeFilterEnabledChange,
   onMinPostAgeChange,
-  onSelectedDefaultStyleChange,
   commentAsCompanyEnabled,
   onCommentAsCompanyEnabledChange,
   languageAwareEnabled,
@@ -139,36 +148,67 @@ export default function SettingsForm({
             {/* Removed 'Use Default Style' button */}
           </div>
 
-          <div className="mt-2 mb-2">
+          <div className="mt-2 mb-2 flex items-center gap-2">
             <select
-              id="default-style-select"
-              value={selectedDefaultStyle}
-              onChange={(e) =>
-                onSelectedDefaultStyleChange(
-                  e.target.value as
-                    | keyof typeof DEFAULT_STYLE_GUIDES_FREE
-                    | keyof typeof DEFAULT_STYLE_GUIDES_PREMIUM,
-                )
-              }
+              id="style-select"
+              value={selectedStyleKey}
+              onChange={(e) => onSelectedStyleChange(e.target.value)}
               disabled={isRunning}
-              className="w-full rounded-md border border-gray-300 py-2 pr-10 pl-3 text-base focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none sm:text-sm"
+              className="flex-1 truncate rounded-md border border-gray-300 py-2 pr-10 pl-3 text-base whitespace-nowrap focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none sm:text-sm"
             >
               {isPremium
                 ? Object.entries(DEFAULT_STYLE_GUIDES_PREMIUM).map(
                     ([key, value]) => (
-                      <option key={key} value={key}>
+                      <option key={key} value={key} className="truncate">
                         {value.label}
                       </option>
                     ),
                   )
                 : Object.entries(DEFAULT_STYLE_GUIDES_FREE).map(
                     ([key, value]) => (
-                      <option key={key} value={key}>
+                      <option key={key} value={key} className="truncate">
                         {value.label}
                       </option>
                     ),
                   )}
+
+              {customStyles.length > 0 && (
+                <option disabled>── Custom Styles ──</option>
+              )}
+
+              {customStyles.map((cs) => (
+                <option
+                  key={cs.name}
+                  value={cs.name}
+                  className="truncate"
+                  title={cs.name}
+                >
+                  {cs.name}
+                </option>
+              ))}
             </select>
+
+            {/* Trash button */}
+            <button
+              type="button"
+              onClick={onDeleteCustomStyle}
+              disabled={isDefaultStyleSelected || isRunning}
+              title="Delete custom style"
+              className="rounded p-2 text-red-600 hover:bg-red-100 disabled:text-gray-400"
+            >
+              <TrashIcon className="h-4 w-4" />
+            </button>
+
+            {/* Plus button */}
+            <button
+              type="button"
+              onClick={onAddCustomStyle}
+              disabled={isRunning}
+              title="Add new custom style"
+              className="rounded p-2 text-green-600 hover:bg-green-100"
+            >
+              <PlusIcon className="h-4 w-4" />
+            </button>
           </div>
 
           <textarea
@@ -203,6 +243,7 @@ export default function SettingsForm({
             className="h-40 w-full rounded-md border border-gray-300 p-3 text-sm focus:border-transparent focus:ring-2 focus:ring-blue-500 disabled:text-gray-400"
             disabled={
               isRunning ||
+              isDefaultStyleSelected ||
               isFeatureDisabled(FEATURE_CONFIG.customStyleGuide.isPremium)
             }
           />
