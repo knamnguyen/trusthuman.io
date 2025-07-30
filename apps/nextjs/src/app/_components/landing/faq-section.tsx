@@ -36,6 +36,29 @@ const faqs = [
     answer:
       "Any support request please send via email at knamnguyen.work@gmail.com. Priority support is avaialble for paid users via dm on the creator's Whatsapp exclusiveprivate group chat.",
   },
+  {
+    question: "More information about our testimonials and reviews",
+    answer: (
+      <>
+        EngageKit is committed to protecting the privacy of our creator users,
+        so we do not put their identifying information publicly. The reviews
+        content on this site are real, but the identifying information have been
+        devised based on the real users. If you would like to access the{" "}
+        <a
+          href="https://drive.google.com/drive/folders/1aUvytxyLHHlINgjta312z_pDv9ST3aKy?usp=sharing"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 underline hover:text-blue-800"
+        >
+          original reviews
+        </a>{" "}
+        from our real users for your personal reference, please request with
+        your email. By asking for this information, you bear the legal
+        responsibility to not share our users' identifying information anywhere
+        and to anyone.
+      </>
+    ),
+  },
 ];
 
 export function FaqSection() {

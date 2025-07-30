@@ -77,6 +77,9 @@ export function TestimonialsSection() {
           <p className="mx-auto mt-4 max-w-2xl text-lg text-gray-600">
             Don't just take our word for it. Here's what our users have to say.
           </p>
+          <p className="mx-auto mt-2 max-w-2xl text-sm text-gray-400">
+            check the faq section for more info about reviews
+          </p>
         </div>
         <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-2">
           {testimonials.map((testimonial) => (
