@@ -28,6 +28,7 @@ import scrollFeedLoadPosts from "./scroll-feed-load-post";
 import updateCommentCounts from "./update-comment-counts";
 
 import "./attach-engage-button";
+import "./init-comment-history";
 
 // Pronoun rule for company mode
 const COMPANY_PRONOUN_RULE =
