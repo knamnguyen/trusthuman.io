@@ -66,3 +66,24 @@
     --ring: 240 4.9% 83.9%;
   }
 }
+
+/* Bounce animation for affiliate banner */
+@keyframes bounce {
+  0%,
+  20%,
+  50%,
+  80%,
+  100% {
+    transform: translateY(0px);
+  }
+  40% {
+    transform: translateY(-2px);
+  }
+  60% {
+    transform: translateY(-1px);
+  }
+}
+
+.animate-bounce-light {
+  animation: bounce 1s infinite;
+}
