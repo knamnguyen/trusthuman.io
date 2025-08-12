@@ -1,11 +1,13 @@
 {
   "manifest_version": 3,
   "name": "EngageKit",
+  "version": "1.4.3",
   "description": "Automatically comment on LinkedIn posts using AI",
   "action": {
     "default_icon": "public/dev-icon-32.png",
     "default_popup": "src/pages/popup/index.html"
   },
+  "options_page": "src/pages/options/index.html",
   "icons": {
     "128": "public/dev-icon-128.png"
   },
@@ -33,7 +35,7 @@
   "content_scripts": [
     {
       "js": [
-        "assets/index.tsx-loader-Cq8f-V60.js"
+        "assets/index.tsx-loader-ZE0UHx3s.js"
       ],
       "matches": [
         "https://*.linkedin.com/*"
@@ -58,12 +60,13 @@
         "https://*.linkedin.com/*"
       ],
       "resources": [
-        "assets/react-uyIGR6pV.js",
-        "assets/index.tsx-yqL0o-du.js"
+        "assets/react-V2OolOr-.js",
+        "assets/profile-extract-button-dLLVuwy8.js",
+        "assets/index-DCPjFz1h.js",
+        "assets/index.tsx-CJhg1bf-.js"
       ],
       "use_dynamic_url": false
     }
   ],
-  "version": "1.4.2",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAjJ8hFJ/0VNPdjWqURUdXdRQ/43ZJIiwCFu/74e/WSb2x2E6c9+VUl+Jvo3zBYMh8dlP6MBG2L3EVJ406bmj7r+sjZt66NFgdmTOb25725c2pJTIPU/V/3As1IGwgQ2dsxdg4zjsntaxsb1hPT5wVECWU11Y5EN5/aixPSUZ9Jj1+W7QtBUS2aS4B3lPrq6nMTwzLXeQ6Zm2FKwPX7LoR1o08gid3JgFoeWcv+PXn6vca0IGXaOxCSUKqYENKLbYxjucFEnYuErQESvNOOcFvSdWPorjI0pWDpMy0doIbWO4yvmvCA5D2FT2PkVP8IHWI/tyFhSQ0hitWUDBR3HX8NwIDAQAB"
 }

@@ -63,6 +63,15 @@ interface SettingsFormProps {
   onSkipPromotedPostsEnabledChange: (value: boolean) => void;
   skipFriendsActivitiesEnabled: boolean;
   onSkipFriendsActivitiesEnabledChange: (value: boolean) => void;
+
+  // Target List (free feature)
+  targetListEnabled: boolean;
+  onTargetListEnabledChange: (value: boolean) => void;
+  selectedTargetList: string;
+  onSelectedTargetListChange: (value: string) => void;
+  targetListOptions: string[];
+  onOpenProfileLists: () => void;
+  onOpenListFeed: () => void;
 }
 
 const FeaturePlaceholder = () => (
@@ -110,6 +119,13 @@ export default function SettingsForm({
   blacklistAuthors,
   onBlacklistEnabledChange,
   onBlacklistAuthorsChange,
+  targetListEnabled,
+  onTargetListEnabledChange,
+  selectedTargetList,
+  onSelectedTargetListChange,
+  targetListOptions,
+  onOpenProfileLists,
+  onOpenListFeed,
 }: SettingsFormProps) {
   // Helper function to determine if features should be disabled
   const isFeatureDisabled = (featureIsPremium: boolean) => {
@@ -126,7 +142,63 @@ export default function SettingsForm({
 
   return (
     <>
-      {/* API Key input removed - using server-side tRPC API now */}
+      {/* Comment on Target List (free feature) */}
+      <div className="mb-4">
+        <div className="mb-1 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={targetListEnabled}
+              onChange={(e) => onTargetListEnabledChange(e.target.checked)}
+              disabled={isRunning}
+              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <label className="text-sm font-medium text-gray-700">
+              Comment on Target List
+            </label>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={onOpenProfileLists}
+              className="text-xs font-medium text-gray-500 hover:text-blue-600 hover:underline"
+            >
+              All Lists
+            </button>
+            <button
+              type="button"
+              onClick={onOpenListFeed}
+              className="text-xs font-medium text-gray-500 hover:text-blue-600 hover:underline"
+            >
+              List feed
+            </button>
+          </div>
+        </div>
+        <select
+          value={selectedTargetList}
+          onChange={(e) => onSelectedTargetListChange(e.target.value)}
+          disabled={isRunning || !targetListEnabled}
+          className="mt-2 w-full rounded-md border border-gray-300 py-2 pr-10 pl-3 text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
+        >
+          {targetListOptions.length > 0 ? (
+            <>
+              <option value="">Select a list</option>
+              {targetListOptions.map((name) => (
+                <option key={name} value={name} className="truncate">
+                  {name}
+                </option>
+              ))}
+            </>
+          ) : (
+            <option value="" disabled>
+              No lists found
+            </option>
+          )}
+        </select>
+        <p className="mt-1 text-xs text-gray-500">
+          Create target list of people to comment on their latest posts
+        </p>
+      </div>
 
       {isPremiumLoading ? (
         <FeaturePlaceholder />

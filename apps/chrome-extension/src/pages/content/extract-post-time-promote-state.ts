@@ -15,7 +15,7 @@ export default function extractPostTimePromoteState(
   try {
     // 1) Primary selector – original assumption
     let span: HTMLElement | null = postContainer.querySelector(
-      ".update-components-actor__sub-description.text-body-xsmall.t-black--light [aria-hidden='true']",
+      ".update-components-actor__sub-description",
     );
 
     // 2) Fallback – any span[aria-hidden="true"] that has pattern like "\d+[mhdw]" or "now" or "promoted"

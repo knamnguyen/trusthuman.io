@@ -109,6 +109,10 @@ export default function Popup() {
   const [lastError, setLastError] = useState<any>(null);
   const [blacklistEnabled, setBlacklistEnabled] = useState(false);
   const [blacklistAuthors, setBlacklistAuthors] = useState("");
+  // Target List (free feature)
+  const [targetListEnabled, setTargetListEnabled] = useState(false);
+  const [selectedTargetList, setSelectedTargetList] = useState<string>("");
+  const [targetListOptions, setTargetListOptions] = useState<string[]>([]);
 
   // Determine max posts limit based on plan - handle null case during loading
   const maxPostsLimit =
@@ -262,6 +266,11 @@ export default function Popup() {
         "customStyleGuides",
         "blacklistEnabled",
         "blacklistAuthors",
+        // Target List (free feature)
+        "targetListEnabled",
+        "selectedTargetList",
+        // List options source
+        "engagekit-profile-lists",
       ],
       (result) => {
         console.log("Popup: Loading settings from storage:", result);
@@ -347,10 +356,40 @@ export default function Popup() {
         setBlacklistEnabled(blacklistEnabledLoaded);
         setBlacklistAuthors(blacklistAuthorsLoaded);
 
+        // Load Target List (free feature)
+        if (typeof result.targetListEnabled === "boolean") {
+          setTargetListEnabled(result.targetListEnabled);
+        }
+        if (typeof result.selectedTargetList === "string") {
+          setSelectedTargetList(result.selectedTargetList);
+        }
+        const storedLists = result["engagekit-profile-lists"];
+        if (Array.isArray(storedLists)) {
+          setTargetListOptions(storedLists);
+        } else {
+          setTargetListOptions([]);
+        }
+
         loadTodayComments();
       },
     );
   }, [isPremium, isPremiumLoading, maxPostsLimit]);
+
+  // Listen to storage changes for list options updates
+  useEffect(() => {
+    const handleStorageChange = (
+      changes: { [key: string]: chrome.storage.StorageChange },
+      areaName: string,
+    ) => {
+      if (areaName !== "local") return;
+      if ("engagekit-profile-lists" in changes) {
+        const next = changes["engagekit-profile-lists"].newValue;
+        setTargetListOptions(Array.isArray(next) ? next : []);
+      }
+    };
+    chrome.storage.onChanged.addListener(handleStorageChange);
+    return () => chrome.storage.onChanged.removeListener(handleStorageChange);
+  }, []);
 
   // Listen for messages from background script
   useEffect(() => {
@@ -670,6 +709,74 @@ export default function Popup() {
     chrome.storage.local.set({ blacklistAuthors: value });
   };
 
+  // Target List handlers (free feature)
+  const handleTargetListEnabledChange = (value: boolean) => {
+    setTargetListEnabled(value);
+    chrome.storage.local.set({ targetListEnabled: value });
+  };
+  const handleSelectedTargetListChange = (value: string) => {
+    setSelectedTargetList(value);
+    chrome.storage.local.set({ selectedTargetList: value });
+  };
+
+  const handleOpenProfileLists = () => {
+    try {
+      if (chrome?.runtime?.openOptionsPage) {
+        chrome.runtime.openOptionsPage();
+      } else {
+        chrome.tabs.create?.({ url: chrome.runtime.getURL("options.html") });
+      }
+    } catch (err) {
+      console.error("Failed to open options page", err);
+    }
+  };
+
+  const handleOpenListFeed = async () => {
+    try {
+      if (!targetListEnabled) {
+        alert("Enable 'Comment on Target List' and select a list first.");
+        return;
+      }
+      const listName = selectedTargetList?.trim();
+      if (!listName) {
+        alert("Please select a list.");
+        return;
+      }
+      // Load stored profile data
+      const result = await chrome.storage.local.get(["engagekit-profile-data"]);
+      const profiles: Record<string, any> =
+        result["engagekit-profile-data"] || {};
+      // Filter profiles in selected list and extract URNs
+      const urns = Array.from(
+        new Set(
+          Object.values(profiles)
+            .filter(
+              (p: any) => Array.isArray(p?.lists) && p.lists.includes(listName),
+            )
+            .map((p: any) => p?.profileUrn)
+            .filter(
+              (u: unknown): u is string =>
+                typeof u === "string" && u.length > 0,
+            ),
+        ),
+      );
+      if (urns.length === 0) {
+        alert("No profile URNs found in this list.");
+        return;
+      }
+      // Build LinkedIn search URL
+      const base = "https://www.linkedin.com/search/results/content/";
+      const params = new URLSearchParams();
+      params.set("fromMember", JSON.stringify(urns));
+      params.set("origin", "FACETED_SEARCH");
+      params.set("sortBy", '"date_posted"');
+      const url = `${base}?${params.toString()}`;
+      chrome.tabs.create?.({ url });
+    } catch (err) {
+      console.error("Failed to open list feed", err);
+    }
+  };
+
   // Removed handleSetDefaultStyleGuide – dropdown applies style directly
 
   const handleStart = async () => {
@@ -890,6 +997,14 @@ export default function Popup() {
           blacklistAuthors={blacklistAuthors}
           onBlacklistEnabledChange={handleBlacklistEnabledChange}
           onBlacklistAuthorsChange={handleBlacklistAuthorsChange}
+          // Target List (free feature)
+          targetListEnabled={targetListEnabled}
+          onTargetListEnabledChange={handleTargetListEnabledChange}
+          selectedTargetList={selectedTargetList}
+          onSelectedTargetListChange={handleSelectedTargetListChange}
+          targetListOptions={targetListOptions}
+          onOpenProfileLists={handleOpenProfileLists}
+          onOpenListFeed={handleOpenListFeed}
         />
 
         {status && !isRunning && (

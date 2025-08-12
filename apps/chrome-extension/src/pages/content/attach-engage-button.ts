@@ -146,7 +146,11 @@ function addEngageButton(form: HTMLFormElement): void {
     try {
       // Locate surrounding post container to obtain context text.
 
-      let postContainer = form.closest("div[data-id]") as HTMLElement | null;
+      // Prefer list/search feed structure first, then default feed
+      let postContainer = form.closest("div[data-urn]") as HTMLElement | null;
+      if (!postContainer) {
+        postContainer = form.closest("div[data-id]") as HTMLElement | null;
+      }
       if (!postContainer) {
         postContainer = form.closest(
           "article[role='article']",

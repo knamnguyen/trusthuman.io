@@ -1,6 +1,7 @@
 {
   "manifest_version": 3,
   "name": "EngageKit",
+  "version": "1.0.0",
   "description": "Automatically comment on LinkedIn posts using AI",
   "action": {
     "default_popup": "src/pages/popup/index.html",
@@ -8,6 +9,7 @@
       "32": "icon-32.png"
     }
   },
+  "options_page": "src/pages/options/index.html",
   "icons": {
     "128": "icon-128.png"
   },

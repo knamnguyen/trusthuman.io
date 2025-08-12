@@ -3,6 +3,8 @@ import { createClerkClient } from "@clerk/chrome-extension/background";
 import type { AutoCommentingState } from "./background-types";
 import { AIService } from "../../services/ai-service";
 import { getSyncHost } from "../../utils/get-sync-host";
+import { buildListFeedUrl, LIST_FEED_BASE_URL } from "./build-list-feed-url";
+import { getUrnsForSelectedList } from "./get-list-urns";
 import { MessageRouter } from "./message-router";
 
 console.log("background script loaded");
@@ -237,7 +239,15 @@ const startAutoCommenting = async (
     console.log(`Starting LinkedIn auto-commenting process...`);
     sendStatusUpdate(`Starting LinkedIn auto-commenting...`);
 
-    // Get the current active tab to decide whether we need a new LinkedIn feed tab
+    // Determine target LinkedIn URL based on Target List setting
+    const { enabled: targetListEnabled, urns } = await getUrnsForSelectedList();
+    const FEED_BASE_URL = "https://www.linkedin.com/feed/" as const;
+    const targetBase = targetListEnabled ? LIST_FEED_BASE_URL : FEED_BASE_URL;
+    const targetUrl = targetListEnabled
+      ? buildListFeedUrl(urns)
+      : FEED_BASE_URL;
+
+    // Get the current active tab to decide whether we need a new LinkedIn tab
     const currentTabs = await chrome.tabs.query({
       active: true,
       currentWindow: true,
@@ -245,19 +255,16 @@ const startAutoCommenting = async (
 
     let feedTab: chrome.tabs.Tab | undefined;
 
-    // Check if the active tab is already the LinkedIn feed page (exact match)
-    if (
-      currentTabs.length > 0 &&
-      currentTabs[0]?.url?.startsWith("https://www.linkedin.com/feed/")
-    ) {
+    // Reuse current tab only if it already matches the target base URL
+    if (currentTabs.length > 0 && currentTabs[0]?.url?.startsWith(targetBase)) {
       // Re-use the current tab as the feed tab
       feedTab = currentTabs[0];
       autoCommentingState.feedTabId = feedTab.id!;
       autoCommentingState.originalTabId = undefined; // Staying on the same tab
 
-      console.log("Using existing LinkedIn feed tab:", feedTab.id);
+      console.log("Using existing LinkedIn tab for automation:", feedTab.id);
       sendStatusUpdate(
-        "Using current LinkedIn feed tab for automation (anti-throttling)...",
+        "Using current LinkedIn tab for automation (anti-throttling)...",
       );
 
       // Ensure the tab is pinned to minimise throttling
@@ -266,12 +273,12 @@ const startAutoCommenting = async (
         console.log("Pinned existing LinkedIn feed tab for anti-throttling");
       }
 
-      // In an already-open feed tab, the content script is loaded and has
+      // In an already-open tab, the content script is loaded and has
       // likely already fired its initial `pageReady` signal earlier. Send the
       // instruction directly so the overlay/start button appears immediately.
       try {
         chrome.tabs.sendMessage(feedTab.id!, { action: "showStartButton" });
-        console.log("Sent showStartButton message to existing feed tab");
+        console.log("Sent showStartButton message to existing tab");
       } catch (err) {
         console.warn("Could not send showStartButton message:", err);
       }
@@ -284,11 +291,11 @@ const startAutoCommenting = async (
         );
       }
 
-      console.log("Creating LinkedIn tab in current window...");
+      console.log("Creating LinkedIn tab in current window with target URL...");
       sendStatusUpdate("Creating LinkedIn tab for automation...");
 
       feedTab = await chrome.tabs.create({
-        url: "https://www.linkedin.com/feed/",
+        url: targetUrl,
         active: true,
         pinned: true,
       });

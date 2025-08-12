@@ -29,6 +29,7 @@ import updateCommentCounts from "./update-comment-counts";
 
 import "./attach-engage-button";
 import "./init-comment-history";
+import "./profile-list";
 
 // Pronoun rule for company mode
 const COMPANY_PRONOUN_RULE =
@@ -54,6 +55,11 @@ let audioElement: HTMLAudioElement | null = null;
 
 // Check if we need to show the start button
 let hasUserInteracted = false;
+
+// Initialize profile functionality early but safely
+console.log("🔥 CONTENT SCRIPT LOADED - EngageKit Profile Extract");
+console.log("🔥 Current URL:", window.location.href);
+console.log("🔥 Document state:", document.readyState);
 
 //check if page is ready to display the start button
 if (document.readyState !== "loading") {
@@ -966,14 +972,24 @@ async function processAllPostsFeed(
     `🎯 Starting to process posts on feed (max ${maxPosts} posts)...`,
   );
 
-  // Find all post containers using the top-level div[data-id] structure
-  const postContainers = document.querySelectorAll("div[data-id]");
-  console.log(
-    `🎯 Found ${postContainers.length} post containers with selector: div[data-id]`,
-  );
-  backgroundLog(
-    `🎯 Found ${postContainers.length} post containers with selector: div[data-id]`,
-  );
+  // Prefer div[data-urn] (search/list feed), fallback to div[data-id] (home feed)
+  let postContainers = document.querySelectorAll("div[data-urn]");
+  if (postContainers.length > 0) {
+    console.log(
+      `🎯 Found ${postContainers.length} post containers with selector: div[data-urn]`,
+    );
+    backgroundLog(
+      `🎯 Found ${postContainers.length} post containers with selector: div[data-urn]`,
+    );
+  } else {
+    postContainers = document.querySelectorAll("div[data-id]");
+    console.log(
+      `🎯 Found ${postContainers.length} post containers with selector: div[data-id]`,
+    );
+    backgroundLog(
+      `🎯 Found ${postContainers.length} post containers with selector: div[data-id]`,
+    );
+  }
 
   // Let's also try alternative selectors to see what we find
   const altSelector1 = document.querySelectorAll(".feed-shared-update-v2");
