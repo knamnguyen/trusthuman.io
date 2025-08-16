@@ -154,7 +154,15 @@ export default function SettingsForm({
               className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
             <label className="text-sm font-medium text-gray-700">
-              Comment on Target List
+              Comment on Target List -
+              <a
+                className="text-blue-600 hover:underline"
+                href="https://youtu.be/UcCB5sPBBzE"
+                target="_blank"
+              >
+                {" "}
+                Tutorial
+              </a>
             </label>
           </div>
           <div className="flex items-center gap-3">

@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 import type { ProfileData } from "../utils/storage";
+import { ProfileListButton } from "./profile-list-button";
 
 interface ProfileCardProps {
   profile: ProfileData;
@@ -17,12 +18,16 @@ export function ProfileCard({ profile }: ProfileCardProps) {
       window.open(profile.profileUrl, "_blank");
     }
   };
+  const [localLists, setLocalLists] = useState<string[]>(profile.lists);
+  useEffect(() => {
+    setLocalLists(profile.lists);
+  }, [profile.lists.join(",")]);
 
   return (
     <div className="rounded-xl border-2 border-black bg-white p-6 shadow-[4px_4px_0px_#000] transition-all hover:bg-gray-50 hover:shadow-[8px_8px_0px_#000]">
       <div className="flex items-start gap-4">
-        {/* Profile Photo */}
-        <div className="flex-shrink-0">
+        {/* Profile Photo and List Button */}
+        <div className="flex flex-shrink-0 flex-col items-center gap-2">
           {profile.profilePhotoUrl ? (
             <img
               src={profile.profilePhotoUrl}
@@ -34,6 +39,11 @@ export function ProfileCard({ profile }: ProfileCardProps) {
               {profile.fullName?.charAt(0) || "?"}
             </div>
           )}
+          <ProfileListButton
+            profileUrl={profile.profileUrl}
+            listsForProfile={localLists}
+            onListsChange={setLocalLists}
+          />
         </div>
 
         {/* Profile Info */}
@@ -87,7 +97,7 @@ export function ProfileCard({ profile }: ProfileCardProps) {
           <div className="mt-3">
             <span className="text-xs font-medium text-gray-500">Lists:</span>
             <div className="mt-1 flex flex-wrap gap-1">
-              {profile.lists.map((list) => (
+              {localLists.map((list) => (
                 <span
                   key={list}
                   className="inline-flex items-center rounded-md border border-gray-300 bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700"

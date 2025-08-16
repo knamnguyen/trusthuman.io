@@ -1,15 +1,17 @@
 {
   "manifest_version": 3,
   "name": "EngageKit",
-  "version": "1.4.3",
+  "version": "1.4.5",
   "description": "Automatically comment on LinkedIn posts using AI",
   "action": {
-    "default_icon": "public/dev-icon-32.png",
-    "default_popup": "src/pages/popup/index.html"
+    "default_popup": "src/pages/popup/index.html",
+    "default_icon": {
+      "32": "icon-32.png"
+    }
   },
   "options_page": "src/pages/options/index.html",
   "icons": {
-    "128": "public/dev-icon-128.png"
+    "128": "icon-128.png"
   },
   "permissions": [
     "activeTab",
@@ -35,7 +37,7 @@
   "content_scripts": [
     {
       "js": [
-        "assets/index.tsx-loader-ZE0UHx3s.js"
+        "assets/index.tsx-loader-7j0ZeE0h.js"
       ],
       "matches": [
         "https://*.linkedin.com/*"
@@ -50,8 +52,8 @@
       "matches": [],
       "resources": [
         "contentStyle.css",
-        "dev-icon-128.png",
-        "dev-icon-32.png"
+        "icon-128.png",
+        "icon-32.png"
       ],
       "use_dynamic_url": false
     },
@@ -60,13 +62,12 @@
         "https://*.linkedin.com/*"
       ],
       "resources": [
-        "assets/react-V2OolOr-.js",
-        "assets/profile-extract-button-dLLVuwy8.js",
+        "assets/react-DltvaS19.js",
+        "assets/profile-extract-button-E_OM6-m_.js",
         "assets/index-DCPjFz1h.js",
-        "assets/index.tsx-CJhg1bf-.js"
+        "assets/index.tsx-DIImEebf.js"
       ],
       "use_dynamic_url": false
     }
-  ],
-  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAjJ8hFJ/0VNPdjWqURUdXdRQ/43ZJIiwCFu/74e/WSb2x2E6c9+VUl+Jvo3zBYMh8dlP6MBG2L3EVJ406bmj7r+sjZt66NFgdmTOb25725c2pJTIPU/V/3As1IGwgQ2dsxdg4zjsntaxsb1hPT5wVECWU11Y5EN5/aixPSUZ9Jj1+W7QtBUS2aS4B3lPrq6nMTwzLXeQ6Zm2FKwPX7LoR1o08gid3JgFoeWcv+PXn6vca0IGXaOxCSUKqYENKLbYxjucFEnYuErQESvNOOcFvSdWPorjI0pWDpMy0doIbWO4yvmvCA5D2FT2PkVP8IHWI/tyFhSQ0hitWUDBR3HX8NwIDAQAB"
+  ]
 }

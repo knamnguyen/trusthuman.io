@@ -1,6 +1,6 @@
 {
   "name": "@sassy/chrome-extension",
-  "version": "1.4.3",
+  "version": "1.4.5",
   "description": "EngageKit Chrome Extension - Automatically comment on LinkedIn posts using AI",
   "license": "MIT",
   "private": true,

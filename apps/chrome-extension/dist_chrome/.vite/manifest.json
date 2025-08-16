@@ -1,12 +1,12 @@
 {
   "../../../../../../../@crx/manifest": {
-    "file": "assets/crx-manifest.js-o34mKJr6.js",
+    "file": "assets/crx-manifest.js-BaPJXtIt.js",
     "name": "crx-manifest.js",
     "src": "../../../../../../../@crx/manifest",
     "isEntry": true
   },
-  "_get-sync-host-BTxo0P6g.js": {
-    "file": "assets/get-sync-host-BTxo0P6g.js",
+  "_get-sync-host-x1WWlkV3.js": {
+    "file": "assets/get-sync-host-x1WWlkV3.js",
     "name": "get-sync-host",
     "imports": [
       "_index-DCPjFz1h.js"
@@ -16,82 +16,82 @@
     "file": "assets/index-DCPjFz1h.js",
     "name": "index"
   },
-  "_index.tsx-loader-ZE0UHx3s.js": {
-    "file": "assets/index.tsx-loader-ZE0UHx3s.js",
-    "src": "_index.tsx-loader-ZE0UHx3s.js"
+  "_index.tsx-loader-7j0ZeE0h.js": {
+    "file": "assets/index.tsx-loader-7j0ZeE0h.js",
+    "src": "_index.tsx-loader-7j0ZeE0h.js"
   },
-  "_profile-extract-button-dLLVuwy8.js": {
-    "file": "assets/profile-extract-button-dLLVuwy8.js",
+  "_profile-extract-button-E_OM6-m_.js": {
+    "file": "assets/profile-extract-button-E_OM6-m_.js",
     "name": "profile-extract-button"
   },
-  "_react-V2OolOr-.js": {
-    "file": "assets/react-V2OolOr-.js",
+  "_react-DltvaS19.js": {
+    "file": "assets/react-DltvaS19.js",
     "name": "react",
     "imports": [
       "_index-DCPjFz1h.js"
     ]
   },
-  "_tailwind-C9hXxL1b.css": {
-    "file": "assets/tailwind-C9hXxL1b.css",
-    "src": "_tailwind-C9hXxL1b.css"
-  },
-  "_tailwind-D13Wohg_.js": {
-    "file": "assets/tailwind-D13Wohg_.js",
+  "_tailwind-BN9c4p8y.js": {
+    "file": "assets/tailwind-BN9c4p8y.js",
     "name": "tailwind",
     "imports": [
       "_index-DCPjFz1h.js"
     ],
     "css": [
-      "assets/tailwind-C9hXxL1b.css"
+      "assets/tailwind-BgMprAYK.css"
     ]
+  },
+  "_tailwind-BgMprAYK.css": {
+    "file": "assets/tailwind-BgMprAYK.css",
+    "src": "_tailwind-BgMprAYK.css"
   },
   "public/icon-128.png": {
     "file": "assets/icon-128-C-YV5z2v.png",
     "src": "public/icon-128.png"
   },
   "src/pages/background/index.ts": {
-    "file": "assets/index.ts-VOqfMbCf.js",
+    "file": "assets/index.ts-Xr-qir2S.js",
     "name": "index.ts",
     "src": "src/pages/background/index.ts",
     "isEntry": true,
     "imports": [
-      "_get-sync-host-BTxo0P6g.js",
-      "_react-V2OolOr-.js",
+      "_get-sync-host-x1WWlkV3.js",
+      "_react-DltvaS19.js",
       "_index-DCPjFz1h.js"
     ]
   },
   "src/pages/content/index.tsx": {
-    "file": "assets/index.tsx-CJhg1bf-.js",
+    "file": "assets/index.tsx-DIImEebf.js",
     "name": "index.tsx",
     "src": "src/pages/content/index.tsx",
     "isEntry": true,
     "imports": [
-      "_react-V2OolOr-.js",
-      "_profile-extract-button-dLLVuwy8.js",
+      "_react-DltvaS19.js",
+      "_profile-extract-button-E_OM6-m_.js",
       "_index-DCPjFz1h.js"
     ]
   },
   "src/pages/options/index.html": {
-    "file": "assets/index.html-D0f0zTyS.js",
+    "file": "assets/index.html-DtTcp_F-.js",
     "name": "index.html",
     "src": "src/pages/options/index.html",
     "isEntry": true,
     "imports": [
-      "_tailwind-D13Wohg_.js",
+      "_tailwind-BN9c4p8y.js",
       "_index-DCPjFz1h.js",
-      "_profile-extract-button-dLLVuwy8.js"
+      "_profile-extract-button-E_OM6-m_.js"
     ]
   },
   "src/pages/popup/index.html": {
-    "file": "assets/index.html-CIjJkBfk.js",
+    "file": "assets/index.html-C2uRKC0U.js",
     "name": "index.html",
     "src": "src/pages/popup/index.html",
     "isEntry": true,
     "imports": [
-      "_tailwind-D13Wohg_.js",
+      "_tailwind-BN9c4p8y.js",
       "_index-DCPjFz1h.js",
-      "_react-V2OolOr-.js",
-      "_get-sync-host-BTxo0P6g.js"
+      "_react-DltvaS19.js",
+      "_get-sync-host-x1WWlkV3.js"
     ],
     "css": [
       "assets/index-addibwyn.css"
