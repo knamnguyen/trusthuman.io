@@ -211,7 +211,6 @@ Lastly but most importantly, you must ahere to the style guide below given by th
           model: "gemini-2.5-flash",
           contents: systemPrompt,
           config: {
-            maxOutputTokens: 100,
             temperature: 0.7,
           },
         });
