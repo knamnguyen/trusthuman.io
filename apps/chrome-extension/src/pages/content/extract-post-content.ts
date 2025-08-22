@@ -4,7 +4,7 @@ export default function extractPostContent(postContainer: HTMLElement): string {
     // Look for the content container within the post
     // const contentContainer = postContainer.querySelector('.fie-impression-container');
     const contentContainer = postContainer.querySelector(
-      ".feed-shared-inline-show-more-text",
+      ".update-components-text",
     );
     if (!contentContainer) {
       console.log("Content container not found");
