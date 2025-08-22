@@ -8,12 +8,19 @@ import {
   backgroundWarn,
 } from "./background-log";
 import {
+  commentedPostHashes,
+  hasCommentedOnPostHash,
+  loadCommentedPostHashes,
+  saveCommentedPostHash,
+} from "./check-duplicate-commented-post-hash";
+import {
   commentedPostUrns,
   hasCommentedOnPostUrn,
   loadCommentedPostUrns,
   saveCommentedPostUrn,
 } from "./check-duplicate-commented-post-urns";
 import checkFriendsActivity from "./check-friends-activity";
+import cleanupOldPostHashes from "./clean-old-post-hashes";
 import cleanupOldPostUrns from "./clean-old-post-urns";
 import cleanupOldTimestampsAuthor from "./clean-old-timestamp-author";
 import extractAuthorInfo from "./extract-author-info";
@@ -22,6 +29,7 @@ import extractPostContent from "./extract-post-content";
 import extractPostTimePromoteState from "./extract-post-time-promote-state";
 import extractPostUrns from "./extract-post-urns";
 import generateComment from "./generate-comment";
+import normalizeAndHashContent from "./normalize-and-hash-content";
 import postCommentOnPost from "./post-comment-on-post";
 import saveCurrentUsernameUrl from "./save-current-username-url";
 import scrollFeedLoadPosts from "./scroll-feed-load-post";
@@ -748,6 +756,7 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
   // Load commented authors with timestamps, post URNs, and counters from local storage
   commentedAuthorsWithTimestamps = await loadCommentedAuthorsWithTimestamps();
   await loadCommentedPostUrns();
+  await loadCommentedPostHashes();
   await loadCounters();
 
   // Retrieve desired company profile name (if any) and language flag from storage once per session
@@ -811,6 +820,7 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
   // Clean up old timestamp entries and post URNs to prevent storage bloat
   await cleanupOldTimestampsAuthor();
   await cleanupOldPostUrns(commentedPostUrns);
+  await cleanupOldPostHashes(commentedPostHashes);
 
   // For backward compatibility, also load today's authors
   commentedAuthors = await loadTodayCommentedAuthors();
@@ -1199,6 +1209,17 @@ async function processAllPostsFeed(
         continue;
       }
 
+      // Hash-based duplicate detection (content-level)
+      const hashRes = await normalizeAndHashContent(postContent);
+      if (hashRes?.hash && hasCommentedOnPostHash(hashRes.hash)) {
+        console.log(
+          `⏭️ SKIPPING post ${i + 1} - duplicate content detected via hash ${hashRes.hash.slice(0, 12)}...`,
+        );
+        await updatePostAlreadyCommentedCounter();
+        console.groupEnd();
+        continue;
+      }
+
       const postAuthorContent = authorInfo.name + postContent;
 
       console.log(
@@ -1288,6 +1309,11 @@ async function processAllPostsFeed(
         // Save all post URNs to prevent commenting on this post again
         for (const urn of postUrns) {
           await saveCommentedPostUrn(urn);
+        }
+
+        // Save content hash as well
+        if (hashRes?.hash) {
+          await saveCommentedPostHash(hashRes.hash);
         }
 
         await updateCommentCounts();

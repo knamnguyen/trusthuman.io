@@ -3,15 +3,21 @@
 // populates the comment editor. Clicking again regenerates/replaces the text.
 // important: at this moment, there is no limit client or server side to limit how many comments the user can generate
 
+import {
+  hasCommentedOnPostHash,
+  saveCommentedPostHash,
+} from "./check-duplicate-commented-post-hash";
 import { saveCommentedPostUrn } from "./check-duplicate-commented-post-urns";
 import extractAuthorInfo from "./extract-author-info";
 import extractPostContent from "./extract-post-content";
 import extractPostUrns from "./extract-post-urns";
 import generateComment from "./generate-comment";
+import normalizeAndHashContent from "./normalize-and-hash-content";
 
 /*****************************
  * Constant style-guide rules *
  *****************************/
+
 const COMPANY_PRONOUN_RULE =
   "IMPORTANT: You are in company page mode, not individual mode anymore. You're speaking on behalf of a company. ALWAYS use We/we pronouns; NEVER use I/i. This is the rule first and foremost you must follow before looking at any other rules or guide. Again, always use We/we pronouns when referring to yourself instead of I/i";
 
@@ -178,6 +184,15 @@ function addEngageButton(form: HTMLFormElement): void {
         return;
       }
 
+      // Content-hash duplicate detection
+      const hashRes = await normalizeAndHashContent(postContent);
+      if (hashRes?.hash && hasCommentedOnPostHash(hashRes.hash)) {
+        console.warn(
+          "Engage button: duplicate post content detected via hash; skipping",
+        );
+        return;
+      }
+
       // Load config from local storage.
       const settings = await new Promise<{
         styleGuide?: string;
@@ -242,6 +257,11 @@ function addEngageButton(form: HTMLFormElement): void {
       const postUrns = extractPostUrns(postContainer);
       for (const urn of postUrns) {
         await saveCommentedPostUrn(urn);
+      }
+
+      // Save content hash to prevent duplicates across different contexts
+      if (hashRes?.hash) {
+        await saveCommentedPostHash(hashRes.hash);
       }
 
       // Dispatch input event so LinkedIn recognises changes.

@@ -3,6 +3,7 @@ const commentedPostUrns = new Map<string, number>();
 /**
  * Load the map of commented post URNs from chrome.storage and populate the in-memory cache.
  */
+
 async function loadCommentedPostUrns(): Promise<void> {
   return new Promise((resolve) => {
     chrome.storage.local.get(["commented_post_urns"], (result) => {
