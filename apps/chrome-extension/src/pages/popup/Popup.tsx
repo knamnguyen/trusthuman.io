@@ -113,6 +113,12 @@ export default function Popup() {
   const [targetListEnabled, setTargetListEnabled] = useState(false);
   const [selectedTargetList, setSelectedTargetList] = useState<string>("");
   const [targetListOptions, setTargetListOptions] = useState<string[]>([]);
+  // Finish List Mode (1 comment per author)
+  const [finishListModeEnabled, setFinishListModeEnabled] = useState(false);
+  const [authorsFound, setAuthorsFound] = useState<string[]>([]);
+  const [authorsMissing, setAuthorsMissing] = useState<string[]>([]);
+  const [authorsPending, setAuthorsPending] = useState<string[]>([]);
+  const [authorsCommented, setAuthorsCommented] = useState<string[]>([]);
 
   // Determine max posts limit based on plan - handle null case during loading
   const maxPostsLimit =
@@ -271,6 +277,8 @@ export default function Popup() {
         "selectedTargetList",
         // List options source
         "engagekit-profile-lists",
+        // Finish list mode
+        "finishListModeEnabled",
       ],
       (result) => {
         console.log("Popup: Loading settings from storage:", result);
@@ -368,6 +376,11 @@ export default function Popup() {
           setTargetListOptions(storedLists);
         } else {
           setTargetListOptions([]);
+        }
+
+        // Finish list mode
+        if (typeof result.finishListModeEnabled === "boolean") {
+          setFinishListModeEnabled(result.finishListModeEnabled);
         }
 
         loadTodayComments();
@@ -485,6 +498,19 @@ export default function Popup() {
           chrome.storage.local.set({
             postsSkippedTimeFilter: request.postsSkippedTimeFilterCount,
           });
+        }
+      }
+      if (request.action === "listModeUpdate") {
+        if (Array.isArray(request.authorsFound))
+          setAuthorsFound(request.authorsFound);
+        if (Array.isArray(request.authorsMissing))
+          setAuthorsMissing(request.authorsMissing);
+        if (Array.isArray(request.authorsPending))
+          setAuthorsPending(request.authorsPending);
+        if (Array.isArray(request.authorsCommented))
+          setAuthorsCommented(request.authorsCommented);
+        if (typeof request.note === "string") {
+          setStatus(request.note);
         }
       }
     };
@@ -950,6 +976,10 @@ export default function Popup() {
           status={status}
           commentCount={commentCount}
           maxPosts={maxPosts}
+          authorsFound={authorsFound}
+          authorsMissing={authorsMissing}
+          authorsPending={authorsPending}
+          authorsCommented={authorsCommented}
         />
 
         <SettingsForm
@@ -1005,6 +1035,11 @@ export default function Popup() {
           targetListOptions={targetListOptions}
           onOpenProfileLists={handleOpenProfileLists}
           onOpenListFeed={handleOpenListFeed}
+          finishListModeEnabled={finishListModeEnabled}
+          onFinishListModeEnabledChange={(v) => {
+            setFinishListModeEnabled(v);
+            chrome.storage.local.set({ finishListModeEnabled: v });
+          }}
         />
 
         {status && !isRunning && (

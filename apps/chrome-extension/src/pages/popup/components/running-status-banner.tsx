@@ -15,6 +15,10 @@ interface RunningStatusBannerProps {
   status: string;
   commentCount: number;
   maxPosts: number;
+  authorsFound?: string[];
+  authorsMissing?: string[];
+  authorsPending?: string[];
+  authorsCommented?: string[];
 }
 
 export default function RunningStatusBanner({
@@ -22,6 +26,10 @@ export default function RunningStatusBanner({
   status,
   commentCount,
   maxPosts,
+  authorsFound = [],
+  authorsMissing = [],
+  authorsPending = [],
+  authorsCommented = [],
 }: RunningStatusBannerProps) {
   if (!isRunning) return null;
 
@@ -42,6 +50,33 @@ export default function RunningStatusBanner({
         <span className="text-blue-600">This session: {commentCount}</span>
         <span className="text-blue-600">Target: {maxPosts} posts</span>
       </div>
+      {(authorsFound.length > 0 ||
+        authorsMissing.length > 0 ||
+        authorsPending.length > 0 ||
+        authorsCommented.length > 0) && (
+        <div className="mt-2 space-y-1 text-xs">
+          {authorsFound.length > 0 && (
+            <div className="text-blue-700">
+              Found: {authorsFound.join(", ")}
+            </div>
+          )}
+          {authorsMissing.length > 0 && (
+            <div className="text-blue-700">
+              Missing: {authorsMissing.join(", ")}
+            </div>
+          )}
+          {authorsPending.length > 0 && (
+            <div className="text-blue-700">
+              Pending: {authorsPending.join(", ")}
+            </div>
+          )}
+          {authorsCommented.length > 0 && (
+            <div className="text-blue-700">
+              Commented: {authorsCommented.join(", ")}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

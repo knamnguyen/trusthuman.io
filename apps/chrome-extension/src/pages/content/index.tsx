@@ -31,6 +31,8 @@ import extractPostUrns from "./extract-post-urns";
 import generateComment from "./generate-comment";
 import normalizeAndHashContent from "./normalize-and-hash-content";
 import postCommentOnPost from "./post-comment-on-post";
+import { loadSelectedListAuthors } from "./profile-list/load-selected-list-authors";
+import { runListMode } from "./profile-list/run-list-mode";
 import saveCurrentUsernameUrl from "./save-current-username-url";
 import scrollFeedLoadPosts from "./scroll-feed-load-post";
 import updateCommentCounts from "./update-comment-counts";
@@ -333,20 +335,96 @@ function showStartButton() {
             container.appendChild(statusPanel);
           }
 
-          // Start the commenting flow but delay tab switching until after scrolling
-          startNewCommentingFlowWithDelayedTabSwitch(
-            scrollDuration,
-            commentDelay,
-            maxPosts,
-            styleGuide,
-            duplicateWindow,
-            overlay,
-            startButton,
-            subtitle,
-            statusPanel,
-            commentAsCompanyEnabled,
-            timeFilterEnabled,
-            minPostAge,
+          // Start the commenting flow but decide if list mode should be used
+          chrome.storage.local.get(
+            [
+              "finishListModeEnabled",
+              "targetListEnabled",
+              "selectedTargetList",
+              "commentProfileName",
+              "languageAwareEnabled",
+              "skipCompanyPagesEnabled",
+              "skipPromotedPostsEnabled",
+              "skipFriendsActivitiesEnabled",
+              "blacklistEnabled",
+              "blacklistAuthors",
+            ],
+            async (cfg) => {
+              const useListMode =
+                !!cfg.finishListModeEnabled &&
+                !!cfg.targetListEnabled &&
+                !!(cfg.selectedTargetList || "").trim();
+              if (useListMode) {
+                try {
+                  isCommentingActive = true;
+                  // Update overlay text
+                  startButton.textContent = `📋 List Mode: preparing authors...`;
+                  subtitle.textContent =
+                    "Loading author posts - please keep this tab visible";
+
+                  const selectedListAuthors = await loadSelectedListAuthors();
+                  const blacklistEnabledCfg = !!cfg.blacklistEnabled;
+                  const blacklistListCfg = (
+                    (cfg.blacklistAuthors as string) || ""
+                  )
+                    .split(",")
+                    .map((s) => s.trim().toLowerCase())
+                    .filter(Boolean);
+                  const skipCompanyPagesCfg = !!cfg.skipCompanyPagesEnabled;
+                  const skipPromotedPostsCfg = !!cfg.skipPromotedPostsEnabled;
+                  const skipFriendsActivitiesCfg =
+                    !!cfg.skipFriendsActivitiesEnabled;
+                  const languageAwareEnabledCfg = !!cfg.languageAwareEnabled;
+                  await runListMode({
+                    commentDelay,
+                    duplicateWindow,
+                    styleGuide,
+                    commentProfileName:
+                      (cfg.commentProfileName as string) || "",
+                    commentAsCompanyEnabled,
+                    languageAwareEnabled: languageAwareEnabledCfg,
+                    timeFilterEnabled,
+                    minPostAge,
+                    blacklistEnabled: blacklistEnabledCfg,
+                    blacklistList: blacklistListCfg,
+                    skipCompanyPages: skipCompanyPagesCfg,
+                    skipPromotedPosts: skipPromotedPostsCfg,
+                    skipFriendsActivities: skipFriendsActivitiesCfg,
+                    isCommentingActiveRef: () => isCommentingActive,
+                    selectedListAuthors,
+                    statusPanel,
+                  });
+
+                  // Remove overlay once preloading started
+                  if (overlay) overlay.remove();
+                  stopTabActiveAudio();
+                  if (isCommentingActive) {
+                    chrome.runtime.sendMessage({
+                      action: "commentingCompleted",
+                    });
+                  }
+                } catch (e) {
+                  console.error("[ListMode] Error:", e);
+                  isCommentingActive = false;
+                  stopTabActiveAudio();
+                }
+              } else {
+                startNewCommentingFlowWithDelayedTabSwitch(
+                  scrollDuration,
+                  commentDelay,
+                  maxPosts,
+                  styleGuide,
+                  duplicateWindow,
+                  overlay,
+                  startButton,
+                  subtitle,
+                  statusPanel,
+                  commentAsCompanyEnabled,
+                  timeFilterEnabled,
+                  minPostAge,
+                );
+              }
+            },
           );
         },
       );

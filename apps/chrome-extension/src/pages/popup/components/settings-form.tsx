@@ -72,6 +72,10 @@ interface SettingsFormProps {
   targetListOptions: string[];
   onOpenProfileLists: () => void;
   onOpenListFeed: () => void;
+
+  // Finish List Mode (targeted list 1 comment/author)
+  finishListModeEnabled: boolean;
+  onFinishListModeEnabledChange: (value: boolean) => void;
 }
 
 const FeaturePlaceholder = () => (
@@ -126,6 +130,8 @@ export default function SettingsForm({
   targetListOptions,
   onOpenProfileLists,
   onOpenListFeed,
+  finishListModeEnabled,
+  onFinishListModeEnabledChange,
 }: SettingsFormProps) {
   // Helper function to determine if features should be disabled
   const isFeatureDisabled = (featureIsPremium: boolean) => {
@@ -205,6 +211,26 @@ export default function SettingsForm({
         </select>
         <p className="mt-1 text-xs text-gray-500">
           Create target list of people to comment on their latest posts
+        </p>
+      </div>
+
+      {/* Finish List Mode - gated by target list selection */}
+      <div className="mb-4">
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={finishListModeEnabled}
+            onChange={(e) => onFinishListModeEnabledChange(e.target.checked)}
+            disabled={isRunning || !targetListEnabled || !selectedTargetList}
+            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          />
+          <label className="text-sm font-medium text-gray-700">
+            Don't stop until finish everyone in list - 1 comment/1 author
+          </label>
+        </div>
+        <p className="mt-1 text-xs text-gray-500">
+          Can only enable with target list. Timeout is 60s to find posts from
+          list
         </p>
       </div>
 

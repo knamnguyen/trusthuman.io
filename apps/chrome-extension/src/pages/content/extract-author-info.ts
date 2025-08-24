@@ -8,7 +8,7 @@ export default function extractAuthorInfo(postContainer: HTMLElement): {
   try {
     // Primary selector: element with class update-components-actor__title
     const primary = postContainer.querySelector(
-      ".update-components-actor__title",
+      '.update-components-actor__title span[aria-hidden="true"]',
     );
     if (primary?.textContent?.trim()) {
       const name = primary.textContent.trim();
