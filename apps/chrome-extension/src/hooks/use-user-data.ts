@@ -9,6 +9,7 @@ import { useBackgroundAuth } from "./use-background-auth";
  * Uses local storage for immediate display and background sync for accuracy
  * Now uses background authentication service instead of Clerk directly
  */
+
 export const useUserData = () => {
   const { isSignedIn, isLoaded, user } = useBackgroundAuth();
   const userId = user?.id;
