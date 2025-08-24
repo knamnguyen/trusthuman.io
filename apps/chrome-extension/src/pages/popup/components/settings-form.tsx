@@ -733,7 +733,7 @@ export default function SettingsForm({
         <div className="mb-4">
           <div className="flex items-center gap-2">
             <label className="block text-sm font-medium text-gray-700">
-              Duplicate Check Window:
+              Skip authors commented on within:
             </label>
             {shouldShowPremiumBadge(
               FEATURE_CONFIG.duplicateAuthorCheck.isPremium,

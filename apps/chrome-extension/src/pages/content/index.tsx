@@ -1198,6 +1198,30 @@ async function processAllPostsFeed(
       }
 
       // STEP 3: Check for author duplicate (within time window)
+      // Skip posts from authors we've recently commented on inside the configured duplicateWindow
+      try {
+        const fallbackAuthorName =
+          "No author name available, please do not refer to author when making comment";
+        const authorName = (authorInfo.name || "").trim();
+        if (
+          authorName &&
+          authorName !== fallbackAuthorName &&
+          hasCommentedOnAuthorRecently(
+            authorName,
+            commentedAuthorsWithTimestamps,
+            duplicateWindow,
+          )
+        ) {
+          console.log(
+            `⏭️ SKIPPING post ${i + 1} - author ${authorName} recently commented within ${duplicateWindow}h`,
+          );
+          await updateSkippedPostCounter();
+          console.groupEnd();
+          continue;
+        }
+      } catch (e) {
+        console.warn("Author recency check failed:", e);
+      }
 
       // Extract post content
       const postContent = extractPostContent(postContainer);

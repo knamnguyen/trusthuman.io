@@ -1,5 +1,19 @@
 // import Script from "next/script"; // Commented out: Tally embed script
 
+import { Button } from "@sassy/ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@sassy/ui/dialog";
+import { Input } from "@sassy/ui/input";
+import { Label } from "@sassy/ui/label";
+
 import { FaqSection } from "./_components/landing/faq-section";
 import { FeaturesSection } from "./_components/landing/features-section";
 import { FinalCTASection } from "./_components/landing/final-cta-section";
@@ -10,6 +24,43 @@ import { Header } from "./_components/landing/header";
 import { HeroSection } from "./_components/landing/hero-section";
 import { TestimonialsSection } from "./_components/landing/testimonials-section";
 import { VideoSection } from "./_components/landing/video-section";
+
+export function DialogDemo() {
+  return (
+    <Dialog>
+      <form>
+        <DialogTrigger asChild>
+          <Button variant="outline">Open Dialog</Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit profile</DialogTitle>
+            <DialogDescription>
+              Make changes to your profile here. Click save when you&apos;re
+              done.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4">
+            <div className="grid gap-3">
+              <Label htmlFor="name-1">Name</Label>
+              <Input id="name-1" name="name" defaultValue="Pedro Duarte" />
+            </div>
+            <div className="grid gap-3">
+              <Label htmlFor="username-1">Username</Label>
+              <Input id="username-1" name="username" defaultValue="@peduarte" />
+            </div>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button type="submit">Save changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </form>
+    </Dialog>
+  );
+}
 
 export default function HomePage() {
   return (
@@ -33,6 +84,7 @@ export default function HomePage() {
 
       <main className="pt-24">
         <HeroSection />
+        <DialogDemo />
         {/* Tally embed form commented out */}
         {/**
         <div className="container mx-auto max-w-3xl px-4 py-12 md:px-20">

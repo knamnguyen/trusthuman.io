@@ -1,97 +1,108 @@
 {
   "../../../../../../../@crx/manifest": {
-    "file": "assets/crx-manifest.js-xOsv0h-Y.js",
+    "file": "assets/crx-manifest.js-oA4Uki7i.js",
     "name": "crx-manifest.js",
     "src": "../../../../../../../@crx/manifest",
     "isEntry": true
   },
-  "_get-sync-host-BTxo0P6g.js": {
-    "file": "assets/get-sync-host-BTxo0P6g.js",
+  "_get-sync-host-BraIa6wa.js": {
+    "file": "assets/get-sync-host-BraIa6wa.js",
     "name": "get-sync-host",
     "imports": [
-      "_index-DCPjFz1h.js"
+      "_index-CP-b3-11.js",
+      "_index-Dr715SCd.js"
     ]
   },
-  "_index-DCPjFz1h.js": {
-    "file": "assets/index-DCPjFz1h.js",
+  "_index-CP-b3-11.js": {
+    "file": "assets/index-CP-b3-11.js",
     "name": "index"
   },
-  "_index.tsx-loader-mTDerEub.js": {
-    "file": "assets/index.tsx-loader-mTDerEub.js",
-    "src": "_index.tsx-loader-mTDerEub.js"
+  "_index-Dr715SCd.js": {
+    "file": "assets/index-Dr715SCd.js",
+    "name": "index",
+    "imports": [
+      "_index-CP-b3-11.js"
+    ]
+  },
+  "_index.tsx-loader-CqA9peaz.js": {
+    "file": "assets/index.tsx-loader-CqA9peaz.js",
+    "src": "_index.tsx-loader-CqA9peaz.js"
   },
   "_profile-extract-button-E_OM6-m_.js": {
     "file": "assets/profile-extract-button-E_OM6-m_.js",
     "name": "profile-extract-button"
   },
-  "_react-V2OolOr-.js": {
-    "file": "assets/react-V2OolOr-.js",
+  "_react-BvlFoRqi.js": {
+    "file": "assets/react-BvlFoRqi.js",
     "name": "react",
     "imports": [
-      "_index-DCPjFz1h.js"
+      "_index-CP-b3-11.js"
     ]
   },
-  "_tailwind-BN9c4p8y.js": {
-    "file": "assets/tailwind-BN9c4p8y.js",
+  "_tailwind-D2UeyWNg.js": {
+    "file": "assets/tailwind-D2UeyWNg.js",
     "name": "tailwind",
     "imports": [
-      "_index-DCPjFz1h.js"
+      "_index-CP-b3-11.js"
     ],
     "css": [
-      "assets/tailwind-BgMprAYK.css"
+      "assets/tailwind-sWZ6QdVE.css"
     ]
   },
-  "_tailwind-BgMprAYK.css": {
-    "file": "assets/tailwind-BgMprAYK.css",
-    "src": "_tailwind-BgMprAYK.css"
+  "_tailwind-sWZ6QdVE.css": {
+    "file": "assets/tailwind-sWZ6QdVE.css",
+    "src": "_tailwind-sWZ6QdVE.css"
   },
   "public/icon-128.png": {
     "file": "assets/icon-128-C-YV5z2v.png",
     "src": "public/icon-128.png"
   },
   "src/pages/background/index.ts": {
-    "file": "assets/index.ts-VOqfMbCf.js",
+    "file": "assets/index.ts-CP8GJirK.js",
     "name": "index.ts",
     "src": "src/pages/background/index.ts",
     "isEntry": true,
     "imports": [
-      "_get-sync-host-BTxo0P6g.js",
-      "_react-V2OolOr-.js",
-      "_index-DCPjFz1h.js"
+      "_get-sync-host-BraIa6wa.js",
+      "_react-BvlFoRqi.js",
+      "_index-CP-b3-11.js",
+      "_index-Dr715SCd.js"
     ]
   },
   "src/pages/content/index.tsx": {
-    "file": "assets/index.tsx-CdrNx9r-.js",
+    "file": "assets/index.tsx-j9-5j7E_.js",
     "name": "index.tsx",
     "src": "src/pages/content/index.tsx",
     "isEntry": true,
     "imports": [
-      "_react-V2OolOr-.js",
+      "_react-BvlFoRqi.js",
       "_profile-extract-button-E_OM6-m_.js",
-      "_index-DCPjFz1h.js"
+      "_index-CP-b3-11.js"
     ]
   },
   "src/pages/options/index.html": {
-    "file": "assets/index.html-DtTcp_F-.js",
+    "file": "assets/index.html-CidHesO0.js",
     "name": "index.html",
     "src": "src/pages/options/index.html",
     "isEntry": true,
     "imports": [
-      "_tailwind-BN9c4p8y.js",
-      "_index-DCPjFz1h.js",
-      "_profile-extract-button-E_OM6-m_.js"
+      "_tailwind-D2UeyWNg.js",
+      "_index-CP-b3-11.js",
+      "_profile-extract-button-E_OM6-m_.js",
+      "_index-Dr715SCd.js"
     ]
   },
   "src/pages/popup/index.html": {
-    "file": "assets/index.html-Bl7fRdrg.js",
+    "file": "assets/index.html-DWgSu2Ou.js",
     "name": "index.html",
     "src": "src/pages/popup/index.html",
     "isEntry": true,
     "imports": [
-      "_tailwind-BN9c4p8y.js",
-      "_index-DCPjFz1h.js",
-      "_react-V2OolOr-.js",
-      "_get-sync-host-BTxo0P6g.js"
+      "_tailwind-D2UeyWNg.js",
+      "_index-CP-b3-11.js",
+      "_react-BvlFoRqi.js",
+      "_get-sync-host-BraIa6wa.js",
+      "_index-Dr715SCd.js"
     ],
     "css": [
       "assets/index-addibwyn.css"

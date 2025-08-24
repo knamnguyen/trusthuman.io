@@ -11,6 +11,7 @@ export type NormalizedContentHashResult = {
  * - Removes punctuation/special chars
  * - Collapses whitespace
  */
+
 export default async function normalizeAndHashContent(
   content: string,
 ): Promise<NormalizedContentHashResult | null> {

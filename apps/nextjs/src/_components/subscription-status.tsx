@@ -96,10 +96,10 @@ export function SubscriptionStatus() {
             title="Choose Your Plan"
           >
             <div className="grid gap-4 md:grid-cols-3">
-              <div className="rounded-lg border bg-card p-6 text-card-foreground">
+              <div className="bg-card text-card-foreground rounded-lg border p-6">
                 <h3 className="mb-2 text-xl font-bold">Monthly Plan</h3>
                 <p className="mb-3 text-3xl font-bold">$9.99/month</p>
-                <ul className="mb-4 space-y-1 text-sm text-muted-foreground">
+                <ul className="text-muted-foreground mb-4 space-y-1 text-sm">
                   <li>✓ Full access to all features</li>
                   <li>✓ Premium support</li>
                   <li>✓ Regular updates</li>
@@ -111,16 +111,16 @@ export function SubscriptionStatus() {
                     className="w-full rounded-lg bg-blue-600 px-4 py-2 font-bold text-white hover:bg-blue-700"
                   />
                 ) : (
-                  <p className="text-center text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-center text-xs">
                     Please sign in to subscribe
                   </p>
                 )}
               </div>
 
-              <div className="rounded-lg border bg-card p-6 text-card-foreground">
+              <div className="bg-card text-card-foreground rounded-lg border p-6">
                 <h3 className="mb-2 text-xl font-bold">Yearly Plan</h3>
                 <p className="mb-3 text-3xl font-bold">$99.99/year</p>
-                <ul className="mb-4 space-y-1 text-sm text-muted-foreground">
+                <ul className="text-muted-foreground mb-4 space-y-1 text-sm">
                   <li>✓ Full access to all features</li>
                   <li>✓ Premium support</li>
                   <li>✓ Regular updates</li>
@@ -133,13 +133,13 @@ export function SubscriptionStatus() {
                     className="w-full rounded-lg bg-blue-600 px-4 py-2 font-bold text-white hover:bg-blue-700"
                   />
                 ) : (
-                  <p className="text-center text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-center text-xs">
                     Please sign in to subscribe
                   </p>
                 )}
               </div>
 
-              <div className="rounded-lg border bg-card p-6 text-card-foreground">
+              {/* <div className="rounded-lg border bg-card p-6 text-card-foreground">
                 <h3 className="mb-2 text-xl font-bold">Lifetime Access</h3>
                 <p className="mb-3 text-3xl font-bold">$99.99</p>
                 <ul className="mb-4 space-y-1 text-sm text-muted-foreground">
@@ -159,7 +159,7 @@ export function SubscriptionStatus() {
                     Please sign in to purchase
                   </p>
                 )}
-              </div>
+              </div> */}
             </div>
           </SubscriptionPlanModal>
         </div>
