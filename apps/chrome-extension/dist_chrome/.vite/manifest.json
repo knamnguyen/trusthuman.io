@@ -1,12 +1,12 @@
 {
   "../../../../../../../@crx/manifest": {
-    "file": "assets/crx-manifest.js-oA4Uki7i.js",
+    "file": "assets/crx-manifest.js-CK_vj5NJ.js",
     "name": "crx-manifest.js",
     "src": "../../../../../../../@crx/manifest",
     "isEntry": true
   },
-  "_get-sync-host-BraIa6wa.js": {
-    "file": "assets/get-sync-host-BraIa6wa.js",
+  "_get-sync-host-c5lwLfGY.js": {
+    "file": "assets/get-sync-host-c5lwLfGY.js",
     "name": "get-sync-host",
     "imports": [
       "_index-CP-b3-11.js",
@@ -24,16 +24,16 @@
       "_index-CP-b3-11.js"
     ]
   },
-  "_index.tsx-loader-aqScxTQD.js": {
-    "file": "assets/index.tsx-loader-aqScxTQD.js",
-    "src": "_index.tsx-loader-aqScxTQD.js"
+  "_index.tsx-loader-B5xaNZws.js": {
+    "file": "assets/index.tsx-loader-B5xaNZws.js",
+    "src": "_index.tsx-loader-B5xaNZws.js"
   },
   "_profile-extract-button-E_OM6-m_.js": {
     "file": "assets/profile-extract-button-E_OM6-m_.js",
     "name": "profile-extract-button"
   },
-  "_react-BvlFoRqi.js": {
-    "file": "assets/react-BvlFoRqi.js",
+  "_react-CixptkQi.js": {
+    "file": "assets/react-CixptkQi.js",
     "name": "react",
     "imports": [
       "_index-CP-b3-11.js"
@@ -58,24 +58,24 @@
     "src": "public/icon-128.png"
   },
   "src/pages/background/index.ts": {
-    "file": "assets/index.ts-CP8GJirK.js",
+    "file": "assets/index.ts-CBO2QHuB.js",
     "name": "index.ts",
     "src": "src/pages/background/index.ts",
     "isEntry": true,
     "imports": [
-      "_get-sync-host-BraIa6wa.js",
-      "_react-BvlFoRqi.js",
+      "_get-sync-host-c5lwLfGY.js",
+      "_react-CixptkQi.js",
       "_index-CP-b3-11.js",
       "_index-Dr715SCd.js"
     ]
   },
   "src/pages/content/index.tsx": {
-    "file": "assets/index.tsx-D_BpQz9Q.js",
+    "file": "assets/index.tsx-DLPVOu0K.js",
     "name": "index.tsx",
     "src": "src/pages/content/index.tsx",
     "isEntry": true,
     "imports": [
-      "_react-BvlFoRqi.js",
+      "_react-CixptkQi.js",
       "_profile-extract-button-E_OM6-m_.js",
       "_index-CP-b3-11.js"
     ]
@@ -93,15 +93,15 @@
     ]
   },
   "src/pages/popup/index.html": {
-    "file": "assets/index.html-BMVus0uj.js",
+    "file": "assets/index.html-CIBfjmW6.js",
     "name": "index.html",
     "src": "src/pages/popup/index.html",
     "isEntry": true,
     "imports": [
       "_tailwind-D2UeyWNg.js",
       "_index-CP-b3-11.js",
-      "_react-BvlFoRqi.js",
-      "_get-sync-host-BraIa6wa.js",
+      "_react-CixptkQi.js",
+      "_get-sync-host-c5lwLfGY.js",
       "_index-Dr715SCd.js"
     ],
     "css": [
