@@ -13,13 +13,11 @@ import {
 // } from "@sassy/db/schema-validators";
 
 import { protectedProcedure, publicProcedure } from "../trpc";
+import { checkPremiumAccess } from "../utils/check-premium-access";
 
 export const userRouter = {
   checkAccess: protectedProcedure.query(async ({ ctx }) => {
-    const user = await ctx.db.user.findUnique({
-      where: { id: ctx.user?.id },
-    });
-    const access = user?.accessType;
+    const access = await checkPremiumAccess(ctx);
     return access;
   }),
 
@@ -146,9 +144,13 @@ export const userRouter = {
     // const prismaType = ctx.Prisma;
 
     try {
+      console.log("found user");
+      console.log("user id is: " + ctx.user.id);
       const user = await ctx.db.user.findUnique({
         where: { id: ctx.user.id },
       });
+
+      console.log(user);
 
       return user;
     } catch (error) {

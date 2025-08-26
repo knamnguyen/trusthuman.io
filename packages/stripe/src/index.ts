@@ -1,8 +1,6 @@
 // packages/stripe/src/index.ts
 import Stripe from "stripe";
 
-import { AccessTypeType } from "@sassy/db/schema-validators";
-
 import { STRIPE_ID_PRICES } from "./schema-validators";
 
 /**

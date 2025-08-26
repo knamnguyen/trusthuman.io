@@ -136,6 +136,72 @@ exports.Prisma.UserScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.ProfileImportRunScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  urls: 'urls',
+  status: 'status',
+  urlsSucceeded: 'urlsSucceeded',
+  urlsFailed: 'urlsFailed',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.LinkedInProfileScalarFieldEnum = {
+  id: 'id',
+  linkedinUrl: 'linkedinUrl',
+  fullName: 'fullName',
+  headline: 'headline',
+  urn: 'urn',
+  profilePic: 'profilePic',
+  firstName: 'firstName',
+  lastName: 'lastName',
+  connections: 'connections',
+  followers: 'followers',
+  email: 'email',
+  mobileNumber: 'mobileNumber',
+  jobTitle: 'jobTitle',
+  companyName: 'companyName',
+  companyIndustry: 'companyIndustry',
+  companyWebsite: 'companyWebsite',
+  companyLinkedin: 'companyLinkedin',
+  companyFoundedIn: 'companyFoundedIn',
+  companySize: 'companySize',
+  currentJobDuration: 'currentJobDuration',
+  currentJobDurationInYrs: 'currentJobDurationInYrs',
+  topSkillsByEndorsements: 'topSkillsByEndorsements',
+  addressCountryOnly: 'addressCountryOnly',
+  addressWithCountry: 'addressWithCountry',
+  addressWithoutCountry: 'addressWithoutCountry',
+  profilePicHighQuality: 'profilePicHighQuality',
+  about: 'about',
+  publicIdentifier: 'publicIdentifier',
+  openConnection: 'openConnection',
+  experiences: 'experiences',
+  updates: 'updates',
+  skills: 'skills',
+  profilePicAllDimensions: 'profilePicAllDimensions',
+  educations: 'educations',
+  licenseAndCertificates: 'licenseAndCertificates',
+  honorsAndAwards: 'honorsAndAwards',
+  languages: 'languages',
+  volunteerAndAwards: 'volunteerAndAwards',
+  verifications: 'verifications',
+  promos: 'promos',
+  highlights: 'highlights',
+  projects: 'projects',
+  publications: 'publications',
+  patents: 'patents',
+  courses: 'courses',
+  testScores: 'testScores',
+  organizations: 'organizations',
+  volunteerCauses: 'volunteerCauses',
+  interests: 'interests',
+  recommendations: 'recommendations',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -168,8 +234,16 @@ exports.AccessType = exports.$Enums.AccessType = {
   YEARLY: 'YEARLY'
 };
 
+exports.ImportStatus = exports.$Enums.ImportStatus = {
+  NOT_STARTED: 'NOT_STARTED',
+  RUNNING: 'RUNNING',
+  FINISHED: 'FINISHED'
+};
+
 exports.Prisma.ModelName = {
-  User: 'User'
+  User: 'User',
+  ProfileImportRun: 'ProfileImportRun',
+  LinkedInProfile: 'LinkedInProfile'
 };
 
 /**

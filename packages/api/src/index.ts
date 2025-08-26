@@ -16,13 +16,14 @@ import { createCallerFactory, createTRPCContext } from "./trpc";
  * instead of recalling other procedures within procedures
  */
 const createCaller = createCallerFactory(appRouter);
+type AppRouterCaller = ReturnType<typeof createCaller>;
 
 /**
  * Helper to create a server-side caller with the required context
  * This is useful for server-side operations where you need to call tRPC procedures
  * But don't use this inside the trpc procedures themselves because it will create a new context
  */
-export const createServerClient = async () => {
+export const createServerClient = async (): Promise<AppRouterCaller> => {
   const ctx = await createTRPCContext({
     headers: new Headers(),
   });

@@ -12,13 +12,23 @@ import { useTRPC } from "~/trpc/react";
 export function useSubscription() {
   const trpc = useTRPC();
 
-  // Query with caching using standard useQuery + queryOptions
-  const { data, isLoading, error } = useQuery(
-    trpc.stripe.checkAccess.queryOptions(),
-  );
+  // // Query with caching using standard useQuery + queryOptions directly from stripe
+  // const { data, isLoading, error } = useQuery(
+  //   trpc.stripe.checkAccess.queryOptions(),
+  // );
 
+  const { data, isLoading, error } = useQuery({
+    ...trpc.user.me.queryOptions(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 2,
+  });
+
+  let hasAccess = false;
+  if (data?.accessType !== "FREE") hasAccess = true;
+
+  console.log("data", data);
   return {
-    hasAccess: data?.hasAccess ?? false,
+    hasAccess: hasAccess,
     accessType: data?.accessType ?? "FREE",
     isLoading,
     error,

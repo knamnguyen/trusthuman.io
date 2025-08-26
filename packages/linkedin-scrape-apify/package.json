@@ -1,11 +1,11 @@
 {
-  "name": "@sassy/api",
+  "name": "@sassy/linkedin-scrape-apify",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "__cmt1": "//info using just in time package export so no need to worry about build step shit",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./schema-validators": "./src/schema-validators.ts"
   },
   "license": "MIT",
   "scripts": {
@@ -13,20 +13,10 @@
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
-    "with-env": "dotenv --override -e ../../.env --",
-    "apify:test": "pnpm with-env bun ./scripts/test-linkedin-scrape-apify.ts"
+    "with-env": "dotenv --override -e ../../.env --"
   },
   "dependencies": {
-    "@clerk/nextjs": "^6.12.5",
-    "@google/genai": "^1.5.1",
-    "@sassy/db": "workspace:*",
-    "@sassy/linkedin-scrape-apify": "workspace:*",
-    "@sassy/stripe": "workspace:*",
-    "@sassy/validators": "workspace:*",
-    "@trpc/server": "catalog:",
-    "data-fns": "^1.1.0",
-    "date-fns": "^4.1.0",
-    "superjson": "2.2.2",
+    "apify-client": "^2.12.0",
     "zod": "catalog:"
   },
   "devDependencies": {
@@ -35,7 +25,7 @@
     "@sassy/tsconfig": "workspace:*",
     "dotenv-cli": "^8.0.0",
     "eslint": "catalog:",
-    "prettier": "catalog:",
+    "tsx": "^4.19.3",
     "typescript": "catalog:"
   },
   "prettier": "@sassy/prettier-config"

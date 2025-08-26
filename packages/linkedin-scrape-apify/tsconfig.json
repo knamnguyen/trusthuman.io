@@ -1,0 +1,13 @@
+{
+  "extends": "@sassy/tsconfig/internal-package.json",
+  "include": ["src"],
+  "exclude": ["node_modules"],
+  "compilerOptions": {
+    "lib": ["ES2022", "dom", "dom.iterable"],
+    "jsx": "preserve",
+    "rootDir": "./src",
+    "paths": {
+      "@sassy/linkedin-scrape-apify/*": ["./src/*"]
+    }
+  }
+}

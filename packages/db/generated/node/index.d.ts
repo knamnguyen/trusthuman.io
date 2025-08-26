@@ -18,6 +18,16 @@ export type PrismaPromise<T> = $Public.PrismaPromise<T>
  * 
  */
 export type User = $Result.DefaultSelection<Prisma.$UserPayload>
+/**
+ * Model ProfileImportRun
+ * 
+ */
+export type ProfileImportRun = $Result.DefaultSelection<Prisma.$ProfileImportRunPayload>
+/**
+ * Model LinkedInProfile
+ * 
+ */
+export type LinkedInProfile = $Result.DefaultSelection<Prisma.$LinkedInProfilePayload>
 
 /**
  * Enums
@@ -32,11 +42,24 @@ export namespace $Enums {
 
 export type AccessType = (typeof AccessType)[keyof typeof AccessType]
 
+
+export const ImportStatus: {
+  NOT_STARTED: 'NOT_STARTED',
+  RUNNING: 'RUNNING',
+  FINISHED: 'FINISHED'
+};
+
+export type ImportStatus = (typeof ImportStatus)[keyof typeof ImportStatus]
+
 }
 
 export type AccessType = $Enums.AccessType
 
 export const AccessType: typeof $Enums.AccessType
+
+export type ImportStatus = $Enums.ImportStatus
+
+export const ImportStatus: typeof $Enums.ImportStatus
 
 /**
  * ##  Prisma Client ʲˢ
@@ -172,6 +195,26 @@ export class PrismaClient<
     * ```
     */
   get user(): Prisma.UserDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.profileImportRun`: Exposes CRUD operations for the **ProfileImportRun** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ProfileImportRuns
+    * const profileImportRuns = await prisma.profileImportRun.findMany()
+    * ```
+    */
+  get profileImportRun(): Prisma.ProfileImportRunDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.linkedInProfile`: Exposes CRUD operations for the **LinkedInProfile** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more LinkedInProfiles
+    * const linkedInProfiles = await prisma.linkedInProfile.findMany()
+    * ```
+    */
+  get linkedInProfile(): Prisma.LinkedInProfileDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -612,7 +655,9 @@ export namespace Prisma {
 
 
   export const ModelName: {
-    User: 'User'
+    User: 'User',
+    ProfileImportRun: 'ProfileImportRun',
+    LinkedInProfile: 'LinkedInProfile'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -631,7 +676,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user"
+      modelProps: "user" | "profileImportRun" | "linkedInProfile"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -706,6 +751,154 @@ export namespace Prisma {
           count: {
             args: Prisma.UserCountArgs<ExtArgs>
             result: $Utils.Optional<UserCountAggregateOutputType> | number
+          }
+        }
+      }
+      ProfileImportRun: {
+        payload: Prisma.$ProfileImportRunPayload<ExtArgs>
+        fields: Prisma.ProfileImportRunFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ProfileImportRunFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProfileImportRunPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ProfileImportRunFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProfileImportRunPayload>
+          }
+          findFirst: {
+            args: Prisma.ProfileImportRunFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProfileImportRunPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ProfileImportRunFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProfileImportRunPayload>
+          }
+          findMany: {
+            args: Prisma.ProfileImportRunFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProfileImportRunPayload>[]
+          }
+          create: {
+            args: Prisma.ProfileImportRunCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProfileImportRunPayload>
+          }
+          createMany: {
+            args: Prisma.ProfileImportRunCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ProfileImportRunCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProfileImportRunPayload>[]
+          }
+          delete: {
+            args: Prisma.ProfileImportRunDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProfileImportRunPayload>
+          }
+          update: {
+            args: Prisma.ProfileImportRunUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProfileImportRunPayload>
+          }
+          deleteMany: {
+            args: Prisma.ProfileImportRunDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ProfileImportRunUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ProfileImportRunUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProfileImportRunPayload>[]
+          }
+          upsert: {
+            args: Prisma.ProfileImportRunUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProfileImportRunPayload>
+          }
+          aggregate: {
+            args: Prisma.ProfileImportRunAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateProfileImportRun>
+          }
+          groupBy: {
+            args: Prisma.ProfileImportRunGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ProfileImportRunGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ProfileImportRunCountArgs<ExtArgs>
+            result: $Utils.Optional<ProfileImportRunCountAggregateOutputType> | number
+          }
+        }
+      }
+      LinkedInProfile: {
+        payload: Prisma.$LinkedInProfilePayload<ExtArgs>
+        fields: Prisma.LinkedInProfileFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.LinkedInProfileFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LinkedInProfilePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.LinkedInProfileFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LinkedInProfilePayload>
+          }
+          findFirst: {
+            args: Prisma.LinkedInProfileFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LinkedInProfilePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.LinkedInProfileFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LinkedInProfilePayload>
+          }
+          findMany: {
+            args: Prisma.LinkedInProfileFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LinkedInProfilePayload>[]
+          }
+          create: {
+            args: Prisma.LinkedInProfileCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LinkedInProfilePayload>
+          }
+          createMany: {
+            args: Prisma.LinkedInProfileCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.LinkedInProfileCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LinkedInProfilePayload>[]
+          }
+          delete: {
+            args: Prisma.LinkedInProfileDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LinkedInProfilePayload>
+          }
+          update: {
+            args: Prisma.LinkedInProfileUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LinkedInProfilePayload>
+          }
+          deleteMany: {
+            args: Prisma.LinkedInProfileDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.LinkedInProfileUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.LinkedInProfileUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LinkedInProfilePayload>[]
+          }
+          upsert: {
+            args: Prisma.LinkedInProfileUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LinkedInProfilePayload>
+          }
+          aggregate: {
+            args: Prisma.LinkedInProfileAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateLinkedInProfile>
+          }
+          groupBy: {
+            args: Prisma.LinkedInProfileGroupByArgs<ExtArgs>
+            result: $Utils.Optional<LinkedInProfileGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.LinkedInProfileCountArgs<ExtArgs>
+            result: $Utils.Optional<LinkedInProfileCountAggregateOutputType> | number
           }
         }
       }
@@ -794,6 +987,8 @@ export namespace Prisma {
   }
   export type GlobalOmitConfig = {
     user?: UserOmit
+    profileImportRun?: ProfileImportRunOmit
+    linkedInProfile?: LinkedInProfileOmit
   }
 
   /* Types for Logging */
@@ -882,6 +1077,36 @@ export namespace Prisma {
    * Count Types
    */
 
+
+  /**
+   * Count Type UserCountOutputType
+   */
+
+  export type UserCountOutputType = {
+    profileImportRuns: number
+  }
+
+  export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    profileImportRuns?: boolean | UserCountOutputTypeCountProfileImportRunsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserCountOutputType
+     */
+    select?: UserCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountProfileImportRunsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ProfileImportRunWhereInput
+  }
 
 
   /**
@@ -1142,6 +1367,8 @@ export namespace Prisma {
     dailyAIcomments?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    profileImportRuns?: boolean | User$profileImportRunsArgs<ExtArgs>
+    _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -1193,10 +1420,18 @@ export namespace Prisma {
   }
 
   export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "firstName" | "lastName" | "username" | "primaryEmailAddress" | "imageUrl" | "clerkUserProperties" | "stripeCustomerId" | "accessType" | "stripeUserProperties" | "dailyAIcomments" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+  export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    profileImportRuns?: boolean | User$profileImportRunsArgs<ExtArgs>
+    _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type UserIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
 
   export type $UserPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "User"
-    objects: {}
+    objects: {
+      profileImportRuns: Prisma.$ProfileImportRunPayload<ExtArgs>[]
+    }
     scalars: $Extensions.GetPayloadResult<{
       id: string
       firstName: string | null
@@ -1605,6 +1840,7 @@ export namespace Prisma {
    */
   export interface Prisma__UserClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
+    profileImportRuns<T extends User$profileImportRunsArgs<ExtArgs> = {}>(args?: Subset<T, User$profileImportRunsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProfileImportRunPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1664,6 +1900,10 @@ export namespace Prisma {
      */
     omit?: UserOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    /**
      * Filter, which User to fetch.
      */
     where: UserWhereUniqueInput
@@ -1682,6 +1922,10 @@ export namespace Prisma {
      */
     omit?: UserOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    /**
      * Filter, which User to fetch.
      */
     where: UserWhereUniqueInput
@@ -1699,6 +1943,10 @@ export namespace Prisma {
      * Omit specific fields from the User
      */
     omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
     /**
      * Filter, which User to fetch.
      */
@@ -1748,6 +1996,10 @@ export namespace Prisma {
      */
     omit?: UserOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    /**
      * Filter, which User to fetch.
      */
     where?: UserWhereInput
@@ -1796,6 +2048,10 @@ export namespace Prisma {
      */
     omit?: UserOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    /**
      * Filter, which Users to fetch.
      */
     where?: UserWhereInput
@@ -1838,6 +2094,10 @@ export namespace Prisma {
      * Omit specific fields from the User
      */
     omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
     /**
      * The data needed to create a User.
      */
@@ -1886,6 +2146,10 @@ export namespace Prisma {
      * Omit specific fields from the User
      */
     omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
     /**
      * The data needed to update a User.
      */
@@ -1953,6 +2217,10 @@ export namespace Prisma {
      */
     omit?: UserOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    /**
      * The filter to search for the User to update in case it exists.
      */
     where: UserWhereUniqueInput
@@ -1979,6 +2247,10 @@ export namespace Prisma {
      */
     omit?: UserOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    /**
      * Filter which User to delete.
      */
     where: UserWhereUniqueInput
@@ -1999,6 +2271,30 @@ export namespace Prisma {
   }
 
   /**
+   * User.profileImportRuns
+   */
+  export type User$profileImportRunsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProfileImportRun
+     */
+    select?: ProfileImportRunSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProfileImportRun
+     */
+    omit?: ProfileImportRunOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProfileImportRunInclude<ExtArgs> | null
+    where?: ProfileImportRunWhereInput
+    orderBy?: ProfileImportRunOrderByWithRelationInput | ProfileImportRunOrderByWithRelationInput[]
+    cursor?: ProfileImportRunWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ProfileImportRunScalarFieldEnum | ProfileImportRunScalarFieldEnum[]
+  }
+
+  /**
    * User without action
    */
   export type UserDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -2010,6 +2306,2663 @@ export namespace Prisma {
      * Omit specific fields from the User
      */
     omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model ProfileImportRun
+   */
+
+  export type AggregateProfileImportRun = {
+    _count: ProfileImportRunCountAggregateOutputType | null
+    _min: ProfileImportRunMinAggregateOutputType | null
+    _max: ProfileImportRunMaxAggregateOutputType | null
+  }
+
+  export type ProfileImportRunMinAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    status: $Enums.ImportStatus | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ProfileImportRunMaxAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    status: $Enums.ImportStatus | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ProfileImportRunCountAggregateOutputType = {
+    id: number
+    userId: number
+    urls: number
+    status: number
+    urlsSucceeded: number
+    urlsFailed: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type ProfileImportRunMinAggregateInputType = {
+    id?: true
+    userId?: true
+    status?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ProfileImportRunMaxAggregateInputType = {
+    id?: true
+    userId?: true
+    status?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ProfileImportRunCountAggregateInputType = {
+    id?: true
+    userId?: true
+    urls?: true
+    status?: true
+    urlsSucceeded?: true
+    urlsFailed?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type ProfileImportRunAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ProfileImportRun to aggregate.
+     */
+    where?: ProfileImportRunWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProfileImportRuns to fetch.
+     */
+    orderBy?: ProfileImportRunOrderByWithRelationInput | ProfileImportRunOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ProfileImportRunWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProfileImportRuns from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProfileImportRuns.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ProfileImportRuns
+    **/
+    _count?: true | ProfileImportRunCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ProfileImportRunMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ProfileImportRunMaxAggregateInputType
+  }
+
+  export type GetProfileImportRunAggregateType<T extends ProfileImportRunAggregateArgs> = {
+        [P in keyof T & keyof AggregateProfileImportRun]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateProfileImportRun[P]>
+      : GetScalarType<T[P], AggregateProfileImportRun[P]>
+  }
+
+
+
+
+  export type ProfileImportRunGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ProfileImportRunWhereInput
+    orderBy?: ProfileImportRunOrderByWithAggregationInput | ProfileImportRunOrderByWithAggregationInput[]
+    by: ProfileImportRunScalarFieldEnum[] | ProfileImportRunScalarFieldEnum
+    having?: ProfileImportRunScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ProfileImportRunCountAggregateInputType | true
+    _min?: ProfileImportRunMinAggregateInputType
+    _max?: ProfileImportRunMaxAggregateInputType
+  }
+
+  export type ProfileImportRunGroupByOutputType = {
+    id: string
+    userId: string
+    urls: string[]
+    status: $Enums.ImportStatus
+    urlsSucceeded: string[]
+    urlsFailed: string[]
+    createdAt: Date
+    updatedAt: Date
+    _count: ProfileImportRunCountAggregateOutputType | null
+    _min: ProfileImportRunMinAggregateOutputType | null
+    _max: ProfileImportRunMaxAggregateOutputType | null
+  }
+
+  type GetProfileImportRunGroupByPayload<T extends ProfileImportRunGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ProfileImportRunGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ProfileImportRunGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ProfileImportRunGroupByOutputType[P]>
+            : GetScalarType<T[P], ProfileImportRunGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ProfileImportRunSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    urls?: boolean
+    status?: boolean
+    urlsSucceeded?: boolean
+    urlsFailed?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["profileImportRun"]>
+
+  export type ProfileImportRunSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    urls?: boolean
+    status?: boolean
+    urlsSucceeded?: boolean
+    urlsFailed?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["profileImportRun"]>
+
+  export type ProfileImportRunSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    urls?: boolean
+    status?: boolean
+    urlsSucceeded?: boolean
+    urlsFailed?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["profileImportRun"]>
+
+  export type ProfileImportRunSelectScalar = {
+    id?: boolean
+    userId?: boolean
+    urls?: boolean
+    status?: boolean
+    urlsSucceeded?: boolean
+    urlsFailed?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type ProfileImportRunOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "urls" | "status" | "urlsSucceeded" | "urlsFailed" | "createdAt" | "updatedAt", ExtArgs["result"]["profileImportRun"]>
+  export type ProfileImportRunInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type ProfileImportRunIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type ProfileImportRunIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $ProfileImportRunPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ProfileImportRun"
+    objects: {
+      user: Prisma.$UserPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      userId: string
+      urls: string[]
+      status: $Enums.ImportStatus
+      urlsSucceeded: string[]
+      urlsFailed: string[]
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["profileImportRun"]>
+    composites: {}
+  }
+
+  type ProfileImportRunGetPayload<S extends boolean | null | undefined | ProfileImportRunDefaultArgs> = $Result.GetResult<Prisma.$ProfileImportRunPayload, S>
+
+  type ProfileImportRunCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ProfileImportRunFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ProfileImportRunCountAggregateInputType | true
+    }
+
+  export interface ProfileImportRunDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ProfileImportRun'], meta: { name: 'ProfileImportRun' } }
+    /**
+     * Find zero or one ProfileImportRun that matches the filter.
+     * @param {ProfileImportRunFindUniqueArgs} args - Arguments to find a ProfileImportRun
+     * @example
+     * // Get one ProfileImportRun
+     * const profileImportRun = await prisma.profileImportRun.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ProfileImportRunFindUniqueArgs>(args: SelectSubset<T, ProfileImportRunFindUniqueArgs<ExtArgs>>): Prisma__ProfileImportRunClient<$Result.GetResult<Prisma.$ProfileImportRunPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ProfileImportRun that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ProfileImportRunFindUniqueOrThrowArgs} args - Arguments to find a ProfileImportRun
+     * @example
+     * // Get one ProfileImportRun
+     * const profileImportRun = await prisma.profileImportRun.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ProfileImportRunFindUniqueOrThrowArgs>(args: SelectSubset<T, ProfileImportRunFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ProfileImportRunClient<$Result.GetResult<Prisma.$ProfileImportRunPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ProfileImportRun that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProfileImportRunFindFirstArgs} args - Arguments to find a ProfileImportRun
+     * @example
+     * // Get one ProfileImportRun
+     * const profileImportRun = await prisma.profileImportRun.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ProfileImportRunFindFirstArgs>(args?: SelectSubset<T, ProfileImportRunFindFirstArgs<ExtArgs>>): Prisma__ProfileImportRunClient<$Result.GetResult<Prisma.$ProfileImportRunPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ProfileImportRun that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProfileImportRunFindFirstOrThrowArgs} args - Arguments to find a ProfileImportRun
+     * @example
+     * // Get one ProfileImportRun
+     * const profileImportRun = await prisma.profileImportRun.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ProfileImportRunFindFirstOrThrowArgs>(args?: SelectSubset<T, ProfileImportRunFindFirstOrThrowArgs<ExtArgs>>): Prisma__ProfileImportRunClient<$Result.GetResult<Prisma.$ProfileImportRunPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ProfileImportRuns that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProfileImportRunFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ProfileImportRuns
+     * const profileImportRuns = await prisma.profileImportRun.findMany()
+     * 
+     * // Get first 10 ProfileImportRuns
+     * const profileImportRuns = await prisma.profileImportRun.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const profileImportRunWithIdOnly = await prisma.profileImportRun.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ProfileImportRunFindManyArgs>(args?: SelectSubset<T, ProfileImportRunFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProfileImportRunPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ProfileImportRun.
+     * @param {ProfileImportRunCreateArgs} args - Arguments to create a ProfileImportRun.
+     * @example
+     * // Create one ProfileImportRun
+     * const ProfileImportRun = await prisma.profileImportRun.create({
+     *   data: {
+     *     // ... data to create a ProfileImportRun
+     *   }
+     * })
+     * 
+     */
+    create<T extends ProfileImportRunCreateArgs>(args: SelectSubset<T, ProfileImportRunCreateArgs<ExtArgs>>): Prisma__ProfileImportRunClient<$Result.GetResult<Prisma.$ProfileImportRunPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ProfileImportRuns.
+     * @param {ProfileImportRunCreateManyArgs} args - Arguments to create many ProfileImportRuns.
+     * @example
+     * // Create many ProfileImportRuns
+     * const profileImportRun = await prisma.profileImportRun.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ProfileImportRunCreateManyArgs>(args?: SelectSubset<T, ProfileImportRunCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ProfileImportRuns and returns the data saved in the database.
+     * @param {ProfileImportRunCreateManyAndReturnArgs} args - Arguments to create many ProfileImportRuns.
+     * @example
+     * // Create many ProfileImportRuns
+     * const profileImportRun = await prisma.profileImportRun.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ProfileImportRuns and only return the `id`
+     * const profileImportRunWithIdOnly = await prisma.profileImportRun.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ProfileImportRunCreateManyAndReturnArgs>(args?: SelectSubset<T, ProfileImportRunCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProfileImportRunPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a ProfileImportRun.
+     * @param {ProfileImportRunDeleteArgs} args - Arguments to delete one ProfileImportRun.
+     * @example
+     * // Delete one ProfileImportRun
+     * const ProfileImportRun = await prisma.profileImportRun.delete({
+     *   where: {
+     *     // ... filter to delete one ProfileImportRun
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ProfileImportRunDeleteArgs>(args: SelectSubset<T, ProfileImportRunDeleteArgs<ExtArgs>>): Prisma__ProfileImportRunClient<$Result.GetResult<Prisma.$ProfileImportRunPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ProfileImportRun.
+     * @param {ProfileImportRunUpdateArgs} args - Arguments to update one ProfileImportRun.
+     * @example
+     * // Update one ProfileImportRun
+     * const profileImportRun = await prisma.profileImportRun.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ProfileImportRunUpdateArgs>(args: SelectSubset<T, ProfileImportRunUpdateArgs<ExtArgs>>): Prisma__ProfileImportRunClient<$Result.GetResult<Prisma.$ProfileImportRunPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ProfileImportRuns.
+     * @param {ProfileImportRunDeleteManyArgs} args - Arguments to filter ProfileImportRuns to delete.
+     * @example
+     * // Delete a few ProfileImportRuns
+     * const { count } = await prisma.profileImportRun.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ProfileImportRunDeleteManyArgs>(args?: SelectSubset<T, ProfileImportRunDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ProfileImportRuns.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProfileImportRunUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ProfileImportRuns
+     * const profileImportRun = await prisma.profileImportRun.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ProfileImportRunUpdateManyArgs>(args: SelectSubset<T, ProfileImportRunUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ProfileImportRuns and returns the data updated in the database.
+     * @param {ProfileImportRunUpdateManyAndReturnArgs} args - Arguments to update many ProfileImportRuns.
+     * @example
+     * // Update many ProfileImportRuns
+     * const profileImportRun = await prisma.profileImportRun.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ProfileImportRuns and only return the `id`
+     * const profileImportRunWithIdOnly = await prisma.profileImportRun.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ProfileImportRunUpdateManyAndReturnArgs>(args: SelectSubset<T, ProfileImportRunUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProfileImportRunPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one ProfileImportRun.
+     * @param {ProfileImportRunUpsertArgs} args - Arguments to update or create a ProfileImportRun.
+     * @example
+     * // Update or create a ProfileImportRun
+     * const profileImportRun = await prisma.profileImportRun.upsert({
+     *   create: {
+     *     // ... data to create a ProfileImportRun
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ProfileImportRun we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ProfileImportRunUpsertArgs>(args: SelectSubset<T, ProfileImportRunUpsertArgs<ExtArgs>>): Prisma__ProfileImportRunClient<$Result.GetResult<Prisma.$ProfileImportRunPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ProfileImportRuns.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProfileImportRunCountArgs} args - Arguments to filter ProfileImportRuns to count.
+     * @example
+     * // Count the number of ProfileImportRuns
+     * const count = await prisma.profileImportRun.count({
+     *   where: {
+     *     // ... the filter for the ProfileImportRuns we want to count
+     *   }
+     * })
+    **/
+    count<T extends ProfileImportRunCountArgs>(
+      args?: Subset<T, ProfileImportRunCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ProfileImportRunCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ProfileImportRun.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProfileImportRunAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ProfileImportRunAggregateArgs>(args: Subset<T, ProfileImportRunAggregateArgs>): Prisma.PrismaPromise<GetProfileImportRunAggregateType<T>>
+
+    /**
+     * Group by ProfileImportRun.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProfileImportRunGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ProfileImportRunGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ProfileImportRunGroupByArgs['orderBy'] }
+        : { orderBy?: ProfileImportRunGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ProfileImportRunGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetProfileImportRunGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ProfileImportRun model
+   */
+  readonly fields: ProfileImportRunFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ProfileImportRun.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ProfileImportRunClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ProfileImportRun model
+   */
+  interface ProfileImportRunFieldRefs {
+    readonly id: FieldRef<"ProfileImportRun", 'String'>
+    readonly userId: FieldRef<"ProfileImportRun", 'String'>
+    readonly urls: FieldRef<"ProfileImportRun", 'String[]'>
+    readonly status: FieldRef<"ProfileImportRun", 'ImportStatus'>
+    readonly urlsSucceeded: FieldRef<"ProfileImportRun", 'String[]'>
+    readonly urlsFailed: FieldRef<"ProfileImportRun", 'String[]'>
+    readonly createdAt: FieldRef<"ProfileImportRun", 'DateTime'>
+    readonly updatedAt: FieldRef<"ProfileImportRun", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ProfileImportRun findUnique
+   */
+  export type ProfileImportRunFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProfileImportRun
+     */
+    select?: ProfileImportRunSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProfileImportRun
+     */
+    omit?: ProfileImportRunOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProfileImportRunInclude<ExtArgs> | null
+    /**
+     * Filter, which ProfileImportRun to fetch.
+     */
+    where: ProfileImportRunWhereUniqueInput
+  }
+
+  /**
+   * ProfileImportRun findUniqueOrThrow
+   */
+  export type ProfileImportRunFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProfileImportRun
+     */
+    select?: ProfileImportRunSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProfileImportRun
+     */
+    omit?: ProfileImportRunOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProfileImportRunInclude<ExtArgs> | null
+    /**
+     * Filter, which ProfileImportRun to fetch.
+     */
+    where: ProfileImportRunWhereUniqueInput
+  }
+
+  /**
+   * ProfileImportRun findFirst
+   */
+  export type ProfileImportRunFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProfileImportRun
+     */
+    select?: ProfileImportRunSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProfileImportRun
+     */
+    omit?: ProfileImportRunOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProfileImportRunInclude<ExtArgs> | null
+    /**
+     * Filter, which ProfileImportRun to fetch.
+     */
+    where?: ProfileImportRunWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProfileImportRuns to fetch.
+     */
+    orderBy?: ProfileImportRunOrderByWithRelationInput | ProfileImportRunOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ProfileImportRuns.
+     */
+    cursor?: ProfileImportRunWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProfileImportRuns from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProfileImportRuns.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ProfileImportRuns.
+     */
+    distinct?: ProfileImportRunScalarFieldEnum | ProfileImportRunScalarFieldEnum[]
+  }
+
+  /**
+   * ProfileImportRun findFirstOrThrow
+   */
+  export type ProfileImportRunFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProfileImportRun
+     */
+    select?: ProfileImportRunSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProfileImportRun
+     */
+    omit?: ProfileImportRunOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProfileImportRunInclude<ExtArgs> | null
+    /**
+     * Filter, which ProfileImportRun to fetch.
+     */
+    where?: ProfileImportRunWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProfileImportRuns to fetch.
+     */
+    orderBy?: ProfileImportRunOrderByWithRelationInput | ProfileImportRunOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ProfileImportRuns.
+     */
+    cursor?: ProfileImportRunWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProfileImportRuns from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProfileImportRuns.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ProfileImportRuns.
+     */
+    distinct?: ProfileImportRunScalarFieldEnum | ProfileImportRunScalarFieldEnum[]
+  }
+
+  /**
+   * ProfileImportRun findMany
+   */
+  export type ProfileImportRunFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProfileImportRun
+     */
+    select?: ProfileImportRunSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProfileImportRun
+     */
+    omit?: ProfileImportRunOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProfileImportRunInclude<ExtArgs> | null
+    /**
+     * Filter, which ProfileImportRuns to fetch.
+     */
+    where?: ProfileImportRunWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProfileImportRuns to fetch.
+     */
+    orderBy?: ProfileImportRunOrderByWithRelationInput | ProfileImportRunOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ProfileImportRuns.
+     */
+    cursor?: ProfileImportRunWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProfileImportRuns from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProfileImportRuns.
+     */
+    skip?: number
+    distinct?: ProfileImportRunScalarFieldEnum | ProfileImportRunScalarFieldEnum[]
+  }
+
+  /**
+   * ProfileImportRun create
+   */
+  export type ProfileImportRunCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProfileImportRun
+     */
+    select?: ProfileImportRunSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProfileImportRun
+     */
+    omit?: ProfileImportRunOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProfileImportRunInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ProfileImportRun.
+     */
+    data: XOR<ProfileImportRunCreateInput, ProfileImportRunUncheckedCreateInput>
+  }
+
+  /**
+   * ProfileImportRun createMany
+   */
+  export type ProfileImportRunCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ProfileImportRuns.
+     */
+    data: ProfileImportRunCreateManyInput | ProfileImportRunCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ProfileImportRun createManyAndReturn
+   */
+  export type ProfileImportRunCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProfileImportRun
+     */
+    select?: ProfileImportRunSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProfileImportRun
+     */
+    omit?: ProfileImportRunOmit<ExtArgs> | null
+    /**
+     * The data used to create many ProfileImportRuns.
+     */
+    data: ProfileImportRunCreateManyInput | ProfileImportRunCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProfileImportRunIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ProfileImportRun update
+   */
+  export type ProfileImportRunUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProfileImportRun
+     */
+    select?: ProfileImportRunSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProfileImportRun
+     */
+    omit?: ProfileImportRunOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProfileImportRunInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ProfileImportRun.
+     */
+    data: XOR<ProfileImportRunUpdateInput, ProfileImportRunUncheckedUpdateInput>
+    /**
+     * Choose, which ProfileImportRun to update.
+     */
+    where: ProfileImportRunWhereUniqueInput
+  }
+
+  /**
+   * ProfileImportRun updateMany
+   */
+  export type ProfileImportRunUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ProfileImportRuns.
+     */
+    data: XOR<ProfileImportRunUpdateManyMutationInput, ProfileImportRunUncheckedUpdateManyInput>
+    /**
+     * Filter which ProfileImportRuns to update
+     */
+    where?: ProfileImportRunWhereInput
+    /**
+     * Limit how many ProfileImportRuns to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ProfileImportRun updateManyAndReturn
+   */
+  export type ProfileImportRunUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProfileImportRun
+     */
+    select?: ProfileImportRunSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProfileImportRun
+     */
+    omit?: ProfileImportRunOmit<ExtArgs> | null
+    /**
+     * The data used to update ProfileImportRuns.
+     */
+    data: XOR<ProfileImportRunUpdateManyMutationInput, ProfileImportRunUncheckedUpdateManyInput>
+    /**
+     * Filter which ProfileImportRuns to update
+     */
+    where?: ProfileImportRunWhereInput
+    /**
+     * Limit how many ProfileImportRuns to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProfileImportRunIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ProfileImportRun upsert
+   */
+  export type ProfileImportRunUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProfileImportRun
+     */
+    select?: ProfileImportRunSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProfileImportRun
+     */
+    omit?: ProfileImportRunOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProfileImportRunInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ProfileImportRun to update in case it exists.
+     */
+    where: ProfileImportRunWhereUniqueInput
+    /**
+     * In case the ProfileImportRun found by the `where` argument doesn't exist, create a new ProfileImportRun with this data.
+     */
+    create: XOR<ProfileImportRunCreateInput, ProfileImportRunUncheckedCreateInput>
+    /**
+     * In case the ProfileImportRun was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ProfileImportRunUpdateInput, ProfileImportRunUncheckedUpdateInput>
+  }
+
+  /**
+   * ProfileImportRun delete
+   */
+  export type ProfileImportRunDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProfileImportRun
+     */
+    select?: ProfileImportRunSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProfileImportRun
+     */
+    omit?: ProfileImportRunOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProfileImportRunInclude<ExtArgs> | null
+    /**
+     * Filter which ProfileImportRun to delete.
+     */
+    where: ProfileImportRunWhereUniqueInput
+  }
+
+  /**
+   * ProfileImportRun deleteMany
+   */
+  export type ProfileImportRunDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ProfileImportRuns to delete
+     */
+    where?: ProfileImportRunWhereInput
+    /**
+     * Limit how many ProfileImportRuns to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ProfileImportRun without action
+   */
+  export type ProfileImportRunDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProfileImportRun
+     */
+    select?: ProfileImportRunSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProfileImportRun
+     */
+    omit?: ProfileImportRunOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProfileImportRunInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model LinkedInProfile
+   */
+
+  export type AggregateLinkedInProfile = {
+    _count: LinkedInProfileCountAggregateOutputType | null
+    _avg: LinkedInProfileAvgAggregateOutputType | null
+    _sum: LinkedInProfileSumAggregateOutputType | null
+    _min: LinkedInProfileMinAggregateOutputType | null
+    _max: LinkedInProfileMaxAggregateOutputType | null
+  }
+
+  export type LinkedInProfileAvgAggregateOutputType = {
+    connections: number | null
+    followers: number | null
+    companyFoundedIn: number | null
+    currentJobDurationInYrs: number | null
+  }
+
+  export type LinkedInProfileSumAggregateOutputType = {
+    connections: number | null
+    followers: number | null
+    companyFoundedIn: number | null
+    currentJobDurationInYrs: number | null
+  }
+
+  export type LinkedInProfileMinAggregateOutputType = {
+    id: string | null
+    linkedinUrl: string | null
+    fullName: string | null
+    headline: string | null
+    urn: string | null
+    profilePic: string | null
+    firstName: string | null
+    lastName: string | null
+    connections: number | null
+    followers: number | null
+    email: string | null
+    mobileNumber: string | null
+    jobTitle: string | null
+    companyName: string | null
+    companyIndustry: string | null
+    companyWebsite: string | null
+    companyLinkedin: string | null
+    companyFoundedIn: number | null
+    companySize: string | null
+    currentJobDuration: string | null
+    currentJobDurationInYrs: number | null
+    topSkillsByEndorsements: string | null
+    addressCountryOnly: string | null
+    addressWithCountry: string | null
+    addressWithoutCountry: string | null
+    profilePicHighQuality: string | null
+    about: string | null
+    publicIdentifier: string | null
+    openConnection: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type LinkedInProfileMaxAggregateOutputType = {
+    id: string | null
+    linkedinUrl: string | null
+    fullName: string | null
+    headline: string | null
+    urn: string | null
+    profilePic: string | null
+    firstName: string | null
+    lastName: string | null
+    connections: number | null
+    followers: number | null
+    email: string | null
+    mobileNumber: string | null
+    jobTitle: string | null
+    companyName: string | null
+    companyIndustry: string | null
+    companyWebsite: string | null
+    companyLinkedin: string | null
+    companyFoundedIn: number | null
+    companySize: string | null
+    currentJobDuration: string | null
+    currentJobDurationInYrs: number | null
+    topSkillsByEndorsements: string | null
+    addressCountryOnly: string | null
+    addressWithCountry: string | null
+    addressWithoutCountry: string | null
+    profilePicHighQuality: string | null
+    about: string | null
+    publicIdentifier: string | null
+    openConnection: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type LinkedInProfileCountAggregateOutputType = {
+    id: number
+    linkedinUrl: number
+    fullName: number
+    headline: number
+    urn: number
+    profilePic: number
+    firstName: number
+    lastName: number
+    connections: number
+    followers: number
+    email: number
+    mobileNumber: number
+    jobTitle: number
+    companyName: number
+    companyIndustry: number
+    companyWebsite: number
+    companyLinkedin: number
+    companyFoundedIn: number
+    companySize: number
+    currentJobDuration: number
+    currentJobDurationInYrs: number
+    topSkillsByEndorsements: number
+    addressCountryOnly: number
+    addressWithCountry: number
+    addressWithoutCountry: number
+    profilePicHighQuality: number
+    about: number
+    publicIdentifier: number
+    openConnection: number
+    experiences: number
+    updates: number
+    skills: number
+    profilePicAllDimensions: number
+    educations: number
+    licenseAndCertificates: number
+    honorsAndAwards: number
+    languages: number
+    volunteerAndAwards: number
+    verifications: number
+    promos: number
+    highlights: number
+    projects: number
+    publications: number
+    patents: number
+    courses: number
+    testScores: number
+    organizations: number
+    volunteerCauses: number
+    interests: number
+    recommendations: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type LinkedInProfileAvgAggregateInputType = {
+    connections?: true
+    followers?: true
+    companyFoundedIn?: true
+    currentJobDurationInYrs?: true
+  }
+
+  export type LinkedInProfileSumAggregateInputType = {
+    connections?: true
+    followers?: true
+    companyFoundedIn?: true
+    currentJobDurationInYrs?: true
+  }
+
+  export type LinkedInProfileMinAggregateInputType = {
+    id?: true
+    linkedinUrl?: true
+    fullName?: true
+    headline?: true
+    urn?: true
+    profilePic?: true
+    firstName?: true
+    lastName?: true
+    connections?: true
+    followers?: true
+    email?: true
+    mobileNumber?: true
+    jobTitle?: true
+    companyName?: true
+    companyIndustry?: true
+    companyWebsite?: true
+    companyLinkedin?: true
+    companyFoundedIn?: true
+    companySize?: true
+    currentJobDuration?: true
+    currentJobDurationInYrs?: true
+    topSkillsByEndorsements?: true
+    addressCountryOnly?: true
+    addressWithCountry?: true
+    addressWithoutCountry?: true
+    profilePicHighQuality?: true
+    about?: true
+    publicIdentifier?: true
+    openConnection?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type LinkedInProfileMaxAggregateInputType = {
+    id?: true
+    linkedinUrl?: true
+    fullName?: true
+    headline?: true
+    urn?: true
+    profilePic?: true
+    firstName?: true
+    lastName?: true
+    connections?: true
+    followers?: true
+    email?: true
+    mobileNumber?: true
+    jobTitle?: true
+    companyName?: true
+    companyIndustry?: true
+    companyWebsite?: true
+    companyLinkedin?: true
+    companyFoundedIn?: true
+    companySize?: true
+    currentJobDuration?: true
+    currentJobDurationInYrs?: true
+    topSkillsByEndorsements?: true
+    addressCountryOnly?: true
+    addressWithCountry?: true
+    addressWithoutCountry?: true
+    profilePicHighQuality?: true
+    about?: true
+    publicIdentifier?: true
+    openConnection?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type LinkedInProfileCountAggregateInputType = {
+    id?: true
+    linkedinUrl?: true
+    fullName?: true
+    headline?: true
+    urn?: true
+    profilePic?: true
+    firstName?: true
+    lastName?: true
+    connections?: true
+    followers?: true
+    email?: true
+    mobileNumber?: true
+    jobTitle?: true
+    companyName?: true
+    companyIndustry?: true
+    companyWebsite?: true
+    companyLinkedin?: true
+    companyFoundedIn?: true
+    companySize?: true
+    currentJobDuration?: true
+    currentJobDurationInYrs?: true
+    topSkillsByEndorsements?: true
+    addressCountryOnly?: true
+    addressWithCountry?: true
+    addressWithoutCountry?: true
+    profilePicHighQuality?: true
+    about?: true
+    publicIdentifier?: true
+    openConnection?: true
+    experiences?: true
+    updates?: true
+    skills?: true
+    profilePicAllDimensions?: true
+    educations?: true
+    licenseAndCertificates?: true
+    honorsAndAwards?: true
+    languages?: true
+    volunteerAndAwards?: true
+    verifications?: true
+    promos?: true
+    highlights?: true
+    projects?: true
+    publications?: true
+    patents?: true
+    courses?: true
+    testScores?: true
+    organizations?: true
+    volunteerCauses?: true
+    interests?: true
+    recommendations?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type LinkedInProfileAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which LinkedInProfile to aggregate.
+     */
+    where?: LinkedInProfileWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LinkedInProfiles to fetch.
+     */
+    orderBy?: LinkedInProfileOrderByWithRelationInput | LinkedInProfileOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: LinkedInProfileWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LinkedInProfiles from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LinkedInProfiles.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned LinkedInProfiles
+    **/
+    _count?: true | LinkedInProfileCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: LinkedInProfileAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: LinkedInProfileSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: LinkedInProfileMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: LinkedInProfileMaxAggregateInputType
+  }
+
+  export type GetLinkedInProfileAggregateType<T extends LinkedInProfileAggregateArgs> = {
+        [P in keyof T & keyof AggregateLinkedInProfile]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateLinkedInProfile[P]>
+      : GetScalarType<T[P], AggregateLinkedInProfile[P]>
+  }
+
+
+
+
+  export type LinkedInProfileGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: LinkedInProfileWhereInput
+    orderBy?: LinkedInProfileOrderByWithAggregationInput | LinkedInProfileOrderByWithAggregationInput[]
+    by: LinkedInProfileScalarFieldEnum[] | LinkedInProfileScalarFieldEnum
+    having?: LinkedInProfileScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: LinkedInProfileCountAggregateInputType | true
+    _avg?: LinkedInProfileAvgAggregateInputType
+    _sum?: LinkedInProfileSumAggregateInputType
+    _min?: LinkedInProfileMinAggregateInputType
+    _max?: LinkedInProfileMaxAggregateInputType
+  }
+
+  export type LinkedInProfileGroupByOutputType = {
+    id: string
+    linkedinUrl: string
+    fullName: string
+    headline: string
+    urn: string
+    profilePic: string
+    firstName: string | null
+    lastName: string | null
+    connections: number | null
+    followers: number | null
+    email: string | null
+    mobileNumber: string | null
+    jobTitle: string | null
+    companyName: string | null
+    companyIndustry: string | null
+    companyWebsite: string | null
+    companyLinkedin: string | null
+    companyFoundedIn: number | null
+    companySize: string | null
+    currentJobDuration: string | null
+    currentJobDurationInYrs: number | null
+    topSkillsByEndorsements: string | null
+    addressCountryOnly: string | null
+    addressWithCountry: string | null
+    addressWithoutCountry: string | null
+    profilePicHighQuality: string | null
+    about: string | null
+    publicIdentifier: string | null
+    openConnection: boolean | null
+    experiences: JsonValue | null
+    updates: JsonValue | null
+    skills: JsonValue | null
+    profilePicAllDimensions: JsonValue | null
+    educations: JsonValue | null
+    licenseAndCertificates: JsonValue | null
+    honorsAndAwards: JsonValue | null
+    languages: JsonValue | null
+    volunteerAndAwards: JsonValue | null
+    verifications: JsonValue | null
+    promos: JsonValue | null
+    highlights: JsonValue | null
+    projects: JsonValue | null
+    publications: JsonValue | null
+    patents: JsonValue | null
+    courses: JsonValue | null
+    testScores: JsonValue | null
+    organizations: JsonValue | null
+    volunteerCauses: JsonValue | null
+    interests: JsonValue | null
+    recommendations: JsonValue | null
+    createdAt: Date
+    updatedAt: Date
+    _count: LinkedInProfileCountAggregateOutputType | null
+    _avg: LinkedInProfileAvgAggregateOutputType | null
+    _sum: LinkedInProfileSumAggregateOutputType | null
+    _min: LinkedInProfileMinAggregateOutputType | null
+    _max: LinkedInProfileMaxAggregateOutputType | null
+  }
+
+  type GetLinkedInProfileGroupByPayload<T extends LinkedInProfileGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<LinkedInProfileGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof LinkedInProfileGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], LinkedInProfileGroupByOutputType[P]>
+            : GetScalarType<T[P], LinkedInProfileGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type LinkedInProfileSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    linkedinUrl?: boolean
+    fullName?: boolean
+    headline?: boolean
+    urn?: boolean
+    profilePic?: boolean
+    firstName?: boolean
+    lastName?: boolean
+    connections?: boolean
+    followers?: boolean
+    email?: boolean
+    mobileNumber?: boolean
+    jobTitle?: boolean
+    companyName?: boolean
+    companyIndustry?: boolean
+    companyWebsite?: boolean
+    companyLinkedin?: boolean
+    companyFoundedIn?: boolean
+    companySize?: boolean
+    currentJobDuration?: boolean
+    currentJobDurationInYrs?: boolean
+    topSkillsByEndorsements?: boolean
+    addressCountryOnly?: boolean
+    addressWithCountry?: boolean
+    addressWithoutCountry?: boolean
+    profilePicHighQuality?: boolean
+    about?: boolean
+    publicIdentifier?: boolean
+    openConnection?: boolean
+    experiences?: boolean
+    updates?: boolean
+    skills?: boolean
+    profilePicAllDimensions?: boolean
+    educations?: boolean
+    licenseAndCertificates?: boolean
+    honorsAndAwards?: boolean
+    languages?: boolean
+    volunteerAndAwards?: boolean
+    verifications?: boolean
+    promos?: boolean
+    highlights?: boolean
+    projects?: boolean
+    publications?: boolean
+    patents?: boolean
+    courses?: boolean
+    testScores?: boolean
+    organizations?: boolean
+    volunteerCauses?: boolean
+    interests?: boolean
+    recommendations?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["linkedInProfile"]>
+
+  export type LinkedInProfileSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    linkedinUrl?: boolean
+    fullName?: boolean
+    headline?: boolean
+    urn?: boolean
+    profilePic?: boolean
+    firstName?: boolean
+    lastName?: boolean
+    connections?: boolean
+    followers?: boolean
+    email?: boolean
+    mobileNumber?: boolean
+    jobTitle?: boolean
+    companyName?: boolean
+    companyIndustry?: boolean
+    companyWebsite?: boolean
+    companyLinkedin?: boolean
+    companyFoundedIn?: boolean
+    companySize?: boolean
+    currentJobDuration?: boolean
+    currentJobDurationInYrs?: boolean
+    topSkillsByEndorsements?: boolean
+    addressCountryOnly?: boolean
+    addressWithCountry?: boolean
+    addressWithoutCountry?: boolean
+    profilePicHighQuality?: boolean
+    about?: boolean
+    publicIdentifier?: boolean
+    openConnection?: boolean
+    experiences?: boolean
+    updates?: boolean
+    skills?: boolean
+    profilePicAllDimensions?: boolean
+    educations?: boolean
+    licenseAndCertificates?: boolean
+    honorsAndAwards?: boolean
+    languages?: boolean
+    volunteerAndAwards?: boolean
+    verifications?: boolean
+    promos?: boolean
+    highlights?: boolean
+    projects?: boolean
+    publications?: boolean
+    patents?: boolean
+    courses?: boolean
+    testScores?: boolean
+    organizations?: boolean
+    volunteerCauses?: boolean
+    interests?: boolean
+    recommendations?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["linkedInProfile"]>
+
+  export type LinkedInProfileSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    linkedinUrl?: boolean
+    fullName?: boolean
+    headline?: boolean
+    urn?: boolean
+    profilePic?: boolean
+    firstName?: boolean
+    lastName?: boolean
+    connections?: boolean
+    followers?: boolean
+    email?: boolean
+    mobileNumber?: boolean
+    jobTitle?: boolean
+    companyName?: boolean
+    companyIndustry?: boolean
+    companyWebsite?: boolean
+    companyLinkedin?: boolean
+    companyFoundedIn?: boolean
+    companySize?: boolean
+    currentJobDuration?: boolean
+    currentJobDurationInYrs?: boolean
+    topSkillsByEndorsements?: boolean
+    addressCountryOnly?: boolean
+    addressWithCountry?: boolean
+    addressWithoutCountry?: boolean
+    profilePicHighQuality?: boolean
+    about?: boolean
+    publicIdentifier?: boolean
+    openConnection?: boolean
+    experiences?: boolean
+    updates?: boolean
+    skills?: boolean
+    profilePicAllDimensions?: boolean
+    educations?: boolean
+    licenseAndCertificates?: boolean
+    honorsAndAwards?: boolean
+    languages?: boolean
+    volunteerAndAwards?: boolean
+    verifications?: boolean
+    promos?: boolean
+    highlights?: boolean
+    projects?: boolean
+    publications?: boolean
+    patents?: boolean
+    courses?: boolean
+    testScores?: boolean
+    organizations?: boolean
+    volunteerCauses?: boolean
+    interests?: boolean
+    recommendations?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["linkedInProfile"]>
+
+  export type LinkedInProfileSelectScalar = {
+    id?: boolean
+    linkedinUrl?: boolean
+    fullName?: boolean
+    headline?: boolean
+    urn?: boolean
+    profilePic?: boolean
+    firstName?: boolean
+    lastName?: boolean
+    connections?: boolean
+    followers?: boolean
+    email?: boolean
+    mobileNumber?: boolean
+    jobTitle?: boolean
+    companyName?: boolean
+    companyIndustry?: boolean
+    companyWebsite?: boolean
+    companyLinkedin?: boolean
+    companyFoundedIn?: boolean
+    companySize?: boolean
+    currentJobDuration?: boolean
+    currentJobDurationInYrs?: boolean
+    topSkillsByEndorsements?: boolean
+    addressCountryOnly?: boolean
+    addressWithCountry?: boolean
+    addressWithoutCountry?: boolean
+    profilePicHighQuality?: boolean
+    about?: boolean
+    publicIdentifier?: boolean
+    openConnection?: boolean
+    experiences?: boolean
+    updates?: boolean
+    skills?: boolean
+    profilePicAllDimensions?: boolean
+    educations?: boolean
+    licenseAndCertificates?: boolean
+    honorsAndAwards?: boolean
+    languages?: boolean
+    volunteerAndAwards?: boolean
+    verifications?: boolean
+    promos?: boolean
+    highlights?: boolean
+    projects?: boolean
+    publications?: boolean
+    patents?: boolean
+    courses?: boolean
+    testScores?: boolean
+    organizations?: boolean
+    volunteerCauses?: boolean
+    interests?: boolean
+    recommendations?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type LinkedInProfileOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "linkedinUrl" | "fullName" | "headline" | "urn" | "profilePic" | "firstName" | "lastName" | "connections" | "followers" | "email" | "mobileNumber" | "jobTitle" | "companyName" | "companyIndustry" | "companyWebsite" | "companyLinkedin" | "companyFoundedIn" | "companySize" | "currentJobDuration" | "currentJobDurationInYrs" | "topSkillsByEndorsements" | "addressCountryOnly" | "addressWithCountry" | "addressWithoutCountry" | "profilePicHighQuality" | "about" | "publicIdentifier" | "openConnection" | "experiences" | "updates" | "skills" | "profilePicAllDimensions" | "educations" | "licenseAndCertificates" | "honorsAndAwards" | "languages" | "volunteerAndAwards" | "verifications" | "promos" | "highlights" | "projects" | "publications" | "patents" | "courses" | "testScores" | "organizations" | "volunteerCauses" | "interests" | "recommendations" | "createdAt" | "updatedAt", ExtArgs["result"]["linkedInProfile"]>
+
+  export type $LinkedInProfilePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "LinkedInProfile"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      linkedinUrl: string
+      fullName: string
+      headline: string
+      urn: string
+      profilePic: string
+      firstName: string | null
+      lastName: string | null
+      connections: number | null
+      followers: number | null
+      email: string | null
+      mobileNumber: string | null
+      jobTitle: string | null
+      companyName: string | null
+      companyIndustry: string | null
+      companyWebsite: string | null
+      companyLinkedin: string | null
+      companyFoundedIn: number | null
+      companySize: string | null
+      currentJobDuration: string | null
+      currentJobDurationInYrs: number | null
+      topSkillsByEndorsements: string | null
+      addressCountryOnly: string | null
+      addressWithCountry: string | null
+      addressWithoutCountry: string | null
+      profilePicHighQuality: string | null
+      about: string | null
+      publicIdentifier: string | null
+      openConnection: boolean | null
+      experiences: Prisma.JsonValue | null
+      updates: Prisma.JsonValue | null
+      skills: Prisma.JsonValue | null
+      profilePicAllDimensions: Prisma.JsonValue | null
+      educations: Prisma.JsonValue | null
+      licenseAndCertificates: Prisma.JsonValue | null
+      honorsAndAwards: Prisma.JsonValue | null
+      languages: Prisma.JsonValue | null
+      volunteerAndAwards: Prisma.JsonValue | null
+      verifications: Prisma.JsonValue | null
+      promos: Prisma.JsonValue | null
+      highlights: Prisma.JsonValue | null
+      projects: Prisma.JsonValue | null
+      publications: Prisma.JsonValue | null
+      patents: Prisma.JsonValue | null
+      courses: Prisma.JsonValue | null
+      testScores: Prisma.JsonValue | null
+      organizations: Prisma.JsonValue | null
+      volunteerCauses: Prisma.JsonValue | null
+      interests: Prisma.JsonValue | null
+      recommendations: Prisma.JsonValue | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["linkedInProfile"]>
+    composites: {}
+  }
+
+  type LinkedInProfileGetPayload<S extends boolean | null | undefined | LinkedInProfileDefaultArgs> = $Result.GetResult<Prisma.$LinkedInProfilePayload, S>
+
+  type LinkedInProfileCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<LinkedInProfileFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: LinkedInProfileCountAggregateInputType | true
+    }
+
+  export interface LinkedInProfileDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['LinkedInProfile'], meta: { name: 'LinkedInProfile' } }
+    /**
+     * Find zero or one LinkedInProfile that matches the filter.
+     * @param {LinkedInProfileFindUniqueArgs} args - Arguments to find a LinkedInProfile
+     * @example
+     * // Get one LinkedInProfile
+     * const linkedInProfile = await prisma.linkedInProfile.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends LinkedInProfileFindUniqueArgs>(args: SelectSubset<T, LinkedInProfileFindUniqueArgs<ExtArgs>>): Prisma__LinkedInProfileClient<$Result.GetResult<Prisma.$LinkedInProfilePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one LinkedInProfile that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {LinkedInProfileFindUniqueOrThrowArgs} args - Arguments to find a LinkedInProfile
+     * @example
+     * // Get one LinkedInProfile
+     * const linkedInProfile = await prisma.linkedInProfile.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends LinkedInProfileFindUniqueOrThrowArgs>(args: SelectSubset<T, LinkedInProfileFindUniqueOrThrowArgs<ExtArgs>>): Prisma__LinkedInProfileClient<$Result.GetResult<Prisma.$LinkedInProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first LinkedInProfile that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LinkedInProfileFindFirstArgs} args - Arguments to find a LinkedInProfile
+     * @example
+     * // Get one LinkedInProfile
+     * const linkedInProfile = await prisma.linkedInProfile.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends LinkedInProfileFindFirstArgs>(args?: SelectSubset<T, LinkedInProfileFindFirstArgs<ExtArgs>>): Prisma__LinkedInProfileClient<$Result.GetResult<Prisma.$LinkedInProfilePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first LinkedInProfile that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LinkedInProfileFindFirstOrThrowArgs} args - Arguments to find a LinkedInProfile
+     * @example
+     * // Get one LinkedInProfile
+     * const linkedInProfile = await prisma.linkedInProfile.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends LinkedInProfileFindFirstOrThrowArgs>(args?: SelectSubset<T, LinkedInProfileFindFirstOrThrowArgs<ExtArgs>>): Prisma__LinkedInProfileClient<$Result.GetResult<Prisma.$LinkedInProfilePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more LinkedInProfiles that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LinkedInProfileFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all LinkedInProfiles
+     * const linkedInProfiles = await prisma.linkedInProfile.findMany()
+     * 
+     * // Get first 10 LinkedInProfiles
+     * const linkedInProfiles = await prisma.linkedInProfile.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const linkedInProfileWithIdOnly = await prisma.linkedInProfile.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends LinkedInProfileFindManyArgs>(args?: SelectSubset<T, LinkedInProfileFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LinkedInProfilePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a LinkedInProfile.
+     * @param {LinkedInProfileCreateArgs} args - Arguments to create a LinkedInProfile.
+     * @example
+     * // Create one LinkedInProfile
+     * const LinkedInProfile = await prisma.linkedInProfile.create({
+     *   data: {
+     *     // ... data to create a LinkedInProfile
+     *   }
+     * })
+     * 
+     */
+    create<T extends LinkedInProfileCreateArgs>(args: SelectSubset<T, LinkedInProfileCreateArgs<ExtArgs>>): Prisma__LinkedInProfileClient<$Result.GetResult<Prisma.$LinkedInProfilePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many LinkedInProfiles.
+     * @param {LinkedInProfileCreateManyArgs} args - Arguments to create many LinkedInProfiles.
+     * @example
+     * // Create many LinkedInProfiles
+     * const linkedInProfile = await prisma.linkedInProfile.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends LinkedInProfileCreateManyArgs>(args?: SelectSubset<T, LinkedInProfileCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many LinkedInProfiles and returns the data saved in the database.
+     * @param {LinkedInProfileCreateManyAndReturnArgs} args - Arguments to create many LinkedInProfiles.
+     * @example
+     * // Create many LinkedInProfiles
+     * const linkedInProfile = await prisma.linkedInProfile.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many LinkedInProfiles and only return the `id`
+     * const linkedInProfileWithIdOnly = await prisma.linkedInProfile.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends LinkedInProfileCreateManyAndReturnArgs>(args?: SelectSubset<T, LinkedInProfileCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LinkedInProfilePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a LinkedInProfile.
+     * @param {LinkedInProfileDeleteArgs} args - Arguments to delete one LinkedInProfile.
+     * @example
+     * // Delete one LinkedInProfile
+     * const LinkedInProfile = await prisma.linkedInProfile.delete({
+     *   where: {
+     *     // ... filter to delete one LinkedInProfile
+     *   }
+     * })
+     * 
+     */
+    delete<T extends LinkedInProfileDeleteArgs>(args: SelectSubset<T, LinkedInProfileDeleteArgs<ExtArgs>>): Prisma__LinkedInProfileClient<$Result.GetResult<Prisma.$LinkedInProfilePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one LinkedInProfile.
+     * @param {LinkedInProfileUpdateArgs} args - Arguments to update one LinkedInProfile.
+     * @example
+     * // Update one LinkedInProfile
+     * const linkedInProfile = await prisma.linkedInProfile.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends LinkedInProfileUpdateArgs>(args: SelectSubset<T, LinkedInProfileUpdateArgs<ExtArgs>>): Prisma__LinkedInProfileClient<$Result.GetResult<Prisma.$LinkedInProfilePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more LinkedInProfiles.
+     * @param {LinkedInProfileDeleteManyArgs} args - Arguments to filter LinkedInProfiles to delete.
+     * @example
+     * // Delete a few LinkedInProfiles
+     * const { count } = await prisma.linkedInProfile.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends LinkedInProfileDeleteManyArgs>(args?: SelectSubset<T, LinkedInProfileDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more LinkedInProfiles.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LinkedInProfileUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many LinkedInProfiles
+     * const linkedInProfile = await prisma.linkedInProfile.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends LinkedInProfileUpdateManyArgs>(args: SelectSubset<T, LinkedInProfileUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more LinkedInProfiles and returns the data updated in the database.
+     * @param {LinkedInProfileUpdateManyAndReturnArgs} args - Arguments to update many LinkedInProfiles.
+     * @example
+     * // Update many LinkedInProfiles
+     * const linkedInProfile = await prisma.linkedInProfile.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more LinkedInProfiles and only return the `id`
+     * const linkedInProfileWithIdOnly = await prisma.linkedInProfile.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends LinkedInProfileUpdateManyAndReturnArgs>(args: SelectSubset<T, LinkedInProfileUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LinkedInProfilePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one LinkedInProfile.
+     * @param {LinkedInProfileUpsertArgs} args - Arguments to update or create a LinkedInProfile.
+     * @example
+     * // Update or create a LinkedInProfile
+     * const linkedInProfile = await prisma.linkedInProfile.upsert({
+     *   create: {
+     *     // ... data to create a LinkedInProfile
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the LinkedInProfile we want to update
+     *   }
+     * })
+     */
+    upsert<T extends LinkedInProfileUpsertArgs>(args: SelectSubset<T, LinkedInProfileUpsertArgs<ExtArgs>>): Prisma__LinkedInProfileClient<$Result.GetResult<Prisma.$LinkedInProfilePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of LinkedInProfiles.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LinkedInProfileCountArgs} args - Arguments to filter LinkedInProfiles to count.
+     * @example
+     * // Count the number of LinkedInProfiles
+     * const count = await prisma.linkedInProfile.count({
+     *   where: {
+     *     // ... the filter for the LinkedInProfiles we want to count
+     *   }
+     * })
+    **/
+    count<T extends LinkedInProfileCountArgs>(
+      args?: Subset<T, LinkedInProfileCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], LinkedInProfileCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a LinkedInProfile.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LinkedInProfileAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends LinkedInProfileAggregateArgs>(args: Subset<T, LinkedInProfileAggregateArgs>): Prisma.PrismaPromise<GetLinkedInProfileAggregateType<T>>
+
+    /**
+     * Group by LinkedInProfile.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LinkedInProfileGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends LinkedInProfileGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: LinkedInProfileGroupByArgs['orderBy'] }
+        : { orderBy?: LinkedInProfileGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, LinkedInProfileGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetLinkedInProfileGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the LinkedInProfile model
+   */
+  readonly fields: LinkedInProfileFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for LinkedInProfile.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__LinkedInProfileClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the LinkedInProfile model
+   */
+  interface LinkedInProfileFieldRefs {
+    readonly id: FieldRef<"LinkedInProfile", 'String'>
+    readonly linkedinUrl: FieldRef<"LinkedInProfile", 'String'>
+    readonly fullName: FieldRef<"LinkedInProfile", 'String'>
+    readonly headline: FieldRef<"LinkedInProfile", 'String'>
+    readonly urn: FieldRef<"LinkedInProfile", 'String'>
+    readonly profilePic: FieldRef<"LinkedInProfile", 'String'>
+    readonly firstName: FieldRef<"LinkedInProfile", 'String'>
+    readonly lastName: FieldRef<"LinkedInProfile", 'String'>
+    readonly connections: FieldRef<"LinkedInProfile", 'Int'>
+    readonly followers: FieldRef<"LinkedInProfile", 'Int'>
+    readonly email: FieldRef<"LinkedInProfile", 'String'>
+    readonly mobileNumber: FieldRef<"LinkedInProfile", 'String'>
+    readonly jobTitle: FieldRef<"LinkedInProfile", 'String'>
+    readonly companyName: FieldRef<"LinkedInProfile", 'String'>
+    readonly companyIndustry: FieldRef<"LinkedInProfile", 'String'>
+    readonly companyWebsite: FieldRef<"LinkedInProfile", 'String'>
+    readonly companyLinkedin: FieldRef<"LinkedInProfile", 'String'>
+    readonly companyFoundedIn: FieldRef<"LinkedInProfile", 'Int'>
+    readonly companySize: FieldRef<"LinkedInProfile", 'String'>
+    readonly currentJobDuration: FieldRef<"LinkedInProfile", 'String'>
+    readonly currentJobDurationInYrs: FieldRef<"LinkedInProfile", 'Float'>
+    readonly topSkillsByEndorsements: FieldRef<"LinkedInProfile", 'String'>
+    readonly addressCountryOnly: FieldRef<"LinkedInProfile", 'String'>
+    readonly addressWithCountry: FieldRef<"LinkedInProfile", 'String'>
+    readonly addressWithoutCountry: FieldRef<"LinkedInProfile", 'String'>
+    readonly profilePicHighQuality: FieldRef<"LinkedInProfile", 'String'>
+    readonly about: FieldRef<"LinkedInProfile", 'String'>
+    readonly publicIdentifier: FieldRef<"LinkedInProfile", 'String'>
+    readonly openConnection: FieldRef<"LinkedInProfile", 'Boolean'>
+    readonly experiences: FieldRef<"LinkedInProfile", 'Json'>
+    readonly updates: FieldRef<"LinkedInProfile", 'Json'>
+    readonly skills: FieldRef<"LinkedInProfile", 'Json'>
+    readonly profilePicAllDimensions: FieldRef<"LinkedInProfile", 'Json'>
+    readonly educations: FieldRef<"LinkedInProfile", 'Json'>
+    readonly licenseAndCertificates: FieldRef<"LinkedInProfile", 'Json'>
+    readonly honorsAndAwards: FieldRef<"LinkedInProfile", 'Json'>
+    readonly languages: FieldRef<"LinkedInProfile", 'Json'>
+    readonly volunteerAndAwards: FieldRef<"LinkedInProfile", 'Json'>
+    readonly verifications: FieldRef<"LinkedInProfile", 'Json'>
+    readonly promos: FieldRef<"LinkedInProfile", 'Json'>
+    readonly highlights: FieldRef<"LinkedInProfile", 'Json'>
+    readonly projects: FieldRef<"LinkedInProfile", 'Json'>
+    readonly publications: FieldRef<"LinkedInProfile", 'Json'>
+    readonly patents: FieldRef<"LinkedInProfile", 'Json'>
+    readonly courses: FieldRef<"LinkedInProfile", 'Json'>
+    readonly testScores: FieldRef<"LinkedInProfile", 'Json'>
+    readonly organizations: FieldRef<"LinkedInProfile", 'Json'>
+    readonly volunteerCauses: FieldRef<"LinkedInProfile", 'Json'>
+    readonly interests: FieldRef<"LinkedInProfile", 'Json'>
+    readonly recommendations: FieldRef<"LinkedInProfile", 'Json'>
+    readonly createdAt: FieldRef<"LinkedInProfile", 'DateTime'>
+    readonly updatedAt: FieldRef<"LinkedInProfile", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * LinkedInProfile findUnique
+   */
+  export type LinkedInProfileFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LinkedInProfile
+     */
+    select?: LinkedInProfileSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LinkedInProfile
+     */
+    omit?: LinkedInProfileOmit<ExtArgs> | null
+    /**
+     * Filter, which LinkedInProfile to fetch.
+     */
+    where: LinkedInProfileWhereUniqueInput
+  }
+
+  /**
+   * LinkedInProfile findUniqueOrThrow
+   */
+  export type LinkedInProfileFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LinkedInProfile
+     */
+    select?: LinkedInProfileSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LinkedInProfile
+     */
+    omit?: LinkedInProfileOmit<ExtArgs> | null
+    /**
+     * Filter, which LinkedInProfile to fetch.
+     */
+    where: LinkedInProfileWhereUniqueInput
+  }
+
+  /**
+   * LinkedInProfile findFirst
+   */
+  export type LinkedInProfileFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LinkedInProfile
+     */
+    select?: LinkedInProfileSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LinkedInProfile
+     */
+    omit?: LinkedInProfileOmit<ExtArgs> | null
+    /**
+     * Filter, which LinkedInProfile to fetch.
+     */
+    where?: LinkedInProfileWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LinkedInProfiles to fetch.
+     */
+    orderBy?: LinkedInProfileOrderByWithRelationInput | LinkedInProfileOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for LinkedInProfiles.
+     */
+    cursor?: LinkedInProfileWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LinkedInProfiles from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LinkedInProfiles.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of LinkedInProfiles.
+     */
+    distinct?: LinkedInProfileScalarFieldEnum | LinkedInProfileScalarFieldEnum[]
+  }
+
+  /**
+   * LinkedInProfile findFirstOrThrow
+   */
+  export type LinkedInProfileFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LinkedInProfile
+     */
+    select?: LinkedInProfileSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LinkedInProfile
+     */
+    omit?: LinkedInProfileOmit<ExtArgs> | null
+    /**
+     * Filter, which LinkedInProfile to fetch.
+     */
+    where?: LinkedInProfileWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LinkedInProfiles to fetch.
+     */
+    orderBy?: LinkedInProfileOrderByWithRelationInput | LinkedInProfileOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for LinkedInProfiles.
+     */
+    cursor?: LinkedInProfileWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LinkedInProfiles from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LinkedInProfiles.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of LinkedInProfiles.
+     */
+    distinct?: LinkedInProfileScalarFieldEnum | LinkedInProfileScalarFieldEnum[]
+  }
+
+  /**
+   * LinkedInProfile findMany
+   */
+  export type LinkedInProfileFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LinkedInProfile
+     */
+    select?: LinkedInProfileSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LinkedInProfile
+     */
+    omit?: LinkedInProfileOmit<ExtArgs> | null
+    /**
+     * Filter, which LinkedInProfiles to fetch.
+     */
+    where?: LinkedInProfileWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LinkedInProfiles to fetch.
+     */
+    orderBy?: LinkedInProfileOrderByWithRelationInput | LinkedInProfileOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing LinkedInProfiles.
+     */
+    cursor?: LinkedInProfileWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LinkedInProfiles from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LinkedInProfiles.
+     */
+    skip?: number
+    distinct?: LinkedInProfileScalarFieldEnum | LinkedInProfileScalarFieldEnum[]
+  }
+
+  /**
+   * LinkedInProfile create
+   */
+  export type LinkedInProfileCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LinkedInProfile
+     */
+    select?: LinkedInProfileSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LinkedInProfile
+     */
+    omit?: LinkedInProfileOmit<ExtArgs> | null
+    /**
+     * The data needed to create a LinkedInProfile.
+     */
+    data: XOR<LinkedInProfileCreateInput, LinkedInProfileUncheckedCreateInput>
+  }
+
+  /**
+   * LinkedInProfile createMany
+   */
+  export type LinkedInProfileCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many LinkedInProfiles.
+     */
+    data: LinkedInProfileCreateManyInput | LinkedInProfileCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * LinkedInProfile createManyAndReturn
+   */
+  export type LinkedInProfileCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LinkedInProfile
+     */
+    select?: LinkedInProfileSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the LinkedInProfile
+     */
+    omit?: LinkedInProfileOmit<ExtArgs> | null
+    /**
+     * The data used to create many LinkedInProfiles.
+     */
+    data: LinkedInProfileCreateManyInput | LinkedInProfileCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * LinkedInProfile update
+   */
+  export type LinkedInProfileUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LinkedInProfile
+     */
+    select?: LinkedInProfileSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LinkedInProfile
+     */
+    omit?: LinkedInProfileOmit<ExtArgs> | null
+    /**
+     * The data needed to update a LinkedInProfile.
+     */
+    data: XOR<LinkedInProfileUpdateInput, LinkedInProfileUncheckedUpdateInput>
+    /**
+     * Choose, which LinkedInProfile to update.
+     */
+    where: LinkedInProfileWhereUniqueInput
+  }
+
+  /**
+   * LinkedInProfile updateMany
+   */
+  export type LinkedInProfileUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update LinkedInProfiles.
+     */
+    data: XOR<LinkedInProfileUpdateManyMutationInput, LinkedInProfileUncheckedUpdateManyInput>
+    /**
+     * Filter which LinkedInProfiles to update
+     */
+    where?: LinkedInProfileWhereInput
+    /**
+     * Limit how many LinkedInProfiles to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * LinkedInProfile updateManyAndReturn
+   */
+  export type LinkedInProfileUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LinkedInProfile
+     */
+    select?: LinkedInProfileSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the LinkedInProfile
+     */
+    omit?: LinkedInProfileOmit<ExtArgs> | null
+    /**
+     * The data used to update LinkedInProfiles.
+     */
+    data: XOR<LinkedInProfileUpdateManyMutationInput, LinkedInProfileUncheckedUpdateManyInput>
+    /**
+     * Filter which LinkedInProfiles to update
+     */
+    where?: LinkedInProfileWhereInput
+    /**
+     * Limit how many LinkedInProfiles to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * LinkedInProfile upsert
+   */
+  export type LinkedInProfileUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LinkedInProfile
+     */
+    select?: LinkedInProfileSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LinkedInProfile
+     */
+    omit?: LinkedInProfileOmit<ExtArgs> | null
+    /**
+     * The filter to search for the LinkedInProfile to update in case it exists.
+     */
+    where: LinkedInProfileWhereUniqueInput
+    /**
+     * In case the LinkedInProfile found by the `where` argument doesn't exist, create a new LinkedInProfile with this data.
+     */
+    create: XOR<LinkedInProfileCreateInput, LinkedInProfileUncheckedCreateInput>
+    /**
+     * In case the LinkedInProfile was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<LinkedInProfileUpdateInput, LinkedInProfileUncheckedUpdateInput>
+  }
+
+  /**
+   * LinkedInProfile delete
+   */
+  export type LinkedInProfileDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LinkedInProfile
+     */
+    select?: LinkedInProfileSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LinkedInProfile
+     */
+    omit?: LinkedInProfileOmit<ExtArgs> | null
+    /**
+     * Filter which LinkedInProfile to delete.
+     */
+    where: LinkedInProfileWhereUniqueInput
+  }
+
+  /**
+   * LinkedInProfile deleteMany
+   */
+  export type LinkedInProfileDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which LinkedInProfiles to delete
+     */
+    where?: LinkedInProfileWhereInput
+    /**
+     * Limit how many LinkedInProfiles to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * LinkedInProfile without action
+   */
+  export type LinkedInProfileDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LinkedInProfile
+     */
+    select?: LinkedInProfileSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LinkedInProfile
+     */
+    omit?: LinkedInProfileOmit<ExtArgs> | null
   }
 
 
@@ -2044,6 +4997,78 @@ export namespace Prisma {
   };
 
   export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+  export const ProfileImportRunScalarFieldEnum: {
+    id: 'id',
+    userId: 'userId',
+    urls: 'urls',
+    status: 'status',
+    urlsSucceeded: 'urlsSucceeded',
+    urlsFailed: 'urlsFailed',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type ProfileImportRunScalarFieldEnum = (typeof ProfileImportRunScalarFieldEnum)[keyof typeof ProfileImportRunScalarFieldEnum]
+
+
+  export const LinkedInProfileScalarFieldEnum: {
+    id: 'id',
+    linkedinUrl: 'linkedinUrl',
+    fullName: 'fullName',
+    headline: 'headline',
+    urn: 'urn',
+    profilePic: 'profilePic',
+    firstName: 'firstName',
+    lastName: 'lastName',
+    connections: 'connections',
+    followers: 'followers',
+    email: 'email',
+    mobileNumber: 'mobileNumber',
+    jobTitle: 'jobTitle',
+    companyName: 'companyName',
+    companyIndustry: 'companyIndustry',
+    companyWebsite: 'companyWebsite',
+    companyLinkedin: 'companyLinkedin',
+    companyFoundedIn: 'companyFoundedIn',
+    companySize: 'companySize',
+    currentJobDuration: 'currentJobDuration',
+    currentJobDurationInYrs: 'currentJobDurationInYrs',
+    topSkillsByEndorsements: 'topSkillsByEndorsements',
+    addressCountryOnly: 'addressCountryOnly',
+    addressWithCountry: 'addressWithCountry',
+    addressWithoutCountry: 'addressWithoutCountry',
+    profilePicHighQuality: 'profilePicHighQuality',
+    about: 'about',
+    publicIdentifier: 'publicIdentifier',
+    openConnection: 'openConnection',
+    experiences: 'experiences',
+    updates: 'updates',
+    skills: 'skills',
+    profilePicAllDimensions: 'profilePicAllDimensions',
+    educations: 'educations',
+    licenseAndCertificates: 'licenseAndCertificates',
+    honorsAndAwards: 'honorsAndAwards',
+    languages: 'languages',
+    volunteerAndAwards: 'volunteerAndAwards',
+    verifications: 'verifications',
+    promos: 'promos',
+    highlights: 'highlights',
+    projects: 'projects',
+    publications: 'publications',
+    patents: 'patents',
+    courses: 'courses',
+    testScores: 'testScores',
+    organizations: 'organizations',
+    volunteerCauses: 'volunteerCauses',
+    interests: 'interests',
+    recommendations: 'recommendations',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type LinkedInProfileScalarFieldEnum = (typeof LinkedInProfileScalarFieldEnum)[keyof typeof LinkedInProfileScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -2163,6 +5188,20 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'ImportStatus'
+   */
+  export type EnumImportStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ImportStatus'>
+    
+
+
+  /**
+   * Reference to a field of type 'ImportStatus[]'
+   */
+  export type ListEnumImportStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ImportStatus[]'>
+    
+
+
+  /**
    * Reference to a field of type 'Float'
    */
   export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
@@ -2173,6 +5212,13 @@ export namespace Prisma {
    * Reference to a field of type 'Float[]'
    */
   export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'Boolean'
+   */
+  export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
     
   /**
    * Deep Input Types
@@ -2196,6 +5242,7 @@ export namespace Prisma {
     dailyAIcomments?: IntFilter<"User"> | number
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
+    profileImportRuns?: ProfileImportRunListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
@@ -2212,6 +5259,7 @@ export namespace Prisma {
     dailyAIcomments?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    profileImportRuns?: ProfileImportRunOrderByRelationAggregateInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -2231,6 +5279,7 @@ export namespace Prisma {
     dailyAIcomments?: IntFilter<"User"> | number
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
+    profileImportRuns?: ProfileImportRunListRelationFilter
   }, "id" | "username" | "primaryEmailAddress" | "stripeCustomerId">
 
   export type UserOrderByWithAggregationInput = {
@@ -2273,6 +5322,365 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
   }
 
+  export type ProfileImportRunWhereInput = {
+    AND?: ProfileImportRunWhereInput | ProfileImportRunWhereInput[]
+    OR?: ProfileImportRunWhereInput[]
+    NOT?: ProfileImportRunWhereInput | ProfileImportRunWhereInput[]
+    id?: StringFilter<"ProfileImportRun"> | string
+    userId?: StringFilter<"ProfileImportRun"> | string
+    urls?: StringNullableListFilter<"ProfileImportRun">
+    status?: EnumImportStatusFilter<"ProfileImportRun"> | $Enums.ImportStatus
+    urlsSucceeded?: StringNullableListFilter<"ProfileImportRun">
+    urlsFailed?: StringNullableListFilter<"ProfileImportRun">
+    createdAt?: DateTimeFilter<"ProfileImportRun"> | Date | string
+    updatedAt?: DateTimeFilter<"ProfileImportRun"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }
+
+  export type ProfileImportRunOrderByWithRelationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    urls?: SortOrder
+    status?: SortOrder
+    urlsSucceeded?: SortOrder
+    urlsFailed?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    user?: UserOrderByWithRelationInput
+  }
+
+  export type ProfileImportRunWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: ProfileImportRunWhereInput | ProfileImportRunWhereInput[]
+    OR?: ProfileImportRunWhereInput[]
+    NOT?: ProfileImportRunWhereInput | ProfileImportRunWhereInput[]
+    userId?: StringFilter<"ProfileImportRun"> | string
+    urls?: StringNullableListFilter<"ProfileImportRun">
+    status?: EnumImportStatusFilter<"ProfileImportRun"> | $Enums.ImportStatus
+    urlsSucceeded?: StringNullableListFilter<"ProfileImportRun">
+    urlsFailed?: StringNullableListFilter<"ProfileImportRun">
+    createdAt?: DateTimeFilter<"ProfileImportRun"> | Date | string
+    updatedAt?: DateTimeFilter<"ProfileImportRun"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }, "id">
+
+  export type ProfileImportRunOrderByWithAggregationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    urls?: SortOrder
+    status?: SortOrder
+    urlsSucceeded?: SortOrder
+    urlsFailed?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: ProfileImportRunCountOrderByAggregateInput
+    _max?: ProfileImportRunMaxOrderByAggregateInput
+    _min?: ProfileImportRunMinOrderByAggregateInput
+  }
+
+  export type ProfileImportRunScalarWhereWithAggregatesInput = {
+    AND?: ProfileImportRunScalarWhereWithAggregatesInput | ProfileImportRunScalarWhereWithAggregatesInput[]
+    OR?: ProfileImportRunScalarWhereWithAggregatesInput[]
+    NOT?: ProfileImportRunScalarWhereWithAggregatesInput | ProfileImportRunScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"ProfileImportRun"> | string
+    userId?: StringWithAggregatesFilter<"ProfileImportRun"> | string
+    urls?: StringNullableListFilter<"ProfileImportRun">
+    status?: EnumImportStatusWithAggregatesFilter<"ProfileImportRun"> | $Enums.ImportStatus
+    urlsSucceeded?: StringNullableListFilter<"ProfileImportRun">
+    urlsFailed?: StringNullableListFilter<"ProfileImportRun">
+    createdAt?: DateTimeWithAggregatesFilter<"ProfileImportRun"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"ProfileImportRun"> | Date | string
+  }
+
+  export type LinkedInProfileWhereInput = {
+    AND?: LinkedInProfileWhereInput | LinkedInProfileWhereInput[]
+    OR?: LinkedInProfileWhereInput[]
+    NOT?: LinkedInProfileWhereInput | LinkedInProfileWhereInput[]
+    id?: StringFilter<"LinkedInProfile"> | string
+    linkedinUrl?: StringFilter<"LinkedInProfile"> | string
+    fullName?: StringFilter<"LinkedInProfile"> | string
+    headline?: StringFilter<"LinkedInProfile"> | string
+    urn?: StringFilter<"LinkedInProfile"> | string
+    profilePic?: StringFilter<"LinkedInProfile"> | string
+    firstName?: StringNullableFilter<"LinkedInProfile"> | string | null
+    lastName?: StringNullableFilter<"LinkedInProfile"> | string | null
+    connections?: IntNullableFilter<"LinkedInProfile"> | number | null
+    followers?: IntNullableFilter<"LinkedInProfile"> | number | null
+    email?: StringNullableFilter<"LinkedInProfile"> | string | null
+    mobileNumber?: StringNullableFilter<"LinkedInProfile"> | string | null
+    jobTitle?: StringNullableFilter<"LinkedInProfile"> | string | null
+    companyName?: StringNullableFilter<"LinkedInProfile"> | string | null
+    companyIndustry?: StringNullableFilter<"LinkedInProfile"> | string | null
+    companyWebsite?: StringNullableFilter<"LinkedInProfile"> | string | null
+    companyLinkedin?: StringNullableFilter<"LinkedInProfile"> | string | null
+    companyFoundedIn?: IntNullableFilter<"LinkedInProfile"> | number | null
+    companySize?: StringNullableFilter<"LinkedInProfile"> | string | null
+    currentJobDuration?: StringNullableFilter<"LinkedInProfile"> | string | null
+    currentJobDurationInYrs?: FloatNullableFilter<"LinkedInProfile"> | number | null
+    topSkillsByEndorsements?: StringNullableFilter<"LinkedInProfile"> | string | null
+    addressCountryOnly?: StringNullableFilter<"LinkedInProfile"> | string | null
+    addressWithCountry?: StringNullableFilter<"LinkedInProfile"> | string | null
+    addressWithoutCountry?: StringNullableFilter<"LinkedInProfile"> | string | null
+    profilePicHighQuality?: StringNullableFilter<"LinkedInProfile"> | string | null
+    about?: StringNullableFilter<"LinkedInProfile"> | string | null
+    publicIdentifier?: StringNullableFilter<"LinkedInProfile"> | string | null
+    openConnection?: BoolNullableFilter<"LinkedInProfile"> | boolean | null
+    experiences?: JsonNullableFilter<"LinkedInProfile">
+    updates?: JsonNullableFilter<"LinkedInProfile">
+    skills?: JsonNullableFilter<"LinkedInProfile">
+    profilePicAllDimensions?: JsonNullableFilter<"LinkedInProfile">
+    educations?: JsonNullableFilter<"LinkedInProfile">
+    licenseAndCertificates?: JsonNullableFilter<"LinkedInProfile">
+    honorsAndAwards?: JsonNullableFilter<"LinkedInProfile">
+    languages?: JsonNullableFilter<"LinkedInProfile">
+    volunteerAndAwards?: JsonNullableFilter<"LinkedInProfile">
+    verifications?: JsonNullableFilter<"LinkedInProfile">
+    promos?: JsonNullableFilter<"LinkedInProfile">
+    highlights?: JsonNullableFilter<"LinkedInProfile">
+    projects?: JsonNullableFilter<"LinkedInProfile">
+    publications?: JsonNullableFilter<"LinkedInProfile">
+    patents?: JsonNullableFilter<"LinkedInProfile">
+    courses?: JsonNullableFilter<"LinkedInProfile">
+    testScores?: JsonNullableFilter<"LinkedInProfile">
+    organizations?: JsonNullableFilter<"LinkedInProfile">
+    volunteerCauses?: JsonNullableFilter<"LinkedInProfile">
+    interests?: JsonNullableFilter<"LinkedInProfile">
+    recommendations?: JsonNullableFilter<"LinkedInProfile">
+    createdAt?: DateTimeFilter<"LinkedInProfile"> | Date | string
+    updatedAt?: DateTimeFilter<"LinkedInProfile"> | Date | string
+  }
+
+  export type LinkedInProfileOrderByWithRelationInput = {
+    id?: SortOrder
+    linkedinUrl?: SortOrder
+    fullName?: SortOrder
+    headline?: SortOrder
+    urn?: SortOrder
+    profilePic?: SortOrder
+    firstName?: SortOrderInput | SortOrder
+    lastName?: SortOrderInput | SortOrder
+    connections?: SortOrderInput | SortOrder
+    followers?: SortOrderInput | SortOrder
+    email?: SortOrderInput | SortOrder
+    mobileNumber?: SortOrderInput | SortOrder
+    jobTitle?: SortOrderInput | SortOrder
+    companyName?: SortOrderInput | SortOrder
+    companyIndustry?: SortOrderInput | SortOrder
+    companyWebsite?: SortOrderInput | SortOrder
+    companyLinkedin?: SortOrderInput | SortOrder
+    companyFoundedIn?: SortOrderInput | SortOrder
+    companySize?: SortOrderInput | SortOrder
+    currentJobDuration?: SortOrderInput | SortOrder
+    currentJobDurationInYrs?: SortOrderInput | SortOrder
+    topSkillsByEndorsements?: SortOrderInput | SortOrder
+    addressCountryOnly?: SortOrderInput | SortOrder
+    addressWithCountry?: SortOrderInput | SortOrder
+    addressWithoutCountry?: SortOrderInput | SortOrder
+    profilePicHighQuality?: SortOrderInput | SortOrder
+    about?: SortOrderInput | SortOrder
+    publicIdentifier?: SortOrderInput | SortOrder
+    openConnection?: SortOrderInput | SortOrder
+    experiences?: SortOrderInput | SortOrder
+    updates?: SortOrderInput | SortOrder
+    skills?: SortOrderInput | SortOrder
+    profilePicAllDimensions?: SortOrderInput | SortOrder
+    educations?: SortOrderInput | SortOrder
+    licenseAndCertificates?: SortOrderInput | SortOrder
+    honorsAndAwards?: SortOrderInput | SortOrder
+    languages?: SortOrderInput | SortOrder
+    volunteerAndAwards?: SortOrderInput | SortOrder
+    verifications?: SortOrderInput | SortOrder
+    promos?: SortOrderInput | SortOrder
+    highlights?: SortOrderInput | SortOrder
+    projects?: SortOrderInput | SortOrder
+    publications?: SortOrderInput | SortOrder
+    patents?: SortOrderInput | SortOrder
+    courses?: SortOrderInput | SortOrder
+    testScores?: SortOrderInput | SortOrder
+    organizations?: SortOrderInput | SortOrder
+    volunteerCauses?: SortOrderInput | SortOrder
+    interests?: SortOrderInput | SortOrder
+    recommendations?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type LinkedInProfileWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    urn?: string
+    AND?: LinkedInProfileWhereInput | LinkedInProfileWhereInput[]
+    OR?: LinkedInProfileWhereInput[]
+    NOT?: LinkedInProfileWhereInput | LinkedInProfileWhereInput[]
+    linkedinUrl?: StringFilter<"LinkedInProfile"> | string
+    fullName?: StringFilter<"LinkedInProfile"> | string
+    headline?: StringFilter<"LinkedInProfile"> | string
+    profilePic?: StringFilter<"LinkedInProfile"> | string
+    firstName?: StringNullableFilter<"LinkedInProfile"> | string | null
+    lastName?: StringNullableFilter<"LinkedInProfile"> | string | null
+    connections?: IntNullableFilter<"LinkedInProfile"> | number | null
+    followers?: IntNullableFilter<"LinkedInProfile"> | number | null
+    email?: StringNullableFilter<"LinkedInProfile"> | string | null
+    mobileNumber?: StringNullableFilter<"LinkedInProfile"> | string | null
+    jobTitle?: StringNullableFilter<"LinkedInProfile"> | string | null
+    companyName?: StringNullableFilter<"LinkedInProfile"> | string | null
+    companyIndustry?: StringNullableFilter<"LinkedInProfile"> | string | null
+    companyWebsite?: StringNullableFilter<"LinkedInProfile"> | string | null
+    companyLinkedin?: StringNullableFilter<"LinkedInProfile"> | string | null
+    companyFoundedIn?: IntNullableFilter<"LinkedInProfile"> | number | null
+    companySize?: StringNullableFilter<"LinkedInProfile"> | string | null
+    currentJobDuration?: StringNullableFilter<"LinkedInProfile"> | string | null
+    currentJobDurationInYrs?: FloatNullableFilter<"LinkedInProfile"> | number | null
+    topSkillsByEndorsements?: StringNullableFilter<"LinkedInProfile"> | string | null
+    addressCountryOnly?: StringNullableFilter<"LinkedInProfile"> | string | null
+    addressWithCountry?: StringNullableFilter<"LinkedInProfile"> | string | null
+    addressWithoutCountry?: StringNullableFilter<"LinkedInProfile"> | string | null
+    profilePicHighQuality?: StringNullableFilter<"LinkedInProfile"> | string | null
+    about?: StringNullableFilter<"LinkedInProfile"> | string | null
+    publicIdentifier?: StringNullableFilter<"LinkedInProfile"> | string | null
+    openConnection?: BoolNullableFilter<"LinkedInProfile"> | boolean | null
+    experiences?: JsonNullableFilter<"LinkedInProfile">
+    updates?: JsonNullableFilter<"LinkedInProfile">
+    skills?: JsonNullableFilter<"LinkedInProfile">
+    profilePicAllDimensions?: JsonNullableFilter<"LinkedInProfile">
+    educations?: JsonNullableFilter<"LinkedInProfile">
+    licenseAndCertificates?: JsonNullableFilter<"LinkedInProfile">
+    honorsAndAwards?: JsonNullableFilter<"LinkedInProfile">
+    languages?: JsonNullableFilter<"LinkedInProfile">
+    volunteerAndAwards?: JsonNullableFilter<"LinkedInProfile">
+    verifications?: JsonNullableFilter<"LinkedInProfile">
+    promos?: JsonNullableFilter<"LinkedInProfile">
+    highlights?: JsonNullableFilter<"LinkedInProfile">
+    projects?: JsonNullableFilter<"LinkedInProfile">
+    publications?: JsonNullableFilter<"LinkedInProfile">
+    patents?: JsonNullableFilter<"LinkedInProfile">
+    courses?: JsonNullableFilter<"LinkedInProfile">
+    testScores?: JsonNullableFilter<"LinkedInProfile">
+    organizations?: JsonNullableFilter<"LinkedInProfile">
+    volunteerCauses?: JsonNullableFilter<"LinkedInProfile">
+    interests?: JsonNullableFilter<"LinkedInProfile">
+    recommendations?: JsonNullableFilter<"LinkedInProfile">
+    createdAt?: DateTimeFilter<"LinkedInProfile"> | Date | string
+    updatedAt?: DateTimeFilter<"LinkedInProfile"> | Date | string
+  }, "id" | "urn">
+
+  export type LinkedInProfileOrderByWithAggregationInput = {
+    id?: SortOrder
+    linkedinUrl?: SortOrder
+    fullName?: SortOrder
+    headline?: SortOrder
+    urn?: SortOrder
+    profilePic?: SortOrder
+    firstName?: SortOrderInput | SortOrder
+    lastName?: SortOrderInput | SortOrder
+    connections?: SortOrderInput | SortOrder
+    followers?: SortOrderInput | SortOrder
+    email?: SortOrderInput | SortOrder
+    mobileNumber?: SortOrderInput | SortOrder
+    jobTitle?: SortOrderInput | SortOrder
+    companyName?: SortOrderInput | SortOrder
+    companyIndustry?: SortOrderInput | SortOrder
+    companyWebsite?: SortOrderInput | SortOrder
+    companyLinkedin?: SortOrderInput | SortOrder
+    companyFoundedIn?: SortOrderInput | SortOrder
+    companySize?: SortOrderInput | SortOrder
+    currentJobDuration?: SortOrderInput | SortOrder
+    currentJobDurationInYrs?: SortOrderInput | SortOrder
+    topSkillsByEndorsements?: SortOrderInput | SortOrder
+    addressCountryOnly?: SortOrderInput | SortOrder
+    addressWithCountry?: SortOrderInput | SortOrder
+    addressWithoutCountry?: SortOrderInput | SortOrder
+    profilePicHighQuality?: SortOrderInput | SortOrder
+    about?: SortOrderInput | SortOrder
+    publicIdentifier?: SortOrderInput | SortOrder
+    openConnection?: SortOrderInput | SortOrder
+    experiences?: SortOrderInput | SortOrder
+    updates?: SortOrderInput | SortOrder
+    skills?: SortOrderInput | SortOrder
+    profilePicAllDimensions?: SortOrderInput | SortOrder
+    educations?: SortOrderInput | SortOrder
+    licenseAndCertificates?: SortOrderInput | SortOrder
+    honorsAndAwards?: SortOrderInput | SortOrder
+    languages?: SortOrderInput | SortOrder
+    volunteerAndAwards?: SortOrderInput | SortOrder
+    verifications?: SortOrderInput | SortOrder
+    promos?: SortOrderInput | SortOrder
+    highlights?: SortOrderInput | SortOrder
+    projects?: SortOrderInput | SortOrder
+    publications?: SortOrderInput | SortOrder
+    patents?: SortOrderInput | SortOrder
+    courses?: SortOrderInput | SortOrder
+    testScores?: SortOrderInput | SortOrder
+    organizations?: SortOrderInput | SortOrder
+    volunteerCauses?: SortOrderInput | SortOrder
+    interests?: SortOrderInput | SortOrder
+    recommendations?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: LinkedInProfileCountOrderByAggregateInput
+    _avg?: LinkedInProfileAvgOrderByAggregateInput
+    _max?: LinkedInProfileMaxOrderByAggregateInput
+    _min?: LinkedInProfileMinOrderByAggregateInput
+    _sum?: LinkedInProfileSumOrderByAggregateInput
+  }
+
+  export type LinkedInProfileScalarWhereWithAggregatesInput = {
+    AND?: LinkedInProfileScalarWhereWithAggregatesInput | LinkedInProfileScalarWhereWithAggregatesInput[]
+    OR?: LinkedInProfileScalarWhereWithAggregatesInput[]
+    NOT?: LinkedInProfileScalarWhereWithAggregatesInput | LinkedInProfileScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"LinkedInProfile"> | string
+    linkedinUrl?: StringWithAggregatesFilter<"LinkedInProfile"> | string
+    fullName?: StringWithAggregatesFilter<"LinkedInProfile"> | string
+    headline?: StringWithAggregatesFilter<"LinkedInProfile"> | string
+    urn?: StringWithAggregatesFilter<"LinkedInProfile"> | string
+    profilePic?: StringWithAggregatesFilter<"LinkedInProfile"> | string
+    firstName?: StringNullableWithAggregatesFilter<"LinkedInProfile"> | string | null
+    lastName?: StringNullableWithAggregatesFilter<"LinkedInProfile"> | string | null
+    connections?: IntNullableWithAggregatesFilter<"LinkedInProfile"> | number | null
+    followers?: IntNullableWithAggregatesFilter<"LinkedInProfile"> | number | null
+    email?: StringNullableWithAggregatesFilter<"LinkedInProfile"> | string | null
+    mobileNumber?: StringNullableWithAggregatesFilter<"LinkedInProfile"> | string | null
+    jobTitle?: StringNullableWithAggregatesFilter<"LinkedInProfile"> | string | null
+    companyName?: StringNullableWithAggregatesFilter<"LinkedInProfile"> | string | null
+    companyIndustry?: StringNullableWithAggregatesFilter<"LinkedInProfile"> | string | null
+    companyWebsite?: StringNullableWithAggregatesFilter<"LinkedInProfile"> | string | null
+    companyLinkedin?: StringNullableWithAggregatesFilter<"LinkedInProfile"> | string | null
+    companyFoundedIn?: IntNullableWithAggregatesFilter<"LinkedInProfile"> | number | null
+    companySize?: StringNullableWithAggregatesFilter<"LinkedInProfile"> | string | null
+    currentJobDuration?: StringNullableWithAggregatesFilter<"LinkedInProfile"> | string | null
+    currentJobDurationInYrs?: FloatNullableWithAggregatesFilter<"LinkedInProfile"> | number | null
+    topSkillsByEndorsements?: StringNullableWithAggregatesFilter<"LinkedInProfile"> | string | null
+    addressCountryOnly?: StringNullableWithAggregatesFilter<"LinkedInProfile"> | string | null
+    addressWithCountry?: StringNullableWithAggregatesFilter<"LinkedInProfile"> | string | null
+    addressWithoutCountry?: StringNullableWithAggregatesFilter<"LinkedInProfile"> | string | null
+    profilePicHighQuality?: StringNullableWithAggregatesFilter<"LinkedInProfile"> | string | null
+    about?: StringNullableWithAggregatesFilter<"LinkedInProfile"> | string | null
+    publicIdentifier?: StringNullableWithAggregatesFilter<"LinkedInProfile"> | string | null
+    openConnection?: BoolNullableWithAggregatesFilter<"LinkedInProfile"> | boolean | null
+    experiences?: JsonNullableWithAggregatesFilter<"LinkedInProfile">
+    updates?: JsonNullableWithAggregatesFilter<"LinkedInProfile">
+    skills?: JsonNullableWithAggregatesFilter<"LinkedInProfile">
+    profilePicAllDimensions?: JsonNullableWithAggregatesFilter<"LinkedInProfile">
+    educations?: JsonNullableWithAggregatesFilter<"LinkedInProfile">
+    licenseAndCertificates?: JsonNullableWithAggregatesFilter<"LinkedInProfile">
+    honorsAndAwards?: JsonNullableWithAggregatesFilter<"LinkedInProfile">
+    languages?: JsonNullableWithAggregatesFilter<"LinkedInProfile">
+    volunteerAndAwards?: JsonNullableWithAggregatesFilter<"LinkedInProfile">
+    verifications?: JsonNullableWithAggregatesFilter<"LinkedInProfile">
+    promos?: JsonNullableWithAggregatesFilter<"LinkedInProfile">
+    highlights?: JsonNullableWithAggregatesFilter<"LinkedInProfile">
+    projects?: JsonNullableWithAggregatesFilter<"LinkedInProfile">
+    publications?: JsonNullableWithAggregatesFilter<"LinkedInProfile">
+    patents?: JsonNullableWithAggregatesFilter<"LinkedInProfile">
+    courses?: JsonNullableWithAggregatesFilter<"LinkedInProfile">
+    testScores?: JsonNullableWithAggregatesFilter<"LinkedInProfile">
+    organizations?: JsonNullableWithAggregatesFilter<"LinkedInProfile">
+    volunteerCauses?: JsonNullableWithAggregatesFilter<"LinkedInProfile">
+    interests?: JsonNullableWithAggregatesFilter<"LinkedInProfile">
+    recommendations?: JsonNullableWithAggregatesFilter<"LinkedInProfile">
+    createdAt?: DateTimeWithAggregatesFilter<"LinkedInProfile"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"LinkedInProfile"> | Date | string
+  }
+
   export type UserCreateInput = {
     id: string
     firstName?: string | null
@@ -2287,6 +5695,7 @@ export namespace Prisma {
     dailyAIcomments?: number
     createdAt?: Date | string
     updatedAt?: Date | string
+    profileImportRuns?: ProfileImportRunCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -2303,6 +5712,7 @@ export namespace Prisma {
     dailyAIcomments?: number
     createdAt?: Date | string
     updatedAt?: Date | string
+    profileImportRuns?: ProfileImportRunUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserUpdateInput = {
@@ -2319,6 +5729,7 @@ export namespace Prisma {
     dailyAIcomments?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    profileImportRuns?: ProfileImportRunUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -2335,6 +5746,7 @@ export namespace Prisma {
     dailyAIcomments?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    profileImportRuns?: ProfileImportRunUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -2381,6 +5793,467 @@ export namespace Prisma {
     accessType?: EnumAccessTypeFieldUpdateOperationsInput | $Enums.AccessType
     stripeUserProperties?: NullableJsonNullValueInput | InputJsonValue
     dailyAIcomments?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProfileImportRunCreateInput = {
+    id?: string
+    urls?: ProfileImportRunCreateurlsInput | string[]
+    status?: $Enums.ImportStatus
+    urlsSucceeded?: ProfileImportRunCreateurlsSucceededInput | string[]
+    urlsFailed?: ProfileImportRunCreateurlsFailedInput | string[]
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    user: UserCreateNestedOneWithoutProfileImportRunsInput
+  }
+
+  export type ProfileImportRunUncheckedCreateInput = {
+    id?: string
+    userId: string
+    urls?: ProfileImportRunCreateurlsInput | string[]
+    status?: $Enums.ImportStatus
+    urlsSucceeded?: ProfileImportRunCreateurlsSucceededInput | string[]
+    urlsFailed?: ProfileImportRunCreateurlsFailedInput | string[]
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ProfileImportRunUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    urls?: ProfileImportRunUpdateurlsInput | string[]
+    status?: EnumImportStatusFieldUpdateOperationsInput | $Enums.ImportStatus
+    urlsSucceeded?: ProfileImportRunUpdateurlsSucceededInput | string[]
+    urlsFailed?: ProfileImportRunUpdateurlsFailedInput | string[]
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutProfileImportRunsNestedInput
+  }
+
+  export type ProfileImportRunUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    urls?: ProfileImportRunUpdateurlsInput | string[]
+    status?: EnumImportStatusFieldUpdateOperationsInput | $Enums.ImportStatus
+    urlsSucceeded?: ProfileImportRunUpdateurlsSucceededInput | string[]
+    urlsFailed?: ProfileImportRunUpdateurlsFailedInput | string[]
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProfileImportRunCreateManyInput = {
+    id?: string
+    userId: string
+    urls?: ProfileImportRunCreateurlsInput | string[]
+    status?: $Enums.ImportStatus
+    urlsSucceeded?: ProfileImportRunCreateurlsSucceededInput | string[]
+    urlsFailed?: ProfileImportRunCreateurlsFailedInput | string[]
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ProfileImportRunUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    urls?: ProfileImportRunUpdateurlsInput | string[]
+    status?: EnumImportStatusFieldUpdateOperationsInput | $Enums.ImportStatus
+    urlsSucceeded?: ProfileImportRunUpdateurlsSucceededInput | string[]
+    urlsFailed?: ProfileImportRunUpdateurlsFailedInput | string[]
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProfileImportRunUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    urls?: ProfileImportRunUpdateurlsInput | string[]
+    status?: EnumImportStatusFieldUpdateOperationsInput | $Enums.ImportStatus
+    urlsSucceeded?: ProfileImportRunUpdateurlsSucceededInput | string[]
+    urlsFailed?: ProfileImportRunUpdateurlsFailedInput | string[]
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type LinkedInProfileCreateInput = {
+    id?: string
+    linkedinUrl: string
+    fullName: string
+    headline: string
+    urn: string
+    profilePic: string
+    firstName?: string | null
+    lastName?: string | null
+    connections?: number | null
+    followers?: number | null
+    email?: string | null
+    mobileNumber?: string | null
+    jobTitle?: string | null
+    companyName?: string | null
+    companyIndustry?: string | null
+    companyWebsite?: string | null
+    companyLinkedin?: string | null
+    companyFoundedIn?: number | null
+    companySize?: string | null
+    currentJobDuration?: string | null
+    currentJobDurationInYrs?: number | null
+    topSkillsByEndorsements?: string | null
+    addressCountryOnly?: string | null
+    addressWithCountry?: string | null
+    addressWithoutCountry?: string | null
+    profilePicHighQuality?: string | null
+    about?: string | null
+    publicIdentifier?: string | null
+    openConnection?: boolean | null
+    experiences?: NullableJsonNullValueInput | InputJsonValue
+    updates?: NullableJsonNullValueInput | InputJsonValue
+    skills?: NullableJsonNullValueInput | InputJsonValue
+    profilePicAllDimensions?: NullableJsonNullValueInput | InputJsonValue
+    educations?: NullableJsonNullValueInput | InputJsonValue
+    licenseAndCertificates?: NullableJsonNullValueInput | InputJsonValue
+    honorsAndAwards?: NullableJsonNullValueInput | InputJsonValue
+    languages?: NullableJsonNullValueInput | InputJsonValue
+    volunteerAndAwards?: NullableJsonNullValueInput | InputJsonValue
+    verifications?: NullableJsonNullValueInput | InputJsonValue
+    promos?: NullableJsonNullValueInput | InputJsonValue
+    highlights?: NullableJsonNullValueInput | InputJsonValue
+    projects?: NullableJsonNullValueInput | InputJsonValue
+    publications?: NullableJsonNullValueInput | InputJsonValue
+    patents?: NullableJsonNullValueInput | InputJsonValue
+    courses?: NullableJsonNullValueInput | InputJsonValue
+    testScores?: NullableJsonNullValueInput | InputJsonValue
+    organizations?: NullableJsonNullValueInput | InputJsonValue
+    volunteerCauses?: NullableJsonNullValueInput | InputJsonValue
+    interests?: NullableJsonNullValueInput | InputJsonValue
+    recommendations?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type LinkedInProfileUncheckedCreateInput = {
+    id?: string
+    linkedinUrl: string
+    fullName: string
+    headline: string
+    urn: string
+    profilePic: string
+    firstName?: string | null
+    lastName?: string | null
+    connections?: number | null
+    followers?: number | null
+    email?: string | null
+    mobileNumber?: string | null
+    jobTitle?: string | null
+    companyName?: string | null
+    companyIndustry?: string | null
+    companyWebsite?: string | null
+    companyLinkedin?: string | null
+    companyFoundedIn?: number | null
+    companySize?: string | null
+    currentJobDuration?: string | null
+    currentJobDurationInYrs?: number | null
+    topSkillsByEndorsements?: string | null
+    addressCountryOnly?: string | null
+    addressWithCountry?: string | null
+    addressWithoutCountry?: string | null
+    profilePicHighQuality?: string | null
+    about?: string | null
+    publicIdentifier?: string | null
+    openConnection?: boolean | null
+    experiences?: NullableJsonNullValueInput | InputJsonValue
+    updates?: NullableJsonNullValueInput | InputJsonValue
+    skills?: NullableJsonNullValueInput | InputJsonValue
+    profilePicAllDimensions?: NullableJsonNullValueInput | InputJsonValue
+    educations?: NullableJsonNullValueInput | InputJsonValue
+    licenseAndCertificates?: NullableJsonNullValueInput | InputJsonValue
+    honorsAndAwards?: NullableJsonNullValueInput | InputJsonValue
+    languages?: NullableJsonNullValueInput | InputJsonValue
+    volunteerAndAwards?: NullableJsonNullValueInput | InputJsonValue
+    verifications?: NullableJsonNullValueInput | InputJsonValue
+    promos?: NullableJsonNullValueInput | InputJsonValue
+    highlights?: NullableJsonNullValueInput | InputJsonValue
+    projects?: NullableJsonNullValueInput | InputJsonValue
+    publications?: NullableJsonNullValueInput | InputJsonValue
+    patents?: NullableJsonNullValueInput | InputJsonValue
+    courses?: NullableJsonNullValueInput | InputJsonValue
+    testScores?: NullableJsonNullValueInput | InputJsonValue
+    organizations?: NullableJsonNullValueInput | InputJsonValue
+    volunteerCauses?: NullableJsonNullValueInput | InputJsonValue
+    interests?: NullableJsonNullValueInput | InputJsonValue
+    recommendations?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type LinkedInProfileUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    linkedinUrl?: StringFieldUpdateOperationsInput | string
+    fullName?: StringFieldUpdateOperationsInput | string
+    headline?: StringFieldUpdateOperationsInput | string
+    urn?: StringFieldUpdateOperationsInput | string
+    profilePic?: StringFieldUpdateOperationsInput | string
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
+    connections?: NullableIntFieldUpdateOperationsInput | number | null
+    followers?: NullableIntFieldUpdateOperationsInput | number | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    mobileNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    jobTitle?: NullableStringFieldUpdateOperationsInput | string | null
+    companyName?: NullableStringFieldUpdateOperationsInput | string | null
+    companyIndustry?: NullableStringFieldUpdateOperationsInput | string | null
+    companyWebsite?: NullableStringFieldUpdateOperationsInput | string | null
+    companyLinkedin?: NullableStringFieldUpdateOperationsInput | string | null
+    companyFoundedIn?: NullableIntFieldUpdateOperationsInput | number | null
+    companySize?: NullableStringFieldUpdateOperationsInput | string | null
+    currentJobDuration?: NullableStringFieldUpdateOperationsInput | string | null
+    currentJobDurationInYrs?: NullableFloatFieldUpdateOperationsInput | number | null
+    topSkillsByEndorsements?: NullableStringFieldUpdateOperationsInput | string | null
+    addressCountryOnly?: NullableStringFieldUpdateOperationsInput | string | null
+    addressWithCountry?: NullableStringFieldUpdateOperationsInput | string | null
+    addressWithoutCountry?: NullableStringFieldUpdateOperationsInput | string | null
+    profilePicHighQuality?: NullableStringFieldUpdateOperationsInput | string | null
+    about?: NullableStringFieldUpdateOperationsInput | string | null
+    publicIdentifier?: NullableStringFieldUpdateOperationsInput | string | null
+    openConnection?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    experiences?: NullableJsonNullValueInput | InputJsonValue
+    updates?: NullableJsonNullValueInput | InputJsonValue
+    skills?: NullableJsonNullValueInput | InputJsonValue
+    profilePicAllDimensions?: NullableJsonNullValueInput | InputJsonValue
+    educations?: NullableJsonNullValueInput | InputJsonValue
+    licenseAndCertificates?: NullableJsonNullValueInput | InputJsonValue
+    honorsAndAwards?: NullableJsonNullValueInput | InputJsonValue
+    languages?: NullableJsonNullValueInput | InputJsonValue
+    volunteerAndAwards?: NullableJsonNullValueInput | InputJsonValue
+    verifications?: NullableJsonNullValueInput | InputJsonValue
+    promos?: NullableJsonNullValueInput | InputJsonValue
+    highlights?: NullableJsonNullValueInput | InputJsonValue
+    projects?: NullableJsonNullValueInput | InputJsonValue
+    publications?: NullableJsonNullValueInput | InputJsonValue
+    patents?: NullableJsonNullValueInput | InputJsonValue
+    courses?: NullableJsonNullValueInput | InputJsonValue
+    testScores?: NullableJsonNullValueInput | InputJsonValue
+    organizations?: NullableJsonNullValueInput | InputJsonValue
+    volunteerCauses?: NullableJsonNullValueInput | InputJsonValue
+    interests?: NullableJsonNullValueInput | InputJsonValue
+    recommendations?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type LinkedInProfileUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    linkedinUrl?: StringFieldUpdateOperationsInput | string
+    fullName?: StringFieldUpdateOperationsInput | string
+    headline?: StringFieldUpdateOperationsInput | string
+    urn?: StringFieldUpdateOperationsInput | string
+    profilePic?: StringFieldUpdateOperationsInput | string
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
+    connections?: NullableIntFieldUpdateOperationsInput | number | null
+    followers?: NullableIntFieldUpdateOperationsInput | number | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    mobileNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    jobTitle?: NullableStringFieldUpdateOperationsInput | string | null
+    companyName?: NullableStringFieldUpdateOperationsInput | string | null
+    companyIndustry?: NullableStringFieldUpdateOperationsInput | string | null
+    companyWebsite?: NullableStringFieldUpdateOperationsInput | string | null
+    companyLinkedin?: NullableStringFieldUpdateOperationsInput | string | null
+    companyFoundedIn?: NullableIntFieldUpdateOperationsInput | number | null
+    companySize?: NullableStringFieldUpdateOperationsInput | string | null
+    currentJobDuration?: NullableStringFieldUpdateOperationsInput | string | null
+    currentJobDurationInYrs?: NullableFloatFieldUpdateOperationsInput | number | null
+    topSkillsByEndorsements?: NullableStringFieldUpdateOperationsInput | string | null
+    addressCountryOnly?: NullableStringFieldUpdateOperationsInput | string | null
+    addressWithCountry?: NullableStringFieldUpdateOperationsInput | string | null
+    addressWithoutCountry?: NullableStringFieldUpdateOperationsInput | string | null
+    profilePicHighQuality?: NullableStringFieldUpdateOperationsInput | string | null
+    about?: NullableStringFieldUpdateOperationsInput | string | null
+    publicIdentifier?: NullableStringFieldUpdateOperationsInput | string | null
+    openConnection?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    experiences?: NullableJsonNullValueInput | InputJsonValue
+    updates?: NullableJsonNullValueInput | InputJsonValue
+    skills?: NullableJsonNullValueInput | InputJsonValue
+    profilePicAllDimensions?: NullableJsonNullValueInput | InputJsonValue
+    educations?: NullableJsonNullValueInput | InputJsonValue
+    licenseAndCertificates?: NullableJsonNullValueInput | InputJsonValue
+    honorsAndAwards?: NullableJsonNullValueInput | InputJsonValue
+    languages?: NullableJsonNullValueInput | InputJsonValue
+    volunteerAndAwards?: NullableJsonNullValueInput | InputJsonValue
+    verifications?: NullableJsonNullValueInput | InputJsonValue
+    promos?: NullableJsonNullValueInput | InputJsonValue
+    highlights?: NullableJsonNullValueInput | InputJsonValue
+    projects?: NullableJsonNullValueInput | InputJsonValue
+    publications?: NullableJsonNullValueInput | InputJsonValue
+    patents?: NullableJsonNullValueInput | InputJsonValue
+    courses?: NullableJsonNullValueInput | InputJsonValue
+    testScores?: NullableJsonNullValueInput | InputJsonValue
+    organizations?: NullableJsonNullValueInput | InputJsonValue
+    volunteerCauses?: NullableJsonNullValueInput | InputJsonValue
+    interests?: NullableJsonNullValueInput | InputJsonValue
+    recommendations?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type LinkedInProfileCreateManyInput = {
+    id?: string
+    linkedinUrl: string
+    fullName: string
+    headline: string
+    urn: string
+    profilePic: string
+    firstName?: string | null
+    lastName?: string | null
+    connections?: number | null
+    followers?: number | null
+    email?: string | null
+    mobileNumber?: string | null
+    jobTitle?: string | null
+    companyName?: string | null
+    companyIndustry?: string | null
+    companyWebsite?: string | null
+    companyLinkedin?: string | null
+    companyFoundedIn?: number | null
+    companySize?: string | null
+    currentJobDuration?: string | null
+    currentJobDurationInYrs?: number | null
+    topSkillsByEndorsements?: string | null
+    addressCountryOnly?: string | null
+    addressWithCountry?: string | null
+    addressWithoutCountry?: string | null
+    profilePicHighQuality?: string | null
+    about?: string | null
+    publicIdentifier?: string | null
+    openConnection?: boolean | null
+    experiences?: NullableJsonNullValueInput | InputJsonValue
+    updates?: NullableJsonNullValueInput | InputJsonValue
+    skills?: NullableJsonNullValueInput | InputJsonValue
+    profilePicAllDimensions?: NullableJsonNullValueInput | InputJsonValue
+    educations?: NullableJsonNullValueInput | InputJsonValue
+    licenseAndCertificates?: NullableJsonNullValueInput | InputJsonValue
+    honorsAndAwards?: NullableJsonNullValueInput | InputJsonValue
+    languages?: NullableJsonNullValueInput | InputJsonValue
+    volunteerAndAwards?: NullableJsonNullValueInput | InputJsonValue
+    verifications?: NullableJsonNullValueInput | InputJsonValue
+    promos?: NullableJsonNullValueInput | InputJsonValue
+    highlights?: NullableJsonNullValueInput | InputJsonValue
+    projects?: NullableJsonNullValueInput | InputJsonValue
+    publications?: NullableJsonNullValueInput | InputJsonValue
+    patents?: NullableJsonNullValueInput | InputJsonValue
+    courses?: NullableJsonNullValueInput | InputJsonValue
+    testScores?: NullableJsonNullValueInput | InputJsonValue
+    organizations?: NullableJsonNullValueInput | InputJsonValue
+    volunteerCauses?: NullableJsonNullValueInput | InputJsonValue
+    interests?: NullableJsonNullValueInput | InputJsonValue
+    recommendations?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type LinkedInProfileUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    linkedinUrl?: StringFieldUpdateOperationsInput | string
+    fullName?: StringFieldUpdateOperationsInput | string
+    headline?: StringFieldUpdateOperationsInput | string
+    urn?: StringFieldUpdateOperationsInput | string
+    profilePic?: StringFieldUpdateOperationsInput | string
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
+    connections?: NullableIntFieldUpdateOperationsInput | number | null
+    followers?: NullableIntFieldUpdateOperationsInput | number | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    mobileNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    jobTitle?: NullableStringFieldUpdateOperationsInput | string | null
+    companyName?: NullableStringFieldUpdateOperationsInput | string | null
+    companyIndustry?: NullableStringFieldUpdateOperationsInput | string | null
+    companyWebsite?: NullableStringFieldUpdateOperationsInput | string | null
+    companyLinkedin?: NullableStringFieldUpdateOperationsInput | string | null
+    companyFoundedIn?: NullableIntFieldUpdateOperationsInput | number | null
+    companySize?: NullableStringFieldUpdateOperationsInput | string | null
+    currentJobDuration?: NullableStringFieldUpdateOperationsInput | string | null
+    currentJobDurationInYrs?: NullableFloatFieldUpdateOperationsInput | number | null
+    topSkillsByEndorsements?: NullableStringFieldUpdateOperationsInput | string | null
+    addressCountryOnly?: NullableStringFieldUpdateOperationsInput | string | null
+    addressWithCountry?: NullableStringFieldUpdateOperationsInput | string | null
+    addressWithoutCountry?: NullableStringFieldUpdateOperationsInput | string | null
+    profilePicHighQuality?: NullableStringFieldUpdateOperationsInput | string | null
+    about?: NullableStringFieldUpdateOperationsInput | string | null
+    publicIdentifier?: NullableStringFieldUpdateOperationsInput | string | null
+    openConnection?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    experiences?: NullableJsonNullValueInput | InputJsonValue
+    updates?: NullableJsonNullValueInput | InputJsonValue
+    skills?: NullableJsonNullValueInput | InputJsonValue
+    profilePicAllDimensions?: NullableJsonNullValueInput | InputJsonValue
+    educations?: NullableJsonNullValueInput | InputJsonValue
+    licenseAndCertificates?: NullableJsonNullValueInput | InputJsonValue
+    honorsAndAwards?: NullableJsonNullValueInput | InputJsonValue
+    languages?: NullableJsonNullValueInput | InputJsonValue
+    volunteerAndAwards?: NullableJsonNullValueInput | InputJsonValue
+    verifications?: NullableJsonNullValueInput | InputJsonValue
+    promos?: NullableJsonNullValueInput | InputJsonValue
+    highlights?: NullableJsonNullValueInput | InputJsonValue
+    projects?: NullableJsonNullValueInput | InputJsonValue
+    publications?: NullableJsonNullValueInput | InputJsonValue
+    patents?: NullableJsonNullValueInput | InputJsonValue
+    courses?: NullableJsonNullValueInput | InputJsonValue
+    testScores?: NullableJsonNullValueInput | InputJsonValue
+    organizations?: NullableJsonNullValueInput | InputJsonValue
+    volunteerCauses?: NullableJsonNullValueInput | InputJsonValue
+    interests?: NullableJsonNullValueInput | InputJsonValue
+    recommendations?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type LinkedInProfileUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    linkedinUrl?: StringFieldUpdateOperationsInput | string
+    fullName?: StringFieldUpdateOperationsInput | string
+    headline?: StringFieldUpdateOperationsInput | string
+    urn?: StringFieldUpdateOperationsInput | string
+    profilePic?: StringFieldUpdateOperationsInput | string
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
+    connections?: NullableIntFieldUpdateOperationsInput | number | null
+    followers?: NullableIntFieldUpdateOperationsInput | number | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    mobileNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    jobTitle?: NullableStringFieldUpdateOperationsInput | string | null
+    companyName?: NullableStringFieldUpdateOperationsInput | string | null
+    companyIndustry?: NullableStringFieldUpdateOperationsInput | string | null
+    companyWebsite?: NullableStringFieldUpdateOperationsInput | string | null
+    companyLinkedin?: NullableStringFieldUpdateOperationsInput | string | null
+    companyFoundedIn?: NullableIntFieldUpdateOperationsInput | number | null
+    companySize?: NullableStringFieldUpdateOperationsInput | string | null
+    currentJobDuration?: NullableStringFieldUpdateOperationsInput | string | null
+    currentJobDurationInYrs?: NullableFloatFieldUpdateOperationsInput | number | null
+    topSkillsByEndorsements?: NullableStringFieldUpdateOperationsInput | string | null
+    addressCountryOnly?: NullableStringFieldUpdateOperationsInput | string | null
+    addressWithCountry?: NullableStringFieldUpdateOperationsInput | string | null
+    addressWithoutCountry?: NullableStringFieldUpdateOperationsInput | string | null
+    profilePicHighQuality?: NullableStringFieldUpdateOperationsInput | string | null
+    about?: NullableStringFieldUpdateOperationsInput | string | null
+    publicIdentifier?: NullableStringFieldUpdateOperationsInput | string | null
+    openConnection?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    experiences?: NullableJsonNullValueInput | InputJsonValue
+    updates?: NullableJsonNullValueInput | InputJsonValue
+    skills?: NullableJsonNullValueInput | InputJsonValue
+    profilePicAllDimensions?: NullableJsonNullValueInput | InputJsonValue
+    educations?: NullableJsonNullValueInput | InputJsonValue
+    licenseAndCertificates?: NullableJsonNullValueInput | InputJsonValue
+    honorsAndAwards?: NullableJsonNullValueInput | InputJsonValue
+    languages?: NullableJsonNullValueInput | InputJsonValue
+    volunteerAndAwards?: NullableJsonNullValueInput | InputJsonValue
+    verifications?: NullableJsonNullValueInput | InputJsonValue
+    promos?: NullableJsonNullValueInput | InputJsonValue
+    highlights?: NullableJsonNullValueInput | InputJsonValue
+    projects?: NullableJsonNullValueInput | InputJsonValue
+    publications?: NullableJsonNullValueInput | InputJsonValue
+    patents?: NullableJsonNullValueInput | InputJsonValue
+    courses?: NullableJsonNullValueInput | InputJsonValue
+    testScores?: NullableJsonNullValueInput | InputJsonValue
+    organizations?: NullableJsonNullValueInput | InputJsonValue
+    volunteerCauses?: NullableJsonNullValueInput | InputJsonValue
+    interests?: NullableJsonNullValueInput | InputJsonValue
+    recommendations?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -2467,9 +6340,19 @@ export namespace Prisma {
     not?: NestedDateTimeFilter<$PrismaModel> | Date | string
   }
 
+  export type ProfileImportRunListRelationFilter = {
+    every?: ProfileImportRunWhereInput
+    some?: ProfileImportRunWhereInput
+    none?: ProfileImportRunWhereInput
+  }
+
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
+  }
+
+  export type ProfileImportRunOrderByRelationAggregateInput = {
+    _count?: SortOrder
   }
 
   export type UserCountOrderByAggregateInput = {
@@ -2626,6 +6509,281 @@ export namespace Prisma {
     _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
+  export type StringNullableListFilter<$PrismaModel = never> = {
+    equals?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    has?: string | StringFieldRefInput<$PrismaModel> | null
+    hasEvery?: string[] | ListStringFieldRefInput<$PrismaModel>
+    hasSome?: string[] | ListStringFieldRefInput<$PrismaModel>
+    isEmpty?: boolean
+  }
+
+  export type EnumImportStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.ImportStatus | EnumImportStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ImportStatus[] | ListEnumImportStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.ImportStatus[] | ListEnumImportStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumImportStatusFilter<$PrismaModel> | $Enums.ImportStatus
+  }
+
+  export type UserScalarRelationFilter = {
+    is?: UserWhereInput
+    isNot?: UserWhereInput
+  }
+
+  export type ProfileImportRunCountOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    urls?: SortOrder
+    status?: SortOrder
+    urlsSucceeded?: SortOrder
+    urlsFailed?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ProfileImportRunMaxOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ProfileImportRunMinOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type EnumImportStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.ImportStatus | EnumImportStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ImportStatus[] | ListEnumImportStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.ImportStatus[] | ListEnumImportStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumImportStatusWithAggregatesFilter<$PrismaModel> | $Enums.ImportStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumImportStatusFilter<$PrismaModel>
+    _max?: NestedEnumImportStatusFilter<$PrismaModel>
+  }
+
+  export type IntNullableFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  }
+
+  export type FloatNullableFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
+  }
+
+  export type BoolNullableFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
+  }
+
+  export type LinkedInProfileCountOrderByAggregateInput = {
+    id?: SortOrder
+    linkedinUrl?: SortOrder
+    fullName?: SortOrder
+    headline?: SortOrder
+    urn?: SortOrder
+    profilePic?: SortOrder
+    firstName?: SortOrder
+    lastName?: SortOrder
+    connections?: SortOrder
+    followers?: SortOrder
+    email?: SortOrder
+    mobileNumber?: SortOrder
+    jobTitle?: SortOrder
+    companyName?: SortOrder
+    companyIndustry?: SortOrder
+    companyWebsite?: SortOrder
+    companyLinkedin?: SortOrder
+    companyFoundedIn?: SortOrder
+    companySize?: SortOrder
+    currentJobDuration?: SortOrder
+    currentJobDurationInYrs?: SortOrder
+    topSkillsByEndorsements?: SortOrder
+    addressCountryOnly?: SortOrder
+    addressWithCountry?: SortOrder
+    addressWithoutCountry?: SortOrder
+    profilePicHighQuality?: SortOrder
+    about?: SortOrder
+    publicIdentifier?: SortOrder
+    openConnection?: SortOrder
+    experiences?: SortOrder
+    updates?: SortOrder
+    skills?: SortOrder
+    profilePicAllDimensions?: SortOrder
+    educations?: SortOrder
+    licenseAndCertificates?: SortOrder
+    honorsAndAwards?: SortOrder
+    languages?: SortOrder
+    volunteerAndAwards?: SortOrder
+    verifications?: SortOrder
+    promos?: SortOrder
+    highlights?: SortOrder
+    projects?: SortOrder
+    publications?: SortOrder
+    patents?: SortOrder
+    courses?: SortOrder
+    testScores?: SortOrder
+    organizations?: SortOrder
+    volunteerCauses?: SortOrder
+    interests?: SortOrder
+    recommendations?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type LinkedInProfileAvgOrderByAggregateInput = {
+    connections?: SortOrder
+    followers?: SortOrder
+    companyFoundedIn?: SortOrder
+    currentJobDurationInYrs?: SortOrder
+  }
+
+  export type LinkedInProfileMaxOrderByAggregateInput = {
+    id?: SortOrder
+    linkedinUrl?: SortOrder
+    fullName?: SortOrder
+    headline?: SortOrder
+    urn?: SortOrder
+    profilePic?: SortOrder
+    firstName?: SortOrder
+    lastName?: SortOrder
+    connections?: SortOrder
+    followers?: SortOrder
+    email?: SortOrder
+    mobileNumber?: SortOrder
+    jobTitle?: SortOrder
+    companyName?: SortOrder
+    companyIndustry?: SortOrder
+    companyWebsite?: SortOrder
+    companyLinkedin?: SortOrder
+    companyFoundedIn?: SortOrder
+    companySize?: SortOrder
+    currentJobDuration?: SortOrder
+    currentJobDurationInYrs?: SortOrder
+    topSkillsByEndorsements?: SortOrder
+    addressCountryOnly?: SortOrder
+    addressWithCountry?: SortOrder
+    addressWithoutCountry?: SortOrder
+    profilePicHighQuality?: SortOrder
+    about?: SortOrder
+    publicIdentifier?: SortOrder
+    openConnection?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type LinkedInProfileMinOrderByAggregateInput = {
+    id?: SortOrder
+    linkedinUrl?: SortOrder
+    fullName?: SortOrder
+    headline?: SortOrder
+    urn?: SortOrder
+    profilePic?: SortOrder
+    firstName?: SortOrder
+    lastName?: SortOrder
+    connections?: SortOrder
+    followers?: SortOrder
+    email?: SortOrder
+    mobileNumber?: SortOrder
+    jobTitle?: SortOrder
+    companyName?: SortOrder
+    companyIndustry?: SortOrder
+    companyWebsite?: SortOrder
+    companyLinkedin?: SortOrder
+    companyFoundedIn?: SortOrder
+    companySize?: SortOrder
+    currentJobDuration?: SortOrder
+    currentJobDurationInYrs?: SortOrder
+    topSkillsByEndorsements?: SortOrder
+    addressCountryOnly?: SortOrder
+    addressWithCountry?: SortOrder
+    addressWithoutCountry?: SortOrder
+    profilePicHighQuality?: SortOrder
+    about?: SortOrder
+    publicIdentifier?: SortOrder
+    openConnection?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type LinkedInProfileSumOrderByAggregateInput = {
+    connections?: SortOrder
+    followers?: SortOrder
+    companyFoundedIn?: SortOrder
+    currentJobDurationInYrs?: SortOrder
+  }
+
+  export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedIntNullableFilter<$PrismaModel>
+    _max?: NestedIntNullableFilter<$PrismaModel>
+  }
+
+  export type FloatNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedFloatNullableFilter<$PrismaModel>
+    _min?: NestedFloatNullableFilter<$PrismaModel>
+    _max?: NestedFloatNullableFilter<$PrismaModel>
+  }
+
+  export type BoolNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedBoolNullableFilter<$PrismaModel>
+    _max?: NestedBoolNullableFilter<$PrismaModel>
+  }
+
+  export type ProfileImportRunCreateNestedManyWithoutUserInput = {
+    create?: XOR<ProfileImportRunCreateWithoutUserInput, ProfileImportRunUncheckedCreateWithoutUserInput> | ProfileImportRunCreateWithoutUserInput[] | ProfileImportRunUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: ProfileImportRunCreateOrConnectWithoutUserInput | ProfileImportRunCreateOrConnectWithoutUserInput[]
+    createMany?: ProfileImportRunCreateManyUserInputEnvelope
+    connect?: ProfileImportRunWhereUniqueInput | ProfileImportRunWhereUniqueInput[]
+  }
+
+  export type ProfileImportRunUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<ProfileImportRunCreateWithoutUserInput, ProfileImportRunUncheckedCreateWithoutUserInput> | ProfileImportRunCreateWithoutUserInput[] | ProfileImportRunUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: ProfileImportRunCreateOrConnectWithoutUserInput | ProfileImportRunCreateOrConnectWithoutUserInput[]
+    createMany?: ProfileImportRunCreateManyUserInputEnvelope
+    connect?: ProfileImportRunWhereUniqueInput | ProfileImportRunWhereUniqueInput[]
+  }
+
   export type StringFieldUpdateOperationsInput = {
     set?: string
   }
@@ -2648,6 +6806,99 @@ export namespace Prisma {
 
   export type DateTimeFieldUpdateOperationsInput = {
     set?: Date | string
+  }
+
+  export type ProfileImportRunUpdateManyWithoutUserNestedInput = {
+    create?: XOR<ProfileImportRunCreateWithoutUserInput, ProfileImportRunUncheckedCreateWithoutUserInput> | ProfileImportRunCreateWithoutUserInput[] | ProfileImportRunUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: ProfileImportRunCreateOrConnectWithoutUserInput | ProfileImportRunCreateOrConnectWithoutUserInput[]
+    upsert?: ProfileImportRunUpsertWithWhereUniqueWithoutUserInput | ProfileImportRunUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: ProfileImportRunCreateManyUserInputEnvelope
+    set?: ProfileImportRunWhereUniqueInput | ProfileImportRunWhereUniqueInput[]
+    disconnect?: ProfileImportRunWhereUniqueInput | ProfileImportRunWhereUniqueInput[]
+    delete?: ProfileImportRunWhereUniqueInput | ProfileImportRunWhereUniqueInput[]
+    connect?: ProfileImportRunWhereUniqueInput | ProfileImportRunWhereUniqueInput[]
+    update?: ProfileImportRunUpdateWithWhereUniqueWithoutUserInput | ProfileImportRunUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: ProfileImportRunUpdateManyWithWhereWithoutUserInput | ProfileImportRunUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: ProfileImportRunScalarWhereInput | ProfileImportRunScalarWhereInput[]
+  }
+
+  export type ProfileImportRunUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<ProfileImportRunCreateWithoutUserInput, ProfileImportRunUncheckedCreateWithoutUserInput> | ProfileImportRunCreateWithoutUserInput[] | ProfileImportRunUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: ProfileImportRunCreateOrConnectWithoutUserInput | ProfileImportRunCreateOrConnectWithoutUserInput[]
+    upsert?: ProfileImportRunUpsertWithWhereUniqueWithoutUserInput | ProfileImportRunUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: ProfileImportRunCreateManyUserInputEnvelope
+    set?: ProfileImportRunWhereUniqueInput | ProfileImportRunWhereUniqueInput[]
+    disconnect?: ProfileImportRunWhereUniqueInput | ProfileImportRunWhereUniqueInput[]
+    delete?: ProfileImportRunWhereUniqueInput | ProfileImportRunWhereUniqueInput[]
+    connect?: ProfileImportRunWhereUniqueInput | ProfileImportRunWhereUniqueInput[]
+    update?: ProfileImportRunUpdateWithWhereUniqueWithoutUserInput | ProfileImportRunUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: ProfileImportRunUpdateManyWithWhereWithoutUserInput | ProfileImportRunUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: ProfileImportRunScalarWhereInput | ProfileImportRunScalarWhereInput[]
+  }
+
+  export type ProfileImportRunCreateurlsInput = {
+    set: string[]
+  }
+
+  export type ProfileImportRunCreateurlsSucceededInput = {
+    set: string[]
+  }
+
+  export type ProfileImportRunCreateurlsFailedInput = {
+    set: string[]
+  }
+
+  export type UserCreateNestedOneWithoutProfileImportRunsInput = {
+    create?: XOR<UserCreateWithoutProfileImportRunsInput, UserUncheckedCreateWithoutProfileImportRunsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutProfileImportRunsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type ProfileImportRunUpdateurlsInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type EnumImportStatusFieldUpdateOperationsInput = {
+    set?: $Enums.ImportStatus
+  }
+
+  export type ProfileImportRunUpdateurlsSucceededInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type ProfileImportRunUpdateurlsFailedInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type UserUpdateOneRequiredWithoutProfileImportRunsNestedInput = {
+    create?: XOR<UserCreateWithoutProfileImportRunsInput, UserUncheckedCreateWithoutProfileImportRunsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutProfileImportRunsInput
+    upsert?: UserUpsertWithoutProfileImportRunsInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutProfileImportRunsInput, UserUpdateWithoutProfileImportRunsInput>, UserUncheckedUpdateWithoutProfileImportRunsInput>
+  }
+
+  export type NullableIntFieldUpdateOperationsInput = {
+    set?: number | null
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
+  export type NullableFloatFieldUpdateOperationsInput = {
+    set?: number | null
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
+  export type NullableBoolFieldUpdateOperationsInput = {
+    set?: boolean | null
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -2824,6 +7075,259 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedDateTimeFilter<$PrismaModel>
     _max?: NestedDateTimeFilter<$PrismaModel>
+  }
+
+  export type NestedEnumImportStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.ImportStatus | EnumImportStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ImportStatus[] | ListEnumImportStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.ImportStatus[] | ListEnumImportStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumImportStatusFilter<$PrismaModel> | $Enums.ImportStatus
+  }
+
+  export type NestedEnumImportStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.ImportStatus | EnumImportStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ImportStatus[] | ListEnumImportStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.ImportStatus[] | ListEnumImportStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumImportStatusWithAggregatesFilter<$PrismaModel> | $Enums.ImportStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumImportStatusFilter<$PrismaModel>
+    _max?: NestedEnumImportStatusFilter<$PrismaModel>
+  }
+
+  export type NestedFloatNullableFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
+  }
+
+  export type NestedBoolNullableFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
+  }
+
+  export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedIntNullableFilter<$PrismaModel>
+    _max?: NestedIntNullableFilter<$PrismaModel>
+  }
+
+  export type NestedFloatNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedFloatNullableFilter<$PrismaModel>
+    _min?: NestedFloatNullableFilter<$PrismaModel>
+    _max?: NestedFloatNullableFilter<$PrismaModel>
+  }
+
+  export type NestedBoolNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedBoolNullableFilter<$PrismaModel>
+    _max?: NestedBoolNullableFilter<$PrismaModel>
+  }
+
+  export type ProfileImportRunCreateWithoutUserInput = {
+    id?: string
+    urls?: ProfileImportRunCreateurlsInput | string[]
+    status?: $Enums.ImportStatus
+    urlsSucceeded?: ProfileImportRunCreateurlsSucceededInput | string[]
+    urlsFailed?: ProfileImportRunCreateurlsFailedInput | string[]
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ProfileImportRunUncheckedCreateWithoutUserInput = {
+    id?: string
+    urls?: ProfileImportRunCreateurlsInput | string[]
+    status?: $Enums.ImportStatus
+    urlsSucceeded?: ProfileImportRunCreateurlsSucceededInput | string[]
+    urlsFailed?: ProfileImportRunCreateurlsFailedInput | string[]
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ProfileImportRunCreateOrConnectWithoutUserInput = {
+    where: ProfileImportRunWhereUniqueInput
+    create: XOR<ProfileImportRunCreateWithoutUserInput, ProfileImportRunUncheckedCreateWithoutUserInput>
+  }
+
+  export type ProfileImportRunCreateManyUserInputEnvelope = {
+    data: ProfileImportRunCreateManyUserInput | ProfileImportRunCreateManyUserInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type ProfileImportRunUpsertWithWhereUniqueWithoutUserInput = {
+    where: ProfileImportRunWhereUniqueInput
+    update: XOR<ProfileImportRunUpdateWithoutUserInput, ProfileImportRunUncheckedUpdateWithoutUserInput>
+    create: XOR<ProfileImportRunCreateWithoutUserInput, ProfileImportRunUncheckedCreateWithoutUserInput>
+  }
+
+  export type ProfileImportRunUpdateWithWhereUniqueWithoutUserInput = {
+    where: ProfileImportRunWhereUniqueInput
+    data: XOR<ProfileImportRunUpdateWithoutUserInput, ProfileImportRunUncheckedUpdateWithoutUserInput>
+  }
+
+  export type ProfileImportRunUpdateManyWithWhereWithoutUserInput = {
+    where: ProfileImportRunScalarWhereInput
+    data: XOR<ProfileImportRunUpdateManyMutationInput, ProfileImportRunUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type ProfileImportRunScalarWhereInput = {
+    AND?: ProfileImportRunScalarWhereInput | ProfileImportRunScalarWhereInput[]
+    OR?: ProfileImportRunScalarWhereInput[]
+    NOT?: ProfileImportRunScalarWhereInput | ProfileImportRunScalarWhereInput[]
+    id?: StringFilter<"ProfileImportRun"> | string
+    userId?: StringFilter<"ProfileImportRun"> | string
+    urls?: StringNullableListFilter<"ProfileImportRun">
+    status?: EnumImportStatusFilter<"ProfileImportRun"> | $Enums.ImportStatus
+    urlsSucceeded?: StringNullableListFilter<"ProfileImportRun">
+    urlsFailed?: StringNullableListFilter<"ProfileImportRun">
+    createdAt?: DateTimeFilter<"ProfileImportRun"> | Date | string
+    updatedAt?: DateTimeFilter<"ProfileImportRun"> | Date | string
+  }
+
+  export type UserCreateWithoutProfileImportRunsInput = {
+    id: string
+    firstName?: string | null
+    lastName?: string | null
+    username?: string | null
+    primaryEmailAddress: string
+    imageUrl?: string | null
+    clerkUserProperties?: NullableJsonNullValueInput | InputJsonValue
+    stripeCustomerId?: string | null
+    accessType?: $Enums.AccessType
+    stripeUserProperties?: NullableJsonNullValueInput | InputJsonValue
+    dailyAIcomments?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type UserUncheckedCreateWithoutProfileImportRunsInput = {
+    id: string
+    firstName?: string | null
+    lastName?: string | null
+    username?: string | null
+    primaryEmailAddress: string
+    imageUrl?: string | null
+    clerkUserProperties?: NullableJsonNullValueInput | InputJsonValue
+    stripeCustomerId?: string | null
+    accessType?: $Enums.AccessType
+    stripeUserProperties?: NullableJsonNullValueInput | InputJsonValue
+    dailyAIcomments?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type UserCreateOrConnectWithoutProfileImportRunsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutProfileImportRunsInput, UserUncheckedCreateWithoutProfileImportRunsInput>
+  }
+
+  export type UserUpsertWithoutProfileImportRunsInput = {
+    update: XOR<UserUpdateWithoutProfileImportRunsInput, UserUncheckedUpdateWithoutProfileImportRunsInput>
+    create: XOR<UserCreateWithoutProfileImportRunsInput, UserUncheckedCreateWithoutProfileImportRunsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutProfileImportRunsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutProfileImportRunsInput, UserUncheckedUpdateWithoutProfileImportRunsInput>
+  }
+
+  export type UserUpdateWithoutProfileImportRunsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
+    username?: NullableStringFieldUpdateOperationsInput | string | null
+    primaryEmailAddress?: StringFieldUpdateOperationsInput | string
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    clerkUserProperties?: NullableJsonNullValueInput | InputJsonValue
+    stripeCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
+    accessType?: EnumAccessTypeFieldUpdateOperationsInput | $Enums.AccessType
+    stripeUserProperties?: NullableJsonNullValueInput | InputJsonValue
+    dailyAIcomments?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UserUncheckedUpdateWithoutProfileImportRunsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
+    username?: NullableStringFieldUpdateOperationsInput | string | null
+    primaryEmailAddress?: StringFieldUpdateOperationsInput | string
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    clerkUserProperties?: NullableJsonNullValueInput | InputJsonValue
+    stripeCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
+    accessType?: EnumAccessTypeFieldUpdateOperationsInput | $Enums.AccessType
+    stripeUserProperties?: NullableJsonNullValueInput | InputJsonValue
+    dailyAIcomments?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProfileImportRunCreateManyUserInput = {
+    id?: string
+    urls?: ProfileImportRunCreateurlsInput | string[]
+    status?: $Enums.ImportStatus
+    urlsSucceeded?: ProfileImportRunCreateurlsSucceededInput | string[]
+    urlsFailed?: ProfileImportRunCreateurlsFailedInput | string[]
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ProfileImportRunUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    urls?: ProfileImportRunUpdateurlsInput | string[]
+    status?: EnumImportStatusFieldUpdateOperationsInput | $Enums.ImportStatus
+    urlsSucceeded?: ProfileImportRunUpdateurlsSucceededInput | string[]
+    urlsFailed?: ProfileImportRunUpdateurlsFailedInput | string[]
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProfileImportRunUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    urls?: ProfileImportRunUpdateurlsInput | string[]
+    status?: EnumImportStatusFieldUpdateOperationsInput | $Enums.ImportStatus
+    urlsSucceeded?: ProfileImportRunUpdateurlsSucceededInput | string[]
+    urlsFailed?: ProfileImportRunUpdateurlsFailedInput | string[]
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProfileImportRunUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    urls?: ProfileImportRunUpdateurlsInput | string[]
+    status?: EnumImportStatusFieldUpdateOperationsInput | $Enums.ImportStatus
+    urlsSucceeded?: ProfileImportRunUpdateurlsSucceededInput | string[]
+    urlsFailed?: ProfileImportRunUpdateurlsFailedInput | string[]
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
 

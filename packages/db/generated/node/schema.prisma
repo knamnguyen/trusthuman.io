@@ -38,6 +38,8 @@ model User {
   dailyAIcomments      Int        @default(0)
   createdAt            DateTime   @default(now())
   updatedAt            DateTime   @updatedAt
+
+  profileImportRuns ProfileImportRun[]
 }
 
 enum AccessType {
@@ -45,4 +47,81 @@ enum AccessType {
   WEEKLY
   MONTHLY
   YEARLY
+}
+
+enum ImportStatus {
+  NOT_STARTED
+  RUNNING
+  FINISHED
+}
+
+model ProfileImportRun {
+  id            String       @id @default(uuid())
+  userId        String
+  user          User         @relation(fields: [userId], references: [id])
+  urls          String[]
+  status        ImportStatus @default(NOT_STARTED)
+  urlsSucceeded String[]     @default([])
+  urlsFailed    String[]     @default([])
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+model LinkedInProfile {
+  id          String @id @default(uuid()) // Unique identifier
+  linkedinUrl String // Required
+  fullName    String // Required
+  headline    String // Required
+  urn         String @unique // Required, globally unique
+  profilePic  String // Required
+
+  firstName               String?
+  lastName                String?
+  connections             Int?
+  followers               Int?
+  email                   String?
+  mobileNumber            String?
+  jobTitle                String?
+  companyName             String?
+  companyIndustry         String?
+  companyWebsite          String?
+  companyLinkedin         String?
+  companyFoundedIn        Int?
+  companySize             String?
+  currentJobDuration      String?
+  currentJobDurationInYrs Float?
+  topSkillsByEndorsements String?
+  addressCountryOnly      String?
+  addressWithCountry      String?
+  addressWithoutCountry   String?
+  profilePicHighQuality   String?
+  about                   String?
+  publicIdentifier        String?
+  openConnection          Boolean?
+
+  // Nested/complex structures stored as JSON
+  experiences             Json?
+  updates                 Json?
+  skills                  Json?
+  profilePicAllDimensions Json?
+  educations              Json?
+  licenseAndCertificates  Json?
+  honorsAndAwards         Json?
+  languages               Json?
+  volunteerAndAwards      Json?
+  verifications           Json?
+  promos                  Json?
+  highlights              Json?
+  projects                Json?
+  publications            Json?
+  patents                 Json?
+  courses                 Json?
+  testScores              Json?
+  organizations           Json?
+  volunteerCauses         Json?
+  interests               Json?
+  recommendations         Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

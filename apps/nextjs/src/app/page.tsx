@@ -17,7 +17,7 @@ export default function HomePage() {
       <Header />
 
       {/* Affiliate Banner - sticky positioned right under the header */}
-      <div className="fixed top-16 z-40 w-full bg-pink-500 py-2">
+      {/* <div className="fixed top-16 z-40 w-full bg-pink-500 py-2">
         <a
           href="https://engagekit.promotekit.com"
           target="_blank"
@@ -29,7 +29,7 @@ export default function HomePage() {
             for EngageKit
           </div>
         </a>
-      </div>
+      </div> */}
 
       <main className="pt-24">
         <HeroSection />
