@@ -136,6 +136,26 @@ export const profileImportRouter = {
       } as const;
     }),
 
+  stopRun: protectedProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const run = await ctx.db.profileImportRun.findUnique({
+        where: { id: input.id },
+        select: { id: true, userId: true, status: true },
+      });
+      if (!run)
+        throw new TRPCError({ code: "NOT_FOUND", message: "Run not found" });
+      if (run.userId !== (ctx.user?.id ?? ""))
+        throw new TRPCError({ code: "FORBIDDEN", message: "Access denied" });
+      if (run.status === "FINISHED")
+        return { id: input.id, stopped: false } as const;
+      await ctx.db.profileImportRun.update({
+        where: { id: input.id },
+        data: { status: "FINISHED" },
+      });
+      return { id: input.id, stopped: true } as const;
+    }),
+
   getRunDetails: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .query(async ({ ctx, input }) => {

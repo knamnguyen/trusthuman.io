@@ -58,6 +58,15 @@ export const executeRun = async (ctx: TRPCContext, runId: string) => {
 
   // 3) Scrape remaining URLs
   for (const url of toScrapeUrls) {
+    // Check cancellation/stop between iterations
+    const latest = await ctx.db.profileImportRun.findUnique({
+      where: { id: runId },
+      select: { status: true },
+    });
+    if (!latest || latest.status !== ImportStatus.RUNNING) {
+      console.log("run stopped or no longer running, halting execution", runId);
+      break;
+    }
     try {
       console.log("starting to get data from apify");
       console.log("url is: " + url);

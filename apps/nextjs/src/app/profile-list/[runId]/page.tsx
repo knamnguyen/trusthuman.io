@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useParams, useRouter } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { Badge } from "@sassy/ui/badge";
 import { Button } from "@sassy/ui/button";
@@ -46,6 +46,14 @@ export default function ProfileListRunPage() {
     ...trpc.profileImport.listProfilesForRun.queryOptions({ id: params.runId }),
     enabled: !!params.runId && statusData?.status === "FINISHED",
   });
+
+  const stopRun = useMutation(
+    trpc.profileImport.stopRun.mutationOptions({
+      onSuccess: () => {
+        // will reflect on next poll
+      },
+    }),
+  );
 
   const urls = runDetails?.urls ?? [];
   const failed = runDetails?.urlsFailed ?? [];
@@ -139,9 +147,19 @@ export default function ProfileListRunPage() {
             </CardHeader>
             <CardContent>
               {status !== "FINISHED" && (
-                <div className="text-sm text-zinc-600">
-                  Scraping in progress... results will appear here once
-                  finished.
+                <div className="mb-3 flex items-center justify-between">
+                  <div className="text-sm text-zinc-600">
+                    Scraping in progress... results will appear here once
+                    finished.
+                  </div>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    disabled={stopRun.isPending}
+                    onClick={() => stopRun.mutate({ id: params.runId })}
+                  >
+                    Stop Run
+                  </Button>
                 </div>
               )}
 
