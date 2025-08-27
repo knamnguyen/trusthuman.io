@@ -14,7 +14,8 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
     "with-env": "dotenv --override -e ../../.env --",
-    "apify:test": "pnpm with-env bun ./scripts/test-linkedin-scrape-apify.ts"
+    "apify:test": "pnpm with-env bun ./scripts/test-linkedin-scrape-apify.ts",
+    "import:profiles": "pnpm with-env bun ./scripts/import-linkedin-profiles.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.12.5",
