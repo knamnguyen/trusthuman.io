@@ -62,7 +62,9 @@
     "GEMINI_API_KEY",
     "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
     "CLERK_SECRET_KEY",
-    "LOOPS_API_KEY"
+    "LOOPS_API_KEY",
+    "APIFY_LINKEDIN_ACTOR_ID",
+    "APIFY_API_TOKEN"
   ],
   "globalPassThroughEnv": [
     "NODE_ENV",
