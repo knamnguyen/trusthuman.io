@@ -39,6 +39,14 @@ export default function ProfileImportPage() {
   const router = useRouter();
   const [rawInput, setRawInput] = React.useState<string>("");
   const createRun = useMutation(trpc.profileImport.createRun.mutationOptions());
+  const retrieveOnly = useMutation(
+    trpc.profileImport.createRetrieveOnly.mutationOptions({
+      onSuccess: (res) => {
+        const id = (res as { id: string }).id;
+        if (id) router.push(`/profile-list/${id}`);
+      },
+    }),
+  );
   const { data: previousRuns } = useQuery({
     ...trpc.profileImport.listRuns.queryOptions(),
     refetchInterval: 5000,
@@ -149,6 +157,19 @@ export default function ProfileImportPage() {
                       disabled={!hasAccess || isLoading || createRun.isPending}
                     >
                       Scrape LinkedIn data
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      onClick={() => {
+                        const urls = normalizeUrls(rawInput);
+                        if (urls.length === 0) return;
+                        retrieveOnly.mutate({ urls });
+                      }}
+                      disabled={
+                        !hasAccess || isLoading || retrieveOnly.isPending
+                      }
+                    >
+                      Retrieve data, no scrape
                     </Button>
                     {!hasAccess && (
                       <span className="text-sm text-zinc-500">

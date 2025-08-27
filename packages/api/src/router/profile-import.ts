@@ -7,6 +7,7 @@ import { ImportStatus } from "@sassy/db";
 
 import { protectedProcedure } from "../trpc";
 import { checkPremiumAccess } from "../utils/check-premium-access";
+import { executeRetrieve } from "../utils/execute-retrieve";
 import { executeRun } from "../utils/execute-run";
 
 export const profileImportRouter = {
@@ -49,6 +50,46 @@ export const profileImportRouter = {
       // auto-start run in background
       void executeRun(ctx, run.id);
       return run; // { id }
+    }),
+
+  createRetrieveOnly: protectedProcedure
+    .input(z.object({ urls: z.array(z.string().url()).min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      const access = await checkPremiumAccess(ctx);
+      if (!access || access === "FREE") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Premium subscription required",
+        });
+      }
+
+      const userId = ctx.user?.id;
+      if (!userId) throw new TRPCError({ code: "UNAUTHORIZED" });
+
+      // Create a run record immediately (no 100 limit)
+      const run = await ctx.db.profileImportRun.create({
+        data: {
+          userId,
+          urls: input.urls,
+          status: ImportStatus.NOT_STARTED,
+        },
+        select: { id: true },
+      });
+
+      // Compute retrieval results
+      const { succeeded, failed } = await executeRetrieve(ctx, input.urls);
+
+      // Persist outcomes and mark finished
+      await ctx.db.profileImportRun.update({
+        where: { id: run.id },
+        data: {
+          urlsSucceeded: { push: succeeded },
+          urlsFailed: { push: failed },
+          status: ImportStatus.FINISHED,
+        },
+      });
+
+      return { id: run.id } as const;
     }),
 
   getRun: protectedProcedure

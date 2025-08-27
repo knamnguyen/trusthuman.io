@@ -133,6 +133,18 @@ export default function ProfileListRunPage() {
                     Go back
                   </Button>
                 </div>
+                {failed.length > 0 && (
+                  <div className="mt-4">
+                    <div className="mb-2 text-sm font-medium">
+                      Failed URLs ({failed.length})
+                    </div>
+                    <div className="max-h-[240px] space-y-1 overflow-auto pr-1 text-sm text-zinc-600">
+                      {failed.map((u: string, i: number) => (
+                        <div key={`${u}-${i}`}>{u}</div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -152,14 +164,16 @@ export default function ProfileListRunPage() {
                     Scraping in progress... results will appear here once
                     finished.
                   </div>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    disabled={stopRun.isPending}
-                    onClick={() => stopRun.mutate({ id: params.runId })}
-                  >
-                    Stop Run
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      disabled={stopRun.isPending}
+                      onClick={() => stopRun.mutate({ id: params.runId })}
+                    >
+                      Stop Run
+                    </Button>
+                  </div>
                 </div>
               )}
 
@@ -177,7 +191,7 @@ export default function ProfileListRunPage() {
                       Export CSV
                     </Button>
                   </div>
-                  <div className="overflow-auto">
+                  <div className="max-h-[560px] overflow-auto pr-1">
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -220,19 +234,6 @@ export default function ProfileListRunPage() {
                       </TableBody>
                     </Table>
                   </div>
-
-                  {failed.length > 0 && (
-                    <div className="mt-6">
-                      <div className="mb-2 text-sm font-medium">
-                        Failed URLs ({failed.length})
-                      </div>
-                      <div className="space-y-1 text-sm text-zinc-600">
-                        {failed.map((u: string, i: number) => (
-                          <div key={`${u}-${i}`}>{u}</div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
               )}
             </CardContent>
