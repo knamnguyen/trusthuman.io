@@ -50,9 +50,12 @@ export class LinkedInScrapeApifyService {
 
   async runSingleProfileItem({ profileUrl }: { profileUrl: string }) {
     if (!profileUrl) return null;
+    console.log("running single profile item");
+    console.log("profileUrl is: " + profileUrl);
     const run = await this.client.actor(this.actorId).call({
       profileUrls: [profileUrl],
     });
+    console.log("run completed");
     const { items } = await this.client
       .dataset(run.defaultDatasetId)
       .listItems();

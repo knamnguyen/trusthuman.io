@@ -15,7 +15,7 @@ let prisma: PrismaClient;
 // 4. Conditional instantiation based on environment
 if (process.env.NODE_ENV === "production") {
   // In production, always create a new instance.
-  console.log("Creating new PrismaClient instance for production"); // For demonstration
+  // console.log("Creating new PrismaClient instance for production"); // For demonstration
   prisma = new PrismaClient({
     /* options */
   });
@@ -39,22 +39,3 @@ if (process.env.NODE_ENV === "production") {
 // 5. Export the Prisma client instance as 'db' (or 'prisma')
 export type { PrismaClient as PrismaClientType } from "@sassy/db-node";
 export const db = prisma;
-
-// // Create a clean Edge client without any global references
-// // Each request will get a fresh instance
-// export const dbEdge = new PrismaClientEdge({
-//   datasources: {
-//     db: {
-//       url: process.env.DATABASE_URL,
-//     },
-//   },
-// });
-// // Export the PrismaClient type for convenience if needed elsewhere
-// export type { PrismaClient as PrismaClientType } from "../generated/client";
-
-// // Export Prisma's transaction type.
-// // This is the type of the `prisma` client passed to the transaction callback.
-// // It's essentially a PrismaClient but scoped to the transaction.
-// export type PrismaTransactionClient = Parameters<
-//   Parameters<PrismaClient["$transaction"]>[0]
-// >[0];

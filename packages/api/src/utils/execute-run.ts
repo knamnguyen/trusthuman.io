@@ -1,7 +1,8 @@
-import { ImportStatus } from "@sassy/db";
+import { ImportStatus, Prisma } from "@sassy/db";
 import { LinkedInScrapeApifyService } from "@sassy/linkedin-scrape-apify";
 
 import type { TRPCContext } from "../trpc";
+import { normalizeLinkedInUrl } from "./normalize-linkedin-url";
 
 export const executeRun = async (ctx: TRPCContext, runId: string) => {
   const run = await ctx.db.profileImportRun.findUnique({
@@ -20,7 +21,7 @@ export const executeRun = async (ctx: TRPCContext, runId: string) => {
   });
 
   // 1) Batch-resolve which URLs already exist in DB
-  const urls = run.urls;
+  const urls = run.urls.map((u) => normalizeLinkedInUrl(u));
   if (urls.length === 0) {
     await ctx.db.profileImportRun.update({
       where: { id: runId },
@@ -33,7 +34,9 @@ export const executeRun = async (ctx: TRPCContext, runId: string) => {
     where: { linkedinUrl: { in: urls } },
     select: { linkedinUrl: true },
   });
-  const existingSet = new Set(existing.map((e) => e.linkedinUrl));
+  const existingSet = new Set(
+    existing.map((e) => normalizeLinkedInUrl(e.linkedinUrl)),
+  );
   const existingUrls = urls.filter((u) => existingSet.has(u));
   const toScrapeUrls = urls.filter((u) => !existingSet.has(u));
 
@@ -56,12 +59,17 @@ export const executeRun = async (ctx: TRPCContext, runId: string) => {
   // 3) Scrape remaining URLs
   for (const url of toScrapeUrls) {
     try {
+      console.log("starting to get data from apify");
+      console.log("url is: " + url);
       const item = await apify.runSingleProfileItem({ profileUrl: url });
       if (!item) throw new Error("No data from Apify");
-
+      console.log("data received from apify");
+      console.log("data is: ");
+      console.log(item);
+      // DB write
       await ctx.db.linkedInProfile.create({
         data: {
-          linkedinUrl: item.linkedinUrl ?? url,
+          linkedinUrl: normalizeLinkedInUrl(item.linkedinUrl ?? url),
           fullName: item.fullName ?? "",
           headline: item.headline ?? "",
           urn: item.urn ?? `url:${url}`,
@@ -113,15 +121,39 @@ export const executeRun = async (ctx: TRPCContext, runId: string) => {
         },
       });
 
+      console.log("data saved to db");
       await ctx.db.profileImportRun.update({
         where: { id: runId },
         data: { urlsSucceeded: { push: url } },
       });
-    } catch {
+      console.log("urlsSucceeded updated");
+    } catch (error: unknown) {
+      console.log("some error happened");
+      // Log Prisma error details for debugging
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        console.error("PrismaKnownRequestError", {
+          code: error.code,
+          meta: error.meta,
+          message: error.message,
+          url,
+          runId,
+        });
+      } else if (error instanceof Error) {
+        console.error("DB write error", {
+          message: error.message,
+          stack: error.stack,
+          url,
+          runId,
+        });
+      } else {
+        console.error("Unknown DB error", { error, url, runId });
+      }
       await ctx.db.profileImportRun.update({
         where: { id: runId },
         data: { urlsFailed: { push: url } },
       });
+      console.log("urlsFailed updated");
+      console.log(error);
     }
   }
 
@@ -129,4 +161,5 @@ export const executeRun = async (ctx: TRPCContext, runId: string) => {
     where: { id: runId },
     data: { status: ImportStatus.FINISHED },
   });
+  console.log("run finished");
 };

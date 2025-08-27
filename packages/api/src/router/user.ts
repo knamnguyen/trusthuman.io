@@ -150,8 +150,6 @@ export const userRouter = {
         where: { id: ctx.user.id },
       });
 
-      console.log(user);
-
       return user;
     } catch (error) {
       console.error("Error fetching user:", error);
