@@ -19,20 +19,43 @@ export const executeRun = async (ctx: TRPCContext, runId: string) => {
     actorId: process.env.APIFY_LINKEDIN_ACTOR_ID ?? "2SyF0bVxmgGr8IVCZ",
   });
 
-  for (const url of run.urls) {
-    try {
-      const existing = await ctx.db.linkedInProfile.findFirst({
-        where: { linkedinUrl: url },
-        select: { id: true },
-      });
-      if (existing) {
-        await ctx.db.profileImportRun.update({
-          where: { id: runId },
-          data: { urlsSucceeded: { push: url } },
-        });
-        continue;
-      }
+  // 1) Batch-resolve which URLs already exist in DB
+  const urls = run.urls;
+  if (urls.length === 0) {
+    await ctx.db.profileImportRun.update({
+      where: { id: runId },
+      data: { status: ImportStatus.FINISHED },
+    });
+    return;
+  }
 
+  const existing = await ctx.db.linkedInProfile.findMany({
+    where: { linkedinUrl: { in: urls } },
+    select: { linkedinUrl: true },
+  });
+  const existingSet = new Set(existing.map((e) => e.linkedinUrl));
+  const existingUrls = urls.filter((u) => existingSet.has(u));
+  const toScrapeUrls = urls.filter((u) => !existingSet.has(u));
+
+  if (existingUrls.length > 0) {
+    await ctx.db.profileImportRun.update({
+      where: { id: runId },
+      data: { urlsSucceeded: { push: existingUrls } },
+    });
+  }
+
+  // 2) If nothing left to scrape, finish immediately
+  if (toScrapeUrls.length === 0) {
+    await ctx.db.profileImportRun.update({
+      where: { id: runId },
+      data: { status: ImportStatus.FINISHED },
+    });
+    return;
+  }
+
+  // 3) Scrape remaining URLs
+  for (const url of toScrapeUrls) {
+    try {
       const item = await apify.runSingleProfileItem({ profileUrl: url });
       if (!item) throw new Error("No data from Apify");
 
