@@ -56,97 +56,133 @@ export const executeRun = async (ctx: TRPCContext, runId: string) => {
     return;
   }
 
-  // 3) Scrape remaining URLs
-  for (const url of toScrapeUrls) {
-    // Check cancellation/stop between iterations
+  // 3) Scrape remaining URLs at once (bulk) and persist
+  // Check cancellation once more before starting bulk call
+  {
     const latest = await ctx.db.profileImportRun.findUnique({
       where: { id: runId },
       select: { status: true },
     });
     if (!latest || latest.status !== ImportStatus.RUNNING) {
-      console.log("run stopped or no longer running, halting execution", runId);
-      break;
+      await ctx.db.profileImportRun.update({
+        where: { id: runId },
+        data: { status: ImportStatus.FINISHED },
+      });
+      return;
     }
+  }
+
+  const bulk = (await apify.runManyProfileItems({
+    profileUrls: toScrapeUrls,
+  })) as Record<string, unknown>[];
+
+  const successSet = new Set<string>();
+  for (const raw of bulk) {
     try {
-      console.log("starting to get data from apify");
-      console.log("url is: " + url);
-      const item = await apify.runSingleProfileItem({ profileUrl: url });
-      if (!item) throw new Error("No data from Apify");
-      // DB write
-      await ctx.db.linkedInProfile.create({
-        data: {
-          linkedinUrl: normalizeLinkedInUrl(item.linkedinUrl ?? url),
-          fullName: item.fullName ?? "",
-          headline: item.headline ?? "",
-          urn: item.urn ?? `url:${url}`,
-          profilePic: item.profilePic ?? "unknown",
-          firstName: item.firstName ?? undefined,
-          lastName: item.lastName ?? undefined,
-          connections: item.connections ?? undefined,
-          followers: item.followers ?? undefined,
-          email: item.email ?? undefined,
-          mobileNumber: item.mobileNumber ?? undefined,
-          jobTitle: item.jobTitle ?? undefined,
-          companyName: item.companyName ?? undefined,
-          companyIndustry: item.companyIndustry ?? undefined,
-          companyWebsite: item.companyWebsite ?? undefined,
-          companyLinkedin: item.companyLinkedin ?? undefined,
-          companyFoundedIn: item.companyFoundedIn ?? undefined,
-          companySize: item.companySize ?? undefined,
-          currentJobDuration: item.currentJobDuration ?? undefined,
-          currentJobDurationInYrs: item.currentJobDurationInYrs ?? undefined,
-          topSkillsByEndorsements: item.topSkillsByEndorsements ?? undefined,
-          addressCountryOnly: item.addressCountryOnly ?? undefined,
-          addressWithCountry: item.addressWithCountry ?? undefined,
-          addressWithoutCountry: item.addressWithoutCountry ?? undefined,
-          profilePicHighQuality: item.profilePicHighQuality ?? undefined,
-          about: item.about ?? undefined,
-          publicIdentifier: item.publicIdentifier ?? undefined,
-          openConnection: item.openConnection ?? undefined,
-          experiences: item.experiences ?? undefined,
-          updates: item.updates ?? undefined,
-          skills: item.skills ?? undefined,
-          profilePicAllDimensions: item.profilePicAllDimensions ?? undefined,
-          educations: item.educations ?? undefined,
-          licenseAndCertificates: item.licenseAndCertificates ?? undefined,
-          honorsAndAwards: item.honorsAndAwards ?? undefined,
-          languages: item.languages ?? undefined,
-          volunteerAndAwards: item.volunteerAndAwards ?? undefined,
-          verifications: item.verifications ?? undefined,
-          promos: item.promos ?? undefined,
-          highlights: item.highlights ?? undefined,
-          projects: item.projects ?? undefined,
-          publications: item.publications ?? undefined,
-          patents: item.patents ?? undefined,
-          courses: item.courses ?? undefined,
-          testScores: item.testScores ?? undefined,
-          organizations: item.organizations ?? undefined,
-          volunteerCauses: item.volunteerCauses ?? undefined,
-          interests: item.interests ?? undefined,
-          recommendations: item.recommendations ?? undefined,
-        },
-      });
+      const linkedinUrlRaw = (raw.linkedinUrl as string | undefined) ?? "";
+      const normalizedUrl = normalizeLinkedInUrl(linkedinUrlRaw);
+      const urn = (raw.urn as string | undefined) ?? undefined;
 
-      console.log("data saved to db");
-      await ctx.db.profileImportRun.update({
-        where: { id: runId },
-        data: { urlsSucceeded: { push: url } },
-      });
-      console.log("urlsSucceeded updated");
-    } catch (error: unknown) {
-      console.log("some error happened");
+      const data = {
+        linkedinUrl: normalizedUrl,
+        fullName: (raw.fullName as string | undefined) ?? "",
+        headline: (raw.headline as string | undefined) ?? "",
+        urn: urn ?? `url:${normalizedUrl}`,
+        profilePic: (raw.profilePic as string | undefined) ?? "unknown",
+        firstName: (raw.firstName as string | undefined) ?? undefined,
+        lastName: (raw.lastName as string | undefined) ?? undefined,
+        connections: (raw.connections as number | undefined) ?? undefined,
+        followers: (raw.followers as number | undefined) ?? undefined,
+        email: (raw.email as string | undefined) ?? undefined,
+        mobileNumber: (raw.mobileNumber as string | undefined) ?? undefined,
+        jobTitle: (raw.jobTitle as string | undefined) ?? undefined,
+        companyName: (raw.companyName as string | undefined) ?? undefined,
+        companyIndustry:
+          (raw.companyIndustry as string | undefined) ?? undefined,
+        companyWebsite: (raw.companyWebsite as string | undefined) ?? undefined,
+        companyLinkedin:
+          (raw.companyLinkedin as string | undefined) ?? undefined,
+        companyFoundedIn:
+          (raw.companyFoundedIn as number | undefined) ?? undefined,
+        companySize: (raw.companySize as string | undefined) ?? undefined,
+        currentJobDuration:
+          (raw.currentJobDuration as string | undefined) ?? undefined,
+        currentJobDurationInYrs:
+          (raw.currentJobDurationInYrs as number | undefined) ?? undefined,
+        topSkillsByEndorsements:
+          (raw.topSkillsByEndorsements as string | undefined) ?? undefined,
+        addressCountryOnly:
+          (raw.addressCountryOnly as string | undefined) ?? undefined,
+        addressWithCountry:
+          (raw.addressWithCountry as string | undefined) ?? undefined,
+        addressWithoutCountry:
+          (raw.addressWithoutCountry as string | undefined) ?? undefined,
+        profilePicHighQuality:
+          (raw.profilePicHighQuality as string | undefined) ?? undefined,
+        about: (raw.about as string | undefined) ?? undefined,
+        publicIdentifier:
+          (raw.publicIdentifier as string | undefined) ?? undefined,
+        openConnection:
+          (raw.openConnection as boolean | undefined) ?? undefined,
+        experiences: raw.experiences ?? undefined,
+        updates: raw.updates ?? undefined,
+        skills: raw.skills ?? undefined,
+        profilePicAllDimensions: raw.profilePicAllDimensions ?? undefined,
+        educations: raw.educations ?? undefined,
+        licenseAndCertificates: raw.licenseAndCertificates ?? undefined,
+        honorsAndAwards: raw.honorsAndAwards ?? undefined,
+        languages: raw.languages ?? undefined,
+        volunteerAndAwards: raw.volunteerAndAwards ?? undefined,
+        verifications: raw.verifications ?? undefined,
+        promos: raw.promos ?? undefined,
+        highlights: raw.highlights ?? undefined,
+        projects: raw.projects ?? undefined,
+        publications: raw.publications ?? undefined,
+        patents: raw.patents ?? undefined,
+        courses: raw.courses ?? undefined,
+        testScores: raw.testScores ?? undefined,
+        organizations: raw.organizations ?? undefined,
+        volunteerCauses: raw.volunteerCauses ?? undefined,
+        interests: raw.interests ?? undefined,
+        recommendations: raw.recommendations ?? undefined,
+      };
 
-      await ctx.db.profileImportRun.update({
-        where: { id: runId },
-        data: { urlsFailed: { push: url } },
-      });
-      console.log("urlsFailed updated");
+      try {
+        await ctx.db.linkedInProfile.create({ data });
+      } catch (e: unknown) {
+        // On unique constraint (urn), try update
+        const err = e as { code?: string; meta?: unknown };
+        if ((err as any)?.code === "P2002" && urn) {
+          await ctx.db.linkedInProfile.update({ where: { urn }, data });
+        } else {
+          throw e;
+        }
+      }
+
+      successSet.add(normalizedUrl);
+    } catch {
+      // ignore per-record error; will be marked failed below
     }
+  }
+
+  if (successSet.size > 0) {
+    await ctx.db.profileImportRun.update({
+      where: { id: runId },
+      data: { urlsSucceeded: { push: Array.from(successSet) } },
+    });
+  }
+
+  const failedUrls = toScrapeUrls.filter((u) => !successSet.has(u));
+  if (failedUrls.length > 0) {
+    await ctx.db.profileImportRun.update({
+      where: { id: runId },
+      data: { urlsFailed: { push: failedUrls } },
+    });
   }
 
   await ctx.db.profileImportRun.update({
     where: { id: runId },
     data: { status: ImportStatus.FINISHED },
   });
-  console.log("run finished");
+  // console.log("run finished");
 };

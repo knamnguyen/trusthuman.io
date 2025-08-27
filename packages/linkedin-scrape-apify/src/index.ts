@@ -64,4 +64,22 @@ export class LinkedInScrapeApifyService {
     if (!parsed.success) return null;
     return parsed.data;
   }
+
+  async runManyProfileItems({
+    profileUrls,
+  }: {
+    profileUrls: string[];
+  }): Promise<unknown[]> {
+    if (!Array.isArray(profileUrls) || profileUrls.length === 0) return [];
+    console.log("running many profile items");
+    console.log("count:", profileUrls.length);
+    const run = await this.client.actor(this.actorId).call({
+      profileUrls,
+    });
+    console.log("bulk run completed");
+    const { items } = await this.client
+      .dataset(run.defaultDatasetId)
+      .listItems();
+    return items as unknown[];
+  }
 }
