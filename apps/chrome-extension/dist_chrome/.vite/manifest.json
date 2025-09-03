@@ -1,12 +1,12 @@
 {
   "../../../../../../../@crx/manifest": {
-    "file": "assets/crx-manifest.js-CK_vj5NJ.js",
+    "file": "assets/crx-manifest.js-C1iTpjb_.js",
     "name": "crx-manifest.js",
     "src": "../../../../../../../@crx/manifest",
     "isEntry": true
   },
-  "_get-sync-host-B_e2MqZL.js": {
-    "file": "assets/get-sync-host-B_e2MqZL.js",
+  "_get-sync-host-BraIa6wa.js": {
+    "file": "assets/get-sync-host-BraIa6wa.js",
     "name": "get-sync-host",
     "imports": [
       "_index-CP-b3-11.js",
@@ -24,9 +24,9 @@
       "_index-CP-b3-11.js"
     ]
   },
-  "_index.tsx-loader-aqScxTQD.js": {
-    "file": "assets/index.tsx-loader-aqScxTQD.js",
-    "src": "_index.tsx-loader-aqScxTQD.js"
+  "_index.tsx-loader-D4gmnYX0.js": {
+    "file": "assets/index.tsx-loader-D4gmnYX0.js",
+    "src": "_index.tsx-loader-D4gmnYX0.js"
   },
   "_profile-extract-button-E_OM6-m_.js": {
     "file": "assets/profile-extract-button-E_OM6-m_.js",
@@ -58,19 +58,19 @@
     "src": "public/icon-128.png"
   },
   "src/pages/background/index.ts": {
-    "file": "assets/index.ts-Bj-26Jjv.js",
+    "file": "assets/index.ts-CP8GJirK.js",
     "name": "index.ts",
     "src": "src/pages/background/index.ts",
     "isEntry": true,
     "imports": [
-      "_get-sync-host-B_e2MqZL.js",
+      "_get-sync-host-BraIa6wa.js",
       "_react-BvlFoRqi.js",
       "_index-CP-b3-11.js",
       "_index-Dr715SCd.js"
     ]
   },
   "src/pages/content/index.tsx": {
-    "file": "assets/index.tsx-D_BpQz9Q.js",
+    "file": "assets/index.tsx-BDRF4AHi.js",
     "name": "index.tsx",
     "src": "src/pages/content/index.tsx",
     "isEntry": true,
@@ -93,7 +93,7 @@
     ]
   },
   "src/pages/popup/index.html": {
-    "file": "assets/index.html-BiAs1yLf.js",
+    "file": "assets/index.html-4PgolGJ1.js",
     "name": "index.html",
     "src": "src/pages/popup/index.html",
     "isEntry": true,
@@ -101,7 +101,7 @@
       "_tailwind-D6sM018g.js",
       "_index-CP-b3-11.js",
       "_react-BvlFoRqi.js",
-      "_get-sync-host-B_e2MqZL.js",
+      "_get-sync-host-BraIa6wa.js",
       "_index-Dr715SCd.js"
     ],
     "css": [

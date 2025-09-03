@@ -76,6 +76,9 @@ interface SettingsFormProps {
   // Finish List Mode (targeted list 1 comment/author)
   finishListModeEnabled: boolean;
   onFinishListModeEnabledChange: (value: boolean) => void;
+  // Manual approve (premium)
+  manualApproveEnabled: boolean;
+  onManualApproveEnabledChange: (value: boolean) => void;
 }
 
 const FeaturePlaceholder = () => (
@@ -132,6 +135,8 @@ export default function SettingsForm({
   onOpenListFeed,
   finishListModeEnabled,
   onFinishListModeEnabledChange,
+  manualApproveEnabled,
+  onManualApproveEnabledChange,
 }: SettingsFormProps) {
   // Helper function to determine if features should be disabled
   const isFeatureDisabled = (featureIsPremium: boolean) => {
@@ -233,6 +238,39 @@ export default function SettingsForm({
           list
         </p>
       </div>
+
+      {/* Manual Approve (premium) */}
+      {isPremiumLoading ? (
+        <FeaturePlaceholder />
+      ) : (
+        <div className="mb-4">
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={manualApproveEnabled}
+              onChange={(e) => onManualApproveEnabledChange(e.target.checked)}
+              disabled={
+                isRunning ||
+                isFeatureDisabled(FEATURE_CONFIG.manualApprove.isPremium)
+              }
+              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <label className="text-sm font-medium text-gray-700">
+              Enable manual approve
+            </label>
+            {shouldShowPremiumBadge(FEATURE_CONFIG.manualApprove.isPremium) && (
+              <span className="rounded-full bg-yellow-400 px-2 py-0.5 text-xs font-bold text-yellow-900 shadow-sm">
+                Premium
+              </span>
+            )}
+          </div>
+          <p className="mt-1 text-xs text-gray-500">
+            Opens comment boxes, prefills "Great post, thanks for sharing", and
+            shows a sidebar to review and edit before posting. Works with target
+            list mode. No auto-posting.
+          </p>
+        </div>
+      )}
 
       {isPremiumLoading ? (
         <FeaturePlaceholder />

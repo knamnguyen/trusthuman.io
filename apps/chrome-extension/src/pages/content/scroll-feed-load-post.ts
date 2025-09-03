@@ -59,6 +59,34 @@ function triggerScrollEvents() {
   }
 }
 
+// Count posts using multiple selectors and return a best-effort estimate
+function countPosts(): number {
+  try {
+    const byDataId = document.querySelectorAll("div[data-id]").length;
+    const byDataUrn = document.querySelectorAll("div[data-urn]").length;
+    const byMenu = document.querySelectorAll(
+      ".feed-shared-update-v2__control-menu-container",
+    ).length;
+    return Math.max(byDataId, byDataUrn, byMenu);
+  } catch {
+    return 0;
+  }
+}
+
+// Click the native scaffold load-more button if present
+function clickLoadMore(): boolean {
+  try {
+    const btn = document.querySelector(
+      ".scaffold-finite-scroll__load-button",
+    ) as HTMLButtonElement | null;
+    if (btn && !btn.disabled) {
+      btn.click();
+      return true;
+    }
+  } catch {}
+  return false;
+}
+
 // Function to scroll feed and load posts - Aggressive scrolling to bottom
 export default async function scrollFeedLoadPosts(
   duration: number,
@@ -83,6 +111,13 @@ export default async function scrollFeedLoadPosts(
   );
   postCountBefore = initialPosts.length;
   lastPostCount = postCountBefore;
+
+  // Additional console logging: initial/per-cycle/final summary
+  const initial = countPosts();
+  let last = initial;
+  let cycles = 0;
+  let clicks = 0;
+  console.log(`Initial posts: ${initial}`);
 
   // Use aggressive scrolling - just go to bottom repeatedly
   const pauseBetweenScrolls = 1500; // 2 second pause to allow content loading
@@ -139,6 +174,10 @@ export default async function scrollFeedLoadPosts(
     // Trigger scroll events on LinkedIn's specific containers
     triggerScrollEvents();
 
+    // Try native load-more button as well
+    cycles++;
+    if (clickLoadMore()) clicks++;
+
     // Wait for scroll to complete and content to load
     await wait(pauseBetweenScrolls);
 
@@ -175,6 +214,14 @@ export default async function scrollFeedLoadPosts(
         }
       }
     }
+
+    // Console logging for quick verification
+    try {
+      const total = countPosts();
+      const delta = total - last;
+      last = total;
+      console.log(`+${delta} -> total ${total}`);
+    } catch {}
   }
 
   // Final status update
@@ -208,4 +255,13 @@ export default async function scrollFeedLoadPosts(
   const actualDuration = Math.round((Date.now() - startTime) / 1000);
 
   console.log("Finished aggressive scrolling to load posts");
+
+  // Final console summary
+  try {
+    const finalTotal = countPosts();
+    const added = finalTotal - initial;
+    console.log(
+      `Final posts: ${finalTotal} (added ${added} over ${cycles} cycles, load-more clicks: ${clicks})`,
+    );
+  } catch {}
 }

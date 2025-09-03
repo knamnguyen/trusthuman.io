@@ -8,22 +8,11 @@ interface ClerkProviderProps {
 
 // Use environment variables from Vite
 const publishableKey = import.meta.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
-const clerkSecretKey = import.meta.env.VITE_CLERK_SECRET_KEY;
-const clerkWebhookSecret = import.meta.env.VITE_CLERK_WEBHOOK_SECRET;
-const clerkFrontendApiVite = import.meta.env.VITE_CLERK_FRONTEND_API;
-
-console.log("publishableKey", publishableKey);
-console.log("clerkSecretKey", clerkSecretKey);
-console.log("clerkWebhookSecret", clerkWebhookSecret);
-console.log("clerkFrontendApiVite", clerkFrontendApiVite);
+// Do not read or log server-side secrets in the client bundle
 
 // Get the correct sync host from our centralized utility
 const SYNC_HOST = getSyncHost();
 const EXTENSION_URL = chrome.runtime.getURL(".");
-console.log("SYNC_HOST", SYNC_HOST);
-console.log("EXTENSION_URL", EXTENSION_URL);
-console.log("Clerk sync host configured:", SYNC_HOST);
-console.log("Extension URL configured:", EXTENSION_URL);
 
 if (!publishableKey) {
   throw new Error(

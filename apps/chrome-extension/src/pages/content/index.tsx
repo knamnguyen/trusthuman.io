@@ -1,5 +1,8 @@
 import wait from "@src/utils/wait";
 
+import { cleanupManualApproveUI } from "./approve-flow/cleanup";
+import { runManualApproveList } from "./approve-flow/manual-approve-list";
+import { runManualApproveStandard } from "./approve-flow/manual-approve-standard";
 import {
   backgroundError,
   backgroundGroup,
@@ -348,6 +351,7 @@ function showStartButton() {
               "skipFriendsActivitiesEnabled",
               "blacklistEnabled",
               "blacklistAuthors",
+              "manualApproveEnabled",
             ],
             async (cfg) => {
               const useListMode =
@@ -375,25 +379,40 @@ function showStartButton() {
                   const skipFriendsActivitiesCfg =
                     !!cfg.skipFriendsActivitiesEnabled;
                   const languageAwareEnabledCfg = !!cfg.languageAwareEnabled;
-                  await runListMode({
-                    commentDelay,
-                    duplicateWindow,
-                    styleGuide,
-                    commentProfileName:
-                      (cfg.commentProfileName as string) || "",
-                    commentAsCompanyEnabled,
-                    languageAwareEnabled: languageAwareEnabledCfg,
-                    timeFilterEnabled,
-                    minPostAge,
-                    blacklistEnabled: blacklistEnabledCfg,
-                    blacklistList: blacklistListCfg,
-                    skipCompanyPages: skipCompanyPagesCfg,
-                    skipPromotedPosts: skipPromotedPostsCfg,
-                    skipFriendsActivities: skipFriendsActivitiesCfg,
-                    isCommentingActiveRef: () => isCommentingActive,
-                    selectedListAuthors,
-                    statusPanel,
-                  });
+                  if (!!cfg.manualApproveEnabled) {
+                    await runManualApproveList({
+                      maxPosts,
+                      timeFilterEnabled,
+                      minPostAge,
+                      skipCompanyPages: skipCompanyPagesCfg,
+                      skipPromotedPosts: skipPromotedPostsCfg,
+                      skipFriendsActivities: skipFriendsActivitiesCfg,
+                      blacklistEnabled: blacklistEnabledCfg,
+                      blacklistList: blacklistListCfg,
+                      targetNormalizedAuthors:
+                        selectedListAuthors.normalizedNames,
+                    });
+                  } else {
+                    await runListMode({
+                      commentDelay,
+                      duplicateWindow,
+                      styleGuide,
+                      commentProfileName:
+                        (cfg.commentProfileName as string) || "",
+                      commentAsCompanyEnabled,
+                      languageAwareEnabled: languageAwareEnabledCfg,
+                      timeFilterEnabled,
+                      minPostAge,
+                      blacklistEnabled: blacklistEnabledCfg,
+                      blacklistList: blacklistListCfg,
+                      skipCompanyPages: skipCompanyPagesCfg,
+                      skipPromotedPosts: skipPromotedPostsCfg,
+                      skipFriendsActivities: skipFriendsActivitiesCfg,
+                      isCommentingActiveRef: () => isCommentingActive,
+                      selectedListAuthors,
+                      statusPanel,
+                    });
+                  }
 
                   // Remove overlay once preloading started
                   if (overlay) overlay.remove();
@@ -422,6 +441,7 @@ function showStartButton() {
                   commentAsCompanyEnabled,
                   timeFilterEnabled,
                   minPostAge,
+                  !!cfg.manualApproveEnabled,
                 );
               }
             },
@@ -598,28 +618,36 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     showStartButton();
     sendResponse({ success: true });
   } else if (request.action === "startNewCommentingFlow") {
-    chrome.storage.local.get(["timeFilterEnabled", "minPostAge"], (r) => {
-      const timeFilterEnabled = r.timeFilterEnabled ?? false;
-      const minPostAge = r.minPostAge ?? 1;
-      startNewCommentingFlowWithDelayedTabSwitch(
-        request.scrollDuration,
-        request.commentDelay,
-        request.maxPosts,
-        request.styleGuide,
-        request.duplicateWindow || 24,
-        null as any,
-        null as any,
-        null as any,
-        null as any,
-        false,
-        timeFilterEnabled,
-        minPostAge,
-      );
-    });
+    chrome.storage.local.get(
+      ["timeFilterEnabled", "minPostAge", "manualApproveEnabled"],
+      (r) => {
+        const timeFilterEnabled = r.timeFilterEnabled ?? false;
+        const minPostAge = r.minPostAge ?? 1;
+        const manualApproveEnabled = !!r.manualApproveEnabled;
+        startNewCommentingFlowWithDelayedTabSwitch(
+          request.scrollDuration,
+          request.commentDelay,
+          request.maxPosts,
+          request.styleGuide,
+          request.duplicateWindow || 24,
+          null as any,
+          null as any,
+          null as any,
+          null as any,
+          false,
+          timeFilterEnabled,
+          minPostAge,
+          manualApproveEnabled,
+        );
+      },
+    );
     sendResponse({ success: true });
   } else if (request.action === "stopCommentingFlow") {
     console.log("Received stop signal - stopping commenting flow");
     isCommentingActive = false;
+    try {
+      cleanupManualApproveUI();
+    } catch {}
     stopTabActiveAudio();
     sendResponse({ success: true });
   } else if (request.action === "statusUpdate" && request.error) {
@@ -808,6 +836,7 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
   commentAsCompanyEnabled: boolean = false,
   timeFilterEnabled: boolean = false,
   minPostAge: number = 1,
+  manualApproveEnabled: boolean = false,
 ) {
   // ➡️ Persist the current LinkedIn username path for later usage in popup
   saveCurrentUsernameUrl();
@@ -974,7 +1003,7 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
       return;
     }
 
-    // Step 3: Find all posts and process them
+    // Step 3: Either manual-approve prepare-only or full auto process
     console.log("📜 Step 3: Processing all posts on feed...");
     console.log(`   - maxPosts parameter: ${maxPosts}`);
     console.log(`   - commentDelay parameter: ${commentDelay}`);
@@ -985,22 +1014,38 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
       `📜 Step 3: Processing all posts on feed... maxPosts: ${maxPosts}, commentDelay: ${commentDelay}, isCommentingActive: ${isCommentingActive}`,
     );
 
-    await processAllPostsFeed(
-      commentDelay,
-      maxPosts,
-      duplicateWindow,
-      styleGuide,
-      commentProfileName,
-      commentAsCompanyEnabled,
-      languageAwareEnabled,
-      timeFilterEnabled,
-      minPostAge,
-      blacklistEnabled,
-      blacklistList,
-      skipCompanyPages,
-      skipPromotedPosts,
-      skipFriendsActivities,
-    );
+    if (manualApproveEnabled) {
+      await runManualApproveStandard({
+        maxPosts,
+        timeFilterEnabled,
+        minPostAge,
+        skipCompanyPages,
+        skipPromotedPosts,
+        skipFriendsActivities,
+        blacklistEnabled,
+        blacklistList,
+      });
+      // In manual approve, we do not auto post; stop audio and return
+      stopTabActiveAudio();
+      return;
+    } else {
+      await processAllPostsFeed(
+        commentDelay,
+        maxPosts,
+        duplicateWindow,
+        styleGuide,
+        commentProfileName,
+        commentAsCompanyEnabled,
+        languageAwareEnabled,
+        timeFilterEnabled,
+        minPostAge,
+        blacklistEnabled,
+        blacklistList,
+        skipCompanyPages,
+        skipPromotedPosts,
+        skipFriendsActivities,
+      );
+    }
 
     console.log(`📜 Step 3 completed. Final state:`);
     console.log(`   - isCommentingActive: ${isCommentingActive}`);

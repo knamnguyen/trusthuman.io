@@ -41,4 +41,8 @@ export const FEATURE_CONFIG = {
   skipFriendsActivities: {
     isPremium: true,
   },
+  // Manual approve flow (review and edit before posting)
+  manualApprove: {
+    isPremium: true,
+  },
 } as const;

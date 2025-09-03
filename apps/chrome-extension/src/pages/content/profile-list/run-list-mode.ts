@@ -1,5 +1,6 @@
 import wait from "@src/utils/wait";
 
+import { runManualApproveList } from "../approve-flow/manual-approve-list";
 import {
   hasCommentedOnPostHash,
   saveCommentedPostHash,
@@ -56,6 +57,7 @@ export async function runListMode(params: {
   isCommentingActiveRef: () => boolean;
   selectedListAuthors: SelectedListAuthors;
   statusPanel?: HTMLDivElement;
+  manualApproveEnabled?: boolean;
 }): Promise<void> {
   const {
     commentDelay,
@@ -125,6 +127,21 @@ export async function runListMode(params: {
   const authorToPost = mapAuthorsToFirstPost({
     targetNormalizedAuthors: authorsFound,
   });
+
+  if (params.manualApproveEnabled) {
+    await runManualApproveList({
+      maxPosts: authorsFound.length,
+      timeFilterEnabled,
+      minPostAge,
+      skipCompanyPages,
+      skipPromotedPosts,
+      skipFriendsActivities,
+      blacklistEnabled,
+      blacklistList,
+      targetNormalizedAuthors: authorsFound,
+    });
+    return;
+  }
 
   // Load author recency map once
   let commentedAuthorsWithTimestamps =

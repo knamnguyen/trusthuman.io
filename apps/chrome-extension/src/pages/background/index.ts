@@ -10,16 +10,9 @@ import { MessageRouter } from "./message-router";
 console.log("background script loaded");
 
 const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-const clerkSecretKey = import.meta.env.VITE_CLERK_SECRET_KEY;
-const clerkWebhookSecret = import.meta.env.VITE_CLERK_WEBHOOK_SECRET;
-const clerkFrontendApiVite = import.meta.env.VITE_CLERK_FRONTEND_API;
 
 const syncHost = getSyncHost();
 
-console.log("publishableKey", publishableKey);
-console.log("clerkSecretKey", clerkSecretKey);
-console.log("clerkWebhookSecret", clerkWebhookSecret);
-console.log("clerkFrontendApiVite", clerkFrontendApiVite);
 console.log("syncHost", syncHost);
 
 if (!publishableKey) {
