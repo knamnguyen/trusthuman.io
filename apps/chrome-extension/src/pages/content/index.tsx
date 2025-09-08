@@ -11,32 +11,36 @@ import {
   backgroundWarn,
 } from "./background-log";
 import {
+  hasCommentedOnAuthorRecently,
+  loadCommentedAuthorsWithTimestamps,
+  saveCommentedAuthorWithTimestamp,
+} from "./check-duplicate/check-duplicate-author-recency";
+import {
   commentedPostHashes,
   hasCommentedOnPostHash,
   loadCommentedPostHashes,
   saveCommentedPostHash,
-} from "./check-duplicate-commented-post-hash";
+} from "./check-duplicate/check-duplicate-commented-post-hash";
 import {
   commentedPostUrns,
   hasCommentedOnPostUrn,
   loadCommentedPostUrns,
   saveCommentedPostUrn,
-} from "./check-duplicate-commented-post-urns";
+} from "./check-duplicate/check-duplicate-commented-post-urns";
+import cleanupOldPostHashes from "./check-duplicate/clean-old-post-hashes";
+import cleanupOldPostUrns from "./check-duplicate/clean-old-post-urns";
+import cleanupOldTimestampsAuthor from "./check-duplicate/clean-old-timestamp-author";
+import normalizeAndHashContent from "./check-duplicate/normalize-and-hash-content";
 import checkFriendsActivity from "./check-friends-activity";
-import cleanupOldPostHashes from "./clean-old-post-hashes";
-import cleanupOldPostUrns from "./clean-old-post-urns";
-import cleanupOldTimestampsAuthor from "./clean-old-timestamp-author";
 import extractAuthorInfo from "./extract-author-info";
 import extractBioAuthor from "./extract-bio-author";
 import extractPostContent from "./extract-post-content";
 import extractPostTimePromoteState from "./extract-post-time-promote-state";
 import extractPostUrns from "./extract-post-urns";
 import generateComment from "./generate-comment";
-import normalizeAndHashContent from "./normalize-and-hash-content";
 import postCommentOnPost from "./post-comment-on-post";
 import { loadSelectedListAuthors } from "./profile-list/load-selected-list-authors";
 import { runListMode } from "./profile-list/run-list-mode";
-import saveCommentedAuthorWithTimestamp from "./save-commented-author-with-timestamp";
 import saveCurrentUsernameUrl from "./save-current-username-url";
 import scrollFeedLoadPosts from "./scroll-feed-load-post";
 import updateCommentCounts from "./update-comment-counts";
@@ -649,43 +653,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
-// Function to load commented authors with timestamps from local storage
-async function loadCommentedAuthorsWithTimestamps(): Promise<
-  Map<string, number>
-> {
-  const storageKey = "commented_authors_timestamps";
-
-  return new Promise((resolve) => {
-    chrome.storage.local.get([storageKey], (result) => {
-      const authorTimestamps = result[storageKey] || {};
-      resolve(
-        new Map(
-          Object.entries(authorTimestamps).map(([name, timestamp]) => [
-            name,
-            Number(timestamp),
-          ]),
-        ),
-      );
-    });
-  });
-}
-
-// saveCommentedAuthorWithTimestamp moved to dedicated module for reuse
-
-// Function to check if author was commented on within the specified time window
-function hasCommentedOnAuthorRecently(
-  authorName: string,
-  commentedAuthors: Map<string, number>,
-  hoursWindow: number,
-): boolean {
-  const timestamp = commentedAuthors.get(authorName);
-  if (!timestamp) return false;
-
-  const now = Date.now();
-  const hoursInMs = hoursWindow * 60 * 60 * 1000;
-
-  return now - timestamp < hoursInMs;
-}
+// saveCommentedAuthorWithTimestamp, loadCommentedAuthorsWithTimestamps, hasCommentedOnAuthorRecently are imported from check-duplicate/check-duplicate-author-recency
 
 // Function to load today's commented authors from local storage (for backward compatibility)
 async function loadTodayCommentedAuthors(): Promise<Set<string>> {

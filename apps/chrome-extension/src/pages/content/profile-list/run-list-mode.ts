@@ -2,13 +2,19 @@ import wait from "@src/utils/wait";
 
 import { runManualApproveList } from "../approve-flow/manual-approve-list";
 import {
+  hasCommentedOnAuthorRecently,
+  loadCommentedAuthorsWithTimestamps,
+  saveCommentedAuthorWithTimestamp,
+} from "../check-duplicate/check-duplicate-author-recency";
+import {
   hasCommentedOnPostHash,
   saveCommentedPostHash,
-} from "../check-duplicate-commented-post-hash";
+} from "../check-duplicate/check-duplicate-commented-post-hash";
 import {
   hasCommentedOnPostUrn,
   saveCommentedPostUrn,
-} from "../check-duplicate-commented-post-urns";
+} from "../check-duplicate/check-duplicate-commented-post-urns";
+import normalizeAndHashContent from "../check-duplicate/normalize-and-hash-content";
 import checkFriendsActivity from "../check-friends-activity";
 import extractAuthorInfo from "../extract-author-info";
 import extractBioAuthor from "../extract-bio-author";
@@ -16,14 +22,8 @@ import extractPostContent from "../extract-post-content";
 import extractPostTimePromoteState from "../extract-post-time-promote-state";
 import extractPostUrns from "../extract-post-urns";
 import generateComment from "../generate-comment";
-import normalizeAndHashContent from "../normalize-and-hash-content";
 import postCommentOnPost from "../post-comment-on-post";
 import updateCommentCounts from "../update-comment-counts";
-import {
-  hasCommentedOnAuthorRecently,
-  loadCommentedAuthorsWithTimestamps,
-  saveCommentedAuthorWithTimestamp,
-} from "./author-recency";
 import { ListModeState, SelectedListAuthors } from "./list-mode-types";
 import { mapAuthorsToFirstPost } from "./map-authors-to-first-post";
 import { preloadAuthorsFeed } from "./preload-authors-feed";

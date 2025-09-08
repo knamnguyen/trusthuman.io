@@ -1,11 +1,11 @@
 import type { ApproveContext, ApproveRowMapping } from "./types";
-import { saveCommentedPostHash } from "../check-duplicate-commented-post-hash";
-import { saveCommentedPostUrn } from "../check-duplicate-commented-post-urns";
+import { saveCommentedAuthorWithTimestamp } from "../check-duplicate/check-duplicate-author-recency";
+import { saveCommentedPostHash } from "../check-duplicate/check-duplicate-commented-post-hash";
+import { saveCommentedPostUrn } from "../check-duplicate/check-duplicate-commented-post-urns";
+import normalizeAndHashContent from "../check-duplicate/normalize-and-hash-content";
 import extractAuthorInfo from "../extract-author-info";
 import extractPostContent from "../extract-post-content";
 import extractPostUrns from "../extract-post-urns";
-import normalizeAndHashContent from "../normalize-and-hash-content";
-import saveCommentedAuthorWithTimestamp from "../save-commented-author-with-timestamp";
 
 export function getEditorPlainText(editorField: HTMLElement): string {
   const parts: string[] = [];

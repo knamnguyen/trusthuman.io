@@ -1,8 +1,13 @@
 import wait from "@src/utils/wait";
 
 import type { ApproveContext, ManualApproveCommonParams } from "./types";
-import { hasCommentedOnPostHash } from "../check-duplicate-commented-post-hash";
-import { hasCommentedOnPostUrn } from "../check-duplicate-commented-post-urns";
+import {
+  hasCommentedOnAuthorRecently,
+  loadCommentedAuthorsWithTimestamps,
+} from "../check-duplicate/check-duplicate-author-recency";
+import { hasCommentedOnPostHash } from "../check-duplicate/check-duplicate-commented-post-hash";
+import { hasCommentedOnPostUrn } from "../check-duplicate/check-duplicate-commented-post-urns";
+import normalizeAndHashContent from "../check-duplicate/normalize-and-hash-content";
 import checkFriendsActivity from "../check-friends-activity";
 import extractAuthorInfo from "../extract-author-info";
 import extractBioAuthor from "../extract-bio-author";
@@ -10,7 +15,6 @@ import extractPostContent from "../extract-post-content";
 import extractPostTimePromoteState from "../extract-post-time-promote-state";
 import extractPostUrns from "../extract-post-urns";
 import generateComment from "../generate-comment";
-import normalizeAndHashContent from "../normalize-and-hash-content";
 import { mapAuthorsToFirstPost } from "../profile-list/map-authors-to-first-post";
 import { injectApprovePanel } from "./inject-sidebar";
 import { addApproveRow, setEditorText } from "./rows-sync";
@@ -35,6 +39,10 @@ export async function runManualApproveList(
   } = params;
 
   const context: ApproveContext = injectApprovePanel();
+
+  // Load author recency map once
+  const commentedAuthorsWithTimestamps =
+    await loadCommentedAuthorsWithTimestamps();
 
   const authorToPost = mapAuthorsToFirstPost({
     targetNormalizedAuthors,
@@ -75,20 +83,15 @@ export async function runManualApproveList(
     const authorDisplay = info?.name ?? "";
     // Author recency filter using duplicateWindow
     try {
-      const storageKey = "commented_authors_timestamps";
-      const store = await new Promise<Map<string, number>>((resolve) => {
-        chrome.storage.local.get([storageKey], (result) => {
-          const map = new Map<string, number>();
-          const obj = result[storageKey] || {};
-          Object.entries(obj).forEach(([k, v]) => map.set(k, Number(v)));
-          resolve(map);
-        });
-      });
-      const ts = store.get(authorDisplay);
-      const within = ts
-        ? Date.now() - ts < duplicateWindow * 60 * 60 * 1000
-        : false;
-      if (authorDisplay && within) continue;
+      if (
+        authorDisplay &&
+        hasCommentedOnAuthorRecently(
+          authorDisplay,
+          commentedAuthorsWithTimestamps,
+          duplicateWindow,
+        )
+      )
+        continue;
     } catch {}
     if (
       blacklistEnabled &&

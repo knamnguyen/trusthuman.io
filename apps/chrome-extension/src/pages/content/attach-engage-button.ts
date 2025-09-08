@@ -6,13 +6,13 @@
 import {
   hasCommentedOnPostHash,
   saveCommentedPostHash,
-} from "./check-duplicate-commented-post-hash";
-import { saveCommentedPostUrn } from "./check-duplicate-commented-post-urns";
+} from "./check-duplicate/check-duplicate-commented-post-hash";
+import { saveCommentedPostUrn } from "./check-duplicate/check-duplicate-commented-post-urns";
+import normalizeAndHashContent from "./check-duplicate/normalize-and-hash-content";
 import extractAuthorInfo from "./extract-author-info";
 import extractPostContent from "./extract-post-content";
 import extractPostUrns from "./extract-post-urns";
 import generateComment from "./generate-comment";
-import normalizeAndHashContent from "./normalize-and-hash-content";
 
 /*****************************
  * Constant style-guide rules *
