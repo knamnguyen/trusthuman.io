@@ -6,6 +6,8 @@ export type ApproveRowMapping = {
   inputEl: HTMLDivElement;
   scrollBtn: HTMLButtonElement;
   removeBtn: HTMLButtonElement;
+  authorName?: string;
+  statusEl: HTMLSpanElement;
 };
 
 export type ApproveContext = {
@@ -16,6 +18,11 @@ export type ApproveContext = {
   isUpdatingFromEditor: boolean;
   defaultText: string;
   activeUrns: Set<string>;
+  sentUrns: Set<string>;
+  draftCountEl?: HTMLSpanElement;
+  sentCountEl?: HTMLSpanElement;
+  composerCommentedAuthors?: Set<string>;
+  submitAllBtn?: HTMLButtonElement;
 };
 
 export type ManualApproveCommonParams = {
@@ -28,4 +35,5 @@ export type ManualApproveCommonParams = {
   blacklistEnabled: boolean;
   blacklistList: string[];
   styleGuide: string;
+  duplicateWindow: number;
 };

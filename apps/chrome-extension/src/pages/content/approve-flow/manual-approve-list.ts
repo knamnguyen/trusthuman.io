@@ -31,6 +31,7 @@ export async function runManualApproveList(
     blacklistEnabled,
     blacklistList,
     targetNormalizedAuthors,
+    duplicateWindow,
   } = params;
 
   const context: ApproveContext = injectApprovePanel();
@@ -72,6 +73,23 @@ export async function runManualApproveList(
 
     const info = extractAuthorInfo(postContainer);
     const authorDisplay = info?.name ?? "";
+    // Author recency filter using duplicateWindow
+    try {
+      const storageKey = "commented_authors_timestamps";
+      const store = await new Promise<Map<string, number>>((resolve) => {
+        chrome.storage.local.get([storageKey], (result) => {
+          const map = new Map<string, number>();
+          const obj = result[storageKey] || {};
+          Object.entries(obj).forEach(([k, v]) => map.set(k, Number(v)));
+          resolve(map);
+        });
+      });
+      const ts = store.get(authorDisplay);
+      const within = ts
+        ? Date.now() - ts < duplicateWindow * 60 * 60 * 1000
+        : false;
+      if (authorDisplay && within) continue;
+    } catch {}
     if (
       blacklistEnabled &&
       blacklistList.some((b) => authorDisplay.toLowerCase().includes(b))
@@ -160,5 +178,6 @@ export async function runManualApproveList(
     }
   } finally {
     unlock();
+    // Ensure audio continues in manual approve; do not stop here
   }
 }

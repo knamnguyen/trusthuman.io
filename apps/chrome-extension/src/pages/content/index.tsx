@@ -36,6 +36,7 @@ import normalizeAndHashContent from "./normalize-and-hash-content";
 import postCommentOnPost from "./post-comment-on-post";
 import { loadSelectedListAuthors } from "./profile-list/load-selected-list-authors";
 import { runListMode } from "./profile-list/run-list-mode";
+import saveCommentedAuthorWithTimestamp from "./save-commented-author-with-timestamp";
 import saveCurrentUsernameUrl from "./save-current-username-url";
 import scrollFeedLoadPosts from "./scroll-feed-load-post";
 import updateCommentCounts from "./update-comment-counts";
@@ -379,21 +380,7 @@ function showStartButton() {
                   const skipFriendsActivitiesCfg =
                     !!cfg.skipFriendsActivitiesEnabled;
                   const languageAwareEnabledCfg = !!cfg.languageAwareEnabled;
-                  if (!!cfg.manualApproveEnabled) {
-                    await runManualApproveList({
-                      maxPosts,
-                      timeFilterEnabled,
-                      minPostAge,
-                      skipCompanyPages: skipCompanyPagesCfg,
-                      skipPromotedPosts: skipPromotedPostsCfg,
-                      skipFriendsActivities: skipFriendsActivitiesCfg,
-                      blacklistEnabled: blacklistEnabledCfg,
-                      blacklistList: blacklistListCfg,
-                      styleGuide,
-                      targetNormalizedAuthors:
-                        selectedListAuthors.normalizedNames,
-                    });
-                  } else {
+                  {
                     await runListMode({
                       commentDelay,
                       duplicateWindow,
@@ -412,16 +399,20 @@ function showStartButton() {
                       isCommentingActiveRef: () => isCommentingActive,
                       selectedListAuthors,
                       statusPanel,
+                      manualApproveEnabled: !!cfg.manualApproveEnabled,
                     });
                   }
 
                   // Remove overlay once preloading started
                   if (overlay) overlay.remove();
-                  stopTabActiveAudio();
-                  if (isCommentingActive) {
-                    chrome.runtime.sendMessage({
-                      action: "commentingCompleted",
-                    });
+                  // In Composer (manual approve) mode, keep audio active and do NOT signal completion here.
+                  if (!cfg.manualApproveEnabled) {
+                    stopTabActiveAudio();
+                    if (isCommentingActive) {
+                      chrome.runtime.sendMessage({
+                        action: "commentingCompleted",
+                      });
+                    }
                   }
                 } catch (e) {
                   console.error("[ListMode] Error:", e);
@@ -679,26 +670,7 @@ async function loadCommentedAuthorsWithTimestamps(): Promise<
   });
 }
 
-// Function to save commented author with timestamp to local storage
-async function saveCommentedAuthorWithTimestamp(
-  authorName: string,
-): Promise<void> {
-  const storageKey = "commented_authors_timestamps";
-  const now = Date.now();
-
-  return new Promise((resolve) => {
-    chrome.storage.local.get([storageKey], (result) => {
-      const authorTimestamps = result[storageKey] || {};
-      authorTimestamps[authorName] = now;
-      chrome.storage.local.set({ [storageKey]: authorTimestamps }, () => {
-        console.log(
-          `Saved commented author: ${authorName} at timestamp: ${now}`,
-        );
-        resolve();
-      });
-    });
-  });
-}
+// saveCommentedAuthorWithTimestamp moved to dedicated module for reuse
 
 // Function to check if author was commented on within the specified time window
 function hasCommentedOnAuthorRecently(
@@ -1026,9 +998,9 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
         blacklistEnabled,
         blacklistList,
         styleGuide,
+        duplicateWindow,
       });
-      // In manual approve, we do not auto post; stop audio and return
-      stopTabActiveAudio();
+      // In manual approve, keep audio playing for the tab (do not stop here)
       return;
     } else {
       await processAllPostsFeed(

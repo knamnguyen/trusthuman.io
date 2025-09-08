@@ -138,6 +138,8 @@ export async function runListMode(params: {
       skipFriendsActivities,
       blacklistEnabled,
       blacklistList,
+      duplicateWindow,
+      styleGuide,
       targetNormalizedAuthors: authorsFound,
     });
     return;

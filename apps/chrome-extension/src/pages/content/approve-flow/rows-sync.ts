@@ -1,4 +1,11 @@
 import type { ApproveContext, ApproveRowMapping } from "./types";
+import { saveCommentedPostHash } from "../check-duplicate-commented-post-hash";
+import { saveCommentedPostUrn } from "../check-duplicate-commented-post-urns";
+import extractAuthorInfo from "../extract-author-info";
+import extractPostContent from "../extract-post-content";
+import extractPostUrns from "../extract-post-urns";
+import normalizeAndHashContent from "../normalize-and-hash-content";
+import saveCommentedAuthorWithTimestamp from "../save-commented-author-with-timestamp";
 
 export function getEditorPlainText(editorField: HTMLElement): string {
   const parts: string[] = [];
@@ -75,6 +82,8 @@ export function addApproveRow(
     padding: "6px",
     background: "#fafafa",
   } as CSSStyleDeclaration);
+  // Tag row with URN for lookup/order when submitting all
+  (rowEl as HTMLDivElement).dataset.urn = urn;
 
   // Helper to truncate by words
   const truncateWords = (text: string, maxWords: number): string => {
@@ -199,6 +208,19 @@ export function addApproveRow(
     boxShadow: "2px 2px 0 #000",
   } as CSSStyleDeclaration);
 
+  // Status chip (Draft/Sent)
+  const statusEl = document.createElement("span");
+  statusEl.textContent = "Draft";
+  Object.assign(statusEl.style, {
+    fontSize: "11px",
+    color: "#374151",
+    background: "#e5e7eb",
+    border: "1px solid #d1d5db",
+    borderRadius: "9999px",
+    padding: "2px 8px",
+    alignSelf: "center",
+  } as CSSStyleDeclaration);
+
   // Action row: editor (left) and buttons (right)
   const actionRow = document.createElement("div");
   Object.assign(actionRow.style, {
@@ -217,6 +239,7 @@ export function addApproveRow(
   } as CSSStyleDeclaration);
   buttonsCol.appendChild(scrollBtn);
   buttonsCol.appendChild(removeBtn);
+  buttonsCol.appendChild(statusEl);
 
   Object.assign(inputEl.style, { flex: "1" } as CSSStyleDeclaration);
   actionRow.appendChild(inputEl);
@@ -226,12 +249,20 @@ export function addApproveRow(
   rowEl.appendChild(actionRow);
   context.list.appendChild(rowEl);
 
+  // Initialize header counts on row creation
+  if (context.draftCountEl)
+    context.draftCountEl.textContent = String(context.activeUrns.size);
+  if (context.sentCountEl)
+    context.sentCountEl.textContent = String(context.sentUrns.size);
+
   // Bi-directional sync with guards to prevent loops
   const onRowInput = () => {
     if (context.isUpdatingFromEditor) return;
     context.isUpdatingFromRow = true;
     setEditorText(editorField, inputEl.textContent ?? "");
     context.isUpdatingFromRow = false;
+    if (context.draftCountEl)
+      context.draftCountEl.textContent = String(context.activeUrns.size);
   };
 
   const onEditorInput = () => {
@@ -239,6 +270,8 @@ export function addApproveRow(
     context.isUpdatingFromEditor = true;
     setRowText(inputEl, getEditorPlainText(editorField));
     context.isUpdatingFromEditor = false;
+    if (context.draftCountEl)
+      context.draftCountEl.textContent = String(context.activeUrns.size);
   };
 
   inputEl.addEventListener("input", onRowInput);
@@ -266,7 +299,58 @@ export function addApproveRow(
     try {
       rowEl.remove();
     } catch {}
+    if (context.draftCountEl)
+      context.draftCountEl.textContent = String(context.activeUrns.size);
   });
+
+  // Helper to mark a row as sent (UI + counters)
+  const markAsSent = () => {
+    context.activeUrns.delete(urn);
+    context.sentUrns.add(urn);
+    statusEl.textContent = "Sent";
+    statusEl.style.background = "#d1fae5";
+    statusEl.style.borderColor = "#10b981";
+    statusEl.style.color = "#065f46";
+    if (context.draftCountEl)
+      context.draftCountEl.textContent = String(context.activeUrns.size);
+    if (context.sentCountEl)
+      context.sentCountEl.textContent = String(context.sentUrns.size);
+    try {
+      if (authorName) {
+        context.composerCommentedAuthors?.add(authorName);
+        chrome.runtime.sendMessage({
+          action: "listModeUpdate",
+          note: `Composer: commented on ${authorName}`,
+          authorsFound: [],
+          authorsMissing: [],
+          authorsPending: [],
+          authorsCommented: Array.from(context.composerCommentedAuthors || []),
+        });
+      }
+    } catch {}
+    if (context.activeUrns.size === 0) {
+      try {
+        chrome.runtime.sendMessage({ action: "commentingCompleted" });
+      } catch {}
+    }
+  };
+
+  // Attempt to detect manual submit clicks on native button
+  try {
+    const nativeSubmit = postContainer.querySelector(
+      ".comments-comment-box__submit-button--cr",
+    ) as HTMLButtonElement | null;
+    if (nativeSubmit) {
+      nativeSubmit.addEventListener(
+        "click",
+        () => {
+          // Defer UI update a tick; assume click implies successful submit
+          setTimeout(() => markAsSent(), 300);
+        },
+        { capture: true },
+      );
+    }
+  } catch {}
 
   const mapping: ApproveRowMapping = {
     urn,
@@ -276,6 +360,8 @@ export function addApproveRow(
     inputEl,
     scrollBtn,
     removeBtn,
+    statusEl: statusEl,
+    authorName,
   };
 
   context.mapByUrn.set(urn, mapping);
@@ -290,15 +376,121 @@ export function addApproveRow(
     const txt = (inputEl.textContent || "").trim();
     if (txt.length > 0) context.activeUrns.add(urn);
     else context.activeUrns.delete(urn);
+    if (context.draftCountEl)
+      context.draftCountEl.textContent = String(context.activeUrns.size);
   };
   const updateActiveSetFromEditor = () => {
     const txt = getEditorPlainText(editorField).trim();
     if (txt.length > 0) context.activeUrns.add(urn);
     else context.activeUrns.delete(urn);
+    if (context.draftCountEl)
+      context.draftCountEl.textContent = String(context.activeUrns.size);
   };
 
   inputEl.addEventListener("input", updateActiveSetFromRow);
   editorField.addEventListener("input", updateActiveSetFromEditor);
+
+  // One coordinator to submit all with delay, bound only once
+  if (!(document as any)._engagekitSubmitCoordinatorBound) {
+    (document as any)._engagekitSubmitCoordinatorBound = true;
+    document.addEventListener("engagekit-submit-all", async () => {
+      try {
+        // read settings from storage
+        const { delaySeconds } = await new Promise<{
+          delaySeconds: number;
+        }>((resolve) => {
+          chrome.storage.local.get(["commentDelay"], (r) => {
+            resolve({
+              delaySeconds: (r.commentDelay as number) ?? 5,
+            });
+          });
+        });
+        const children = Array.from(context.list.children) as HTMLDivElement[];
+        for (const row of children) {
+          const rowUrn = row.dataset.urn || "";
+          const mapping = context.mapByUrn.get(rowUrn);
+          if (!mapping) continue;
+          if (!context.activeUrns.has(rowUrn)) continue;
+          const txt = getEditorPlainText(mapping.editorField).trim();
+          if (!txt) continue;
+
+          // Extract using the same helpers as index.tsx (submission should not re-apply time filters)
+          const urns: string[] = extractPostUrns(mapping.postContainer);
+          const authorInfo = extractAuthorInfo(mapping.postContainer);
+          const authorNameFinal = (
+            authorInfo?.name ||
+            mapping.authorName ||
+            ""
+          ).trim();
+          const content: string = extractPostContent(mapping.postContainer);
+          const submitButton = mapping.postContainer.querySelector(
+            ".comments-comment-box__submit-button--cr",
+          ) as HTMLButtonElement | null;
+          if (submitButton && !submitButton.disabled) {
+            submitButton.click();
+            // Persist URNs and content hash and author recency
+            try {
+              // save URNs
+              for (const u of urns) await saveCommentedPostUrn(u);
+              // hash
+              const hashRes = await normalizeAndHashContent(content);
+              if (hashRes?.hash) {
+                await saveCommentedPostHash(hashRes.hash);
+              }
+              // author recency
+              if (authorNameFinal) {
+                await saveCommentedAuthorWithTimestamp(authorNameFinal);
+              }
+              // mark sent
+              const mm = context.mapByUrn.get(rowUrn);
+              if (mm) {
+                mm.statusEl.textContent = "Sent";
+                mm.statusEl.style.background = "#d1fae5";
+                mm.statusEl.style.borderColor = "#10b981";
+                mm.statusEl.style.color = "#065f46";
+              }
+              context.activeUrns.delete(rowUrn);
+              context.sentUrns.add(rowUrn);
+              if (context.draftCountEl)
+                context.draftCountEl.textContent = String(
+                  context.activeUrns.size,
+                );
+              if (context.sentCountEl)
+                context.sentCountEl.textContent = String(context.sentUrns.size);
+              try {
+                if (mm?.authorName) {
+                  context.composerCommentedAuthors?.add(mm.authorName);
+                  chrome.runtime.sendMessage({
+                    action: "listModeUpdate",
+                    note: `Composer: commented on ${mm.authorName}`,
+                    authorsFound: [],
+                    authorsMissing: [],
+                    authorsPending: [],
+                    authorsCommented: Array.from(
+                      context.composerCommentedAuthors || [],
+                    ),
+                  });
+                }
+              } catch {}
+            } catch (e) {
+              console.warn("Persist after submit failed", e);
+            }
+            // delay between posts
+            const chunks = Math.max(1, Math.ceil(delaySeconds));
+            for (let c = 0; c < chunks; c++)
+              await new Promise((r) => setTimeout(r, 1000));
+          }
+        }
+        if (context.activeUrns.size === 0) {
+          try {
+            chrome.runtime.sendMessage({ action: "commentingCompleted" });
+          } catch {}
+        }
+      } catch (e) {
+        console.warn("Submit All coordinator error", e);
+      }
+    });
+  }
   return mapping;
 }
 

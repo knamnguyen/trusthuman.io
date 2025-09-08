@@ -27,6 +27,7 @@ export async function runManualApproveStandard(
     skipFriendsActivities,
     blacklistEnabled,
     blacklistList,
+    duplicateWindow,
   } = params;
 
   const context: ApproveContext = injectApprovePanel();
@@ -75,6 +76,31 @@ export async function runManualApproveStandard(
     if (urns.some((u) => hasCommentedOnPostUrn(u))) continue;
 
     const authorInfo = extractAuthorInfo(postContainer);
+    // Author recency filter using duplicateWindow
+    try {
+      const fallbackAuthorName =
+        "No author name available, please do not refer to author when making comment";
+      const authorName = (authorInfo?.name || "").trim();
+      const store = await (async () => {
+        // reuse helper from index.tsx via storage directly
+        const storageKey = "commented_authors_timestamps";
+        return await new Promise<Map<string, number>>((resolve) => {
+          chrome.storage.local.get([storageKey], (result) => {
+            const map = new Map<string, number>();
+            const obj = result[storageKey] || {};
+            Object.entries(obj).forEach(([k, v]) => map.set(k, Number(v)));
+            resolve(map);
+          });
+        });
+      })();
+      const ts = store.get(authorName);
+      const within = ts
+        ? Date.now() - ts < duplicateWindow * 60 * 60 * 1000
+        : false;
+      if (authorName && authorName !== fallbackAuthorName && within) {
+        continue;
+      }
+    } catch {}
     if (
       blacklistEnabled &&
       blacklistList.some((b) =>
@@ -166,5 +192,6 @@ export async function runManualApproveStandard(
     }
   } finally {
     unlock();
+    // Ensure audio continues in manual approve; do not stop here
   }
 }
