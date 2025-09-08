@@ -23,6 +23,7 @@ export type ApproveContext = {
   sentCountEl?: HTMLSpanElement;
   composerCommentedAuthors?: Set<string>;
   submitAllBtn?: HTMLButtonElement;
+  skeletonEl?: HTMLDivElement;
 };
 
 export type ManualApproveCommonParams = {

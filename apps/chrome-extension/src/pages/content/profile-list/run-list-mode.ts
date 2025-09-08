@@ -107,6 +107,11 @@ export async function runListMode(params: {
     targetNormalizedAuthors: selectedListAuthors.normalizedNames,
     statusPanel,
   });
+  // Remove blue overlay immediately after preload completes so commenting proceeds unobstructed
+  try {
+    const overlay = document.getElementById("linkedin-start-overlay");
+    if (overlay) overlay.remove();
+  } catch {}
   authorsFound = preloadRes.found;
   authorsMissing = preloadRes.missing;
   authorsPending = authorsPending.filter((n) => !authorsFound.includes(n));

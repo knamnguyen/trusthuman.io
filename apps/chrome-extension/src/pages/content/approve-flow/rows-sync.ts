@@ -248,6 +248,13 @@ export function addApproveRow(
   rowEl.appendChild(metaRow);
   rowEl.appendChild(actionRow);
   context.list.appendChild(rowEl);
+  // Hide skeleton once first row is added
+  try {
+    if (context.skeletonEl) {
+      context.skeletonEl.remove();
+      context.skeletonEl = undefined as any;
+    }
+  } catch {}
 
   // Initialize header counts on row creation
   if (context.draftCountEl)

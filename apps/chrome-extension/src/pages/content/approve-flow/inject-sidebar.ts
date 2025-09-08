@@ -136,6 +136,31 @@ export function injectApprovePanel(): ApproveContext {
   } as CSSStyleDeclaration);
   panel.appendChild(list);
 
+  // Loading skeleton (visible until first row is added)
+  const skeleton = document.createElement("div");
+  Object.assign(skeleton.style, {
+    display: "flex",
+    flexDirection: "column",
+    gap: "8px",
+  } as CSSStyleDeclaration);
+  for (let i = 0; i < 3; i++) {
+    const block = document.createElement("div");
+    Object.assign(block.style, {
+      height: "64px",
+      border: "1px solid #e5e7eb",
+      borderRadius: "6px",
+      background: "linear-gradient(90deg,#f3f4f6 25%,#e5e7eb 37%,#f3f4f6 63%)",
+      backgroundSize: "400% 100%",
+      animation: "ek-skeleton 1.4s ease infinite",
+    } as CSSStyleDeclaration);
+    skeleton.appendChild(block);
+  }
+  panel.appendChild(skeleton);
+
+  const style = document.createElement("style");
+  style.textContent = `@keyframes ek-skeleton {0%{background-position:100% 50%}100%{background-position:0 50%}}`;
+  document.head.appendChild(style);
+
   // Mount overlay to body
   document.body.appendChild(panel);
 
@@ -152,6 +177,7 @@ export function injectApprovePanel(): ApproveContext {
     sentCountEl,
     composerCommentedAuthors: new Set<string>(),
     submitAllBtn,
+    skeletonEl: skeleton,
   };
 }
 
