@@ -389,6 +389,7 @@ function showStartButton() {
                       skipFriendsActivities: skipFriendsActivitiesCfg,
                       blacklistEnabled: blacklistEnabledCfg,
                       blacklistList: blacklistListCfg,
+                      styleGuide,
                       targetNormalizedAuthors:
                         selectedListAuthors.normalizedNames,
                     });
@@ -1024,6 +1025,7 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
         skipFriendsActivities,
         blacklistEnabled,
         blacklistList,
+        styleGuide,
       });
       // In manual approve, we do not auto post; stop audio and return
       stopTabActiveAudio();

@@ -79,7 +79,7 @@ export function addApproveRow(
 
   const scrollBtn = document.createElement("button");
   scrollBtn.type = "button";
-  scrollBtn.textContent = "Go";
+  scrollBtn.textContent = "Focus";
   Object.assign(scrollBtn.style, {
     padding: "6px 10px",
     background: "#ec4899",
@@ -144,4 +144,3 @@ export function cleanupApproveContext(context: ApproveContext): void {
   } catch {}
   context.mapByUrn.clear();
 }
-

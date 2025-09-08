@@ -9,6 +9,7 @@ import extractBioAuthor from "../extract-bio-author";
 import extractPostContent from "../extract-post-content";
 import extractPostTimePromoteState from "../extract-post-time-promote-state";
 import extractPostUrns from "../extract-post-urns";
+import generateComment from "../generate-comment";
 import normalizeAndHashContent from "../normalize-and-hash-content";
 import { injectApprovePanel } from "./inject-sidebar";
 import { addApproveRow, setEditorText } from "./rows-sync";
@@ -29,19 +30,23 @@ export async function runManualApproveStandard(
   } = params;
 
   const context: ApproveContext = injectApprovePanel();
-  const unlock = lockScrollAtTop();
 
-  let created = 0;
+  // Phase 1: collect eligible targets (respect all filters and maxPosts)
+  type Target = {
+    urns: string[];
+    postContainer: HTMLElement;
+    authorName: string;
+    postContent: string;
+  };
+
+  const targets: Target[] = [];
   // Prefer data-urn then data-id
   let containers = document.querySelectorAll("div[data-urn]");
   if (containers.length === 0) {
     containers = document.querySelectorAll("div[data-id]");
   }
 
-  // Capture original scroll position to avoid moving the viewport while preparing
-  const originalScrollY = window.scrollY;
-
-  for (let i = 0; i < containers.length && created < maxPosts; i++) {
+  for (let i = 0; i < containers.length && targets.length < maxPosts; i++) {
     const postContainer = containers[i] as HTMLElement;
 
     // Filters
@@ -82,32 +87,54 @@ export async function runManualApproveStandard(
     const hashRes = await normalizeAndHashContent(content);
     if (hashRes?.hash && hasCommentedOnPostHash(hashRes.hash)) continue;
 
-    // Open editor: click comment button
-    const commentButton = postContainer.querySelector(
-      'button[aria-label="Comment"]',
-    ) as HTMLButtonElement | null;
-    if (!commentButton) continue;
-    commentButton.click();
-    await wait(1200);
-
-    const editorField = postContainer.querySelector(
-      '.comments-comment-box-comment__text-editor div[contenteditable="true"]',
-    ) as HTMLElement | null;
-    if (!editorField) continue;
-
-    // Prefill literal text
-    setEditorText(editorField, context.defaultText);
-
-    // Use primary URN
-    const primaryUrn = urns[0]!;
-    addApproveRow(context, {
-      urn: primaryUrn,
+    targets.push({
+      urns,
       postContainer,
-      editorField,
-      initialText: context.defaultText,
+      authorName: authorInfo?.name || "",
+      postContent: content,
     });
-    created++;
   }
-  // Unlock scroll after preparation
-  unlock();
+
+  // Phase 2: generate comments in parallel for collected targets
+  const generationPromises = targets.map((t) =>
+    generateComment(`${t.authorName}${t.postContent}`, params.styleGuide),
+  );
+
+  const results = await Promise.allSettled(generationPromises);
+
+  // Phase 3: open editors, insert AI/fallback text, and add approve rows while scroll-locked
+  const unlock = lockScrollAtTop();
+  try {
+    for (let i = 0; i < targets.length; i++) {
+      const t = targets[i]!;
+
+      const commentButton = t.postContainer.querySelector(
+        'button[aria-label="Comment"]',
+      ) as HTMLButtonElement | null;
+      if (!commentButton) continue;
+      commentButton.click();
+      await wait(1200);
+
+      const editorField = t.postContainer.querySelector(
+        '.comments-comment-box-comment__text-editor div[contenteditable="true"]',
+      ) as HTMLElement | null;
+      if (!editorField) continue;
+
+      const r = results[i]!;
+      const aiText =
+        r.status === "fulfilled" && r.value ? r.value : context.defaultText;
+
+      setEditorText(editorField, aiText);
+
+      const primaryUrn = t.urns[0]!;
+      addApproveRow(context, {
+        urn: primaryUrn,
+        postContainer: t.postContainer,
+        editorField,
+        initialText: aiText,
+      });
+    }
+  } finally {
+    unlock();
+  }
 }

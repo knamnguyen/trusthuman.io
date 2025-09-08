@@ -9,6 +9,7 @@ import extractBioAuthor from "../extract-bio-author";
 import extractPostContent from "../extract-post-content";
 import extractPostTimePromoteState from "../extract-post-time-promote-state";
 import extractPostUrns from "../extract-post-urns";
+import generateComment from "../generate-comment";
 import normalizeAndHashContent from "../normalize-and-hash-content";
 import { mapAuthorsToFirstPost } from "../profile-list/map-authors-to-first-post";
 import { injectApprovePanel } from "./inject-sidebar";
@@ -33,16 +34,21 @@ export async function runManualApproveList(
   } = params;
 
   const context: ApproveContext = injectApprovePanel();
-  const unlock = lockScrollAtTop();
 
   const authorToPost = mapAuthorsToFirstPost({
     targetNormalizedAuthors,
   });
 
-  let created = 0;
-  const originalScrollY = window.scrollY;
+  type Target = {
+    urns: string[];
+    postContainer: HTMLElement;
+    authorName: string;
+    postContent: string;
+  };
+  const targets: Target[] = [];
+
   for (const [, postContainer] of authorToPost) {
-    if (created >= maxPosts) break;
+    if (targets.length >= maxPosts) break;
 
     if (skipFriendsActivities && checkFriendsActivity(postContainer)) continue;
 
@@ -76,27 +82,53 @@ export async function runManualApproveList(
     const hashRes = await normalizeAndHashContent(content);
     if (hashRes?.hash && hasCommentedOnPostHash(hashRes.hash)) continue;
 
-    const commentButton = postContainer.querySelector(
-      'button[aria-label="Comment"]',
-    ) as HTMLButtonElement | null;
-    if (!commentButton) continue;
-    commentButton.click();
-    await wait(1200);
-
-    const editorField = postContainer.querySelector(
-      '.comments-comment-box-comment__text-editor div[contenteditable="true"]',
-    ) as HTMLElement | null;
-    if (!editorField) continue;
-
-    setEditorText(editorField, context.defaultText);
-    const primaryUrn = urns[0]!;
-    addApproveRow(context, {
-      urn: primaryUrn,
+    targets.push({
+      urns,
       postContainer,
-      editorField,
-      initialText: context.defaultText,
+      authorName: authorDisplay,
+      postContent: content,
     });
-    created++;
   }
-  unlock();
+
+  // Generate in parallel
+  const results = await Promise.allSettled(
+    targets.map((t) =>
+      generateComment(`${t.authorName}${t.postContent}`, params.styleGuide),
+    ),
+  );
+
+  // Insert while scroll-locked
+  const unlock = lockScrollAtTop();
+  try {
+    for (let i = 0; i < targets.length; i++) {
+      const t = targets[i]!;
+
+      const commentButton = t.postContainer.querySelector(
+        'button[aria-label="Comment"]',
+      ) as HTMLButtonElement | null;
+      if (!commentButton) continue;
+      commentButton.click();
+      await wait(1200);
+
+      const editorField = t.postContainer.querySelector(
+        '.comments-comment-box-comment__text-editor div[contenteditable="true"]',
+      ) as HTMLElement | null;
+      if (!editorField) continue;
+
+      const r = results[i]!;
+      const aiText =
+        r.status === "fulfilled" && r.value ? r.value : context.defaultText;
+
+      setEditorText(editorField, aiText);
+      const primaryUrn = t.urns[0]!;
+      addApproveRow(context, {
+        urn: primaryUrn,
+        postContainer: t.postContainer,
+        editorField,
+        initialText: aiText,
+      });
+    }
+  } finally {
+    unlock();
+  }
 }

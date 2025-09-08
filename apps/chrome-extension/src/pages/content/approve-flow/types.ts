@@ -25,5 +25,5 @@ export type ManualApproveCommonParams = {
   skipFriendsActivities: boolean;
   blacklistEnabled: boolean;
   blacklistList: string[];
+  styleGuide: string;
 };
-

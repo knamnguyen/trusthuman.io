@@ -12,7 +12,7 @@ export default function extractAuthorInfo(postContainer: HTMLElement): {
     );
     if (primary?.textContent?.trim()) {
       const name = primary.textContent.trim();
-      console.log(`Extracted author name (primary): ${name}`);
+      // console.log(`Extracted author name (primary): ${name}`);
       return { name };
     }
 
@@ -22,7 +22,7 @@ export default function extractAuthorInfo(postContainer: HTMLElement): {
     );
     if (secondary?.textContent?.trim()) {
       const name = secondary.textContent.trim();
-      console.log(`Extracted author name (secondary): ${name}`);
+      // console.log(`Extracted author name (secondary): ${name}`);
       return { name };
     }
 

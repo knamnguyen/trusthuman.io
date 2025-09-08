@@ -1,91 +1,11 @@
 import wait from "@src/utils/wait";
 
-// Helper function to manually trigger scroll events for better LinkedIn compatibility
-function triggerScrollEvents() {
-  try {
-    // Create scroll event (following the 10-year-old solution approach)
-    const scrollEvent = new Event("scroll", {
-      bubbles: true,
-      cancelable: true,
-    });
-
-    // Method 1: Traditional window/document events
-    window.dispatchEvent(scrollEvent);
-    document.dispatchEvent(scrollEvent);
-
-    // Method 2: Target LinkedIn's specific feed containers (key insight from old solution)
-    const linkedInFeedSelectors = [
-      ".scaffold-layout__main", // Main content area
-      ".feed-container-theme", // Feed container
-      ".scaffold-finite-scroll", // Infinite scroll container
-      ".feed-shared-update-v2", // Individual post containers
-      ".application-outlet", // Main app container
-      ".feed-outlet", // Feed outlet
-      "#main", // Main element
-      '[role="main"]', // ARIA main role
-      ".ember-application", // Ember app container
-    ];
-
-    // Dispatch scroll events to each LinkedIn container we can find
-    linkedInFeedSelectors.forEach((selector) => {
-      const elements = document.querySelectorAll(selector);
-      elements.forEach((element) => {
-        if (element) {
-          element.dispatchEvent(scrollEvent);
-          console.log(`Triggered scroll event on: ${selector}`);
-        }
-      });
-    });
-
-    // Method 3: Also trigger wheel events (some sites listen for these)
-    const wheelEvent = new WheelEvent("wheel", {
-      bubbles: true,
-      cancelable: true,
-      deltaY: 200,
-      deltaMode: WheelEvent.DOM_DELTA_PIXEL,
-    });
-    window.dispatchEvent(wheelEvent);
-
-    // Trigger wheel events on main containers too
-    const mainContainer = document.querySelector(
-      ".scaffold-layout__main, .feed-container-theme",
-    );
-    if (mainContainer) {
-      mainContainer.dispatchEvent(wheelEvent);
-      console.log("Triggered wheel event on main LinkedIn container");
-    }
-  } catch (error) {
-    console.error("Failed to trigger scroll events:", error);
-  }
-}
-
-// Count posts using multiple selectors and return a best-effort estimate
-function countPosts(): number {
-  try {
-    const byDataId = document.querySelectorAll("div[data-id]").length;
-    const byDataUrn = document.querySelectorAll("div[data-urn]").length;
-    const byMenu = document.querySelectorAll(
-      ".feed-shared-update-v2__control-menu-container",
-    ).length;
-    return Math.max(byDataId, byDataUrn, byMenu);
-  } catch {
-    return 0;
-  }
-}
-
-// Click the native scaffold load-more button if present
-function clickLoadMore(): boolean {
-  try {
-    const btn = document.querySelector(
-      ".scaffold-finite-scroll__load-button",
-    ) as HTMLButtonElement | null;
-    if (btn && !btn.disabled) {
-      btn.click();
-      return true;
-    }
-  } catch {}
-  return false;
-}
+import {
+  clickLoadMore,
+  countPosts,
+  SCROLL_PAUSE_MS,
+  triggerScrollEvents,
+} from "./utils/scroll-helpers";
 
 // Function to scroll feed and load posts - Aggressive scrolling to bottom
 export default async function scrollFeedLoadPosts(
@@ -120,7 +40,7 @@ export default async function scrollFeedLoadPosts(
   console.log(`Initial posts: ${initial}`);
 
   // Use aggressive scrolling - just go to bottom repeatedly
-  const pauseBetweenScrolls = 1500; // 2 second pause to allow content loading
+  const pauseBetweenScrolls = SCROLL_PAUSE_MS;
 
   while (Date.now() < endTime && isCommentingActive) {
     // Check if we should stop
@@ -176,7 +96,7 @@ export default async function scrollFeedLoadPosts(
 
     // Try native load-more button as well
     cycles++;
-    if (clickLoadMore()) clicks++;
+    if (await clickLoadMore()) clicks++;
 
     // Wait for scroll to complete and content to load
     await wait(pauseBetweenScrolls);
