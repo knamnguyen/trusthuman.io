@@ -59,6 +59,7 @@ export function injectApprovePanel(): ApproveContext {
     isUpdatingFromRow: false,
     isUpdatingFromEditor: false,
     defaultText: "Great post, thanks for sharing",
+    activeUrns: new Set<string>(),
   };
 }
 

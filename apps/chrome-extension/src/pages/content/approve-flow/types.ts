@@ -5,6 +5,7 @@ export type ApproveRowMapping = {
   rowEl: HTMLDivElement;
   inputEl: HTMLDivElement;
   scrollBtn: HTMLButtonElement;
+  removeBtn: HTMLButtonElement;
 };
 
 export type ApproveContext = {
@@ -14,6 +15,7 @@ export type ApproveContext = {
   isUpdatingFromRow: boolean;
   isUpdatingFromEditor: boolean;
   defaultText: string;
+  activeUrns: Set<string>;
 };
 
 export type ManualApproveCommonParams = {

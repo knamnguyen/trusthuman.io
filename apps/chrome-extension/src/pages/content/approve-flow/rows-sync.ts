@@ -47,20 +47,111 @@ export function addApproveRow(
     postContainer: HTMLElement;
     editorField: HTMLElement;
     initialText: string;
+    authorName?: string;
+    authorHeadline?: string | null;
+    postPreview?: string;
+    authorImageUrl?: string;
   },
 ): ApproveRowMapping {
-  const { urn, postContainer, editorField, initialText } = params;
+  const {
+    urn,
+    postContainer,
+    editorField,
+    initialText,
+    authorName,
+    authorHeadline,
+    postPreview,
+    authorImageUrl,
+  } = params;
 
   const rowEl = document.createElement("div");
   Object.assign(rowEl.style, {
     display: "flex",
-    alignItems: "center",
+    alignItems: "stretch",
+    flexDirection: "column",
     gap: "8px",
     border: "1px solid #e5e7eb",
     borderRadius: "6px",
     padding: "6px",
     background: "#fafafa",
   } as CSSStyleDeclaration);
+
+  // Helper to truncate by words
+  const truncateWords = (text: string, maxWords: number): string => {
+    const words = (text || "").trim().split(/\s+/);
+    if (words.length <= maxWords) return words.join(" ");
+    return words.slice(0, maxWords).join(" ") + "...";
+  };
+
+  const appendEllipsis = (text: string): string => {
+    const t = (text || "").trim();
+    return t.endsWith("...") ? t : `${t} ...`;
+  };
+
+  // Meta row (full width): Author + Post preview
+  const metaRow = document.createElement("div");
+  Object.assign(metaRow.style, {
+    fontSize: "11px",
+    color: "#6b7280",
+    display: "flex",
+    flexDirection: "column",
+    gap: "4px",
+  } as CSSStyleDeclaration);
+
+  if (authorName || authorHeadline || postPreview) {
+    // Author line
+    const authorRow = document.createElement("div");
+    Object.assign(authorRow.style, {
+      display: "flex",
+      alignItems: "center",
+      gap: "8px",
+    } as CSSStyleDeclaration);
+
+    if (authorImageUrl) {
+      const avatar = document.createElement("img");
+      avatar.src = authorImageUrl;
+      Object.assign(avatar, {
+        width: 24,
+        height: 24,
+      } as Partial<HTMLImageElement>);
+      Object.assign(avatar.style, {
+        borderRadius: "9999px",
+        flexShrink: "0",
+        objectFit: "cover",
+      } as CSSStyleDeclaration);
+      authorRow.appendChild(avatar);
+    }
+
+    const authorLine = document.createElement("div");
+    const authorLabel = document.createElement("span");
+    authorLabel.textContent = "Author: ";
+    Object.assign(authorLabel.style, {
+      fontWeight: "700",
+      color: "#374151",
+    } as CSSStyleDeclaration);
+    const authorContent = document.createElement("span");
+    const combined = `${authorName ?? ""}${authorHeadline ? " — " + authorHeadline : ""}`;
+    authorContent.textContent = appendEllipsis(truncateWords(combined, 7));
+    authorLine.appendChild(authorLabel);
+    authorLine.appendChild(authorContent);
+    authorRow.appendChild(authorLine);
+
+    // Post line
+    const postLine = document.createElement("div");
+    const postLabel = document.createElement("span");
+    postLabel.textContent = "Post: ";
+    Object.assign(postLabel.style, {
+      fontWeight: "700",
+      color: "#374151",
+    } as CSSStyleDeclaration);
+    const postContentSpan = document.createElement("span");
+    if (postPreview) postContentSpan.textContent = appendEllipsis(postPreview);
+    postLine.appendChild(postLabel);
+    postLine.appendChild(postContentSpan);
+
+    metaRow.appendChild(authorRow);
+    metaRow.appendChild(postLine);
+  }
 
   const inputEl = document.createElement("div");
   inputEl.contentEditable = "true";
@@ -71,6 +162,7 @@ export function addApproveRow(
     outline: "none",
     padding: "6px 8px",
     borderRadius: "4px",
+    fontSize: "12px",
     border: "1px solid #e5e7eb",
     background: "#fff",
     whiteSpace: "pre-wrap",
@@ -92,8 +184,46 @@ export function addApproveRow(
     boxShadow: "2px 2px 0 #000",
   } as CSSStyleDeclaration);
 
-  rowEl.appendChild(inputEl);
-  rowEl.appendChild(scrollBtn);
+  const removeBtn = document.createElement("button");
+  removeBtn.type = "button";
+  removeBtn.textContent = "Remove";
+  Object.assign(removeBtn.style, {
+    padding: "6px 10px",
+    background: "#f3f4f6",
+    color: "#111827",
+    border: "2px solid #000",
+    borderRadius: "4px",
+    fontWeight: "700",
+    fontSize: "12px",
+    cursor: "pointer",
+    boxShadow: "2px 2px 0 #000",
+  } as CSSStyleDeclaration);
+
+  // Action row: editor (left) and buttons (right)
+  const actionRow = document.createElement("div");
+  Object.assign(actionRow.style, {
+    display: "flex",
+    alignItems: "stretch",
+    gap: "8px",
+  } as CSSStyleDeclaration);
+
+  // Right buttons column stacked vertically
+  const buttonsCol = document.createElement("div");
+  Object.assign(buttonsCol.style, {
+    display: "flex",
+    flexDirection: "column",
+    gap: "6px",
+    alignSelf: "center",
+  } as CSSStyleDeclaration);
+  buttonsCol.appendChild(scrollBtn);
+  buttonsCol.appendChild(removeBtn);
+
+  Object.assign(inputEl.style, { flex: "1" } as CSSStyleDeclaration);
+  actionRow.appendChild(inputEl);
+  actionRow.appendChild(buttonsCol);
+
+  rowEl.appendChild(metaRow);
+  rowEl.appendChild(actionRow);
   context.list.appendChild(rowEl);
 
   // Bi-directional sync with guards to prevent loops
@@ -125,6 +255,19 @@ export function addApproveRow(
     } catch {}
   });
 
+  removeBtn.addEventListener("click", () => {
+    try {
+      setEditorText(editorField, "");
+    } catch {}
+    try {
+      context.activeUrns.delete(urn);
+      context.mapByUrn.delete(urn);
+    } catch {}
+    try {
+      rowEl.remove();
+    } catch {}
+  });
+
   const mapping: ApproveRowMapping = {
     urn,
     postContainer,
@@ -132,9 +275,30 @@ export function addApproveRow(
     rowEl,
     inputEl,
     scrollBtn,
+    removeBtn,
   };
 
   context.mapByUrn.set(urn, mapping);
+
+  // Initialize active set based on initial text
+  if ((initialText || "").trim().length > 0) {
+    context.activeUrns.add(urn);
+  }
+
+  // Maintain active set membership based on content changes
+  const updateActiveSetFromRow = () => {
+    const txt = (inputEl.textContent || "").trim();
+    if (txt.length > 0) context.activeUrns.add(urn);
+    else context.activeUrns.delete(urn);
+  };
+  const updateActiveSetFromEditor = () => {
+    const txt = getEditorPlainText(editorField).trim();
+    if (txt.length > 0) context.activeUrns.add(urn);
+    else context.activeUrns.delete(urn);
+  };
+
+  inputEl.addEventListener("input", updateActiveSetFromRow);
+  editorField.addEventListener("input", updateActiveSetFromEditor);
   return mapping;
 }
 

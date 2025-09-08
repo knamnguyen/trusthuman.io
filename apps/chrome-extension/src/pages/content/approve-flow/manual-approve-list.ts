@@ -43,7 +43,9 @@ export async function runManualApproveList(
     urns: string[];
     postContainer: HTMLElement;
     authorName: string;
+    authorHeadline: string | null;
     postContent: string;
+    authorImageUrl?: string;
   };
   const targets: Target[] = [];
 
@@ -82,11 +84,32 @@ export async function runManualApproveList(
     const hashRes = await normalizeAndHashContent(content);
     if (hashRes?.hash && hasCommentedOnPostHash(hashRes.hash)) continue;
 
+    // Try to extract author avatar image URL
+    let authorImageUrl: string | undefined = undefined;
+    try {
+      const img = postContainer.querySelector(
+        "img.update-components-actor__avatar-image",
+      ) as HTMLImageElement | null;
+      if (img) {
+        authorImageUrl =
+          (
+            img.currentSrc ||
+            img.src ||
+            img.getAttribute("src") ||
+            img.getAttribute("data-delayed-url") ||
+            img.getAttribute("data-li-src") ||
+            ""
+          ).trim() || undefined;
+      }
+    } catch {}
+
     targets.push({
       urns,
       postContainer,
       authorName: authorDisplay,
+      authorHeadline: extractBioAuthor(postContainer),
       postContent: content,
+      authorImageUrl,
     });
   }
 
@@ -121,11 +144,18 @@ export async function runManualApproveList(
 
       setEditorText(editorField, aiText);
       const primaryUrn = t.urns[0]!;
+      const words = t.postContent.trim().split(/\s+/);
+      const preview =
+        words.slice(0, 20).join(" ") + (words.length > 20 ? "..." : "");
       addApproveRow(context, {
         urn: primaryUrn,
         postContainer: t.postContainer,
         editorField,
         initialText: aiText,
+        authorName: t.authorName,
+        authorHeadline: t.authorHeadline,
+        postPreview: preview,
+        authorImageUrl: t.authorImageUrl,
       });
     }
   } finally {
