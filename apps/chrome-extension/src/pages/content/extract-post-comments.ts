@@ -112,16 +112,30 @@ export default async function loadAndExtractComments(
   postContainer: HTMLElement,
 ): Promise<CommentInfo[]> {
   try {
+    // Ensure comments list is visible by opening the comment editor if needed
+    let container = postContainer.querySelector<HTMLElement>(
+      ".comments-comment-list__container",
+    );
+    if (!container) {
+      const commentButton = postContainer.querySelector<HTMLButtonElement>(
+        'button[aria-label="Comment"]',
+      );
+      if (commentButton) {
+        commentButton.click();
+        await wait(1500);
+      }
+    }
+
     const loadMoreBtn = postContainer.querySelector<HTMLElement>(
       ".comments-comments-list__load-more-comments-button--cr",
     );
 
     if (loadMoreBtn) {
       loadMoreBtn.click();
-      await wait(1000);
+      await wait(1500);
     }
 
-    const container = postContainer.querySelector<HTMLElement>(
+    container = postContainer.querySelector<HTMLElement>(
       ".comments-comment-list__container",
     );
 

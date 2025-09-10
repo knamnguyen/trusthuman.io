@@ -11,10 +11,12 @@ import normalizeAndHashContent from "../check-duplicate/normalize-and-hash-conte
 import checkFriendsActivity from "../check-friends-activity";
 import extractAuthorInfo from "../extract-author-info";
 import extractBioAuthor from "../extract-bio-author";
+import loadAndExtractComments from "../extract-post-comments";
 import extractPostContent from "../extract-post-content";
 import extractPostTimePromoteState from "../extract-post-time-promote-state";
 import extractPostUrns from "../extract-post-urns";
 import generateComment from "../generate-comment";
+import { MAX_CONCURRENCY, processInBatches } from "./concurrency";
 import { injectApprovePanel } from "./inject-sidebar";
 import { addApproveRow, setEditorText } from "./rows-sync";
 import { lockScrollAtTop } from "./scroll-lock";
@@ -141,12 +143,49 @@ export async function runManualApproveStandard(
     });
   }
 
-  // Phase 2: generate comments in parallel for collected targets
-  const generationPromises = targets.map((t) =>
-    generateComment(`${t.authorName}${t.postContent}`, params.styleGuide),
-  );
+  // Phase 2A: precompute adjacent comments in batches
+  type PreparedAdjacent =
+    | { commentContent: string; likeCount: number; replyCount: number }[]
+    | "No existing comments";
 
-  const results = await Promise.allSettled(generationPromises);
+  const adjacentSummaries: PreparedAdjacent[] = params.authenticityBoostEnabled
+    ? await processInBatches(targets, MAX_CONCURRENCY, async (t) => {
+        try {
+          const extracted = await loadAndExtractComments(t.postContainer);
+          return extracted
+            .slice()
+            .sort(
+              (a, b) =>
+                b.likeCount + b.replyCount - (a.likeCount + a.replyCount),
+            )
+            .slice(0, 5)
+            .map(({ commentContent, likeCount, replyCount }) => ({
+              commentContent,
+              likeCount,
+              replyCount,
+            }));
+        } catch {
+          return "No existing comments" as const;
+        }
+      })
+    : new Array(targets.length).fill("No existing comments");
+
+  // Phase 2B: generate AI comments in batches
+  const aiResults: (string | undefined)[] = await processInBatches(
+    targets,
+    MAX_CONCURRENCY,
+    async (t, i) => {
+      try {
+        return await generateComment(
+          `${t.authorName}${t.postContent}`,
+          params.styleGuide,
+          adjacentSummaries[i]!,
+        );
+      } catch {
+        return undefined;
+      }
+    },
+  );
 
   // Phase 3: open editors, insert AI/fallback text, and add approve rows while scroll-locked
   const unlock = lockScrollAtTop();
@@ -166,9 +205,7 @@ export async function runManualApproveStandard(
       ) as HTMLElement | null;
       if (!editorField) continue;
 
-      const r = results[i]!;
-      const aiText =
-        r.status === "fulfilled" && r.value ? r.value : context.defaultText;
+      const aiText = aiResults[i] ?? context.defaultText;
 
       setEditorText(editorField, aiText);
 

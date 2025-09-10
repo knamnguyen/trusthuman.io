@@ -34,20 +34,22 @@ import normalizeAndHashContent from "./check-duplicate/normalize-and-hash-conten
 import checkFriendsActivity from "./check-friends-activity";
 import extractAuthorInfo from "./extract-author-info";
 import extractBioAuthor from "./extract-bio-author";
+import loadAndExtractComments from "./extract-post-comments";
 import extractPostContent from "./extract-post-content";
 import extractPostTimePromoteState from "./extract-post-time-promote-state";
 import extractPostUrns from "./extract-post-urns";
 import generateComment from "./generate-comment";
 import postCommentOnPost from "./post-comment-on-post";
-import { loadSelectedListAuthors } from "./profile-list/load-selected-list-authors";
-import { runListMode } from "./profile-list/run-list-mode";
+import { loadSelectedListAuthors } from "./profile-target-list/load-selected-list-authors";
+import { runListMode } from "./profile-target-list/run-target-list-mode";
 import saveCurrentUsernameUrl from "./save-current-username-url";
 import scrollFeedLoadPosts from "./scroll-feed-load-post";
+import { tabAudio } from "./tab-audio";
 import updateCommentCounts from "./update-comment-counts";
 
 import "./attach-engage-button";
 import "./init-comment-history";
-import "./profile-list";
+import "./profile-target-list";
 
 // Pronoun rule for company mode
 const COMPANY_PRONOUN_RULE =
@@ -63,13 +65,8 @@ let commentedAuthors = new Set<string>();
 let commentedAuthorsWithTimestamps = new Map<string, number>();
 let postsSkippedDuplicateCount = 0;
 let recentAuthorsDetectedCount = 0;
-// commentedPostUrns map is now provided by check-duplicate-commented-post-urns.ts
 let postsSkippedAlreadyCommentedCount = 0;
 let duplicatePostsDetectedCount = 0;
-let postsSkippedTimeFilterCount = 0;
-let audioContext: AudioContext | null = null;
-let currentOscillator: OscillatorNode | null = null;
-let audioElement: HTMLAudioElement | null = null;
 
 // Check if we need to show the start button
 let hasUserInteracted = false;
@@ -219,7 +216,12 @@ function showStartButton() {
     try {
       // Step 1: Start continuous audio
       console.log("🎵 Step 1: Starting continuous audio...");
-      await injectAndPlayContinuousSound();
+      await tabAudio.start({
+        frequencyHz: 10000,
+        gain: 0.001,
+        muted: true,
+        loop: true,
+      });
 
       // startButton.textContent = "🎵 Audio Started";
 
@@ -241,8 +243,6 @@ function showStartButton() {
           "minPostAge",
         ],
         (result) => {
-          backgroundLog("Content: Retrieved settings from storage:", result);
-
           // Use popup settings with fallbacks only if completely missing
           const scrollDuration =
             result.scrollDuration !== undefined ? result.scrollDuration : 10;
@@ -357,12 +357,15 @@ function showStartButton() {
               "blacklistEnabled",
               "blacklistAuthors",
               "manualApproveEnabled",
+              "authenticityBoostEnabled",
             ],
             async (cfg) => {
               const useListMode =
                 !!cfg.finishListModeEnabled &&
                 !!cfg.targetListEnabled &&
                 !!(cfg.selectedTargetList || "").trim();
+              const authenticityBoostEnabledCfg =
+                !!cfg.authenticityBoostEnabled;
               if (useListMode) {
                 try {
                   isCommentingActive = true;
@@ -384,6 +387,7 @@ function showStartButton() {
                   const skipFriendsActivitiesCfg =
                     !!cfg.skipFriendsActivitiesEnabled;
                   const languageAwareEnabledCfg = !!cfg.languageAwareEnabled;
+
                   {
                     await runListMode({
                       commentDelay,
@@ -404,6 +408,7 @@ function showStartButton() {
                       selectedListAuthors,
                       statusPanel,
                       manualApproveEnabled: !!cfg.manualApproveEnabled,
+                      authenticityBoostEnabled: authenticityBoostEnabledCfg,
                     });
                   }
 
@@ -411,7 +416,7 @@ function showStartButton() {
                   if (overlay) overlay.remove();
                   // In Composer (manual approve) mode, keep audio active and do NOT signal completion here.
                   if (!cfg.manualApproveEnabled) {
-                    stopTabActiveAudio();
+                    tabAudio.stop();
                     if (isCommentingActive) {
                       chrome.runtime.sendMessage({
                         action: "commentingCompleted",
@@ -421,7 +426,7 @@ function showStartButton() {
                 } catch (e) {
                   console.error("[ListMode] Error:", e);
                   isCommentingActive = false;
-                  stopTabActiveAudio();
+                  tabAudio.stop();
                 }
               } else {
                 startNewCommentingFlowWithDelayedTabSwitch(
@@ -438,6 +443,7 @@ function showStartButton() {
                   timeFilterEnabled,
                   minPostAge,
                   !!cfg.manualApproveEnabled,
+                  authenticityBoostEnabledCfg,
                 );
               }
             },
@@ -470,140 +476,7 @@ function showStartButton() {
   console.log("🚀 Start button overlay displayed");
 }
 
-// --- Main function to create and play the continuous audio ---
-async function injectAndPlayContinuousSound(): Promise<void> {
-  return new Promise((resolve, reject) => {
-    try {
-      console.log("🎵 Initializing Web Audio API for continuous sound...");
-
-      // Get the AudioContext constructor, working across browsers
-      const AudioContext =
-        window.AudioContext || (window as any).webkitAudioContext;
-
-      // Check if Web Audio API is supported
-      if (!AudioContext) {
-        throw new Error(
-          "Web Audio API is not supported in this browser. Cannot play audio.",
-        );
-      }
-
-      // Create an AudioContext instance
-      // This is the gateway to using the Web Audio API
-      audioContext = new AudioContext();
-
-      // --- Sound Generation Setup ---
-
-      // Create an OscillatorNode: This will generate the actual sound wave
-      const oscillator = audioContext.createOscillator();
-
-      // Create a GainNode: This will control the volume of the sound
-      const gainNode = audioContext.createGain();
-
-      // Create a MediaStreamDestinationNode: This allows us to take the audio
-      // generated by the Web Audio API and use it as a source for an HTML <audio> element.
-      const mediaStreamDestination =
-        audioContext.createMediaStreamDestination();
-
-      // Connect the nodes: Oscillator -> GainNode -> MediaStreamDestination
-      // The sound flows from the oscillator, through the volume control (gain),
-      // and then to the stream destination.
-      oscillator.connect(gainNode);
-      gainNode.connect(mediaStreamDestination);
-
-      // --- Configure the Sound ---
-
-      // Set the type of wave for the oscillator
-      // 'sine': a pure, smooth tone
-      // Other options: 'square', 'sawtooth', 'triangle'
-      oscillator.type = "sine";
-
-      // Set the frequency (pitch) of the sound in Hertz (Hz)
-      // Let's pick a random frequency in a generally pleasant mid-range (e.g., between C4 and C5)
-      // C4 is approx 261.63 Hz, C5 is approx 523.25 Hz
-      const minFreq = 261.63;
-      const maxFreq = 523.25;
-      // const frequency = Math.random() * (maxFreq - minFreq) + minFreq;
-      const frequency = 10000;
-
-      //picking an inaudible frequency almost zero volume
-      oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
-
-      // Set the volume using the GainNode
-      // 0.0 is silent, 1.0 is full volume. Let's set it low to be less intrusive.
-      gainNode.gain.setValueAtTime(0.001, audioContext.currentTime); // 10% volume
-
-      // --- HTML <audio> Element Setup ---
-
-      // Create a new HTML <audio> element
-      audioElement = document.createElement("audio");
-
-      // Set the source of the audio element to the stream from our Web Audio API setup
-      audioElement.srcObject = mediaStreamDestination.stream;
-
-      // Set the audio to autoplay
-      // IMPORTANT: Browsers have autoplay restrictions. This might not work without user interaction.
-      audioElement.autoplay = true;
-
-      // Set the audio to loop continuously
-      audioElement.loop = true;
-      // Mute the audio so it is inaudible but still considered active by the browser
-      audioElement.muted = true;
-      // Hide the default audio controls for background audio
-      audioElement.controls = false;
-
-      // Hide the audio element
-      audioElement.style.cssText = "position: fixed; top: -9999px; opacity: 0;";
-
-      // --- Inject into DOM and Start ---
-
-      // Append the new audio element to the body of the document
-      // This makes it part of the webpage
-      document.body.appendChild(audioElement);
-
-      // Resume AudioContext if needed (for user gesture compliance)
-      const startAudioPlayback = async () => {
-        if (audioContext!.state === "suspended") {
-          await audioContext!.resume();
-        }
-
-        // Start the oscillator to begin generating sound
-        // This needs to happen for any sound to be produced
-        oscillator.start();
-        currentOscillator = oscillator;
-
-        // Attempt to play the HTML audio element
-        // This is often needed due to autoplay policies, especially if audioCtx was not started by user gesture.
-        const playPromise = audioElement!.play();
-
-        if (playPromise !== undefined) {
-          playPromise
-            .then(() => {
-              // Autoplay started successfully.
-              console.log(
-                `✅ Playing a ${oscillator.type} wave at ${frequency.toFixed(
-                  2,
-                )} Hz. Audio element injected and playing.`,
-              );
-              resolve();
-            })
-            .catch((error) => {
-              // Autoplay was prevented.
-              console.warn("❌ Autoplay was prevented by the browser:", error);
-              reject(error);
-            });
-        } else {
-          console.log(`✅ Audio started successfully (no promise returned)`);
-          resolve();
-        }
-      };
-
-      startAudioPlayback();
-    } catch (error) {
-      console.error("❌ Audio setup failed:", error);
-      reject(error);
-    }
-  });
-}
+// (Audio logic moved to tab-audio.ts)
 
 // Listen for messages from the background script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -644,7 +517,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     try {
       cleanupManualApproveUI();
     } catch {}
-    stopTabActiveAudio();
+    tabAudio.stop();
     sendResponse({ success: true });
   } else if (request.action === "statusUpdate" && request.error) {
     // Log error details to the website console for debugging
@@ -693,76 +566,6 @@ async function loadCounters(): Promise<void> {
   });
 }
 
-// Function to update skipped post counter
-async function updateSkippedPostCounter(): Promise<void> {
-  postsSkippedDuplicateCount++;
-  recentAuthorsDetectedCount++; // For now both counters increment together
-  duplicatePostsDetectedCount++; // For now, both author filter skips and post URN skips increment this
-
-  return new Promise((resolve) => {
-    chrome.storage.local.set(
-      {
-        postsSkippedDuplicate: postsSkippedDuplicateCount,
-        recentAuthorsDetected: recentAuthorsDetectedCount,
-        duplicatePostsDetected: duplicatePostsDetectedCount,
-      },
-      () => {
-        console.log(
-          `Updated counters - Posts skipped: ${postsSkippedDuplicateCount}, Recent authors: ${recentAuthorsDetectedCount}, Duplicate posts detected: ${duplicatePostsDetectedCount}`,
-        );
-
-        // Send real-time update to popup
-        chrome.runtime.sendMessage({
-          action: "realTimeCountUpdate",
-          skippedCount: postsSkippedDuplicateCount,
-          recentAuthorsCount: recentAuthorsDetectedCount,
-          duplicatePostsDetectedCount: duplicatePostsDetectedCount,
-        });
-
-        resolve();
-      },
-    );
-  });
-}
-
-/*
- * The commented-post-URN helper logic has been extracted to
- * check-duplicate-commented-post-urns.ts. The original in-file
- * implementations have been removed to avoid duplication.
- */
-
-// Function to update the post already commented counter
-async function updatePostAlreadyCommentedCounter(): Promise<void> {
-  postsSkippedAlreadyCommentedCount++;
-  duplicatePostsDetectedCount++; // For now, both counters increment together
-
-  return new Promise((resolve) => {
-    chrome.storage.local.set(
-      {
-        postsSkippedAlreadyCommented: postsSkippedAlreadyCommentedCount,
-        duplicatePostsDetected: duplicatePostsDetectedCount,
-      },
-      () => {
-        console.log(
-          `Updated post already commented counter: ${postsSkippedAlreadyCommentedCount}`,
-        );
-        console.log(
-          `Updated duplicate posts detected counter: ${duplicatePostsDetectedCount}`,
-        );
-
-        // Send real-time update to popup
-        chrome.runtime.sendMessage({
-          action: "realTimeCountUpdate",
-          postsSkippedAlreadyCommentedCount: postsSkippedAlreadyCommentedCount,
-          duplicatePostsDetectedCount: duplicatePostsDetectedCount,
-        });
-
-        resolve();
-      },
-    );
-  });
-}
-
 // Main function to start the new commenting flow with delayed tab switching
 async function startNewCommentingFlowWithDelayedTabSwitch(
   scrollDuration: number,
@@ -778,22 +581,18 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
   timeFilterEnabled: boolean = false,
   minPostAge: number = 1,
   manualApproveEnabled: boolean = false,
+  authenticityBoostEnabled: boolean = false,
 ) {
   // ➡️ Persist the current LinkedIn username path for later usage in popup
   saveCurrentUsernameUrl();
 
   isCommentingActive = true;
   console.log(`🚀 Starting new commenting flow with parameters:`);
-  backgroundLog(`🚀 Starting new commenting flow with parameters:`);
+
   console.log(`   - scrollDuration: ${scrollDuration}`);
   console.log(`   - commentDelay: ${commentDelay}`);
   console.log(`   - maxPosts: ${maxPosts}`);
   console.log(`   - isCommentingActive: ${isCommentingActive}`);
-  backgroundLog(
-    `   - scrollDuration: ${scrollDuration}, commentDelay: ${commentDelay}, maxPosts: ${maxPosts}, isCommentingActive: ${isCommentingActive}`,
-  );
-
-  backgroundLog("🎭 Applied LinkedIn background tab bypass techniques");
 
   // // Start anti-throttling mechanisms to prevent tab throttling
   // keepTabActiveAudio();
@@ -806,6 +605,8 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
   await loadCommentedPostUrns();
   await loadCommentedPostHashes();
   await loadCounters();
+
+  console.log("CHECKpoinn 1");
 
   // Retrieve desired company profile name (if any) and language flag from storage once per session
   const {
@@ -820,6 +621,7 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
     skipCompanyPagesEnabled: boolean;
     skipPromotedPostsEnabled: boolean;
     skipFriendsActivitiesEnabled: boolean;
+    authenticityBoostEnabled: boolean;
   }>((resolve) => {
     chrome.storage.local.get(
       [
@@ -828,6 +630,7 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
         "skipCompanyPagesEnabled",
         "skipPromotedPostsEnabled",
         "skipFriendsActivitiesEnabled",
+        "authenticityBoostEnabled",
       ],
       (r) => {
         resolve({
@@ -836,13 +639,17 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
           skipCompanyPagesEnabled: r.skipCompanyPagesEnabled || false,
           skipPromotedPostsEnabled: r.skipPromotedPostsEnabled || false,
           skipFriendsActivitiesEnabled: r.skipFriendsActivitiesEnabled || false,
+          authenticityBoostEnabled: r.authenticityBoostEnabled || false,
         });
       },
     );
   });
+  console.log("CHECK POINT REACHED");
   const skipCompanyPages = skipCompanyPagesEnabled;
   const skipPromotedPosts = skipPromotedPostsEnabled;
   const skipFriendsActivities = skipFriendsActivitiesEnabled;
+  console.log("CHECK POINT 2");
+  // authenticityBoostEnabled already available from storage destructuring
   // Retrieve blacklist settings once per session
   const { blacklistEnabled: blacklistEnabled, blacklistAuthors } =
     await new Promise<{
@@ -878,47 +685,29 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
   console.log(
     `Loaded counters - Posts skipped: ${postsSkippedDuplicateCount}, Recent authors: ${recentAuthorsDetectedCount}`,
   );
-  backgroundLog(
-    `Loaded ${commentedAuthorsWithTimestamps.size} authors with timestamps and ${commentedAuthors.size} authors for today`,
-  );
-  backgroundLog(
-    `Loaded counters - Posts skipped: ${postsSkippedDuplicateCount}, Recent authors: ${recentAuthorsDetectedCount}`,
-  );
 
   try {
     console.log(`Starting new commenting flow with max ${maxPosts} posts...`);
-    backgroundLog(`Starting new commenting flow with max ${maxPosts} posts...`);
 
     // Step 1: Scroll down for specified duration to load posts
     console.log(`📜 Step 1: Scrolling feed for ${scrollDuration} seconds...`);
-    backgroundLog(`📜 Step 1: Scrolling feed for ${scrollDuration} seconds...`);
+
     await scrollFeedLoadPosts(scrollDuration, isCommentingActive, statusPanel);
 
     console.log(
       "📜 Step 1.5: Scrolling completed, now moving back to original tab...",
     );
-    backgroundLog(
-      "📜 Step 1.5: Scrolling completed, now moving back to original tab...",
-    );
-
-    //TODO: not being used, consider removing in the future
-    // chrome.runtime.sendMessage({
-    //   action: "moveToOriginalTab",
-    // });
-
-    // Wait a moment for tab switch to complete
-    // await wait(2000);
 
     if (!isCommentingActive) {
       console.log("❌ Commenting stopped during scroll phase");
-      backgroundLog("❌ Commenting stopped during scroll phase");
-      stopTabActiveAudio();
+
+      tabAudio.stop();
       return;
     }
 
     // Step 2: Scroll back to top
     console.log("📜 Step 2: Scrolling back to top...");
-    backgroundLog("📜 Step 2: Scrolling back to top...");
+
     window.scrollTo({ top: 0, behavior: "smooth" });
     await wait(1000);
 
@@ -934,13 +723,12 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
       // Wait a moment to show the message, then remove overlay
       await wait(1000);
       overlay.remove();
-      backgroundLog("📜 🎭 Overlay removed after successful post loading");
     }
 
     if (!isCommentingActive) {
       console.log("❌ Commenting stopped during scroll to top");
-      backgroundLog("❌ Commenting stopped during scroll to top");
-      stopTabActiveAudio();
+
+      tabAudio.stop();
       return;
     }
 
@@ -950,9 +738,6 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
     console.log(`   - commentDelay parameter: ${commentDelay}`);
     console.log(
       `   - isCommentingActive before processing: ${isCommentingActive}`,
-    );
-    backgroundLog(
-      `📜 Step 3: Processing all posts on feed... maxPosts: ${maxPosts}, commentDelay: ${commentDelay}, isCommentingActive: ${isCommentingActive}`,
     );
 
     if (manualApproveEnabled) {
@@ -967,6 +752,7 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
         blacklistList,
         styleGuide,
         duplicateWindow,
+        authenticityBoostEnabled,
       });
       // In manual approve, keep audio playing for the tab (do not stop here)
       return;
@@ -986,22 +772,20 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
         skipCompanyPages,
         skipPromotedPosts,
         skipFriendsActivities,
+        authenticityBoostEnabled,
       );
     }
 
     console.log(`📜 Step 3 completed. Final state:`);
     console.log(`   - isCommentingActive: ${isCommentingActive}`);
-    backgroundLog(
-      `📜 Step 3 completed. Final isCommentingActive: ${isCommentingActive}`,
-    );
 
     // Stop anti-throttling mechanisms
-    stopTabActiveAudio();
+    tabAudio.stop();
 
     // Only notify completion if we weren't stopped
     if (isCommentingActive) {
       console.log("🏁 Sending completion message to background script...");
-      backgroundLog("🏁 Sending completion message to background script...");
+
       chrome.runtime.sendMessage({
         action: "commentingCompleted",
       });
@@ -1009,15 +793,12 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
       console.log(
         "🛑 Not sending completion message because commenting was stopped",
       );
-      backgroundLog(
-        "🛑 Not sending completion message because commenting was stopped",
-      );
     }
   } catch (error) {
     console.error("💥 Error in new commenting flow:", error);
-    backgroundError("💥 Error in new commenting flow:", error);
+
     isCommentingActive = false;
-    stopTabActiveAudio();
+    tabAudio.stop();
   }
 }
 
@@ -1037,13 +818,11 @@ async function processAllPostsFeed(
   skipCompanyPages: boolean,
   skipPromotedPosts: boolean,
   skipFriendsActivities: boolean,
+  authenticityBoostEnabled: boolean,
 ): Promise<void> {
   console.group("🎯 PROCESSING ALL POSTS - DETAILED DEBUG");
-  backgroundGroup("🎯 PROCESSING ALL POSTS - DETAILED DEBUG");
+
   console.log(
-    `🎯 Starting to process posts on feed (max ${maxPosts} posts)...`,
-  );
-  backgroundLog(
     `🎯 Starting to process posts on feed (max ${maxPosts} posts)...`,
   );
 
@@ -1053,15 +832,9 @@ async function processAllPostsFeed(
     console.log(
       `🎯 Found ${postContainers.length} post containers with selector: div[data-urn]`,
     );
-    backgroundLog(
-      `🎯 Found ${postContainers.length} post containers with selector: div[data-urn]`,
-    );
   } else {
     postContainers = document.querySelectorAll("div[data-id]");
     console.log(
-      `🎯 Found ${postContainers.length} post containers with selector: div[data-id]`,
-    );
-    backgroundLog(
       `🎯 Found ${postContainers.length} post containers with selector: div[data-id]`,
     );
   }
@@ -1075,18 +848,6 @@ async function processAllPostsFeed(
     ".feed-shared-update-v2__content",
   );
 
-  console.log(`🎯 Alternative selector results:`);
-  console.log(`   - .feed-shared-update-v2: ${altSelector1.length} elements`);
-  console.log(
-    `   - [data-urn*="urn:li:activity"]: ${altSelector2.length} elements`,
-  );
-  console.log(
-    `   - .feed-shared-update-v2__content: ${altSelector3.length} elements`,
-  );
-  backgroundLog(
-    `🎯 Alternative selector results: .feed-shared-update-v2: ${altSelector1.length}, [data-urn*="urn:li:activity"]: ${altSelector2.length}, .feed-shared-update-v2__content: ${altSelector3.length}`,
-  );
-
   if (postContainers.length === 0) {
     console.error(
       "🚨 NO POSTS FOUND! This is why the automation stops immediately.",
@@ -1094,14 +855,9 @@ async function processAllPostsFeed(
     console.error(
       "🚨 The page might not be fully loaded or the selector is wrong.",
     );
-    backgroundError(
-      "🚨 NO POSTS FOUND! This is why the automation stops immediately.",
-    );
-    backgroundError(
-      "🚨 The page might not be fully loaded or the selector is wrong.",
-    );
+
     console.groupEnd();
-    backgroundGroupEnd();
+
     return;
   }
 
@@ -1185,7 +941,6 @@ async function processAllPostsFeed(
       console.log(
         `⏭️ SKIPPING post ${i + 1} due to age (${ageHours ?? "unknown"}h) > limit ${minPostAge}h`,
       );
-      await updateTimeFilterSkippedCounter();
       console.groupEnd();
       continue;
     }
@@ -1231,8 +986,6 @@ async function processAllPostsFeed(
       }
 
       if (hasCommentedOnThisPost) {
-        // Update the post already commented counter
-        await updatePostAlreadyCommentedCounter();
         console.groupEnd();
         continue;
       }
@@ -1257,7 +1010,6 @@ async function processAllPostsFeed(
         console.log(
           `⏭️ SKIPPING post ${i + 1} - author ${authorInfo.name} is blacklisted`,
         );
-        await updateSkippedPostCounter();
         console.groupEnd();
         continue;
       }
@@ -1280,7 +1032,6 @@ async function processAllPostsFeed(
           console.log(
             `⏭️ SKIPPING post ${i + 1} - author ${authorName} recently commented within ${duplicateWindow}h`,
           );
-          await updateSkippedPostCounter();
           console.groupEnd();
           continue;
         }
@@ -1304,7 +1055,6 @@ async function processAllPostsFeed(
         console.log(
           `⏭️ SKIPPING post ${i + 1} - duplicate content detected via hash ${hashRes.hash.slice(0, 12)}...`,
         );
-        await updatePostAlreadyCommentedCounter();
         console.groupEnd();
         continue;
       }
@@ -1337,9 +1087,29 @@ async function processAllPostsFeed(
 
       // Generate comment using direct tRPC call
       console.log(`🤖 Generating comment for post ${i + 1}...`);
+      let adjacentComments: any = "No existing comments";
+      if (authenticityBoostEnabled) {
+        try {
+          const extracted = await loadAndExtractComments(postContainer);
+          adjacentComments = extracted
+            .slice()
+            .sort(
+              (a, b) =>
+                b.likeCount + b.replyCount - (a.likeCount + a.replyCount),
+            )
+            .slice(0, 5)
+            .map(({ commentContent, likeCount, replyCount }) => ({
+              commentContent,
+              likeCount,
+              replyCount,
+            }));
+        } catch {}
+      }
+
       const comment = await generateComment(
         postAuthorContent,
         effectiveStyleGuide,
+        adjacentComments,
       );
       console.log(
         `🤖 Comment generation result for post ${i + 1}:`,
@@ -1410,17 +1180,7 @@ async function processAllPostsFeed(
         console.log(
           `🎉 Successfully posted comment ${commentCount}/${maxPosts} on post by ${authorInfo.name}`,
         );
-        backgroundLog(
-          `🎉 Successfully posted comment ${commentCount}/${maxPosts} on post by ${authorInfo.name}`,
-        );
-        console.group(`📊 Progress Update After Successful Comment`);
-        console.log(
-          `Comments posted this session: ${commentCount}/${maxPosts}`,
-        );
-        console.log(
-          `Authors commented on today:`,
-          Array.from(commentedAuthors),
-        );
+
         console.log(
           `Remaining posts to process: ${postContainers.length - i - 1}`,
         );
@@ -1433,11 +1193,6 @@ async function processAllPostsFeed(
           `Next iteration will be: ${i + 1} < ${postContainers.length} = ${
             i + 1 < postContainers.length
           }`,
-        );
-        backgroundLog(
-          `📊 Progress Update: ${commentCount}/${maxPosts} comments posted. Remaining posts: ${
-            postContainers.length - i - 1
-          }. Should continue: ${commentCount < maxPosts}`,
         );
         console.groupEnd();
 
@@ -1453,9 +1208,7 @@ async function processAllPostsFeed(
           console.log(
             `✅ REACHED MAX POSTS LIMIT: commentCount(${commentCount}) >= maxPosts(${maxPosts}). Stopping...`,
           );
-          backgroundLog(
-            `✅ REACHED MAX POSTS LIMIT: commentCount(${commentCount}) >= maxPosts(${maxPosts}). Stopping...`,
-          );
+
           console.groupEnd();
           break;
         }
@@ -1550,70 +1303,10 @@ async function processAllPostsFeed(
   console.log(`     - Reached max posts? ${commentCount >= maxPosts}`);
   console.log(`     - Lost active status? ${!isCommentingActive}`);
   console.log(`     - Ran out of posts? ${postContainers.length === 0}`);
-  backgroundLog(
-    `🏁 LOOP COMPLETED. Final stats: Posted ${commentCount}/${maxPosts} comments total. Final isCommentingActive: ${isCommentingActive}. Processed ${postContainers.length} total posts.`,
-  );
-  backgroundLog(
-    `🏁 Loop exit reason: Reached max posts? ${
-      commentCount >= maxPosts
-    }, Lost active status? ${!isCommentingActive}, Ran out of posts? ${
-      postContainers.length === 0
-    }`,
-  );
+
   console.groupEnd();
-  backgroundGroupEnd();
 }
 
-// Function to update time filter skipped counter
-async function updateTimeFilterSkippedCounter(): Promise<void> {
-  postsSkippedTimeFilterCount++;
+// (Audio stop moved to tab-audio.ts)
 
-  return new Promise((resolve) => {
-    chrome.storage.local.set(
-      {
-        postsSkippedTimeFilter: postsSkippedTimeFilterCount,
-      },
-      () => {
-        console.log(
-          `Updated time filter skipped counter: ${postsSkippedTimeFilterCount}`,
-        );
-
-        // Send real-time update to popup
-        chrome.runtime.sendMessage({
-          action: "realTimeCountUpdate",
-          postsSkippedTimeFilterCount: postsSkippedTimeFilterCount,
-        });
-
-        resolve();
-      },
-    );
-  });
-}
-
-function stopTabActiveAudio() {
-  try {
-    console.log("🔇 Stopping continuous audio...");
-
-    if (currentOscillator) {
-      currentOscillator.stop();
-      currentOscillator = null;
-    }
-
-    if (audioElement) {
-      audioElement.pause();
-      audioElement.remove();
-      audioElement = null;
-    }
-
-    if (audioContext && audioContext.state !== "closed") {
-      audioContext.close();
-      audioContext = null;
-    }
-
-    console.log("🔇 Continuous audio stopped");
-  } catch (error) {
-    console.warn("⚠️ Error stopping audio:", error);
-  }
-}
-
-console.log("EngageKit content script loaded - Background Window Mode");
+console.log("EngageKit content script loaded");

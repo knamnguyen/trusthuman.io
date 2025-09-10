@@ -37,4 +37,5 @@ export type ManualApproveCommonParams = {
   blacklistList: string[];
   styleGuide: string;
   duplicateWindow: number;
+  authenticityBoostEnabled: boolean;
 };

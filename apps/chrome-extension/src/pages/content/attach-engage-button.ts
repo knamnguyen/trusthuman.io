@@ -10,6 +10,7 @@ import {
 import { saveCommentedPostUrn } from "./check-duplicate/check-duplicate-commented-post-urns";
 import normalizeAndHashContent from "./check-duplicate/normalize-and-hash-content";
 import extractAuthorInfo from "./extract-author-info";
+import loadAndExtractComments from "./extract-post-comments";
 import extractPostContent from "./extract-post-content";
 import extractPostUrns from "./extract-post-urns";
 import generateComment from "./generate-comment";
@@ -48,6 +49,60 @@ const LANGUAGE_AWARE_RULE =
   .engage-btn--down{transform:translate(2px,2px)!important;box-shadow:none!important;}`;
   document.head.appendChild(styleTag);
 })();
+
+function lockScrollAtCurrentPosition(): () => void {
+  const savedX = window.scrollX;
+  const savedY = window.scrollY;
+  const html = document.documentElement;
+  const body = document.body;
+
+  const prevHtmlOverflow = html.style.overflow;
+  const prevBodyOverflow = body.style.overflow;
+  const prevBodyPosition = body.style.position;
+  const prevBodyTop = body.style.top;
+  const prevBodyLeft = body.style.left;
+  const prevBodyWidth = body.style.width;
+
+  const prevent = (e: Event) => {
+    if (typeof (e as any).preventDefault === "function") {
+      (e as any).preventDefault();
+    }
+  };
+
+  // Hard lock: fix body in place and hide overflow to suppress layout-driven scrolls
+  html.style.overflow = "hidden";
+  body.style.overflow = "hidden";
+  body.style.position = "fixed";
+  body.style.top = `-${savedY}px`;
+  body.style.left = `-${savedX}px`;
+  body.style.width = "100%";
+
+  window.addEventListener("wheel", prevent, { passive: false });
+  window.addEventListener("touchmove", prevent, { passive: false });
+
+  let cleaned = false;
+  const cleanup = () => {
+    if (cleaned) return;
+    cleaned = true;
+    window.removeEventListener("wheel", prevent as any);
+    window.removeEventListener("touchmove", prevent as any);
+    body.style.position = prevBodyPosition;
+    body.style.top = prevBodyTop;
+    body.style.left = prevBodyLeft;
+    body.style.width = prevBodyWidth;
+    html.style.overflow = prevHtmlOverflow;
+    body.style.overflow = prevBodyOverflow;
+    window.scrollTo(savedX, savedY);
+  };
+
+  // Failsafe: ensure we never leave the page locked if an exception occurs
+  const failSafe = window.setTimeout(cleanup, 4000);
+
+  return () => {
+    window.clearTimeout(failSafe);
+    cleanup();
+  };
+}
 
 function setLoading(btn: HTMLButtonElement, isLoading: boolean) {
   if (isLoading) {
@@ -199,6 +254,7 @@ function addEngageButton(form: HTMLFormElement): void {
         commentAsCompanyEnabled?: boolean;
         commentProfileName?: string; // not used for generation but available
         languageAwareEnabled?: boolean;
+        authenticityBoostEnabled?: boolean;
       }>((resolve) => {
         chrome.storage.local.get(
           [
@@ -206,6 +262,7 @@ function addEngageButton(form: HTMLFormElement): void {
             "commentAsCompanyEnabled",
             "commentProfileName",
             "languageAwareEnabled",
+            "authenticityBoostEnabled",
           ],
           (r) => resolve(r as any),
         );
@@ -227,9 +284,33 @@ function addEngageButton(form: HTMLFormElement): void {
         : postContent;
 
       // Generate comment via existing tRPC helper.
+      // Build adjacent comments (top 5 by like+reply) from this post
+      let adjacent: any = "No existing comments";
+      if (settings.authenticityBoostEnabled) {
+        const unlock = lockScrollAtCurrentPosition();
+        try {
+          const extracted = await loadAndExtractComments(postContainer);
+          adjacent = extracted
+            .slice() // copy
+            .sort(
+              (a, b) =>
+                b.likeCount + b.replyCount - (a.likeCount + a.replyCount),
+            )
+            .slice(0, 5)
+            .map(({ commentContent, likeCount, replyCount }) => ({
+              commentContent,
+              likeCount,
+              replyCount,
+            }));
+        } catch {
+        } finally {
+          unlock();
+        }
+      }
       const generated = await generateComment(
         combinedContent,
         effectiveStyleGuide,
+        adjacent,
       );
 
       // Find editable field inside form.
@@ -253,16 +334,31 @@ function addEngageButton(form: HTMLFormElement): void {
         editableField.appendChild(p);
       });
 
-      // Save post URNs to avoid duplicate comments in future automated runs.
+      // Extract URNs now, but defer saving until the actual submit click
       const postUrns = extractPostUrns(postContainer);
-      for (const urn of postUrns) {
-        await saveCommentedPostUrn(urn);
-      }
-
-      // Save content hash to prevent duplicates across different contexts
-      if (hashRes?.hash) {
-        await saveCommentedPostHash(hashRes.hash);
-      }
+      try {
+        const submitBtn = form.querySelector(
+          ".comments-comment-box__submit-button--cr",
+        ) as HTMLButtonElement | null;
+        if (submitBtn) {
+          // Prevent attaching multiple handlers on the same button
+          if (!submitBtn.hasAttribute("data-engage-save-handler")) {
+            submitBtn.setAttribute("data-engage-save-handler", "1");
+            const urnsToSave = [...postUrns];
+            const hashToSave = hashRes?.hash;
+            submitBtn.addEventListener(
+              "click",
+              async () => {
+                try {
+                  for (const u of urnsToSave) await saveCommentedPostUrn(u);
+                  if (hashToSave) await saveCommentedPostHash(hashToSave);
+                } catch {}
+              },
+              { capture: true, once: true },
+            );
+          }
+        }
+      } catch {}
 
       // Dispatch input event so LinkedIn recognises changes.
       const inputEvent = new Event("input", {

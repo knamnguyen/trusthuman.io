@@ -1,11 +1,11 @@
-import type { ProfileData } from "../../content/profile-list/profile-extract-button";
+import type { ProfileData } from "../../content/profile-target-list/profile-extract-button";
 import {
   loadListsFromStorage,
   loadProfileDataFromStorage,
   saveListsToStorage,
   saveProfileDataToStorage,
   STORAGE_KEYS,
-} from "../../content/profile-list/profile-extract-button";
+} from "../../content/profile-target-list/profile-extract-button";
 
 /**
  * Storage Utilities for Options Page

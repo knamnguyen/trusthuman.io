@@ -120,6 +120,8 @@ export default function Popup() {
   const [authorsPending, setAuthorsPending] = useState<string[]>([]);
   const [authorsCommented, setAuthorsCommented] = useState<string[]>([]);
   const [manualApproveEnabled, setManualApproveEnabled] = useState(false);
+  const [authenticityBoostEnabled, setAuthenticityBoostEnabled] =
+    useState(false);
 
   // Determine max posts limit based on plan - handle null case during loading
   const maxPostsLimit =
@@ -282,6 +284,7 @@ export default function Popup() {
         "finishListModeEnabled",
         // Manual approve
         "manualApproveEnabled",
+        "authenticityBoostEnabled",
       ],
       (result) => {
         console.log("Popup: Loading settings from storage:", result);
@@ -388,6 +391,10 @@ export default function Popup() {
 
         if (typeof result.manualApproveEnabled === "boolean") {
           setManualApproveEnabled(result.manualApproveEnabled);
+        }
+
+        if (typeof result.authenticityBoostEnabled === "boolean") {
+          setAuthenticityBoostEnabled(result.authenticityBoostEnabled);
         }
 
         loadTodayComments();
@@ -1051,6 +1058,11 @@ export default function Popup() {
           onManualApproveEnabledChange={(v) => {
             setManualApproveEnabled(v);
             chrome.storage.local.set({ manualApproveEnabled: v });
+          }}
+          authenticityBoostEnabled={authenticityBoostEnabled}
+          onAuthenticityBoostEnabledChange={(v) => {
+            setAuthenticityBoostEnabled(v);
+            chrome.storage.local.set({ authenticityBoostEnabled: v });
           }}
         />
 

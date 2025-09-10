@@ -18,6 +18,7 @@ import normalizeAndHashContent from "../check-duplicate/normalize-and-hash-conte
 import checkFriendsActivity from "../check-friends-activity";
 import extractAuthorInfo from "../extract-author-info";
 import extractBioAuthor from "../extract-bio-author";
+import loadAndExtractComments from "../extract-post-comments";
 import extractPostContent from "../extract-post-content";
 import extractPostTimePromoteState from "../extract-post-time-promote-state";
 import extractPostUrns from "../extract-post-urns";
@@ -58,6 +59,7 @@ export async function runListMode(params: {
   selectedListAuthors: SelectedListAuthors;
   statusPanel?: HTMLDivElement;
   manualApproveEnabled?: boolean;
+  authenticityBoostEnabled?: boolean;
 }): Promise<void> {
   const {
     commentDelay,
@@ -335,9 +337,27 @@ export async function runListMode(params: {
       effectiveStyleGuide = `${LANGUAGE_AWARE_RULE}\n\n${effectiveStyleGuide}`;
     }
     const postAuthorContent = (info?.name || "") + postContent;
+    let adjacent: any = "No existing comments";
+    if (params.authenticityBoostEnabled) {
+      try {
+        const extracted = await loadAndExtractComments(postContainer);
+        adjacent = extracted
+          .slice()
+          .sort(
+            (a, b) => b.likeCount + b.replyCount - (a.likeCount + a.replyCount),
+          )
+          .slice(0, 5)
+          .map(({ commentContent, likeCount, replyCount }) => ({
+            commentContent,
+            likeCount,
+            replyCount,
+          }));
+      } catch {}
+    }
     const comment = await generateComment(
       postAuthorContent,
       effectiveStyleGuide,
+      adjacent,
     );
     if (!comment) {
       authorsPending = authorsPending.filter((n) => n !== author);

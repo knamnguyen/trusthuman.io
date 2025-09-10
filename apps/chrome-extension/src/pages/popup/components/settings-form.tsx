@@ -79,6 +79,8 @@ interface SettingsFormProps {
   // Manual approve (premium)
   manualApproveEnabled: boolean;
   onManualApproveEnabledChange: (value: boolean) => void;
+  authenticityBoostEnabled: boolean;
+  onAuthenticityBoostEnabledChange: (value: boolean) => void;
 }
 
 const FeaturePlaceholder = () => (
@@ -137,6 +139,8 @@ export default function SettingsForm({
   onFinishListModeEnabledChange,
   manualApproveEnabled,
   onManualApproveEnabledChange,
+  authenticityBoostEnabled,
+  onAuthenticityBoostEnabledChange,
 }: SettingsFormProps) {
   // Helper function to determine if features should be disabled
   const isFeatureDisabled = (featureIsPremium: boolean) => {
@@ -256,7 +260,7 @@ export default function SettingsForm({
               className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
             <label className="text-sm font-medium text-gray-700">
-              Enable manual approve
+              Composer manual approve
             </label>
             {shouldShowPremiumBadge(FEATURE_CONFIG.manualApprove.isPremium) && (
               <span className="rounded-full bg-yellow-400 px-2 py-0.5 text-xs font-bold text-yellow-900 shadow-sm">
@@ -265,12 +269,32 @@ export default function SettingsForm({
             )}
           </div>
           <p className="mt-1 text-xs text-gray-500">
-            Opens comment boxes, prefills "Great post, thanks for sharing", and
-            shows a sidebar to review and edit before posting. Works with target
-            list mode. No auto-posting.
+            Opens comment boxes, prefills comment in composer, and shows a
+            sidebar to review and edit before posting. Works with target list
+            mode. No auto-posting.
           </p>
         </div>
       )}
+
+      {/* Authenticity Boost (free) */}
+      <div className="mb-4">
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={authenticityBoostEnabled}
+            onChange={(e) => onAuthenticityBoostEnabledChange(e.target.checked)}
+            disabled={isRunning}
+            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          />
+          <label className="text-sm font-medium text-gray-700">
+            Authenticity Boost
+          </label>
+        </div>
+        <p className="mt-1 text-xs text-gray-500">
+          the intern will look at surrounding context to make sure the comment
+          is authentic to the highest level - will take 2s/cmt longer to run
+        </p>
+      </div>
 
       {isPremiumLoading ? (
         <FeaturePlaceholder />
