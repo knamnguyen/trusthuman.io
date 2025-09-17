@@ -243,11 +243,16 @@ Lastly but most importantly, you must ahere to the style guide below given by th
 
       console.log("Final prompt fed into the ai:", systemPrompt);
 
+      const groundingTool = {
+        googleSearch: {},
+      };
+
       try {
         const response = await ai.models.generateContent({
           model: "gemini-2.5-flash-lite",
           contents: systemPrompt,
           config: {
+            tools: [groundingTool],
             temperature: 1,
             topP: 1,
             thinkingConfig: {
