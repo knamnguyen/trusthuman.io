@@ -1,3 +1,4 @@
+import type { User } from "@clerk/nextjs/server";
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -16,38 +17,6 @@ import {
 import { protectedProcedure, publicProcedure } from "../trpc";
 import { checkPremiumAccess } from "../utils/check-premium-access";
 
-async function upsertClerkUserToDb(
-  db: PrismaClient,
-  user: {
-    firstName: string | null;
-    lastName: string | null;
-    username: string | null;
-    primaryEmailAddress: string;
-    imageUrl: string | null;
-    id: string;
-  },
-) {
-  await db.user.upsert({
-    where: { id: user.id },
-    update: {
-      firstName: user.firstName,
-      lastName: user.lastName,
-      username: user.username,
-      primaryEmailAddress: user.primaryEmailAddress,
-      imageUrl: user.imageUrl,
-      updatedAt: new Date(),
-    },
-    create: {
-      id: user.id,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      username: user.username,
-      primaryEmailAddress: user.primaryEmailAddress,
-      imageUrl: user.imageUrl,
-    },
-  });
-}
-
 export const userRouter = {
   checkAccess: protectedProcedure.query(async ({ ctx }) => {
     const access = await checkPremiumAccess(ctx);
@@ -59,41 +28,9 @@ export const userRouter = {
    * Used by extension to display daily limits
    */
   getDailyCommentCount: protectedProcedure.query(async ({ ctx }) => {
-    const user = await ctx.db.user.findUnique({
-      where: { id: ctx.user.id },
-      select: { dailyAIcomments: true },
-    });
+    const dbUser = await getOrCreateUser(ctx.db, ctx.user);
 
-    if (user !== null) {
-      return user.dailyAIcomments;
-    }
-
-    const primaryEmailAddress = ctx.user.primaryEmailAddress?.emailAddress;
-    if (primaryEmailAddress === undefined) {
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "No clerk email found",
-      });
-    }
-
-    await upsertClerkUserToDb(ctx.db, {
-      ...ctx.user,
-      primaryEmailAddress,
-    });
-    const newUser = await ctx.db.user.findUnique({
-      where: { id: ctx.user.id },
-      select: { dailyAIcomments: true },
-    });
-
-    // technically shouldnt happen but just for type narrowing
-    if (newUser === null) {
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "User not found after upsert",
-      });
-    }
-
-    return newUser.dailyAIcomments;
+    return dbUser.dailyAIcomments;
   }),
 
   create: publicProcedure
@@ -145,42 +82,8 @@ export const userRouter = {
    * Get the current authenticated user
    * This is primarily used by client applications
    */
-  me: protectedProcedure.query(async ({ ctx }) => {
-    // const prismaType = ctx.Prisma;
-
-    const user = await ctx.db.user.findUnique({
-      where: { id: ctx.user.id },
-    });
-
-    if (user !== null) {
-      return user;
-    }
-
-    const primaryEmailAddress = ctx.user.primaryEmailAddress?.emailAddress;
-    if (primaryEmailAddress === undefined) {
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "No clerk email found",
-      });
-    }
-
-    await upsertClerkUserToDb(ctx.db, {
-      ...ctx.user,
-      primaryEmailAddress,
-    });
-    const newUser = await ctx.db.user.findUnique({
-      where: { id: ctx.user.id },
-    });
-
-    // technically shouldnt happen but just for type narrowing
-    if (newUser === null) {
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "User not found after upsert",
-      });
-    }
-
-    return newUser;
+  me: protectedProcedure.query(({ ctx }) => {
+    return getOrCreateUser(ctx.db, ctx.user);
   }),
 
   /**
@@ -204,3 +107,53 @@ export const userRouter = {
   //     }
   //   }),
 } satisfies TRPCRouterRecord;
+
+async function getOrCreateUser(db: PrismaClient, userParams: User) {
+  const dbUser = await db.user.findUnique({
+    where: {
+      id: userParams.id,
+    },
+    select: {
+      accessType: true,
+      dailyAIcomments: true,
+    },
+  });
+  if (dbUser !== null) {
+    return dbUser;
+  }
+
+  const primaryEmailAddress = userParams.primaryEmailAddress?.emailAddress;
+
+  if (primaryEmailAddress === undefined) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "User must have a primary email address",
+    });
+  }
+
+  const newUser = await db.user.upsert({
+    where: { id: userParams.id },
+    update: {
+      firstName: userParams.firstName,
+      lastName: userParams.lastName,
+      username: userParams.username,
+      primaryEmailAddress,
+      imageUrl: userParams.imageUrl,
+      updatedAt: new Date(),
+    },
+    create: {
+      id: userParams.id,
+      firstName: userParams.firstName,
+      lastName: userParams.lastName,
+      username: userParams.username,
+      primaryEmailAddress,
+      imageUrl: userParams.imageUrl,
+    },
+    select: {
+      accessType: true,
+      dailyAIcomments: true,
+    },
+  });
+
+  return newUser;
+}
