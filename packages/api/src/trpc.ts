@@ -9,7 +9,7 @@
 
 import type { User } from "@clerk/nextjs/server";
 import { createClerkClient, verifyToken } from "@clerk/backend";
-import { currentUser } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
@@ -119,17 +119,17 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
       },
     });
   }
-  // Handle Next.js authentication using currentUser()
-  const clerkUser = await currentUser();
 
-  if (clerkUser === null) {
+  const { userId } = await auth();
+
+  if (userId === null) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
       message: "Not authenticated",
     });
   }
 
-  const user = await getOrInsertUser(ctx.db, clerkUser.id, clerkUser);
+  const user = await getOrInsertUser(ctx.db, userId);
 
   return next({
     ctx: {
