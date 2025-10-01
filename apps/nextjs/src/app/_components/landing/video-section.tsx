@@ -22,11 +22,10 @@ export const VideoSection = () => {
                 height="100%"
                 src="https://www.youtube.com/embed/k_SkDlggN1s?si=pPOxmu_Ov-9gQOJK"
                 title="YouTube video player"
-                frameborder="0"
+                style={{ border: "0px" }}
                 allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                referrerpolicy="strict-origin-when-cross-origin"
-                allowfullscreen
-                quality="high"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
               ></iframe>
             </div>
           </div>
