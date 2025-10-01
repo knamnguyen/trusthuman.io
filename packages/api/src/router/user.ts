@@ -2,6 +2,7 @@ import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import type { PrismaClient } from "@sassy/db";
 import {
   UserCreateInputSchema,
   UserUpdateInputSchema,
@@ -15,6 +16,38 @@ import {
 import { protectedProcedure, publicProcedure } from "../trpc";
 import { checkPremiumAccess } from "../utils/check-premium-access";
 
+async function upsertClerkUserToDb(
+  db: PrismaClient,
+  user: {
+    firstName: string | null;
+    lastName: string | null;
+    username: string | null;
+    primaryEmailAddress: string;
+    imageUrl: string | null;
+    id: string;
+  },
+) {
+  await db.user.upsert({
+    where: { id: user.id },
+    update: {
+      firstName: user.firstName,
+      lastName: user.lastName,
+      username: user.username,
+      primaryEmailAddress: user.primaryEmailAddress,
+      imageUrl: user.imageUrl,
+      updatedAt: new Date(),
+    },
+    create: {
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      username: user.username,
+      primaryEmailAddress: user.primaryEmailAddress,
+      imageUrl: user.imageUrl,
+    },
+  });
+}
+
 export const userRouter = {
   checkAccess: protectedProcedure.query(async ({ ctx }) => {
     const access = await checkPremiumAccess(ctx);
@@ -26,59 +59,56 @@ export const userRouter = {
    * Used by extension to display daily limits
    */
   getDailyCommentCount: protectedProcedure.query(async ({ ctx }) => {
-    if (!ctx.user?.id) {
-      throw new TRPCError({
-        code: "UNAUTHORIZED",
-        message: "User ID not found in context",
-      });
+    const user = await ctx.db.user.findUnique({
+      where: { id: ctx.user.id },
+      select: { dailyAIcomments: true },
+    });
+
+    if (user !== null) {
+      return user.dailyAIcomments;
     }
 
-    try {
-      const user = await ctx.db.user.findUnique({
-        where: { id: ctx.user.id },
-        select: { dailyAIcomments: true },
-      });
-
-      if (!user) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "User not found",
-        });
-      }
-
-      return user.dailyAIcomments;
-    } catch (error) {
-      console.error("Error fetching daily comment count:", error);
+    const primaryEmailAddress = ctx.user.primaryEmailAddress?.emailAddress;
+    if (primaryEmailAddress === undefined) {
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to fetch daily comment count",
-        cause: error,
+        message: "No clerk email found",
       });
     }
+
+    await upsertClerkUserToDb(ctx.db, {
+      ...ctx.user,
+      primaryEmailAddress,
+    });
+    const newUser = await ctx.db.user.findUnique({
+      where: { id: ctx.user.id },
+      select: { dailyAIcomments: true },
+    });
+
+    // technically shouldnt happen but just for type narrowing
+    if (newUser === null) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "User not found after upsert",
+      });
+    }
+
+    return newUser.dailyAIcomments;
   }),
 
   create: publicProcedure
     .input(UserCreateInputSchema)
     .mutation(async ({ ctx, input }) => {
-      try {
-        return await ctx.db.user.create({
-          data: {
-            id: input.id,
-            firstName: input.firstName,
-            lastName: input.lastName,
-            primaryEmailAddress: input.primaryEmailAddress,
-            imageUrl: input.imageUrl,
-            clerkUserProperties: input.clerkUserProperties,
-          },
-        });
-      } catch (error) {
-        console.error("Error creating user:", error);
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to create user",
-          cause: error,
-        });
-      }
+      return await ctx.db.user.create({
+        data: {
+          id: input.id,
+          firstName: input.firstName,
+          lastName: input.lastName,
+          primaryEmailAddress: input.primaryEmailAddress,
+          imageUrl: input.imageUrl,
+          clerkUserProperties: input.clerkUserProperties,
+        },
+      });
     }),
 
   /**
@@ -93,19 +123,10 @@ export const userRouter = {
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      try {
-        return await ctx.db.user.update({
-          where: { id: input.id },
-          data: input.data,
-        });
-      } catch (error) {
-        console.error("Error updating user:", error);
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to update user",
-          cause: error,
-        });
-      }
+      return await ctx.db.user.update({
+        where: { id: input.id },
+        data: input.data,
+      });
     }),
 
   /**
@@ -115,18 +136,9 @@ export const userRouter = {
   delete: publicProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      try {
-        return await ctx.db.user.delete({
-          where: { id: input.id },
-        });
-      } catch (error) {
-        console.error("Error deleting user:", error);
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to delete user",
-          cause: error,
-        });
-      }
+      return await ctx.db.user.delete({
+        where: { id: input.id },
+      });
     }),
 
   /**
@@ -134,31 +146,41 @@ export const userRouter = {
    * This is primarily used by client applications
    */
   me: protectedProcedure.query(async ({ ctx }) => {
-    if (!ctx.user) {
-      throw new TRPCError({
-        code: "UNAUTHORIZED",
-        message: "Not authenticated",
-      });
-    }
-
     // const prismaType = ctx.Prisma;
 
-    try {
-      console.log("found user");
-      console.log("user id is: " + ctx.user.id);
-      const user = await ctx.db.user.findUnique({
-        where: { id: ctx.user.id },
-      });
+    const user = await ctx.db.user.findUnique({
+      where: { id: ctx.user.id },
+    });
 
+    if (user !== null) {
       return user;
-    } catch (error) {
-      console.error("Error fetching user:", error);
+    }
+
+    const primaryEmailAddress = ctx.user.primaryEmailAddress?.emailAddress;
+    if (primaryEmailAddress === undefined) {
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to fetch user",
-        cause: error,
+        message: "No clerk email found",
       });
     }
+
+    await upsertClerkUserToDb(ctx.db, {
+      ...ctx.user,
+      primaryEmailAddress,
+    });
+    const newUser = await ctx.db.user.findUnique({
+      where: { id: ctx.user.id },
+    });
+
+    // technically shouldnt happen but just for type narrowing
+    if (newUser === null) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "User not found after upsert",
+      });
+    }
+
+    return newUser;
   }),
 
   /**

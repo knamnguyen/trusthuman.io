@@ -39,7 +39,7 @@ export const createTRPCContext = async (opts: {
   headers: Headers;
 }): Promise<TRPCContext> => {
   const source = opts.headers.get("x-trpc-source");
-  console.log(">>> tRPC Request from", source || "nextjs");
+  console.log(">>> tRPC Request from", source ?? "nextjs");
 
   return {
     db,
@@ -63,6 +63,11 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
       zodError: error.cause instanceof ZodError ? error.cause.flatten() : null,
     },
   }),
+});
+
+// Create Clerk client
+const clerkClient = createClerkClient({
+  secretKey: process.env.CLERK_SECRET_KEY,
 });
 
 /**
@@ -95,11 +100,6 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
     );
 
     try {
-      // Create Clerk client
-      const clerkClient = createClerkClient({
-        secretKey: process.env.CLERK_SECRET_KEY,
-      });
-
       // Check if this is a JWT (3 parts separated by dots) or a session ID
       if (token.split(".").length === 3) {
         // This is a JWT - use verifyToken
@@ -212,6 +212,4 @@ export const publicProcedure = t.procedure;
  *
  * @see https://trpc.io/docs/procedures
  */
-export const protectedProcedure = t.procedure.use(
-  isAuthed,
-) as unknown as typeof t.procedure;
+export const protectedProcedure = t.procedure.use(isAuthed);
