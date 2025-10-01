@@ -19,6 +19,7 @@
     "@google/genai": "^1.5.1",
     "@sassy/api": "workspace:*",
     "@sassy/db": "workspace:*",
+    "@sassy/feature-flags": "workspace:*",
     "@sassy/stripe": "workspace:*",
     "@sassy/ui": "workspace:*",
     "@sassy/validators": "workspace:*",

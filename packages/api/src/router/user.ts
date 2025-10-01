@@ -1,4 +1,5 @@
 import type { TRPCRouterRecord } from "@trpc/server";
+import { authenticator } from "otplib";
 import z from "zod";
 
 import {
@@ -80,23 +81,38 @@ export const userRouter = {
    */
   me: protectedProcedure.query(({ ctx }) => ctx.user),
 
+  verifyTwoFactorSecretKey: protectedProcedure
+    .input(
+      z.object({
+        twoFactorSecretKey: z.string(),
+        otp: z.string(),
+      }),
+    )
+    .mutation(({ input }) => {
+      const correctOtp = authenticator.generate(input.twoFactorSecretKey);
+
+      return {
+        valid: input.otp === correctOtp,
+      };
+    }),
+
   addLinkedInAccount: protectedProcedure
     .input(
       z.object({
-        username: z.string(),
+        email: z.string(),
         password: z.string(),
-        twoFactorySecretKey: z.string(),
+        twoFactorSecretKey: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       const account = await ctx.db.linkedInAccount.create({
         data: {
           userId: ctx.user.id,
-          username: input.username,
+          email: input.email,
           encryptedPassword: await linkedinPasswordEncryption.encrypt(
             input.password,
           ),
-          twoFactorSecretKey: input.twoFactorySecretKey,
+          twoFactorSecretKey: input.twoFactorSecretKey,
         },
         select: {
           id: true,
@@ -111,7 +127,7 @@ export const userRouter = {
       where: { userId: ctx.user.id },
       select: {
         id: true,
-        username: true,
+        email: true,
         createdAt: true,
       },
     }),

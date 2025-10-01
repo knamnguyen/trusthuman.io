@@ -12,7 +12,6 @@ import { Separator } from "@sassy/ui/separator";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -64,12 +63,12 @@ export default function ProfileListRunPage() {
   const onExportCsv = React.useCallback(() => {
     if (!profiles || profiles.length === 0) return;
     const header = ["fullName", "urn", "linkedinUrl", "headline", "profilePic"];
-    const rows = profiles.map((p: any) => [
-      p.fullName ?? "",
-      p.profileUrn ?? "",
-      p.profileUrl ?? "",
-      p.headline ?? "",
-      p.profilePhotoUrl ?? "",
+    const rows = profiles.map((p) => [
+      p.fullName,
+      p.profileUrn,
+      p.profileUrl,
+      p.headline,
+      p.profilePhotoUrl,
     ]);
     const csv = [header, ...rows]
       .map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))
@@ -203,10 +202,10 @@ export default function ProfileListRunPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {(profiles ?? []).map((p: any, idx: number) => (
+                        {(profiles ?? []).map((p, idx: number) => (
                           <TableRow key={idx}>
-                            <TableCell>{p.fullName ?? ""}</TableCell>
-                            <TableCell>{p.profileUrn ?? ""}</TableCell>
+                            <TableCell>{p.fullName}</TableCell>
+                            <TableCell>{p.profileUrn}</TableCell>
                             <TableCell>
                               <a
                                 href={p.profileUrl}
@@ -217,9 +216,10 @@ export default function ProfileListRunPage() {
                                 {p.profileUrl}
                               </a>
                             </TableCell>
-                            <TableCell>{p.headline ?? ""}</TableCell>
+                            <TableCell>{p.headline}</TableCell>
                             <TableCell>
                               {p.profilePhotoUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
                                 <img
                                   src={p.profilePhotoUrl}
                                   alt="avatar"

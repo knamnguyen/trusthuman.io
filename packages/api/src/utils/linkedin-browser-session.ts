@@ -3,7 +3,7 @@ import { Hyperbrowser } from "@hyperbrowser/sdk";
 import { authenticator } from "otplib";
 import { connect } from "puppeteer-core";
 
-import { Logger } from "./commons";
+import type { Logger } from "./commons";
 
 type CreateHyperbrowserSessionParams = NonNullable<
   Parameters<Hyperbrowser["sessions"]["create"]>[0]

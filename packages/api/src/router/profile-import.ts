@@ -226,7 +226,7 @@ export const profileImportRouter = {
       if (run.userId !== ctx.user.id)
         throw new TRPCError({ code: "FORBIDDEN", message: "Access denied" });
       const urls = run.urlsSucceeded;
-      if (urls.length === 0) return [] as const;
+      if (urls.length === 0) return [];
       const profiles = await ctx.db.linkedInProfile.findMany({
         where: { linkedinUrl: { in: urls } },
         select: {

@@ -120,9 +120,9 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
     });
   }
 
-  const { userId } = await auth();
+  const { isAuthenticated, userId } = await auth();
 
-  if (userId === null) {
+  if (!isAuthenticated) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
       message: "Not authenticated",
@@ -171,7 +171,7 @@ async function getUserIdFromClerkToken(token: string) {
   }
 }
 
-async function getOrInsertUser(
+export async function getOrInsertUser(
   db: PrismaClient,
   userId: string,
   clerkUser?: User,
