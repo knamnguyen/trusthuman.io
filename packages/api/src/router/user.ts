@@ -1,7 +1,7 @@
 import type { User } from "@clerk/nextjs/server";
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
-import { z } from "zod";
+import z from "zod";
 
 import type { PrismaClient } from "@sassy/db";
 import {
@@ -86,6 +86,25 @@ export const userRouter = {
     return getOrCreateUser(ctx.db, ctx.user);
   }),
 
+  addLinkedInAccount: protectedProcedure
+    .input(
+      z.object({
+        username: z.string(),
+        password: z.string(),
+        twoFactorySecretKey: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await getOrCreateUser(ctx.db, ctx.user);
+      const account = await ctx.db.linkedInAccount.create({
+        data: {
+          userId: ctx.user.id,
+          username: input.username,
+          encryptedPassword: input.password,
+        },
+      });
+    }),
+
   /**
    * Get a user by ID
    * This is primarily used by client applications
@@ -118,6 +137,7 @@ async function getOrCreateUser(db: PrismaClient, userParams: User) {
       dailyAIcomments: true,
     },
   });
+
   if (dbUser !== null) {
     return dbUser;
   }
