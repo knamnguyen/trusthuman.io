@@ -19,6 +19,11 @@ export type PrismaPromise<T> = $Public.PrismaPromise<T>
  */
 export type User = $Result.DefaultSelection<Prisma.$UserPayload>
 /**
+ * Model LinkedInAccount
+ * 
+ */
+export type LinkedInAccount = $Result.DefaultSelection<Prisma.$LinkedInAccountPayload>
+/**
  * Model ProfileImportRun
  * 
  */
@@ -195,6 +200,16 @@ export class PrismaClient<
     * ```
     */
   get user(): Prisma.UserDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.linkedInAccount`: Exposes CRUD operations for the **LinkedInAccount** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more LinkedInAccounts
+    * const linkedInAccounts = await prisma.linkedInAccount.findMany()
+    * ```
+    */
+  get linkedInAccount(): Prisma.LinkedInAccountDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.profileImportRun`: Exposes CRUD operations for the **ProfileImportRun** model.
@@ -656,6 +671,7 @@ export namespace Prisma {
 
   export const ModelName: {
     User: 'User',
+    LinkedInAccount: 'LinkedInAccount',
     ProfileImportRun: 'ProfileImportRun',
     LinkedInProfile: 'LinkedInProfile'
   };
@@ -676,7 +692,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "profileImportRun" | "linkedInProfile"
+      modelProps: "user" | "linkedInAccount" | "profileImportRun" | "linkedInProfile"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -751,6 +767,80 @@ export namespace Prisma {
           count: {
             args: Prisma.UserCountArgs<ExtArgs>
             result: $Utils.Optional<UserCountAggregateOutputType> | number
+          }
+        }
+      }
+      LinkedInAccount: {
+        payload: Prisma.$LinkedInAccountPayload<ExtArgs>
+        fields: Prisma.LinkedInAccountFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.LinkedInAccountFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LinkedInAccountPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.LinkedInAccountFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LinkedInAccountPayload>
+          }
+          findFirst: {
+            args: Prisma.LinkedInAccountFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LinkedInAccountPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.LinkedInAccountFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LinkedInAccountPayload>
+          }
+          findMany: {
+            args: Prisma.LinkedInAccountFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LinkedInAccountPayload>[]
+          }
+          create: {
+            args: Prisma.LinkedInAccountCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LinkedInAccountPayload>
+          }
+          createMany: {
+            args: Prisma.LinkedInAccountCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.LinkedInAccountCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LinkedInAccountPayload>[]
+          }
+          delete: {
+            args: Prisma.LinkedInAccountDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LinkedInAccountPayload>
+          }
+          update: {
+            args: Prisma.LinkedInAccountUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LinkedInAccountPayload>
+          }
+          deleteMany: {
+            args: Prisma.LinkedInAccountDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.LinkedInAccountUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.LinkedInAccountUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LinkedInAccountPayload>[]
+          }
+          upsert: {
+            args: Prisma.LinkedInAccountUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LinkedInAccountPayload>
+          }
+          aggregate: {
+            args: Prisma.LinkedInAccountAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateLinkedInAccount>
+          }
+          groupBy: {
+            args: Prisma.LinkedInAccountGroupByArgs<ExtArgs>
+            result: $Utils.Optional<LinkedInAccountGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.LinkedInAccountCountArgs<ExtArgs>
+            result: $Utils.Optional<LinkedInAccountCountAggregateOutputType> | number
           }
         }
       }
@@ -991,6 +1081,7 @@ export namespace Prisma {
   }
   export type GlobalOmitConfig = {
     user?: UserOmit
+    linkedInAccount?: LinkedInAccountOmit
     profileImportRun?: ProfileImportRunOmit
     linkedInProfile?: LinkedInProfileOmit
   }
@@ -1088,10 +1179,12 @@ export namespace Prisma {
 
   export type UserCountOutputType = {
     profileImportRuns: number
+    linkedInAccounts: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     profileImportRuns?: boolean | UserCountOutputTypeCountProfileImportRunsArgs
+    linkedInAccounts?: boolean | UserCountOutputTypeCountLinkedInAccountsArgs
   }
 
   // Custom InputTypes
@@ -1110,6 +1203,13 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountProfileImportRunsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: ProfileImportRunWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountLinkedInAccountsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: LinkedInAccountWhereInput
   }
 
 
@@ -1372,6 +1472,7 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     profileImportRuns?: boolean | User$profileImportRunsArgs<ExtArgs>
+    linkedInAccounts?: boolean | User$linkedInAccountsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -1426,6 +1527,7 @@ export namespace Prisma {
   export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "firstName" | "lastName" | "username" | "primaryEmailAddress" | "imageUrl" | "clerkUserProperties" | "stripeCustomerId" | "accessType" | "stripeUserProperties" | "dailyAIcomments" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     profileImportRuns?: boolean | User$profileImportRunsArgs<ExtArgs>
+    linkedInAccounts?: boolean | User$linkedInAccountsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -1435,6 +1537,7 @@ export namespace Prisma {
     name: "User"
     objects: {
       profileImportRuns: Prisma.$ProfileImportRunPayload<ExtArgs>[]
+      linkedInAccounts: Prisma.$LinkedInAccountPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -1845,6 +1948,7 @@ export namespace Prisma {
   export interface Prisma__UserClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     profileImportRuns<T extends User$profileImportRunsArgs<ExtArgs> = {}>(args?: Subset<T, User$profileImportRunsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProfileImportRunPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    linkedInAccounts<T extends User$linkedInAccountsArgs<ExtArgs> = {}>(args?: Subset<T, User$linkedInAccountsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LinkedInAccountPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2299,6 +2403,30 @@ export namespace Prisma {
   }
 
   /**
+   * User.linkedInAccounts
+   */
+  export type User$linkedInAccountsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LinkedInAccount
+     */
+    select?: LinkedInAccountSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LinkedInAccount
+     */
+    omit?: LinkedInAccountOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LinkedInAccountInclude<ExtArgs> | null
+    where?: LinkedInAccountWhereInput
+    orderBy?: LinkedInAccountOrderByWithRelationInput | LinkedInAccountOrderByWithRelationInput[]
+    cursor?: LinkedInAccountWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: LinkedInAccountScalarFieldEnum | LinkedInAccountScalarFieldEnum[]
+  }
+
+  /**
    * User without action
    */
   export type UserDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -2314,6 +2442,1090 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: UserInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model LinkedInAccount
+   */
+
+  export type AggregateLinkedInAccount = {
+    _count: LinkedInAccountCountAggregateOutputType | null
+    _min: LinkedInAccountMinAggregateOutputType | null
+    _max: LinkedInAccountMaxAggregateOutputType | null
+  }
+
+  export type LinkedInAccountMinAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    username: string | null
+    encryptedPassword: string | null
+    twoFactorySecretKey: string | null
+    createdAt: Date | null
+    staticIp: string | null
+  }
+
+  export type LinkedInAccountMaxAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    username: string | null
+    encryptedPassword: string | null
+    twoFactorySecretKey: string | null
+    createdAt: Date | null
+    staticIp: string | null
+  }
+
+  export type LinkedInAccountCountAggregateOutputType = {
+    id: number
+    userId: number
+    username: number
+    encryptedPassword: number
+    twoFactorySecretKey: number
+    createdAt: number
+    staticIp: number
+    _all: number
+  }
+
+
+  export type LinkedInAccountMinAggregateInputType = {
+    id?: true
+    userId?: true
+    username?: true
+    encryptedPassword?: true
+    twoFactorySecretKey?: true
+    createdAt?: true
+    staticIp?: true
+  }
+
+  export type LinkedInAccountMaxAggregateInputType = {
+    id?: true
+    userId?: true
+    username?: true
+    encryptedPassword?: true
+    twoFactorySecretKey?: true
+    createdAt?: true
+    staticIp?: true
+  }
+
+  export type LinkedInAccountCountAggregateInputType = {
+    id?: true
+    userId?: true
+    username?: true
+    encryptedPassword?: true
+    twoFactorySecretKey?: true
+    createdAt?: true
+    staticIp?: true
+    _all?: true
+  }
+
+  export type LinkedInAccountAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which LinkedInAccount to aggregate.
+     */
+    where?: LinkedInAccountWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LinkedInAccounts to fetch.
+     */
+    orderBy?: LinkedInAccountOrderByWithRelationInput | LinkedInAccountOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: LinkedInAccountWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LinkedInAccounts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LinkedInAccounts.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned LinkedInAccounts
+    **/
+    _count?: true | LinkedInAccountCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: LinkedInAccountMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: LinkedInAccountMaxAggregateInputType
+  }
+
+  export type GetLinkedInAccountAggregateType<T extends LinkedInAccountAggregateArgs> = {
+        [P in keyof T & keyof AggregateLinkedInAccount]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateLinkedInAccount[P]>
+      : GetScalarType<T[P], AggregateLinkedInAccount[P]>
+  }
+
+
+
+
+  export type LinkedInAccountGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: LinkedInAccountWhereInput
+    orderBy?: LinkedInAccountOrderByWithAggregationInput | LinkedInAccountOrderByWithAggregationInput[]
+    by: LinkedInAccountScalarFieldEnum[] | LinkedInAccountScalarFieldEnum
+    having?: LinkedInAccountScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: LinkedInAccountCountAggregateInputType | true
+    _min?: LinkedInAccountMinAggregateInputType
+    _max?: LinkedInAccountMaxAggregateInputType
+  }
+
+  export type LinkedInAccountGroupByOutputType = {
+    id: string
+    userId: string
+    username: string
+    encryptedPassword: string
+    twoFactorySecretKey: string
+    createdAt: Date
+    staticIp: string | null
+    _count: LinkedInAccountCountAggregateOutputType | null
+    _min: LinkedInAccountMinAggregateOutputType | null
+    _max: LinkedInAccountMaxAggregateOutputType | null
+  }
+
+  type GetLinkedInAccountGroupByPayload<T extends LinkedInAccountGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<LinkedInAccountGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof LinkedInAccountGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], LinkedInAccountGroupByOutputType[P]>
+            : GetScalarType<T[P], LinkedInAccountGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type LinkedInAccountSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    username?: boolean
+    encryptedPassword?: boolean
+    twoFactorySecretKey?: boolean
+    createdAt?: boolean
+    staticIp?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["linkedInAccount"]>
+
+  export type LinkedInAccountSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    username?: boolean
+    encryptedPassword?: boolean
+    twoFactorySecretKey?: boolean
+    createdAt?: boolean
+    staticIp?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["linkedInAccount"]>
+
+  export type LinkedInAccountSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    username?: boolean
+    encryptedPassword?: boolean
+    twoFactorySecretKey?: boolean
+    createdAt?: boolean
+    staticIp?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["linkedInAccount"]>
+
+  export type LinkedInAccountSelectScalar = {
+    id?: boolean
+    userId?: boolean
+    username?: boolean
+    encryptedPassword?: boolean
+    twoFactorySecretKey?: boolean
+    createdAt?: boolean
+    staticIp?: boolean
+  }
+
+  export type LinkedInAccountOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "username" | "encryptedPassword" | "twoFactorySecretKey" | "createdAt" | "staticIp", ExtArgs["result"]["linkedInAccount"]>
+  export type LinkedInAccountInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type LinkedInAccountIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type LinkedInAccountIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $LinkedInAccountPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "LinkedInAccount"
+    objects: {
+      user: Prisma.$UserPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      userId: string
+      username: string
+      encryptedPassword: string
+      twoFactorySecretKey: string
+      createdAt: Date
+      staticIp: string | null
+    }, ExtArgs["result"]["linkedInAccount"]>
+    composites: {}
+  }
+
+  type LinkedInAccountGetPayload<S extends boolean | null | undefined | LinkedInAccountDefaultArgs> = $Result.GetResult<Prisma.$LinkedInAccountPayload, S>
+
+  type LinkedInAccountCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<LinkedInAccountFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: LinkedInAccountCountAggregateInputType | true
+    }
+
+  export interface LinkedInAccountDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['LinkedInAccount'], meta: { name: 'LinkedInAccount' } }
+    /**
+     * Find zero or one LinkedInAccount that matches the filter.
+     * @param {LinkedInAccountFindUniqueArgs} args - Arguments to find a LinkedInAccount
+     * @example
+     * // Get one LinkedInAccount
+     * const linkedInAccount = await prisma.linkedInAccount.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends LinkedInAccountFindUniqueArgs>(args: SelectSubset<T, LinkedInAccountFindUniqueArgs<ExtArgs>>): Prisma__LinkedInAccountClient<$Result.GetResult<Prisma.$LinkedInAccountPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one LinkedInAccount that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {LinkedInAccountFindUniqueOrThrowArgs} args - Arguments to find a LinkedInAccount
+     * @example
+     * // Get one LinkedInAccount
+     * const linkedInAccount = await prisma.linkedInAccount.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends LinkedInAccountFindUniqueOrThrowArgs>(args: SelectSubset<T, LinkedInAccountFindUniqueOrThrowArgs<ExtArgs>>): Prisma__LinkedInAccountClient<$Result.GetResult<Prisma.$LinkedInAccountPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first LinkedInAccount that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LinkedInAccountFindFirstArgs} args - Arguments to find a LinkedInAccount
+     * @example
+     * // Get one LinkedInAccount
+     * const linkedInAccount = await prisma.linkedInAccount.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends LinkedInAccountFindFirstArgs>(args?: SelectSubset<T, LinkedInAccountFindFirstArgs<ExtArgs>>): Prisma__LinkedInAccountClient<$Result.GetResult<Prisma.$LinkedInAccountPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first LinkedInAccount that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LinkedInAccountFindFirstOrThrowArgs} args - Arguments to find a LinkedInAccount
+     * @example
+     * // Get one LinkedInAccount
+     * const linkedInAccount = await prisma.linkedInAccount.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends LinkedInAccountFindFirstOrThrowArgs>(args?: SelectSubset<T, LinkedInAccountFindFirstOrThrowArgs<ExtArgs>>): Prisma__LinkedInAccountClient<$Result.GetResult<Prisma.$LinkedInAccountPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more LinkedInAccounts that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LinkedInAccountFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all LinkedInAccounts
+     * const linkedInAccounts = await prisma.linkedInAccount.findMany()
+     * 
+     * // Get first 10 LinkedInAccounts
+     * const linkedInAccounts = await prisma.linkedInAccount.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const linkedInAccountWithIdOnly = await prisma.linkedInAccount.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends LinkedInAccountFindManyArgs>(args?: SelectSubset<T, LinkedInAccountFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LinkedInAccountPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a LinkedInAccount.
+     * @param {LinkedInAccountCreateArgs} args - Arguments to create a LinkedInAccount.
+     * @example
+     * // Create one LinkedInAccount
+     * const LinkedInAccount = await prisma.linkedInAccount.create({
+     *   data: {
+     *     // ... data to create a LinkedInAccount
+     *   }
+     * })
+     * 
+     */
+    create<T extends LinkedInAccountCreateArgs>(args: SelectSubset<T, LinkedInAccountCreateArgs<ExtArgs>>): Prisma__LinkedInAccountClient<$Result.GetResult<Prisma.$LinkedInAccountPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many LinkedInAccounts.
+     * @param {LinkedInAccountCreateManyArgs} args - Arguments to create many LinkedInAccounts.
+     * @example
+     * // Create many LinkedInAccounts
+     * const linkedInAccount = await prisma.linkedInAccount.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends LinkedInAccountCreateManyArgs>(args?: SelectSubset<T, LinkedInAccountCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many LinkedInAccounts and returns the data saved in the database.
+     * @param {LinkedInAccountCreateManyAndReturnArgs} args - Arguments to create many LinkedInAccounts.
+     * @example
+     * // Create many LinkedInAccounts
+     * const linkedInAccount = await prisma.linkedInAccount.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many LinkedInAccounts and only return the `id`
+     * const linkedInAccountWithIdOnly = await prisma.linkedInAccount.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends LinkedInAccountCreateManyAndReturnArgs>(args?: SelectSubset<T, LinkedInAccountCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LinkedInAccountPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a LinkedInAccount.
+     * @param {LinkedInAccountDeleteArgs} args - Arguments to delete one LinkedInAccount.
+     * @example
+     * // Delete one LinkedInAccount
+     * const LinkedInAccount = await prisma.linkedInAccount.delete({
+     *   where: {
+     *     // ... filter to delete one LinkedInAccount
+     *   }
+     * })
+     * 
+     */
+    delete<T extends LinkedInAccountDeleteArgs>(args: SelectSubset<T, LinkedInAccountDeleteArgs<ExtArgs>>): Prisma__LinkedInAccountClient<$Result.GetResult<Prisma.$LinkedInAccountPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one LinkedInAccount.
+     * @param {LinkedInAccountUpdateArgs} args - Arguments to update one LinkedInAccount.
+     * @example
+     * // Update one LinkedInAccount
+     * const linkedInAccount = await prisma.linkedInAccount.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends LinkedInAccountUpdateArgs>(args: SelectSubset<T, LinkedInAccountUpdateArgs<ExtArgs>>): Prisma__LinkedInAccountClient<$Result.GetResult<Prisma.$LinkedInAccountPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more LinkedInAccounts.
+     * @param {LinkedInAccountDeleteManyArgs} args - Arguments to filter LinkedInAccounts to delete.
+     * @example
+     * // Delete a few LinkedInAccounts
+     * const { count } = await prisma.linkedInAccount.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends LinkedInAccountDeleteManyArgs>(args?: SelectSubset<T, LinkedInAccountDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more LinkedInAccounts.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LinkedInAccountUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many LinkedInAccounts
+     * const linkedInAccount = await prisma.linkedInAccount.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends LinkedInAccountUpdateManyArgs>(args: SelectSubset<T, LinkedInAccountUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more LinkedInAccounts and returns the data updated in the database.
+     * @param {LinkedInAccountUpdateManyAndReturnArgs} args - Arguments to update many LinkedInAccounts.
+     * @example
+     * // Update many LinkedInAccounts
+     * const linkedInAccount = await prisma.linkedInAccount.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more LinkedInAccounts and only return the `id`
+     * const linkedInAccountWithIdOnly = await prisma.linkedInAccount.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends LinkedInAccountUpdateManyAndReturnArgs>(args: SelectSubset<T, LinkedInAccountUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LinkedInAccountPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one LinkedInAccount.
+     * @param {LinkedInAccountUpsertArgs} args - Arguments to update or create a LinkedInAccount.
+     * @example
+     * // Update or create a LinkedInAccount
+     * const linkedInAccount = await prisma.linkedInAccount.upsert({
+     *   create: {
+     *     // ... data to create a LinkedInAccount
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the LinkedInAccount we want to update
+     *   }
+     * })
+     */
+    upsert<T extends LinkedInAccountUpsertArgs>(args: SelectSubset<T, LinkedInAccountUpsertArgs<ExtArgs>>): Prisma__LinkedInAccountClient<$Result.GetResult<Prisma.$LinkedInAccountPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of LinkedInAccounts.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LinkedInAccountCountArgs} args - Arguments to filter LinkedInAccounts to count.
+     * @example
+     * // Count the number of LinkedInAccounts
+     * const count = await prisma.linkedInAccount.count({
+     *   where: {
+     *     // ... the filter for the LinkedInAccounts we want to count
+     *   }
+     * })
+    **/
+    count<T extends LinkedInAccountCountArgs>(
+      args?: Subset<T, LinkedInAccountCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], LinkedInAccountCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a LinkedInAccount.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LinkedInAccountAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends LinkedInAccountAggregateArgs>(args: Subset<T, LinkedInAccountAggregateArgs>): Prisma.PrismaPromise<GetLinkedInAccountAggregateType<T>>
+
+    /**
+     * Group by LinkedInAccount.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LinkedInAccountGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends LinkedInAccountGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: LinkedInAccountGroupByArgs['orderBy'] }
+        : { orderBy?: LinkedInAccountGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, LinkedInAccountGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetLinkedInAccountGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the LinkedInAccount model
+   */
+  readonly fields: LinkedInAccountFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for LinkedInAccount.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__LinkedInAccountClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the LinkedInAccount model
+   */
+  interface LinkedInAccountFieldRefs {
+    readonly id: FieldRef<"LinkedInAccount", 'String'>
+    readonly userId: FieldRef<"LinkedInAccount", 'String'>
+    readonly username: FieldRef<"LinkedInAccount", 'String'>
+    readonly encryptedPassword: FieldRef<"LinkedInAccount", 'String'>
+    readonly twoFactorySecretKey: FieldRef<"LinkedInAccount", 'String'>
+    readonly createdAt: FieldRef<"LinkedInAccount", 'DateTime'>
+    readonly staticIp: FieldRef<"LinkedInAccount", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * LinkedInAccount findUnique
+   */
+  export type LinkedInAccountFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LinkedInAccount
+     */
+    select?: LinkedInAccountSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LinkedInAccount
+     */
+    omit?: LinkedInAccountOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LinkedInAccountInclude<ExtArgs> | null
+    /**
+     * Filter, which LinkedInAccount to fetch.
+     */
+    where: LinkedInAccountWhereUniqueInput
+  }
+
+  /**
+   * LinkedInAccount findUniqueOrThrow
+   */
+  export type LinkedInAccountFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LinkedInAccount
+     */
+    select?: LinkedInAccountSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LinkedInAccount
+     */
+    omit?: LinkedInAccountOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LinkedInAccountInclude<ExtArgs> | null
+    /**
+     * Filter, which LinkedInAccount to fetch.
+     */
+    where: LinkedInAccountWhereUniqueInput
+  }
+
+  /**
+   * LinkedInAccount findFirst
+   */
+  export type LinkedInAccountFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LinkedInAccount
+     */
+    select?: LinkedInAccountSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LinkedInAccount
+     */
+    omit?: LinkedInAccountOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LinkedInAccountInclude<ExtArgs> | null
+    /**
+     * Filter, which LinkedInAccount to fetch.
+     */
+    where?: LinkedInAccountWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LinkedInAccounts to fetch.
+     */
+    orderBy?: LinkedInAccountOrderByWithRelationInput | LinkedInAccountOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for LinkedInAccounts.
+     */
+    cursor?: LinkedInAccountWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LinkedInAccounts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LinkedInAccounts.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of LinkedInAccounts.
+     */
+    distinct?: LinkedInAccountScalarFieldEnum | LinkedInAccountScalarFieldEnum[]
+  }
+
+  /**
+   * LinkedInAccount findFirstOrThrow
+   */
+  export type LinkedInAccountFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LinkedInAccount
+     */
+    select?: LinkedInAccountSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LinkedInAccount
+     */
+    omit?: LinkedInAccountOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LinkedInAccountInclude<ExtArgs> | null
+    /**
+     * Filter, which LinkedInAccount to fetch.
+     */
+    where?: LinkedInAccountWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LinkedInAccounts to fetch.
+     */
+    orderBy?: LinkedInAccountOrderByWithRelationInput | LinkedInAccountOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for LinkedInAccounts.
+     */
+    cursor?: LinkedInAccountWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LinkedInAccounts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LinkedInAccounts.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of LinkedInAccounts.
+     */
+    distinct?: LinkedInAccountScalarFieldEnum | LinkedInAccountScalarFieldEnum[]
+  }
+
+  /**
+   * LinkedInAccount findMany
+   */
+  export type LinkedInAccountFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LinkedInAccount
+     */
+    select?: LinkedInAccountSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LinkedInAccount
+     */
+    omit?: LinkedInAccountOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LinkedInAccountInclude<ExtArgs> | null
+    /**
+     * Filter, which LinkedInAccounts to fetch.
+     */
+    where?: LinkedInAccountWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LinkedInAccounts to fetch.
+     */
+    orderBy?: LinkedInAccountOrderByWithRelationInput | LinkedInAccountOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing LinkedInAccounts.
+     */
+    cursor?: LinkedInAccountWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LinkedInAccounts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LinkedInAccounts.
+     */
+    skip?: number
+    distinct?: LinkedInAccountScalarFieldEnum | LinkedInAccountScalarFieldEnum[]
+  }
+
+  /**
+   * LinkedInAccount create
+   */
+  export type LinkedInAccountCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LinkedInAccount
+     */
+    select?: LinkedInAccountSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LinkedInAccount
+     */
+    omit?: LinkedInAccountOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LinkedInAccountInclude<ExtArgs> | null
+    /**
+     * The data needed to create a LinkedInAccount.
+     */
+    data: XOR<LinkedInAccountCreateInput, LinkedInAccountUncheckedCreateInput>
+  }
+
+  /**
+   * LinkedInAccount createMany
+   */
+  export type LinkedInAccountCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many LinkedInAccounts.
+     */
+    data: LinkedInAccountCreateManyInput | LinkedInAccountCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * LinkedInAccount createManyAndReturn
+   */
+  export type LinkedInAccountCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LinkedInAccount
+     */
+    select?: LinkedInAccountSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the LinkedInAccount
+     */
+    omit?: LinkedInAccountOmit<ExtArgs> | null
+    /**
+     * The data used to create many LinkedInAccounts.
+     */
+    data: LinkedInAccountCreateManyInput | LinkedInAccountCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LinkedInAccountIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * LinkedInAccount update
+   */
+  export type LinkedInAccountUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LinkedInAccount
+     */
+    select?: LinkedInAccountSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LinkedInAccount
+     */
+    omit?: LinkedInAccountOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LinkedInAccountInclude<ExtArgs> | null
+    /**
+     * The data needed to update a LinkedInAccount.
+     */
+    data: XOR<LinkedInAccountUpdateInput, LinkedInAccountUncheckedUpdateInput>
+    /**
+     * Choose, which LinkedInAccount to update.
+     */
+    where: LinkedInAccountWhereUniqueInput
+  }
+
+  /**
+   * LinkedInAccount updateMany
+   */
+  export type LinkedInAccountUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update LinkedInAccounts.
+     */
+    data: XOR<LinkedInAccountUpdateManyMutationInput, LinkedInAccountUncheckedUpdateManyInput>
+    /**
+     * Filter which LinkedInAccounts to update
+     */
+    where?: LinkedInAccountWhereInput
+    /**
+     * Limit how many LinkedInAccounts to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * LinkedInAccount updateManyAndReturn
+   */
+  export type LinkedInAccountUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LinkedInAccount
+     */
+    select?: LinkedInAccountSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the LinkedInAccount
+     */
+    omit?: LinkedInAccountOmit<ExtArgs> | null
+    /**
+     * The data used to update LinkedInAccounts.
+     */
+    data: XOR<LinkedInAccountUpdateManyMutationInput, LinkedInAccountUncheckedUpdateManyInput>
+    /**
+     * Filter which LinkedInAccounts to update
+     */
+    where?: LinkedInAccountWhereInput
+    /**
+     * Limit how many LinkedInAccounts to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LinkedInAccountIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * LinkedInAccount upsert
+   */
+  export type LinkedInAccountUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LinkedInAccount
+     */
+    select?: LinkedInAccountSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LinkedInAccount
+     */
+    omit?: LinkedInAccountOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LinkedInAccountInclude<ExtArgs> | null
+    /**
+     * The filter to search for the LinkedInAccount to update in case it exists.
+     */
+    where: LinkedInAccountWhereUniqueInput
+    /**
+     * In case the LinkedInAccount found by the `where` argument doesn't exist, create a new LinkedInAccount with this data.
+     */
+    create: XOR<LinkedInAccountCreateInput, LinkedInAccountUncheckedCreateInput>
+    /**
+     * In case the LinkedInAccount was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<LinkedInAccountUpdateInput, LinkedInAccountUncheckedUpdateInput>
+  }
+
+  /**
+   * LinkedInAccount delete
+   */
+  export type LinkedInAccountDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LinkedInAccount
+     */
+    select?: LinkedInAccountSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LinkedInAccount
+     */
+    omit?: LinkedInAccountOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LinkedInAccountInclude<ExtArgs> | null
+    /**
+     * Filter which LinkedInAccount to delete.
+     */
+    where: LinkedInAccountWhereUniqueInput
+  }
+
+  /**
+   * LinkedInAccount deleteMany
+   */
+  export type LinkedInAccountDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which LinkedInAccounts to delete
+     */
+    where?: LinkedInAccountWhereInput
+    /**
+     * Limit how many LinkedInAccounts to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * LinkedInAccount without action
+   */
+  export type LinkedInAccountDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LinkedInAccount
+     */
+    select?: LinkedInAccountSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LinkedInAccount
+     */
+    omit?: LinkedInAccountOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LinkedInAccountInclude<ExtArgs> | null
   }
 
 
@@ -5003,6 +6215,19 @@ export namespace Prisma {
   export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
 
 
+  export const LinkedInAccountScalarFieldEnum: {
+    id: 'id',
+    userId: 'userId',
+    username: 'username',
+    encryptedPassword: 'encryptedPassword',
+    twoFactorySecretKey: 'twoFactorySecretKey',
+    createdAt: 'createdAt',
+    staticIp: 'staticIp'
+  };
+
+  export type LinkedInAccountScalarFieldEnum = (typeof LinkedInAccountScalarFieldEnum)[keyof typeof LinkedInAccountScalarFieldEnum]
+
+
   export const ProfileImportRunScalarFieldEnum: {
     id: 'id',
     userId: 'userId',
@@ -5247,6 +6472,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     profileImportRuns?: ProfileImportRunListRelationFilter
+    linkedInAccounts?: LinkedInAccountListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
@@ -5264,6 +6490,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     profileImportRuns?: ProfileImportRunOrderByRelationAggregateInput
+    linkedInAccounts?: LinkedInAccountOrderByRelationAggregateInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -5284,6 +6511,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     profileImportRuns?: ProfileImportRunListRelationFilter
+    linkedInAccounts?: LinkedInAccountListRelationFilter
   }, "id" | "username" | "primaryEmailAddress" | "stripeCustomerId">
 
   export type UserOrderByWithAggregationInput = {
@@ -5324,6 +6552,71 @@ export namespace Prisma {
     dailyAIcomments?: IntWithAggregatesFilter<"User"> | number
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
+  }
+
+  export type LinkedInAccountWhereInput = {
+    AND?: LinkedInAccountWhereInput | LinkedInAccountWhereInput[]
+    OR?: LinkedInAccountWhereInput[]
+    NOT?: LinkedInAccountWhereInput | LinkedInAccountWhereInput[]
+    id?: StringFilter<"LinkedInAccount"> | string
+    userId?: StringFilter<"LinkedInAccount"> | string
+    username?: StringFilter<"LinkedInAccount"> | string
+    encryptedPassword?: StringFilter<"LinkedInAccount"> | string
+    twoFactorySecretKey?: StringFilter<"LinkedInAccount"> | string
+    createdAt?: DateTimeFilter<"LinkedInAccount"> | Date | string
+    staticIp?: StringNullableFilter<"LinkedInAccount"> | string | null
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }
+
+  export type LinkedInAccountOrderByWithRelationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    username?: SortOrder
+    encryptedPassword?: SortOrder
+    twoFactorySecretKey?: SortOrder
+    createdAt?: SortOrder
+    staticIp?: SortOrderInput | SortOrder
+    user?: UserOrderByWithRelationInput
+  }
+
+  export type LinkedInAccountWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: LinkedInAccountWhereInput | LinkedInAccountWhereInput[]
+    OR?: LinkedInAccountWhereInput[]
+    NOT?: LinkedInAccountWhereInput | LinkedInAccountWhereInput[]
+    userId?: StringFilter<"LinkedInAccount"> | string
+    username?: StringFilter<"LinkedInAccount"> | string
+    encryptedPassword?: StringFilter<"LinkedInAccount"> | string
+    twoFactorySecretKey?: StringFilter<"LinkedInAccount"> | string
+    createdAt?: DateTimeFilter<"LinkedInAccount"> | Date | string
+    staticIp?: StringNullableFilter<"LinkedInAccount"> | string | null
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }, "id">
+
+  export type LinkedInAccountOrderByWithAggregationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    username?: SortOrder
+    encryptedPassword?: SortOrder
+    twoFactorySecretKey?: SortOrder
+    createdAt?: SortOrder
+    staticIp?: SortOrderInput | SortOrder
+    _count?: LinkedInAccountCountOrderByAggregateInput
+    _max?: LinkedInAccountMaxOrderByAggregateInput
+    _min?: LinkedInAccountMinOrderByAggregateInput
+  }
+
+  export type LinkedInAccountScalarWhereWithAggregatesInput = {
+    AND?: LinkedInAccountScalarWhereWithAggregatesInput | LinkedInAccountScalarWhereWithAggregatesInput[]
+    OR?: LinkedInAccountScalarWhereWithAggregatesInput[]
+    NOT?: LinkedInAccountScalarWhereWithAggregatesInput | LinkedInAccountScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"LinkedInAccount"> | string
+    userId?: StringWithAggregatesFilter<"LinkedInAccount"> | string
+    username?: StringWithAggregatesFilter<"LinkedInAccount"> | string
+    encryptedPassword?: StringWithAggregatesFilter<"LinkedInAccount"> | string
+    twoFactorySecretKey?: StringWithAggregatesFilter<"LinkedInAccount"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"LinkedInAccount"> | Date | string
+    staticIp?: StringNullableWithAggregatesFilter<"LinkedInAccount"> | string | null
   }
 
   export type ProfileImportRunWhereInput = {
@@ -5700,6 +6993,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     profileImportRuns?: ProfileImportRunCreateNestedManyWithoutUserInput
+    linkedInAccounts?: LinkedInAccountCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -5717,6 +7011,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     profileImportRuns?: ProfileImportRunUncheckedCreateNestedManyWithoutUserInput
+    linkedInAccounts?: LinkedInAccountUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserUpdateInput = {
@@ -5734,6 +7029,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     profileImportRuns?: ProfileImportRunUpdateManyWithoutUserNestedInput
+    linkedInAccounts?: LinkedInAccountUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -5751,6 +7047,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     profileImportRuns?: ProfileImportRunUncheckedUpdateManyWithoutUserNestedInput
+    linkedInAccounts?: LinkedInAccountUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -5799,6 +7096,75 @@ export namespace Prisma {
     dailyAIcomments?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type LinkedInAccountCreateInput = {
+    id?: string
+    username: string
+    encryptedPassword: string
+    twoFactorySecretKey: string
+    createdAt?: Date | string
+    staticIp?: string | null
+    user: UserCreateNestedOneWithoutLinkedInAccountsInput
+  }
+
+  export type LinkedInAccountUncheckedCreateInput = {
+    id?: string
+    userId: string
+    username: string
+    encryptedPassword: string
+    twoFactorySecretKey: string
+    createdAt?: Date | string
+    staticIp?: string | null
+  }
+
+  export type LinkedInAccountUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    username?: StringFieldUpdateOperationsInput | string
+    encryptedPassword?: StringFieldUpdateOperationsInput | string
+    twoFactorySecretKey?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    staticIp?: NullableStringFieldUpdateOperationsInput | string | null
+    user?: UserUpdateOneRequiredWithoutLinkedInAccountsNestedInput
+  }
+
+  export type LinkedInAccountUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    username?: StringFieldUpdateOperationsInput | string
+    encryptedPassword?: StringFieldUpdateOperationsInput | string
+    twoFactorySecretKey?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    staticIp?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type LinkedInAccountCreateManyInput = {
+    id?: string
+    userId: string
+    username: string
+    encryptedPassword: string
+    twoFactorySecretKey: string
+    createdAt?: Date | string
+    staticIp?: string | null
+  }
+
+  export type LinkedInAccountUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    username?: StringFieldUpdateOperationsInput | string
+    encryptedPassword?: StringFieldUpdateOperationsInput | string
+    twoFactorySecretKey?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    staticIp?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type LinkedInAccountUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    username?: StringFieldUpdateOperationsInput | string
+    encryptedPassword?: StringFieldUpdateOperationsInput | string
+    twoFactorySecretKey?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    staticIp?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type ProfileImportRunCreateInput = {
@@ -6350,12 +7716,22 @@ export namespace Prisma {
     none?: ProfileImportRunWhereInput
   }
 
+  export type LinkedInAccountListRelationFilter = {
+    every?: LinkedInAccountWhereInput
+    some?: LinkedInAccountWhereInput
+    none?: LinkedInAccountWhereInput
+  }
+
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
   }
 
   export type ProfileImportRunOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type LinkedInAccountOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -6513,6 +7889,41 @@ export namespace Prisma {
     _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
+  export type UserScalarRelationFilter = {
+    is?: UserWhereInput
+    isNot?: UserWhereInput
+  }
+
+  export type LinkedInAccountCountOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    username?: SortOrder
+    encryptedPassword?: SortOrder
+    twoFactorySecretKey?: SortOrder
+    createdAt?: SortOrder
+    staticIp?: SortOrder
+  }
+
+  export type LinkedInAccountMaxOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    username?: SortOrder
+    encryptedPassword?: SortOrder
+    twoFactorySecretKey?: SortOrder
+    createdAt?: SortOrder
+    staticIp?: SortOrder
+  }
+
+  export type LinkedInAccountMinOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    username?: SortOrder
+    encryptedPassword?: SortOrder
+    twoFactorySecretKey?: SortOrder
+    createdAt?: SortOrder
+    staticIp?: SortOrder
+  }
+
   export type StringNullableListFilter<$PrismaModel = never> = {
     equals?: string[] | ListStringFieldRefInput<$PrismaModel> | null
     has?: string | StringFieldRefInput<$PrismaModel> | null
@@ -6526,11 +7937,6 @@ export namespace Prisma {
     in?: $Enums.ImportStatus[] | ListEnumImportStatusFieldRefInput<$PrismaModel>
     notIn?: $Enums.ImportStatus[] | ListEnumImportStatusFieldRefInput<$PrismaModel>
     not?: NestedEnumImportStatusFilter<$PrismaModel> | $Enums.ImportStatus
-  }
-
-  export type UserScalarRelationFilter = {
-    is?: UserWhereInput
-    isNot?: UserWhereInput
   }
 
   export type ProfileImportRunCountOrderByAggregateInput = {
@@ -6781,11 +8187,25 @@ export namespace Prisma {
     connect?: ProfileImportRunWhereUniqueInput | ProfileImportRunWhereUniqueInput[]
   }
 
+  export type LinkedInAccountCreateNestedManyWithoutUserInput = {
+    create?: XOR<LinkedInAccountCreateWithoutUserInput, LinkedInAccountUncheckedCreateWithoutUserInput> | LinkedInAccountCreateWithoutUserInput[] | LinkedInAccountUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: LinkedInAccountCreateOrConnectWithoutUserInput | LinkedInAccountCreateOrConnectWithoutUserInput[]
+    createMany?: LinkedInAccountCreateManyUserInputEnvelope
+    connect?: LinkedInAccountWhereUniqueInput | LinkedInAccountWhereUniqueInput[]
+  }
+
   export type ProfileImportRunUncheckedCreateNestedManyWithoutUserInput = {
     create?: XOR<ProfileImportRunCreateWithoutUserInput, ProfileImportRunUncheckedCreateWithoutUserInput> | ProfileImportRunCreateWithoutUserInput[] | ProfileImportRunUncheckedCreateWithoutUserInput[]
     connectOrCreate?: ProfileImportRunCreateOrConnectWithoutUserInput | ProfileImportRunCreateOrConnectWithoutUserInput[]
     createMany?: ProfileImportRunCreateManyUserInputEnvelope
     connect?: ProfileImportRunWhereUniqueInput | ProfileImportRunWhereUniqueInput[]
+  }
+
+  export type LinkedInAccountUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<LinkedInAccountCreateWithoutUserInput, LinkedInAccountUncheckedCreateWithoutUserInput> | LinkedInAccountCreateWithoutUserInput[] | LinkedInAccountUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: LinkedInAccountCreateOrConnectWithoutUserInput | LinkedInAccountCreateOrConnectWithoutUserInput[]
+    createMany?: LinkedInAccountCreateManyUserInputEnvelope
+    connect?: LinkedInAccountWhereUniqueInput | LinkedInAccountWhereUniqueInput[]
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -6826,6 +8246,20 @@ export namespace Prisma {
     deleteMany?: ProfileImportRunScalarWhereInput | ProfileImportRunScalarWhereInput[]
   }
 
+  export type LinkedInAccountUpdateManyWithoutUserNestedInput = {
+    create?: XOR<LinkedInAccountCreateWithoutUserInput, LinkedInAccountUncheckedCreateWithoutUserInput> | LinkedInAccountCreateWithoutUserInput[] | LinkedInAccountUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: LinkedInAccountCreateOrConnectWithoutUserInput | LinkedInAccountCreateOrConnectWithoutUserInput[]
+    upsert?: LinkedInAccountUpsertWithWhereUniqueWithoutUserInput | LinkedInAccountUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: LinkedInAccountCreateManyUserInputEnvelope
+    set?: LinkedInAccountWhereUniqueInput | LinkedInAccountWhereUniqueInput[]
+    disconnect?: LinkedInAccountWhereUniqueInput | LinkedInAccountWhereUniqueInput[]
+    delete?: LinkedInAccountWhereUniqueInput | LinkedInAccountWhereUniqueInput[]
+    connect?: LinkedInAccountWhereUniqueInput | LinkedInAccountWhereUniqueInput[]
+    update?: LinkedInAccountUpdateWithWhereUniqueWithoutUserInput | LinkedInAccountUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: LinkedInAccountUpdateManyWithWhereWithoutUserInput | LinkedInAccountUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: LinkedInAccountScalarWhereInput | LinkedInAccountScalarWhereInput[]
+  }
+
   export type ProfileImportRunUncheckedUpdateManyWithoutUserNestedInput = {
     create?: XOR<ProfileImportRunCreateWithoutUserInput, ProfileImportRunUncheckedCreateWithoutUserInput> | ProfileImportRunCreateWithoutUserInput[] | ProfileImportRunUncheckedCreateWithoutUserInput[]
     connectOrCreate?: ProfileImportRunCreateOrConnectWithoutUserInput | ProfileImportRunCreateOrConnectWithoutUserInput[]
@@ -6838,6 +8272,34 @@ export namespace Prisma {
     update?: ProfileImportRunUpdateWithWhereUniqueWithoutUserInput | ProfileImportRunUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: ProfileImportRunUpdateManyWithWhereWithoutUserInput | ProfileImportRunUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: ProfileImportRunScalarWhereInput | ProfileImportRunScalarWhereInput[]
+  }
+
+  export type LinkedInAccountUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<LinkedInAccountCreateWithoutUserInput, LinkedInAccountUncheckedCreateWithoutUserInput> | LinkedInAccountCreateWithoutUserInput[] | LinkedInAccountUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: LinkedInAccountCreateOrConnectWithoutUserInput | LinkedInAccountCreateOrConnectWithoutUserInput[]
+    upsert?: LinkedInAccountUpsertWithWhereUniqueWithoutUserInput | LinkedInAccountUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: LinkedInAccountCreateManyUserInputEnvelope
+    set?: LinkedInAccountWhereUniqueInput | LinkedInAccountWhereUniqueInput[]
+    disconnect?: LinkedInAccountWhereUniqueInput | LinkedInAccountWhereUniqueInput[]
+    delete?: LinkedInAccountWhereUniqueInput | LinkedInAccountWhereUniqueInput[]
+    connect?: LinkedInAccountWhereUniqueInput | LinkedInAccountWhereUniqueInput[]
+    update?: LinkedInAccountUpdateWithWhereUniqueWithoutUserInput | LinkedInAccountUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: LinkedInAccountUpdateManyWithWhereWithoutUserInput | LinkedInAccountUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: LinkedInAccountScalarWhereInput | LinkedInAccountScalarWhereInput[]
+  }
+
+  export type UserCreateNestedOneWithoutLinkedInAccountsInput = {
+    create?: XOR<UserCreateWithoutLinkedInAccountsInput, UserUncheckedCreateWithoutLinkedInAccountsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutLinkedInAccountsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type UserUpdateOneRequiredWithoutLinkedInAccountsNestedInput = {
+    create?: XOR<UserCreateWithoutLinkedInAccountsInput, UserUncheckedCreateWithoutLinkedInAccountsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutLinkedInAccountsInput
+    upsert?: UserUpsertWithoutLinkedInAccountsInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutLinkedInAccountsInput, UserUpdateWithoutLinkedInAccountsInput>, UserUncheckedUpdateWithoutLinkedInAccountsInput>
   }
 
   export type ProfileImportRunCreateurlsInput = {
@@ -7184,6 +8646,34 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type LinkedInAccountCreateWithoutUserInput = {
+    id?: string
+    username: string
+    encryptedPassword: string
+    twoFactorySecretKey: string
+    createdAt?: Date | string
+    staticIp?: string | null
+  }
+
+  export type LinkedInAccountUncheckedCreateWithoutUserInput = {
+    id?: string
+    username: string
+    encryptedPassword: string
+    twoFactorySecretKey: string
+    createdAt?: Date | string
+    staticIp?: string | null
+  }
+
+  export type LinkedInAccountCreateOrConnectWithoutUserInput = {
+    where: LinkedInAccountWhereUniqueInput
+    create: XOR<LinkedInAccountCreateWithoutUserInput, LinkedInAccountUncheckedCreateWithoutUserInput>
+  }
+
+  export type LinkedInAccountCreateManyUserInputEnvelope = {
+    data: LinkedInAccountCreateManyUserInput | LinkedInAccountCreateManyUserInput[]
+    skipDuplicates?: boolean
+  }
+
   export type ProfileImportRunUpsertWithWhereUniqueWithoutUserInput = {
     where: ProfileImportRunWhereUniqueInput
     update: XOR<ProfileImportRunUpdateWithoutUserInput, ProfileImportRunUncheckedUpdateWithoutUserInput>
@@ -7214,6 +8704,119 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"ProfileImportRun"> | Date | string
   }
 
+  export type LinkedInAccountUpsertWithWhereUniqueWithoutUserInput = {
+    where: LinkedInAccountWhereUniqueInput
+    update: XOR<LinkedInAccountUpdateWithoutUserInput, LinkedInAccountUncheckedUpdateWithoutUserInput>
+    create: XOR<LinkedInAccountCreateWithoutUserInput, LinkedInAccountUncheckedCreateWithoutUserInput>
+  }
+
+  export type LinkedInAccountUpdateWithWhereUniqueWithoutUserInput = {
+    where: LinkedInAccountWhereUniqueInput
+    data: XOR<LinkedInAccountUpdateWithoutUserInput, LinkedInAccountUncheckedUpdateWithoutUserInput>
+  }
+
+  export type LinkedInAccountUpdateManyWithWhereWithoutUserInput = {
+    where: LinkedInAccountScalarWhereInput
+    data: XOR<LinkedInAccountUpdateManyMutationInput, LinkedInAccountUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type LinkedInAccountScalarWhereInput = {
+    AND?: LinkedInAccountScalarWhereInput | LinkedInAccountScalarWhereInput[]
+    OR?: LinkedInAccountScalarWhereInput[]
+    NOT?: LinkedInAccountScalarWhereInput | LinkedInAccountScalarWhereInput[]
+    id?: StringFilter<"LinkedInAccount"> | string
+    userId?: StringFilter<"LinkedInAccount"> | string
+    username?: StringFilter<"LinkedInAccount"> | string
+    encryptedPassword?: StringFilter<"LinkedInAccount"> | string
+    twoFactorySecretKey?: StringFilter<"LinkedInAccount"> | string
+    createdAt?: DateTimeFilter<"LinkedInAccount"> | Date | string
+    staticIp?: StringNullableFilter<"LinkedInAccount"> | string | null
+  }
+
+  export type UserCreateWithoutLinkedInAccountsInput = {
+    id: string
+    firstName?: string | null
+    lastName?: string | null
+    username?: string | null
+    primaryEmailAddress: string
+    imageUrl?: string | null
+    clerkUserProperties?: NullableJsonNullValueInput | InputJsonValue
+    stripeCustomerId?: string | null
+    accessType?: $Enums.AccessType
+    stripeUserProperties?: NullableJsonNullValueInput | InputJsonValue
+    dailyAIcomments?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    profileImportRuns?: ProfileImportRunCreateNestedManyWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutLinkedInAccountsInput = {
+    id: string
+    firstName?: string | null
+    lastName?: string | null
+    username?: string | null
+    primaryEmailAddress: string
+    imageUrl?: string | null
+    clerkUserProperties?: NullableJsonNullValueInput | InputJsonValue
+    stripeCustomerId?: string | null
+    accessType?: $Enums.AccessType
+    stripeUserProperties?: NullableJsonNullValueInput | InputJsonValue
+    dailyAIcomments?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    profileImportRuns?: ProfileImportRunUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutLinkedInAccountsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutLinkedInAccountsInput, UserUncheckedCreateWithoutLinkedInAccountsInput>
+  }
+
+  export type UserUpsertWithoutLinkedInAccountsInput = {
+    update: XOR<UserUpdateWithoutLinkedInAccountsInput, UserUncheckedUpdateWithoutLinkedInAccountsInput>
+    create: XOR<UserCreateWithoutLinkedInAccountsInput, UserUncheckedCreateWithoutLinkedInAccountsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutLinkedInAccountsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutLinkedInAccountsInput, UserUncheckedUpdateWithoutLinkedInAccountsInput>
+  }
+
+  export type UserUpdateWithoutLinkedInAccountsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
+    username?: NullableStringFieldUpdateOperationsInput | string | null
+    primaryEmailAddress?: StringFieldUpdateOperationsInput | string
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    clerkUserProperties?: NullableJsonNullValueInput | InputJsonValue
+    stripeCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
+    accessType?: EnumAccessTypeFieldUpdateOperationsInput | $Enums.AccessType
+    stripeUserProperties?: NullableJsonNullValueInput | InputJsonValue
+    dailyAIcomments?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    profileImportRuns?: ProfileImportRunUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutLinkedInAccountsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
+    username?: NullableStringFieldUpdateOperationsInput | string | null
+    primaryEmailAddress?: StringFieldUpdateOperationsInput | string
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    clerkUserProperties?: NullableJsonNullValueInput | InputJsonValue
+    stripeCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
+    accessType?: EnumAccessTypeFieldUpdateOperationsInput | $Enums.AccessType
+    stripeUserProperties?: NullableJsonNullValueInput | InputJsonValue
+    dailyAIcomments?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    profileImportRuns?: ProfileImportRunUncheckedUpdateManyWithoutUserNestedInput
+  }
+
   export type UserCreateWithoutProfileImportRunsInput = {
     id: string
     firstName?: string | null
@@ -7228,6 +8831,7 @@ export namespace Prisma {
     dailyAIcomments?: number
     createdAt?: Date | string
     updatedAt?: Date | string
+    linkedInAccounts?: LinkedInAccountCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutProfileImportRunsInput = {
@@ -7244,6 +8848,7 @@ export namespace Prisma {
     dailyAIcomments?: number
     createdAt?: Date | string
     updatedAt?: Date | string
+    linkedInAccounts?: LinkedInAccountUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutProfileImportRunsInput = {
@@ -7276,6 +8881,7 @@ export namespace Prisma {
     dailyAIcomments?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    linkedInAccounts?: LinkedInAccountUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutProfileImportRunsInput = {
@@ -7292,6 +8898,7 @@ export namespace Prisma {
     dailyAIcomments?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    linkedInAccounts?: LinkedInAccountUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type ProfileImportRunCreateManyUserInput = {
@@ -7302,6 +8909,15 @@ export namespace Prisma {
     urlsFailed?: ProfileImportRunCreateurlsFailedInput | string[]
     createdAt?: Date | string
     updatedAt?: Date | string
+  }
+
+  export type LinkedInAccountCreateManyUserInput = {
+    id?: string
+    username: string
+    encryptedPassword: string
+    twoFactorySecretKey: string
+    createdAt?: Date | string
+    staticIp?: string | null
   }
 
   export type ProfileImportRunUpdateWithoutUserInput = {
@@ -7332,6 +8948,33 @@ export namespace Prisma {
     urlsFailed?: ProfileImportRunUpdateurlsFailedInput | string[]
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type LinkedInAccountUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    username?: StringFieldUpdateOperationsInput | string
+    encryptedPassword?: StringFieldUpdateOperationsInput | string
+    twoFactorySecretKey?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    staticIp?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type LinkedInAccountUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    username?: StringFieldUpdateOperationsInput | string
+    encryptedPassword?: StringFieldUpdateOperationsInput | string
+    twoFactorySecretKey?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    staticIp?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type LinkedInAccountUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    username?: StringFieldUpdateOperationsInput | string
+    encryptedPassword?: StringFieldUpdateOperationsInput | string
+    twoFactorySecretKey?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    staticIp?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
 

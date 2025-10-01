@@ -40,6 +40,18 @@ model User {
   updatedAt            DateTime   @updatedAt
 
   profileImportRuns ProfileImportRun[]
+  linkedInAccounts  LinkedInAccount[]
+}
+
+model LinkedInAccount {
+  id                  String   @id @default(uuid())
+  user                User     @relation(fields: [userId], references: [id])
+  userId              String
+  username            String
+  encryptedPassword   String
+  twoFactorySecretKey String
+  createdAt           DateTime @default(now())
+  staticIp            String?
 }
 
 enum AccessType {

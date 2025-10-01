@@ -58,3 +58,5 @@ dist/
 
 # db
 ../generated/prisma
+
+packages/db/generated

@@ -136,6 +136,16 @@ exports.Prisma.UserScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.LinkedInAccountScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  username: 'username',
+  encryptedPassword: 'encryptedPassword',
+  twoFactorySecretKey: 'twoFactorySecretKey',
+  createdAt: 'createdAt',
+  staticIp: 'staticIp'
+};
+
 exports.Prisma.ProfileImportRunScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -242,6 +252,7 @@ exports.ImportStatus = exports.$Enums.ImportStatus = {
 
 exports.Prisma.ModelName = {
   User: 'User',
+  LinkedInAccount: 'LinkedInAccount',
   ProfileImportRun: 'ProfileImportRun',
   LinkedInProfile: 'LinkedInProfile'
 };
