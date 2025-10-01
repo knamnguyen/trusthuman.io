@@ -78,7 +78,7 @@ export const userRouter = {
    * Get the current authenticated user
    * This is primarily used by client applications
    */
-  me: protectedProcedure.query(({ ctx }) => ctx.db.user),
+  me: protectedProcedure.query(({ ctx }) => ctx.user),
 
   addLinkedInAccount: protectedProcedure
     .input(
