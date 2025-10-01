@@ -3,6 +3,8 @@ import { Hyperbrowser } from "@hyperbrowser/sdk";
 import { authenticator } from "otplib";
 import { connect } from "puppeteer-core";
 
+import { Logger } from "./commons";
+
 type CreateHyperbrowserSessionParams = NonNullable<
   Parameters<Hyperbrowser["sessions"]["create"]>[0]
 >;
@@ -25,12 +27,6 @@ export async function createBrowserSession(
   });
 
   return browser;
-}
-
-interface Logger {
-  info: (message: string) => void;
-  error: (message: string) => void;
-  warn: (message: string) => void;
 }
 
 export class LinkedInBrowserSession {
