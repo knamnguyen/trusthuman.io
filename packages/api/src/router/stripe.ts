@@ -1,7 +1,6 @@
 // packages/api/src/router/stripe.ts
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
-import { z } from "zod";
 
 import { StripeService } from "@sassy/stripe";
 import {
@@ -42,7 +41,6 @@ export const stripeRouter = {
   createCheckout: protectedProcedure
     .input(createCheckoutSchema)
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.user) throw new Error("User not authenticated");
       //if user already has lifetime subscription, don't allow config or checkout
       const access = await checkAccessType(ctx);
       if (access === "MONTHLY" || access === "WEEKLY" || access === "YEARLY")
@@ -51,13 +49,12 @@ export const stripeRouter = {
         );
 
       const userId = ctx.user.id;
-      const email = ctx.user.emailAddresses[0]?.emailAddress;
 
       // Create checkout session with Stripe
       const checkoutUrl = await stripeService.createCheckoutSession(
         userId, // Clerk user ID
         input.purchaseType,
-        email,
+        ctx.user.primaryEmailAddress,
       );
       return checkoutUrl;
     }),
@@ -70,9 +67,7 @@ export const stripeRouter = {
   createCustomerPortal: protectedProcedure
     .input(createCustomerPortalSchema)
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.user) throw new Error("User not authenticated");
       //if user already has lifetime subscription, don't allow config or checkout
-      const access = await checkAccessType(ctx);
       const userId = ctx.user.id;
 
       // Get origin for redirect URL if not provided
@@ -96,7 +91,6 @@ export const stripeRouter = {
     }),
 
   checkAccess: protectedProcedure.query(async ({ ctx }) => {
-    if (!ctx.user) throw new Error("User not authenticated");
     const access = await checkAccessType(ctx);
 
     if (access === "FREE") return { hasAccess: false, accessType: "FREE" };

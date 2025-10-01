@@ -23,11 +23,9 @@ export const profileImportRouter = {
       }
 
       // one active run max: check for PENDING or RUNNING
-      const userId = ctx.user?.id;
-      if (!userId) throw new TRPCError({ code: "UNAUTHORIZED" });
       const active = await ctx.db.profileImportRun.findFirst({
         where: {
-          userId,
+          userId: ctx.user.id,
           status: { in: [ImportStatus.NOT_STARTED, ImportStatus.RUNNING] },
         },
         select: { id: true },
@@ -41,7 +39,7 @@ export const profileImportRouter = {
 
       const run = await ctx.db.profileImportRun.create({
         data: {
-          userId,
+          userId: ctx.user.id,
           urls: input.urls,
         },
         select: { id: true },
@@ -63,13 +61,10 @@ export const profileImportRouter = {
         });
       }
 
-      const userId = ctx.user?.id;
-      if (!userId) throw new TRPCError({ code: "UNAUTHORIZED" });
-
       // Create a run record immediately (no 100 limit)
       const run = await ctx.db.profileImportRun.create({
         data: {
-          userId,
+          userId: ctx.user.id,
           urls: input.urls,
           status: ImportStatus.NOT_STARTED,
         },
@@ -109,10 +104,8 @@ export const profileImportRouter = {
     }),
 
   listRuns: protectedProcedure.query(async ({ ctx }) => {
-    const userId = ctx.user?.id;
-    if (!userId) throw new TRPCError({ code: "UNAUTHORIZED" });
     const runs = await ctx.db.profileImportRun.findMany({
-      where: { userId },
+      where: { userId: ctx.user.id },
       orderBy: { createdAt: "desc" },
       select: {
         id: true,
@@ -166,7 +159,7 @@ export const profileImportRouter = {
       if (!run) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Run not found" });
       }
-      if (run.userId !== (ctx.user?.id ?? "")) {
+      if (run.userId !== ctx.user.id) {
         throw new TRPCError({ code: "FORBIDDEN", message: "Access denied" });
       }
       return {
@@ -186,7 +179,7 @@ export const profileImportRouter = {
       });
       if (!run)
         throw new TRPCError({ code: "NOT_FOUND", message: "Run not found" });
-      if (run.userId !== (ctx.user?.id ?? ""))
+      if (run.userId !== ctx.user.id)
         throw new TRPCError({ code: "FORBIDDEN", message: "Access denied" });
       if (run.status === "FINISHED")
         return { id: input.id, stopped: false } as const;
@@ -215,7 +208,7 @@ export const profileImportRouter = {
       if (!run) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Run not found" });
       }
-      if (run.userId !== (ctx.user?.id ?? "")) {
+      if (run.userId !== ctx.user.id) {
         throw new TRPCError({ code: "FORBIDDEN", message: "Access denied" });
       }
       return run;
@@ -230,7 +223,7 @@ export const profileImportRouter = {
       });
       if (!run)
         throw new TRPCError({ code: "NOT_FOUND", message: "Run not found" });
-      if (run.userId !== (ctx.user?.id ?? ""))
+      if (run.userId !== ctx.user.id)
         throw new TRPCError({ code: "FORBIDDEN", message: "Access denied" });
       const urls = run.urlsSucceeded;
       if (urls.length === 0) return [] as const;
@@ -245,11 +238,11 @@ export const profileImportRouter = {
         },
       });
       return profiles.map((p) => ({
-        profilePhotoUrl: p.profilePic ?? undefined,
+        profilePhotoUrl: p.profilePic,
         profileUrl: p.linkedinUrl,
-        fullName: p.fullName ?? undefined,
-        headline: p.headline ?? undefined,
-        profileUrn: p.urn ?? undefined,
+        fullName: p.fullName,
+        headline: p.headline,
+        profileUrn: p.urn,
       }));
     }),
 } satisfies TRPCRouterRecord;
