@@ -1,9 +1,6 @@
-import type { User } from "@clerk/nextjs/server";
 import type { TRPCRouterRecord } from "@trpc/server";
-import { TRPCError } from "@trpc/server";
 import z from "zod";
 
-import type { PrismaClient } from "@sassy/db";
 import {
   UserCreateInputSchema,
   UserUpdateInputSchema,
@@ -16,6 +13,7 @@ import {
 
 import { protectedProcedure, publicProcedure } from "../trpc";
 import { checkPremiumAccess } from "../utils/check-premium-access";
+import { linkedinPasswordEncryption } from "../utils/encryption";
 
 export const userRouter = {
   checkAccess: protectedProcedure.query(async ({ ctx }) => {
@@ -27,11 +25,9 @@ export const userRouter = {
    * Get the current user's daily AI comment count
    * Used by extension to display daily limits
    */
-  getDailyCommentCount: protectedProcedure.query(async ({ ctx }) => {
-    const dbUser = await getOrCreateUser(ctx.db, ctx.user);
-
-    return dbUser.dailyAIcomments;
-  }),
+  getDailyCommentCount: protectedProcedure.query(
+    ({ ctx }) => ctx.user.dailyAIcomments,
+  ),
 
   create: publicProcedure
     .input(UserCreateInputSchema)
@@ -82,9 +78,7 @@ export const userRouter = {
    * Get the current authenticated user
    * This is primarily used by client applications
    */
-  me: protectedProcedure.query(({ ctx }) => {
-    return getOrCreateUser(ctx.db, ctx.user);
-  }),
+  me: protectedProcedure.query(({ ctx }) => ctx.db.user),
 
   addLinkedInAccount: protectedProcedure
     .input(
@@ -95,15 +89,33 @@ export const userRouter = {
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      await getOrCreateUser(ctx.db, ctx.user);
       const account = await ctx.db.linkedInAccount.create({
         data: {
           userId: ctx.user.id,
           username: input.username,
-          encryptedPassword: input.password,
+          encryptedPassword: await linkedinPasswordEncryption.encrypt(
+            input.password,
+          ),
+          twoFactorSecretKey: input.twoFactorySecretKey,
+        },
+        select: {
+          id: true,
         },
       });
+
+      return account.id;
     }),
+
+  listLinkedInAccounts: protectedProcedure.query(({ ctx }) =>
+    ctx.db.linkedInAccount.findMany({
+      where: { userId: ctx.user.id },
+      select: {
+        id: true,
+        username: true,
+        createdAt: true,
+      },
+    }),
+  ),
 
   /**
    * Get a user by ID
@@ -126,54 +138,3 @@ export const userRouter = {
   //     }
   //   }),
 } satisfies TRPCRouterRecord;
-
-async function getOrCreateUser(db: PrismaClient, userParams: User) {
-  const dbUser = await db.user.findUnique({
-    where: {
-      id: userParams.id,
-    },
-    select: {
-      accessType: true,
-      dailyAIcomments: true,
-    },
-  });
-
-  if (dbUser !== null) {
-    return dbUser;
-  }
-
-  const primaryEmailAddress = userParams.primaryEmailAddress?.emailAddress;
-
-  if (primaryEmailAddress === undefined) {
-    throw new TRPCError({
-      code: "BAD_REQUEST",
-      message: "User must have a primary email address",
-    });
-  }
-
-  const newUser = await db.user.upsert({
-    where: { id: userParams.id },
-    update: {
-      firstName: userParams.firstName,
-      lastName: userParams.lastName,
-      username: userParams.username,
-      primaryEmailAddress,
-      imageUrl: userParams.imageUrl,
-      updatedAt: new Date(),
-    },
-    create: {
-      id: userParams.id,
-      firstName: userParams.firstName,
-      lastName: userParams.lastName,
-      username: userParams.username,
-      primaryEmailAddress,
-      imageUrl: userParams.imageUrl,
-    },
-    select: {
-      accessType: true,
-      dailyAIcomments: true,
-    },
-  });
-
-  return newUser;
-}
