@@ -29,7 +29,7 @@ model User {
   firstName            String?
   lastName             String?
   username             String?    @unique
-  primaryEmailAddress  String    @unique
+  primaryEmailAddress  String     @unique
   imageUrl             String?
   clerkUserProperties  Json?
   stripeCustomerId     String?    @unique
@@ -39,7 +39,19 @@ model User {
   createdAt            DateTime   @default(now())
   updatedAt            DateTime   @updatedAt
 
-  profileImportRuns    ProfileImportRun[]
+  profileImportRuns ProfileImportRun[]
+  linkedInAccounts  LinkedInAccount[]
+}
+
+model LinkedInAccount {
+  id                  String   @id @default(uuid())
+  user                User     @relation(fields: [userId], references: [id])
+  userId              String
+  username            String
+  encryptedPassword   String
+  twoFactorySecretKey String
+  createdAt           DateTime @default(now())
+  staticIp            String?
 }
 
 enum AccessType {
@@ -56,24 +68,24 @@ enum ImportStatus {
 }
 
 model ProfileImportRun {
-  id        String   @id @default(uuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  urls      String[]
-  status    ImportStatus @default(NOT_STARTED)
-  urlsSucceeded String[] @default([])
-  urlsFailed    String[] @default([])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String       @id @default(uuid())
+  userId        String
+  user          User         @relation(fields: [userId], references: [id])
+  urls          String[]
+  status        ImportStatus @default(NOT_STARTED)
+  urlsSucceeded String[]     @default([])
+  urlsFailed    String[]     @default([])
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 }
 
 model LinkedInProfile {
-  id                      String   @id @default(uuid())                // Unique identifier
-  linkedinUrl             String                                      // Required
-  fullName                String                                      // Required
-  headline                String                                      // Required
-  urn                     String   @unique                            // Required, globally unique
-  profilePic              String                                      // Required
+  id          String @id @default(uuid()) // Unique identifier
+  linkedinUrl String // Required
+  fullName    String // Required
+  headline    String // Required
+  urn         String @unique // Required, globally unique
+  profilePic  String // Required
 
   firstName               String?
   lastName                String?
@@ -122,6 +134,6 @@ model LinkedInProfile {
   interests               Json?
   recommendations         Json?
 
-  createdAt               DateTime @default(now())
-  updatedAt               DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
