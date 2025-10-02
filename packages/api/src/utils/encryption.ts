@@ -1,15 +1,15 @@
 import type { Logger } from "./commons";
 
-export class Encryption {
+export class Cryptography {
   private encoder = new TextEncoder();
   private decoder = new TextDecoder();
   private SALT_LENGTH = 16; // Length of the salt in bytes
   private IV_LENGTH = 12; // Length of the IV in bytes for AES-GCM
+  private logger: Logger;
 
-  constructor(
-    private readonly secret: string,
-    private readonly logger: Logger,
-  ) {}
+  constructor(logger?: Logger) {
+    this.logger = logger ?? console;
+  }
 
   private async deriveKey(secret: string, salt: Uint8Array) {
     const keyMaterial = await crypto.subtle.importKey(
@@ -34,10 +34,10 @@ export class Encryption {
     );
   }
 
-  public async encrypt(content: string) {
+  public async encrypt(content: string, secret: string) {
     const salt = crypto.getRandomValues(new Uint8Array(this.SALT_LENGTH));
     const iv = crypto.getRandomValues(new Uint8Array(this.IV_LENGTH)); // AES-GCM standard IV length
-    const key = await this.deriveKey(this.secret, salt);
+    const key = await this.deriveKey(secret, salt);
     const encrypted = await crypto.subtle.encrypt(
       {
         name: "AES-GCM",
@@ -57,7 +57,7 @@ export class Encryption {
     return Buffer.from(combined).toString("base64");
   }
 
-  public async decrypt(encrypted: string) {
+  public async decrypt(encrypted: string, secret: string) {
     const combined = new Uint8Array(Buffer.from(encrypted, "base64"));
     const salt = combined.slice(0, this.SALT_LENGTH);
     const iv = combined.slice(
@@ -66,7 +66,7 @@ export class Encryption {
     );
     const data = combined.slice(this.SALT_LENGTH + this.IV_LENGTH);
 
-    const key = await this.deriveKey(this.secret, salt);
+    const key = await this.deriveKey(secret, salt);
 
     try {
       const decrypted = await crypto.subtle.decrypt(
@@ -88,11 +88,4 @@ export class Encryption {
   }
 }
 
-if (process.env.LINKEDIN_PASSWORD_SECRET_KEY === undefined) {
-  throw new Error("LINKEDIN_PASSWORD_SECRET_KEY is not defined");
-}
-
-export const linkedinPasswordEncryption = new Encryption(
-  process.env.LINKEDIN_PASSWORD_SECRET_KEY,
-  console,
-);
+export const cryptography = new Cryptography();

@@ -1,10 +1,10 @@
 import { describe, expect, test } from "bun:test";
 
-import { Encryption } from "./encryption";
+import { Cryptography } from "./encryption";
 
 describe("Encryption", () => {
   const secret = "123";
-  const encryption = new Encryption(secret, console);
+  const encryption = new Cryptography(secret, console);
 
   test("encrypt and decrypt", async () => {
     const text = "hello";

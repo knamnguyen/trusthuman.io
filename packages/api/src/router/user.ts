@@ -14,7 +14,8 @@ import {
 
 import { protectedProcedure, publicProcedure } from "../trpc";
 import { checkPremiumAccess } from "../utils/check-premium-access";
-import { linkedinPasswordEncryption } from "../utils/encryption";
+import { cryptography } from "../utils/encryption";
+import { env } from "../utils/env";
 
 export const userRouter = {
   checkAccess: protectedProcedure.query(async ({ ctx }) => {
@@ -105,14 +106,20 @@ export const userRouter = {
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const [encryptedPassword, encryptedTwoFASecretKey] = await Promise.all([
+        cryptography.encrypt(input.password, env.LINKEDIN_PASSWORD_SECRET_KEY),
+        cryptography.encrypt(
+          input.twoFactorSecretKey,
+          env.LINKEDIN_TWO_FA_SECRET_KEY,
+        ),
+      ]);
+
       const account = await ctx.db.linkedInAccount.create({
         data: {
           userId: ctx.user.id,
           email: input.email,
-          encryptedPassword: await linkedinPasswordEncryption.encrypt(
-            input.password,
-          ),
-          twoFactorSecretKey: input.twoFactorSecretKey,
+          encryptedPassword,
+          twoFactorSecretKey: encryptedTwoFASecretKey,
         },
         select: {
           id: true,
@@ -122,16 +129,24 @@ export const userRouter = {
       return account.id;
     }),
 
-  listLinkedInAccounts: protectedProcedure.query(({ ctx }) =>
-    ctx.db.linkedInAccount.findMany({
-      where: { userId: ctx.user.id },
-      select: {
-        id: true,
-        email: true,
-        createdAt: true,
-      },
-    }),
-  ),
+  listLinkedInAccounts: protectedProcedure
+    .input(
+      z.object({
+        cursor: z.string().nullish(),
+      }),
+    )
+    .query(({ ctx, input }) =>
+      ctx.db.linkedInAccount.findMany({
+        where: { userId: ctx.user.id, id: { gt: input.cursor ?? undefined } },
+        select: {
+          id: true,
+          email: true,
+          createdAt: true,
+        },
+        take: 20,
+        orderBy: { id: "asc" },
+      }),
+    ),
 
   /**
    * Get a user by ID
