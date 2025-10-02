@@ -52,7 +52,8 @@ model LinkedInAccount {
   active             Boolean  @default(true)
   twoFactorSecretKey String
   createdAt          DateTime @default(now())
-  staticIp           String?
+  staticIpId         String?
+  browserProfileId   String?
 }
 
 enum AccessType {

@@ -1,4 +1,5 @@
 import type { TRPCRouterRecord } from "@trpc/server";
+import { TRPCError } from "@trpc/server";
 import { authenticator } from "otplib";
 import z from "zod";
 
@@ -13,6 +14,7 @@ import {
 // } from "@sassy/db/schema-validators";
 
 import { protectedProcedure, publicProcedure } from "../trpc";
+import { browserSession, hyperbrowser } from "../utils/browser";
 import { checkPremiumAccess } from "../utils/check-premium-access";
 import { cryptography } from "../utils/encryption";
 import { env } from "../utils/env";
@@ -106,13 +108,20 @@ export const userRouter = {
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const [encryptedPassword, encryptedTwoFASecretKey] = await Promise.all([
-        cryptography.encrypt(input.password, env.LINKEDIN_PASSWORD_SECRET_KEY),
-        cryptography.encrypt(
-          input.twoFactorSecretKey,
-          env.LINKEDIN_TWO_FA_SECRET_KEY,
-        ),
-      ]);
+      const [encryptedPassword, encryptedTwoFASecretKey, browserProfileId] =
+        await Promise.all([
+          cryptography.encrypt(
+            input.password,
+            env.LINKEDIN_PASSWORD_SECRET_KEY,
+          ),
+          cryptography.encrypt(
+            input.twoFactorSecretKey,
+            env.LINKEDIN_TWO_FA_SECRET_KEY,
+          ),
+          hyperbrowser.profiles
+            .create({ name: ctx.user.primaryEmailAddress })
+            .then((p) => p.id),
+        ]);
 
       const account = await ctx.db.linkedInAccount.create({
         data: {
@@ -120,6 +129,7 @@ export const userRouter = {
           email: input.email,
           encryptedPassword,
           twoFactorSecretKey: encryptedTwoFASecretKey,
+          browserProfileId,
         },
         select: {
           id: true,
@@ -131,13 +141,15 @@ export const userRouter = {
 
   listLinkedInAccounts: protectedProcedure
     .input(
-      z.object({
-        cursor: z.string().nullish(),
-      }),
+      z
+        .object({
+          cursor: z.string().nullish(),
+        })
+        .optional(),
     )
     .query(({ ctx, input }) =>
       ctx.db.linkedInAccount.findMany({
-        where: { userId: ctx.user.id, id: { gt: input.cursor ?? undefined } },
+        where: { userId: ctx.user.id, id: { gt: input?.cursor ?? undefined } },
         select: {
           id: true,
           email: true,
@@ -147,6 +159,73 @@ export const userRouter = {
         orderBy: { id: "asc" },
       }),
     ),
+
+  startBrowserSession: protectedProcedure
+    .input(
+      z.object({
+        linkedInAccountId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const account = await ctx.db.linkedInAccount.findUnique({
+        where: { id: input.linkedInAccountId, userId: ctx.user.id },
+        select: {
+          id: true,
+          email: true,
+          encryptedPassword: true,
+          twoFactorSecretKey: true,
+          browserProfileId: true,
+          staticIpId: true,
+        },
+      });
+
+      if (account === null) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "LinkedIn account not found",
+        });
+      }
+
+      await browserSession.getOrCreate(account.id, {
+        useProxy: true,
+        proxyCountry: "US",
+        profile: {
+          id: account.browserProfileId ?? undefined,
+        },
+        staticIpId: account.staticIpId ?? undefined,
+      });
+
+      return {
+        status: "success",
+      } as const;
+    }),
+
+  browserSessionStatus: protectedProcedure
+    .input(
+      z.object({
+        linkedInAccountId: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const account = await ctx.db.linkedInAccount.findUnique({
+        where: { id: input.linkedInAccountId, userId: ctx.user.id },
+        select: {
+          id: true,
+        },
+      });
+
+      if (account === null) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "LinkedIn account not found",
+        });
+      }
+
+      const status = await browserSession.status(account.id);
+      return {
+        status,
+      };
+    }),
 
   /**
    * Get a user by ID

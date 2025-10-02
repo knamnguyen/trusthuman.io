@@ -1,33 +1,9 @@
 import type { Browser, Page } from "puppeteer-core";
-import { Hyperbrowser } from "@hyperbrowser/sdk";
 import { authenticator } from "otplib";
-import { connect } from "puppeteer-core";
 
+import type { ProxyLocation } from "./browser";
 import type { Logger } from "./commons";
-
-type CreateHyperbrowserSessionParams = NonNullable<
-  Parameters<Hyperbrowser["sessions"]["create"]>[0]
->;
-
-export async function createBrowserSession(
-  params: CreateHyperbrowserSessionParams = {},
-) {
-  if (process.env.HYPERBROWSER_API_KEY === undefined) {
-    throw new Error("HYPERBROWSER_API_KEY is not defined");
-  }
-
-  const client = new Hyperbrowser({
-    apiKey: process.env.HYPERBROWSER_API_KEY,
-  });
-  const session = await client.sessions.create(params);
-
-  const browser = await connect({
-    browserWSEndpoint: session.wsEndpoint,
-    defaultViewport: null,
-  });
-
-  return browser;
-}
+import { browserSession } from "./browser";
 
 export class LinkedInBrowserSession {
   public browser!: Browser;
@@ -38,9 +14,9 @@ export class LinkedInBrowserSession {
       username: string;
       password: string;
       twoFactorSecretKey: string;
-      location: NonNullable<CreateHyperbrowserSessionParams["proxyCountry"]>;
-      // TODO: static IP associated with an account
-      // staticIp: string;
+      location: ProxyLocation;
+      staticIpId?: string;
+      browserProfileId?: string;
     },
     private readonly logger: Logger,
   ) {
@@ -48,10 +24,16 @@ export class LinkedInBrowserSession {
   }
 
   private async init() {
-    this.browser = await createBrowserSession({
+    const session = await browserSession.create({
       useProxy: true,
       proxyCountry: this.opts.location,
+      profile: {
+        id: this.opts.browserProfileId,
+      },
+      staticIpId: this.opts.staticIpId,
     });
+
+    this.browser = session.browser;
 
     const [page] = await this.browser.pages();
 
@@ -169,9 +151,5 @@ export class LinkedInBrowserSession {
     return {
       status: "success",
     } as const;
-  }
-
-  async destroy() {
-    await this.browser.close();
   }
 }
