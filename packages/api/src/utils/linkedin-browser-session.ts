@@ -24,7 +24,7 @@ export class LinkedInBrowserSession {
   }
 
   private async init() {
-    const session = await browserSession.create({
+    const session = await browserSession.create(this.opts.username, {
       useProxy: true,
       proxyCountry: this.opts.location,
       profile: {
