@@ -53,6 +53,9 @@ const sanitizeGeneratedComment = (raw: string): string => {
     "",
   );
 
+  // 6. Replace em dashes with periods and remove leading space
+  result = result.replace(/\s*[—–]/g, ", ");
+
   // Collapse multiple spaces and trim again
   result = result.replace(/\s{2,}/g, " ").trim();
 
