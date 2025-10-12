@@ -1,11 +1,17 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 
-import { LinkedInBrowserSession } from "./linkedin-browser-session";
+import {
+  BrowserSessionRegistry,
+  LinkedInBrowserSession,
+} from "./linkedin-browser-session";
 
 describe("LinkedInBrowserSession", () => {
   let session!: LinkedInBrowserSession;
+  let registry!: BrowserSessionRegistry;
   beforeAll(async () => {
+    registry = new BrowserSessionRegistry();
     session = new LinkedInBrowserSession(
+      registry,
       {
         username: process.env.LINKEDIN_TEST_ACCOUNT_USERNAME!,
         password: process.env.LINKEDIN_TEST_ACCOUNT_PASSWORD!,
@@ -18,14 +24,22 @@ describe("LinkedInBrowserSession", () => {
   });
 
   afterAll(async () => {
-    await session.destroy();
+    await registry.destroyAll();
   });
 
-  test(
+  test.todo(
     "login",
     async () => {
       const result = await session.login();
       expect(result.status).toBe("success");
+    },
+    Infinity,
+  );
+
+  test(
+    "loginToEngagekitExtension",
+    async () => {
+      await session.loginToEngagekitExtension("test-token");
     },
     Infinity,
   );

@@ -42,6 +42,7 @@
     "dotenv-cli": "^8.0.0",
     "eslint": "catalog:",
     "prettier": "catalog:",
+    "puppeteer": "^24.24.0",
     "typescript": "catalog:"
   },
   "prettier": "@sassy/prettier-config"
