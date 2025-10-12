@@ -50,6 +50,7 @@ secrets.json
 dist_chrome/
 dist_firefox/
 dist_opera/
+dist_build/
 dist/
 .cache
 

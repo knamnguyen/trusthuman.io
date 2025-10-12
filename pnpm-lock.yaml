@@ -388,8 +388,8 @@ importers:
         specifier: ^1.5.1
         version: 1.7.0
       '@hyperbrowser/sdk':
-        specifier: ^0.62.0
-        version: 0.62.0
+        specifier: ^0.65.0
+        version: 0.65.0
       '@sassy/db':
         specifier: workspace:*
         version: link:../db
@@ -1574,8 +1574,8 @@ packages:
     resolution: {integrity: sha512-bV0Tgo9K4hfPCek+aMAn81RppFKv2ySDQeMoSZuvTASywNTnVJCArCZE2FWqpvIatKu7VMRLWlR1EazvVhDyhQ==}
     engines: {node: '>=18.18'}
 
-  '@hyperbrowser/sdk@0.62.0':
-    resolution: {integrity: sha512-GEZrmTvy+APNdDRs6SciJKSPsNBttBdNXo/zafmQrqKGZuK4x3uCQy2Vqf65wpkSsrcSQFKC0pQYBap0k9l6CQ==}
+  '@hyperbrowser/sdk@0.65.0':
+    resolution: {integrity: sha512-HSOjHF3XnO3dvdCixjxAv85F96L35CRL5H/TC0QJJEReQ8rxzLUPzIE3fcuWRF1Sw4yF0QuDKRgwg6f5e2HODQ==}
 
   '@ianvs/prettier-plugin-sort-imports@4.4.2':
     resolution: {integrity: sha512-KkVFy3TLh0OFzimbZglMmORi+vL/i2OFhEs5M07R9w0IwWAGpsNNyE4CY/2u0YoMF5bawKC2+8/fUH60nnNtjw==}
@@ -8616,7 +8616,7 @@ snapshots:
 
   '@humanwhocodes/retry@0.4.3': {}
 
-  '@hyperbrowser/sdk@0.62.0':
+  '@hyperbrowser/sdk@0.65.0':
     dependencies:
       form-data: 4.0.4
       node-fetch: 2.7.0
@@ -12015,7 +12015,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 9.30.0(jiti@2.4.2)
       eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.12.1(@typescript-eslint/parser@7.18.0(eslint@9.30.0(jiti@2.4.2))(typescript@5.8.3))(eslint-import-resolver-node@0.3.9)(eslint@9.30.0(jiti@2.4.2))
+      eslint-module-utils: 2.12.1(@typescript-eslint/parser@8.35.0(eslint@9.30.0(jiti@2.4.2))(typescript@5.8.3))(eslint-import-resolver-node@0.3.9)(eslint@9.30.0(jiti@2.4.2))
       hasown: 2.0.2
       is-core-module: 2.16.1
       is-glob: 4.0.3

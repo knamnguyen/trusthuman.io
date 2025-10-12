@@ -17,6 +17,7 @@ export class LinkedInBrowserSession {
       location: ProxyLocation;
       staticIpId?: string;
       browserProfileId?: string;
+      extensionIds?: string[];
     },
     private readonly logger: Logger,
   ) {
@@ -26,6 +27,7 @@ export class LinkedInBrowserSession {
   private async init() {
     const session = await browserSession.create(this.opts.username, {
       useProxy: true,
+      extensionIds: this.opts.extensionIds,
       proxyCountry: this.opts.location,
       profile: {
         id: this.opts.browserProfileId,

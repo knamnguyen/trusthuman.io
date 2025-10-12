@@ -28,7 +28,9 @@ if (result.status === "error") {
   logger.error(`Login failed: ${result.error}`);
 }
 
-await new Promise((resolve) => setTimeout(resolve, 100000));
+await new Promise((resolve) => {
+  setTimeout(resolve, 100000);
+});
 
 await linkedin.close();
 await Actor.exit();
