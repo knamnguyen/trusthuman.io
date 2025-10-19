@@ -1,4 +1,3 @@
-import { existsSync } from "node:fs";
 import path from "node:path";
 import type { Browser, Page } from "puppeteer";
 import { Hyperbrowser } from "@hyperbrowser/sdk";
@@ -28,9 +27,47 @@ interface BrowserSession {
   browser: Browser;
 }
 
+async function getExtensionId(manifestJsonPath: string) {
+  const json = (await import(manifestJsonPath)) as { key?: string };
+  if (!json.key) {
+    throw new Error("Extension key not found in manifest.json");
+  }
+
+  const binaryKey = Buffer.from(json.key, "base64");
+
+  // SHA-256 hash
+  const hash = await crypto.subtle.digest("SHA-256", binaryKey);
+
+  // Convert to hex string
+  const hashArray = Array.from(new Uint8Array(hash));
+  const hashHex = hashArray
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+
+  // Take first 32 characters and translate 0-9a-f to a-p
+  const extensionId = hashHex
+    .slice(0, 32)
+    .split("")
+    .map((char) => {
+      const code = char.charCodeAt(0);
+      if (code >= 48 && code <= 57) {
+        // 0-9
+        return String.fromCharCode(code + 49); // converts to a-j
+      }
+      return char; // a-f stays as is
+    })
+    .join("");
+
+  return extensionId;
+}
+
 export class LinkedInBrowserSession {
   public browser!: Browser;
-  public page!: Page;
+  public pages!: {
+    linkedin: Page;
+    engagekitExtension: Page;
+  };
+  public pageInView: "linkedin" | "engagekitExtension" = "linkedin";
   public ready: Promise<void>;
   private browserSessionFactory: BrowserSessionFactory;
   constructor(
@@ -44,9 +81,10 @@ export class LinkedInBrowserSession {
       browserProfileId?: string;
       extensionIds?: string[];
     },
-    private readonly logger: Logger,
+    private readonly logger: Logger = console,
   ) {
     this.browserSessionFactory = new BrowserSessionFactory(registry);
+    // NOTE: remember to call await session.ready before using any methods within the class
     this.ready = this.init();
   }
 
@@ -69,27 +107,44 @@ export class LinkedInBrowserSession {
 
     this.browser = result.instance.browser;
 
-    const [page] = await this.browser.pages();
+    const target = this.browser.targets();
+    console.info(target.map((t) => t.type()));
 
-    if (page === undefined) {
-      throw new Error("page not found");
+    this.pages = {
+      linkedin: await this.browser.newPage().then(async (page) => {
+        await page.goto("https://www.linkedin.com");
+        return page;
+      }),
+      engagekitExtension: await this.browser.newPage().then(async (page) => {
+        // technically we should use the getExtensionId + manifest.dev.json key to get the extension id but screw it
+        const extensionId = await getExtensionId(
+          path.join(
+            __dirname,
+            "../../../../apps/chrome-extension/manifest.dev.json",
+          ),
+        );
+        // but somehow this is getting the wrong id, maybe manifest.dev.json's key is wrong idk
+        console.info({ extensionId });
+        await page.goto(
+          `chrome-extension://flcmblnepmbbmohljbdnejgkkpeangfk/src/pages/popup/index.html`,
+        );
+        return page;
+      }),
+    };
+
+    await this.bringToFront("linkedin");
+  }
+
+  async bringToFront(page: "linkedin" | "engagekitExtension") {
+    if (page === this.pageInView) {
+      return;
     }
-    this.page = page;
+    this.pageInView = page;
+    await this.pages[page].bringToFront();
   }
 
   async loginToEngagekitExtension(tempAuthToken: string) {
-    await this.page.evaluate((token) => {
-      console.info(token);
-    }, tempAuthToken);
-
-    const workerTarget = await this.browser.waitForTarget(
-      (target) =>
-        target.type() === TargetType.SERVICE_WORKER &&
-        target.url().endsWith("background.js"),
-    );
-
-    const worker = await workerTarget.worker();
-    console.info(worker);
+    await this.bringToFront("engagekitExtension");
   }
 
   async login() {
@@ -259,17 +314,17 @@ export class BrowserSessionFactory {
       return { sessionId: session.id, browser };
     }
 
-    const zipFilepath = path.join(
+    const filepath = path.join(
       __dirname,
-      "../../../../apps/chrome-extension/dist_build/engagekit-extension.zip",
+      "../../../../apps/chrome-extension/dist_chrome",
     );
 
+    // TODO: figure out how to add the chrome-extension build dir in production
     const browser = await puppeteer.launch({
       defaultViewport: null,
       headless: false,
       pipe: true,
-      // TODO: continue here, debug why the fk it says ProtocolError: Protocol error (Extensions.loadUnpacked): Manifest file is missing or unreadable
-      enableExtensions: [zipFilepath],
+      enableExtensions: [filepath],
     });
 
     return {
