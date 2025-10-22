@@ -2,13 +2,15 @@ import path from "node:path";
 import type { Browser, Page } from "puppeteer";
 import { Hyperbrowser } from "@hyperbrowser/sdk";
 import { authenticator } from "otplib";
-import puppeteer, { TargetType } from "puppeteer";
+import puppeteer from "puppeteer";
 import { connect } from "puppeteer-core";
+import { z } from "zod";
 
 import type { PrismaClient } from "@sassy/db";
 
 import type { Logger } from "./commons";
 import { env } from "./env";
+import { jwtFactory } from "./jwt";
 
 export const hyperbrowser = new Hyperbrowser({
   apiKey: env.HYPERBROWSER_API_KEY,
@@ -26,6 +28,28 @@ interface BrowserSession {
   sessionId: string;
   browser: Browser;
 }
+
+if (process.env.JWT_SECRET === undefined) {
+  throw new Error("JWT_SECRET is not defined");
+}
+
+export const tempAuthJwt = jwtFactory(
+  z.object({
+    userId: z.string(),
+    username: z.string(),
+  }),
+  120_000,
+  process.env.JWT_SECRET,
+); // 120 seconds short lived token
+
+// this token should be attached in headers of every trpc request when browserbase mode is used
+export const assumedUserJwt = jwtFactory(
+  z.object({
+    userId: z.string(),
+  }),
+  86_400_000, // put a day
+  process.env.JWT_SECRET,
+);
 
 async function getExtensionId(manifestJsonPath: string) {
   const json = (await import(manifestJsonPath)) as { key?: string };
@@ -68,11 +92,9 @@ export class LinkedInBrowserSession {
     engagekitExtension: Page;
   };
   public pageInView: "linkedin" | "engagekitExtension" = "linkedin";
-  public ready: Promise<void>;
-  private browserSessionFactory: BrowserSessionFactory;
   constructor(
-    registry: BrowserSessionRegistry,
     private readonly opts: {
+      userId: string;
       username: string;
       password: string;
       twoFactorSecretKey: string;
@@ -82,11 +104,8 @@ export class LinkedInBrowserSession {
       extensionIds?: string[];
     },
     private readonly logger: Logger = console,
-  ) {
-    this.browserSessionFactory = new BrowserSessionFactory(registry);
-    // NOTE: remember to call await session.ready before using any methods within the class
-    this.ready = this.init();
-  }
+    public readonly sessionId: string,
+  ) {}
 
   public static getLatestEngagekitExtensionId(db: PrismaClient) {
     return db.extensionDeploymentMeta.findFirst({
@@ -94,8 +113,13 @@ export class LinkedInBrowserSession {
     });
   }
 
-  private async init() {
-    const result = await this.browserSessionFactory.create(this.opts.username, {
+  async init(): Promise<LinkedInBrowserSession> {
+    const tempAuthToken = await tempAuthJwt.encode({
+      userId: this.opts.userId,
+      username: this.opts.username,
+    });
+
+    const result = await createBrowserSession({
       useProxy: true,
       extensionIds: this.opts.extensionIds,
       proxyCountry: this.opts.location,
@@ -126,13 +150,15 @@ export class LinkedInBrowserSession {
         // but somehow this is getting the wrong id, maybe manifest.dev.json's key is wrong idk
         console.info({ extensionId });
         await page.goto(
-          `chrome-extension://flcmblnepmbbmohljbdnejgkkpeangfk/src/pages/popup/index.html`,
+          `chrome-extension://flcmblnepmbbmohljbdnejgkkpeangfk/src/pages/popup/index.html?tempAuthToken=${tempAuthToken}`,
         );
         return page;
       }),
     };
 
     await this.bringToFront("linkedin");
+
+    return this;
   }
 
   async bringToFront(page: "linkedin" | "engagekitExtension") {
@@ -141,10 +167,6 @@ export class LinkedInBrowserSession {
     }
     this.pageInView = page;
     await this.pages[page].bringToFront();
-  }
-
-  async loginToEngagekitExtension(tempAuthToken: string) {
-    await this.bringToFront("engagekitExtension");
   }
 
   async login() {
@@ -259,18 +281,40 @@ export class LinkedInBrowserSession {
 }
 
 export class BrowserSessionRegistry {
-  private readonly registry = new Map<string, BrowserSession>();
+  private readonly registry = new Map<string, LinkedInBrowserSession>();
 
   get(id: string) {
     return this.registry.get(id);
   }
 
-  register(id: string, session: BrowserSession) {
-    const existing = this.registry.get(id);
+  async register(id: string, session: LinkedInBrowserSession) {
+    const existing = this.get(id);
     if (existing !== undefined) {
-      throw new Error(`Session with id ${id} already exists`);
+      if (existing.sessionId === "mock") {
+        return {
+          status: "existing",
+          instance: existing,
+        } as const;
+      }
+
+      const status = await hyperbrowser.sessions.get(existing.sessionId);
+      if (status.status === "active") {
+        return {
+          status: "existing",
+          instance: existing,
+        } as const;
+      }
+
+      // if existing session exists but status is not active, we destroy it and create it again below
+      await this.destroy(id);
     }
-    this.registry.set(id, session);
+
+    const browserSession = await session.init();
+
+    return {
+      status: "new",
+      instance: browserSession,
+    } as const;
   }
 
   async destroy(id: string) {
@@ -299,77 +343,54 @@ export class BrowserSessionRegistry {
 
 export const browserRegistry = new BrowserSessionRegistry();
 
+async function createBrowserSession(
+  params: CreateHyperbrowserSessionParams,
+): Promise<{
+  status: "new" | "existing";
+  instance: BrowserSession;
+}> {
+  // if there is existing, then check it's status, if its active then just return the existing instance
+  // else destroy and create a new one
+
+  const session = await createHyperbrowserSession(params);
+
+  return {
+    status: "new",
+    instance: session,
+  } as const;
+}
+
+async function createHyperbrowserSession(
+  params: CreateHyperbrowserSessionParams,
+): Promise<BrowserSession> {
+  if (process.env.NODE_ENV === "production") {
+    const session = await hyperbrowser.sessions.create(params);
+    const browser = (await connect({
+      browserWSEndpoint: session.wsEndpoint,
+      defaultViewport: null,
+    })) as unknown as Browser;
+    return { sessionId: session.id, browser };
+  }
+
+  const filepath = path.join(
+    __dirname,
+    "../../../../apps/chrome-extension/dist_chrome",
+  );
+
+  // TODO: figure out how to add the chrome-extension build dir in production
+  const browser = await puppeteer.launch({
+    defaultViewport: null,
+    headless: false,
+    pipe: true,
+    enableExtensions: [filepath],
+  });
+
+  return {
+    sessionId: "mock",
+    browser,
+  };
+}
+
 export class BrowserSessionFactory {
   constructor(private readonly registry: BrowserSessionRegistry) {}
-
-  private async createSession(
-    params: CreateHyperbrowserSessionParams,
-  ): Promise<BrowserSession> {
-    if (process.env.NODE_ENV === "production") {
-      const session = await hyperbrowser.sessions.create(params);
-      const browser = (await connect({
-        browserWSEndpoint: session.wsEndpoint,
-        defaultViewport: null,
-      })) as unknown as Browser;
-      return { sessionId: session.id, browser };
-    }
-
-    const filepath = path.join(
-      __dirname,
-      "../../../../apps/chrome-extension/dist_chrome",
-    );
-
-    // TODO: figure out how to add the chrome-extension build dir in production
-    const browser = await puppeteer.launch({
-      defaultViewport: null,
-      headless: false,
-      pipe: true,
-      enableExtensions: [filepath],
-    });
-
-    return {
-      sessionId: "mock",
-      browser,
-    };
-  }
-
-  async create(
-    id: string,
-    params: CreateHyperbrowserSessionParams,
-  ): Promise<{
-    status: "new" | "existing";
-    instance: BrowserSession;
-  }> {
-    const existing = this.registry.get(id);
-
-    // if there is existing, then check it's status, if its active then just return the existing instance
-    // else destroy and create a new one
-    if (existing !== undefined) {
-      if (existing.sessionId === "mock") {
-        return {
-          status: "existing",
-          instance: existing,
-        } as const;
-      }
-
-      const status = await hyperbrowser.sessions.get(existing.sessionId);
-      if (status.status === "active") {
-        return {
-          status: "existing",
-          instance: existing,
-        } as const;
-      }
-
-      await this.registry.destroy(id);
-    }
-
-    const session = await this.createSession(params);
-
-    this.registry.register(id, session);
-
-    return {
-      status: "new",
-      instance: session,
-    } as const;
-  }
 }

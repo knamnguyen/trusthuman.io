@@ -14,10 +14,16 @@ import {
 // } from "@sassy/db/schema-validators";
 
 import { protectedProcedure, publicProcedure } from "../trpc";
-import { browserSession, hyperbrowser } from "../utils/browser";
 import { checkPremiumAccess } from "../utils/check-premium-access";
 import { cryptography } from "../utils/encryption";
 import { env } from "../utils/env";
+import {
+  assumedUserJwt,
+  browserRegistry,
+  hyperbrowser,
+  LinkedInBrowserSession,
+  tempAuthJwt,
+} from "../utils/linkedin-browser-session";
 
 export const userRouter = {
   checkAccess: protectedProcedure.query(async ({ ctx }) => {
@@ -160,6 +166,48 @@ export const userRouter = {
       }),
     ),
 
+  attachTempTokenToSession: publicProcedure
+    .input(
+      z.object({
+        tempAuthToken: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // validate temp auth token
+      const decoded = await tempAuthJwt.decode(input.tempAuthToken);
+
+      if (decoded.success === false) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Session not found for the provided temporary token",
+        });
+      }
+
+      const account = await ctx.db.linkedInAccount.findUnique({
+        where: { id: decoded.payload.userId },
+        select: {
+          id: true,
+        },
+      });
+
+      if (account === null) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message:
+            "LinkedIn account not found for the provided temporary token",
+        });
+      }
+
+      const token = await assumedUserJwt.encode({
+        userId: account.id,
+      });
+
+      return {
+        status: "success",
+        token,
+      } as const;
+    }),
+
   startBrowserSession: protectedProcedure
     .input(
       z.object({
@@ -186,14 +234,46 @@ export const userRouter = {
         });
       }
 
-      await browserSession.getOrCreate(account.id, {
-        useProxy: true,
-        proxyCountry: "US",
-        profile: {
-          id: account.browserProfileId ?? undefined,
-        },
-        staticIpId: account.staticIpId ?? undefined,
-      });
+      const decryptedPassword = await cryptography.decrypt(
+        account.encryptedPassword,
+        env.LINKEDIN_PASSWORD_SECRET_KEY,
+      );
+
+      if (!decryptedPassword.success) {
+        return {
+          status: "error",
+          message: "Failed to decrypt LinkedIn password",
+        } as const;
+      }
+
+      const decryptedTwoFASecretKey = await cryptography.decrypt(
+        account.twoFactorSecretKey,
+        env.LINKEDIN_TWO_FA_SECRET_KEY,
+      );
+
+      if (!decryptedTwoFASecretKey.success) {
+        return {
+          status: "error",
+          message: "Failed to decrypt LinkedIn 2FA secret key",
+        } as const;
+      }
+
+      await browserRegistry.register(
+        account.id,
+        new LinkedInBrowserSession(
+          {
+            userId: account.id,
+            username: account.email,
+            password: decryptedPassword.data,
+            location: "MY", // TODO: add location in account settings
+            twoFactorSecretKey: decryptedTwoFASecretKey.data,
+            browserProfileId: account.browserProfileId ?? undefined,
+            staticIpId: account.staticIpId ?? undefined,
+          },
+          console,
+          process.env.NODE_ENV === "production" ? account.id : "mock",
+        ),
+      );
 
       return {
         status: "success",
@@ -221,10 +301,25 @@ export const userRouter = {
         });
       }
 
-      const status = await browserSession.status(account.id);
+      const session = browserRegistry.get(account.id);
+
+      if (session === undefined) {
+        return {
+          status: "offline",
+        } as const;
+      }
+
+      if (session.sessionId === "mock") {
+        return {
+          status: "online",
+        } as const;
+      }
+
+      const details = await hyperbrowser.sessions.get(session.sessionId);
+
       return {
-        status,
-      };
+        status: details.status,
+      } as const;
     }),
 
   /**

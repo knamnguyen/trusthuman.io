@@ -59,6 +59,18 @@ export class AuthService {
   }
 
   /**
+   * Sign in with temp auth token
+   */
+  async attachTempTokenToSession(tempToken: string) {
+    console.log("AuthService: Attaching temp token to session...");
+    await chrome.runtime.sendMessage({
+      action: "attachTempTokenToSession",
+      payload: { tempToken },
+    });
+    console.log("AuthService: Temp token attached to session.");
+  }
+
+  /**
    * Get current authentication status and user information
    */
   async getAuthStatus(): Promise<AuthStatus> {

@@ -51,7 +51,19 @@ const getStyleGuidePrompt = (
   return DEFAULT_STYLE_GUIDES_FREE.PROFESSIONAL.prompt;
 };
 
+export function useTempAuthToken() {
+  const [tempAuthToken] = useState(() => {
+    const url = new URL(document.URL);
+    const tempToken = url.searchParams.get("tempAuthToken");
+    return tempToken;
+  });
+
+  return tempAuthToken;
+}
+
 export default function Popup() {
+  const tempAuthToken = useTempAuthToken();
+
   const { user, isLoaded, isSignedIn, signOut, isSigningOut } =
     useBackgroundAuth();
   const {

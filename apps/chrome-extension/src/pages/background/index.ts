@@ -1,4 +1,5 @@
 import { createClerkClient } from "@clerk/chrome-extension/background";
+import { getTRPCClient } from "@src/services/trpc-client";
 
 import type { AutoCommentingState } from "./background-types";
 import { AIService } from "../../services/ai-service";
@@ -33,6 +34,8 @@ const getClerkClient = async () => {
     syncHost: syncHost,
   });
 };
+
+const trpc = getTRPCClient();
 
 /**
  * Authentication Service - handles all auth operations in background
@@ -102,6 +105,21 @@ const authService = {
       return { success: true };
     } catch (error) {
       console.error("Background: Error signing out:", error);
+      return { success: false };
+    }
+  },
+
+  async attachTempTokenToSession(
+    tempToken: string,
+  ): Promise<{ success: boolean }> {
+    try {
+      // TODO: attach this token to further requests so that server can validate the jwt token
+      const { token } = await trpc.user.attachTempTokenToSession.mutate({
+        tempAuthToken: tempToken,
+      });
+      return { success: true };
+    } catch {
+      console.error("Background: Error attaching temp token to session");
       return { success: false };
     }
   },
@@ -347,6 +365,25 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         .catch((error) => {
           console.error("Background: Error getting fresh token:", error);
           sendResponse({ token: null });
+        });
+      return true;
+
+    case "attachTempTokenToSession":
+      console.log("Background: Received attachTempTokenToSession request");
+      authService
+        .attachTempTokenToSession(request.payload.tempToken)
+        .then(() => {
+          console.log(
+            "Background: Temp token attached to session successfully",
+          );
+          sendResponse({ success: true });
+        })
+        .catch((error) => {
+          console.error(
+            "Background: Error attaching temp token to session:",
+            error,
+          );
+          sendResponse({ success: false });
         });
       return true;
 
