@@ -31,6 +31,11 @@ describe("LinkedInBrowserSession", () => {
     await registry.destroyAll();
   });
 
+  // flow
+  // 1. login with linkedin page
+  // 2. wait for home page to load
+  // 3. do some random actions so that it wont look too bot-ish
+  // 4. start autocommenting?
   test.todo(
     "login",
     async () => {

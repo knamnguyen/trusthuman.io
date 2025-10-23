@@ -55,6 +55,7 @@ export interface MessageRouterDependencies {
     commentDelay: number,
     maxPosts: number,
     duplicateWindow: number,
+    browserbaseMode: boolean,
   ) => Promise<void>;
   generateComment: (postContent: string) => Promise<string>;
 }

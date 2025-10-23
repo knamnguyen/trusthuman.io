@@ -112,19 +112,9 @@ const authService = {
     }
   },
 
-  async requestAssumedUserTokenAndAttachToSession(
-    tempToken: string,
-  ): Promise<{ success: boolean }> {
-    try {
-      const { token } = await trpc.user.requestAssumedUserToken.mutate({
-        tempAuthToken: tempToken,
-      });
-      this.assumedUserToken = token;
-      return { success: true };
-    } catch {
-      console.error("Background: Error attaching temp token to session");
-      return { success: false };
-    }
+  attachTokenToSession(token: string) {
+    this.assumedUserToken = token;
+    return { success: true };
   },
 
   /**
@@ -234,6 +224,7 @@ const startAutoCommenting = async (
   commentDelay: number,
   maxPosts: number,
   duplicateWindow: number,
+  browserbaseMode: boolean,
 ): Promise<void> => {
   try {
     console.log(
@@ -263,7 +254,7 @@ const startAutoCommenting = async (
 
     // Get the current active tab to decide whether we need a new LinkedIn tab
     const currentTabs = await chrome.tabs.query({
-      active: true,
+      active: browserbaseMode ? false : true,
       currentWindow: true,
     });
 
@@ -375,21 +366,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       console.log(
         "Background: Received requestAssumedUserTokenAndAttachToSession request",
       );
-      authService
-        .requestAssumedUserTokenAndAttachToSession(request.payload.tempToken)
-        .then(() => {
-          console.log(
-            "Background: Temp token attached to session successfully",
-          );
-          sendResponse({ success: true });
-        })
-        .catch((error) => {
-          console.error(
-            "Background: Error attaching temp token to session:",
-            error,
-          );
-          sendResponse({ success: false });
-        });
+      const response = authService.attachTokenToSession(request.payload.token);
+      sendResponse(response);
       return true;
 
     case "getAuthStatus":

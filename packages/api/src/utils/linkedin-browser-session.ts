@@ -33,15 +33,6 @@ if (process.env.JWT_SECRET === undefined) {
   throw new Error("JWT_SECRET is not defined");
 }
 
-export const tempAuthJwt = jwtFactory(
-  z.object({
-    userId: z.string(),
-    username: z.string(),
-  }),
-  120_000,
-  process.env.JWT_SECRET,
-); // 120 seconds short lived token
-
 // this token should be attached in headers of every trpc request when browserbase mode is used
 export const assumedUserJwt = jwtFactory(
   z.object({
@@ -114,9 +105,8 @@ export class LinkedInBrowserSession {
   }
 
   async init(): Promise<LinkedInBrowserSession> {
-    const tempAuthToken = await tempAuthJwt.encode({
+    const userJwt = await assumedUserJwt.encode({
       userId: this.opts.userId,
-      username: this.opts.username,
     });
 
     const result = await createBrowserSession({
@@ -150,7 +140,7 @@ export class LinkedInBrowserSession {
         // but somehow this is getting the wrong id, maybe manifest.dev.json's key is wrong idk
         console.info({ extensionId });
         await page.goto(
-          `chrome-extension://ofpificfhbopdfmlcmnmhhhmdbepgfbh/src/pages/popup/index.html?tempAuthToken=${tempAuthToken}`,
+          `chrome-extension://ofpificfhbopdfmlcmnmhhhmdbepgfbh/src/pages/popup/index.html?userJwt=${userJwt}`,
         );
         return page;
       }),
@@ -170,14 +160,9 @@ export class LinkedInBrowserSession {
   }
 
   async login() {
-    const [page] = await this.browser.pages();
-    if (page === undefined) {
-      return {
-        status: "error",
-        code: 500,
-        error: "page not found",
-      } as const;
-    }
+    const page = this.pages.linkedin;
+    await page.bringToFront();
+
     this.logger.info("navigating to linkedin.com");
 
     await page.goto("https://www.linkedin.com", {

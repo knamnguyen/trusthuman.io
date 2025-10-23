@@ -51,18 +51,18 @@ const getStyleGuidePrompt = (
   return DEFAULT_STYLE_GUIDES_FREE.PROFESSIONAL.prompt;
 };
 
-export function useTempAuthToken() {
-  const [tempAuthToken] = useState(() => {
+export function useUserJwt() {
+  const [userJwt] = useState(() => {
     const url = new URL(document.URL);
-    const tempToken = url.searchParams.get("tempAuthToken");
-    return tempToken;
+    const userJwt = url.searchParams.get("userJwt");
+    return userJwt;
   });
 
-  return tempAuthToken;
+  return userJwt;
 }
 
 export default function Popup() {
-  const tempAuthToken = useTempAuthToken();
+  const userJwt = useUserJwt();
 
   const { user, isLoaded, isSignedIn, signOut, isSigningOut } =
     useBackgroundAuth();
@@ -231,17 +231,17 @@ export default function Popup() {
   }, []);
 
   useEffect(() => {
-    if (tempAuthToken !== null) {
+    if (userJwt !== null) {
       void chrome.runtime
         .sendMessage({
-          action: "requestAssumedUserTokenAndAttachToSession",
+          action: "attachTokenToSession",
           payload: {
-            tempToken: tempAuthToken,
+            token: userJwt,
           },
         })
         .then(() => console.info("Temp auth token processed in background"));
     }
-  }, [tempAuthToken]);
+  }, [userJwt]);
 
   // Update auth state when user signs in
   useEffect(() => {

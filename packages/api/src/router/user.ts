@@ -18,11 +18,9 @@ import { checkPremiumAccess } from "../utils/check-premium-access";
 import { cryptography } from "../utils/encryption";
 import { env } from "../utils/env";
 import {
-  assumedUserJwt,
   browserRegistry,
   hyperbrowser,
   LinkedInBrowserSession,
-  tempAuthJwt,
 } from "../utils/linkedin-browser-session";
 
 export const userRouter = {
@@ -165,48 +163,6 @@ export const userRouter = {
         orderBy: { id: "asc" },
       }),
     ),
-
-  requestAssumedUserToken: publicProcedure
-    .input(
-      z.object({
-        tempAuthToken: z.string(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      // validate temp auth token
-      const decoded = await tempAuthJwt.decode(input.tempAuthToken);
-
-      if (decoded.success === false) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Session not found for the provided temporary token",
-        });
-      }
-
-      const account = await ctx.db.linkedInAccount.findUnique({
-        where: { id: decoded.payload.userId },
-        select: {
-          id: true,
-        },
-      });
-
-      if (account === null) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message:
-            "LinkedIn account not found for the provided temporary token",
-        });
-      }
-
-      const token = await assumedUserJwt.encode({
-        userId: account.id,
-      });
-
-      return {
-        status: "success",
-        token,
-      } as const;
-    }),
 
   startBrowserSession: protectedProcedure
     .input(
