@@ -61,10 +61,10 @@ export class AuthService {
   /**
    * Sign in with temp auth token
    */
-  async attachTempTokenToSession(tempToken: string) {
+  async requestAssumedUserTokenAndAttachToSession(tempToken: string) {
     console.log("AuthService: Attaching temp token to session...");
     await chrome.runtime.sendMessage({
-      action: "attachTempTokenToSession",
+      action: "requestAssumedUserTokenAndAttachToSession",
       payload: { tempToken },
     });
     console.log("AuthService: Temp token attached to session.");

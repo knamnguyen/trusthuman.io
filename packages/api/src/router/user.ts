@@ -166,7 +166,7 @@ export const userRouter = {
       }),
     ),
 
-  attachTempTokenToSession: publicProcedure
+  requestAssumedUserToken: publicProcedure
     .input(
       z.object({
         tempAuthToken: z.string(),
@@ -274,6 +274,7 @@ export const userRouter = {
           process.env.NODE_ENV === "production" ? account.id : "mock",
         ),
       );
+      // TODO: frontend must poll http requests to backend to make sure the frontend is alive, else we just cleanup the browserbase instance
 
       return {
         status: "success",

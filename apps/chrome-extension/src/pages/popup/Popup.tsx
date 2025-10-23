@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import engageKitLogo from "../../../public/icon-128.png";
 import { DEFAULT_STYLE_GUIDES_FREE } from "../../config/default-style-guides-free";
@@ -229,6 +229,17 @@ export default function Popup() {
 
     loadAuthState();
   }, []);
+
+  useEffect(() => {
+    if (tempAuthToken !== null) {
+      void chrome.runtime.sendMessage({
+        action: "requestAssumedUserTokenAndAttachToSession",
+        payload: {
+          tempToken: tempAuthToken,
+        },
+      });
+    }
+  }, [tempAuthToken]);
 
   // Update auth state when user signs in
   useEffect(() => {

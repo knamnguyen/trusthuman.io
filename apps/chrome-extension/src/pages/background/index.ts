@@ -35,12 +35,15 @@ const getClerkClient = async () => {
   });
 };
 
-const trpc = getTRPCClient();
+const trpc = getTRPCClient({
+  assumedUserTokenGetter: () => authService.assumedUserToken,
+});
 
 /**
  * Authentication Service - handles all auth operations in background
  */
 const authService = {
+  assumedUserToken: null as string | null,
   /**
    * Get fresh token from Clerk session
    */
@@ -109,14 +112,14 @@ const authService = {
     }
   },
 
-  async attachTempTokenToSession(
+  async requestAssumedUserTokenAndAttachToSession(
     tempToken: string,
   ): Promise<{ success: boolean }> {
     try {
-      // TODO: attach this token to further requests so that server can validate the jwt token
-      const { token } = await trpc.user.attachTempTokenToSession.mutate({
+      const { token } = await trpc.user.requestAssumedUserToken.mutate({
         tempAuthToken: tempToken,
       });
+      this.assumedUserToken = token;
       return { success: true };
     } catch {
       console.error("Background: Error attaching temp token to session");
@@ -368,10 +371,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         });
       return true;
 
-    case "attachTempTokenToSession":
-      console.log("Background: Received attachTempTokenToSession request");
+    case "requestAssumedUserTokenAndAttachToSession":
+      console.log(
+        "Background: Received requestAssumedUserTokenAndAttachToSession request",
+      );
       authService
-        .attachTempTokenToSession(request.payload.tempToken)
+        .requestAssumedUserTokenAndAttachToSession(request.payload.tempToken)
         .then(() => {
           console.log(
             "Background: Temp token attached to session successfully",

@@ -69,7 +69,9 @@ const getClerkToken = async (): Promise<string | null> => {
 /**
  * Create tRPC client instance
  */
-export const createExtensionTRPCClient = () => {
+export const createExtensionTRPCClient = (opts?: {
+  assumedUserTokenGetter?: () => string | null;
+}) => {
   return createTRPCProxyClient<AppRouter>({
     links: [
       httpBatchLink({
@@ -83,6 +85,17 @@ export const createExtensionTRPCClient = () => {
             "ngrok-skip-browser-warning": "true",
             "Content-Type": "application/json",
           };
+
+          if (opts?.assumedUserTokenGetter) {
+            const assumedJwt = opts.assumedUserTokenGetter();
+            if (assumedJwt !== null) {
+              headers["x-assumed-user-token"] = assumedJwt;
+              console.log(
+                "tRPC Client: Adding x-assumed-user-jwt header, length:",
+                assumedJwt.length,
+              );
+            }
+          }
 
           if (clerkToken) {
             headers.Authorization = `Bearer ${clerkToken}`;
@@ -106,7 +119,7 @@ export const createExtensionTRPCClient = () => {
           try {
             const response = await fetch(input, {
               ...init,
-              signal: controller.signal,
+              signal: AbortSignal.timeout(30000),
             });
             clearTimeout(timeoutId);
             return response;
@@ -128,9 +141,11 @@ let trpcClient: ReturnType<typeof createExtensionTRPCClient> | null = null;
 /**
  * Get or create the tRPC client instance
  */
-export const getTRPCClient = () => {
+export const getTRPCClient = (opts?: {
+  assumedUserTokenGetter?: () => string | null;
+}) => {
   if (!trpcClient) {
-    trpcClient = createExtensionTRPCClient();
+    trpcClient = createExtensionTRPCClient(opts);
   }
   return trpcClient;
 };
