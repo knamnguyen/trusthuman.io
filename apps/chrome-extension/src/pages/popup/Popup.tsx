@@ -51,18 +51,34 @@ const getStyleGuidePrompt = (
   return DEFAULT_STYLE_GUIDES_FREE.PROFESSIONAL.prompt;
 };
 
-export function useUserJwt() {
+export function useAttachUserJwt() {
   const [userJwt] = useState(() => {
     const url = new URL(document.URL);
     const userJwt = url.searchParams.get("userJwt");
     return userJwt;
   });
+  const [pending, setPending] = useState(true);
+  const [valid, setValid] = useState(false);
 
-  return userJwt;
+  useEffect(() => {
+    if (userJwt !== null) {
+      void chrome.runtime
+        .sendMessage({
+          action: "attachTokenToSession",
+          payload: {
+            token: userJwt,
+          },
+        })
+        .then((response) => setValid(!!response.success))
+        .finally(() => setPending(false));
+    }
+  }, [userJwt]);
+
+  return { valid, userJwt, pending };
 }
 
 export default function Popup() {
-  const userJwt = useUserJwt();
+  const attachUserJwt = useAttachUserJwt();
 
   const { user, isLoaded, isSignedIn, signOut, isSigningOut } =
     useBackgroundAuth();
@@ -229,19 +245,6 @@ export default function Popup() {
 
     loadAuthState();
   }, []);
-
-  useEffect(() => {
-    if (userJwt !== null) {
-      void chrome.runtime
-        .sendMessage({
-          action: "attachTokenToSession",
-          payload: {
-            token: userJwt,
-          },
-        })
-        .then(() => console.info("Temp auth token processed in background"));
-    }
-  }, [userJwt]);
 
   // Update auth state when user signs in
   useEffect(() => {
@@ -902,6 +905,7 @@ export default function Popup() {
         duplicateWindow,
         timeFilterEnabled,
         minPostAge,
+        browserbaseMode: false,
       };
 
       console.log(
@@ -935,6 +939,8 @@ export default function Popup() {
       console.error("Error stopping auto-commenting:", error);
     }
   };
+
+  // figure out how to call the start autocommenting scripts and all here in browserbase mode
 
   // If user has never signed in, show sign-in UI (skip loading entirely)
   if (!hasEverSignedIn) return <Auth />;

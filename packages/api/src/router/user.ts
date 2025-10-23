@@ -18,6 +18,7 @@ import { checkPremiumAccess } from "../utils/check-premium-access";
 import { cryptography } from "../utils/encryption";
 import { env } from "../utils/env";
 import {
+  assumedUserJwt,
   browserRegistry,
   hyperbrowser,
   LinkedInBrowserSession,
@@ -163,6 +164,22 @@ export const userRouter = {
         orderBy: { id: "asc" },
       }),
     ),
+
+  verifyAssumedUserJwt: publicProcedure
+    .input(z.object({ token: z.string() }))
+    .mutation(async ({ input }) => {
+      const decoded = await assumedUserJwt.decode(input.token);
+      if (decoded.success) {
+        return {
+          status: "success",
+        } as const;
+      }
+
+      return {
+        status: "error",
+        error: decoded.error,
+      } as const;
+    }),
 
   startBrowserSession: protectedProcedure
     .input(

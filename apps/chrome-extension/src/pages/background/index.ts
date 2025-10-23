@@ -112,8 +112,13 @@ const authService = {
     }
   },
 
-  attachTokenToSession(token: string) {
+  async attachTokenToSession(token: string) {
     this.assumedUserToken = token;
+    const response = await trpc.user.verifyAssumedUserJwt.mutate({ token });
+    if (response.status === "error") {
+      return { success: false };
+    }
+
     return { success: true };
   },
 
@@ -362,12 +367,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         });
       return true;
 
-    case "requestAssumedUserTokenAndAttachToSession":
+    case "attachTokenToSession":
       console.log(
         "Background: Received requestAssumedUserTokenAndAttachToSession request",
       );
-      const response = authService.attachTokenToSession(request.payload.token);
-      sendResponse(response);
+      authService
+        .attachTokenToSession(request.payload.token)
+        .then((response) => {
+          sendResponse(response);
+        });
       return true;
 
     case "getAuthStatus":

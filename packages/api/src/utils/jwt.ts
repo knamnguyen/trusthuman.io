@@ -146,7 +146,7 @@ export function jwtFactory<
       return {
         success: true,
         payload: parsed.data as z.output<Schema>,
-      };
+      } as const;
     },
   };
 }
