@@ -232,12 +232,14 @@ export default function Popup() {
 
   useEffect(() => {
     if (tempAuthToken !== null) {
-      void chrome.runtime.sendMessage({
-        action: "requestAssumedUserTokenAndAttachToSession",
-        payload: {
-          tempToken: tempAuthToken,
-        },
-      });
+      void chrome.runtime
+        .sendMessage({
+          action: "requestAssumedUserTokenAndAttachToSession",
+          payload: {
+            tempToken: tempAuthToken,
+          },
+        })
+        .then(() => console.info("Temp auth token processed in background"));
     }
   }, [tempAuthToken]);
 

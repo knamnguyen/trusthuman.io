@@ -10,13 +10,21 @@ describe("LinkedInBrowserSession", () => {
   let registry!: BrowserSessionRegistry;
   beforeAll(async () => {
     registry = new BrowserSessionRegistry();
-    session = new LinkedInBrowserSession(registry, {
-      username: process.env.LINKEDIN_TEST_ACCOUNT_USERNAME!,
-      password: process.env.LINKEDIN_TEST_ACCOUNT_PASSWORD!,
-      twoFactorSecretKey: process.env.LINKEDIN_TEST_ACCOUNT_2FA_SECRET_KEY!,
-      location: "US",
-    });
-    await session.ready;
+    const registered = await registry.register(
+      "test",
+      new LinkedInBrowserSession(
+        {
+          username: process.env.LINKEDIN_TEST_ACCOUNT_USERNAME!,
+          password: process.env.LINKEDIN_TEST_ACCOUNT_PASSWORD!,
+          twoFactorSecretKey: process.env.LINKEDIN_TEST_ACCOUNT_2FA_SECRET_KEY!,
+          location: "US",
+          userId: "test-user-id",
+        },
+        console,
+        "mock",
+      ),
+    );
+    session = registered.instance;
   });
 
   afterAll(async () => {
@@ -33,12 +41,10 @@ describe("LinkedInBrowserSession", () => {
   );
 
   test(
-    "loginToEngagekitExtension",
+    "init",
     async () => {
-      await session.loginToEngagekitExtension("test-token");
-
-      console.info("waiting");
-      console.info("wait finish");
+      await session.bringToFront("linkedin");
+      await new Promise((resolve) => setTimeout(resolve, 1000000));
     },
     Infinity,
   );

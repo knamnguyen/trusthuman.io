@@ -150,7 +150,7 @@ export class LinkedInBrowserSession {
         // but somehow this is getting the wrong id, maybe manifest.dev.json's key is wrong idk
         console.info({ extensionId });
         await page.goto(
-          `chrome-extension://flcmblnepmbbmohljbdnejgkkpeangfk/src/pages/popup/index.html?tempAuthToken=${tempAuthToken}`,
+          `chrome-extension://ofpificfhbopdfmlcmnmhhhmdbepgfbh/src/pages/popup/index.html?tempAuthToken=${tempAuthToken}`,
         );
         return page;
       }),
