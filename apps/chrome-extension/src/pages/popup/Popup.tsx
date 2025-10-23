@@ -940,7 +940,8 @@ export default function Popup() {
     }
   };
 
-  // figure out how to call the start autocommenting scripts and all here in browserbase mode
+  // TODO: figure out what's the best way to start autocommenting scripts and all here in browserbase mode
+  // we might not even need to do it in react, just call it from background directly or something
 
   // If user has never signed in, show sign-in UI (skip loading entirely)
   if (!hasEverSignedIn) return <Auth />;
