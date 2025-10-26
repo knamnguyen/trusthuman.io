@@ -17,6 +17,8 @@ import { ZodError } from "zod";
 import type { Prisma, PrismaClient } from "@sassy/db";
 import { db } from "@sassy/db";
 
+import { assumedUserJwt } from "./utils/linkedin-browser-session";
+
 /**
  * 1. CONTEXT
  *
@@ -87,6 +89,23 @@ const clerkClient = createClerkClient({
  * - Chrome extension requests: Uses Backend SDK to verify Authorization header
  */
 const isAuthed = t.middleware(async ({ ctx, next }) => {
+  const assumedUserToken = ctx.headers.get("x-assumed-user-token");
+
+  // check for assumedUserToken
+  if (assumedUserToken !== null) {
+    const decoded = await assumedUserJwt.decode(assumedUserToken);
+    if (decoded.success) {
+      const user = await getOrInsertUser(ctx.db, decoded.payload.userId);
+
+      return next({
+        ctx: {
+          ...ctx,
+          user,
+        },
+      });
+    }
+  }
+
   const source = ctx.headers.get("x-trpc-source");
 
   if (source === "chrome-extension") {

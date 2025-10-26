@@ -108,6 +108,16 @@ export const aiCommentsRouter = createTRPCRouter({
 
         const now = new Date();
         const needsReset = isDifferentDay(currentUser.updatedAt, now);
+        const newDailyCommentsCount = needsReset
+          ? 1
+          : currentUser.dailyAIcomments + 1;
+
+        if (newDailyCommentsCount > 100) {
+          throw new TRPCError({
+            code: "TOO_MANY_REQUESTS",
+            message: "You have exceeded the daily comment counts",
+          });
+        }
 
         // Update daily comment count (reset if different day, otherwise increment)
         await ctx.db.user.update({
