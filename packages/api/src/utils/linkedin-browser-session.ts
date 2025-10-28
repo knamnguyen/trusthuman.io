@@ -111,6 +111,8 @@ export class LinkedInBrowserSession {
 
     const result = await createBrowserSession({
       useProxy: true,
+      useStealth: true,
+      solveCaptchas: true,
       extensionIds: this.opts.extensionIds,
       proxyCountry: this.opts.location,
       profile: {

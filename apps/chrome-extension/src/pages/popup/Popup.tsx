@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useStorage, useStorageState } from "@src/services/storage";
+import { useQuery } from "@tanstack/react-query";
 
 import engageKitLogo from "../../../public/icon-128.png";
 import { DEFAULT_STYLE_GUIDES_FREE } from "../../config/default-style-guides-free";
@@ -61,16 +63,22 @@ export function useAttachUserJwt() {
   const [valid, setValid] = useState(false);
 
   useEffect(() => {
-    if (userJwt !== null) {
-      void chrome.runtime
-        .sendMessage({
-          action: "attachTokenToSession",
-          payload: {
-            token: userJwt,
-          },
-        })
-        .then((response) => setValid(!!response.success))
-        .finally(() => setPending(false));
+    async function run() {
+      if (userJwt !== null) {
+        await chrome.runtime
+          .sendMessage({
+            action: "attachTokenToSession",
+            payload: {
+              token: userJwt,
+            },
+          })
+          .then((response) => setValid(!!response.success))
+          .finally(() => setPending(false));
+
+        await chrome.runtime.sendMessage({
+          action: "readyForAction",
+        });
+      }
     }
   }, [userJwt]);
 
@@ -82,6 +90,7 @@ export default function Popup() {
 
   const { user, isLoaded, isSignedIn, signOut, isSigningOut } =
     useBackgroundAuth();
+
   const {
     isPremium,
     isLoading: isPremiumLoading,

@@ -7,6 +7,7 @@ import {
   UserCreateInputSchema,
   UserUpdateInputSchema,
 } from "@sassy/db/schema-validators";
+import { storageStateSchema } from "@sassy/validators";
 
 // import {
 //   userCreateSchema,
@@ -295,6 +296,41 @@ export const userRouter = {
         status: details.status,
       } as const;
     }),
+
+  saveBrowserState: protectedProcedure
+    .input(storageStateSchema)
+    .mutation(async ({ ctx, input }) => {
+      const serialized = JSON.stringify(input);
+      await ctx.db.userBrowserState.upsert({
+        update: {
+          state: serialized,
+        },
+        where: {
+          userId: ctx.user.id,
+        },
+        create: {
+          userId: ctx.user.id,
+          state: serialized,
+        },
+      });
+
+      return {
+        status: "success",
+      } as const;
+    }),
+
+  getBrowserState: protectedProcedure.query(async ({ ctx }) => {
+    const state = await ctx.db.userBrowserState.findUnique({
+      where: {
+        userId: ctx.user.id,
+      },
+      select: {
+        state: true,
+      },
+    });
+
+    return state ? storageStateSchema.parse(JSON.parse(state.state)) : null;
+  }),
 
   /**
    * Get a user by ID

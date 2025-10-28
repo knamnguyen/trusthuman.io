@@ -11,7 +11,7 @@ import {
 export default async function scrollFeedLoadPosts(
   duration: number,
   isCommentingActive: boolean,
-  statusPanel?: HTMLDivElement,
+  statusPanel?: HTMLDivElement | null,
 ): Promise<void> {
   console.log(
     `Aggressively scrolling feed for ${duration} seconds to load posts...`,

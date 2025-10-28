@@ -6,6 +6,7 @@ import "@assets/styles/tailwind.css";
 
 import Popup from "@pages/popup/Popup";
 import { ClerkProvider } from "@src/components/clerk-provider";
+import { AppStorageContextProvider } from "@src/services/storage";
 
 import { TRPCReactProvider } from "../../trpc/react";
 
@@ -16,7 +17,9 @@ function init() {
   root.render(
     <ClerkProvider>
       <TRPCReactProvider>
-        <Popup />
+        <AppStorageContextProvider>
+          <Popup />
+        </AppStorageContextProvider>
       </TRPCReactProvider>
     </ClerkProvider>,
   );

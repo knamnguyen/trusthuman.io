@@ -378,6 +378,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         });
       return true;
 
+    case "readyForAction":
+      console.log(
+        "Background: Received requestAssumedUserTokenAndAttachToSession request",
+      );
+      // TODO: get ack message from popup.tsx before sending messages to start actions
+      authService
+        .attachTokenToSession(request.payload.token)
+        .then((response) => {
+          sendResponse(response);
+        });
+      return true;
+
     case "getAuthStatus":
       console.log("Background: Received getAuthStatus request");
       authService

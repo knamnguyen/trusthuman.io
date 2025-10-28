@@ -95,6 +95,9 @@ if (document.readyState !== "loading") {
 
 // Function to show the start button overlay
 function showStartButton() {
+  // TODO: refactor this to be runnable by pupetteer
+  // or even just run this fn and stream the session to hyperbrowser clients
+  // https://www.hyperbrowser.ai/docs/sessions/recordings#get-video-recording-url
   console.log("🚀 Showing start button for EngageKit...");
 
   // Don't show multiple buttons
@@ -429,7 +432,7 @@ function showStartButton() {
                   tabAudio.stop();
                 }
               } else {
-                startNewCommentingFlowWithDelayedTabSwitch(
+                startNewCommentingFlowWithDelayedTabSwitch({
                   scrollDuration,
                   commentDelay,
                   maxPosts,
@@ -442,9 +445,9 @@ function showStartButton() {
                   commentAsCompanyEnabled,
                   timeFilterEnabled,
                   minPostAge,
-                  !!cfg.manualApproveEnabled,
-                  authenticityBoostEnabledCfg,
-                );
+                  manualApproveEnabled: !!cfg.manualApproveEnabled,
+                  authenticityBoostEnabled: authenticityBoostEnabledCfg,
+                });
               }
             },
           );
@@ -493,21 +496,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         const timeFilterEnabled = r.timeFilterEnabled ?? false;
         const minPostAge = r.minPostAge ?? 1;
         const manualApproveEnabled = !!r.manualApproveEnabled;
-        startNewCommentingFlowWithDelayedTabSwitch(
-          request.scrollDuration,
-          request.commentDelay,
-          request.maxPosts,
-          request.styleGuide,
-          request.duplicateWindow || 24,
-          null as any,
-          null as any,
-          null as any,
-          null as any,
-          false,
+        startNewCommentingFlowWithDelayedTabSwitch({
+          scrollDuration: request.scrollDuration,
+          commentDelay: request.commentDelay,
+          maxPosts: request.maxPosts,
+          styleGuide: request.styleGuide,
+          duplicateWindow: request.duplicateWindow || 24,
+          commentAsCompanyEnabled: false,
           timeFilterEnabled,
           minPostAge,
           manualApproveEnabled,
-        );
+        });
       },
     );
     sendResponse({ success: true });
@@ -567,22 +566,52 @@ async function loadCounters(): Promise<void> {
 }
 
 // Main function to start the new commenting flow with delayed tab switching
-async function startNewCommentingFlowWithDelayedTabSwitch(
-  scrollDuration: number,
-  commentDelay: number,
-  maxPosts: number,
-  styleGuide: string,
-  duplicateWindow: number,
-  overlay: HTMLDivElement,
-  startButton: HTMLButtonElement,
-  subtitle: HTMLParagraphElement,
-  statusPanel: HTMLDivElement,
-  commentAsCompanyEnabled: boolean = false,
-  timeFilterEnabled: boolean = false,
-  minPostAge: number = 1,
-  manualApproveEnabled: boolean = false,
-  authenticityBoostEnabled: boolean = false,
-) {
+async function startNewCommentingFlowWithDelayedTabSwitch(params: {
+  scrollDuration: number;
+  commentDelay: number;
+  maxPosts: number;
+  styleGuide: string;
+  duplicateWindow: number;
+  overlay?: HTMLDivElement;
+  startButton?: HTMLButtonElement;
+  subtitle?: HTMLParagraphElement;
+  statusPanel?: HTMLDivElement;
+  commentAsCompanyEnabled?: boolean;
+  timeFilterEnabled?: boolean;
+  minPostAge?: number;
+  manualApproveEnabled?: boolean;
+  authenticityBoostEnabled?: boolean;
+  commentProfileName?: string;
+  languageAwareEnabled?: boolean;
+  skipCompanyPagesEnabled?: boolean;
+  skipPromotedPostsEnabled?: boolean;
+  skipFriendsActivitiesEnabled?: boolean;
+  blacklistEnabled?: boolean;
+  blacklistAuthors?: string[];
+}) {
+  const {
+    scrollDuration,
+    blacklistEnabled = false,
+    blacklistAuthors = [],
+    commentDelay,
+    maxPosts,
+    styleGuide,
+    duplicateWindow,
+    overlay,
+    startButton,
+    subtitle,
+    statusPanel,
+    commentAsCompanyEnabled = false,
+    timeFilterEnabled = false,
+    minPostAge = 1,
+    manualApproveEnabled = false,
+    authenticityBoostEnabled = false,
+    commentProfileName = "",
+    languageAwareEnabled = false,
+    skipCompanyPagesEnabled = false,
+    skipPromotedPostsEnabled = false,
+    skipFriendsActivitiesEnabled = false,
+  } = params;
   // ➡️ Persist the current LinkedIn username path for later usage in popup
   saveCurrentUsernameUrl();
 
@@ -609,41 +638,6 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
   console.log("CHECKpoinn 1");
 
   // Retrieve desired company profile name (if any) and language flag from storage once per session
-  const {
-    commentProfileName,
-    languageAwareEnabled,
-    skipCompanyPagesEnabled,
-    skipPromotedPostsEnabled,
-    skipFriendsActivitiesEnabled,
-  } = await new Promise<{
-    commentProfileName: string;
-    languageAwareEnabled: boolean;
-    skipCompanyPagesEnabled: boolean;
-    skipPromotedPostsEnabled: boolean;
-    skipFriendsActivitiesEnabled: boolean;
-    authenticityBoostEnabled: boolean;
-  }>((resolve) => {
-    chrome.storage.local.get(
-      [
-        "commentProfileName",
-        "languageAwareEnabled",
-        "skipCompanyPagesEnabled",
-        "skipPromotedPostsEnabled",
-        "skipFriendsActivitiesEnabled",
-        "authenticityBoostEnabled",
-      ],
-      (r) => {
-        resolve({
-          commentProfileName: (r.commentProfileName as string) || "",
-          languageAwareEnabled: r.languageAwareEnabled || false,
-          skipCompanyPagesEnabled: r.skipCompanyPagesEnabled || false,
-          skipPromotedPostsEnabled: r.skipPromotedPostsEnabled || false,
-          skipFriendsActivitiesEnabled: r.skipFriendsActivitiesEnabled || false,
-          authenticityBoostEnabled: r.authenticityBoostEnabled || false,
-        });
-      },
-    );
-  });
   console.log("CHECK POINT REACHED");
   const skipCompanyPages = skipCompanyPagesEnabled;
   const skipPromotedPosts = skipPromotedPostsEnabled;
@@ -651,26 +645,6 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
   console.log("CHECK POINT 2");
   // authenticityBoostEnabled already available from storage destructuring
   // Retrieve blacklist settings once per session
-  const { blacklistEnabled: blacklistEnabled, blacklistAuthors } =
-    await new Promise<{
-      blacklistEnabled: boolean;
-      blacklistAuthors: string;
-    }>((resolve) => {
-      chrome.storage.local.get(
-        ["blacklistEnabled", "blacklistAuthors"],
-        (r) => {
-          resolve({
-            blacklistEnabled: r.blacklistEnabled ?? false,
-            blacklistAuthors: (r.blacklistAuthors as string) ?? "",
-          });
-        },
-      );
-    });
-
-  const blacklistList = blacklistAuthors
-    .split(",")
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean);
 
   // Clean up old timestamp entries and post URNs to prevent storage bloat
   await cleanupOldTimestampsAuthor();
@@ -749,7 +723,7 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
         skipPromotedPosts,
         skipFriendsActivities,
         blacklistEnabled,
-        blacklistList,
+        blacklistList: blacklistAuthors,
         styleGuide,
         duplicateWindow,
         authenticityBoostEnabled,
@@ -768,7 +742,7 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
         timeFilterEnabled,
         minPostAge,
         blacklistEnabled,
-        blacklistList,
+        blacklistAuthors,
         skipCompanyPages,
         skipPromotedPosts,
         skipFriendsActivities,
