@@ -119,8 +119,16 @@ export class AppStorage {
   }
 
   async hydrate() {
-    const state = await this.persister.retrieveAll();
-    await chrome.storage.local.set({ ...defaultState, ...state });
+    while (true) {
+      try {
+        const state = await this.persister.retrieveAll();
+        await chrome.storage.local.set({ ...defaultState, ...state });
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+        break;
+      } catch (err) {
+        console.error("error hydrating from persister", err);
+      }
+    }
   }
 
   async getAll() {
@@ -178,7 +186,7 @@ export function AppStorageContextProvider({
   const storageRef = useRef(appStorage);
 
   useEffect(() => {
-    void storageRef.current.hydrate();
+    // void storageRef.current.hydrate();
   }, []);
 
   return (

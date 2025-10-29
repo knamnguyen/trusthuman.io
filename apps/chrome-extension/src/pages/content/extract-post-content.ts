@@ -1,5 +1,5 @@
 // Function to extract post content from post container
-export default function extractPostContent(postContainer: HTMLElement): string {
+export default function extractPostContent(postContainer: HTMLElement) {
   try {
     // Look for the content container within the post
     // const contentContainer = postContainer.querySelector('.fie-impression-container');
@@ -8,7 +8,7 @@ export default function extractPostContent(postContainer: HTMLElement): string {
     );
     if (!contentContainer) {
       console.log("Content container not found");
-      return "";
+      return { content: "", html: null };
     }
 
     // Extract text content recursively
@@ -26,9 +26,9 @@ export default function extractPostContent(postContainer: HTMLElement): string {
 
     const content = extractText(contentContainer).replace(/\s+/g, " ").trim();
     console.log(`Extracted post content: ${content.substring(0, 100)}...`);
-    return content;
+    return { content, html: contentContainer.innerHTML };
   } catch (error) {
     console.error("Error extracting post content:", error);
-    return "";
+    return { content: "", html: null };
   }
 }

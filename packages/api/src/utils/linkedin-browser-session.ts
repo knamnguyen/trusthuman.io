@@ -1,5 +1,5 @@
 import path from "node:path";
-import type { Browser, Page } from "puppeteer";
+import type { Browser, Page, WebWorker } from "puppeteer";
 import { Hyperbrowser } from "@hyperbrowser/sdk";
 import { authenticator } from "otplib";
 import puppeteer, { TargetType } from "puppeteer";
@@ -106,6 +106,8 @@ export class LinkedInBrowserSession {
     engagekitExtension: Page;
   };
   public pageInView: "linkedin" | "engagekitExtension" = "linkedin";
+
+  private extensionWorker: WebWorker | null = null;
   constructor(
     private readonly opts: {
       userId: string;
@@ -163,6 +165,9 @@ export class LinkedInBrowserSession {
         console.info({ extensionId });
         await page.goto(
           `chrome-extension://ofpificfhbopdfmlcmnmhhhmdbepgfbh/src/pages/popup/index.html?userJwt=${userJwt}`,
+          {
+            waitUntil: "networkidle0",
+          },
         );
 
         return page;
@@ -180,6 +185,39 @@ export class LinkedInBrowserSession {
     }
     this.pageInView = page;
     await this.pages[page].bringToFront();
+  }
+
+  async getExtensionWorker() {
+    if (this.extensionWorker !== null) {
+      return this.extensionWorker;
+    }
+
+    const target = await this.browser.waitForTarget(
+      (target) => target.type() === TargetType.SERVICE_WORKER,
+    );
+
+    let attempts = 0;
+
+    // we need to retry here because sometimes the worker is not ready
+    // there is no straightforward method to wait for worker
+    // so we just retry in 2000ms untill max_attempts is reached
+    while (true) {
+      try {
+        this.extensionWorker = await target.worker();
+
+        return this.extensionWorker;
+      } catch (err) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        this.logger.info(`extension worker met error: ${err as any}, retrying`);
+        attempts++;
+
+        if (attempts > 5) {
+          throw err;
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      }
+    }
   }
 
   async login() {
@@ -348,24 +386,6 @@ export class LinkedInBrowserSession {
       output: result,
     } as const;
   }
-
-  async getExtensionWorker() {
-    const targets = this.browser.targets();
-    const target =
-      targets.find((t) => t.type() === TargetType.SERVICE_WORKER) ?? null;
-
-    if (target === null) {
-      return null;
-    }
-
-    const worker = await target.worker();
-
-    if (worker === null) {
-      return null;
-    }
-
-    return worker;
-  }
 }
 
 export class BrowserSessionRegistry {
@@ -470,6 +490,7 @@ async function createHyperbrowserSession(
     defaultViewport: null,
     headless: false,
     pipe: true,
+    userDataDir: path.join(process.cwd(), ".puppeteer", "user_data"),
     enableExtensions: [filepath],
   });
 
@@ -477,8 +498,4 @@ async function createHyperbrowserSession(
     sessionId: "mock",
     browser,
   };
-}
-
-export class BrowserSessionFactory {
-  constructor(private readonly registry: BrowserSessionRegistry) {}
 }

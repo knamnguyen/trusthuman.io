@@ -46,14 +46,18 @@ describe("LinkedInBrowserSession", () => {
   );
 
   test(
-    "init",
+    "startAutoCommenting",
     async () => {
       await session.bringToFront("linkedin");
-      await session.executeInBackground(function () {
-        this.globalThis.fn;
-        console.info("wasup man");
+      await session.startAutoCommenting({
+        scrollDuration: 10,
+        maxPosts: 5,
+        commentDelay: 30,
+        styleGuide: "PROFESSIONAL",
+        duplicateWindow: 24,
       });
-      await new Promise((resolve) => setTimeout(resolve, 1000000));
+
+      await new Promise((resolve) => setTimeout(resolve, 20000));
     },
     Infinity,
   );

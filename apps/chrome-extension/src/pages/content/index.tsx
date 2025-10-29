@@ -51,6 +51,8 @@ import "./attach-engage-button";
 import "./init-comment-history";
 import "./profile-target-list";
 
+import { getStandaloneTRPCClient } from "@src/trpc/react";
+
 import { ContentScriptMessage } from "../background";
 
 // Pronoun rule for company mode
@@ -496,6 +498,7 @@ chrome.runtime.onMessage.addListener(
         break;
       }
       case "startNewCommentingFlow": {
+        console.info("Received start new commenting flow:", request);
         chrome.storage.local.get(
           ["timeFilterEnabled", "minPostAge", "manualApproveEnabled"],
           (r) => {
@@ -803,6 +806,53 @@ async function startNewCommentingFlowWithDelayedTabSwitch(params: {
   }
 }
 
+async function getUncommentedPostContainers(containers: NodeListOf<Element>) {
+  const filteredPostContainers: HTMLElement[] = [];
+
+  const urnMap: Map<string, HTMLElement> = new Map();
+
+  const hashes: string[] = [];
+
+  for (let i = 0; i < containers.length; i++) {
+    const container = containers[i] as HTMLElement;
+    const urns = extractPostUrns(container);
+    for (const urn of urns) {
+      urnMap.set(urn, container);
+    }
+
+    const { content: postContent } = extractPostContent(container);
+    if (!postContent) {
+      console.log(`⏭️ SKIPPING post ${i + 1} - could not extract post content`);
+      console.groupEnd();
+      continue;
+    }
+
+    // Hash-based duplicate detection (content-level)
+    const hash = await normalizeAndHashContent(postContent);
+    if (hash === null) {
+      console.log(`⏭️ SKIPPING post ${i + 1} - could not extract post hash`);
+
+      continue;
+    }
+    hashes.push(hash.hash);
+  }
+
+  const result = await getStandaloneTRPCClient().user.hasCommentedBefore.query({
+    urns: Array.from(urnMap.keys()),
+    hashes,
+  });
+
+  const uncommentedUrns = new Set(result.uncommentedUrns);
+
+  for (const [urn, container] of urnMap.entries()) {
+    if (uncommentedUrns.has(urn)) {
+      filteredPostContainers.push(container);
+    }
+  }
+
+  return filteredPostContainers;
+}
+
 // Function to process all posts on the feed
 async function processAllPostsFeed(
   commentDelay: number,
@@ -828,15 +878,16 @@ async function processAllPostsFeed(
   );
 
   // Prefer div[data-urn] (search/list feed), fallback to div[data-id] (home feed)
-  let postContainers = document.querySelectorAll("div[data-urn]");
-  if (postContainers.length > 0) {
+  let allPostContainers = document.querySelectorAll("div[data-urn]");
+  // urn:li:activity:7389124229595742208
+  if (allPostContainers.length > 0) {
     console.log(
-      `🎯 Found ${postContainers.length} post containers with selector: div[data-urn]`,
+      `🎯 Found ${allPostContainers.length} post containers with selector: div[data-urn]`,
     );
   } else {
-    postContainers = document.querySelectorAll("div[data-id]");
+    allPostContainers = document.querySelectorAll("div[data-id]");
     console.log(
-      `🎯 Found ${postContainers.length} post containers with selector: div[data-id]`,
+      `🎯 Found ${allPostContainers.length} post containers with selector: div[data-id]`,
     );
   }
 
@@ -849,7 +900,7 @@ async function processAllPostsFeed(
     ".feed-shared-update-v2__content",
   );
 
-  if (postContainers.length === 0) {
+  if (allPostContainers.length === 0) {
     console.error(
       "🚨 NO POSTS FOUND! This is why the automation stops immediately.",
     );
@@ -869,6 +920,16 @@ async function processAllPostsFeed(
   backgroundLog(
     `🎯 Starting loop: commentCount=${commentCount}, maxPosts=${maxPosts}, isActive=${isCommentingActive}`,
   );
+
+  const postContainers = await getUncommentedPostContainers(allPostContainers);
+
+  const comments: {
+    postContentHtml: string | null;
+    comment: string;
+    urn: string;
+    hash: string | null;
+    isDuplicate: boolean;
+  }[] = [];
 
   for (
     let i = 0;
@@ -966,6 +1027,7 @@ async function processAllPostsFeed(
         break;
       }
 
+      // TODO: maybe remove this since we have a db check already
       // STEP 1: Check for post URN duplicates (if we've already commented on this specific post)
       const postUrns = extractPostUrns(postContainer);
       if (postUrns.length === 0) {
@@ -1041,7 +1103,8 @@ async function processAllPostsFeed(
       }
 
       // Extract post content
-      const postContent = extractPostContent(postContainer);
+      const { content: postContent, html: contentHtml } =
+        extractPostContent(postContainer);
       if (!postContent) {
         console.log(
           `⏭️ SKIPPING post ${i + 1} - could not extract post content`,
@@ -1159,6 +1222,15 @@ async function processAllPostsFeed(
       );
 
       if (success) {
+        for (const [index, urn] of postUrns.entries()) {
+          comments.push({
+            urn,
+            comment,
+            postContentHtml: contentHtml,
+            hash: hashRes?.hash ?? null,
+            isDuplicate: index !== 0,
+          });
+        }
         commentCount++;
         commentedAuthors.add(authorInfo.name);
 
@@ -1177,6 +1249,13 @@ async function processAllPostsFeed(
         }
 
         await updateCommentCounts();
+
+        await getStandaloneTRPCClient()
+          .user.saveComments.mutate(comments)
+          .catch((err) => {
+            // just catch this error here and continue
+            console.error("error saving comments:", err);
+          });
 
         console.log(
           `🎉 Successfully posted comment ${commentCount}/${maxPosts} on post by ${authorInfo.name}`,

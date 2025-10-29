@@ -171,7 +171,7 @@ const sendStatusUpdate = (
   updates: Partial<AutoCommentingState> = {},
 ) => {
   try {
-    sendMessageToContentScript({
+    chrome.runtime.sendMessage({
       action: "statusUpdate",
       status,
       commentCount: autoCommentingState.commentCount,
@@ -231,6 +231,7 @@ const startAutoCommenting = async (
   commentDelay: number,
   maxPosts: number,
   duplicateWindow: number,
+  // TODO: check if this can be removed
   browserbaseMode?: boolean,
 ): Promise<void> => {
   try {
@@ -261,7 +262,7 @@ const startAutoCommenting = async (
 
     // Get the current active tab to decide whether we need a new LinkedIn tab
     const currentTabs = await chrome.tabs.query({
-      active: browserbaseMode ? false : true,
+      active: true,
       currentWindow: true,
     });
 
@@ -348,60 +349,73 @@ const messageRouter = new MessageRouter({
   generateComment: generateCommentBackground,
 });
 
+const createExposedFunctions = () => {
+  let tabId: number | null = null;
+
+  async function sendMessageToTab(
+    tabId: number,
+    message: ContentScriptMessage,
+  ) {
+    await chrome.tabs.sendMessage(tabId, message);
+    return true;
+  }
+
+  async function getPinnedTabId() {
+    // if a tab id is already set, just return
+    if (tabId !== null) {
+      return tabId;
+    }
+
+    // query for tabs to see if there are any linkedin tabs
+    const tabs = await chrome.tabs.query({
+      active: false,
+      currentWindow: true,
+    });
+
+    const feedTab = tabs.find(
+      (tab) =>
+        tab.url !== undefined && tab.url.startsWith("https://www.linkedin.com"),
+    );
+
+    // if no linkedin tabs, just create one and assign it to tab id
+    if (feedTab === undefined) {
+      console.log("No pinned LinkedIn tab found, creating one...");
+      const tab = await chrome.tabs.create({
+        url: "https://www.linkedin.com/feed/",
+        active: false,
+        pinned: true,
+      });
+
+      // can use null assertion because chrome.tabs.create and chrome.tabs.query should return an id
+      tabId = tab.id!;
+      console.log("Pinned LinkedIn tab created.");
+    } else {
+      // can use null assertion because chrome.tabs.create and chrome.tabs.query should return an id
+      tabId = feedTab.id!;
+    }
+
+    return tabId;
+  }
+
+  return {
+    async startAutoCommenting(params) {
+      const tabId = await getPinnedTabId();
+      await sendMessageToTab(tabId, {
+        action: "startNewCommentingFlow",
+        params,
+      });
+    },
+    async stopAutoCommenting() {
+      const tabId = await getPinnedTabId();
+      await sendMessageToTab(tabId, {
+        action: "stopCommentingFlow",
+      });
+    },
+  } satisfies BrowserFunctions;
+};
+
 // expose functions to be called in linkedin-browser-session
-(globalThis as any).exposedFunctions = {
-  async startAutoCommenting(params) {
-    await chrome.runtime.sendMessage({
-      action: "startAutoCommenting",
-      payload: params,
-    });
-  },
-  async stopAutoCommenting() {
-    await chrome.runtime.sendMessage({
-      action: "stopAutoCommenting",
-    });
-  },
-} satisfies BrowserFunctions;
-
-export type ContentScriptMessage =
-  | {
-      action: "startNewCommentingFlow";
-      params: {
-        scrollDuration: number;
-        commentDelay: number;
-        maxPosts: number;
-        styleGuide: string;
-        duplicateWindow: number;
-        commentAsCompanyEnabled?: boolean;
-        timeFilterEnabled?: boolean;
-        minPostAge?: number;
-        manualApproveEnabled?: boolean;
-        authenticityBoostEnabled?: boolean;
-        commentProfileName?: string;
-        languageAwareEnabled?: boolean;
-        skipCompanyPagesEnabled?: boolean;
-        skipPromotedPostsEnabled?: boolean;
-        skipFriendsActivitiesEnabled?: boolean;
-        blacklistEnabled?: boolean;
-        blacklistAuthors?: string[];
-      };
-    }
-  | {
-      action: "showStartButton";
-    }
-  | {
-      action: "stopCommentingFlow";
-    }
-  | ({
-      action: "statusUpdate";
-      status: string;
-    } & {
-      [k in string]: any;
-    });
-
-async function sendMessageToContentScript(message: ContentScriptMessage) {
-  await chrome.runtime.sendMessage(message);
-}
+(globalThis as any).exposedFunctions = createExposedFunctions();
 
 // Message listener with comprehensive authentication service
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -425,6 +439,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       return true;
 
     case "attachTokenToSession":
+      console.info(request);
       console.log(
         "Background: Received requestAssumedUserTokenAndAttachToSession request",
       );
@@ -435,17 +450,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         });
       return true;
 
-    case "readyForAction":
-      console.log(
-        "Background: Received requestAssumedUserTokenAndAttachToSession request",
-      );
-      // TODO: get ack message from popup.tsx before sending messages to start actions
-      authService
-        .attachTokenToSession(request.payload.token)
-        .then((response) => {
-          sendResponse(response);
-        });
-      return true;
+    // TODO: do something to let client know ready for action
+    // case "readyForAction":
+    //   console.log(
+    //     "Background: Received requestAssumedUserTokenAndAttachToSession request",
+    //   );
+    //   // TODO: get ack message from popup.tsx before sending messages to start actions
+    //   authService
+    //     .attachTokenToSession(request.payload.token)
+    //     .then((response) => {
+    //       sendResponse(response);
+    //     });
+    //   return true;
 
     case "getAuthStatus":
       console.log("Background: Received getAuthStatus request");
@@ -631,3 +647,39 @@ chrome.alarms.create("authCheck", { periodInMinutes: 2 });
 console.log(
   "Background: Auth monitoring and service worker lifecycle handlers initialized",
 );
+
+export type ContentScriptMessage =
+  | {
+      action: "startNewCommentingFlow";
+      params: {
+        scrollDuration: number;
+        commentDelay: number;
+        maxPosts: number;
+        styleGuide: string;
+        duplicateWindow: number;
+        commentAsCompanyEnabled?: boolean;
+        timeFilterEnabled?: boolean;
+        minPostAge?: number;
+        manualApproveEnabled?: boolean;
+        authenticityBoostEnabled?: boolean;
+        commentProfileName?: string;
+        languageAwareEnabled?: boolean;
+        skipCompanyPagesEnabled?: boolean;
+        skipPromotedPostsEnabled?: boolean;
+        skipFriendsActivitiesEnabled?: boolean;
+        blacklistEnabled?: boolean;
+        blacklistAuthors?: string[];
+      };
+    }
+  | {
+      action: "showStartButton";
+    }
+  | {
+      action: "stopCommentingFlow";
+    }
+  | ({
+      action: "statusUpdate";
+      status: string;
+    } & {
+      [k in string]: any;
+    });

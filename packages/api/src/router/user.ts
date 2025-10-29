@@ -332,6 +332,77 @@ export const userRouter = {
     return state ? storageStateSchema.parse(JSON.parse(state.state)) : null;
   }),
 
+  saveComments: protectedProcedure
+    .input(
+      z
+        .object({
+          comment: z.string(),
+          postContentHtml: z.string().nullable(),
+          urn: z.string(),
+          hash: z.string().nullable(),
+          isDuplicate: z.boolean().default(false),
+          commentedAt: z.date().optional(),
+        })
+        .array()
+        .min(1),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const now = new Date();
+      const result = await ctx.db.userComment.createMany({
+        data: input.map((row) => ({
+          urn: row.urn,
+          userId: ctx.user.id,
+          hash: row.hash,
+          comment: row.comment,
+          postContentHtml: row.postContentHtml,
+          commentedAt: row.commentedAt ?? now,
+          isDuplicate: row.isDuplicate,
+        })),
+        skipDuplicates: true,
+      });
+
+      return {
+        status: "success",
+        inserted: result.count,
+      } as const;
+    }),
+
+  hasCommentedBefore: protectedProcedure
+    .input(
+      z.object({
+        urns: z.string().array(),
+        hashes: z.string().array(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const clause = [];
+
+      if (input.urns.length > 0) {
+        clause.push({
+          urn: { in: input.urns },
+        } as const);
+      }
+
+      if (input.hashes.length > 0) {
+        clause.push({
+          hash: { in: input.hashes },
+        } as const);
+      }
+
+      const comments = await ctx.db.userComment.findMany({
+        where: {
+          OR: clause,
+        },
+        select: { urn: true },
+      });
+
+      const commentedUrns = new Set(comments.map((comment) => comment.urn));
+
+      return {
+        uncommentedUrns: input.urns.filter((urn) => !commentedUrns.has(urn)),
+      } as const;
+    }),
+
   /**
    * Get a user by ID
    * This is primarily used by client applications

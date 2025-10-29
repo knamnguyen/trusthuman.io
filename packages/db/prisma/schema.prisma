@@ -43,6 +43,7 @@ model User {
   linkedInAccounts  LinkedInAccount[]
 
   UserBrowserState UserBrowserState[]
+  Comments         UserComment[]
 }
 
 model LinkedInAccount {
@@ -140,6 +141,18 @@ model LinkedInProfile {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model UserComment {
+  urn             String  @id
+  postContentHtml String?
+  hash            String?
+  comment         String
+  userId          String
+  isDuplicate     String
+  user            User    @relation(fields: [userId], references: [id])
+
+  @@index([hash])
 }
 
 model UserBrowserState {
