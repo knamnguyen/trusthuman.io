@@ -49,6 +49,10 @@ describe("LinkedInBrowserSession", () => {
     "init",
     async () => {
       await session.bringToFront("linkedin");
+      await session.executeInBackground(function () {
+        this.globalThis.fn;
+        console.info("wasup man");
+      });
       await new Promise((resolve) => setTimeout(resolve, 1000000));
     },
     Infinity,

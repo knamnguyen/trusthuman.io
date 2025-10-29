@@ -51,6 +51,8 @@ import "./attach-engage-button";
 import "./init-comment-history";
 import "./profile-target-list";
 
+import { ContentScriptMessage } from "../background";
+
 // Pronoun rule for company mode
 const COMPANY_PRONOUN_RULE =
   "IMPORTANT: You are in company page mode, not individual mode anymore. You're speaking on behalf of a company. ALWAYS use We/we pronouns; NEVER use I/i. This is the rule first and foremost you must follow before looking at any other rules or guide. Again, always use We/we pronouns when referring to yourself instead of I/i";
@@ -482,48 +484,73 @@ function showStartButton() {
 // (Audio logic moved to tab-audio.ts)
 
 // Listen for messages from the background script
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log("Content script received message:", request);
+chrome.runtime.onMessage.addListener(
+  (request: ContentScriptMessage, sender, sendResponse) => {
+    console.log("Content script received message:", request);
 
-  if (request.action === "showStartButton") {
-    console.log("📱 Popup requested to show start button");
-    showStartButton();
-    sendResponse({ success: true });
-  } else if (request.action === "startNewCommentingFlow") {
-    chrome.storage.local.get(
-      ["timeFilterEnabled", "minPostAge", "manualApproveEnabled"],
-      (r) => {
-        const timeFilterEnabled = r.timeFilterEnabled ?? false;
-        const minPostAge = r.minPostAge ?? 1;
-        const manualApproveEnabled = !!r.manualApproveEnabled;
-        startNewCommentingFlowWithDelayedTabSwitch({
-          scrollDuration: request.scrollDuration,
-          commentDelay: request.commentDelay,
-          maxPosts: request.maxPosts,
-          styleGuide: request.styleGuide,
-          duplicateWindow: request.duplicateWindow || 24,
-          commentAsCompanyEnabled: false,
-          timeFilterEnabled,
-          minPostAge,
-          manualApproveEnabled,
-        });
-      },
-    );
-    sendResponse({ success: true });
-  } else if (request.action === "stopCommentingFlow") {
-    console.log("Received stop signal - stopping commenting flow");
-    isCommentingActive = false;
-    try {
-      cleanupManualApproveUI();
-    } catch {}
-    tabAudio.stop();
-    sendResponse({ success: true });
-  } else if (request.action === "statusUpdate" && request.error) {
-    // Log error details to the website console for debugging
-    console.group("🚨 EngageKit Error Details");
-    console.error("Error Message:", request.error.message);
-  }
-});
+    switch (request.action) {
+      case "showStartButton": {
+        console.log("📱 Popup requested to show start button");
+        showStartButton();
+        sendResponse({ success: true });
+        break;
+      }
+      case "startNewCommentingFlow": {
+        chrome.storage.local.get(
+          ["timeFilterEnabled", "minPostAge", "manualApproveEnabled"],
+          (r) => {
+            const timeFilterEnabled = r.timeFilterEnabled ?? false;
+            const minPostAge = r.minPostAge ?? 1;
+            const manualApproveEnabled = !!r.manualApproveEnabled;
+            startNewCommentingFlowWithDelayedTabSwitch({
+              scrollDuration: request.params.scrollDuration,
+              commentDelay: request.params.commentDelay,
+              maxPosts: request.params.maxPosts,
+              styleGuide: request.params.styleGuide,
+              duplicateWindow: request.params.duplicateWindow || 24,
+              commentAsCompanyEnabled:
+                request.params.commentAsCompanyEnabled ?? false,
+              timeFilterEnabled:
+                request.params.timeFilterEnabled ?? timeFilterEnabled,
+              minPostAge: request.params.minPostAge ?? minPostAge,
+              manualApproveEnabled:
+                request.params.manualApproveEnabled ?? manualApproveEnabled,
+              authenticityBoostEnabled: request.params.authenticityBoostEnabled,
+              commentProfileName: request.params.commentProfileName,
+              languageAwareEnabled: request.params.languageAwareEnabled,
+              skipCompanyPagesEnabled: request.params.skipCompanyPagesEnabled,
+              skipPromotedPostsEnabled: request.params.skipPromotedPostsEnabled,
+              skipFriendsActivitiesEnabled:
+                request.params.skipFriendsActivitiesEnabled,
+              blacklistEnabled: request.params.blacklistEnabled,
+              blacklistAuthors: request.params.blacklistAuthors,
+            });
+          },
+        );
+        sendResponse({ success: true });
+        break;
+      }
+      case "stopCommentingFlow": {
+        console.log("Received stop signal - stopping commenting flow");
+        isCommentingActive = false;
+        try {
+          cleanupManualApproveUI();
+        } catch {}
+        tabAudio.stop();
+        sendResponse({ success: true });
+        break;
+      }
+      case "statusUpdate": {
+        if (request.error) {
+          // Log error details to the website console for debugging
+          console.group("🚨 EngageKit Error Details");
+          console.error("Error Message:", request.error.message);
+        }
+        break;
+      }
+    }
+  },
+);
 
 // saveCommentedAuthorWithTimestamp, loadCommentedAuthorsWithTimestamps, hasCommentedOnAuthorRecently are imported from check-duplicate/check-duplicate-author-recency
 

@@ -2,7 +2,7 @@ import path from "node:path";
 import type { Browser, Page } from "puppeteer";
 import { Hyperbrowser } from "@hyperbrowser/sdk";
 import { authenticator } from "otplib";
-import puppeteer from "puppeteer";
+import puppeteer, { TargetType } from "puppeteer";
 import { connect } from "puppeteer-core";
 import { z } from "zod";
 
@@ -76,6 +76,29 @@ async function getExtensionId(manifestJsonPath: string) {
   return extensionId;
 }
 
+export interface BrowserFunctions {
+  startAutoCommenting: (params: {
+    scrollDuration: number;
+    commentDelay: number;
+    maxPosts: number;
+    styleGuide: string;
+    duplicateWindow: number;
+    commentAsCompanyEnabled?: boolean;
+    timeFilterEnabled?: boolean;
+    minPostAge?: number;
+    manualApproveEnabled?: boolean;
+    authenticityBoostEnabled?: boolean;
+    commentProfileName?: string;
+    languageAwareEnabled?: boolean;
+    skipCompanyPagesEnabled?: boolean;
+    skipPromotedPostsEnabled?: boolean;
+    skipFriendsActivitiesEnabled?: boolean;
+    blacklistEnabled?: boolean;
+    blacklistAuthors?: string[];
+  }) => Promise<void>;
+  stopAutoCommenting: () => Promise<void>;
+}
+
 export class LinkedInBrowserSession {
   public browser!: Browser;
   public pages!: {
@@ -123,9 +146,6 @@ export class LinkedInBrowserSession {
 
     this.browser = result.instance.browser;
 
-    const target = this.browser.targets();
-    console.info(target.map((t) => t.type()));
-
     this.pages = {
       linkedin: await this.browser.newPage().then(async (page) => {
         await page.goto("https://www.linkedin.com");
@@ -144,6 +164,7 @@ export class LinkedInBrowserSession {
         await page.goto(
           `chrome-extension://ofpificfhbopdfmlcmnmhhhmdbepgfbh/src/pages/popup/index.html?userJwt=${userJwt}`,
         );
+
         return page;
       }),
     };
@@ -264,6 +285,86 @@ export class LinkedInBrowserSession {
     return {
       status: "success",
     } as const;
+  }
+
+  async startAutoCommenting(params: {
+    scrollDuration: number;
+    commentDelay: number;
+    maxPosts: number;
+    styleGuide: string;
+    duplicateWindow: number;
+    commentAsCompanyEnabled?: boolean;
+    timeFilterEnabled?: boolean;
+    minPostAge?: number;
+    manualApproveEnabled?: boolean;
+    authenticityBoostEnabled?: boolean;
+    commentProfileName?: string;
+    languageAwareEnabled?: boolean;
+    skipCompanyPagesEnabled?: boolean;
+    skipPromotedPostsEnabled?: boolean;
+    skipFriendsActivitiesEnabled?: boolean;
+    blacklistEnabled?: boolean;
+    blacklistAuthors?: string[];
+  }) {
+    const worker = await this.getExtensionWorker();
+    if (worker === null) {
+      return {
+        status: "error",
+        error: "extension target not found",
+      } as const;
+    }
+
+    const result = await worker.evaluate(async (params) => {
+      const fn =
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+        (globalThis as any).exposedFunctions as BrowserFunctions;
+      return await fn.startAutoCommenting(params);
+    }, params);
+
+    return {
+      status: "success",
+      output: result,
+    } as const;
+  }
+
+  async stopAutoCommenting() {
+    const worker = await this.getExtensionWorker();
+    if (worker === null) {
+      return {
+        status: "error",
+        error: "extension target not found",
+      } as const;
+    }
+
+    const result = await worker.evaluate(async () => {
+      const fn =
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+        (globalThis as any).exposedFunctions as BrowserFunctions;
+      return await fn.stopAutoCommenting();
+    });
+
+    return {
+      status: "success",
+      output: result,
+    } as const;
+  }
+
+  async getExtensionWorker() {
+    const targets = this.browser.targets();
+    const target =
+      targets.find((t) => t.type() === TargetType.SERVICE_WORKER) ?? null;
+
+    if (target === null) {
+      return null;
+    }
+
+    const worker = await target.worker();
+
+    if (worker === null) {
+      return null;
+    }
+
+    return worker;
   }
 }
 

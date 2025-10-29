@@ -59,30 +59,41 @@ export function useAttachUserJwt() {
     const userJwt = url.searchParams.get("userJwt");
     return userJwt;
   });
+  // pending denotes that the attachTokenToSession is still pending
   const [pending, setPending] = useState(true);
   const [valid, setValid] = useState(false);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     async function run() {
       if (userJwt !== null) {
-        await chrome.runtime
-          .sendMessage({
+        try {
+          const attached = await chrome.runtime.sendMessage({
             action: "attachTokenToSession",
             payload: {
               token: userJwt,
             },
-          })
-          .then((response) => setValid(!!response.success))
-          .finally(() => setPending(false));
+          });
 
-        await chrome.runtime.sendMessage({
-          action: "readyForAction",
-        });
+          setValid(!!attached.success);
+
+          const ready = await chrome.runtime.sendMessage({
+            action: "readyForAction",
+          });
+
+          if (ready.success) {
+            setReady(true);
+          }
+        } finally {
+          setPending(false);
+        }
       }
     }
+
+    void run();
   }, [userJwt]);
 
-  return { valid, userJwt, pending };
+  return { valid, userJwt, pending, ready };
 }
 
 export default function Popup() {

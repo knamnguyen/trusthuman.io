@@ -1,6 +1,8 @@
 import { createClerkClient } from "@clerk/chrome-extension/background";
 import { getTRPCClient } from "@src/services/trpc-client";
 
+import type { BrowserFunctions } from "@sassy/api";
+
 import type { AutoCommentingState } from "./background-types";
 import { AIService } from "../../services/ai-service";
 import { getSyncHost } from "../../utils/get-sync-host";
@@ -169,7 +171,7 @@ const sendStatusUpdate = (
   updates: Partial<AutoCommentingState> = {},
 ) => {
   try {
-    chrome.runtime.sendMessage({
+    sendMessageToContentScript({
       action: "statusUpdate",
       status,
       commentCount: autoCommentingState.commentCount,
@@ -345,6 +347,61 @@ const messageRouter = new MessageRouter({
   startAutoCommenting,
   generateComment: generateCommentBackground,
 });
+
+// expose functions to be called in linkedin-browser-session
+(globalThis as any).exposedFunctions = {
+  async startAutoCommenting(params) {
+    await chrome.runtime.sendMessage({
+      action: "startAutoCommenting",
+      payload: params,
+    });
+  },
+  async stopAutoCommenting() {
+    await chrome.runtime.sendMessage({
+      action: "stopAutoCommenting",
+    });
+  },
+} satisfies BrowserFunctions;
+
+export type ContentScriptMessage =
+  | {
+      action: "startNewCommentingFlow";
+      params: {
+        scrollDuration: number;
+        commentDelay: number;
+        maxPosts: number;
+        styleGuide: string;
+        duplicateWindow: number;
+        commentAsCompanyEnabled?: boolean;
+        timeFilterEnabled?: boolean;
+        minPostAge?: number;
+        manualApproveEnabled?: boolean;
+        authenticityBoostEnabled?: boolean;
+        commentProfileName?: string;
+        languageAwareEnabled?: boolean;
+        skipCompanyPagesEnabled?: boolean;
+        skipPromotedPostsEnabled?: boolean;
+        skipFriendsActivitiesEnabled?: boolean;
+        blacklistEnabled?: boolean;
+        blacklistAuthors?: string[];
+      };
+    }
+  | {
+      action: "showStartButton";
+    }
+  | {
+      action: "stopCommentingFlow";
+    }
+  | ({
+      action: "statusUpdate";
+      status: string;
+    } & {
+      [k in string]: any;
+    });
+
+async function sendMessageToContentScript(message: ContentScriptMessage) {
+  await chrome.runtime.sendMessage(message);
+}
 
 // Message listener with comprehensive authentication service
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {

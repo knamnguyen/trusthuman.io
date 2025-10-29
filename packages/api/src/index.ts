@@ -4,6 +4,8 @@ import type { AppRouter } from "./router/root";
 import { appRouter } from "./router/root";
 import { createCallerFactory, createTRPCContext } from "./trpc";
 
+export type { BrowserFunctions } from "./utils/linkedin-browser-session";
+
 /**
  * Create a server-side caller for the tRPC API
  * @example
