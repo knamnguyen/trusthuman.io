@@ -149,7 +149,7 @@ model UserComment {
   hash            String?
   comment         String
   userId          String
-  isDuplicate     String
+  isDuplicate     Boolean @default(false)
   user            User    @relation(fields: [userId], references: [id])
 
   @@index([hash])
