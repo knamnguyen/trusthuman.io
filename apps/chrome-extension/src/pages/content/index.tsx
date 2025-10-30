@@ -1205,26 +1205,32 @@ async function processAllPostsFeed(
         commentCount++;
         commentedAuthors.add(authorInfo.name);
 
+        const promises = [];
+
         // Save author with timestamp and update counts
-        await saveCommentedAuthorWithTimestamp(authorInfo.name); // new timestamp-based storage
+        promises.push(saveCommentedAuthorWithTimestamp(authorInfo.name)); // new timestamp-based storage
         commentedAuthorsWithTimestamps.set(authorInfo.name, Date.now()); // update in-memory data
 
         // Save all post URNs to prevent commenting on this post again
-        await saveCommentedPostUrn(postUrns);
+        promises.push(saveCommentedPostUrn(postUrns));
 
         // Save content hash as well
         if (hashRes?.hash) {
-          await saveCommentedPostHash([hashRes.hash]);
+          promises.push(saveCommentedPostHash([hashRes.hash]));
         }
 
-        await updateCommentCounts();
+        promises.push(updateCommentCounts());
 
-        await getStandaloneTRPCClient()
-          .user.saveComments.mutate(comments)
-          .catch((err) => {
-            // just catch this error here and continue
-            console.error("error saving comments:", err);
-          });
+        promises.push(
+          getStandaloneTRPCClient()
+            .user.saveComments.mutate(comments)
+            .catch((err) => {
+              // just catch this error here and continue
+              console.error("error saving comments:", err);
+            }),
+        );
+
+        await Promise.all(promises);
 
         console.log(
           `🎉 Successfully posted comment ${commentCount}/${maxPosts} on post by ${authorInfo.name}`,

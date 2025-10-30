@@ -150,6 +150,7 @@ model UserComment {
   comment         String
   userId          String
   isDuplicate     Boolean @default(false)
+  isAutoCommented Boolean @default(true)
   user            User    @relation(fields: [userId], references: [id])
 
   @@index([hash])

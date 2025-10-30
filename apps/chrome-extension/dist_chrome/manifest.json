@@ -35,7 +35,7 @@
   "content_scripts": [
     {
       "js": [
-        "assets/index.tsx-loader-HoLUk42E.js"
+        "assets/index.tsx-loader-B5r5Og36.js"
       ],
       "matches": [
         "https://*.linkedin.com/*"
@@ -57,7 +57,7 @@
         "assets/react-BL0Uunfh.js",
         "assets/profile-extract-button-E_OM6-m_.js",
         "assets/index-CP-b3-11.js",
-        "assets/index.tsx-BhUBTKok.js"
+        "assets/index.tsx-Dg45Ha9h.js"
       ],
       "use_dynamic_url": false
     }

@@ -341,6 +341,7 @@ export const userRouter = {
           urn: z.string(),
           hash: z.string().nullable(),
           isDuplicate: z.boolean().default(false),
+          isAutoCommented: z.boolean().default(true),
           commentedAt: z.date().optional(),
         })
         .array()
@@ -357,6 +358,7 @@ export const userRouter = {
           postContentHtml: row.postContentHtml,
           commentedAt: row.commentedAt ?? now,
           isDuplicate: row.isDuplicate,
+          isAutoCommented: row.isAutoCommented,
         })),
         skipDuplicates: true,
       });
