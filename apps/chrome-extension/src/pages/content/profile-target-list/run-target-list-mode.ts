@@ -1,3 +1,4 @@
+import { getStandaloneTRPCClient } from "@src/trpc/react";
 import wait from "@src/utils/wait";
 
 import { runManualApproveList } from "../approve-flow/manual-approve-list";
@@ -303,7 +304,8 @@ export async function runListMode(params: {
     } catch {}
 
     // Content duplicate
-    const postContent = extractPostContent(postContainer);
+    const { content: postContent, html: postContentHtml } =
+      extractPostContent(postContainer);
     if (!postContent) {
       authorsPending = authorsPending.filter((n) => n !== author);
       sendListModeUpdate(`Skipped (no content) for ${authorDisplay}`, {
@@ -386,8 +388,34 @@ export async function runListMode(params: {
         await saveCommentedAuthorWithTimestamp(info.name);
         commentedAuthorsWithTimestamps.set(info.name, Date.now());
       }
-      for (const urn of urns) await saveCommentedPostUrn(urn);
-      if (hashRes?.hash) await saveCommentedPostHash(hashRes.hash);
+      const comments: {
+        postContentHtml: string | null;
+        comment: string;
+        urn: string;
+        hash: string | null;
+        isDuplicate: boolean;
+      }[] = [];
+
+      for (const [index, urn] of urns.entries()) {
+        comments.push({
+          urn,
+          comment,
+          postContentHtml,
+          hash: hashRes?.hash ?? null,
+          isDuplicate: index !== 0,
+        });
+      }
+
+      await getStandaloneTRPCClient()
+        .user.saveComments.mutate(comments)
+        .catch((err) => {
+          // just catch this error here and continue
+          console.error("error saving comments:", err);
+        });
+
+      await saveCommentedPostUrn(urns);
+      if (hashRes?.hash) await saveCommentedPostHash([hashRes.hash]);
+
       await updateCommentCounts();
       sendListModeUpdate(`Commented on ${authorDisplay}`, {
         authorsFound: display(authorsFound),

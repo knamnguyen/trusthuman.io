@@ -102,7 +102,7 @@ export async function runManualApproveList(
       continue;
     }
 
-    const content = extractPostContent(postContainer);
+    const { content } = extractPostContent(postContainer);
     if (!content) continue;
     const hashRes = await normalizeAndHashContent(content);
     if (hashRes?.hash && hasCommentedOnPostHash(hashRes.hash)) continue;

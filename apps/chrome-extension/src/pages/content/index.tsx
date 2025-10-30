@@ -1,15 +1,8 @@
 import wait from "@src/utils/wait";
 
 import { cleanupManualApproveUI } from "./approve-flow/cleanup";
-import { runManualApproveList } from "./approve-flow/manual-approve-list";
 import { runManualApproveStandard } from "./approve-flow/manual-approve-standard";
-import {
-  backgroundError,
-  backgroundGroup,
-  backgroundGroupEnd,
-  backgroundLog,
-  backgroundWarn,
-} from "./background-log";
+import { backgroundError, backgroundLog } from "./background-log";
 import {
   hasCommentedOnAuthorRecently,
   loadCommentedAuthorsWithTimestamps,
@@ -23,7 +16,6 @@ import {
 } from "./check-duplicate/check-duplicate-commented-post-hash";
 import {
   commentedPostUrns,
-  hasCommentedOnPostUrn,
   loadCommentedPostUrns,
   saveCommentedPostUrn,
 } from "./check-duplicate/check-duplicate-commented-post-urns";
@@ -1032,23 +1024,6 @@ async function processAllPostsFeed(
         continue;
       }
 
-      // Check if we've commented on any of these URNs before
-      let hasCommentedOnThisPost = false;
-      for (const urn of postUrns) {
-        if (hasCommentedOnPostUrn(urn)) {
-          console.log(
-            `⏭️ SKIPPING post ${i + 1} - already commented on post URN: ${urn}`,
-          );
-          hasCommentedOnThisPost = true;
-          break;
-        }
-      }
-
-      if (hasCommentedOnThisPost) {
-        console.groupEnd();
-        continue;
-      }
-
       // STEP 2: Extract author info
       const authorInfo = extractAuthorInfo(postContainer);
       if (!authorInfo) {
@@ -1235,13 +1210,11 @@ async function processAllPostsFeed(
         commentedAuthorsWithTimestamps.set(authorInfo.name, Date.now()); // update in-memory data
 
         // Save all post URNs to prevent commenting on this post again
-        for (const urn of postUrns) {
-          await saveCommentedPostUrn(urn);
-        }
+        await saveCommentedPostUrn(postUrns);
 
         // Save content hash as well
         if (hashRes?.hash) {
-          await saveCommentedPostHash(hashRes.hash);
+          await saveCommentedPostHash([hashRes.hash]);
         }
 
         await updateCommentCounts();

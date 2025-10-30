@@ -228,7 +228,8 @@ function addEngageButton(form: HTMLFormElement): void {
         return;
       }
 
-      let postContent = extractPostContent(postContainer);
+      const extractedPostContent = extractPostContent(postContainer);
+      let postContent = extractedPostContent.content;
       // Fallback: If extraction failed, attempt to use innerText of first paragraph within postContainer
       if (!postContent) {
         const fallbackPara = postContainer.querySelector("p");
@@ -350,8 +351,8 @@ function addEngageButton(form: HTMLFormElement): void {
               "click",
               async () => {
                 try {
-                  for (const u of urnsToSave) await saveCommentedPostUrn(u);
-                  if (hashToSave) await saveCommentedPostHash(hashToSave);
+                  await saveCommentedPostUrn(urnsToSave);
+                  if (hashToSave) await saveCommentedPostHash([hashToSave]);
                 } catch {}
               },
               { capture: true, once: true },
