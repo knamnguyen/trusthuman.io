@@ -931,11 +931,7 @@ async function processAllPostsFeed(
     isDuplicate: boolean;
   }[] = [];
 
-  for (
-    let i = 0;
-    i < postContainers.length && isCommentingActive && commentCount < maxPosts;
-    i++
-  ) {
+  for (let i = 0; i < postContainers.length; i++) {
     console.group(
       `🔄 POST ${i + 1}/${postContainers.length} - DETAILED PROCESSING`,
     );
