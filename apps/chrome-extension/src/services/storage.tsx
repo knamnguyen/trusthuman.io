@@ -58,7 +58,7 @@ class StoragePersister {
   }
 
   async save(state: StorageState) {
-    await this.trpc.user.saveBrowserState.mutate(state);
+    await this.trpc.browser.saveBrowserState.mutate(state);
   }
 
   // can use this to publish changes

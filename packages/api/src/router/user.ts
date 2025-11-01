@@ -1,5 +1,4 @@
 import type { TRPCRouterRecord } from "@trpc/server";
-import { TRPCError } from "@trpc/server";
 import { authenticator } from "otplib";
 import z from "zod";
 
@@ -7,7 +6,7 @@ import {
   UserCreateInputSchema,
   UserUpdateInputSchema,
 } from "@sassy/db/schema-validators";
-import { storageStateSchema } from "@sassy/validators";
+import { countrySchema } from "@sassy/validators";
 
 // import {
 //   userCreateSchema,
@@ -20,9 +19,7 @@ import { cryptography } from "../utils/encryption";
 import { env } from "../utils/env";
 import {
   assumedUserJwt,
-  browserRegistry,
   hyperbrowser,
-  LinkedInBrowserSession,
 } from "../utils/linkedin-browser-session";
 
 export const userRouter = {
@@ -111,6 +108,7 @@ export const userRouter = {
         email: z.string(),
         password: z.string(),
         twoFactorSecretKey: z.string(),
+        location: countrySchema,
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -136,6 +134,7 @@ export const userRouter = {
           encryptedPassword,
           twoFactorSecretKey: encryptedTwoFASecretKey,
           browserProfileId,
+          location: input.location,
         },
         select: {
           id: true,
@@ -181,156 +180,6 @@ export const userRouter = {
         error: decoded.error,
       } as const;
     }),
-
-  startBrowserSession: protectedProcedure
-    .input(
-      z.object({
-        linkedInAccountId: z.string(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const account = await ctx.db.linkedInAccount.findUnique({
-        where: { id: input.linkedInAccountId, userId: ctx.user.id },
-        select: {
-          id: true,
-          email: true,
-          encryptedPassword: true,
-          twoFactorSecretKey: true,
-          browserProfileId: true,
-          staticIpId: true,
-        },
-      });
-
-      if (account === null) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "LinkedIn account not found",
-        });
-      }
-
-      const decryptedPassword = await cryptography.decrypt(
-        account.encryptedPassword,
-        env.LINKEDIN_PASSWORD_SECRET_KEY,
-      );
-
-      if (!decryptedPassword.success) {
-        return {
-          status: "error",
-          message: "Failed to decrypt LinkedIn password",
-        } as const;
-      }
-
-      const decryptedTwoFASecretKey = await cryptography.decrypt(
-        account.twoFactorSecretKey,
-        env.LINKEDIN_TWO_FA_SECRET_KEY,
-      );
-
-      if (!decryptedTwoFASecretKey.success) {
-        return {
-          status: "error",
-          message: "Failed to decrypt LinkedIn 2FA secret key",
-        } as const;
-      }
-
-      await browserRegistry.register(
-        account.id,
-        new LinkedInBrowserSession(
-          {
-            userId: account.id,
-            username: account.email,
-            password: decryptedPassword.data,
-            location: "MY", // TODO: add location in account settings
-            twoFactorSecretKey: decryptedTwoFASecretKey.data,
-            browserProfileId: account.browserProfileId ?? undefined,
-            staticIpId: account.staticIpId ?? undefined,
-          },
-          console,
-          process.env.NODE_ENV === "production" ? account.id : "mock",
-        ),
-      );
-      // TODO: frontend must poll http requests to backend to make sure the frontend is alive, else we just cleanup the browserbase instance
-
-      return {
-        status: "success",
-      } as const;
-    }),
-
-  browserSessionStatus: protectedProcedure
-    .input(
-      z.object({
-        linkedInAccountId: z.string(),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      const account = await ctx.db.linkedInAccount.findUnique({
-        where: { id: input.linkedInAccountId, userId: ctx.user.id },
-        select: {
-          id: true,
-        },
-      });
-
-      if (account === null) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "LinkedIn account not found",
-        });
-      }
-
-      const session = browserRegistry.get(account.id);
-
-      if (session === undefined) {
-        return {
-          status: "offline",
-        } as const;
-      }
-
-      if (session.sessionId === "mock") {
-        return {
-          status: "online",
-        } as const;
-      }
-
-      const details = await hyperbrowser.sessions.get(session.sessionId);
-
-      return {
-        status: details.status,
-      } as const;
-    }),
-
-  saveBrowserState: protectedProcedure
-    .input(storageStateSchema)
-    .mutation(async ({ ctx, input }) => {
-      const serialized = JSON.stringify(input);
-      await ctx.db.userBrowserState.upsert({
-        update: {
-          state: serialized,
-        },
-        where: {
-          userId: ctx.user.id,
-        },
-        create: {
-          userId: ctx.user.id,
-          state: serialized,
-        },
-      });
-
-      return {
-        status: "success",
-      } as const;
-    }),
-
-  getBrowserState: protectedProcedure.query(async ({ ctx }) => {
-    const state = await ctx.db.userBrowserState.findUnique({
-      where: {
-        userId: ctx.user.id,
-      },
-      select: {
-        state: true,
-      },
-    });
-
-    return state ? storageStateSchema.parse(JSON.parse(state.state)) : null;
-  }),
 
   saveComments: protectedProcedure
     .input(

@@ -34,6 +34,7 @@ if (process.env.JWT_SECRET === undefined) {
 }
 
 // this token should be attached in headers of every trpc request when browserbase mode is used
+// this allows browserbase session to assume as userId
 export const assumedUserJwt = jwtFactory(
   z.object({
     userId: z.string(),
@@ -99,7 +100,16 @@ export interface BrowserFunctions {
   stopAutoCommenting: () => Promise<void>;
 }
 
+type BrowserBackendChannelMessage =
+  | {
+      action: "stopAutoCommenting";
+    }
+  | {
+      action: "sendStatusUpdate";
+    };
+
 export class LinkedInBrowserSession {
+  public sessionId: string;
   public browser!: Browser;
   public pages!: {
     linkedin: Page;
@@ -109,7 +119,9 @@ export class LinkedInBrowserSession {
 
   private extensionWorker: WebWorker | null = null;
   constructor(
+    private readonly registry: BrowserSessionRegistry,
     private readonly opts: {
+      id: string;
       userId: string;
       username: string;
       password: string;
@@ -118,10 +130,16 @@ export class LinkedInBrowserSession {
       staticIpId?: string;
       browserProfileId?: string;
       extensionIds?: string[];
+      onBrowserMessage?: (
+        this: LinkedInBrowserSession,
+        data: BrowserBackendChannelMessage,
+      ) => unknown;
+      sessionId: string;
     },
     private readonly logger: Logger = console,
-    public readonly sessionId: string,
-  ) {}
+  ) {
+    this.sessionId = this.opts.sessionId;
+  }
 
   public static getLatestEngagekitExtensionId(db: PrismaClient) {
     return db.extensionDeploymentMeta.findFirst({
@@ -170,6 +188,8 @@ export class LinkedInBrowserSession {
           },
         );
 
+        await this.setupBackendChannel(page);
+
         return page;
       }),
     };
@@ -177,6 +197,30 @@ export class LinkedInBrowserSession {
     await this.bringToFront("linkedin");
 
     return this;
+  }
+
+  public async shutdown() {
+    await this.registry.destroy(this.opts.id);
+  }
+
+  private async setupBackendChannel(page: Page) {
+    const onBrowserMessage = this.opts.onBrowserMessage;
+    if (onBrowserMessage === undefined) {
+      return;
+    }
+
+    await page.exposeFunction(
+      "_sendMessageToPuppeteer",
+      async (data: BrowserBackendChannelMessage) => {
+        onBrowserMessage.bind(this)(data);
+
+        switch (data.action) {
+          case "stopAutoCommenting": {
+            await this.shutdown();
+          }
+        }
+      },
+    );
   }
 
   async bringToFront(page: "linkedin" | "engagekitExtension") {

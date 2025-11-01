@@ -1,5 +1,6 @@
 import { createTRPCRouter } from "../trpc";
 import { aiCommentsRouter } from "./ai-comments";
+import { browserRouter } from "./browser";
 import { linkedinScrapeApifyRouter } from "./linkedin-scrape-apify";
 import { profileImportRouter } from "./profile-import";
 import { stripeRouter } from "./stripe";
@@ -11,6 +12,7 @@ export const appRouter = createTRPCRouter({
   user: userRouter,
   profileImport: profileImportRouter,
   linkedinScrapeApify: linkedinScrapeApifyRouter,
+  browser: browserRouter,
 });
 
 // export type definition of API

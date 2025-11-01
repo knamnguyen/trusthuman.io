@@ -13,15 +13,17 @@ describe("LinkedInBrowserSession", () => {
     const registered = await registry.register(
       "test",
       new LinkedInBrowserSession(
+        registry,
         {
+          id: "test-user-id",
           username: process.env.LINKEDIN_TEST_ACCOUNT_USERNAME!,
           password: process.env.LINKEDIN_TEST_ACCOUNT_PASSWORD!,
           twoFactorSecretKey: process.env.LINKEDIN_TEST_ACCOUNT_2FA_SECRET_KEY!,
           location: "US",
           userId: "test-user-id",
+          sessionId: "mock",
         },
         console,
-        "mock",
       ),
     );
     session = registered.instance;
@@ -49,6 +51,7 @@ describe("LinkedInBrowserSession", () => {
     "startAutoCommenting",
     async () => {
       await session.bringToFront("linkedin");
+      await new Promise((resolve) => setTimeout(resolve, 80000));
       await session.startAutoCommenting({
         scrollDuration: 10,
         maxPosts: 5,
@@ -57,7 +60,7 @@ describe("LinkedInBrowserSession", () => {
         duplicateWindow: 24,
       });
 
-      await new Promise((resolve) => setTimeout(resolve, 20000));
+      await new Promise(() => {});
     },
     Infinity,
   );

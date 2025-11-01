@@ -57,6 +57,7 @@ model LinkedInAccount {
   createdAt          DateTime @default(now())
   staticIpId         String?
   browserProfileId   String?
+  location           String?
 }
 
 enum AccessType {

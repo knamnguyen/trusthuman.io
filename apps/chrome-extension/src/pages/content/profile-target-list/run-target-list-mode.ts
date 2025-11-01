@@ -149,6 +149,7 @@ export async function runListMode(params: {
       duplicateWindow,
       styleGuide,
       targetNormalizedAuthors: authorsFound,
+      authenticityBoostEnabled: false,
     });
     return;
   }
