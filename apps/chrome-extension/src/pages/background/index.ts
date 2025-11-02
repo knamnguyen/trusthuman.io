@@ -1,7 +1,10 @@
 import { createClerkClient } from "@clerk/chrome-extension/background";
 import { getTRPCClient } from "@src/services/trpc-client";
 
-import type { BrowserFunctions } from "@sassy/api";
+import type {
+  BrowserBackendChannelMessage,
+  BrowserFunctions,
+} from "@sassy/api";
 
 import type { AutoCommentingState } from "./background-types";
 import { AIService } from "../../services/ai-service";
@@ -349,10 +352,16 @@ const messageRouter = new MessageRouter({
   generateComment: generateCommentBackground,
 });
 
-const createExposedFunctions = () => {
+interface BackgroundScriptFunctions extends BrowserFunctions {
+  sendMessageToContentScriptTab: (
+    message: ContentScriptMessage,
+  ) => Promise<void>;
+}
+
+const createBackgroundScriptFunctions = () => {
   let tabId: number | null = null;
 
-  async function sendMessageToTab(
+  async function sendMessageToContentScriptTab(
     tabId: number,
     message: ContentScriptMessage,
   ) {
@@ -400,22 +409,29 @@ const createExposedFunctions = () => {
   return {
     async startAutoCommenting(params) {
       const tabId = await getPinnedTabId();
-      await sendMessageToTab(tabId, {
+      await sendMessageToContentScriptTab(tabId, {
         action: "startNewCommentingFlow",
         params,
       });
     },
     async stopAutoCommenting() {
       const tabId = await getPinnedTabId();
-      await sendMessageToTab(tabId, {
+      await sendMessageToContentScriptTab(tabId, {
         action: "stopCommentingFlow",
       });
     },
-  } satisfies BrowserFunctions;
+    async sendMessageToContentScriptTab(message) {
+      const pinnedTabId = await getPinnedTabId();
+      await sendMessageToContentScriptTab(pinnedTabId, message);
+    },
+  } satisfies BackgroundScriptFunctions;
 };
 
+export const backgroundScriptFunctions = createBackgroundScriptFunctions();
+
 // expose functions to be called in linkedin-browser-session
-(globalThis as any).exposedFunctions = createExposedFunctions();
+(globalThis as any)._backgroundScriptExposedFunctions =
+  backgroundScriptFunctions;
 
 // Message listener with comprehensive authentication service
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -449,19 +465,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           sendResponse(response);
         });
       return true;
-
-    // TODO: do something to let client know ready for action
-    // case "readyForAction":
-    //   console.log(
-    //     "Background: Received requestAssumedUserTokenAndAttachToSession request",
-    //   );
-    //   // TODO: get ack message from popup.tsx before sending messages to start actions
-    //   authService
-    //     .attachTokenToSession(request.payload.token)
-    //     .then((response) => {
-    //       sendResponse(response);
-    //     });
-    //   return true;
 
     case "getAuthStatus":
       console.log("Background: Received getAuthStatus request");
@@ -648,6 +651,15 @@ console.log(
   "Background: Auth monitoring and service worker lifecycle handlers initialized",
 );
 
+export async function sendMessageToPuppeteerBackend(
+  message: BrowserBackendChannelMessage,
+) {
+  await backgroundScriptFunctions.sendMessageToContentScriptTab({
+    action: "sendMessageToPuppeteerBackend",
+    payload: message,
+  });
+}
+
 export type ContentScriptMessage =
   | {
       action: "startNewCommentingFlow";
@@ -682,4 +694,8 @@ export type ContentScriptMessage =
       status: string;
     } & {
       [k in string]: any;
-    });
+    })
+  | {
+      action: "sendMessageToPuppeteerBackend";
+      payload: BrowserBackendChannelMessage;
+    };

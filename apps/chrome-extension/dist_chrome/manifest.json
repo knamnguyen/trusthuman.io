@@ -35,7 +35,7 @@
   "content_scripts": [
     {
       "js": [
-        "assets/index.tsx-loader-DFObNTfw.js"
+        "assets/index.tsx-loader-CdV6XOqf.js"
       ],
       "matches": [
         "https://*.linkedin.com/*"
@@ -54,10 +54,12 @@
         "contentStyle.css",
         "icon-128.png",
         "icon-32.png",
-        "assets/react-BL0Uunfh.js",
+        "assets/get-sync-host-Cl3UakQu.js",
         "assets/profile-extract-button-E_OM6-m_.js",
-        "assets/index-CP-b3-11.js",
-        "assets/index.tsx-DZmwlX2d.js"
+        "assets/storage-DBwVD2h_.js",
+        "assets/index.ts-BTivqztC.js",
+        "assets/index-C4GW0my_.js",
+        "assets/index.tsx-CiC06iG7.js"
       ],
       "use_dynamic_url": false
     }

@@ -100,12 +100,15 @@ export interface BrowserFunctions {
   stopAutoCommenting: () => Promise<void>;
 }
 
-type BrowserBackendChannelMessage =
+export type BrowserBackendChannelMessage =
   | {
       action: "stopAutoCommenting";
     }
   | {
       action: "sendStatusUpdate";
+    }
+  | {
+      action: "autoCommentingCompleted";
     };
 
 export class LinkedInBrowserSession {
@@ -152,6 +155,7 @@ export class LinkedInBrowserSession {
       userId: this.opts.userId,
     });
 
+    // TODO: return liveurl for user to stream whats going on
     const result = await createBrowserSession({
       useProxy: true,
       useStealth: true,
@@ -210,13 +214,18 @@ export class LinkedInBrowserSession {
     }
 
     await page.exposeFunction(
-      "_sendMessageToPuppeteer",
+      "_sendMessageToPuppeteerBackend",
       async (data: BrowserBackendChannelMessage) => {
         onBrowserMessage.bind(this)(data);
 
         switch (data.action) {
           case "stopAutoCommenting": {
             await this.shutdown();
+            break;
+          }
+          case "autoCommentingCompleted": {
+            await this.shutdown();
+            break;
           }
         }
       },
@@ -398,8 +407,12 @@ export class LinkedInBrowserSession {
 
     const result = await worker.evaluate(async (params) => {
       const fn =
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-        (globalThis as any).exposedFunctions as BrowserFunctions;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (globalThis as any)
+        // prettier-ignore
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+          ._backgroundScriptExposedFunctions as BrowserFunctions;
+
       return await fn.startAutoCommenting(params);
     }, params);
 
@@ -420,8 +433,11 @@ export class LinkedInBrowserSession {
 
     const result = await worker.evaluate(async () => {
       const fn =
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-        (globalThis as any).exposedFunctions as BrowserFunctions;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (globalThis as any)
+        // prettier-ignore
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+          ._backgroundScriptExposedFunctions as BrowserFunctions;
       return await fn.stopAutoCommenting();
     });
 

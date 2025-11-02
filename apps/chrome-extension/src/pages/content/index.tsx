@@ -43,9 +43,13 @@ import "./attach-engage-button";
 import "./init-comment-history";
 import "./profile-target-list";
 
+import { appStorage } from "@src/services/storage";
 import { getStandaloneTRPCClient } from "@src/trpc/react";
 
-import { ContentScriptMessage } from "../background";
+import {
+  ContentScriptMessage,
+  sendMessageToPuppeteerBackend,
+} from "../background";
 
 // Pronoun rule for company mode
 const COMPANY_PRONOUN_RULE =
@@ -491,38 +495,43 @@ chrome.runtime.onMessage.addListener(
       }
       case "startNewCommentingFlow": {
         console.info("Received start new commenting flow:", request);
-        chrome.storage.local.get(
-          ["timeFilterEnabled", "minPostAge", "manualApproveEnabled"],
-          (r) => {
-            const timeFilterEnabled = r.timeFilterEnabled ?? false;
-            const minPostAge = r.minPostAge ?? 1;
-            const manualApproveEnabled = !!r.manualApproveEnabled;
-            startNewCommentingFlowWithDelayedTabSwitch({
-              scrollDuration: request.params.scrollDuration,
-              commentDelay: request.params.commentDelay,
-              maxPosts: request.params.maxPosts,
-              styleGuide: request.params.styleGuide,
-              duplicateWindow: request.params.duplicateWindow || 24,
-              commentAsCompanyEnabled:
-                request.params.commentAsCompanyEnabled ?? false,
-              timeFilterEnabled:
-                request.params.timeFilterEnabled ?? timeFilterEnabled,
-              minPostAge: request.params.minPostAge ?? minPostAge,
-              manualApproveEnabled:
-                request.params.manualApproveEnabled ?? manualApproveEnabled,
-              authenticityBoostEnabled: request.params.authenticityBoostEnabled,
-              commentProfileName: request.params.commentProfileName,
-              languageAwareEnabled: request.params.languageAwareEnabled,
-              skipCompanyPagesEnabled: request.params.skipCompanyPagesEnabled,
-              skipPromotedPostsEnabled: request.params.skipPromotedPostsEnabled,
-              skipFriendsActivitiesEnabled:
-                request.params.skipFriendsActivitiesEnabled,
-              blacklistEnabled: request.params.blacklistEnabled,
-              blacklistAuthors: request.params.blacklistAuthors,
-            });
-          },
-        );
-        sendResponse({ success: true });
+        (async () => {
+          const settings = await appStorage.get([
+            "timeFilterEnabled",
+            "minPostAge",
+            "manualApproveEnabled",
+          ]);
+          const timeFilterEnabled = settings.timeFilterEnabled ?? false;
+          const minPostAge = settings.minPostAge ?? 1;
+          const manualApproveEnabled = !!settings.manualApproveEnabled;
+          await startNewCommentingFlowWithDelayedTabSwitch({
+            scrollDuration: request.params.scrollDuration,
+            commentDelay: request.params.commentDelay,
+            maxPosts: request.params.maxPosts,
+            styleGuide: request.params.styleGuide,
+            duplicateWindow: request.params.duplicateWindow || 24,
+            commentAsCompanyEnabled:
+              request.params.commentAsCompanyEnabled ?? false,
+            timeFilterEnabled:
+              request.params.timeFilterEnabled ?? timeFilterEnabled,
+            minPostAge: request.params.minPostAge ?? minPostAge,
+            manualApproveEnabled:
+              request.params.manualApproveEnabled ?? manualApproveEnabled,
+            authenticityBoostEnabled: request.params.authenticityBoostEnabled,
+            commentProfileName: request.params.commentProfileName,
+            languageAwareEnabled: request.params.languageAwareEnabled,
+            skipCompanyPagesEnabled: request.params.skipCompanyPagesEnabled,
+            skipPromotedPostsEnabled: request.params.skipPromotedPostsEnabled,
+            skipFriendsActivitiesEnabled:
+              request.params.skipFriendsActivitiesEnabled,
+            blacklistEnabled: request.params.blacklistEnabled,
+            blacklistAuthors: request.params.blacklistAuthors,
+          });
+          sendResponse({ success: true });
+          await sendMessageToPuppeteerBackend({
+            action: "autoCommentingCompleted",
+          });
+        })();
         break;
       }
       case "stopCommentingFlow": {
@@ -542,6 +551,10 @@ chrome.runtime.onMessage.addListener(
           console.error("Error Message:", request.error.message);
         }
         break;
+      }
+      case "sendMessageToPuppeteerBackend": {
+        // access sendMessageToPuppeteerBackend which is exposed in setupBackendChannel()
+        (window as any)._sendMessageToPuppeteerBackend(request.payload);
       }
     }
   },
