@@ -44,6 +44,7 @@ model User {
 
   UserBrowserState UserBrowserState[]
   Comments         UserComment[]
+  AutoCommentRun   AutoCommentRun[]
 }
 
 model LinkedInAccount {
@@ -145,16 +146,29 @@ model LinkedInProfile {
 }
 
 model UserComment {
-  urn             String  @id
-  postContentHtml String?
-  hash            String?
-  comment         String
-  userId          String
-  isDuplicate     Boolean @default(false)
-  isAutoCommented Boolean @default(true)
-  user            User    @relation(fields: [userId], references: [id])
+  urn              String          @id
+  postContentHtml  String?
+  hash             String?
+  autoCommentRunId String?
+  comment          String
+  userId           String
+  isDuplicate      Boolean         @default(false)
+  isAutoCommented  Boolean         @default(true)
+  user             User            @relation(fields: [userId], references: [id])
+  autoCommentRun   AutoCommentRun? @relation(fields: [autoCommentRunId], references: [id])
 
   @@index([hash])
+}
+
+model AutoCommentRun {
+  id          String        @id @default(uuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id])
+  startedAt   DateTime      @default(now())
+  endedAt     DateTime?
+  error       String?
+  status      String
+  UserComment UserComment[]
 }
 
 model UserBrowserState {

@@ -19,8 +19,11 @@ import { cryptography } from "../utils/encryption";
 import { env } from "../utils/env";
 import {
   assumedUserJwt,
+  browserRegistry,
   hyperbrowser,
+  LinkedInBrowserSession,
 } from "../utils/linkedin-browser-session";
+import { registerOrGetBrowserSession } from "./browser";
 
 export const userRouter = {
   checkAccess: protectedProcedure.query(async ({ ctx }) => {
@@ -187,6 +190,7 @@ export const userRouter = {
         .object({
           comment: z.string(),
           postContentHtml: z.string().nullable(),
+          autoCommentRunId: z.string().optional(),
           urn: z.string(),
           hash: z.string().nullable(),
           isDuplicate: z.boolean().default(false),
@@ -202,6 +206,7 @@ export const userRouter = {
         data: input.map((row) => ({
           urn: row.urn,
           userId: ctx.user.id,
+          autoCommentRunId: row.autoCommentRunId,
           hash: row.hash,
           comment: row.comment,
           postContentHtml: row.postContentHtml,
@@ -251,6 +256,90 @@ export const userRouter = {
 
       return {
         uncommentedUrns: input.urns.filter((urn) => !commentedUrns.has(urn)),
+      } as const;
+    }),
+
+  startAutoCommenting: protectedProcedure
+    .input(
+      z.object({
+        linkedInAccountId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const browserSession = await registerOrGetBrowserSession(
+        ctx.db,
+        ctx.user.id,
+        input.linkedInAccountId,
+      );
+
+      if (browserSession.status === "error") {
+        return browserSession;
+      }
+
+      const instance = browserSession.instance;
+
+      const autoCommentRun = await ctx.db.autoCommentRun.create({
+        data: {
+          userId: ctx.user.id,
+          status: "pending",
+        },
+
+        select: {
+          id: true,
+        },
+      });
+
+      await instance.startAutoCommenting({
+        autoCommentRunId: autoCommentRun.id,
+        // TODO: add other props here that's given from zod input
+      });
+    }),
+
+  stopAutoCommenting: protectedProcedure
+    .input(
+      z.object({
+        autoCommentRunId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const autoCommentRun = await ctx.db.autoCommentRun.findUnique({
+        where: { id: input.autoCommentRunId },
+      });
+
+      if (autoCommentRun === null) {
+        return {
+          status: "error",
+          code: 404,
+          message: "Auto comment run not found",
+        } as const;
+      }
+
+      if (autoCommentRun.status !== "pending") {
+        return {
+          status: "success",
+          message: "auto commenting already stopped",
+        } as const;
+      }
+
+      const session = browserRegistry.get(ctx.user.id);
+
+      if (session === undefined) {
+        return {
+          status: "error",
+          code: 400,
+          message: "No active browser session found",
+        } as const;
+      }
+
+      await session.stopAutoCommenting();
+
+      await ctx.db.autoCommentRun.update({
+        where: { id: input.autoCommentRunId },
+        data: { status: "stopped", endedAt: new Date() },
+      });
+
+      return {
+        status: "success",
       } as const;
     }),
 

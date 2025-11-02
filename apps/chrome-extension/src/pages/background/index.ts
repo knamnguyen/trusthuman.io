@@ -664,6 +664,7 @@ export type ContentScriptMessage =
   | {
       action: "startNewCommentingFlow";
       params: {
+        autoCommentRunId: string;
         scrollDuration: number;
         commentDelay: number;
         maxPosts: number;

@@ -79,6 +79,7 @@ async function getExtensionId(manifestJsonPath: string) {
 
 export interface BrowserFunctions {
   startAutoCommenting: (params: {
+    autoCommentRunId: string;
     scrollDuration: number;
     commentDelay: number;
     maxPosts: number;
@@ -109,6 +110,11 @@ export type BrowserBackendChannelMessage =
     }
   | {
       action: "autoCommentingCompleted";
+      payload: {
+        autoCommentRunId: string;
+        success: boolean;
+        error?: string;
+      };
     };
 
 export class LinkedInBrowserSession {
@@ -123,6 +129,7 @@ export class LinkedInBrowserSession {
   private extensionWorker: WebWorker | null = null;
   constructor(
     private readonly registry: BrowserSessionRegistry,
+    private readonly prisma: PrismaClient,
     private readonly opts: {
       id: string;
       userId: string;
@@ -225,6 +232,16 @@ export class LinkedInBrowserSession {
           }
           case "autoCommentingCompleted": {
             await this.shutdown();
+            if (process.env.NODE_ENV !== "test") {
+              await this.prisma.autoCommentRun.update({
+                where: { id: data.payload.autoCommentRunId },
+                data: {
+                  status: data.payload.success ? "completed" : "errored",
+                  error: data.payload.error,
+                  endedAt: new Date(),
+                },
+              });
+            }
             break;
           }
         }
@@ -379,6 +396,7 @@ export class LinkedInBrowserSession {
   }
 
   async startAutoCommenting(params: {
+    autoCommentRunId: string;
     scrollDuration: number;
     commentDelay: number;
     maxPosts: number;

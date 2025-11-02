@@ -1,5 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 
+import { db } from "@sassy/db";
+
 import {
   BrowserSessionRegistry,
   LinkedInBrowserSession,
@@ -14,6 +16,7 @@ describe("LinkedInBrowserSession", () => {
       "test",
       new LinkedInBrowserSession(
         registry,
+        db,
         {
           id: "test-user-id",
           username: process.env.LINKEDIN_TEST_ACCOUNT_USERNAME!,

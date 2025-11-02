@@ -496,41 +496,58 @@ chrome.runtime.onMessage.addListener(
       case "startNewCommentingFlow": {
         console.info("Received start new commenting flow:", request);
         (async () => {
-          const settings = await appStorage.get([
-            "timeFilterEnabled",
-            "minPostAge",
-            "manualApproveEnabled",
-          ]);
-          const timeFilterEnabled = settings.timeFilterEnabled ?? false;
-          const minPostAge = settings.minPostAge ?? 1;
-          const manualApproveEnabled = !!settings.manualApproveEnabled;
-          await startNewCommentingFlowWithDelayedTabSwitch({
-            scrollDuration: request.params.scrollDuration,
-            commentDelay: request.params.commentDelay,
-            maxPosts: request.params.maxPosts,
-            styleGuide: request.params.styleGuide,
-            duplicateWindow: request.params.duplicateWindow || 24,
-            commentAsCompanyEnabled:
-              request.params.commentAsCompanyEnabled ?? false,
-            timeFilterEnabled:
-              request.params.timeFilterEnabled ?? timeFilterEnabled,
-            minPostAge: request.params.minPostAge ?? minPostAge,
-            manualApproveEnabled:
-              request.params.manualApproveEnabled ?? manualApproveEnabled,
-            authenticityBoostEnabled: request.params.authenticityBoostEnabled,
-            commentProfileName: request.params.commentProfileName,
-            languageAwareEnabled: request.params.languageAwareEnabled,
-            skipCompanyPagesEnabled: request.params.skipCompanyPagesEnabled,
-            skipPromotedPostsEnabled: request.params.skipPromotedPostsEnabled,
-            skipFriendsActivitiesEnabled:
-              request.params.skipFriendsActivitiesEnabled,
-            blacklistEnabled: request.params.blacklistEnabled,
-            blacklistAuthors: request.params.blacklistAuthors,
-          });
-          sendResponse({ success: true });
-          await sendMessageToPuppeteerBackend({
-            action: "autoCommentingCompleted",
-          });
+          let success = false;
+          try {
+            const settings = await appStorage.get([
+              "timeFilterEnabled",
+              "minPostAge",
+              "manualApproveEnabled",
+            ]);
+            const timeFilterEnabled = settings.timeFilterEnabled ?? false;
+            const minPostAge = settings.minPostAge ?? 1;
+            const manualApproveEnabled = !!settings.manualApproveEnabled;
+            await startNewCommentingFlowWithDelayedTabSwitch({
+              autoCommentRunId: request.params.autoCommentRunId,
+              scrollDuration: request.params.scrollDuration,
+              commentDelay: request.params.commentDelay,
+              maxPosts: request.params.maxPosts,
+              styleGuide: request.params.styleGuide,
+              duplicateWindow: request.params.duplicateWindow || 24,
+              commentAsCompanyEnabled:
+                request.params.commentAsCompanyEnabled ?? false,
+              timeFilterEnabled:
+                request.params.timeFilterEnabled ?? timeFilterEnabled,
+              minPostAge: request.params.minPostAge ?? minPostAge,
+              manualApproveEnabled:
+                request.params.manualApproveEnabled ?? manualApproveEnabled,
+              authenticityBoostEnabled: request.params.authenticityBoostEnabled,
+              commentProfileName: request.params.commentProfileName,
+              languageAwareEnabled: request.params.languageAwareEnabled,
+              skipCompanyPagesEnabled: request.params.skipCompanyPagesEnabled,
+              skipPromotedPostsEnabled: request.params.skipPromotedPostsEnabled,
+              skipFriendsActivitiesEnabled:
+                request.params.skipFriendsActivitiesEnabled,
+              blacklistEnabled: request.params.blacklistEnabled,
+              blacklistAuthors: request.params.blacklistAuthors,
+            });
+            sendResponse({ success: true });
+            await sendMessageToPuppeteerBackend({
+              action: "autoCommentingCompleted",
+              payload: {
+                success: true,
+                autoCommentRunId: request.params.autoCommentRunId,
+              },
+            });
+          } catch (err) {
+            await sendMessageToPuppeteerBackend({
+              action: "autoCommentingCompleted",
+              payload: {
+                success: false,
+                autoCommentRunId: request.params.autoCommentRunId,
+                error: err instanceof Error ? err.message : String(err),
+              },
+            });
+          }
         })();
         break;
       }
@@ -602,6 +619,7 @@ async function loadCounters(): Promise<void> {
 
 // Main function to start the new commenting flow with delayed tab switching
 async function startNewCommentingFlowWithDelayedTabSwitch(params: {
+  autoCommentRunId?: string;
   scrollDuration: number;
   commentDelay: number;
   maxPosts: number;
@@ -875,6 +893,7 @@ async function processAllPostsFeed(
   skipPromotedPosts: boolean,
   skipFriendsActivities: boolean,
   authenticityBoostEnabled: boolean,
+  autoCommentRunId?: string,
 ): Promise<void> {
   console.group("🎯 PROCESSING ALL POSTS - DETAILED DEBUG");
 
@@ -929,6 +948,7 @@ async function processAllPostsFeed(
   const postContainers = await getUncommentedPostContainers(allPostContainers);
 
   const comments: {
+    autoCommentRunId?: string;
     postContentHtml: string | null;
     comment: string;
     urn: string;
@@ -1210,6 +1230,7 @@ async function processAllPostsFeed(
           comments.push({
             urn,
             comment,
+            autoCommentRunId,
             postContentHtml: contentHtml,
             hash: hashRes?.hash ?? null,
             isDuplicate: index !== 0,
