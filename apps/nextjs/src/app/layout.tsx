@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
+import Script from "next/script";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -64,6 +65,13 @@ export const viewport: Viewport = {
 export default function RootLayout(props: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      {/* tracking for Endoresely affiliate referral */}
+      <Script
+        async
+        src="https://assets.endorsely.com/endorsely.js"
+        data-endorsely="2fb18c3c-7198-4c86-b16b-714f8e177932"
+        strategy="afterInteractive"
+      />
       <body
         className={cn(
           "bg-background text-foreground min-h-screen font-sans antialiased",
