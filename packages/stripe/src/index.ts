@@ -40,13 +40,15 @@ export class StripeService {
 
   async createCheckoutSession(
     clerkUserId: string,
-    purchaseType: "MONTHLY" | "YEARLY" | "LIFETIME",
+    purchaseType: "WEEKLY" | "MONTHLY" | "YEARLY",
     email?: string,
+    endorsely_referral?: string,
   ): Promise<{ url: string | null }> {
     // Get or create a Stripe customer with Clerk ID in metadata
     const customerId = await this.getOrCreateCustomer(clerkUserId, email);
 
-    const mode = purchaseType === "LIFETIME" ? "payment" : "subscription";
+    // const mode = purchaseType === "LIFETIME" ? "payment" : "subscription";
+    const mode = "subscription";
 
     // Generate URLs based on environment
     const baseUrl = process.env.NEXTJS_URL ?? "http://localhost:3000";
@@ -71,6 +73,7 @@ export class StripeService {
       metadata: {
         clerkUserId,
         purchaseType,
+        endorsely_referral,
       },
     } as Stripe.Checkout.SessionCreateParams;
 

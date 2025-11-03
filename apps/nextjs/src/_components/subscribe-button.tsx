@@ -31,12 +31,15 @@ export function SubscribeButton({
   const { mutateAsync: createCheckout, isPending } = useMutation(
     trpc.stripe.createCheckout.mutationOptions({}),
   );
+  const endorsely_referral = (window as any).endorsely_referral;
+  console.log("endorsely_referral: ", endorsely_referral);
 
   const handleClick = async () => {
     try {
       // Call tRPC to create checkout session
       const { url } = await createCheckout({
         purchaseType,
+        endorsely_referral,
       });
 
       // Redirect to Stripe checkout page

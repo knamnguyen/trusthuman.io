@@ -58,6 +58,7 @@ export const stripeRouter = {
         userId, // Clerk user ID
         input.purchaseType,
         email,
+        input.endorsely_referral,
       );
       return checkoutUrl;
     }),
