@@ -17,19 +17,19 @@ export default function HomePage() {
       <Header />
 
       {/* Affiliate Banner - sticky positioned right under the header */}
-      {/* <div className="fixed top-16 z-40 w-full bg-pink-500 py-2">
+      <div className="fixed top-16 z-40 w-full bg-pink-500 py-2">
         <a
-          href="https://engagekit.promotekit.com"
+          href="https://engagekit.endorsely.com"
           target="_blank"
           rel="noopener noreferrer"
           className="block"
         >
           <div className="animate-bounce-light text-ld text-center font-bold text-white">
-            Launch special: earn up to $1200 a year by referring potential users
-            for EngageKit
+            Early Affiliate Special: earn up to $1200 a year by referring
+            potential users for EngageKit
           </div>
         </a>
-      </div> */}
+      </div>
 
       <main className="pt-24">
         <HeroSection />
