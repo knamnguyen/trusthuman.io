@@ -21,7 +21,6 @@ import {
   assumedUserJwt,
   browserRegistry,
   hyperbrowser,
-  LinkedInBrowserSession,
 } from "../utils/linkedin-browser-session";
 import { registerOrGetBrowserSession } from "./browser";
 
@@ -335,7 +334,7 @@ export const userRouter = {
 
       await ctx.db.autoCommentRun.update({
         where: { id: input.autoCommentRunId },
-        data: { status: "stopped", endedAt: new Date() },
+        data: { status: "terminated", endedAt: new Date() },
       });
 
       return {
