@@ -19,7 +19,6 @@ interface SubscribeButtonProps {
  */
 export function SubscribeButton({
   purchaseType,
-  endorsely_referral,
   buttonText = purchaseType === "WEEKLY"
     ? "Subscribe Weekly"
     : purchaseType === "MONTHLY"
@@ -33,11 +32,11 @@ export function SubscribeButton({
   const { mutateAsync: createCheckout, isPending } = useMutation(
     trpc.stripe.createCheckout.mutationOptions({}),
   );
-  endorsely_referral = endorsely_referral || (window as any).endorsely_referral;
-  console.log("endorsely_referral: ", endorsely_referral);
 
   const handleClick = async () => {
     try {
+      const endorsely_referral = (window as any).endorsely_referral;
+      console.log("endorsely_referral: ", endorsely_referral);
       // Call tRPC to create checkout session
       const { url } = await createCheckout({
         purchaseType,
