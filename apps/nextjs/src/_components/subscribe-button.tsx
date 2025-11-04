@@ -8,7 +8,7 @@ import { useTRPC } from "~/trpc/react"; // Correct TRPC import
 
 interface SubscribeButtonProps {
   purchaseType: "WEEKLY" | "MONTHLY" | "YEARLY";
-  endorsely_referral?: string;
+  endorsely_referral?: string | null;
   buttonText?: string; // Custom button text
   className?: string; // CSS class for styling
 }
@@ -33,7 +33,7 @@ export function SubscribeButton({
   const { mutateAsync: createCheckout, isPending } = useMutation(
     trpc.stripe.createCheckout.mutationOptions({}),
   );
-  const endorsely_referral = endorsely_referral || (window as any).endorsely_referral;
+  endorsely_referral = endorsely_referral || (window as any).endorsely_referral;
   console.log("endorsely_referral: ", endorsely_referral);
 
   const handleClick = async () => {

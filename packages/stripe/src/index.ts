@@ -42,7 +42,7 @@ export class StripeService {
     clerkUserId: string,
     purchaseType: "WEEKLY" | "MONTHLY" | "YEARLY",
     email?: string,
-    endorsely_referral?: string,
+    endorsely_referral?: string | null,
   ): Promise<{ url: string | null }> {
     // Get or create a Stripe customer with Clerk ID in metadata
     const customerId = await this.getOrCreateCustomer(clerkUserId, email);
