@@ -49,6 +49,9 @@ export default function SubscriptionPage() {
   console.log("accessType", accessType);
   console.log("isLoading", isLoading);
 
+  const endorsely_referral =
+    endorsely_referral || (window as any).endorsely_referral;
+
   return (
     <div className="min-h-screen bg-white text-black">
       <div className="container mx-auto max-w-7xl px-4 py-12">
@@ -134,6 +137,7 @@ export default function SubscriptionPage() {
                 <CardFooter>
                   <SubscribeButton
                     purchaseType="WEEKLY"
+                    endorsely_referral={endorsely_referral}
                     buttonText="Start Weekly"
                     className="w-full cursor-pointer rounded-md border-2 border-black bg-gray-200 py-2 font-bold text-black shadow-[4px_4px_0px_#000] hover:bg-gray-300 hover:shadow-none"
                   />
@@ -167,6 +171,7 @@ export default function SubscriptionPage() {
                 <CardFooter>
                   <SubscribeButton
                     purchaseType="MONTHLY"
+                    endorsely_referral={endorsely_referral}
                     buttonText="Go Monthly"
                     className="w-full cursor-pointer rounded-md border-2 border-black bg-pink-500 py-2 font-bold text-white shadow-[4px_4px_0px_#000] hover:bg-pink-600 hover:shadow-none"
                   />
@@ -200,6 +205,7 @@ export default function SubscriptionPage() {
                 <CardFooter>
                   <SubscribeButton
                     purchaseType="YEARLY"
+                    endorsely_referral={endorsely_referral}
                     buttonText="Go Yearly"
                     className="w-full cursor-pointer rounded-md border-2 border-black bg-gray-200 py-2 font-bold text-black shadow-[4px_4px_0px_#000] hover:bg-gray-300 hover:shadow-none"
                   />
