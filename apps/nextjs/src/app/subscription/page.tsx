@@ -49,8 +49,7 @@ export default function SubscriptionPage() {
   console.log("accessType", accessType);
   console.log("isLoading", isLoading);
 
-  const endorsely_referral =
-    endorsely_referral || (window as any).endorsely_referral;
+  const endorsely_referral = (window as any).endorsely_referral;
 
   return (
     <div className="min-h-screen bg-white text-black">
