@@ -15,7 +15,7 @@ export enum STRIPE_ID_PRODUCTS {
 //createCheckoutSchema
 export const createCheckoutSchema = z.object({
   purchaseType: z.enum(["WEEKLY", "MONTHLY", "YEARLY"]),
-  endorsely_referral: z.string().optional(),
+  endorsely_referral: z.string().optional().nullable(),
 });
 
 export const createCustomerPortalSchema = z.object({
