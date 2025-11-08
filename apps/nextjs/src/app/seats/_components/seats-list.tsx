@@ -16,8 +16,8 @@ const formSchema = z.object({
   email: z.string().trim().email(),
   password: z.string().trim(),
   location: countrySchema,
-  twoFactorSecretKey: z.string(),
-  otp: z.string(),
+  twoFactorSecretKey: z.string().trim().min(1),
+  otp: z.string().trim().min(1),
 });
 
 export function SeatsList() {
@@ -93,7 +93,7 @@ export function SeatsList() {
     >
       <h1 className="mb-6 text-3xl font-bold">Add Seats</h1>
 
-      <div className="space-x-2">
+      <div className="flex flex-wrap gap-2">
         <input
           className="border-2"
           placeholder="Linkedin Email"
@@ -124,12 +124,16 @@ export function SeatsList() {
           className="border-2"
           required
           {...register("otp")}
-          placeholder="OTP from authenticator app"
+          placeholder="OTP from authenticator"
           type="text"
         />
-        <label htmlFor="location">
+        <label htmlFor="location" className="inline-block border-2">
           Location:
-          <select {...register("location")} id="location">
+          <select
+            {...register("location")}
+            id="location"
+            className="outline-none"
+          >
             {Object.entries(countries).map(([code, country]) => (
               <option key={code} value={code}>
                 {country}
@@ -138,39 +142,58 @@ export function SeatsList() {
           </select>
         </label>
       </div>
-      {Object.keys(errors).length > 0 && JSON.stringify(errors, null, 2)}
-      <button
-        className="mt-4 cursor-pointer border border-gray-400 bg-gray-200 px-2"
-        type="button"
-        onClick={async () => {
-          const valid = await trigger(["twoFactorSecretKey", "otp"]);
-          if (!valid) {
-            return;
-          }
+      <p className="text-destructive mt-2">
+        {Object.keys(errors).length > 0 &&
+          JSON.stringify(
+            {
+              otp: errors.otp?.message,
+              twoFactorSecretKey: errors.twoFactorSecretKey?.message,
+              location: errors.location?.message,
+              password: errors.password?.message,
+              email: errors.email?.message,
+            },
+            null,
+            2,
+          )}
+      </p>
+      {verifyTwoFactorSecretKey.data?.valid !== undefined &&
+        (verifyTwoFactorSecretKey.data.valid ? (
+          <p className="text-green-500">2FA Secret Key is valid!</p>
+        ) : (
+          <p className="text-destructive">2FA Secret Key is invalid.</p>
+        ))}
+      <div className="space-x-2">
+        <button
+          className="mt-4 cursor-pointer border border-gray-400 bg-gray-200 px-2 disabled:cursor-not-allowed disabled:opacity-50"
+          type="button"
+          disabled={verifyTwoFactorSecretKey.isPending}
+          onClick={async () => {
+            const valid = await trigger(["twoFactorSecretKey", "otp"]);
+            if (!valid) {
+              return;
+            }
 
-          const twoFactorSecretKey = getValues("twoFactorSecretKey");
-          const otp = getValues("otp");
-          verifyTwoFactorSecretKey.mutate({
-            twoFactorSecretKey,
-            otp,
-          });
-        }}
-      >
-        Verify 2FA Secret Key
-      </button>
-      {verifyTwoFactorSecretKey.data?.valid && (
-        <div>
-          <p className="mt-2 text-green-600">
-            Successfully verified two factor secret key.
-          </p>
-          <button
-            className="mt-4 cursor-pointer border border-gray-400 bg-gray-200 px-2"
-            type="submit"
-          >
-            Click here to confirm add seat
-          </button>
-        </div>
-      )}
+            const twoFactorSecretKey = getValues("twoFactorSecretKey");
+            const otp = getValues("otp");
+            verifyTwoFactorSecretKey.mutate({
+              twoFactorSecretKey,
+              otp,
+            });
+          }}
+        >
+          {verifyTwoFactorSecretKey.isPending
+            ? "Verifying..."
+            : "Verify 2FA Secret Key"}
+        </button>
+        <button
+          disabled={verifyTwoFactorSecretKey.data?.valid !== true}
+          className="mt-4 cursor-pointer border border-gray-400 bg-gray-200 px-2 disabled:cursor-not-allowed disabled:opacity-50"
+          title="Verify your 2FA Secret Key before adding a seat"
+          type="submit"
+        >
+          Add Seat
+        </button>
+      </div>
       <div className="mt-4">{renderList()}</div>
     </form>
   );

@@ -13,7 +13,7 @@ interface FeatureFlag {
 
 const featureConfig = {
   "linkedin-browser-mode": {
-    emails: ["lamzihao98"],
+    emails: ["tutuhub.malaysia@gmail.com"],
     teams: ["developers"],
   },
 } satisfies Record<Feature, FeatureFlag>;
