@@ -127,13 +127,16 @@ export function SeatsList() {
           placeholder="OTP from authenticator app"
           type="text"
         />
-        <select {...register("location")}>
-          {Object.entries(countries).map(([code, country]) => (
-            <option key={code} value={code}>
-              {country}
-            </option>
-          ))}
-        </select>
+        <label htmlFor="location">
+          Location:
+          <select {...register("location")} id="location">
+            {Object.entries(countries).map(([code, country]) => (
+              <option key={code} value={code}>
+                {country}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
       {Object.keys(errors).length > 0 && JSON.stringify(errors, null, 2)}
       <button
