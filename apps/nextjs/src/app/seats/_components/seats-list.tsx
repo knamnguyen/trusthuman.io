@@ -1,22 +1,46 @@
 "use client";
 
 import React from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { format } from "date-fns/format";
 import { LoaderCircleIcon } from "lucide-react";
+import { useForm } from "react-hook-form";
+import z from "zod";
+
+import { countries, countrySchema } from "@sassy/validators";
 
 import { useTRPC } from "~/trpc/react";
+
+const formSchema = z.object({
+  email: z.string().trim().email(),
+  password: z.string().trim(),
+  location: countrySchema,
+  twoFactorSecretKey: z.string(),
+  otp: z.string(),
+});
 
 export function SeatsList() {
   const trpc = useTRPC();
   const { data: linkedInAccounts } = useQuery({
     ...trpc.user.listLinkedInAccounts.queryOptions(),
   });
-  const [email, setEmail] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [error, setError] = React.useState("");
-  const [otp, setOtp] = React.useState("");
-  const [twoFactorSecretKey, setTwoFactorSecretKey] = React.useState("");
+  const {
+    register,
+    formState: { errors },
+    handleSubmit,
+    getValues,
+    trigger,
+  } = useForm<z.output<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+      location: undefined,
+      twoFactorSecretKey: "",
+      otp: "",
+    },
+  });
 
   const verifyTwoFactorSecretKey = useMutation(
     trpc.user.verifyTwoFactorSecretKey.mutationOptions(),
@@ -63,29 +87,32 @@ export function SeatsList() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl py-10">
-      <h1 className="mb-6 text-3xl font-bold">Added Seats</h1>
+    <form
+      className="mx-auto max-w-4xl py-10"
+      onSubmit={handleSubmit((data) => addSeat.mutate(data))}
+    >
+      <h1 className="mb-6 text-3xl font-bold">Add Seats</h1>
 
       <div className="space-x-2">
         <input
           className="border-2"
-          value={email}
           placeholder="Linkedin Email"
-          onChange={(e) => setEmail(e.target.value)}
+          required
+          {...register("email")}
           autoComplete="email"
         />
         <input
           className="border-2"
-          value={password}
           placeholder="Password"
-          onChange={(e) => setPassword(e.target.value)}
+          required
+          {...register("password")}
           type="password"
           autoComplete="current-password"
         />
         <input
           className="border-2"
-          value={twoFactorSecretKey}
-          onChange={(e) => setTwoFactorSecretKey(e.target.value)}
+          {...register("twoFactorSecretKey")}
+          required
           disabled={
             verifyTwoFactorSecretKey.isPending ||
             verifyTwoFactorSecretKey.data?.valid === true
@@ -95,31 +122,39 @@ export function SeatsList() {
         />
         <input
           className="border-2"
-          value={otp}
-          onChange={(e) => setOtp(e.target.value)}
+          required
+          {...register("otp")}
           placeholder="OTP from authenticator app"
           type="text"
         />
+        <select {...register("location")}>
+          {Object.entries(countries).map(([code, country]) => (
+            <option key={code} value={code}>
+              {country}
+            </option>
+          ))}
+        </select>
       </div>
+      {Object.keys(errors).length > 0 && JSON.stringify(errors, null, 2)}
       <button
         className="mt-4 cursor-pointer border border-gray-400 bg-gray-200 px-2"
-        onClick={() => {
-          const trimmed = twoFactorSecretKey.trim();
-          if (trimmed === "") {
-            return setError("2FA Secret Key is required");
+        type="button"
+        onClick={async () => {
+          const valid = await trigger(["twoFactorSecretKey", "otp"]);
+          if (!valid) {
+            return;
           }
-          if (otp.trim() === "") {
-            return setError("OTP is required");
-          }
+
+          const twoFactorSecretKey = getValues("twoFactorSecretKey");
+          const otp = getValues("otp");
           verifyTwoFactorSecretKey.mutate({
-            twoFactorSecretKey: trimmed,
+            twoFactorSecretKey,
             otp,
           });
         }}
       >
         Verify 2FA Secret Key
       </button>
-      {error && <p className="mt-2 text-red-600">{error}</p>}
       {verifyTwoFactorSecretKey.data?.valid && (
         <div>
           <p className="mt-2 text-green-600">
@@ -127,25 +162,13 @@ export function SeatsList() {
           </p>
           <button
             className="mt-4 cursor-pointer border border-gray-400 bg-gray-200 px-2"
-            onClick={() => {
-              const trimmedEmail = email.trim();
-              const trimmedPassword = password.trim();
-              if (trimmedEmail === "" || trimmedPassword === "") {
-                return setError("Email and password are required");
-              }
-
-              addSeat.mutate({
-                email: trimmedEmail,
-                password: trimmedPassword,
-                twoFactorSecretKey: twoFactorSecretKey.trim(),
-              });
-            }}
+            type="submit"
           >
             Click here to confirm add seat
           </button>
         </div>
       )}
       <div className="mt-4">{renderList()}</div>
-    </div>
+    </form>
   );
 }
