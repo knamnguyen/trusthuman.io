@@ -819,6 +819,18 @@ export default function Popup() {
     }
   };
 
+  const handleOpenConfigPage = () => {
+    try {
+      if (chrome.runtime?.openOptionsPage) {
+        chrome.runtime.openOptionsPage();
+      } else {
+        chrome.tabs.create?.({ url: chrome.runtime.getURL("options.html") });
+      }
+    } catch (err) {
+      console.error("Failed to open config page", err);
+    }
+  };
+
   const handleOpenListFeed = async () => {
     try {
       if (!targetListEnabled) {
@@ -1024,6 +1036,18 @@ export default function Popup() {
                 Start Auto Commenting
               </button>
             )}
+            <button
+              onClick={handleOpenConfigPage}
+              className="mt-2 w-full cursor-pointer rounded-md border-2 border-blue-500 px-4 py-3 font-medium text-blue-600 transition-colors hover:bg-blue-200 disabled:cursor-not-allowed disabled:border-transparent disabled:bg-gray-400 disabled:text-white"
+              disabled={
+                isInitialDataLoading ||
+                !styleGuide.trim() ||
+                isDailyLimitReached ||
+                styleGuideTooLong
+              }
+            >
+              Configure Cloud Mode
+            </button>
           </div>
 
           <StatisticsDashboard

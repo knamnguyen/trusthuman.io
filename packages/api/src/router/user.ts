@@ -262,6 +262,22 @@ export const userRouter = {
     .input(
       z.object({
         linkedInAccountId: z.string(),
+        scrollDuration: z.number(),
+        commentDelay: z.number(),
+        maxPosts: z.number(),
+        styleGuide: z.string(),
+        duplicateWindow: z.number(),
+        commentAsCompanyEnabled: z.boolean().optional(),
+        timeFilterEnabled: z.boolean().optional(),
+        minPostAge: z.number().optional(),
+        manualApproveEnabled: z.boolean().optional(),
+        authenticityBoostEnabled: z.boolean().optional(),
+        commentProfileName: z.string().optional(),
+        languageAwareEnabled: z.boolean().optional(),
+        skipCompanyPagesEnabled: z.boolean().optional(),
+        blacklistEnabled: z.boolean().optional(),
+        skipPromotedPostsEnabled: z.boolean().optional(),
+        skipFriendsActivitiesEnabled: z.boolean().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -290,7 +306,19 @@ export const userRouter = {
 
       await instance.startAutoCommenting({
         autoCommentRunId: autoCommentRun.id,
-        // TODO: add other props here that's given from zod input
+        scrollDuration: input.scrollDuration,
+        commentDelay: input.commentDelay,
+        styleGuide: input.styleGuide,
+        maxPosts: input.maxPosts,
+        blacklistEnabled: input.blacklistEnabled,
+        duplicateWindow: input.duplicateWindow,
+        commentAsCompanyEnabled: input.commentAsCompanyEnabled,
+        timeFilterEnabled: input.timeFilterEnabled,
+        minPostAge: input.minPostAge,
+        manualApproveEnabled: input.manualApproveEnabled,
+        authenticityBoostEnabled: input.authenticityBoostEnabled,
+        commentProfileName: input.commentProfileName,
+        languageAwareEnabled: input.languageAwareEnabled,
       });
     }),
 
