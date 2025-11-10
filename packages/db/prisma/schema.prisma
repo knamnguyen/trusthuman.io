@@ -197,6 +197,17 @@ model TargetProfile {
   updatedAt  DateTime        @updatedAt
   list       TargetList      @relation(fields: [listId], references: [id])
   profile    LinkedInProfile @relation(fields: [profileUrn], references: [urn])
+
+  @@unique([listId, profileUrn])
+}
+
+model BlacklistedProfile {
+  id         String   @id
+  userId     String
+  profileUrn String
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, profileUrn])
 }
 
 model ExtensionDeploymentMeta {
