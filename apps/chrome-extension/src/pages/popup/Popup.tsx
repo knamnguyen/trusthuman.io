@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { useStorage, useStorageState } from "@src/services/storage";
-import { useQuery } from "@tanstack/react-query";
+
+import {
+  DEFAULT_STYLE_GUIDES_FREE,
+  DEFAULT_STYLE_GUIDES_PREMIUM,
+  FEATURE_CONFIG,
+} from "@sassy/feature-flags";
 
 import engageKitLogo from "../../../public/icon-128.png";
-import { DEFAULT_STYLE_GUIDES_FREE } from "../../config/default-style-guides-free";
-import { DEFAULT_STYLE_GUIDES_PREMIUM } from "../../config/default-style-guides-premium";
-import { FEATURE_CONFIG } from "../../config/features";
 import { useBackgroundAuth } from "../../hooks/use-background-auth";
 import { useDailyCommentCount } from "../../hooks/use-daily-comment-count";
 import { usePremiumStatus } from "../../hooks/use-premium-status";
@@ -819,12 +820,14 @@ export default function Popup() {
     }
   };
 
-  const handleOpenConfigPage = () => {
+  const handleAutoCommentOpenConfigPage = () => {
     try {
       if (chrome.runtime?.openOptionsPage) {
         chrome.runtime.openOptionsPage();
       } else {
-        chrome.tabs.create?.({ url: chrome.runtime.getURL("options.html") });
+        chrome.tabs.create?.({
+          url: chrome.runtime.getURL("options.html#autocomment"),
+        });
       }
     } catch (err) {
       console.error("Failed to open config page", err);
@@ -937,7 +940,6 @@ export default function Popup() {
         duplicateWindow,
         timeFilterEnabled,
         minPostAge,
-        browserbaseMode: false,
       };
 
       console.log(
@@ -1037,7 +1039,7 @@ export default function Popup() {
               </button>
             )}
             <button
-              onClick={handleOpenConfigPage}
+              onClick={handleAutoCommentOpenConfigPage}
               className="mt-2 w-full cursor-pointer rounded-md border-2 border-blue-500 px-4 py-3 font-medium text-blue-600 transition-colors hover:bg-blue-200 disabled:cursor-not-allowed disabled:border-transparent disabled:bg-gray-400 disabled:text-white"
               disabled={
                 isInitialDataLoading ||

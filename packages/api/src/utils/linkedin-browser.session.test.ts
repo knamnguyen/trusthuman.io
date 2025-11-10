@@ -54,7 +54,7 @@ describe("LinkedInBrowserSession", () => {
     "startAutoCommenting",
     async () => {
       await session.bringToFront("linkedin");
-      await new Promise((resolve) => setTimeout(resolve, 80000));
+      await new Promise(() => {});
       await session.startAutoCommenting({
         scrollDuration: 10,
         maxPosts: 5,
@@ -62,8 +62,6 @@ describe("LinkedInBrowserSession", () => {
         styleGuide: "PROFESSIONAL",
         duplicateWindow: 24,
       });
-
-      await new Promise(() => {});
     },
     Infinity,
   );

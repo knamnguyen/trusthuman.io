@@ -234,8 +234,6 @@ const startAutoCommenting = async (
   commentDelay: number,
   maxPosts: number,
   duplicateWindow: number,
-  // TODO: check if this can be removed
-  browserbaseMode?: boolean,
 ): Promise<void> => {
   try {
     console.log(

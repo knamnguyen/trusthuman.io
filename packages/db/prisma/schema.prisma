@@ -141,12 +141,14 @@ model LinkedInProfile {
   interests               Json?
   recommendations         Json?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  targetProfiles TargetProfile[]
 }
 
 model UserComment {
-  urn              String          @id
+  id               String          @id
+  urn              String
   postContentHtml  String?
   hash             String?
   autoCommentRunId String?
@@ -161,20 +163,40 @@ model UserComment {
 }
 
 model AutoCommentRun {
-  id          String        @id @default(uuid())
-  userId      String
-  user        User          @relation(fields: [userId], references: [id])
-  startedAt   DateTime      @default(now())
-  endedAt     DateTime?
-  error       String?
-  status      String
-  UserComment UserComment[]
+  id        String        @id
+  userId    String
+  user      User          @relation(fields: [userId], references: [id])
+  startedAt DateTime      @default(now())
+  endedAt   DateTime?
+  error     String?
+  status    String
+  comments  UserComment[]
 }
 
 model UserBrowserState {
   userId String @id
   state  String
   user   User   @relation(fields: [userId], references: [id])
+}
+
+model TargetList {
+  id             String          @id
+  userId         String
+  name           String
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  targetProfiles TargetProfile[]
+}
+
+model TargetProfile {
+  id         String          @id
+  listId     String
+  userId     String
+  profileUrn String          @unique
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  list       TargetList      @relation(fields: [listId], references: [id])
+  profile    LinkedInProfile @relation(fields: [profileUrn], references: [urn])
 }
 
 model ExtensionDeploymentMeta {

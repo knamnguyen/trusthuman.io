@@ -31,12 +31,12 @@
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
     "superjson": "2.2.2",
-    "webextension-polyfill": "^0.12.0",
-    "wouter": "^3.7.1"
+    "webextension-polyfill": "^0.12.0"
   },
   "devDependencies": {
     "@crxjs/vite-plugin": "^2.0.0-beta.32",
     "@sassy/eslint-config": "workspace:*",
+    "@sassy/feature-flags": "workspace:*",
     "@sassy/prettier-config": "workspace:*",
     "@sassy/tailwind-config": "workspace:*",
     "@sassy/tsconfig": "workspace:*",

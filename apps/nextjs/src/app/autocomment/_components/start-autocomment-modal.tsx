@@ -1,27 +1,39 @@
-import React from "react";
+import type { ReactNode } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { PlusIcon, TrashIcon } from "@radix-ui/react-icons";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 import {
   DEFAULT_STYLE_GUIDES_FREE,
   DEFAULT_STYLE_GUIDES_PREMIUM,
   FEATURE_CONFIG,
 } from "@sassy/feature-flags";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  DialogTrigger,
+} from "@sassy/ui/dialog";
 
-import { UpgradeLink } from "./comment-limit-status";
+const FeaturePlaceholder = () => (
+  <div className="mb-4 h-24 w-full animate-pulse rounded-lg bg-gray-200" />
+);
 
-/**
- * SettingsForm Component
- *
- * PRESENTATIONAL COMPONENT - Pure UI rendering only
- * - Receives settings data and change handlers via props from parent (Popup.tsx)
- * - No state management, no business logic, no side effects
- * - Parent component (Popup.tsx) handles all settings state, storage, and default values
- * - This component only renders the form inputs and calls provided handlers
- */
-
-interface CustomStyle {
-  name: string;
-  prompt: string;
+export function StartAutoCommentModal({ trigger }: { trigger: ReactNode }) {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>{trigger}</DialogTrigger>
+      <DialogContent>
+        <DialogTitle>Start Auto Commenting</DialogTitle>
+        <DialogDescription>
+          Configure your autocommenting settings here.
+        </DialogDescription>
+        <form></form>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 interface SettingsFormProps {
@@ -37,7 +49,10 @@ interface SettingsFormProps {
   isPremiumLoading: boolean;
   maxPostsLimit: number;
   selectedStyleKey: string;
-  customStyles: CustomStyle[];
+  customStyles: {
+    name: string;
+    prompt: string;
+  }[];
   isDefaultStyleSelected: boolean;
   onSelectedStyleChange: (value: string) => void;
   onAddCustomStyle: () => void;
@@ -86,11 +101,7 @@ interface SettingsFormProps {
   onAuthenticityBoostEnabledChange: (value: boolean) => void;
 }
 
-const FeaturePlaceholder = () => (
-  <div className="mb-4 h-24 w-full animate-pulse rounded-lg bg-gray-200" />
-);
-
-export default function SettingsForm({
+function SettingsForm({
   styleGuide,
   scrollDuration,
   commentDelay,
@@ -145,6 +156,10 @@ export default function SettingsForm({
   authenticityBoostEnabled,
   onAuthenticityBoostEnabledChange,
 }: SettingsFormProps) {
+  const {} = useForm({
+    resolver: zodResolver(z.object({})),
+  });
+
   // Helper function to determine if features should be disabled
   const isFeatureDisabled = (featureIsPremium: boolean) => {
     if (isPremiumLoading) return true; // Disabled during loading

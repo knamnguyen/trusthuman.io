@@ -171,6 +171,7 @@ export class LinkedInBrowserSession {
       proxyCountry: this.opts.location,
       profile: {
         id: this.opts.browserProfileId,
+        persistChanges: true,
       },
       staticIpId: this.opts.staticIpId,
     });
