@@ -11,7 +11,7 @@ interface FeatureFlag {
   teams: Team[];
 }
 
-const featureConfig = {
+const featureFlagConfig = {
   "linkedin-browser-mode": {
     emails: ["tutuhub.malaysia@gmail.com"],
     teams: ["developers"],
@@ -19,7 +19,7 @@ const featureConfig = {
 } satisfies Record<Feature, FeatureFlag>;
 
 export function isFeatureEnabled(feature: Feature, email: string) {
-  const config = featureConfig[feature];
+  const config = featureFlagConfig[feature];
   if (config.emails.includes(email)) {
     return true;
   }
@@ -30,3 +30,9 @@ export function isFeatureEnabled(feature: Feature, email: string) {
 
   return false;
 }
+
+export {
+  FEATURE_CONFIG,
+  DEFAULT_STYLE_GUIDES_FREE,
+  DEFAULT_STYLE_GUIDES_PREMIUM,
+} from "./premium";
