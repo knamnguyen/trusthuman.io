@@ -1,7 +1,6 @@
 import path from "node:path";
 import type { Browser, Page, WebWorker } from "puppeteer";
 import { Hyperbrowser } from "@hyperbrowser/sdk";
-import { authenticator } from "otplib";
 import puppeteer, { TargetType } from "puppeteer";
 import { connect } from "puppeteer-core";
 import { z } from "zod";
@@ -25,7 +24,10 @@ export type ProxyLocation = NonNullable<
 >;
 
 interface BrowserSession {
-  sessionId: string;
+  session: {
+    id: string;
+    liveUrl: string;
+  };
   browser: Browser;
 }
 
@@ -35,9 +37,9 @@ if (process.env.JWT_SECRET === undefined) {
 
 // this token should be attached in headers of every trpc request when browserbase mode is used
 // this allows browserbase session to assume as userId
-export const assumedUserJwt = jwtFactory(
+export const assumedAccountJwt = jwtFactory(
   z.object({
-    userId: z.string(),
+    accountId: z.string(),
   }),
   86_400_000, // put a day
   process.env.JWT_SECRET,
@@ -118,8 +120,10 @@ export type BrowserBackendChannelMessage =
     };
 
 export class LinkedInBrowserSession {
-  public sessionId: string;
+  public id: string;
+  public sessionId!: string;
   public browser!: Browser;
+  public liveUrl!: string;
   public pages!: {
     linkedin: Page;
     engagekitExtension: Page;
@@ -131,24 +135,19 @@ export class LinkedInBrowserSession {
     private readonly registry: BrowserSessionRegistry,
     private readonly prisma: PrismaClient,
     private readonly opts: {
-      id: string;
-      userId: string;
-      username: string;
-      password: string;
-      twoFactorSecretKey: string;
+      accountId: string;
       location: ProxyLocation;
       staticIpId?: string;
-      browserProfileId?: string;
+      browserProfileId: string;
       extensionIds?: string[];
       onBrowserMessage?: (
         this: LinkedInBrowserSession,
         data: BrowserBackendChannelMessage,
       ) => unknown;
-      sessionId: string;
     },
     private readonly logger: Logger = console,
   ) {
-    this.sessionId = this.opts.sessionId;
+    this.id = opts.accountId;
   }
 
   public static getLatestEngagekitExtensionId(db: PrismaClient) {
@@ -157,12 +156,32 @@ export class LinkedInBrowserSession {
     });
   }
 
+  static async getOrCreate(
+    registry: BrowserSessionRegistry,
+    prisma: PrismaClient,
+    opts: {
+      accountId: string;
+      location: ProxyLocation;
+      staticIpId?: string;
+      browserProfileId: string;
+      extensionIds?: string[];
+      onBrowserMessage?: (
+        this: LinkedInBrowserSession,
+        data: BrowserBackendChannelMessage,
+      ) => unknown;
+    },
+    logger: Logger = console,
+  ) {
+    return await registry.register(
+      new LinkedInBrowserSession(registry, prisma, opts, logger),
+    );
+  }
+
   async init(): Promise<LinkedInBrowserSession> {
-    const userJwt = await assumedUserJwt.encode({
-      userId: this.opts.userId,
+    const accountJwt = await assumedAccountJwt.encode({
+      accountId: this.opts.accountId,
     });
 
-    // TODO: return liveurl for user to stream whats going on
     const result = await createBrowserSession({
       useProxy: true,
       useStealth: true,
@@ -175,6 +194,10 @@ export class LinkedInBrowserSession {
       },
       staticIpId: this.opts.staticIpId,
     });
+
+    this.liveUrl = result.instance.session.liveUrl;
+
+    this.sessionId = result.instance.session.id;
 
     this.browser = result.instance.browser;
 
@@ -194,7 +217,7 @@ export class LinkedInBrowserSession {
         // but somehow this is getting the wrong id, maybe manifest.dev.json's key is wrong idk
         console.info({ extensionId });
         await page.goto(
-          `chrome-extension://ofpificfhbopdfmlcmnmhhhmdbepgfbh/src/pages/popup/index.html?userJwt=${userJwt}`,
+          `chrome-extension://ofpificfhbopdfmlcmnmhhhmdbepgfbh/src/pages/popup/index.html?userJwt=${accountJwt}`,
           {
             waitUntil: "networkidle0",
           },
@@ -211,8 +234,8 @@ export class LinkedInBrowserSession {
     return this;
   }
 
-  public async shutdown() {
-    await this.registry.destroy(this.opts.id);
+  public async destroy() {
+    await this.registry.destroy(this.id);
   }
 
   private async setupBackendChannel(page: Page) {
@@ -228,11 +251,11 @@ export class LinkedInBrowserSession {
 
         switch (data.action) {
           case "stopAutoCommenting": {
-            await this.shutdown();
+            await this.destroy();
             break;
           }
           case "autoCommentingCompleted": {
-            await this.shutdown();
+            await this.destroy();
             if (process.env.NODE_ENV !== "test") {
               await this.prisma.autoCommentRun.update({
                 where: { id: data.payload.autoCommentRunId },
@@ -289,111 +312,6 @@ export class LinkedInBrowserSession {
         await new Promise((resolve) => setTimeout(resolve, 2000));
       }
     }
-  }
-
-  async login() {
-    const page = this.pages.linkedin;
-    await page.bringToFront();
-
-    this.logger.info("navigating to linkedin.com");
-
-    await page.goto("https://www.linkedin.com", {
-      waitUntil: "networkidle0",
-    });
-    const signInButton = await page.$(
-      'a[data-tracking-control-name="guest_homepage-basic_nav-header-signin"]',
-    );
-    if (signInButton === null) {
-      this.logger.error("sign in button not found");
-      return {
-        status: "error",
-        code: 500,
-        error: "sign in button not found",
-      } as const;
-    }
-
-    await Promise.all([
-      page.waitForNavigation({ waitUntil: "networkidle0" }),
-      signInButton.click(),
-    ]);
-    this.logger.info("navigated to login page");
-
-    this.logger.info("typing username and password");
-    await page.type("input#username", this.opts.username, {
-      delay: 40,
-    });
-    this.logger.info("typed username");
-    await page.type("input#password", this.opts.password, {
-      delay: 40,
-    });
-    this.logger.info("typed password");
-
-    const submitButton = await page.$('button[type="submit"]');
-    if (submitButton === null) {
-      this.logger.error("submit button not found");
-      return {
-        status: "error",
-        code: 500,
-        error: "submit button not found",
-      } as const;
-    }
-    await Promise.all([
-      page.waitForNavigation({ waitUntil: "networkidle0" }),
-      submitButton.click(),
-    ]);
-
-    const url = page.url();
-
-    if (!url.includes("checkpoint/challenge")) {
-      this.logger.error("account does not have 2fa enabled, cannot proceed");
-      return {
-        status: "error",
-        code: 400,
-        error: "Account does not have 2fa enabled, cannot proceed",
-      } as const;
-    }
-
-    this.logger.info("clicked submit button");
-    this.logger.info("navigated to post-login page");
-
-    const otpElement = await page.$("input#input__phone_verification_pin");
-    if (otpElement === null) {
-      this.logger.error("otp element not found");
-      return {
-        status: "error",
-        code: 500,
-        error: "otp element not found",
-      } as const;
-    }
-
-    const otp = authenticator.generate(this.opts.twoFactorSecretKey);
-    this.logger.info(`generated otp: ${otp}`);
-
-    this.logger.info("typing otp");
-    await otpElement.type(otp, { delay: 40 });
-
-    const submitOtpButton = await page.$(
-      'button#two-step-submit-button[type="submit"]',
-    );
-
-    if (submitOtpButton === null) {
-      this.logger.error("submit otp button not found");
-      return {
-        status: "error",
-        code: 500,
-        error: "submit otp button not found",
-      } as const;
-    }
-
-    this.logger.info("submitting otp");
-    await Promise.all([
-      page.waitForNavigation({ waitUntil: "networkidle0" }),
-      submitOtpButton.click(),
-    ]);
-
-    return {
-      status: "success",
-    } as const;
   }
 
   async startAutoCommenting(params: {
@@ -474,16 +392,9 @@ export class BrowserSessionRegistry {
     return this.registry.get(id);
   }
 
-  async register(id: string, session: LinkedInBrowserSession) {
-    const existing = this.get(id);
+  async register(session: LinkedInBrowserSession) {
+    const existing = this.get(session.id);
     if (existing !== undefined) {
-      if (existing.sessionId === "mock") {
-        return {
-          status: "existing",
-          instance: existing,
-        } as const;
-      }
-
       const status = await hyperbrowser.sessions.get(existing.sessionId);
       if (status.status === "active") {
         return {
@@ -493,7 +404,7 @@ export class BrowserSessionRegistry {
       }
 
       // if existing session exists but status is not active, we destroy it and create it again below
-      await this.destroy(id);
+      await this.destroy(session.id);
     }
 
     const browserSession = await session.init();
@@ -556,7 +467,20 @@ async function createHyperbrowserSession(
       browserWSEndpoint: session.wsEndpoint,
       defaultViewport: null,
     })) as unknown as Browser;
-    return { sessionId: session.id, browser };
+
+    if (session.liveUrl === undefined) {
+      // docs say that liveUrl is always defined but not sure why its undefined here
+      // so just throw error for now
+      throw new Error("liveUrl is undefined");
+    }
+
+    return {
+      session: {
+        id: session.id,
+        liveUrl: session.liveUrl,
+      },
+      browser,
+    };
   }
 
   const filepath = path.join(
@@ -574,7 +498,10 @@ async function createHyperbrowserSession(
   });
 
   return {
-    sessionId: "mock",
+    session: {
+      id: "mock",
+      liveUrl: "http://localhost/mock-live-view",
+    },
     browser,
   };
 }

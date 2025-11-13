@@ -8,8 +8,6 @@ import { SeatsList } from "./_components/seats-list";
 async function Page() {
   const user = await currentUser();
 
-  console.info(user?.primaryEmailAddress?.emailAddress);
-
   if (user === null) return redirect("/");
 
   if (

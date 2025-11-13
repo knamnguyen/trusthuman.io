@@ -17,7 +17,7 @@ import { ZodError } from "zod";
 import type { Prisma, PrismaClient } from "@sassy/db";
 import { db } from "@sassy/db";
 
-import { assumedUserJwt } from "./utils/linkedin-browser-session";
+import { assumedAccountJwt } from "./utils/linkedin-browser-session";
 
 /**
  * 1. CONTEXT
@@ -93,9 +93,9 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
 
   // check for assumedUserToken
   if (assumedUserToken !== null) {
-    const decoded = await assumedUserJwt.decode(assumedUserToken);
+    const decoded = await assumedAccountJwt.decode(assumedUserToken);
     if (decoded.success) {
-      const user = await getOrInsertUser(ctx.db, decoded.payload.userId);
+      const user = await getOrInsertUser(ctx.db, decoded.payload.accountId);
 
       return next({
         ctx: {

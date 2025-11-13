@@ -1,5 +1,6 @@
 import type { TRPCRouterRecord } from "@trpc/server";
 import { authenticator } from "otplib";
+import { ulid } from "ulidx";
 import z from "zod";
 
 import {
@@ -15,11 +16,11 @@ import { countrySchema } from "@sassy/validators";
 
 import { protectedProcedure, publicProcedure } from "../trpc";
 import { checkPremiumAccess } from "../utils/check-premium-access";
-import { cryptography } from "../utils/encryption";
-import { env } from "../utils/env";
 import {
-  assumedUserJwt,
+  assumedAccountJwt,
+  browserRegistry,
   hyperbrowser,
+  LinkedInBrowserSession,
 } from "../utils/linkedin-browser-session";
 
 export const userRouter = {
@@ -102,46 +103,70 @@ export const userRouter = {
       };
     }),
 
-  addLinkedInAccount: protectedProcedure
+  getLinkedInAccount: protectedProcedure
+    .input(z.object({ accountId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const account = await ctx.db.linkedInAccount.findFirst({
+        where: { id: input.accountId, userId: ctx.user.id },
+      });
+
+      return account;
+    }),
+
+  initAddAccountSession: protectedProcedure
     .input(
       z.object({
         email: z.string(),
-        password: z.string(),
-        twoFactorSecretKey: z.string(),
+        name: z.string(),
         location: countrySchema,
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const [encryptedPassword, encryptedTwoFASecretKey, browserProfileId] =
-        await Promise.all([
-          cryptography.encrypt(
-            input.password,
-            env.LINKEDIN_PASSWORD_SECRET_KEY,
-          ),
-          cryptography.encrypt(
-            input.twoFactorSecretKey,
-            env.LINKEDIN_TWO_FA_SECRET_KEY,
-          ),
-          hyperbrowser.profiles
-            .create({ name: ctx.user.primaryEmailAddress })
-            .then((p) => p.id),
-        ]);
+      const accountId = ulid();
+      const profile = await hyperbrowser.profiles.create({
+        name: ctx.user.primaryEmailAddress,
+      });
 
-      const account = await ctx.db.linkedInAccount.create({
+      const { instance } = await LinkedInBrowserSession.getOrCreate(
+        browserRegistry,
+        ctx.db,
+        {
+          accountId,
+          location: input.location,
+          browserProfileId: profile.id,
+        },
+      );
+
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      void instance.pages.linkedin.on("framenavigated", async (frame) => {
+        // attach a framenavigated here to detect succesful logins
+        const currentUrl = frame.url();
+        if (currentUrl.includes("linkedin.com/feed")) {
+          // User has successfully logged in, destroy the instance and update the account status
+          await ctx.db.linkedInAccount.update({
+            where: { id: accountId },
+            data: { status: "ACTIVE" },
+          });
+          await instance.destroy();
+        }
+      });
+
+      await ctx.db.linkedInAccount.create({
         data: {
+          id: accountId,
           userId: ctx.user.id,
           email: input.email,
-          encryptedPassword,
-          twoFactorSecretKey: encryptedTwoFASecretKey,
-          browserProfileId,
+          browserProfileId: profile.id,
           location: input.location,
-        },
-        select: {
-          id: true,
+          status: "CONNECTING",
         },
       });
 
-      return account.id;
+      return {
+        status: "success",
+        accountId,
+        liveUrl: instance.liveUrl,
+      } as const;
     }),
 
   listLinkedInAccounts: protectedProcedure
@@ -168,7 +193,7 @@ export const userRouter = {
   verifyAssumedUserJwt: publicProcedure
     .input(z.object({ token: z.string() }))
     .mutation(async ({ input }) => {
-      const decoded = await assumedUserJwt.decode(input.token);
+      const decoded = await assumedAccountJwt.decode(input.token);
       if (decoded.success) {
         return {
           status: "success",

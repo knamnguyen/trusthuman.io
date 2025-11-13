@@ -14,10 +14,8 @@ import { useTRPC } from "~/trpc/react";
 
 const formSchema = z.object({
   email: z.string().trim().email(),
-  password: z.string().trim(),
+  name: z.string().trim(),
   location: countrySchema,
-  twoFactorSecretKey: z.string().trim().min(1),
-  otp: z.string().trim().min(1),
 });
 
 export function SeatsList() {
@@ -29,24 +27,35 @@ export function SeatsList() {
     register,
     formState: { errors },
     handleSubmit,
-    getValues,
-    trigger,
   } = useForm<z.output<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: "",
-      password: "",
+      name: "",
       location: undefined,
-      twoFactorSecretKey: "",
-      otp: "",
     },
   });
 
-  const verifyTwoFactorSecretKey = useMutation(
-    trpc.user.verifyTwoFactorSecretKey.mutationOptions(),
+  const initAddAccountSession = useMutation(
+    trpc.user.initAddAccountSession.mutationOptions(),
   );
 
-  const addSeat = useMutation(trpc.user.addLinkedInAccount.mutationOptions());
+  const status = useQuery(
+    trpc.user.getLinkedInAccount.queryOptions(
+      {
+        accountId: initAddAccountSession.data?.accountId ?? "",
+      },
+      {
+        enabled: initAddAccountSession.data !== undefined,
+        refetchInterval(query) {
+          return !query.state.data || query.state.data.status === "CONNECTING"
+            ? 2000
+            : false;
+        },
+        select: (data) => data?.status,
+      },
+    ),
+  );
 
   const renderList = () => {
     if (linkedInAccounts === undefined) {
@@ -89,7 +98,13 @@ export function SeatsList() {
   return (
     <form
       className="mx-auto max-w-4xl py-10"
-      onSubmit={handleSubmit((data) => addSeat.mutate(data))}
+      onSubmit={handleSubmit((data) =>
+        initAddAccountSession.mutate(data, {
+          onSuccess: (data) => {
+            window.open(data.liveUrl, "_blank", "noopener,noreferrer");
+          },
+        }),
+      )}
     >
       <h1 className="mb-6 text-3xl font-bold">Add Seats</h1>
 
@@ -103,29 +118,10 @@ export function SeatsList() {
         />
         <input
           className="border-2"
-          placeholder="Password"
+          placeholder="Name"
           required
-          {...register("password")}
-          type="password"
-          autoComplete="current-password"
-        />
-        <input
-          className="border-2"
-          {...register("twoFactorSecretKey")}
-          required
-          disabled={
-            verifyTwoFactorSecretKey.isPending ||
-            verifyTwoFactorSecretKey.data?.valid === true
-          }
-          placeholder="2FA Secret Key"
-          type="text"
-        />
-        <input
-          className="border-2"
-          required
-          {...register("otp")}
-          placeholder="OTP from authenticator"
-          type="text"
+          {...register("name")}
+          autoComplete="none"
         />
         <label htmlFor="location" className="inline-block border-2">
           Location:
@@ -146,53 +142,28 @@ export function SeatsList() {
         {Object.keys(errors).length > 0 &&
           JSON.stringify(
             {
-              otp: errors.otp?.message,
-              twoFactorSecretKey: errors.twoFactorSecretKey?.message,
               location: errors.location?.message,
-              password: errors.password?.message,
+              name: errors.name?.message,
               email: errors.email?.message,
             },
             null,
             2,
           )}
       </p>
-      {verifyTwoFactorSecretKey.data?.valid !== undefined &&
-        (verifyTwoFactorSecretKey.data.valid ? (
-          <p className="text-green-500">2FA Secret Key is valid!</p>
-        ) : (
-          <p className="text-destructive">2FA Secret Key is invalid.</p>
-        ))}
       <div className="space-x-2">
         <button
-          className="mt-4 cursor-pointer border border-gray-400 bg-gray-200 px-2 disabled:cursor-not-allowed disabled:opacity-50"
-          type="button"
-          disabled={verifyTwoFactorSecretKey.isPending}
-          onClick={async () => {
-            const valid = await trigger(["twoFactorSecretKey", "otp"]);
-            if (!valid) {
-              return;
-            }
-
-            const twoFactorSecretKey = getValues("twoFactorSecretKey");
-            const otp = getValues("otp");
-            verifyTwoFactorSecretKey.mutate({
-              twoFactorSecretKey,
-              otp,
-            });
-          }}
-        >
-          {verifyTwoFactorSecretKey.isPending
-            ? "Verifying..."
-            : "Verify 2FA Secret Key"}
-        </button>
-        <button
-          disabled={verifyTwoFactorSecretKey.data?.valid !== true}
+          disabled={initAddAccountSession.data !== undefined}
           className="mt-4 cursor-pointer border border-gray-400 bg-gray-200 px-2 disabled:cursor-not-allowed disabled:opacity-50"
           title="Verify your 2FA Secret Key before adding a seat"
           type="submit"
         >
-          Add Seat
+          {initAddAccountSession.isPending ? (
+            <LoaderCircleIcon className="animate-spin" />
+          ) : (
+            "Initiate add seat"
+          )}
         </button>
+        {status.data && <div>{status.data}</div>}
       </div>
       <div className="mt-4">{renderList()}</div>
     </form>
