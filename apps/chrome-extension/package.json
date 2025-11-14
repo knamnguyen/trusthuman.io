@@ -9,6 +9,7 @@
     "build": "pnpm build:chrome",
     "build:chrome": "pnpm with-env vite build --mode production --config vite.config.chrome.ts",
     "dev:chrome": "pnpm with-env nodemon --config nodemon.chrome.json",
+    "zip:chrome": "(cd dist_chrome; zip -r ../dist/engagekit-extension-chrome.zip ./)",
     "build:firefox": "pnpm with-env vite build --mode production --config vite.config.firefox.ts",
     "dev": "pnpm dev:chrome",
     "dev:firefox": "pnpm with-env vite --mode development --config vite.config.firefox.ts",
