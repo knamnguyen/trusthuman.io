@@ -122,10 +122,36 @@ export const userRouter = {
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const accountId = ulid();
-      const profile = await hyperbrowser.profiles.create({
-        name: ctx.user.primaryEmailAddress,
+      const existingAccount = await ctx.db.linkedInAccount.findFirst({
+        where: { email: input.email, userId: ctx.user.id },
       });
+
+      let profileId;
+      let accountId;
+
+      if (existingAccount !== null) {
+        // Reuse existing account's profile and ID
+        profileId = existingAccount.browserProfileId;
+        accountId = existingAccount.id;
+      } else {
+        accountId = ulid();
+        const profile = await hyperbrowser.profiles.create({
+          name: input.email,
+        });
+
+        await ctx.db.linkedInAccount.create({
+          data: {
+            id: accountId,
+            userId: ctx.user.id,
+            email: input.email,
+            browserProfileId: profile.id,
+            location: input.location,
+            status: "CONNECTING",
+          },
+        });
+
+        profileId = profile.id;
+      }
 
       const { instance } = await LinkedInBrowserSession.getOrCreate(
         browserRegistry,
@@ -133,7 +159,7 @@ export const userRouter = {
         {
           accountId,
           location: input.location,
-          browserProfileId: profile.id,
+          browserProfileId: profileId,
         },
       );
 
@@ -141,6 +167,8 @@ export const userRouter = {
       void instance.pages.linkedin.on("framenavigated", async (frame) => {
         // attach a framenavigated here to detect succesful logins
         const currentUrl = frame.url();
+
+        console.info({ currentUrl });
         if (currentUrl.includes("linkedin.com/feed")) {
           // User has successfully logged in, destroy the instance and update the account status
           await ctx.db.linkedInAccount.update({
@@ -149,17 +177,6 @@ export const userRouter = {
           });
           await instance.destroy();
         }
-      });
-
-      await ctx.db.linkedInAccount.create({
-        data: {
-          id: accountId,
-          userId: ctx.user.id,
-          email: input.email,
-          browserProfileId: profile.id,
-          location: input.location,
-          status: "CONNECTING",
-        },
       });
 
       return {
@@ -184,6 +201,7 @@ export const userRouter = {
           id: true,
           email: true,
           createdAt: true,
+          status: true,
         },
         take: 20,
         orderBy: { id: "asc" },

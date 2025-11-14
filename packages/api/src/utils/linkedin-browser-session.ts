@@ -1,4 +1,5 @@
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import type { Browser, Page, WebWorker } from "puppeteer";
 import { Hyperbrowser } from "@hyperbrowser/sdk";
 import puppeteer, { TargetType } from "puppeteer";
@@ -22,6 +23,8 @@ export type CreateHyperbrowserSessionParams = NonNullable<
 export type ProxyLocation = NonNullable<
   CreateHyperbrowserSessionParams["proxyCountry"]
 >;
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 interface BrowserSession {
   session: {
@@ -139,7 +142,6 @@ export class LinkedInBrowserSession {
       location: ProxyLocation;
       staticIpId?: string;
       browserProfileId: string;
-      extensionIds?: string[];
       onBrowserMessage?: (
         this: LinkedInBrowserSession,
         data: BrowserBackendChannelMessage,
@@ -182,11 +184,25 @@ export class LinkedInBrowserSession {
       accountId: this.opts.accountId,
     });
 
+    const latestExtension = await this.prisma.extensionDeploymentMeta.findFirst(
+      {
+        orderBy: { createdAt: "desc" },
+      },
+    );
+
+    console.info({ latestExtension });
+
+    const extensionIds: string[] = [];
+
+    if (latestExtension !== null) {
+      extensionIds.push(latestExtension.id);
+    }
+
     const result = await createBrowserSession({
       useProxy: true,
       useStealth: true,
       solveCaptchas: true,
-      extensionIds: this.opts.extensionIds,
+      extensionIds,
       proxyCountry: this.opts.location,
       profile: {
         id: this.opts.browserProfileId,
@@ -208,16 +224,16 @@ export class LinkedInBrowserSession {
       }),
       engagekitExtension: await this.browser.newPage().then(async (page) => {
         // technically we should use the getExtensionId + manifest.dev.json key to get the extension id but screw it
-        const extensionId = await getExtensionId(
-          path.join(
-            __dirname,
-            "../../../../apps/chrome-extension/manifest.dev.json",
-          ),
-        );
-        // but somehow this is getting the wrong id, maybe manifest.dev.json's key is wrong idk
-        console.info({ extensionId });
+        // const extensionId = await getExtensionId(
+        //   path.join(
+        //     __dirname,
+        //     "../../../../apps/chrome-extension/manifest.dev.json",
+        //   ),
+        // );
+        // // but somehow this is getting the wrong id, maybe manifest.dev.json's key is wrong idk
+        // console.info({ extensionId });
         await page.goto(
-          `chrome-extension://ofpificfhbopdfmlcmnmhhhmdbepgfbh/src/pages/popup/index.html?userJwt=${accountJwt}`,
+          `chrome-extension://lnpioglpginpegnbigmiaaohacfbmbfl/src/pages/popup/index.html?userJwt=${accountJwt}`,
           {
             waitUntil: "networkidle0",
           },
@@ -461,7 +477,7 @@ async function createBrowserSession(
 async function createHyperbrowserSession(
   params: CreateHyperbrowserSessionParams,
 ): Promise<BrowserSession> {
-  if (process.env.NODE_ENV === "production") {
+  if (process.env.NODE_ENV !== "test") {
     const session = await hyperbrowser.sessions.create(params);
     const browser = (await connect({
       browserWSEndpoint: session.wsEndpoint,
@@ -487,6 +503,7 @@ async function createHyperbrowserSession(
     __dirname,
     "../../../../apps/chrome-extension/dist_chrome",
   );
+  console.info({ filepath });
 
   // TODO: figure out how to add the chrome-extension build dir in production
   const browser = await puppeteer.launch({

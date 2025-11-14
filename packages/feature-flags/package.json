@@ -5,7 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "premium": "./src/premium.ts"
+    "./premium": "./src/premium.ts"
   },
   "license": "MIT",
   "scripts": {

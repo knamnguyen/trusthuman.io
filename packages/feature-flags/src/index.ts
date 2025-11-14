@@ -1,7 +1,11 @@
 export type Feature = "linkedin-browser-mode";
 
 const teams = {
-  developers: ["lamzihao98@gmail.com", "knamnguyen@gmail.com"],
+  developers: [
+    "lamzihao98@gmail.com",
+    "knamnguyen@gmail.com",
+    "zihaolam98@gmail.com",
+  ],
 };
 
 type Team = keyof typeof teams;

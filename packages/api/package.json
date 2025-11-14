@@ -14,7 +14,7 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
     "with-env": "dotenv --override -e ../../.env --",
-    "deploy-extension-hyperbrowser": "bun --env-file ../../.env run ./scripts/deploy-extension.ts",
+    "deploy-extension-hyperbrowser": "pnpm with-env pnpm tsx ./scripts/deploy-extension.ts",
     "apify:test": "pnpm with-env bun ./scripts/test-linkedin-scrape-apify.ts",
     "import:profiles": "pnpm with-env bun ./scripts/import-linkedin-profiles.ts"
   },

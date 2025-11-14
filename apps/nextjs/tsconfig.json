@@ -10,6 +10,6 @@
     "plugins": [{ "name": "next" }],
     "module": "esnext"
   },
-  "include": ["src", ".", ".next/types/**/*.ts"],
+  "include": ["src", ".", ".next/types/**/*.ts", "../chrome-extension/extension_dist_chrome"],
   "exclude": ["node_modules"]
 }

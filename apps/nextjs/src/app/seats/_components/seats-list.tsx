@@ -83,9 +83,7 @@ export function SeatsList() {
             className="rounded-lg border bg-white p-4 shadow"
           >
             <h2 className="mb-2 text-xl font-semibold">{account.email}</h2>
-            <p className="mb-2">
-              Status: {account.email ? "Active" : "Inactive"}
-            </p>
+            <p className="mb-2">Status: {account.status}</p>
             <p className="mb-2">
               Added at: {format(account.createdAt, "yyyy-MM-dd hh:mm:ssa")}
             </p>
