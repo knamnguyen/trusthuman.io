@@ -40,8 +40,12 @@ const items = [
         url: "/autocomment",
       },
       {
+        title: "Configure",
+        url: "/autocomment/config",
+      },
+      {
         title: "Comment Styles",
-        url: "/comment-style",
+        url: "/autocomment/comment-style",
       },
     ],
   },

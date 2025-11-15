@@ -1,6 +1,5 @@
 "use client";
 
-import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
@@ -11,13 +10,6 @@ import {
   DEFAULT_STYLE_GUIDES_PREMIUM,
   FEATURE_CONFIG,
 } from "@sassy/feature-flags";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-  DialogTrigger,
-} from "@sassy/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -55,23 +47,6 @@ const UpgradeLink = () => {
   );
 };
 
-export function StartAutoCommentModal({ trigger }: { trigger: ReactNode }) {
-  return (
-    <Dialog>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="max-h-[80vh] overflow-y-auto">
-        <DialogTitle>Start Auto Commenting</DialogTitle>
-        <DialogDescription>
-          Configure your autocommenting settings here.
-        </DialogDescription>
-        <div className="mt-5">
-          <SettingsForm />
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 const isDefaultStyle = (key: string): boolean =>
   key in DEFAULT_STYLE_GUIDES_FREE || key in DEFAULT_STYLE_GUIDES_PREMIUM;
 
@@ -82,7 +57,31 @@ const getMaxPostsLimit = (isPremium: boolean | null) =>
       ? FEATURE_CONFIG.maxPosts.premiumTierLimit
       : FEATURE_CONFIG.maxPosts.freeTierLimit;
 
-function SettingsForm() {
+export function AutoCommentConfigurationForm({
+  onSubmit,
+}: {
+  onSubmit?: (config: {
+    scrollDuration: number;
+    commentDelay: number;
+    maxPosts: number;
+    duplicateWindow: number;
+    finishListModeEnabled: boolean;
+    commentAsCompanyEnabled: boolean;
+    timeFilterEnabled: boolean;
+    minPostAge?: number;
+    manualApproveEnabled: boolean;
+    authenticityBoostEnabled: boolean;
+    targetListId?: string;
+    selectedStyleId?: string;
+    commentProfileName?: string;
+    customStylePrompt: string;
+    languageAwareEnabled: boolean;
+    skipCompanyPagesEnabled: boolean;
+    blacklistEnabled: boolean;
+    skipPromotedPostsEnabled: boolean;
+    targetListEnabled: boolean;
+  }) => void;
+}) {
   const trpc = useTRPC();
   const { accountId } = useCurrentLinkedInAccountId();
   const { isPremium, isLoading: isPremiumLoading } = usePremiumStatus();
@@ -119,7 +118,6 @@ function SettingsForm() {
   const [maxPosts, setMaxPosts] = useState(0);
   const [customStylePrompt, setCustomStylePrompt] = useState("");
   const [duplicateWindow, setDuplicateWindow] = useState(0);
-
   const [finishListModeEnabled, setFinishListModeEnabled] = useState(false);
   const [commentAsCompanyEnabled, setCommentAsCompanyEnabled] = useState(false);
   const [timeFilterEnabled, setTimeFilterEnabled] = useState(false);
@@ -192,7 +190,32 @@ function SettingsForm() {
   );
 
   return (
-    <>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSubmit?.({
+          scrollDuration,
+          commentDelay,
+          maxPosts,
+          duplicateWindow,
+          finishListModeEnabled,
+          commentAsCompanyEnabled,
+          timeFilterEnabled,
+          minPostAge,
+          manualApproveEnabled,
+          authenticityBoostEnabled,
+          targetListId,
+          selectedStyleId,
+          commentProfileName,
+          customStylePrompt,
+          languageAwareEnabled,
+          skipCompanyPagesEnabled,
+          blacklistEnabled,
+          skipPromotedPostsEnabled,
+          targetListEnabled,
+        });
+      }}
+    >
       {/* Comment on Target List (free feature) */}
       <div className="mb-4">
         <div className="mb-1 flex items-center justify-between">
@@ -516,11 +539,12 @@ function SettingsForm() {
           )}
 
           <button
-            onClick={() => {
-              addCommentStyle.mutate({
+            onClick={async () => {
+              const result = await addCommentStyle.mutateAsync({
                 name: customStyleName,
                 prompt: customStylePrompt,
               });
+              setSelectedStyleId(result.id);
             }}
             className="mt-2 w-full cursor-pointer rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-blue-200 disabled:cursor-not-allowed disabled:bg-gray-400"
             disabled={
@@ -953,6 +977,6 @@ function SettingsForm() {
           </div>
         </div>
       )}
-    </>
+    </form>
   );
 }

@@ -1,8 +1,4 @@
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@sassy/ui/sidebar";
+import { SidebarInset, SidebarProvider } from "@sassy/ui/sidebar";
 
 import { DashboardSidebar } from "./_components/dashboard-sidebar";
 
@@ -18,12 +14,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     >
       <DashboardSidebar />
       <SidebarInset>
-        <main className="flex flex-1 flex-col">
-          <div className="px-2 py-1.5">
-            <SidebarTrigger className="size-5" />
-          </div>
-          <div className="flex-1 px-2">{children}</div>
-        </main>
+        <main className="flex flex-1 flex-col py-3">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );

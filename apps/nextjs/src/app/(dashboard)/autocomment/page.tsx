@@ -1,9 +1,6 @@
-import { Button } from "@sassy/ui/button";
-
 import { env } from "~/env";
 import { prefetch, trpc } from "~/trpc/server";
 import { AutoCommentRunsList } from "./_components/autocomment-runs-list";
-import { StartAutoCommentModal } from "./_components/start-autocomment-modal";
 
 export async function AutoCommentPage() {
   if (env.NODE_ENV === "production") {
@@ -15,12 +12,9 @@ export async function AutoCommentPage() {
   }
 
   return (
-    <>
-      <StartAutoCommentModal
-        trigger={<Button variant="outline">Start Auto Commenting</Button>}
-      />
+    <div className="px-4">
       <AutoCommentRunsList />
-    </>
+    </div>
   );
 }
 

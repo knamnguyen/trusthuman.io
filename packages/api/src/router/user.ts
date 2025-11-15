@@ -153,6 +153,7 @@ export const userRouter = {
             id: accountId,
             userId: ctx.user.id,
             email: input.email,
+            name: input.name,
             browserProfileId: profile.id,
             location: input.location,
             status: "CONNECTING",

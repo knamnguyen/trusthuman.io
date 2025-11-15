@@ -2,7 +2,11 @@
 
 import { useEffect, useMemo } from "react";
 import Link from "next/link";
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { ChevronsUpDown, Plus } from "lucide-react";
 
 import {
@@ -29,6 +33,7 @@ import { useTRPC } from "~/trpc/react";
 export function AccountSwitcher() {
   const { isMobile } = useSidebar();
   const { accountId, setAccountId } = useCurrentLinkedInAccountId();
+  const queryClient = useQueryClient();
   const trpc = useTRPC();
 
   const accountsQuery = useInfiniteQuery(
@@ -61,9 +66,15 @@ export function AccountSwitcher() {
       const firstAccount = accounts?.[0];
       if (firstAccount !== undefined) {
         setAccountId(firstAccount.id);
+        queryClient.setQueryData(
+          trpc.user.getLinkedInAccount.queryKey({
+            accountId: firstAccount.id,
+          }),
+          firstAccount,
+        );
       }
     }
-  }, [accounts, accountId, setAccountId]);
+  }, [accounts, accountId, setAccountId, queryClient]);
 
   if (activeAccount.data === null || activeAccount.data === undefined) {
     return null;
@@ -114,7 +125,15 @@ export function AccountSwitcher() {
                 accounts.map((account, index) => (
                   <DropdownMenuItem
                     key={account.id}
-                    onClick={() => setAccountId(account.id)}
+                    onClick={() => {
+                      queryClient.setQueryData(
+                        trpc.user.getLinkedInAccount.queryKey({
+                          accountId: account.id,
+                        }),
+                        account,
+                      );
+                      setAccountId(account.id);
+                    }}
                     className="cursor-pointer gap-2 p-2"
                   >
                     <div className="grid size-6 shrink-0 place-items-center rounded-md bg-blue-600 text-xs font-medium">
