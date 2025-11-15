@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { UserButton } from "@clerk/nextjs";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import {
   BanIcon,
   BotIcon,
@@ -15,6 +19,7 @@ import {
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarMenu,
@@ -25,6 +30,7 @@ import {
   SidebarMenuSubItem,
 } from "@sassy/ui/sidebar";
 
+import { useTRPC } from "~/trpc/react";
 import { AccountSwitcher } from "./account-switcher";
 
 // Menu items.
@@ -77,6 +83,9 @@ const items = [
 ];
 
 export function DashboardSidebar() {
+  const trpc = useTRPC();
+  const me = useSuspenseQuery(trpc.user.me.queryOptions());
+
   return (
     <Sidebar collapsible="icon">
       <AccountSwitcher />
@@ -131,6 +140,18 @@ export function DashboardSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter>
+        <SidebarMenu className="mb-2 ml-0 group-data-[state=expanded]:ml-2">
+          <SidebarMenuItem className="flex items-center gap-2">
+            <UserButton />
+            <div className="grid flex-1 text-left text-sm leading-tight">
+              <span className="truncate font-medium">
+                {me.data.firstName ?? me.data.primaryEmailAddress}
+              </span>
+            </div>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 }

@@ -22,6 +22,8 @@ export default async function Layout({
 }: {
   children: React.ReactNode;
 }) {
+  const queryClient = getQueryClient();
+  await queryClient.prefetchQuery(trpc.user.me.queryOptions());
   const firstAccount = await getFirstAccountId();
 
   return (

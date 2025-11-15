@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { trpcStandalone } from "~/trpc/react";
+import { getQueryClient, HydrateClient, trpc } from "~/trpc/server";
 import {
   AutoCommentConfigurationForm,
   AutoCommentConfigurationFormHeader,
@@ -14,20 +14,28 @@ export async function AutoCommentConfigurationPage() {
   if (firstAccount === undefined) {
     return redirect("/seats");
   }
-  const config = await trpcStandalone.autocomment.configuration.load.query({
-    linkedInAccountId: firstAccount.id,
-  });
+
+  const queryClient = getQueryClient();
+  const config = await queryClient.ensureQueryData(
+    trpc.autocomment.configuration.load.queryOptions({
+      linkedInAccountId: firstAccount.id,
+    }),
+  );
 
   return (
-    <div className="px-4">
-      <AutoCommentConfigurationFormProvider defaultValues={config ?? undefined}>
-        <AutoCommentConfigurationFormHeader />
-        {/* <StartAutoCommentModal */}
-        {/*   trigger={<Button variant="outline">Start Auto Commenting</Button>} */}
-        {/* /> */}
-        <AutoCommentConfigurationForm />
-      </AutoCommentConfigurationFormProvider>
-    </div>
+    <HydrateClient>
+      <div className="px-4">
+        <AutoCommentConfigurationFormProvider
+          defaultValues={config ?? undefined}
+        >
+          <AutoCommentConfigurationFormHeader />
+          {/* <StartAutoCommentModal */}
+          {/*   trigger={<Button variant="outline">Start Auto Commenting</Button>} */}
+          {/* /> */}
+          <AutoCommentConfigurationForm />
+        </AutoCommentConfigurationFormProvider>
+      </div>
+    </HydrateClient>
   );
 }
 

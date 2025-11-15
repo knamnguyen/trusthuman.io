@@ -3,7 +3,6 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 // Define public routes that don't require authentication
 const isPublicRoute = createRouteMatcher([
   "/",
-  "/seats(.*)",
   "/api/trpc/post.all",
   "/api/trpc(.*)", // Allow all tRPC routes - authentication is handled in tRPC context
   "/sign-in(.*)",
