@@ -1,6 +1,17 @@
 import Link from "next/link";
-import { BanIcon, BotIcon, UserIcon, UsersRoundIcon } from "lucide-react";
+import {
+  BanIcon,
+  BotIcon,
+  ChevronRight,
+  UserIcon,
+  UsersRoundIcon,
+} from "lucide-react";
 
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@sassy/ui/collapsible";
 import {
   Sidebar,
   SidebarContent,
@@ -9,6 +20,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
 } from "@sassy/ui/sidebar";
 
 import { AccountSwitcher } from "./account-switcher";
@@ -17,8 +31,19 @@ import { AccountSwitcher } from "./account-switcher";
 const items = [
   {
     title: "Autocommenting",
-    url: "/autocomment",
+    url: "#",
     icon: BotIcon,
+    defaultOpen: true,
+    children: [
+      {
+        title: "Runs",
+        url: "/autocomment",
+      },
+      {
+        title: "Comment Styles",
+        url: "/comment-style",
+      },
+    ],
   },
   {
     title: "Accounts",
@@ -46,16 +71,48 @@ export function DashboardSidebar() {
           {/* <SidebarGroupLabel>Profiles</SidebarGroupLabel> */}
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <Link href={item.url}>
-                      <item.icon />
-                      <span className="font-medium">{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {items.map((item) =>
+                item.children !== undefined ? (
+                  <Collapsible
+                    key={item.title}
+                    asChild
+                    defaultOpen={item.defaultOpen}
+                    className="group/collapsible"
+                  >
+                    <SidebarMenuItem>
+                      <CollapsibleTrigger asChild>
+                        <SidebarMenuButton>
+                          <item.icon />
+                          <span className="font-medium">{item.title}</span>
+                          <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                        </SidebarMenuButton>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <SidebarMenuSub>
+                          {item.children.map((subItem) => (
+                            <SidebarMenuSubItem key={subItem.title}>
+                              <SidebarMenuSubButton asChild>
+                                <a href={subItem.url}>
+                                  <span>{subItem.title}</span>
+                                </a>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          ))}
+                        </SidebarMenuSub>
+                      </CollapsibleContent>
+                    </SidebarMenuItem>
+                  </Collapsible>
+                ) : (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <Link href={item.url}>
+                        <item.icon />
+                        <span className="font-medium">{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ),
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
