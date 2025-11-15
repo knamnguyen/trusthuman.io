@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { LoaderCircleIcon, XIcon } from "lucide-react";
@@ -62,6 +62,12 @@ function AddSeatPage() {
   const destroySession = useMutation(
     trpc.user.destroyAddAccountSession.mutationOptions(),
   );
+
+  useEffect(() => {
+    if (initAddAccountSessionStatus === "signed_in") {
+      setLiveUrl(null);
+    }
+  }, [initAddAccountSessionStatus]);
 
   const status = useQuery(
     trpc.user.getLinkedInAccount.queryOptions(
