@@ -45,6 +45,7 @@ model User {
   UserBrowserState UserBrowserState[]
   Comments         UserComment[]
   AutoCommentRun   AutoCommentRun[]
+  CommentStyle     CommentStyle[]
 }
 
 model LinkedInAccount {
@@ -58,6 +59,7 @@ model LinkedInAccount {
   browserProfileId String
   location         String
   name             String?
+  isRunning        Boolean               @default(false)
 }
 
 enum LinkedInAccountStatus {
@@ -218,4 +220,14 @@ model BlacklistedProfile {
 model ExtensionDeploymentMeta {
   id        String   @id
   createdAt DateTime @default(now())
+}
+
+model CommentStyle {
+  id        String   @id
+  userId    String
+  name      String
+  prompt    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
 }

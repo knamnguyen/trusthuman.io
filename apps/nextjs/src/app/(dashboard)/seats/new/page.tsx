@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { format } from "date-fns/format";
 import { LoaderCircleIcon, XIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import z from "zod";
@@ -20,11 +19,9 @@ const formSchema = z.object({
   location: countrySchema,
 });
 
-export function SeatsList() {
+function AddSeatPage() {
   const trpc = useTRPC();
-  const { data: linkedInAccounts } = useQuery({
-    ...trpc.user.listLinkedInAccounts.queryOptions(),
-  });
+
   const {
     register,
     formState: { errors },
@@ -82,61 +79,6 @@ export function SeatsList() {
       },
     ),
   );
-
-  const renderList = () => {
-    if (linkedInAccounts === undefined) {
-      return (
-        <div className="grid place-items-center py-5">
-          <LoaderCircleIcon className="animate-spin" />
-        </div>
-      );
-    }
-    if (linkedInAccounts.length === 0) {
-      return (
-        <div>
-          <p>
-            No LinkedIn accounts connected. Please connect an account to use
-            browser mode.
-          </p>
-        </div>
-      );
-    }
-
-    // TODO: add ability to edit current account's location
-    return (
-      <div className="space-y-4">
-        {linkedInAccounts.map((account) => (
-          <div
-            key={account.id}
-            className="rounded-lg border bg-white p-4 shadow"
-          >
-            <h2 className="mb-2 text-xl font-semibold">{account.email}</h2>
-            <p className="mb-2">Status: {account.status}</p>
-            <p className="mb-2">Location: {account.location}</p>
-            <p className="mb-2">
-              Added at: {format(account.createdAt, "yyyy-MM-dd hh:mm:ssa")}
-            </p>
-            {account.status === "CONNECTING" ? (
-              <button
-                className="cursor-pointer border border-gray-400 bg-gray-200 px-2"
-                type="button"
-                onClick={() => {
-                  setAccountId(account.id);
-                  initAddAccountSession.mutate({
-                    email: account.email,
-                    name: account.name ?? "",
-                    location: account.location as CountrySchema,
-                  });
-                }}
-              >
-                Continue initialization
-              </button>
-            ) : null}
-          </div>
-        ))}
-      </div>
-    );
-  };
 
   return (
     <>
@@ -233,8 +175,9 @@ export function SeatsList() {
             <div>{initAddAccountSessionStatus}</div>
           )}
         </div>
-        <div className="mt-4">{renderList()}</div>
       </form>
     </>
   );
 }
+
+export default AddSeatPage;

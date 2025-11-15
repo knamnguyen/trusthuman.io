@@ -21,7 +21,7 @@ async function Page() {
   }
 
   return (
-    <div className="min-h-dvh bg-zinc-50 text-black">
+    <div className="min-h-dvh text-black">
       <SeatsList />
     </div>
   );

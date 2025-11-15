@@ -13,6 +13,8 @@ import { TRPCReactProvider } from "~/trpc/react";
 import "~/app/globals.css";
 
 import { env } from "~/env";
+import { LinkedInAccountProvider } from "~/hooks/use-current-linkedin-account-id";
+import { HydrateClient } from "~/trpc/server";
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -72,7 +74,11 @@ export default function RootLayout(props: { children: React.ReactNode }) {
       >
         <ClerkProvider afterSignOutUrl="/" redirectUrl="/extension-auth">
           <ThemeProvider attribute="class" defaultTheme="light">
-            <TRPCReactProvider>{props.children}</TRPCReactProvider>
+            <TRPCReactProvider>
+              <LinkedInAccountProvider>
+                <HydrateClient>{props.children}</HydrateClient>
+              </LinkedInAccountProvider>
+            </TRPCReactProvider>
             <Toaster />
             {env.VERCEL_ENV === "production" && <Analytics />}
             {env.VERCEL_ENV === "production" && <SpeedInsights />}

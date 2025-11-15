@@ -23,6 +23,7 @@ import {
   hyperbrowser,
   LinkedInBrowserSession,
 } from "../utils/linkedin-browser-session";
+import { paginate } from "../utils/pagination";
 
 export const userRouter = {
   checkAccess: protectedProcedure.query(async ({ ctx }) => {
@@ -238,9 +239,9 @@ export const userRouter = {
         })
         .optional(),
     )
-    .query(({ ctx, input }) =>
-      ctx.db.linkedInAccount.findMany({
-        where: { userId: ctx.user.id, id: { gt: input?.cursor ?? undefined } },
+    .query(async ({ ctx, input }) => {
+      const accounts = await ctx.db.linkedInAccount.findMany({
+        where: { userId: ctx.user.id, id: { lt: input?.cursor ?? undefined } },
         select: {
           id: true,
           email: true,
@@ -249,10 +250,15 @@ export const userRouter = {
           location: true,
           name: true,
         },
-        take: 20,
-        orderBy: { id: "asc" },
-      }),
-    ),
+        take: 21,
+        orderBy: { id: "desc" },
+      });
+
+      return paginate(accounts, {
+        key: "id",
+        size: 20,
+      });
+    }),
 
   verifyAssumedUserJwt: publicProcedure
     .input(z.object({ token: z.string() }))

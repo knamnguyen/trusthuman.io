@@ -8,7 +8,7 @@ import z from "zod";
 
 import { protectedProcedure } from "../trpc";
 import { browserRegistry } from "../utils/linkedin-browser-session";
-import { getPaginationMeta } from "../utils/pagination";
+import { paginate } from "../utils/pagination";
 import { registerOrGetBrowserSession } from "./browser";
 
 export const autoCommentRouter = {
@@ -28,13 +28,10 @@ export const autoCommentRouter = {
         take: 20,
       });
 
-      const meta = getPaginationMeta(runs, { key: "id", size: 20 });
-
-      return {
-        data: runs,
-        cursor: meta.cursor,
-        hasNextPage: meta.hasNextPage,
-      };
+      return paginate(runs, {
+        key: "id",
+        size: 20,
+      });
     }),
   run: protectedProcedure
     .input(
@@ -66,15 +63,13 @@ export const autoCommentRouter = {
         orderBy: {
           id: "desc",
         },
-        take: 50,
+        take: 51,
       });
 
-      const meta = getPaginationMeta(comments, { key: "id", size: 50 });
-      return {
-        data: comments,
-        cursor: meta.cursor,
-        hasNextPage: meta.hasNextPage,
-      };
+      return paginate(comments, {
+        key: "id",
+        size: 50,
+      });
     }),
   saveComments: protectedProcedure
     .input(
@@ -259,6 +254,97 @@ export const autoCommentRouter = {
       await ctx.db.autoCommentRun.update({
         where: { id: input.autoCommentRunId },
         data: { status: "terminated", endedAt: new Date() },
+      });
+
+      return {
+        status: "success",
+      } as const;
+    }),
+
+  addCommentStyle: protectedProcedure
+    .input(
+      z.object({
+        name: z.string(),
+        prompt: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const id = ulid();
+      await ctx.db.commentStyle.create({
+        data: {
+          id,
+          userId: ctx.user.id,
+          name: input.name,
+          prompt: input.prompt,
+        },
+      });
+
+      return {
+        status: "success",
+        id,
+      } as const;
+    }),
+
+  listCommentStyles: protectedProcedure
+    .input(
+      z.object({
+        cursor: z.string().optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const whereClause = [];
+      whereClause.push({ userId: ctx.user.id });
+      if (input.cursor) {
+        whereClause.push({ id: { lt: input.cursor } });
+      }
+      const styles = await ctx.db.commentStyle.findMany({
+        where: {
+          OR: whereClause,
+        },
+        orderBy: { id: "desc" },
+        take: 21,
+      });
+
+      return paginate(styles, { key: "id", size: 20 });
+    }),
+
+  deleteCommentStyle: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db.commentStyle.deleteMany({
+        where: {
+          id: input.id,
+          userId: ctx.user.id,
+        },
+      });
+
+      return {
+        status: "success",
+      } as const;
+    }),
+
+  updateCommentStyle: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        name: z.string().optional(),
+        prompt: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db.commentStyle.updateMany({
+        where: {
+          id: input.id,
+          userId: ctx.user.id,
+        },
+        data: {
+          name: input.name,
+          prompt: input.prompt,
+        },
       });
 
       return {

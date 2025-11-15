@@ -2,7 +2,7 @@ import { ulid } from "ulidx";
 import { z } from "zod/v4";
 
 import { protectedProcedure } from "../trpc";
-import { getPaginationMeta } from "../utils/pagination";
+import { paginate } from "../utils/pagination";
 
 export const targetListRouter = {
   addList: protectedProcedure
@@ -45,19 +45,13 @@ export const targetListRouter = {
         orderBy: {
           id: "desc",
         },
-        take: 20,
+        take: 21,
       });
 
-      const meta = getPaginationMeta(lists, {
+      return paginate(lists, {
         key: "id",
         size: 20,
       });
-
-      return {
-        data: lists,
-        next: meta.cursor,
-        hasNextPage: meta.hasNextPage,
-      };
     }),
   findListById: protectedProcedure
     .input(
@@ -99,19 +93,13 @@ export const targetListRouter = {
         orderBy: {
           id: "desc",
         },
-        take: 20,
+        take: 21,
       });
 
-      const meta = getPaginationMeta(profiles, {
+      return paginate(profiles, {
         key: "id",
         size: 20,
       });
-
-      return {
-        data: profiles,
-        next: meta.cursor,
-        hasNextPage: meta.hasNextPage,
-      };
     }),
   addProfileToList: protectedProcedure
     .input(

@@ -1,0 +1,42 @@
+"use client";
+
+import type { ReactNode } from "react";
+import { createContext, useContext, useState } from "react";
+
+const LinkedInAccountContext = createContext<{
+  accountId: string | null;
+  setAccountId: (accountId: string | null) => void;
+} | null>(null);
+
+export const LinkedInAccountProvider = ({
+  children,
+}: {
+  children: ReactNode;
+}) => {
+  const [accountId, setAccountId] = useState<string | null>(null);
+  return (
+    <LinkedInAccountContext.Provider
+      value={{
+        accountId,
+        setAccountId,
+      }}
+    >
+      {children}
+    </LinkedInAccountContext.Provider>
+  );
+};
+
+export const useCurrentLinkedInAccountId = () => {
+  const ctx = useContext(LinkedInAccountContext);
+
+  if (ctx === null) {
+    throw new Error(
+      "useLinkedInAccountId must be used within a LinkedInAccountProvider",
+    );
+  }
+
+  return {
+    accountId: ctx.accountId,
+    setAccountId: ctx.setAccountId,
+  };
+};

@@ -2,7 +2,7 @@ import { ulid } from "ulidx";
 import { z } from "zod";
 
 import { protectedProcedure } from "../trpc";
-import { getPaginationMeta } from "../utils/pagination";
+import { paginate } from "../utils/pagination";
 
 export const blacklistRouter = {
   addToBlacklist: protectedProcedure
@@ -62,18 +62,12 @@ export const blacklistRouter = {
         orderBy: {
           id: "desc",
         },
-        take: 20,
+        take: 21,
       });
 
-      const meta = getPaginationMeta(profiles, {
+      return paginate(profiles, {
         key: "id",
         size: 20,
       });
-
-      return {
-        data: profiles,
-        next: meta.cursor,
-        hasNextPage: meta.hasNextPage,
-      };
     }),
 };
