@@ -5,45 +5,38 @@
     "src": "../../../../../../@crx/manifest",
     "isEntry": true
   },
-  "_get-sync-host-CnGZcii3.js": {
-    "file": "assets/get-sync-host-CnGZcii3.js",
+  "_get-sync-host-Cl3UakQu.js": {
+    "file": "assets/get-sync-host-Cl3UakQu.js",
     "name": "get-sync-host",
     "imports": [
-      "_index-Dh-SgQrv.js"
+      "_index-C4GW0my_.js"
     ]
   },
-  "_index-Dh-SgQrv.js": {
-    "file": "assets/index-Dh-SgQrv.js",
+  "_index-C4GW0my_.js": {
+    "file": "assets/index-C4GW0my_.js",
     "name": "index"
   },
-  "_index.tsx-loader-CLl1R9oJ.js": {
-    "file": "assets/index.tsx-loader-CLl1R9oJ.js",
-    "src": "_index.tsx-loader-CLl1R9oJ.js"
+  "_index.tsx-loader-xi4yzTTn.js": {
+    "file": "assets/index.tsx-loader-xi4yzTTn.js",
+    "src": "_index.tsx-loader-xi4yzTTn.js"
   },
   "_profile-extract-button-E_OM6-m_.js": {
     "file": "assets/profile-extract-button-E_OM6-m_.js",
     "name": "profile-extract-button"
   },
-  "_react-icons--LYPfZOn.css": {
-    "file": "assets/react-icons--LYPfZOn.css",
-    "src": "_react-icons--LYPfZOn.css"
-  },
-  "_react-icons.esm-BmuZHAIi.js": {
-    "file": "assets/react-icons.esm-BmuZHAIi.js",
+  "_react-icons.esm-ChaHjZKj.js": {
+    "file": "assets/react-icons.esm-ChaHjZKj.js",
     "name": "react-icons.esm",
     "imports": [
-      "_index-Dh-SgQrv.js"
-    ],
-    "css": [
-      "assets/react-icons--LYPfZOn.css"
+      "_index-C4GW0my_.js"
     ]
   },
-  "_storage-JtvHKh5B.js": {
-    "file": "assets/storage-JtvHKh5B.js",
+  "_storage-DBwVD2h_.js": {
+    "file": "assets/storage-DBwVD2h_.js",
     "name": "storage",
     "imports": [
-      "_index-Dh-SgQrv.js",
-      "_get-sync-host-CnGZcii3.js"
+      "_index-C4GW0my_.js",
+      "_get-sync-host-Cl3UakQu.js"
     ]
   },
   "public/icon-128.png": {
@@ -51,52 +44,52 @@
     "src": "public/icon-128.png"
   },
   "src/pages/background/index.ts": {
-    "file": "assets/index.ts-B8wjgpHr.js",
+    "file": "assets/index.ts-DNh3-lfh.js",
     "name": "index.ts",
     "src": "src/pages/background/index.ts",
     "isEntry": true,
     "imports": [
-      "_get-sync-host-CnGZcii3.js",
-      "_index-Dh-SgQrv.js"
+      "_get-sync-host-Cl3UakQu.js",
+      "_index-C4GW0my_.js"
     ]
   },
   "src/pages/content/index.tsx": {
-    "file": "assets/index.tsx-BoS0fZXU.js",
+    "file": "assets/index.tsx-DeFAYqbm.js",
     "name": "index.tsx",
     "src": "src/pages/content/index.tsx",
     "isEntry": true,
     "imports": [
-      "_get-sync-host-CnGZcii3.js",
+      "_get-sync-host-Cl3UakQu.js",
       "_profile-extract-button-E_OM6-m_.js",
-      "_storage-JtvHKh5B.js",
+      "_storage-DBwVD2h_.js",
       "src/pages/background/index.ts",
-      "_index-Dh-SgQrv.js"
+      "_index-C4GW0my_.js"
     ]
   },
   "src/pages/options/index.html": {
-    "file": "assets/index.html-Bj17b9OX.js",
+    "file": "assets/index.html-C57nAWLH.js",
     "name": "index.html",
     "src": "src/pages/options/index.html",
     "isEntry": true,
     "imports": [
-      "_react-icons.esm-BmuZHAIi.js",
-      "_index-Dh-SgQrv.js",
+      "_react-icons.esm-ChaHjZKj.js",
+      "_index-C4GW0my_.js",
       "_profile-extract-button-E_OM6-m_.js"
     ]
   },
   "src/pages/popup/index.html": {
-    "file": "assets/index.html-B5vd6FDB.js",
+    "file": "assets/index.html-DEHhjVim.js",
     "name": "index.html",
     "src": "src/pages/popup/index.html",
     "isEntry": true,
     "imports": [
-      "_react-icons.esm-BmuZHAIi.js",
-      "_index-Dh-SgQrv.js",
-      "_get-sync-host-CnGZcii3.js",
-      "_storage-JtvHKh5B.js"
+      "_react-icons.esm-ChaHjZKj.js",
+      "_index-C4GW0my_.js",
+      "_get-sync-host-Cl3UakQu.js",
+      "_storage-DBwVD2h_.js"
     ],
     "css": [
-      "assets/index-addibwyn.css"
+      "assets/index-CAZtBAyg.css"
     ],
     "assets": [
       "assets/icon-128-C-YV5z2v.png"
