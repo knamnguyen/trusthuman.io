@@ -1,15 +1,20 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
 import { LoaderCircleIcon } from "lucide-react";
+import { FormProvider, useForm, useFormContext } from "react-hook-form";
+import { z } from "zod";
 
 import {
   DEFAULT_STYLE_GUIDES_FREE,
   DEFAULT_STYLE_GUIDES_PREMIUM,
   FEATURE_CONFIG,
 } from "@sassy/feature-flags";
+import { Button } from "@sassy/ui/button";
 import {
   Select,
   SelectContent,
@@ -57,31 +62,8 @@ const getMaxPostsLimit = (isPremium: boolean | null) =>
       ? FEATURE_CONFIG.maxPosts.premiumTierLimit
       : FEATURE_CONFIG.maxPosts.freeTierLimit;
 
-export function AutoCommentConfigurationForm({
-  onSubmit,
-}: {
-  onSubmit?: (config: {
-    scrollDuration: number;
-    commentDelay: number;
-    maxPosts: number;
-    duplicateWindow: number;
-    finishListModeEnabled: boolean;
-    commentAsCompanyEnabled: boolean;
-    timeFilterEnabled: boolean;
-    minPostAge?: number;
-    manualApproveEnabled: boolean;
-    authenticityBoostEnabled: boolean;
-    targetListId?: string;
-    selectedStyleId?: string;
-    commentProfileName?: string;
-    customStylePrompt: string;
-    languageAwareEnabled: boolean;
-    skipCompanyPagesEnabled: boolean;
-    blacklistEnabled: boolean;
-    skipPromotedPostsEnabled: boolean;
-    targetListEnabled: boolean;
-  }) => void;
-}) {
+export function AutoCommentConfigurationForm() {
+  const { register } = useFormContext<FormState>();
   const trpc = useTRPC();
   const { accountId } = useCurrentLinkedInAccountId();
   const { isPremium, isLoading: isPremiumLoading } = usePremiumStatus();
@@ -193,27 +175,6 @@ export function AutoCommentConfigurationForm({
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        onSubmit?.({
-          scrollDuration,
-          commentDelay,
-          maxPosts,
-          duplicateWindow,
-          finishListModeEnabled,
-          commentAsCompanyEnabled,
-          timeFilterEnabled,
-          minPostAge,
-          manualApproveEnabled,
-          authenticityBoostEnabled,
-          targetListId,
-          selectedStyleId,
-          commentProfileName,
-          customStylePrompt,
-          languageAwareEnabled,
-          skipCompanyPagesEnabled,
-          blacklistEnabled,
-          skipPromotedPostsEnabled,
-          targetListEnabled,
-        });
       }}
     >
       {/* Comment on Target List (free feature) */}
@@ -979,4 +940,87 @@ export function AutoCommentConfigurationForm({
       )}
     </form>
   );
+}
+
+export function AutoCommentConfigurationFormHeader() {
+  const trpc = useTRPC();
+  const saveConfig = useMutation(
+    trpc.autocomment.configuration.save.mutationOptions(),
+  );
+  const { getValues } = useFormContext<FormState>();
+  const { accountId } = useCurrentLinkedInAccountId();
+  return (
+    <div className="sticky top-0 mb-3 flex items-center justify-between pb-2">
+      <div className="text-lg font-semibold">Auto commenting configuration</div>
+      <Button
+        onClick={() => {
+          if (accountId === null) {
+            return;
+          }
+          const values = getValues();
+          saveConfig.mutate({ ...values, linkedInAccountId: accountId });
+        }}
+      >
+        Save
+      </Button>
+    </div>
+  );
+}
+
+export const formStateSchema = z.object({
+  scrollDuration: z.number(),
+  commentDelay: z.number(),
+  maxPosts: z.number(),
+  duplicateWindow: z.number(),
+  finishListModeEnabled: z.boolean(),
+  commentAsCompanyEnabled: z.boolean(),
+  timeFilterEnabled: z.boolean(),
+  minPostAge: z.number().nullish(),
+  manualApproveEnabled: z.boolean(),
+  authenticityBoostEnabled: z.boolean(),
+  targetListId: z.string().nullish(),
+  selectedStyleId: z.string().nullish(),
+  commentProfileName: z.string().nullish().default(""),
+  languageAwareEnabled: z.boolean(),
+  skipCompanyPagesEnabled: z.boolean(),
+  blacklistEnabled: z.boolean(),
+  skipPromotedPostsEnabled: z.boolean(),
+  targetListEnabled: z.boolean(),
+});
+
+export type FormState = z.infer<typeof formStateSchema>;
+
+export function AutoCommentConfigurationFormProvider({
+  children,
+  defaultValues,
+}: {
+  children: ReactNode;
+  defaultValues?: Partial<FormState>;
+}) {
+  const form = useForm<FormState>({
+    resolver: zodResolver(formStateSchema),
+    defaultValues: {
+      scrollDuration: 0,
+      commentDelay: 0,
+      maxPosts: 0,
+      duplicateWindow: 0,
+      finishListModeEnabled: false,
+      commentAsCompanyEnabled: false,
+      timeFilterEnabled: false,
+      minPostAge: undefined,
+      manualApproveEnabled: false,
+      authenticityBoostEnabled: false,
+      targetListId: null,
+      selectedStyleId: null,
+      commentProfileName: "",
+      languageAwareEnabled: false,
+      skipCompanyPagesEnabled: false,
+      blacklistEnabled: false,
+      skipPromotedPostsEnabled: false,
+      targetListEnabled: false,
+      ...defaultValues,
+    },
+  });
+
+  return <FormProvider {...form}>{children}</FormProvider>;
 }

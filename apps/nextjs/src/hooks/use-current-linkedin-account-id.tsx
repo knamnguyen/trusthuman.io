@@ -9,11 +9,15 @@ const LinkedInAccountContext = createContext<{
 } | null>(null);
 
 export const LinkedInAccountProvider = ({
+  initialAccountId,
   children,
 }: {
   children: ReactNode;
+  initialAccountId?: string | null;
 }) => {
-  const [accountId, setAccountId] = useState<string | null>(null);
+  const [accountId, setAccountId] = useState<string | null>(
+    initialAccountId ?? null,
+  );
   return (
     <LinkedInAccountContext.Provider
       value={{

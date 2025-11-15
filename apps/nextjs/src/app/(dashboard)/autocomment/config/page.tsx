@@ -1,25 +1,32 @@
-import { env } from "~/env";
-import { prefetch, trpc } from "~/trpc/server";
-import { AutoCommentConfigurationForm } from "../_components/autocomment-configuration-form";
+import { redirect } from "next/navigation";
+
+import { trpcStandalone } from "~/trpc/react";
+import {
+  AutoCommentConfigurationForm,
+  AutoCommentConfigurationFormHeader,
+  AutoCommentConfigurationFormProvider,
+} from "../_components/autocomment-configuration-form";
+import { getFirstAccountId } from "../../layout";
 
 export async function AutoCommentConfigurationPage() {
-  if (env.NODE_ENV === "production") {
-    // prefetch only in prod, cause in dev hot reload is really slow with this
-    await Promise.all([
-      prefetch(trpc.autocomment.runs.infiniteQueryOptions()),
-      prefetch(trpc.user.listLinkedInAccounts.infiniteQueryOptions()),
-    ]);
+  const firstAccount = await getFirstAccountId();
+
+  if (firstAccount === undefined) {
+    return redirect("/seats");
   }
+  const config = await trpcStandalone.autocomment.configuration.load.query({
+    linkedInAccountId: firstAccount.id,
+  });
 
   return (
     <div className="px-4">
-      <div className="mb-5 text-lg font-semibold">
-        Auto commenting configuration
-      </div>
-      {/* <StartAutoCommentModal */}
-      {/*   trigger={<Button variant="outline">Start Auto Commenting</Button>} */}
-      {/* /> */}
-      <AutoCommentConfigurationForm />
+      <AutoCommentConfigurationFormProvider defaultValues={config ?? undefined}>
+        <AutoCommentConfigurationFormHeader />
+        {/* <StartAutoCommentModal */}
+        {/*   trigger={<Button variant="outline">Start Auto Commenting</Button>} */}
+        {/* /> */}
+        <AutoCommentConfigurationForm />
+      </AutoCommentConfigurationFormProvider>
     </div>
   );
 }

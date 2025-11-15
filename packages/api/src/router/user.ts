@@ -243,14 +243,6 @@ export const userRouter = {
     .query(async ({ ctx, input }) => {
       const accounts = await ctx.db.linkedInAccount.findMany({
         where: { userId: ctx.user.id, id: { lt: input?.cursor ?? undefined } },
-        select: {
-          id: true,
-          email: true,
-          createdAt: true,
-          status: true,
-          location: true,
-          name: true,
-        },
         take: 21,
         orderBy: { id: "desc" },
       });

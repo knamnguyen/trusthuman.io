@@ -1,21 +1,46 @@
+import { cache } from "react";
+
 import { SidebarInset, SidebarProvider } from "@sassy/ui/sidebar";
 
+import { LinkedInAccountProvider } from "~/hooks/use-current-linkedin-account-id";
+import { getQueryClient, HydrateClient, trpc } from "~/trpc/server";
 import { DashboardSidebar } from "./_components/dashboard-sidebar";
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+export const getFirstAccountId = cache(async () => {
+  const queryClient = getQueryClient();
+  const accounts = await queryClient.ensureInfiniteQueryData(
+    trpc.user.listLinkedInAccounts.infiniteQueryOptions({}),
+  );
+
+  const firstAccount = accounts.pages[0]?.data[0];
+
+  return firstAccount;
+});
+
+export default async function Layout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const firstAccount = await getFirstAccountId();
+
   return (
-    <SidebarProvider
-      style={
-        {
-          "--sidebar-width": "calc(var(--spacing) * 72)",
-          "--header-height": "calc(var(--spacing) * 12)",
-        } as React.CSSProperties
-      }
-    >
-      <DashboardSidebar />
-      <SidebarInset>
-        <main className="flex flex-1 flex-col py-3">{children}</main>
-      </SidebarInset>
-    </SidebarProvider>
+    <HydrateClient>
+      <LinkedInAccountProvider initialAccountId={firstAccount?.id}>
+        <SidebarProvider
+          style={
+            {
+              "--sidebar-width": "calc(var(--spacing) * 72)",
+              "--header-height": "calc(var(--spacing) * 12)",
+            } as React.CSSProperties
+          }
+        >
+          <DashboardSidebar />
+          <SidebarInset>
+            <main className="flex flex-1 flex-col py-3">{children}</main>
+          </SidebarInset>
+        </SidebarProvider>
+      </LinkedInAccountProvider>
+    </HydrateClient>
   );
 }

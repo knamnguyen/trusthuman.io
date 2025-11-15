@@ -261,6 +261,114 @@ export const autoCommentRouter = {
       } as const;
     }),
 
+  configuration: {
+    save: protectedProcedure
+      .input(
+        z.object({
+          linkedInAccountId: z.string(),
+          scrollDuration: z.number(),
+          commentDelay: z.number(),
+          commentStyleId: z.string().optional(),
+          targetListId: z.string().optional(),
+          duplicateWindow: z.number(),
+          commentAsCompanyEnabled: z.boolean().optional(),
+          timeFilterEnabled: z.boolean().optional(),
+          minPostAge: z.number().optional(),
+          manualApproveEnabled: z.boolean().optional(),
+          maxPosts: z.number(),
+          finishListModeEnabled: z.boolean().optional(),
+          authenticityBoostEnabled: z.boolean().optional(),
+          commentProfileName: z.string().optional(),
+          languageAwareEnabled: z.boolean().optional(),
+          skipCompanyPagesEnabled: z.boolean().optional(),
+          blacklistEnabled: z.boolean().optional(),
+          skipPromotedPostsEnabled: z.boolean().optional(),
+          skipFriendsActivitiesEnabled: z.boolean().optional(),
+        }),
+      )
+      .mutation(async ({ ctx, input }) => {
+        const account = await ctx.db.linkedInAccount.findUnique({
+          where: {
+            id: input.linkedInAccountId,
+          },
+        });
+
+        if (account?.userId !== ctx.user.id) {
+          return {
+            status: "error",
+            code: 403,
+            message:
+              "You do not have permission to modify this account's configuration",
+          } as const;
+        }
+        await ctx.db.autoCommentConfig.upsert({
+          where: {
+            accountId: input.linkedInAccountId,
+          },
+          create: {
+            userId: ctx.user.id,
+            accountId: input.linkedInAccountId,
+            scrollDuration: input.scrollDuration,
+            commentDelay: input.commentDelay,
+            maxPosts: input.maxPosts,
+            finishListModeEnabled: input.finishListModeEnabled ?? false,
+            duplicateWindow: input.duplicateWindow,
+            commentAsCompanyEnabled: input.commentAsCompanyEnabled ?? false,
+            timeFilterEnabled: input.timeFilterEnabled ?? false,
+            commentStyleId: input.commentStyleId ?? null,
+            targetListId: input.targetListId ?? null,
+            minPostAge: input.minPostAge,
+            manualApproveEnabled: input.manualApproveEnabled ?? false,
+            authenticityBoostEnabled: input.authenticityBoostEnabled ?? false,
+            commentProfileName: input.commentProfileName,
+            languageAwareEnabled: input.languageAwareEnabled ?? false,
+            skipCompanyPagesEnabled: input.skipCompanyPagesEnabled ?? false,
+            blacklistEnabled: input.blacklistEnabled ?? false,
+            skipPromotedPostsEnabled: input.skipPromotedPostsEnabled ?? false,
+            skipFriendActivitiesEnabled:
+              input.skipFriendsActivitiesEnabled ?? false,
+          },
+          update: {
+            scrollDuration: input.scrollDuration,
+            commentDelay: input.commentDelay,
+            commentStyleId: input.commentStyleId ?? null,
+            targetListId: input.targetListId ?? null,
+            duplicateWindow: input.duplicateWindow,
+            commentAsCompanyEnabled: input.commentAsCompanyEnabled,
+            timeFilterEnabled: input.timeFilterEnabled,
+            minPostAge: input.minPostAge,
+            manualApproveEnabled: input.manualApproveEnabled,
+            authenticityBoostEnabled: input.authenticityBoostEnabled,
+            commentProfileName: input.commentProfileName,
+            languageAwareEnabled: input.languageAwareEnabled,
+            skipCompanyPagesEnabled: input.skipCompanyPagesEnabled,
+            blacklistEnabled: input.blacklistEnabled,
+            skipPromotedPostsEnabled: input.skipPromotedPostsEnabled,
+            skipFriendActivitiesEnabled: input.skipFriendsActivitiesEnabled,
+          },
+        });
+
+        return {
+          status: "success",
+        } as const;
+      }),
+    load: protectedProcedure
+      .input(
+        z.object({
+          linkedInAccountId: z.string(),
+        }),
+      )
+      .query(async ({ ctx, input }) => {
+        const config = await ctx.db.autoCommentConfig.findUnique({
+          where: {
+            accountId: input.linkedInAccountId,
+          },
+        });
+
+        return config;
+      }),
+  },
+
   addCommentStyle: protectedProcedure
     .input(
       z.object({

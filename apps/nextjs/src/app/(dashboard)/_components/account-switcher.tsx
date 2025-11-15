@@ -74,6 +74,8 @@ export function AccountSwitcher() {
         );
       }
     }
+    // eslint-disable-next-line react-compiler/react-compiler
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accounts, accountId, setAccountId, queryClient]);
 
   if (activeAccount.data === null || activeAccount.data === undefined) {

@@ -22,7 +22,7 @@ const createContext = cache(async () => {
   });
 });
 
-const getQueryClient = cache(createQueryClient);
+export const getQueryClient = cache(createQueryClient);
 
 export const trpc = createTRPCOptionsProxy<AppRouter>({
   router: appRouter,
@@ -45,8 +45,8 @@ export function prefetch<T extends ReturnType<TRPCQueryOptions<any>>>(
   const queryClient = getQueryClient();
   if (queryOptions.queryKey[1]?.type === "infinite") {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
-    return queryClient.prefetchInfiniteQuery(queryOptions as any);
+    return queryClient.ensureInfiniteQueryData(queryOptions as any);
   } else {
-    return queryClient.prefetchQuery(queryOptions);
+    return queryClient.ensureQueryData(queryOptions);
   }
 }

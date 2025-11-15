@@ -17,7 +17,7 @@ export function useSubscription() {
   //   trpc.stripe.checkAccess.queryOptions(),
   // );
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isPending, error } = useQuery({
     ...trpc.user.me.queryOptions(),
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 2,
@@ -30,7 +30,7 @@ export function useSubscription() {
   return {
     hasAccess: hasAccess,
     accessType: data?.accessType ?? "FREE",
-    isLoading,
+    isLoading: isPending,
     error,
   };
 }
