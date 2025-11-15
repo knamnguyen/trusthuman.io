@@ -1,4 +1,5 @@
 import type { TRPCRouterRecord } from "@trpc/server";
+import type { Page } from "puppeteer";
 import { authenticator } from "otplib";
 import { ulid } from "ulidx";
 import z from "zod";
@@ -117,17 +118,24 @@ export const userRouter = {
     .input(
       z.object({
         email: z.string(),
-        name: z.string(),
+        name: z.string().optional(),
         location: countrySchema,
       }),
     )
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async function* ({ ctx, input }) {
       const existingAccount = await ctx.db.linkedInAccount.findFirst({
         where: { email: input.email, userId: ctx.user.id },
       });
 
       let profileId;
       let accountId;
+
+      if (existingAccount !== null && existingAccount.status === "ACTIVE") {
+        yield {
+          status: "signed_in",
+        } as const;
+        return;
+      }
 
       if (existingAccount !== null) {
         // Reuse existing account's profile and ID
@@ -163,26 +171,62 @@ export const userRouter = {
         },
       );
 
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      void instance.pages.linkedin.on("framenavigated", async (frame) => {
-        // attach a framenavigated here to detect succesful logins
-        const currentUrl = frame.url();
+      yield {
+        status: "initialized",
+        accountId,
+        liveUrl: instance.liveUrl,
+      } as const;
 
-        console.info({ currentUrl });
-        if (currentUrl.includes("linkedin.com/feed")) {
-          // User has successfully logged in, destroy the instance and update the account status
-          await ctx.db.linkedInAccount.update({
-            where: { id: accountId },
-            data: { status: "ACTIVE" },
-          });
-          await instance.destroy();
-        }
+      const signedIn = await waitForSigninSuccess(
+        instance.pages.linkedin,
+        instance.signal,
+      );
+
+      if (signedIn) {
+        await ctx.db.linkedInAccount.update({
+          where: {
+            id: accountId,
+          },
+          data: {
+            status: "ACTIVE",
+          },
+        });
+        yield {
+          status: "signed_in",
+        } as const;
+        await instance.destroy();
+      } else {
+        yield {
+          status: "failed_to_sign_in",
+        } as const;
+      }
+    }),
+
+  destroyAddAccountSession: protectedProcedure
+    .input(
+      z.object({
+        accountId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const account = await ctx.db.linkedInAccount.findFirst({
+        where: { id: input.accountId },
+        select: {
+          userId: true,
+        },
       });
+
+      if (account === null || account.userId !== ctx.user.id) {
+        return {
+          status: "error",
+          error: "Not Permitted",
+        } as const;
+      }
+
+      await browserRegistry.destroy(input.accountId);
 
       return {
         status: "success",
-        accountId,
-        liveUrl: instance.liveUrl,
       } as const;
     }),
 
@@ -202,6 +246,8 @@ export const userRouter = {
           email: true,
           createdAt: true,
           status: true,
+          location: true,
+          name: true,
         },
         take: 20,
         orderBy: { id: "asc" },
@@ -245,3 +291,30 @@ export const userRouter = {
   //     }
   //   }),
 } satisfies TRPCRouterRecord;
+
+async function waitForSigninSuccess(page: Page, signal: AbortSignal) {
+  // just keep polling until we hit the feed page or an error
+  // if we hit the feed page, means signin has succeeded
+  // 5 minute timeout
+  const time = Date.now();
+  while (time + 5 * 60 * 1000 > Date.now() || signal.aborted === false) {
+    try {
+      const url = page.url();
+      console.info("Polling LinkedIn URL:", url);
+      if (url.includes("linkedin.com/feed")) {
+        return true;
+      }
+
+      await new Promise((resolve, reject) => {
+        const timeoutId = setTimeout(resolve, 2000);
+        signal.addEventListener("abort", () => {
+          clearTimeout(timeoutId);
+          reject(new Error("Aborted"));
+        });
+      });
+    } catch (err) {
+      console.error("Error polling LinkedIn URL:", err);
+      return false;
+    }
+  }
+}

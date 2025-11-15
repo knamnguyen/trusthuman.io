@@ -56,7 +56,8 @@ model LinkedInAccount {
   createdAt        DateTime              @default(now())
   staticIpId       String?
   browserProfileId String
-  location         String?
+  location         String
+  name             String?
 }
 
 enum LinkedInAccountStatus {

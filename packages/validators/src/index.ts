@@ -245,3 +245,5 @@ export const countrySchema = z.enum(
     ...(keyof typeof countries)[],
   ],
 );
+
+export type CountrySchema = z.output<typeof countrySchema>;

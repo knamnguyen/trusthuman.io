@@ -30,9 +30,16 @@ const getQueryClient = () => {
 // Export the context for backward compatibility
 export const { useTRPC, TRPCProvider } = createTRPCContext<AppRouter>();
 
+const getBaseUrl = () => {
+  if (typeof window !== "undefined") return window.location.origin;
+  if (env.VERCEL_URL) return `https://${env.VERCEL_URL}`;
+  // eslint-disable-next-line no-restricted-properties
+  return `http://localhost:${process.env.PORT ?? 3000}`;
+};
+
 // Create a singleton trpc client that will be used in the global provider
 let _trpcClient: ReturnType<typeof createTRPCClient<AppRouter>> | undefined;
-const getTrpcClient = () => {
+export const getTrpcClient = () => {
   if (typeof window === "undefined") {
     return createTRPCClient<AppRouter>({
       links: [
@@ -89,9 +96,4 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
   );
 }
 
-const getBaseUrl = () => {
-  if (typeof window !== "undefined") return window.location.origin;
-  if (env.VERCEL_URL) return `https://${env.VERCEL_URL}`;
-  // eslint-disable-next-line no-restricted-properties
-  return `http://localhost:${process.env.PORT ?? 3000}`;
-};
+export const trpcStandalone = getTrpcClient();

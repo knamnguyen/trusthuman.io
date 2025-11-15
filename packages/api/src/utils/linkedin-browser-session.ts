@@ -132,6 +132,8 @@ export class LinkedInBrowserSession {
     engagekitExtension: Page;
   };
   public pageInView: "linkedin" | "engagekitExtension" = "linkedin";
+  private controller = new AbortController();
+  public signal = this.controller.signal;
 
   private extensionWorker: WebWorker | null = null;
   constructor(
@@ -184,13 +186,13 @@ export class LinkedInBrowserSession {
       accountId: this.opts.accountId,
     });
 
+    this.controller = new AbortController();
+
     const latestExtension = await this.prisma.extensionDeploymentMeta.findFirst(
       {
         orderBy: { createdAt: "desc" },
       },
     );
-
-    console.info({ latestExtension });
 
     const extensionIds: string[] = [];
 
@@ -217,12 +219,14 @@ export class LinkedInBrowserSession {
 
     this.browser = result.instance.browser;
 
-    this.pages = {
-      linkedin: await this.browser.newPage().then(async (page) => {
-        await page.goto("https://www.linkedin.com");
+    const [linkedin, engagekitExtension] = await Promise.all([
+      this.browser.newPage().then(async (page) => {
+        await page.goto("https://www.linkedin.com", {
+          timeout: 60_000,
+        });
         return page;
       }),
-      engagekitExtension: await this.browser.newPage().then(async (page) => {
+      this.browser.newPage().then(async (page) => {
         // technically we should use the getExtensionId + manifest.dev.json key to get the extension id but screw it
         // const extensionId = await getExtensionId(
         //   path.join(
@@ -243,6 +247,11 @@ export class LinkedInBrowserSession {
 
         return page;
       }),
+    ]);
+
+    this.pages = {
+      linkedin,
+      engagekitExtension,
     };
 
     await this.bringToFront("linkedin");
@@ -252,6 +261,7 @@ export class LinkedInBrowserSession {
 
   public async destroy() {
     await this.registry.destroy(this.id);
+    this.controller.abort();
   }
 
   private async setupBackendChannel(page: Page) {
@@ -431,14 +441,16 @@ export class BrowserSessionRegistry {
     } as const;
   }
 
-  async destroy(id: string) {
-    const entry = this.registry.get(id);
+  async destroy(accountId: string) {
+    const entry = this.registry.get(accountId);
     if (entry === undefined) {
       return;
     }
-    await entry.browser.close();
-    await hyperbrowser.sessions.stop(id);
-    this.registry.delete(id);
+    await Promise.all([
+      entry.browser.close(),
+      hyperbrowser.sessions.stop(entry.sessionId),
+    ]);
+    this.registry.delete(accountId);
   }
 
   async destroyAll() {
