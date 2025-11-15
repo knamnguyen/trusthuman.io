@@ -16,6 +16,8 @@ export async function AutoCommentConfigurationPage() {
   }
 
   const queryClient = getQueryClient();
+  // TODO: use trpcStandalone.query directly instead of using ensureQueryData
+  // there is some issue with trpcStandalone tho where nested object access dont work
   const config = await queryClient.ensureQueryData(
     trpc.autocomment.configuration.load.queryOptions({
       linkedInAccountId: firstAccount.id,
