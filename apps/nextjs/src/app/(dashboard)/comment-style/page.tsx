@@ -1,5 +1,6 @@
 import { env } from "~/env";
 import { prefetch, trpc } from "~/trpc/server";
+import { CommentStyleList } from "./_components/comment-style-list";
 
 async function Page() {
   if (env.NODE_ENV === "production") {
@@ -11,7 +12,7 @@ async function Page() {
 
   return (
     <div>
-      <TargetLists />
+      <CommentStyleList />
     </div>
   );
 }

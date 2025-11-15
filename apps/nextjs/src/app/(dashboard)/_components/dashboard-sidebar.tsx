@@ -49,6 +49,16 @@ const items = [
     title: "Accounts",
     url: "/seats",
     icon: UserIcon,
+    children: [
+      {
+        title: "All accounts",
+        url: "/seats",
+      },
+      {
+        title: "Add account",
+        url: "/seats/new",
+      },
+    ],
   },
   {
     title: "Target Lists",
@@ -92,9 +102,9 @@ export function DashboardSidebar() {
                           {item.children.map((subItem) => (
                             <SidebarMenuSubItem key={subItem.title}>
                               <SidebarMenuSubButton asChild>
-                                <a href={subItem.url}>
+                                <Link href={subItem.url}>
                                   <span>{subItem.title}</span>
-                                </a>
+                                </Link>
                               </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
                           ))}

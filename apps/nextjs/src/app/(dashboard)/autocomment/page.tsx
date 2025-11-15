@@ -16,7 +16,9 @@ export async function AutoCommentPage() {
 
   return (
     <>
-      <StartAutoCommentModal trigger={<Button>Start Auto Commenting</Button>} />
+      <StartAutoCommentModal
+        trigger={<Button variant="outline">Start Auto Commenting</Button>}
+      />
       <AutoCommentRunsList />
     </>
   );

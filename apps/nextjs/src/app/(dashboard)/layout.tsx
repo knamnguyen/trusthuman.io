@@ -22,7 +22,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div className="px-2 py-1.5">
             <SidebarTrigger className="size-5" />
           </div>
-          <div className="flex-1">{children}</div>
+          <div className="flex-1 px-2">{children}</div>
         </main>
       </SidebarInset>
     </SidebarProvider>
