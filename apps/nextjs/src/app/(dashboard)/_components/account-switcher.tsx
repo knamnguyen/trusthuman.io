@@ -37,7 +37,7 @@ export function AccountSwitcher() {
   const trpc = useTRPC();
 
   const accountsQuery = useInfiniteQuery(
-    trpc.user.listLinkedInAccounts.infiniteQueryOptions(
+    trpc.account.list.infiniteQueryOptions(
       {},
       {
         getNextPageParam: (lastPage) => lastPage.next,
@@ -46,9 +46,9 @@ export function AccountSwitcher() {
   );
 
   const activeAccount = useQuery(
-    trpc.user.getLinkedInAccount.queryOptions(
+    trpc.account.get.queryOptions(
       {
-        accountId: accountId ?? "",
+        id: accountId ?? "",
       },
       {
         enabled: !!accountId,
@@ -67,8 +67,8 @@ export function AccountSwitcher() {
       if (firstAccount !== undefined) {
         setAccountId(firstAccount.id);
         queryClient.setQueryData(
-          trpc.user.getLinkedInAccount.queryKey({
-            accountId: firstAccount.id,
+          trpc.account.get.queryKey({
+            id: firstAccount.id,
           }),
           firstAccount,
         );
@@ -129,8 +129,8 @@ export function AccountSwitcher() {
                     key={account.id}
                     onClick={() => {
                       queryClient.setQueryData(
-                        trpc.user.getLinkedInAccount.queryKey({
-                          accountId: account.id,
+                        trpc.account.get.queryKey({
+                          id: account.id,
                         }),
                         account,
                       );

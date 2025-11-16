@@ -1,6 +1,11 @@
 import { ulid } from "ulidx";
 import z from "zod";
 
+import {
+  autoCommentConfigurationDefaults,
+  DEFAULT_STYLE_GUIDES,
+} from "@sassy/feature-flags";
+
 // import {
 //   userCreateSchema,
 //   userUpdateSchema,
@@ -116,6 +121,7 @@ export const autoCommentRouter = {
       z.object({
         urns: z.string().array(),
         hashes: z.string().array(),
+        duplicateWindow: z.number().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -133,9 +139,23 @@ export const autoCommentRouter = {
         } as const);
       }
 
+      let commentedBefore: Date | undefined = undefined;
+      if (input.duplicateWindow !== undefined) {
+        commentedBefore = new Date(
+          Date.now() - input.duplicateWindow * 60 * 60 * 1000,
+        );
+      }
+
       const comments = await ctx.db.userComment.findMany({
         where: {
-          OR: clause,
+          AND: [
+            { OR: clause },
+            commentedBefore
+              ? {
+                  commentedAt: { lt: commentedBefore, not: null },
+                }
+              : {},
+          ],
         },
         select: { urn: true },
       });
@@ -147,53 +167,40 @@ export const autoCommentRouter = {
       } as const;
     }),
 
-  startAutoCommenting: protectedProcedure
+  start: protectedProcedure
     .input(
       z.object({
-        linkedInAccountId: z.string(),
-        scrollDuration: z.number(),
-        commentDelay: z.number(),
-        maxPosts: z.number(),
-        styleGuide: z.string(),
-        duplicateWindow: z.number(),
-        commentAsCompanyEnabled: z.boolean().optional(),
-        timeFilterEnabled: z.boolean().optional(),
-        minPostAge: z.number().optional(),
-        manualApproveEnabled: z.boolean().optional(),
-        authenticityBoostEnabled: z.boolean().optional(),
-        commentProfileName: z.string().optional(),
-        languageAwareEnabled: z.boolean().optional(),
-        skipCompanyPagesEnabled: z.boolean().optional(),
-        blacklistEnabled: z.boolean().optional(),
-        skipPromotedPostsEnabled: z.boolean().optional(),
-        skipFriendsActivitiesEnabled: z.boolean().optional(),
+        accountId: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       const browserSession = await registerOrGetBrowserSession(
         ctx.db,
         ctx.user.id,
-        input.linkedInAccountId,
-        async function (data) {
-          switch (data.action) {
-            case "stopAutoCommenting": {
-              await this.destroy();
-              break;
+        input.accountId,
+        {
+          liveviewViewOnlyMode: true,
+          onBrowserMessage: async function (data) {
+            switch (data.action) {
+              case "stopAutoCommenting": {
+                await this.destroy();
+                break;
+              }
+              case "autoCommentingCompleted": {
+                await Promise.all([
+                  this.destroy(),
+                  ctx.db.autoCommentRun.update({
+                    where: { id: data.payload.autoCommentRunId },
+                    data: {
+                      status: data.payload.success ? "completed" : "errored",
+                      error: data.payload.error,
+                      endedAt: new Date(),
+                    },
+                  }),
+                ]);
+              }
             }
-            case "autoCommentingCompleted": {
-              await Promise.all([
-                this.destroy(),
-                ctx.db.autoCommentRun.update({
-                  where: { id: data.payload.autoCommentRunId },
-                  data: {
-                    status: data.payload.success ? "completed" : "errored",
-                    error: data.payload.error,
-                    endedAt: new Date(),
-                  },
-                }),
-              ]);
-            }
-          }
+          },
         },
       );
 
@@ -203,38 +210,118 @@ export const autoCommentRouter = {
 
       const instance = browserSession.instance;
 
-      const autoCommentRun = await ctx.db.autoCommentRun.create({
-        data: {
-          // use ulid here because we wanna paginate by creation time + id
-          id: ulid(),
-          userId: ctx.user.id,
-          status: "pending",
-        },
+      const [autoCommentRun, autocommentConfig] = await Promise.all([
+        ctx.db.autoCommentRun.create({
+          data: {
+            // use ulid here because we wanna paginate by creation time + id
+            id: ulid(),
+            userId: ctx.user.id,
+            status: "pending",
+            liveUrl: instance.liveUrl,
+          },
 
-        select: {
-          id: true,
-        },
-      });
+          select: {
+            id: true,
+          },
+        }),
+        ctx.db.autoCommentConfig.findFirst({
+          where: { accountId: input.accountId },
+          include: {
+            commentStyle: true,
+          },
+        }),
+      ]);
+
+      let styleGuide: string | undefined = undefined;
+
+      // if a custom comment style is selected, use that
+      if (autocommentConfig?.commentStyle) {
+        styleGuide = autocommentConfig.commentStyle.prompt;
+      }
+
+      // if not fallback to defaultCommentStyle if provided by user
+      if (styleGuide === undefined) {
+        if (
+          autocommentConfig?.defaultCommentStyle &&
+          autocommentConfig.defaultCommentStyle in DEFAULT_STYLE_GUIDES
+        ) {
+          styleGuide =
+            DEFAULT_STYLE_GUIDES[
+              autocommentConfig.defaultCommentStyle as keyof typeof DEFAULT_STYLE_GUIDES
+            ].prompt;
+        }
+      }
+
+      // if still undefined, use PROFESSIONAL as default
+      styleGuide ??= DEFAULT_STYLE_GUIDES.PROFESSIONAL.prompt;
+
+      const blacklisted = autocommentConfig?.blacklistEnabled
+        ? await ctx.db.blacklistedProfile.findMany({
+            where: {
+              accountId: input.accountId,
+            },
+          })
+        : [];
 
       await instance.startAutoCommenting({
         autoCommentRunId: autoCommentRun.id,
-        scrollDuration: input.scrollDuration,
-        commentDelay: input.commentDelay,
-        styleGuide: input.styleGuide,
-        maxPosts: input.maxPosts,
-        blacklistEnabled: input.blacklistEnabled,
-        duplicateWindow: input.duplicateWindow,
-        commentAsCompanyEnabled: input.commentAsCompanyEnabled,
-        timeFilterEnabled: input.timeFilterEnabled,
-        minPostAge: input.minPostAge,
-        manualApproveEnabled: input.manualApproveEnabled,
-        authenticityBoostEnabled: input.authenticityBoostEnabled,
-        commentProfileName: input.commentProfileName,
-        languageAwareEnabled: input.languageAwareEnabled,
+        scrollDuration:
+          autocommentConfig?.scrollDuration ??
+          autoCommentConfigurationDefaults.scrollDuration,
+        commentDelay:
+          autocommentConfig?.commentDelay ??
+          autoCommentConfigurationDefaults.commentDelay,
+        maxPosts:
+          autocommentConfig?.maxPosts ??
+          autoCommentConfigurationDefaults.maxPosts,
+        styleGuide,
+        duplicateWindow:
+          autocommentConfig?.duplicateWindow ??
+          autoCommentConfigurationDefaults.duplicateWindow,
+        commentAsCompanyEnabled:
+          autocommentConfig?.commentAsCompanyEnabled ??
+          autoCommentConfigurationDefaults.commentAsCompanyEnabled,
+        timeFilterEnabled:
+          autocommentConfig?.timeFilterEnabled ??
+          autoCommentConfigurationDefaults.timeFilterEnabled,
+        minPostAge:
+          autocommentConfig?.minPostAge ??
+          autoCommentConfigurationDefaults.minPostAge,
+        manualApproveEnabled:
+          autocommentConfig?.manualApproveEnabled ??
+          autoCommentConfigurationDefaults.manualApproveEnabled,
+        authenticityBoostEnabled:
+          autocommentConfig?.authenticityBoostEnabled ??
+          autoCommentConfigurationDefaults.authenticityBoostEnabled,
+        commentProfileName:
+          autocommentConfig?.commentProfileName ??
+          autoCommentConfigurationDefaults.commentProfileName,
+        languageAwareEnabled:
+          autocommentConfig?.languageAwareEnabled ??
+          autoCommentConfigurationDefaults.languageAwareEnabled,
+        skipCompanyPagesEnabled:
+          autocommentConfig?.skipCompanyPagesEnabled ??
+          autoCommentConfigurationDefaults.skipCompanyPagesEnabled,
+        skipPromotedPostsEnabled:
+          autocommentConfig?.skipPromotedPostsEnabled ??
+          autoCommentConfigurationDefaults.skipPromotedPostsEnabled,
+        skipFriendsActivitiesEnabled:
+          autocommentConfig?.skipFriendActivitiesEnabled ??
+          autoCommentConfigurationDefaults.skipFriendActivitiesEnabled,
+        blacklistEnabled:
+          autocommentConfig?.blacklistEnabled ??
+          autoCommentConfigurationDefaults.blacklistEnabled,
+        blacklistAuthors: blacklisted.map((b) => b.profileUrn),
       });
+
+      return {
+        status: "success",
+        liveUrl: instance.liveUrl,
+        runId: autoCommentRun.id,
+      } as const;
     }),
 
-  stopAutoCommenting: protectedProcedure
+  stop: protectedProcedure
     .input(
       z.object({
         autoCommentRunId: z.string(),

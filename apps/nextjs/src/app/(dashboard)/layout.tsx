@@ -9,7 +9,7 @@ import { DashboardSidebar } from "./_components/dashboard-sidebar";
 export const getFirstAccountId = cache(async () => {
   const queryClient = getQueryClient();
   const accounts = await queryClient.ensureInfiniteQueryData(
-    trpc.user.listLinkedInAccounts.infiniteQueryOptions({}),
+    trpc.account.list.infiniteQueryOptions({}),
   );
 
   const firstAccount = accounts.pages[0]?.data[0];

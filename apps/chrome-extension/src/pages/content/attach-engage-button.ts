@@ -360,7 +360,7 @@ function addEngageButton(form: HTMLFormElement): void {
                     promises.push(saveCommentedPostHash([hashToSave]));
 
                   promises.push(
-                    getStandaloneTRPCClient().user.saveComments.mutate(
+                    getStandaloneTRPCClient().account.saveComments.mutate(
                       urnsToSave.map((urn, index) => ({
                         urn,
                         hash: hashToSave ?? null,

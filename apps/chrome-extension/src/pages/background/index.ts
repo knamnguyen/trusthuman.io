@@ -119,7 +119,7 @@ const authService = {
 
   async attachTokenToSession(token: string) {
     this.assumedUserToken = token;
-    const response = await trpc.user.verifyAssumedUserJwt.mutate({ token });
+    const response = await trpc.account.verifyJwt.mutate({ token });
     if (response.status === "error") {
       return { success: false };
     }

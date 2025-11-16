@@ -1,4 +1,5 @@
 import { createTRPCRouter } from "../trpc";
+import { accountRouter } from "./account";
 import { aiCommentsRouter } from "./ai-comments";
 import { autoCommentRouter } from "./autocomment";
 import { blacklistRouter } from "./blacklist";
@@ -19,6 +20,7 @@ export const appRouter = createTRPCRouter({
   autocomment: autoCommentRouter,
   targetList: targetListRouter,
   blacklist: blacklistRouter,
+  account: accountRouter,
 });
 
 // export type definition of API

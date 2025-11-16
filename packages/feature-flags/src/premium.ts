@@ -687,3 +687,8 @@ The Golden Rule: Output Purity
 Your entire response must consist of only the generated comment text. Anything else is a failure. No intros, no quotes, no explanations.`,
   },
 };
+
+export const DEFAULT_STYLE_GUIDES = {
+  ...DEFAULT_STYLE_GUIDES_FREE,
+  ...DEFAULT_STYLE_GUIDES_PREMIUM,
+} as const;

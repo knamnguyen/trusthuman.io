@@ -527,7 +527,9 @@ chrome.runtime.onMessage.addListener(
               skipPromotedPostsEnabled: request.params.skipPromotedPostsEnabled,
               skipFriendsActivitiesEnabled:
                 request.params.skipFriendsActivitiesEnabled,
-              blacklistEnabled: request.params.blacklistEnabled,
+              blacklistEnabled:
+                request.params.blacklistAuthors !== undefined &&
+                request.params.blacklistAuthors.length > 0,
               blacklistAuthors: request.params.blacklistAuthors,
             });
             sendResponse({ success: true });
@@ -829,7 +831,10 @@ async function startNewCommentingFlowWithDelayedTabSwitch(params: {
   }
 }
 
-async function getUncommentedPostContainers(containers: NodeListOf<Element>) {
+async function getUncommentedPostContainers(
+  containers: NodeListOf<Element>,
+  duplicateWindow?: number,
+) {
   const filteredPostContainers: HTMLElement[] = [];
 
   const urnMap: Map<string, HTMLElement> = new Map();
@@ -860,10 +865,12 @@ async function getUncommentedPostContainers(containers: NodeListOf<Element>) {
     hashes.push(hash.hash);
   }
 
-  const result = await getStandaloneTRPCClient().user.hasCommentedBefore.query({
-    urns: Array.from(urnMap.keys()),
-    hashes,
-  });
+  const result =
+    await getStandaloneTRPCClient().autocomment.hasCommentedBefore.query({
+      urns: Array.from(urnMap.keys()),
+      hashes,
+      duplicateWindow,
+    });
 
   const uncommentedUrns = new Set(result.uncommentedUrns);
 
@@ -945,7 +952,10 @@ async function processAllPostsFeed(
     `🎯 Starting loop: commentCount=${commentCount}, maxPosts=${maxPosts}, isActive=${isCommentingActive}`,
   );
 
-  const postContainers = await getUncommentedPostContainers(allPostContainers);
+  const postContainers = await getUncommentedPostContainers(
+    allPostContainers,
+    duplicateWindow,
+  );
 
   const comments: {
     autoCommentRunId?: string;
@@ -1257,7 +1267,7 @@ async function processAllPostsFeed(
 
         promises.push(
           getStandaloneTRPCClient()
-            .user.saveComments.mutate(comments)
+            .autocomment.saveComments.mutate(comments)
             .catch((err) => {
               // just catch this error here and continue
               console.error("error saving comments:", err);

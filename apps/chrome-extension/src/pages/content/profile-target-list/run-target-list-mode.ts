@@ -408,7 +408,7 @@ export async function runListMode(params: {
       }
 
       await getStandaloneTRPCClient()
-        .user.saveComments.mutate(comments)
+        .autocomment.saveComments.mutate(comments)
         .catch((err) => {
           // just catch this error here and continue
           console.error("error saving comments:", err);

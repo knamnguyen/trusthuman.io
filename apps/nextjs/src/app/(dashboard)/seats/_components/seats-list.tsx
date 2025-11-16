@@ -10,7 +10,7 @@ import z from "zod";
 
 import type { CountrySchema } from "@sassy/validators";
 import { Dialog, DialogContent } from "@sassy/ui/dialog";
-import { countries, countrySchema } from "@sassy/validators";
+import { countrySchema } from "@sassy/validators";
 
 import { trpcStandalone, useTRPC } from "~/trpc/react";
 
@@ -23,7 +23,7 @@ const formSchema = z.object({
 export function SeatsList() {
   const trpc = useTRPC();
   const accountsQuery = useInfiniteQuery(
-    trpc.user.listLinkedInAccounts.infiniteQueryOptions(
+    trpc.account.list.infiniteQueryOptions(
       {},
       {
         getNextPageParam: (lastPage) => lastPage.next,
@@ -45,7 +45,13 @@ export function SeatsList() {
   });
 
   const [initAddAccountSessionStatus, setInitAddAccountSessionStatus] =
-    useState<"signed_in" | "initialized" | "failed_to_sign_in" | null>(null);
+    useState<
+      | "signed_in"
+      | "initialized"
+      | "failed_to_sign_in"
+      | "failed_to_initialize_session"
+      | null
+    >(null);
 
   const [accountId, setAccountId] = useState<string | null>(null);
 
@@ -57,9 +63,13 @@ export function SeatsList() {
       name: string;
       location: CountrySchema;
     }) => {
-      for await (const status of await trpcStandalone.user.initAddAccountSession.mutate(
+      for await (const status of await trpcStandalone.account.init.create.mutate(
         input,
       )) {
+        if (status.status === "error") {
+          setInitAddAccountSessionStatus("failed_to_initialize_session");
+          return;
+        }
         if (status.status === "initialized") {
           setLiveUrl(status.liveUrl);
         }
@@ -69,13 +79,13 @@ export function SeatsList() {
   });
 
   const destroySession = useMutation(
-    trpc.user.destroyAddAccountSession.mutationOptions(),
+    trpc.account.init.destroy.mutationOptions(),
   );
 
   const status = useQuery(
-    trpc.user.getLinkedInAccount.queryOptions(
+    trpc.account.get.queryOptions(
       {
-        accountId: accountId ?? "",
+        id: accountId ?? "",
       },
       {
         enabled: accountId !== null,

@@ -6,6 +6,7 @@ import { storageStateSchema } from "@sassy/validators";
 
 import type {
   BrowserBackendChannelMessage,
+  LinkedInBrowserSessionParams,
   ProxyLocation,
 } from "../utils/linkedin-browser-session";
 import { protectedProcedure } from "../trpc";
@@ -25,10 +26,10 @@ export async function registerOrGetBrowserSession(
   prisma: PrismaClient,
   userId: string,
   linkedInAccountId: string,
-  onBrowserMessage?: (
-    this: LinkedInBrowserSession,
-    data: BrowserBackendChannelMessage,
-  ) => unknown,
+  opts?: Pick<
+    LinkedInBrowserSessionParams,
+    "onBrowserMessage" | "liveviewViewOnlyMode"
+  >,
 ) {
   const account = await prisma.linkedInAccount.findUnique({
     where: { id: linkedInAccountId, userId },
@@ -59,7 +60,7 @@ export async function registerOrGetBrowserSession(
       location: account.location as ProxyLocation,
       browserProfileId: account.browserProfileId,
       engagekitExtensionId: engagekitExtensionId.id,
-      onBrowserMessage,
+      ...opts,
     },
   );
 

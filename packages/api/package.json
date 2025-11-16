@@ -23,6 +23,7 @@
     "@google/genai": "^1.5.1",
     "@hyperbrowser/sdk": "^0.65.0",
     "@sassy/db": "workspace:*",
+    "@sassy/feature-flags": "workspace:*",
     "@sassy/linkedin-scrape-apify": "workspace:*",
     "@sassy/stripe": "workspace:*",
     "@sassy/validators": "workspace:*",

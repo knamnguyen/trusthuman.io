@@ -15,6 +15,7 @@ import {
 import { z } from "zod";
 
 import {
+  autoCommentConfigurationDefaults,
   DEFAULT_STYLE_GUIDES_FREE,
   DEFAULT_STYLE_GUIDES_PREMIUM,
   FEATURE_CONFIG,
@@ -76,9 +77,9 @@ export function AutoCommentConfigurationForm() {
   const maxPostsLimit = getMaxPostsLimit(isPremium);
 
   const linkedInAccount = useQuery(
-    trpc.user.getLinkedInAccount.queryOptions(
+    trpc.account.get.queryOptions(
       {
-        accountId: accountId ?? "",
+        id: accountId ?? "",
       },
       {
         enabled: accountId !== null,
@@ -1210,25 +1211,7 @@ export function AutoCommentConfigurationFormProvider({
   const form = useForm<FormState>({
     resolver: zodResolver(formStateSchema),
     defaultValues: {
-      scrollDuration: 0,
-      commentDelay: 0,
-      maxPosts: 0,
-      duplicateWindow: 0,
-      finishListModeEnabled: false,
-      commentAsCompanyEnabled: false,
-      timeFilterEnabled: false,
-      minPostAge: undefined,
-      manualApproveEnabled: false,
-      authenticityBoostEnabled: false,
-      defaultCommentStyle: undefined,
-      targetListId: undefined,
-      commentStyleId: undefined,
-      commentProfileName: "",
-      languageAwareEnabled: false,
-      skipCompanyPagesEnabled: false,
-      blacklistEnabled: false,
-      skipPromotedPostsEnabled: false,
-      targetListEnabled: false,
+      ...autoCommentConfigurationDefaults,
       ...defaultValues,
     },
   });

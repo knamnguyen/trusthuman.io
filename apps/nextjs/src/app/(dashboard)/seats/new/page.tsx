@@ -11,6 +11,7 @@ import type { CountrySchema } from "@sassy/validators";
 import { Dialog, DialogContent } from "@sassy/ui/dialog";
 import { countries, countrySchema } from "@sassy/validators";
 
+import { BrowserLiveviewDialog } from "~/_components/liveview-dialog";
 import { trpcStandalone, useTRPC } from "~/trpc/react";
 
 const formSchema = z.object({
@@ -36,7 +37,13 @@ function AddSeatPage() {
   });
 
   const [initAddAccountSessionStatus, setInitAddAccountSessionStatus] =
-    useState<"signed_in" | "initialized" | "failed_to_sign_in" | null>(null);
+    useState<
+      | "signed_in"
+      | "initialized"
+      | "failed_to_sign_in"
+      | "failed_to_initialize_session"
+      | null
+    >(null);
 
   const [accountId, setAccountId] = useState<string | null>(null);
 
@@ -48,9 +55,13 @@ function AddSeatPage() {
       name: string;
       location: CountrySchema;
     }) => {
-      for await (const status of await trpcStandalone.user.initAddAccountSession.mutate(
+      for await (const status of await trpcStandalone.account.init.create.mutate(
         input,
       )) {
+        if (status.status === "error") {
+          setInitAddAccountSessionStatus("failed_to_initialize_session");
+          return;
+        }
         if (status.status === "initialized") {
           setLiveUrl(status.liveUrl);
         }
@@ -60,7 +71,7 @@ function AddSeatPage() {
   });
 
   const destroySession = useMutation(
-    trpc.user.destroyAddAccountSession.mutationOptions(),
+    trpc.account.init.destroy.mutationOptions(),
   );
 
   useEffect(() => {
@@ -70,9 +81,9 @@ function AddSeatPage() {
   }, [initAddAccountSessionStatus]);
 
   const status = useQuery(
-    trpc.user.getLinkedInAccount.queryOptions(
+    trpc.account.get.queryOptions(
       {
-        accountId: accountId ?? "",
+        id: accountId ?? "",
       },
       {
         enabled: accountId !== null,
@@ -88,34 +99,17 @@ function AddSeatPage() {
 
   return (
     <>
-      <Dialog open={liveUrl !== null}>
-        {/* TODO: add alert dialog for button close */}
-        <DialogContent
-          className="h-[90vh] max-h-[90vh] w-[90vw] max-w-[90vw] p-2"
-          hideCloseIcon
-        >
-          <button
-            className="absolute top-2 right-2 cursor-pointer"
-            onClick={() => {
-              if (accountId === null) return;
-              destroySession.mutate({ accountId });
-              setAccountId(null);
-              setLiveUrl(null);
-              setInitAddAccountSessionStatus(null);
-            }}
-          >
-            <XIcon className="size-4" />
-          </button>
-          {liveUrl !== null && (
-            <iframe
-              src={liveUrl}
-              width="100%"
-              height="100%"
-              style={{ border: "none" }}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+      <BrowserLiveviewDialog
+        open={liveUrl !== null}
+        onClose={() => {
+          if (accountId === null) return;
+          destroySession.mutate({ accountId });
+          setAccountId(null);
+          setLiveUrl(null);
+          setInitAddAccountSessionStatus(null);
+        }}
+        liveUrl={liveUrl}
+      />
       <form
         className="mx-auto max-w-4xl py-10"
         onSubmit={handleSubmit((data) => initAddAccountSession.mutate(data))}

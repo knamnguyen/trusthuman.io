@@ -39,4 +39,7 @@ export {
   FEATURE_CONFIG,
   DEFAULT_STYLE_GUIDES_FREE,
   DEFAULT_STYLE_GUIDES_PREMIUM,
+  DEFAULT_STYLE_GUIDES,
 } from "./premium";
+
+export { autoCommentConfigurationDefaults } from "./constants";

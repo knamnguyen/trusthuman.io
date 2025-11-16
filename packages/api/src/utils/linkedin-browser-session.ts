@@ -1,9 +1,9 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import type { Browser, Page, WebWorker } from "puppeteer";
+import type { Browser, Page, WebWorker } from "puppeteer-core";
 import { Hyperbrowser } from "@hyperbrowser/sdk";
-import puppeteer, { TargetType } from "puppeteer";
-import { connect } from "puppeteer-core";
+import puppeteer from "puppeteer";
+import { connect, TargetType } from "puppeteer-core";
 import { z } from "zod";
 
 import type { Logger } from "./commons";
@@ -120,6 +120,19 @@ export type BrowserBackendChannelMessage =
       };
     };
 
+export interface LinkedInBrowserSessionParams {
+  accountId: string;
+  location: ProxyLocation;
+  staticIpId?: string;
+  engagekitExtensionId: string;
+  browserProfileId: string;
+  liveviewViewOnlyMode?: boolean;
+  onBrowserMessage?: (
+    this: LinkedInBrowserSession,
+    data: BrowserBackendChannelMessage,
+  ) => unknown;
+}
+
 export class LinkedInBrowserSession {
   public id: string;
   public sessionId!: string;
@@ -136,17 +149,7 @@ export class LinkedInBrowserSession {
   private extensionWorker: WebWorker | null = null;
   constructor(
     private readonly registry: BrowserSessionRegistry,
-    private readonly opts: {
-      accountId: string;
-      location: ProxyLocation;
-      staticIpId?: string;
-      engagekitExtensionId: string;
-      browserProfileId: string;
-      onBrowserMessage?: (
-        this: LinkedInBrowserSession,
-        data: BrowserBackendChannelMessage,
-      ) => unknown;
-    },
+    private readonly opts: LinkedInBrowserSessionParams,
     private readonly logger: Logger = console,
   ) {
     this.id = opts.accountId;
@@ -154,17 +157,7 @@ export class LinkedInBrowserSession {
 
   static async getOrCreate(
     registry: BrowserSessionRegistry,
-    opts: {
-      accountId: string;
-      location: ProxyLocation;
-      staticIpId?: string;
-      browserProfileId: string;
-      engagekitExtensionId: string;
-      onBrowserMessage?: (
-        this: LinkedInBrowserSession,
-        data: BrowserBackendChannelMessage,
-      ) => unknown;
-    },
+    opts: LinkedInBrowserSessionParams,
     logger: Logger = console,
   ) {
     return await registry.register(
@@ -182,6 +175,7 @@ export class LinkedInBrowserSession {
     const result = await createBrowserSession({
       useProxy: true,
       useStealth: true,
+      viewOnlyLiveView: this.opts.liveviewViewOnlyMode ?? false,
       solveCaptchas: true,
       extensionIds: [this.opts.engagekitExtensionId],
       proxyCountry: this.opts.location,
@@ -473,10 +467,10 @@ async function createHyperbrowserSession(
 ): Promise<BrowserSession> {
   if (process.env.NODE_ENV !== "test") {
     const session = await hyperbrowser.sessions.create(params);
-    const browser = (await connect({
+    const browser = await connect({
       browserWSEndpoint: session.wsEndpoint,
       defaultViewport: null,
-    })) as unknown as Browser;
+    });
 
     if (session.liveUrl === undefined) {
       // docs say that liveUrl is always defined but not sure why its undefined here
@@ -499,13 +493,13 @@ async function createHyperbrowserSession(
   );
   console.info({ filepath });
 
-  const browser = await puppeteer.launch({
+  const browser = (await puppeteer.launch({
     defaultViewport: null,
     headless: false,
     pipe: true,
     userDataDir: path.join(process.cwd(), ".puppeteer", "user_data"),
     enableExtensions: [filepath],
-  });
+  })) as unknown as Browser;
 
   return {
     session: {
