@@ -6,7 +6,12 @@ import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
 import { LoaderCircleIcon } from "lucide-react";
-import { FormProvider, useForm, useFormContext } from "react-hook-form";
+import {
+  Controller,
+  FormProvider,
+  useForm,
+  useFormContext,
+} from "react-hook-form";
 import { z } from "zod";
 
 import {
@@ -63,7 +68,7 @@ const getMaxPostsLimit = (isPremium: boolean | null) =>
       : FEATURE_CONFIG.maxPosts.freeTierLimit;
 
 export function AutoCommentConfigurationForm() {
-  const { register } = useFormContext<FormState>();
+  const { control, watch, setValue } = useFormContext<FormState>();
   const trpc = useTRPC();
   const { accountId } = useCurrentLinkedInAccountId();
   const { isPremium, isLoading: isPremiumLoading } = usePremiumStatus();
@@ -95,34 +100,9 @@ export function AutoCommentConfigurationForm() {
     ),
   );
 
-  const [scrollDuration, setScrollDuration] = useState(0);
-  const [commentDelay, setCommentDelay] = useState(0);
-  const [maxPosts, setMaxPosts] = useState(0);
   const [customStylePrompt, setCustomStylePrompt] = useState("");
-  const [duplicateWindow, setDuplicateWindow] = useState(0);
-  const [finishListModeEnabled, setFinishListModeEnabled] = useState(false);
-  const [commentAsCompanyEnabled, setCommentAsCompanyEnabled] = useState(false);
-  const [timeFilterEnabled, setTimeFilterEnabled] = useState(false);
-  const [minPostAge, setMinPostAge] = useState<number | undefined>(undefined);
-  const [manualApproveEnabled, setManualApproveEnabled] = useState(false);
-  const [authenticityBoostEnabled, setAuthenticityBoostEnabled] =
-    useState(false);
-  const [targetListId, setTargetListId] = useState<string | undefined>(
-    undefined,
-  );
-  const [selectedStyleId, setSelectedStyleId] = useState<string | undefined>();
-  const [commentProfileName, setCommentProfileName] = useState<
-    string | undefined
-  >(undefined);
+
   const [customStyleName, setCustomStyleName] = useState<string>("");
-  const [languageAwareEnabled, setLanguageAwareEnabled] = useState(false);
-  const [skipCompanyPagesEnabled, setSkipCompanyPagesEnabled] = useState(false);
-  const [blacklistEnabled, setBlacklistEnabled] = useState(false);
-  const [skipPromotedPostsEnabled, setSkipPromotedPostsEnabled] =
-    useState(false);
-  const [targetListEnabled, setTargetListEnabled] = useState(false);
-  const [skipFriendsActivitiesEnabled, setSkipFriendsActivitiesEnabled] =
-    useState(false);
 
   // Helper function to determine if features should be disabled
   const isFeatureDisabled = (featureIsPremium: boolean) => {
@@ -137,7 +117,12 @@ export function AutoCommentConfigurationForm() {
     return featureIsPremium && !isPremium; // Show if it's premium feature and user is not premium
   };
 
-  const isDefaultStyleSelected = isDefaultStyle(selectedStyleId ?? "");
+  const commentStyleId = watch("commentStyleId");
+  const targetListId = watch("targetListId");
+  const commentAsCompanyEnabled = watch("commentAsCompanyEnabled");
+  const timeFilterEnabled = watch("timeFilterEnabled");
+
+  const isDefaultStyleSelected = isDefaultStyle(commentStyleId ?? "");
 
   // Free-plan custom style guide length enforcement (≤100 words)
   const customStylePromptWordCount = useMemo(() => {
@@ -171,6 +156,8 @@ export function AutoCommentConfigurationForm() {
     ),
   );
 
+  const targetListEnabled = watch("targetListEnabled");
+
   return (
     <form
       onSubmit={(e) => {
@@ -181,13 +168,21 @@ export function AutoCommentConfigurationForm() {
       <div className="mb-4">
         <div className="mb-1 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={targetListEnabled}
-              onChange={(e) => setTargetListEnabled(e.target.checked)}
-              disabled={isRunning}
-              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            <Controller
+              control={control}
+              name="targetListEnabled"
+              render={({ field: { value, onChange, ...rest } }) => (
+                <input
+                  type="checkbox"
+                  checked={value}
+                  onChange={(e) => onChange(e.target.checked)}
+                  {...rest}
+                  disabled={isRunning}
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+              )}
             />
+
             <label className="text-sm font-medium text-gray-700">
               Comment on Target List -
               <a
@@ -209,53 +204,60 @@ export function AutoCommentConfigurationForm() {
             </Link>
           </div>
         </div>
-        <Select
-          value={targetListId}
-          onValueChange={(value) => setTargetListId(value)}
-          disabled={isRunning || !targetListEnabled}
-        >
-          <SelectTrigger className="mt-2 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none">
-            <SelectValue placeholder="Select a target list" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              {targetLists.data !== undefined && (
-                <>
-                  {targetLists.data.pages.map((page) =>
-                    page.data.map((list) => (
-                      <SelectItem
-                        key={list.name}
-                        value={list.id}
-                        className="truncate"
-                      >
-                        {list.name}
-                      </SelectItem>
-                    )),
+        <Controller
+          control={control}
+          name="targetListId"
+          render={({ field: { value, onChange } }) => (
+            <Select
+              value={value ?? undefined}
+              onValueChange={(value) => onChange(value)}
+              disabled={isRunning || !targetListEnabled}
+            >
+              <SelectTrigger className="mt-2 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none">
+                <SelectValue placeholder="Select a target list" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {targetLists.data !== undefined && (
+                    <>
+                      {targetLists.data.pages.map((page) =>
+                        page.data.map((list) => (
+                          <SelectItem
+                            key={list.name}
+                            value={list.id}
+                            className="truncate"
+                          >
+                            {list.name}
+                          </SelectItem>
+                        )),
+                      )}
+                    </>
                   )}
-                </>
-              )}
-              {!targetLists.data?.pages[0]?.data.length && (
-                <SelectItem value="disabled" disabled>
-                  No lists found
-                </SelectItem>
-              )}
-              {targetLists.hasNextPage && (
-                <SelectItem
-                  value="disabled"
-                  ref={(el) => {
-                    if (el === null) return;
-                    if (targetLists.hasNextPage) {
-                      void targetLists.fetchNextPage();
-                    }
-                  }}
-                  disabled
-                >
-                  <LoaderCircleIcon className="size-3 animate-spin text-gray-500" />
-                </SelectItem>
-              )}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
+                  {!targetLists.data?.pages[0]?.data.length && (
+                    <SelectItem value="disabled" disabled>
+                      No lists found
+                    </SelectItem>
+                  )}
+                  {targetLists.hasNextPage && (
+                    <SelectItem
+                      value="disabled"
+                      ref={(el) => {
+                        if (el === null) return;
+                        if (targetLists.hasNextPage) {
+                          void targetLists.fetchNextPage();
+                        }
+                      }}
+                      disabled
+                    >
+                      <LoaderCircleIcon className="size-3 animate-spin text-gray-500" />
+                    </SelectItem>
+                  )}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          )}
+        />
+
         <p className="mt-1 text-xs text-gray-500">
           Create target list of people to comment on their latest posts
         </p>
@@ -264,13 +266,20 @@ export function AutoCommentConfigurationForm() {
       {/* Finish List Mode - gated by target list selection */}
       <div className="mb-4">
         <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={finishListModeEnabled}
-            onChange={(e) => setFinishListModeEnabled(e.target.checked)}
-            disabled={isRunning || !targetListEnabled || !targetListId}
-            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          <Controller
+            control={control}
+            name="finishListModeEnabled"
+            render={({ field }) => (
+              <input
+                type="checkbox"
+                checked={field.value}
+                onChange={(e) => field.onChange(e.target.checked)}
+                disabled={isRunning || !targetListEnabled || !targetListId}
+                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+            )}
           />
+
           <label className="text-sm font-medium text-gray-700">
             Don't stop until finish everyone in list - 1 comment/1 author
           </label>
@@ -287,15 +296,22 @@ export function AutoCommentConfigurationForm() {
       ) : (
         <div className="mb-4">
           <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={manualApproveEnabled}
-              onChange={(e) => setManualApproveEnabled(e.target.checked)}
-              disabled={
-                isRunning ||
-                isFeatureDisabled(FEATURE_CONFIG.manualApprove.isPremium)
-              }
-              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            <Controller
+              control={control}
+              name="manualApproveEnabled"
+              render={({ field: { value, onChange, ...rest } }) => (
+                <input
+                  type="checkbox"
+                  checked={value}
+                  onChange={(e) => onChange(e.target.checked)}
+                  {...rest}
+                  disabled={
+                    isRunning ||
+                    isFeatureDisabled(FEATURE_CONFIG.manualApprove.isPremium)
+                  }
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+              )}
             />
             <label className="text-sm font-medium text-gray-700">
               Composer manual approve
@@ -317,13 +333,21 @@ export function AutoCommentConfigurationForm() {
       {/* Authenticity Boost (free) */}
       <div className="mb-4">
         <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={authenticityBoostEnabled}
-            onChange={(e) => setAuthenticityBoostEnabled(e.target.checked)}
-            disabled={isRunning}
-            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          <Controller
+            name="authenticityBoostEnabled"
+            control={control}
+            render={({ field: { value, onChange, ...rest } }) => (
+              <input
+                type="checkbox"
+                checked={value}
+                onChange={(e) => onChange(e.target.checked)}
+                disabled={isRunning}
+                {...rest}
+                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+            )}
           />
+
           <label className="text-sm font-medium text-gray-700">
             Authenticity Boost
           </label>
@@ -355,77 +379,83 @@ export function AutoCommentConfigurationForm() {
           </div>
 
           <div className="mt-2 mb-2 flex items-center gap-2">
-            <Select
-              value={selectedStyleId}
-              onValueChange={(value) => setSelectedStyleId(value)}
-              disabled={isRunning}
-            >
-              <SelectTrigger className="flex-1 truncate rounded-md border border-gray-300 px-3 py-2 text-base whitespace-nowrap focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none sm:text-sm">
-                <SelectValue placeholder="Select a comment style guide" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>Default styles</SelectLabel>
-                  {isPremium
-                    ? Object.entries(DEFAULT_STYLE_GUIDES_PREMIUM).map(
-                        ([key, value]) => (
+            <Controller
+              control={control}
+              name="commentStyleId"
+              render={({ field: { value, onChange } }) => (
+                <Select
+                  value={value ?? undefined}
+                  onValueChange={(value) => onChange(value)}
+                  disabled={isRunning}
+                >
+                  <SelectTrigger className="flex-1 truncate rounded-md border border-gray-300 px-3 py-2 text-base whitespace-nowrap focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none sm:text-sm">
+                    <SelectValue placeholder="Select a comment style guide" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>Default styles</SelectLabel>
+                      {isPremium
+                        ? Object.entries(DEFAULT_STYLE_GUIDES_PREMIUM).map(
+                            ([key, value]) => (
+                              <SelectItem
+                                key={key}
+                                value={key}
+                                className="truncate"
+                              >
+                                {value.label}
+                              </SelectItem>
+                            ),
+                          )
+                        : Object.entries(DEFAULT_STYLE_GUIDES_FREE).map(
+                            ([key, value]) => (
+                              <SelectItem
+                                key={key}
+                                value={key}
+                                className="truncate"
+                              >
+                                {value.label}
+                              </SelectItem>
+                            ),
+                          )}
+                    </SelectGroup>
+
+                    <SelectGroup>
+                      {commentStyles.data?.pages[0] !== undefined &&
+                        commentStyles.data.pages[0].data.length > 0 && (
+                          <SelectLabel>Custom Styles</SelectLabel>
+                        )}
+
+                      {commentStyles.data?.pages.map((page) =>
+                        page.data.map((style) => (
                           <SelectItem
-                            key={key}
-                            value={key}
+                            key={style.id}
+                            value={style.id}
                             className="truncate"
+                            title={style.name}
                           >
-                            {value.label}
+                            {style.name}
                           </SelectItem>
-                        ),
-                      )
-                    : Object.entries(DEFAULT_STYLE_GUIDES_FREE).map(
-                        ([key, value]) => (
-                          <SelectItem
-                            key={key}
-                            value={key}
-                            className="truncate"
-                          >
-                            {value.label}
-                          </SelectItem>
-                        ),
+                        )),
                       )}
-                </SelectGroup>
-
-                <SelectGroup>
-                  {commentStyles.data?.pages[0] !== undefined &&
-                    commentStyles.data.pages[0].data.length > 0 && (
-                      <SelectLabel>Custom Styles</SelectLabel>
-                    )}
-
-                  {commentStyles.data?.pages.map((page) =>
-                    page.data.map((style) => (
-                      <SelectItem
-                        key={style.id}
-                        value={style.id}
-                        className="truncate"
-                        title={style.name}
-                      >
-                        {style.name}
-                      </SelectItem>
-                    )),
-                  )}
-                  {commentStyles.hasNextPage && (
-                    <SelectItem
-                      value="disabled"
-                      ref={(el) => {
-                        if (el === null) return;
-                        if (commentStyles.hasNextPage) {
-                          void commentStyles.fetchNextPage();
-                        }
-                      }}
-                      disabled
-                    >
-                      <LoaderCircleIcon className="size-3 animate-spin text-gray-500" />
-                    </SelectItem>
-                  )}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+                      {commentStyles.hasNextPage && (
+                        <SelectItem
+                          value="disabled"
+                          ref={(el) => {
+                            if (el === null) return;
+                            if (commentStyles.hasNextPage) {
+                              void commentStyles.fetchNextPage();
+                            }
+                          }}
+                          disabled
+                        >
+                          <LoaderCircleIcon className="size-3 animate-spin text-gray-500" />
+                        </SelectItem>
+                      )}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              )}
+            />
 
             {/* Trash button */}
             {/* TODO: delete custom style */}
@@ -505,7 +535,7 @@ export function AutoCommentConfigurationForm() {
                 name: customStyleName,
                 prompt: customStylePrompt,
               });
-              setSelectedStyleId(result.id);
+              setValue("commentStyleId", result.id);
             }}
             className="mt-2 w-full cursor-pointer rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-blue-200 disabled:cursor-not-allowed disabled:bg-gray-400"
             disabled={
@@ -525,16 +555,24 @@ export function AutoCommentConfigurationForm() {
       ) : (
         <div className="mb-4">
           <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={blacklistEnabled}
-              onChange={(e) => setBlacklistEnabled(e.target.checked)}
-              disabled={
-                isRunning ||
-                isFeatureDisabled(FEATURE_CONFIG.blacklistAuthor.isPremium)
-              }
-              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            <Controller
+              control={control}
+              name="blacklistEnabled"
+              render={({ field: { value, onChange, ...rest } }) => (
+                <input
+                  type="checkbox"
+                  checked={value}
+                  onChange={(e) => onChange(e.target.checked)}
+                  {...rest}
+                  disabled={
+                    isRunning ||
+                    isFeatureDisabled(FEATURE_CONFIG.blacklistAuthor.isPremium)
+                  }
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+              )}
             />
+
             <label className="text-sm font-medium text-gray-700">
               Blacklist author – never comment on
             </label>
@@ -572,16 +610,26 @@ export function AutoCommentConfigurationForm() {
       ) : (
         <div className="mb-4">
           <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={commentAsCompanyEnabled}
-              onChange={(e) => setCommentAsCompanyEnabled(e.target.checked)}
-              disabled={
-                isRunning ||
-                isFeatureDisabled(FEATURE_CONFIG.commentAsCompanyPage.isPremium)
-              }
-              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            <Controller
+              control={control}
+              name="commentAsCompanyEnabled"
+              render={({ field: { value, onChange, ...rest } }) => (
+                <input
+                  type="checkbox"
+                  checked={value}
+                  onChange={(e) => onChange(e.target.checked)}
+                  {...rest}
+                  disabled={
+                    isRunning ||
+                    isFeatureDisabled(
+                      FEATURE_CONFIG.commentAsCompanyPage.isPremium,
+                    )
+                  }
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+              )}
             />
+
             <label className="text-sm font-medium text-gray-700">
               Comment as company page:
             </label>
@@ -593,24 +641,39 @@ export function AutoCommentConfigurationForm() {
               </span>
             )}
           </div>
-          <input
-            type="text"
-            value={
-              shouldShowPremiumBadge(
-                FEATURE_CONFIG.commentAsCompanyPage.isPremium,
-              )
-                ? ""
-                : commentProfileName
-            }
-            onChange={(e) => setCommentProfileName(e.target.value)}
-            disabled={
-              isRunning ||
-              !commentAsCompanyEnabled ||
-              isFeatureDisabled(FEATURE_CONFIG.commentAsCompanyPage.isPremium)
-            }
-            placeholder="Page name"
-            className="mt-2 w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
+          <Controller
+            control={control}
+            name="commentProfileName"
+            render={({ field: { value, onChange, ...rest } }) => (
+              <input
+                type="text"
+                value={
+                  shouldShowPremiumBadge(
+                    FEATURE_CONFIG.commentAsCompanyPage.isPremium,
+                  )
+                    ? ""
+                    : value
+                }
+                onChange={(e) => onChange(e.target.value)}
+                // we only provide rest props if should show premium badge
+                {...(shouldShowPremiumBadge(
+                  FEATURE_CONFIG.commentAsCompanyPage.isPremium,
+                )
+                  ? { ...rest }
+                  : {})}
+                disabled={
+                  isRunning ||
+                  !commentAsCompanyEnabled ||
+                  isFeatureDisabled(
+                    FEATURE_CONFIG.commentAsCompanyPage.isPremium,
+                  )
+                }
+                placeholder="Page name"
+                className="mt-2 w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
+              />
+            )}
           />
+
           <p className="mt-1 text-xs text-gray-500">
             Please type the page name exactly and make sure it exists, otherwise
             the comment flow will break.
@@ -624,16 +687,26 @@ export function AutoCommentConfigurationForm() {
       ) : (
         <div className="mb-4">
           <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={languageAwareEnabled}
-              onChange={(e) => setLanguageAwareEnabled(e.target.checked)}
-              disabled={
-                isRunning ||
-                isFeatureDisabled(FEATURE_CONFIG.languageAwareComment.isPremium)
-              }
-              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            <Controller
+              control={control}
+              name="languageAwareEnabled"
+              render={({ field: { value, onChange, ...rest } }) => (
+                <input
+                  type="checkbox"
+                  checked={value}
+                  onChange={(e) => onChange(e.target.checked)}
+                  {...rest}
+                  disabled={
+                    isRunning ||
+                    isFeatureDisabled(
+                      FEATURE_CONFIG.languageAwareComment.isPremium,
+                    )
+                  }
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+              )}
             />
+
             <label className="text-sm font-medium text-gray-700">
               Language aware comment:
             </label>
@@ -658,16 +731,24 @@ export function AutoCommentConfigurationForm() {
       ) : (
         <div className="mb-4">
           <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={skipCompanyPagesEnabled}
-              onChange={(e) => setSkipCompanyPagesEnabled(e.target.checked)}
-              disabled={
-                isRunning ||
-                isFeatureDisabled(FEATURE_CONFIG.skipCompanyPages.isPremium)
-              }
-              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            <Controller
+              control={control}
+              name="skipCompanyPagesEnabled"
+              render={({ field: { value, onChange, ...rest } }) => (
+                <input
+                  type="checkbox"
+                  checked={value}
+                  onChange={(e) => onChange(e.target.checked)}
+                  {...rest}
+                  disabled={
+                    isRunning ||
+                    isFeatureDisabled(FEATURE_CONFIG.skipCompanyPages.isPremium)
+                  }
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+              )}
             />
+
             <label className="text-sm font-medium text-gray-700">
               Skip company pages:
             </label>
@@ -691,16 +772,26 @@ export function AutoCommentConfigurationForm() {
       ) : (
         <div className="mb-4">
           <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={skipPromotedPostsEnabled}
-              onChange={(e) => setSkipPromotedPostsEnabled(e.target.checked)}
-              disabled={
-                isRunning ||
-                isFeatureDisabled(FEATURE_CONFIG.skipPromotedPosts.isPremium)
-              }
-              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            <Controller
+              control={control}
+              name="skipPromotedPostsEnabled"
+              render={({ field: { value, onChange, ...rest } }) => (
+                <input
+                  type="checkbox"
+                  checked={value}
+                  onChange={(e) => onChange(e.target.checked)}
+                  {...rest}
+                  disabled={
+                    isRunning ||
+                    isFeatureDisabled(
+                      FEATURE_CONFIG.skipPromotedPosts.isPremium,
+                    )
+                  }
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+              )}
             />
+
             <label className="text-sm font-medium text-gray-700">
               Skip promoted posts:
             </label>
@@ -725,20 +816,26 @@ export function AutoCommentConfigurationForm() {
       ) : (
         <div className="mb-4">
           <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={skipFriendsActivitiesEnabled}
-              onChange={(e) =>
-                setSkipFriendsActivitiesEnabled(e.target.checked)
-              }
-              disabled={
-                isRunning ||
-                isFeatureDisabled(
-                  FEATURE_CONFIG.skipFriendsActivities.isPremium,
-                )
-              }
-              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            <Controller
+              control={control}
+              name="skipFriendsActivitiesEnabled"
+              render={({ field: { value, onChange, ...rest } }) => (
+                <input
+                  type="checkbox"
+                  checked={value}
+                  onChange={(e) => onChange(e.target.checked)}
+                  {...rest}
+                  disabled={
+                    isRunning ||
+                    isFeatureDisabled(
+                      FEATURE_CONFIG.skipFriendsActivities.isPremium,
+                    )
+                  }
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+              )}
             />
+
             <label className="text-sm font-medium text-gray-700">
               Skip posts from friends' activities:
             </label>
@@ -779,17 +876,25 @@ export function AutoCommentConfigurationForm() {
             }
           >
             <div className="mb-2 flex items-center space-x-3">
-              <input
-                type="checkbox"
-                id="timeFilterEnabled"
-                checked={timeFilterEnabled}
-                onChange={(e) => setTimeFilterEnabled(e.target.checked)}
-                disabled={
-                  isRunning ||
-                  isFeatureDisabled(FEATURE_CONFIG.postAgeFilter.isPremium)
-                }
-                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              <Controller
+                control={control}
+                name="timeFilterEnabled"
+                render={({ field: { value, onChange, ...rest } }) => (
+                  <input
+                    type="checkbox"
+                    id="timeFilterEnabled"
+                    checked={value}
+                    onChange={(e) => onChange(e.target.checked)}
+                    {...rest}
+                    disabled={
+                      isRunning ||
+                      isFeatureDisabled(FEATURE_CONFIG.postAgeFilter.isPremium)
+                    }
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                )}
               />
+
               <label
                 htmlFor="timeFilterEnabled"
                 className="text-sm text-gray-700"
@@ -797,20 +902,32 @@ export function AutoCommentConfigurationForm() {
                 Only comment on posts made within:
               </label>
               <div className="flex flex-1 items-center space-x-2">
-                <input
-                  type="range"
-                  min="1"
-                  max="24"
-                  value={minPostAge}
-                  onChange={(e) => setMinPostAge(parseInt(e.target.value))}
-                  disabled={
-                    isRunning ||
-                    isFeatureDisabled(FEATURE_CONFIG.postAgeFilter.isPremium) ||
-                    !timeFilterEnabled
-                  }
-                  className="flex-1"
+                <Controller
+                  control={control}
+                  name="minPostAge"
+                  render={({ field: { value, onChange, ...rest } }) => (
+                    <>
+                      <input
+                        type="range"
+                        min="1"
+                        max="24"
+                        value={value}
+                        onChange={(e) => onChange(parseInt(e.target.value))}
+                        {...rest}
+                        disabled={
+                          isRunning ||
+                          isFeatureDisabled(
+                            FEATURE_CONFIG.postAgeFilter.isPremium,
+                          ) ||
+                          !timeFilterEnabled
+                        }
+                        className="flex-1"
+                      />
+
+                      <span className="w-12 text-sm font-medium">{value}h</span>
+                    </>
+                  )}
                 />
-                <span className="w-12 text-sm font-medium">{minPostAge}h</span>
               </div>
             </div>
             <p className="text-xs text-gray-500">
@@ -826,16 +943,26 @@ export function AutoCommentConfigurationForm() {
           Feed Scroll Duration:
         </label>
         <div className="flex items-center space-x-2">
-          <input
-            type="range"
-            min="5"
-            max="60"
-            value={scrollDuration}
-            onChange={(e) => setScrollDuration(parseInt(e.target.value))}
-            disabled={isRunning}
-            className="flex-1"
+          <Controller
+            control={control}
+            name="scrollDuration"
+            render={({ field: { value, onChange, ...rest } }) => (
+              <>
+                <input
+                  type="range"
+                  min="5"
+                  max="60"
+                  value={value}
+                  onChange={(e) => onChange(parseInt(e.target.value))}
+                  {...rest}
+                  disabled={isRunning}
+                  className="flex-1"
+                />
+
+                <span className="w-16 text-sm font-medium">{value}s</span>
+              </>
+            )}
           />
-          <span className="w-16 text-sm font-medium">{scrollDuration}s</span>
         </div>
         <p className="mt-1 text-xs text-gray-500">
           Time to scroll the feed to load more posts
@@ -847,16 +974,26 @@ export function AutoCommentConfigurationForm() {
           Max Posts to Comment On:
         </label>
         <div className="flex items-center space-x-2">
-          <input
-            type="range"
-            min="5"
-            max={maxPostsLimit}
-            value={maxPosts}
-            onChange={(e) => setMaxPosts(parseInt(e.target.value))}
-            disabled={isRunning}
-            className="flex-1"
+          <Controller
+            control={control}
+            name="maxPosts"
+            render={({ field: { value, onChange, ...rest } }) => (
+              <>
+                <input
+                  type="range"
+                  min="5"
+                  max={maxPostsLimit}
+                  value={value}
+                  onChange={(e) => onChange(parseInt(e.target.value))}
+                  {...rest}
+                  disabled={isRunning}
+                  className="flex-1"
+                />
+
+                <span className="w-16 text-sm font-medium">{value}</span>
+              </>
+            )}
           />
-          <span className="w-16 text-sm font-medium">{maxPosts}</span>
         </div>
         <p className="mt-1 text-xs text-gray-500">
           Maximum number of posts to comment on in one session
@@ -874,16 +1011,25 @@ export function AutoCommentConfigurationForm() {
           Seconds Between Each Comment:
         </label>
         <div className="flex items-center space-x-2">
-          <input
-            type="range"
-            min="5"
-            max="60"
-            value={commentDelay}
-            onChange={(e) => setCommentDelay(parseInt(e.target.value))}
-            disabled={isRunning}
-            className="flex-1"
+          <Controller
+            control={control}
+            name="commentDelay"
+            render={({ field: { value, onChange, ...rest } }) => (
+              <>
+                <input
+                  type="range"
+                  min="5"
+                  max="60"
+                  value={value}
+                  onChange={(e) => onChange(parseInt(e.target.value))}
+                  {...rest}
+                  disabled={isRunning}
+                  className="flex-1"
+                />
+                <span className="w-16 text-sm font-medium">{value}s</span>
+              </>
+            )}
           />
-          <span className="w-16 text-sm font-medium">{commentDelay}s</span>
         </div>
         <p className="mt-1 text-xs text-gray-500">
           Delay between processing each post to avoid being flagged
@@ -914,23 +1060,31 @@ export function AutoCommentConfigurationForm() {
             }
           >
             <div className="flex items-center space-x-2">
-              <input
-                type="range"
-                min="1"
-                max="72"
-                value={duplicateWindow}
-                onChange={(e) => setDuplicateWindow(parseInt(e.target.value))}
-                disabled={
-                  isRunning ||
-                  isFeatureDisabled(
-                    FEATURE_CONFIG.duplicateAuthorCheck.isPremium,
-                  )
-                }
-                className="flex-1"
+              <Controller
+                control={control}
+                name="duplicateWindow"
+                render={({ field: { value, onChange, ...rest } }) => (
+                  <>
+                    <input
+                      type="range"
+                      min="1"
+                      max="72"
+                      value={value}
+                      onChange={(e) => onChange(parseInt(e.target.value))}
+                      {...rest}
+                      disabled={
+                        isRunning ||
+                        isFeatureDisabled(
+                          FEATURE_CONFIG.duplicateAuthorCheck.isPremium,
+                        )
+                      }
+                      className="flex-1"
+                    />
+
+                    <span className="w-16 text-sm font-medium">{value}h</span>
+                  </>
+                )}
               />
-              <span className="w-16 text-sm font-medium">
-                {duplicateWindow}h
-              </span>
             </div>
             <p className="mt-1 text-xs text-gray-500">
               Skip authors you've commented on within this time window
@@ -975,16 +1129,17 @@ export const formStateSchema = z.object({
   finishListModeEnabled: z.boolean(),
   commentAsCompanyEnabled: z.boolean(),
   timeFilterEnabled: z.boolean(),
-  minPostAge: z.number().nullish(),
+  minPostAge: z.number().optional(),
   manualApproveEnabled: z.boolean(),
   authenticityBoostEnabled: z.boolean(),
   targetListId: z.string().nullish(),
-  selectedStyleId: z.string().nullish(),
-  commentProfileName: z.string().nullish().default(""),
+  commentStyleId: z.string().nullish(),
+  commentProfileName: z.string().optional().default(""),
   languageAwareEnabled: z.boolean(),
   skipCompanyPagesEnabled: z.boolean(),
   blacklistEnabled: z.boolean(),
   skipPromotedPostsEnabled: z.boolean(),
+  skipFriendsActivitiesEnabled: z.boolean(),
   targetListEnabled: z.boolean(),
 });
 
@@ -1011,7 +1166,7 @@ export function AutoCommentConfigurationFormProvider({
       manualApproveEnabled: false,
       authenticityBoostEnabled: false,
       targetListId: null,
-      selectedStyleId: null,
+      commentStyleId: null,
       commentProfileName: "",
       languageAwareEnabled: false,
       skipCompanyPagesEnabled: false,
