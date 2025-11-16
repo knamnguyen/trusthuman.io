@@ -6,8 +6,6 @@ import puppeteer, { TargetType } from "puppeteer";
 import { connect } from "puppeteer-core";
 import { z } from "zod";
 
-import type { PrismaClient } from "@sassy/db";
-
 import type { Logger } from "./commons";
 import { env } from "./env";
 import { jwtFactory } from "./jwt";
@@ -138,11 +136,11 @@ export class LinkedInBrowserSession {
   private extensionWorker: WebWorker | null = null;
   constructor(
     private readonly registry: BrowserSessionRegistry,
-    private readonly prisma: PrismaClient,
     private readonly opts: {
       accountId: string;
       location: ProxyLocation;
       staticIpId?: string;
+      engagekitExtensionId: string;
       browserProfileId: string;
       onBrowserMessage?: (
         this: LinkedInBrowserSession,
@@ -154,21 +152,14 @@ export class LinkedInBrowserSession {
     this.id = opts.accountId;
   }
 
-  public static getLatestEngagekitExtensionId(db: PrismaClient) {
-    return db.extensionDeploymentMeta.findFirst({
-      orderBy: { createdAt: "desc" },
-    });
-  }
-
   static async getOrCreate(
     registry: BrowserSessionRegistry,
-    prisma: PrismaClient,
     opts: {
       accountId: string;
       location: ProxyLocation;
       staticIpId?: string;
       browserProfileId: string;
-      extensionIds?: string[];
+      engagekitExtensionId: string;
       onBrowserMessage?: (
         this: LinkedInBrowserSession,
         data: BrowserBackendChannelMessage,
@@ -177,7 +168,7 @@ export class LinkedInBrowserSession {
     logger: Logger = console,
   ) {
     return await registry.register(
-      new LinkedInBrowserSession(registry, prisma, opts, logger),
+      new LinkedInBrowserSession(registry, opts, logger),
     );
   }
 
@@ -188,23 +179,11 @@ export class LinkedInBrowserSession {
 
     this.controller = new AbortController();
 
-    const latestExtension = await this.prisma.extensionDeploymentMeta.findFirst(
-      {
-        orderBy: { createdAt: "desc" },
-      },
-    );
-
-    const extensionIds: string[] = [];
-
-    if (latestExtension !== null) {
-      extensionIds.push(latestExtension.id);
-    }
-
     const result = await createBrowserSession({
       useProxy: true,
       useStealth: true,
       solveCaptchas: true,
-      extensionIds,
+      extensionIds: [this.opts.engagekitExtensionId],
       proxyCountry: this.opts.location,
       profile: {
         id: this.opts.browserProfileId,
@@ -272,26 +251,27 @@ export class LinkedInBrowserSession {
 
     await page.exposeFunction(
       "_sendMessageToPuppeteerBackend",
-      async (data: BrowserBackendChannelMessage) => {
+      (data: BrowserBackendChannelMessage) => {
         onBrowserMessage.bind(this)(data);
 
         switch (data.action) {
           case "stopAutoCommenting": {
-            await this.destroy();
+            // TODO: rely on caller to register these functions
+            /* await this.destroy(); */
             break;
           }
           case "autoCommentingCompleted": {
-            await this.destroy();
-            if (process.env.NODE_ENV !== "test") {
-              await this.prisma.autoCommentRun.update({
-                where: { id: data.payload.autoCommentRunId },
-                data: {
-                  status: data.payload.success ? "completed" : "errored",
-                  error: data.payload.error,
-                  endedAt: new Date(),
-                },
-              });
-            }
+            // await this.destroy();
+            // if (process.env.NODE_ENV !== "test") {
+            //   await this.prisma.autoCommentRun.update({
+            //     where: { id: data.payload.autoCommentRunId },
+            //     data: {
+            //       status: data.payload.success ? "completed" : "errored",
+            //       error: data.payload.error,
+            //       endedAt: new Date(),
+            //     },
+            //   });
+            // }
             break;
           }
         }
@@ -435,6 +415,8 @@ export class BrowserSessionRegistry {
 
     const browserSession = await session.init();
 
+    this.registry.set(session.id, browserSession);
+
     return {
       status: "new",
       instance: browserSession,
@@ -517,7 +499,6 @@ async function createHyperbrowserSession(
   );
   console.info({ filepath });
 
-  // TODO: figure out how to add the chrome-extension build dir in production
   const browser = await puppeteer.launch({
     defaultViewport: null,
     headless: false,

@@ -8,6 +8,21 @@ import {
 } from "../_components/autocomment-configuration-form";
 import { getFirstAccountId } from "../../layout";
 
+function replaceNullWithUndefined<T extends Record<string, unknown>>(
+  obj: T,
+): {
+  [K in keyof T]: Exclude<T[K], null> | undefined;
+} {
+  return Object.fromEntries(
+    Object.entries(obj).map(([key, value]) => [
+      key,
+      value === null ? undefined : value,
+    ]),
+  ) as {
+    [K in keyof T]: T[K] extends null ? Exclude<T[K], null> | undefined : T[K];
+  };
+}
+
 export async function AutoCommentConfigurationPage() {
   const firstAccount = await getFirstAccountId();
 
@@ -26,9 +41,11 @@ export async function AutoCommentConfigurationPage() {
 
   return (
     <HydrateClient>
-      <div className="px-4">
+      <div>
         <AutoCommentConfigurationFormProvider
-          defaultValues={config ?? undefined}
+          defaultValues={
+            config !== null ? replaceNullWithUndefined(config) : undefined
+          }
         >
           <AutoCommentConfigurationFormHeader />
           {/* <StartAutoCommentModal */}

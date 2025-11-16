@@ -21,9 +21,9 @@ import {
   assumedAccountJwt,
   browserRegistry,
   hyperbrowser,
-  LinkedInBrowserSession,
 } from "../utils/linkedin-browser-session";
 import { paginate } from "../utils/pagination";
+import { registerOrGetBrowserSession } from "./browser";
 
 export const userRouter = {
   checkAccess: protectedProcedure.query(async ({ ctx }) => {
@@ -128,7 +128,6 @@ export const userRouter = {
         where: { email: input.email, userId: ctx.user.id },
       });
 
-      let profileId;
       let accountId;
 
       if (existingAccount !== null && existingAccount.status === "ACTIVE") {
@@ -139,8 +138,6 @@ export const userRouter = {
       }
 
       if (existingAccount !== null) {
-        // Reuse existing account's profile and ID
-        profileId = existingAccount.browserProfileId;
         accountId = existingAccount.id;
       } else {
         accountId = ulid();
@@ -159,19 +156,23 @@ export const userRouter = {
             status: "CONNECTING",
           },
         });
-
-        profileId = profile.id;
       }
 
-      const { instance } = await LinkedInBrowserSession.getOrCreate(
-        browserRegistry,
+      const result = await registerOrGetBrowserSession(
         ctx.db,
-        {
-          accountId,
-          location: input.location,
-          browserProfileId: profileId,
-        },
+        ctx.user.id,
+        accountId,
       );
+
+      if (result.status === "error") {
+        yield {
+          status: "error",
+          reason: "Failed to start browser session",
+        } as const;
+        return;
+      }
+
+      const instance = result.instance;
 
       yield {
         status: "initialized",

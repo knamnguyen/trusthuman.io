@@ -4,32 +4,34 @@ import z from "zod";
 import type { PrismaClient } from "@sassy/db";
 import { storageStateSchema } from "@sassy/validators";
 
-import type { ProxyLocation } from "../utils/linkedin-browser-session";
+import type {
+  BrowserBackendChannelMessage,
+  ProxyLocation,
+} from "../utils/linkedin-browser-session";
 import { protectedProcedure } from "../trpc";
-import { cryptography } from "../utils/encryption";
-import { env } from "../utils/env";
 import {
   browserRegistry,
   hyperbrowser,
   LinkedInBrowserSession,
 } from "../utils/linkedin-browser-session";
 
+function getLatestEngagekitExtensionId(db: PrismaClient) {
+  return db.extensionDeploymentMeta.findFirst({
+    orderBy: { createdAt: "desc" },
+  });
+}
+
 export async function registerOrGetBrowserSession(
   prisma: PrismaClient,
   userId: string,
   linkedInAccountId: string,
+  onBrowserMessage?: (
+    this: LinkedInBrowserSession,
+    data: BrowserBackendChannelMessage,
+  ) => unknown,
 ) {
   const account = await prisma.linkedInAccount.findUnique({
     where: { id: linkedInAccountId, userId },
-    select: {
-      id: true,
-      email: true,
-      encryptedPassword: true,
-      twoFactorSecretKey: true,
-      browserProfileId: true,
-      staticIpId: true,
-      location: true,
-    },
   });
 
   if (account === null) {
@@ -40,46 +42,25 @@ export async function registerOrGetBrowserSession(
     } as const;
   }
 
-  const decryptedPassword = await cryptography.decrypt(
-    account.encryptedPassword,
-    env.LINKEDIN_PASSWORD_SECRET_KEY,
-  );
+  const engagekitExtensionId = await getLatestEngagekitExtensionId(prisma);
 
-  if (!decryptedPassword.success) {
+  if (engagekitExtensionId === null) {
     return {
       status: "error",
       code: 500,
-      message: "Failed to decrypt LinkedIn password",
+      message: "Engagekit extension not deployed",
     } as const;
   }
 
-  const decryptedTwoFASecretKey = await cryptography.decrypt(
-    account.twoFactorSecretKey,
-    env.LINKEDIN_TWO_FA_SECRET_KEY,
-  );
-
-  if (!decryptedTwoFASecretKey.success) {
-    return {
-      status: "error",
-      code: 500,
-      message: "Failed to decrypt LinkedIn 2FA secret key",
-    } as const;
-  }
-
-  const { instance, status } = await browserRegistry.register(
-    account.id,
-    new LinkedInBrowserSession(browserRegistry, prisma, {
-      id: account.id,
-      userId: account.id,
-      username: account.email,
-      password: decryptedPassword.data,
-      // technically this account.location should be filled when adding seat, db allows null though so just fallback to US
-      location: (account.location ?? "US") as ProxyLocation,
-      twoFactorSecretKey: decryptedTwoFASecretKey.data,
-      browserProfileId: account.browserProfileId ?? undefined,
-      staticIpId: account.staticIpId ?? undefined,
-      sessionId: process.env.NODE_ENV === "production" ? account.id : "mock",
-    }),
+  const { instance, status } = await LinkedInBrowserSession.getOrCreate(
+    browserRegistry,
+    {
+      accountId: account.id,
+      location: account.location as ProxyLocation,
+      browserProfileId: account.browserProfileId,
+      engagekitExtensionId: engagekitExtensionId.id,
+      onBrowserMessage,
+    },
   );
 
   return {

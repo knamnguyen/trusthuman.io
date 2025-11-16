@@ -249,6 +249,9 @@ model AutoCommentConfig {
   manualApproveEnabled        Boolean
   authenticityBoostEnabled    Boolean
   targetListId                String?
+  defaultCommentStyle         String?
+  // commentStyleId is custom style id
+  // defaultCommentStyle is from ready made prompts
   commentStyleId              String?
   commentProfileName          String?
   languageAwareEnabled        Boolean

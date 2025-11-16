@@ -174,6 +174,27 @@ export const autoCommentRouter = {
         ctx.db,
         ctx.user.id,
         input.linkedInAccountId,
+        async function (data) {
+          switch (data.action) {
+            case "stopAutoCommenting": {
+              await this.destroy();
+              break;
+            }
+            case "autoCommentingCompleted": {
+              await Promise.all([
+                this.destroy(),
+                ctx.db.autoCommentRun.update({
+                  where: { id: data.payload.autoCommentRunId },
+                  data: {
+                    status: data.payload.success ? "completed" : "errored",
+                    error: data.payload.error,
+                    endedAt: new Date(),
+                  },
+                }),
+              ]);
+            }
+          }
+        },
       );
 
       if (browserSession.status === "error") {
@@ -268,6 +289,7 @@ export const autoCommentRouter = {
           linkedInAccountId: z.string(),
           scrollDuration: z.number(),
           commentDelay: z.number(),
+          defaultCommentStyle: z.string().nullish(),
           commentStyleId: z.string().nullish(),
           targetListId: z.string().nullish(),
           duplicateWindow: z.number(),
@@ -314,6 +336,7 @@ export const autoCommentRouter = {
             finishListModeEnabled: input.finishListModeEnabled ?? false,
             duplicateWindow: input.duplicateWindow,
             commentAsCompanyEnabled: input.commentAsCompanyEnabled ?? false,
+            defaultCommentStyle: input.defaultCommentStyle ?? null,
             timeFilterEnabled: input.timeFilterEnabled ?? false,
             commentStyleId: input.commentStyleId ?? null,
             targetListId: input.targetListId ?? null,
@@ -333,6 +356,9 @@ export const autoCommentRouter = {
             commentDelay: input.commentDelay,
             commentStyleId: input.commentStyleId ?? null,
             targetListId: input.targetListId ?? null,
+            maxPosts: input.maxPosts,
+            finishListModeEnabled: input.finishListModeEnabled ?? false,
+            defaultCommentStyle: input.defaultCommentStyle ?? null,
             duplicateWindow: input.duplicateWindow,
             commentAsCompanyEnabled: input.commentAsCompanyEnabled,
             timeFilterEnabled: input.timeFilterEnabled,

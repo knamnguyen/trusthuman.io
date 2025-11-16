@@ -39,7 +39,7 @@ export default async function Layout({
         >
           <DashboardSidebar />
           <SidebarInset>
-            <main className="flex flex-1 flex-col py-3">{children}</main>
+            <main className="flex flex-1 flex-col">{children}</main>
           </SidebarInset>
         </SidebarProvider>
       </LinkedInAccountProvider>

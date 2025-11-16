@@ -1,7 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 
-import { db } from "@sassy/db";
-
 import {
   BrowserSessionRegistry,
   LinkedInBrowserSession,
@@ -12,23 +10,8 @@ describe("LinkedInBrowserSession", () => {
   let registry!: BrowserSessionRegistry;
   beforeAll(async () => {
     registry = new BrowserSessionRegistry();
-    const registered = await registry.register(
-      "test",
-      new LinkedInBrowserSession(
-        registry,
-        db,
-        {
-          id: "test-user-id",
-          username: process.env.LINKEDIN_TEST_ACCOUNT_USERNAME!,
-          password: process.env.LINKEDIN_TEST_ACCOUNT_PASSWORD!,
-          twoFactorSecretKey: process.env.LINKEDIN_TEST_ACCOUNT_2FA_SECRET_KEY!,
-          location: "US",
-          userId: "test-user-id",
-          sessionId: "mock",
-        },
-        console,
-      ),
-    );
+    const session = registry;
+    const registered = await LinkedInBrowserSession.getOrCreate(registry);
     session = registered.instance;
   });
 

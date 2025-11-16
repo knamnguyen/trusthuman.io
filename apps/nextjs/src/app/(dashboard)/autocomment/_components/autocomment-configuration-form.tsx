@@ -163,6 +163,7 @@ export function AutoCommentConfigurationForm() {
       onSubmit={(e) => {
         e.preventDefault();
       }}
+      className="px-4"
     >
       {/* Comment on Target List (free feature) */}
       <div className="mb-4">
@@ -174,6 +175,7 @@ export function AutoCommentConfigurationForm() {
               render={({ field: { value, onChange, ...rest } }) => (
                 <input
                   type="checkbox"
+                  id="targetListEnabled"
                   checked={value}
                   onChange={(e) => onChange(e.target.checked)}
                   {...rest}
@@ -183,7 +185,10 @@ export function AutoCommentConfigurationForm() {
               )}
             />
 
-            <label className="text-sm font-medium text-gray-700">
+            <label
+              className="text-sm font-medium text-gray-700"
+              htmlFor="targetListEnabled"
+            >
               Comment on Target List -
               <a
                 className="text-blue-600 hover:underline"
@@ -271,6 +276,7 @@ export function AutoCommentConfigurationForm() {
             name="finishListModeEnabled"
             render={({ field }) => (
               <input
+                id="finishListModeEnabled"
                 type="checkbox"
                 checked={field.value}
                 onChange={(e) => field.onChange(e.target.checked)}
@@ -280,7 +286,10 @@ export function AutoCommentConfigurationForm() {
             )}
           />
 
-          <label className="text-sm font-medium text-gray-700">
+          <label
+            className="text-sm font-medium text-gray-700"
+            htmlFor="finishListModeEnabled"
+          >
             Don't stop until finish everyone in list - 1 comment/1 author
           </label>
         </div>
@@ -302,6 +311,7 @@ export function AutoCommentConfigurationForm() {
               render={({ field: { value, onChange, ...rest } }) => (
                 <input
                   type="checkbox"
+                  id="manualApproveEnabled"
                   checked={value}
                   onChange={(e) => onChange(e.target.checked)}
                   {...rest}
@@ -313,7 +323,10 @@ export function AutoCommentConfigurationForm() {
                 />
               )}
             />
-            <label className="text-sm font-medium text-gray-700">
+            <label
+              className="text-sm font-medium text-gray-700"
+              htmlFor="manualApproveEnabled"
+            >
               Composer manual approve
             </label>
             {shouldShowPremiumBadge(FEATURE_CONFIG.manualApprove.isPremium) && (
@@ -341,6 +354,7 @@ export function AutoCommentConfigurationForm() {
                 type="checkbox"
                 checked={value}
                 onChange={(e) => onChange(e.target.checked)}
+                id="authenticityBoostEnabled"
                 disabled={isRunning}
                 {...rest}
                 className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
@@ -348,7 +362,10 @@ export function AutoCommentConfigurationForm() {
             )}
           />
 
-          <label className="text-sm font-medium text-gray-700">
+          <label
+            className="text-sm font-medium text-gray-700"
+            htmlFor="authenticityBoostEnabled"
+          >
             Authenticity Boost
           </label>
         </div>
@@ -385,7 +402,15 @@ export function AutoCommentConfigurationForm() {
               render={({ field: { value, onChange } }) => (
                 <Select
                   value={value ?? undefined}
-                  onValueChange={(value) => onChange(value)}
+                  onValueChange={(value) => {
+                    if (isDefaultStyle(value) === true) {
+                      setValue("defaultCommentStyle", value);
+                      onChange(undefined);
+                    } else {
+                      onChange(value);
+                      setValue("defaultCommentStyle", undefined);
+                    }
+                  }}
                   disabled={isRunning}
                 >
                   <SelectTrigger className="flex-1 truncate rounded-md border border-gray-300 px-3 py-2 text-base whitespace-nowrap focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none sm:text-sm">
@@ -561,6 +586,7 @@ export function AutoCommentConfigurationForm() {
               render={({ field: { value, onChange, ...rest } }) => (
                 <input
                   type="checkbox"
+                  id="blacklistEnabled"
                   checked={value}
                   onChange={(e) => onChange(e.target.checked)}
                   {...rest}
@@ -573,7 +599,10 @@ export function AutoCommentConfigurationForm() {
               )}
             />
 
-            <label className="text-sm font-medium text-gray-700">
+            <label
+              className="text-sm font-medium text-gray-700"
+              htmlFor="blacklistEnabled"
+            >
               Blacklist author – never comment on
             </label>
             {shouldShowPremiumBadge(
@@ -616,6 +645,7 @@ export function AutoCommentConfigurationForm() {
               render={({ field: { value, onChange, ...rest } }) => (
                 <input
                   type="checkbox"
+                  id="commentAsCompanyEnabled"
                   checked={value}
                   onChange={(e) => onChange(e.target.checked)}
                   {...rest}
@@ -630,7 +660,10 @@ export function AutoCommentConfigurationForm() {
               )}
             />
 
-            <label className="text-sm font-medium text-gray-700">
+            <label
+              className="text-sm font-medium text-gray-700"
+              htmlFor="commentAsCompanyEnabled"
+            >
               Comment as company page:
             </label>
             {shouldShowPremiumBadge(
@@ -693,6 +726,7 @@ export function AutoCommentConfigurationForm() {
               render={({ field: { value, onChange, ...rest } }) => (
                 <input
                   type="checkbox"
+                  id="languageAwareEnabled"
                   checked={value}
                   onChange={(e) => onChange(e.target.checked)}
                   {...rest}
@@ -707,7 +741,10 @@ export function AutoCommentConfigurationForm() {
               )}
             />
 
-            <label className="text-sm font-medium text-gray-700">
+            <label
+              className="text-sm font-medium text-gray-700"
+              htmlFor="languageAwareEnabled"
+            >
               Language aware comment:
             </label>
             {shouldShowPremiumBadge(
@@ -737,6 +774,7 @@ export function AutoCommentConfigurationForm() {
               render={({ field: { value, onChange, ...rest } }) => (
                 <input
                   type="checkbox"
+                  id="skipCompanyPagesEnabled"
                   checked={value}
                   onChange={(e) => onChange(e.target.checked)}
                   {...rest}
@@ -749,7 +787,10 @@ export function AutoCommentConfigurationForm() {
               )}
             />
 
-            <label className="text-sm font-medium text-gray-700">
+            <label
+              className="text-sm font-medium text-gray-700"
+              htmlFor="skipCompanyPagesEnabled"
+            >
               Skip company pages:
             </label>
             {shouldShowPremiumBadge(
@@ -778,6 +819,7 @@ export function AutoCommentConfigurationForm() {
               render={({ field: { value, onChange, ...rest } }) => (
                 <input
                   type="checkbox"
+                  id="skipPromotedPostsEnabled"
                   checked={value}
                   onChange={(e) => onChange(e.target.checked)}
                   {...rest}
@@ -792,7 +834,10 @@ export function AutoCommentConfigurationForm() {
               )}
             />
 
-            <label className="text-sm font-medium text-gray-700">
+            <label
+              className="text-sm font-medium text-gray-700"
+              htmlFor="skipPromotedPostsEnabled"
+            >
               Skip promoted posts:
             </label>
             {shouldShowPremiumBadge(
@@ -822,6 +867,7 @@ export function AutoCommentConfigurationForm() {
               render={({ field: { value, onChange, ...rest } }) => (
                 <input
                   type="checkbox"
+                  id="skipFriendsActivitiesEnabled"
                   checked={value}
                   onChange={(e) => onChange(e.target.checked)}
                   {...rest}
@@ -836,7 +882,10 @@ export function AutoCommentConfigurationForm() {
               )}
             />
 
-            <label className="text-sm font-medium text-gray-700">
+            <label
+              className="text-sm font-medium text-gray-700"
+              htmlFor="skipFriendsActivitiesEnabled"
+            >
               Skip posts from friends' activities:
             </label>
             {shouldShowPremiumBadge(
@@ -1104,7 +1153,7 @@ export function AutoCommentConfigurationFormHeader() {
   const { getValues } = useFormContext<FormState>();
   const { accountId } = useCurrentLinkedInAccountId();
   return (
-    <div className="sticky top-0 mb-3 flex items-center justify-between pb-2">
+    <div className="bg-background sticky top-0 mb-3 flex items-center justify-between px-4 py-2 shadow-sm">
       <div className="text-lg font-semibold">Auto commenting configuration</div>
       <Button
         onClick={() => {
@@ -1114,8 +1163,13 @@ export function AutoCommentConfigurationFormHeader() {
           const values = getValues();
           saveConfig.mutate({ ...values, linkedInAccountId: accountId });
         }}
+        disabled={saveConfig.isPending}
       >
-        Save
+        {saveConfig.isPending ? (
+          <LoaderCircleIcon className="size-4 animate-spin" />
+        ) : (
+          "Save"
+        )}
       </Button>
     </div>
   );
@@ -1135,6 +1189,7 @@ export const formStateSchema = z.object({
   targetListId: z.string().nullish(),
   commentStyleId: z.string().nullish(),
   commentProfileName: z.string().optional().default(""),
+  defaultCommentStyle: z.string().nullish(),
   languageAwareEnabled: z.boolean(),
   skipCompanyPagesEnabled: z.boolean(),
   blacklistEnabled: z.boolean(),
@@ -1165,8 +1220,9 @@ export function AutoCommentConfigurationFormProvider({
       minPostAge: undefined,
       manualApproveEnabled: false,
       authenticityBoostEnabled: false,
-      targetListId: null,
-      commentStyleId: null,
+      defaultCommentStyle: undefined,
+      targetListId: undefined,
+      commentStyleId: undefined,
       commentProfileName: "",
       languageAwareEnabled: false,
       skipCompanyPagesEnabled: false,
