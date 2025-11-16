@@ -26,7 +26,6 @@ export function useSubscription() {
   let hasAccess = false;
   if (data?.accessType !== "FREE") hasAccess = true;
 
-  console.log("data", data);
   return {
     hasAccess: hasAccess,
     accessType: data?.accessType ?? "FREE",
