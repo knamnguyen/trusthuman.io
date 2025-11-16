@@ -563,6 +563,8 @@ export const contentScriptFunctions = createContentScriptFunctions();
 // expose functions to be called in linkedin-browser-session
 (window as any)._contentScriptFunctions = contentScriptFunctions;
 
+console.info("injected contentscripts");
+
 // (Audio logic moved to tab-audio.ts)
 
 // Listen for messages from the background script

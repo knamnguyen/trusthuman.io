@@ -205,7 +205,7 @@ export class LinkedInBrowserSession {
         // // but somehow this is getting the wrong id, maybe manifest.dev.json's key is wrong idk
         // console.info({ extensionId });
         await page.goto(
-          `chrome-extension://lnpioglpginpegnbigmiaaohacfbmbfl/src/pages/popup/index.html?userJwt=${accountJwt}`,
+          `chrome-extension://ofpificfhbopdfmlcmnmhhhmdbepgfbh/src/pages/popup/index.html?userJwt=${accountJwt}`,
           {
             waitUntil: "networkidle0",
           },
