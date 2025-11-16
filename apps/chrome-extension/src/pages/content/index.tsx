@@ -558,6 +558,8 @@ const createContentScriptFunctions = () => {
 };
 
 export const contentScriptFunctions = createContentScriptFunctions();
+// TODO: implement this
+// https://t3.chat/chat/0a5858d7-182b-407e-8dba-ce4290e77063
 
 // TODO: some error here that it's not exposed properly so when backend calls it fails
 // expose functions to be called in linkedin-browser-session
