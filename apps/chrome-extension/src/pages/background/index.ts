@@ -350,87 +350,6 @@ const messageRouter = new MessageRouter({
   generateComment: generateCommentBackground,
 });
 
-interface BackgroundScriptFunctions extends BrowserFunctions {
-  sendMessageToContentScriptTab: (
-    message: ContentScriptMessage,
-  ) => Promise<void>;
-}
-
-const createBackgroundScriptFunctions = () => {
-  let tabId: number | null = null;
-
-  async function sendMessageToContentScriptTab(
-    tabId: number,
-    message: ContentScriptMessage,
-  ) {
-    await chrome.tabs.sendMessage(tabId, message);
-    return true;
-  }
-
-  async function getPinnedTabId() {
-    // if a tab id is already set, just return
-    if (tabId !== null) {
-      return tabId;
-    }
-
-    // query for tabs to see if there are any linkedin tabs
-    const tabs = await chrome.tabs.query({
-      active: false,
-      currentWindow: true,
-    });
-
-    const feedTab = tabs.find(
-      (tab) =>
-        tab.url !== undefined && tab.url.startsWith("https://www.linkedin.com"),
-    );
-
-    // if no linkedin tabs, just create one and assign it to tab id
-    if (feedTab === undefined) {
-      console.log("No pinned LinkedIn tab found, creating one...");
-      const tab = await chrome.tabs.create({
-        url: "https://www.linkedin.com/feed/",
-        active: false,
-        pinned: true,
-      });
-
-      // can use null assertion because chrome.tabs.create and chrome.tabs.query should return an id
-      tabId = tab.id!;
-      console.log("Pinned LinkedIn tab created.");
-    } else {
-      // can use null assertion because chrome.tabs.create and chrome.tabs.query should return an id
-      tabId = feedTab.id!;
-    }
-
-    return tabId;
-  }
-
-  return {
-    async startAutoCommenting(params) {
-      const tabId = await getPinnedTabId();
-      await sendMessageToContentScriptTab(tabId, {
-        action: "startNewCommentingFlow",
-        params,
-      });
-    },
-    async stopAutoCommenting() {
-      const tabId = await getPinnedTabId();
-      await sendMessageToContentScriptTab(tabId, {
-        action: "stopCommentingFlow",
-      });
-    },
-    async sendMessageToContentScriptTab(message) {
-      const pinnedTabId = await getPinnedTabId();
-      await sendMessageToContentScriptTab(pinnedTabId, message);
-    },
-  } satisfies BackgroundScriptFunctions;
-};
-
-export const backgroundScriptFunctions = createBackgroundScriptFunctions();
-
-// expose functions to be called in linkedin-browser-session
-(globalThis as any)._backgroundScriptExposedFunctions =
-  backgroundScriptFunctions;
-
 // Message listener with comprehensive authentication service
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   // Handle authentication requests directly in background
@@ -648,15 +567,6 @@ chrome.alarms.create("authCheck", { periodInMinutes: 2 });
 console.log(
   "Background: Auth monitoring and service worker lifecycle handlers initialized",
 );
-
-export async function sendMessageToPuppeteerBackend(
-  message: BrowserBackendChannelMessage,
-) {
-  await backgroundScriptFunctions.sendMessageToContentScriptTab({
-    action: "sendMessageToPuppeteerBackend",
-    payload: message,
-  });
-}
 
 export type ContentScriptMessage =
   | {

@@ -192,14 +192,9 @@ export class LinkedInBrowserSession {
 
     this.browser = result.instance.browser;
 
-    const [linkedin, engagekitExtension] = await Promise.all([
-      this.browser.newPage().then(async (page) => {
-        await page.goto("https://www.linkedin.com", {
-          timeout: 60_000,
-        });
-        return page;
-      }),
-      this.browser.newPage().then(async (page) => {
+    const engagekitExtensionPagePromise = this.browser
+      .newPage()
+      .then(async (page) => {
         // technically we should use the getExtensionId + manifest.dev.json key to get the extension id but screw it
         // const extensionId = await getExtensionId(
         //   path.join(
@@ -219,7 +214,18 @@ export class LinkedInBrowserSession {
         await this.setupBackendChannel(page);
 
         return page;
-      }),
+      });
+
+    const linkedinPagePromise = this.browser.newPage().then(async (page) => {
+      await page.goto("https://www.linkedin.com", {
+        timeout: 0,
+      });
+      return page;
+    });
+
+    const [linkedin, engagekitExtension] = await Promise.all([
+      linkedinPagePromise,
+      engagekitExtensionPagePromise,
     ]);
 
     this.pages = {
@@ -314,6 +320,7 @@ export class LinkedInBrowserSession {
     }
   }
 
+  // TODO: add error handling in general to destroy when any errors are caught
   async startAutoCommenting(params: {
     autoCommentRunId: string;
     scrollDuration: number;
@@ -334,7 +341,11 @@ export class LinkedInBrowserSession {
     blacklistEnabled?: boolean;
     blacklistAuthors?: string[];
   }) {
+    await this.bringToFront("linkedin");
+
     const worker = await this.getExtensionWorker();
+
+    // test for target exists to verify the extension is loaded?
     if (worker === null) {
       return {
         status: "error",
@@ -342,13 +353,13 @@ export class LinkedInBrowserSession {
       } as const;
     }
 
-    const result = await worker.evaluate(async (params) => {
+    const result = await this.pages.linkedin.evaluate(async (params) => {
       const fn =
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (globalThis as any)
+        (window as any)
         // prettier-ignore
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-          ._backgroundScriptExposedFunctions as BrowserFunctions;
+          ._contentScriptFunctions as BrowserFunctions;
 
       return await fn.startAutoCommenting(params);
     }, params);
@@ -371,10 +382,10 @@ export class LinkedInBrowserSession {
     const result = await worker.evaluate(async () => {
       const fn =
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (globalThis as any)
+        (window as any)
         // prettier-ignore
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-          ._backgroundScriptExposedFunctions as BrowserFunctions;
+          ._contentScriptFunctions as BrowserFunctions;
       return await fn.stopAutoCommenting();
     });
 

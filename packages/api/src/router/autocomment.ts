@@ -179,7 +179,7 @@ export const autoCommentRouter = {
         ctx.user.id,
         input.accountId,
         {
-          liveviewViewOnlyMode: true,
+          liveviewViewOnlyMode: process.env.NODE_ENV === "production",
           onBrowserMessage: async function (data) {
             switch (data.action) {
               case "stopAutoCommenting": {

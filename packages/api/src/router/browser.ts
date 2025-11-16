@@ -5,7 +5,6 @@ import type { PrismaClient } from "@sassy/db";
 import { storageStateSchema } from "@sassy/validators";
 
 import type {
-  BrowserBackendChannelMessage,
   LinkedInBrowserSessionParams,
   ProxyLocation,
 } from "../utils/linkedin-browser-session";

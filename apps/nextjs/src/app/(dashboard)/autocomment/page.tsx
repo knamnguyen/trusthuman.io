@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { LoaderCircleIcon } from "lucide-react";
 
 import { Button } from "@sassy/ui/button";
 import { toast } from "@sassy/ui/toast";
@@ -13,7 +13,23 @@ import { AutoCommentRunsList } from "./_components/autocomment-runs-list";
 
 export function AutoCommentPage() {
   const trpc = useTRPC();
-  const autocomment = useMutation(trpc.autocomment.start.mutationOptions());
+  const queryClient = useQueryClient();
+  const autocomment = useMutation(
+    trpc.autocomment.start.mutationOptions({
+      onSuccess(data) {
+        if (data.status === "success") {
+          // can optimize this nextime to just add the new run to the front of the the list
+          // for now just invalidate the whole list cause aint got time for that
+          void queryClient.invalidateQueries({
+            queryKey: trpc.autocomment.runs.infiniteQueryKey(),
+          });
+        }
+      },
+      onError(error) {
+        toast.error(`Error starting autocommenting: ${error.message}`);
+      },
+    }),
+  );
 
   const { accountId } = useCurrentLinkedInAccountId();
 
@@ -53,7 +69,11 @@ export function AutoCommentPage() {
             disabled={!account.data || account.data.isRunning}
             onClick={() => startAutoCommenting(accountId)}
           >
-            Start new session
+            {autocomment.isPending ? (
+              <LoaderCircleIcon className="size-4 animate-spin" />
+            ) : (
+              "Start new session"
+            )}
           </Button>
         </div>
       </div>

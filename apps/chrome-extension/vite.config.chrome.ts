@@ -4,7 +4,11 @@ import { defineConfig, mergeConfig, UserConfig } from "vite";
 
 import getBaseConfig from "./vite.config.base";
 
-const outDir = resolve(__dirname, "dist_chrome");
+let outDir = resolve(__dirname, "dist_chrome");
+
+if (process.env.TARGET_ENV === "hyperbrowser") {
+  outDir = resolve(__dirname, "dist_hyperbrowser");
+}
 
 // We need to call defineConfig ourselves to get access to the mode
 export default defineConfig(({ command, mode }) => {

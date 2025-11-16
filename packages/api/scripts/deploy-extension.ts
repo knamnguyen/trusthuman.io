@@ -13,7 +13,7 @@ const __dirname = dirname(__filename);
 
 const chromeExtensionBuildZip = path.join(
   __dirname,
-  "../../../apps/chrome-extension/dist/engagekit-extension-chrome.zip",
+  "../../../apps/chrome-extension/dist/engagekit-extension-hyperbrowser.zip",
 );
 
 if (existsSync(chromeExtensionBuildZip) === false) {

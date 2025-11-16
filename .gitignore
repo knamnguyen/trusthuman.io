@@ -52,6 +52,7 @@ dist_firefox/
 dist_opera/
 dist_build/
 dist/
+dist_hyperbrowser/
 .cache
 
 # turbo

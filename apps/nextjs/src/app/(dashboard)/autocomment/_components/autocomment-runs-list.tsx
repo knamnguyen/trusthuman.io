@@ -17,7 +17,7 @@ export function AutoCommentRunsList() {
     ),
   );
 
-  const [liveUrl, setLiveUrl] = useState(null);
+  const [liveUrl, setLiveUrl] = useState<string | null>(null);
 
   const runs = useMemo(() => {
     return query.data?.pages.flatMap((page) => page.data) ?? [];
