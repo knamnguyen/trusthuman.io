@@ -353,13 +353,13 @@ export class LinkedInBrowserSession {
       } as const;
     }
 
-    const result = await this.pages.linkedin.evaluate(async (params) => {
+    const result = await worker.evaluate(async (params) => {
       const fn =
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (window as any)
+        (globalThis as any)
         // prettier-ignore
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-          ._contentScriptFunctions as BrowserFunctions;
+          ._backgroundScriptFunctions as BrowserFunctions;
 
       return await fn.startAutoCommenting(params);
     }, params);
@@ -382,10 +382,10 @@ export class LinkedInBrowserSession {
     const result = await worker.evaluate(async () => {
       const fn =
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (window as any)
+        (globalThis as any)
         // prettier-ignore
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-          ._contentScriptFunctions as BrowserFunctions;
+          ._backgroundScriptFunctions as BrowserFunctions;
       return await fn.stopAutoCommenting();
     });
 

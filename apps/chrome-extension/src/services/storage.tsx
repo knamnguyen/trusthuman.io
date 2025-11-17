@@ -78,7 +78,7 @@ class StoragePersister {
   }
 
   retrieveAll() {
-    return this.trpc.user.getBrowserState.query();
+    return this.trpc.browser.getBrowserState.query();
   }
 }
 

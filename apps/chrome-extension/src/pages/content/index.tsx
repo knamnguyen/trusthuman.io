@@ -46,9 +46,9 @@ import "./profile-target-list";
 import { appStorage } from "@src/services/storage";
 import { getStandaloneTRPCClient } from "@src/trpc/react";
 
-import type { BrowserFunctions } from "@sassy/api";
+import { BrowserBackendChannelMessage } from "@sassy/api";
 
-import { ContentScriptMessage } from "../background";
+import { type ContentScriptMessage } from "../background";
 
 // Pronoun rule for company mode
 const COMPANY_PRONOUN_RULE =
@@ -478,94 +478,14 @@ function showStartButton() {
   console.log("🚀 Start button overlay displayed");
 }
 
-function sendMessageToPuppeteerBackend(message: any) {
-  (window as any)._sendMessageToPuppeteerBackend(message);
+async function sendMessageToPuppeteerBackend(
+  message: BrowserBackendChannelMessage,
+) {
+  await chrome.runtime.sendMessage({
+    action: "sendMessageToPuppeteerBackend",
+    payload: message,
+  });
 }
-
-interface ContentScriptFunctions extends BrowserFunctions {
-  sendMessageToContentScriptTab: (
-    message: ContentScriptMessage,
-  ) => Promise<void>;
-}
-
-const createContentScriptFunctions = () => {
-  let tabId: number | null = null;
-
-  async function sendMessageToContentScriptTab(
-    tabId: number,
-    message: ContentScriptMessage,
-  ) {
-    await chrome.tabs.sendMessage(tabId, message);
-    return true;
-  }
-
-  async function getPinnedTabId() {
-    // if a tab id is already set, just return
-    if (tabId !== null) {
-      return tabId;
-    }
-
-    // query for tabs to see if there are any linkedin tabs
-    const tabs = await chrome.tabs.query({
-      active: false,
-      currentWindow: true,
-    });
-
-    const feedTab = tabs.find(
-      (tab) =>
-        tab.url !== undefined && tab.url.startsWith("https://www.linkedin.com"),
-    );
-
-    // if no linkedin tabs, just create one and assign it to tab id
-    if (feedTab === undefined) {
-      console.log("No pinned LinkedIn tab found, creating one...");
-      const tab = await chrome.tabs.create({
-        url: "https://www.linkedin.com/feed/",
-        active: false,
-        pinned: true,
-      });
-
-      // can use null assertion because chrome.tabs.create and chrome.tabs.query should return an id
-      tabId = tab.id!;
-      console.log("Pinned LinkedIn tab created.");
-    } else {
-      // can use null assertion because chrome.tabs.create and chrome.tabs.query should return an id
-      tabId = feedTab.id!;
-    }
-
-    return tabId;
-  }
-
-  return {
-    async startAutoCommenting(params) {
-      const tabId = await getPinnedTabId();
-      await sendMessageToContentScriptTab(tabId, {
-        action: "startNewCommentingFlow",
-        params,
-      });
-    },
-    async stopAutoCommenting() {
-      const tabId = await getPinnedTabId();
-      await sendMessageToContentScriptTab(tabId, {
-        action: "stopCommentingFlow",
-      });
-    },
-    async sendMessageToContentScriptTab(message) {
-      const pinnedTabId = await getPinnedTabId();
-      await sendMessageToContentScriptTab(pinnedTabId, message);
-    },
-  } satisfies ContentScriptFunctions;
-};
-
-export const contentScriptFunctions = createContentScriptFunctions();
-// TODO: implement this
-// https://t3.chat/chat/0a5858d7-182b-407e-8dba-ce4290e77063
-
-// TODO: some error here that it's not exposed properly so when backend calls it fails
-// expose functions to be called in linkedin-browser-session
-(window as any)._contentScriptFunctions = contentScriptFunctions;
-
-console.info("injected contentscripts");
 
 // (Audio logic moved to tab-audio.ts)
 
@@ -621,15 +541,21 @@ chrome.runtime.onMessage.addListener(
               blacklistAuthors: request.params.blacklistAuthors,
             });
             sendResponse({ success: true });
-            sendMessageToPuppeteerBackend({
-              success: true,
-              autoCommentRunId: request.params.autoCommentRunId,
+            chrome.runtime.sendMessage({
+              action: "autoCommentingCompleted",
+              payload: {
+                success: true,
+                autoCommentRunId: request.params.autoCommentRunId,
+              },
             });
           } catch (err) {
-            sendMessageToPuppeteerBackend({
-              success: false,
-              autoCommentRunId: request.params.autoCommentRunId,
-              error: err instanceof Error ? err.message : String(err),
+            await sendMessageToPuppeteerBackend({
+              action: "autoCommentingCompleted",
+              payload: {
+                success: false,
+                autoCommentRunId: request.params.autoCommentRunId,
+                error: err instanceof Error ? err.message : String(err),
+              },
             });
           }
         })();
@@ -655,7 +581,7 @@ chrome.runtime.onMessage.addListener(
       }
       case "sendMessageToPuppeteerBackend": {
         // access sendMessageToPuppeteerBackend which is exposed in setupBackendChannel()
-        (window as any)._sendMessageToPuppeteerBackend(request.payload);
+        sendMessageToPuppeteerBackend(request.payload);
       }
     }
   },
@@ -1490,4 +1416,4 @@ async function processAllPostsFeed(
 
 // (Audio stop moved to tab-audio.ts)
 
-console.log("EngageKit content script loaded 123123");
+console.log("EngageKit content script loaded");
