@@ -64,6 +64,7 @@ model LinkedInAccount {
   isRunning          Boolean               @default(false)
   AutoCommentConfig  AutoCommentConfig[]
   BlacklistedProfile BlacklistedProfile[]
+  AutoCommentRun     AutoCommentRun[]
 }
 
 enum LinkedInAccountStatus {
@@ -179,13 +180,16 @@ model UserComment {
 model AutoCommentRun {
   id        String        @id
   userId    String
+  accountId String
   liveUrl   String
-  user      User          @relation(fields: [userId], references: [id])
   startedAt DateTime      @default(now())
   endedAt   DateTime?
   error     String?
   status    String
   comments  UserComment[]
+
+  user    User            @relation(fields: [userId], references: [id])
+  account LinkedInAccount @relation(fields: [accountId], references: [id])
 }
 
 model UserBrowserState {

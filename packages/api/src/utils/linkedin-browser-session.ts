@@ -249,34 +249,38 @@ export class LinkedInBrowserSession {
       return;
     }
 
+    // expose _sendMessageToPuppeteerBackend to the page
     await page.exposeFunction(
       "_sendMessageToPuppeteerBackend",
       (data: BrowserBackendChannelMessage) => {
-        onBrowserMessage.bind(this)(data);
-
-        switch (data.action) {
-          case "stopAutoCommenting": {
-            // TODO: rely on caller to register these functions
-            /* await this.destroy(); */
-            break;
-          }
-          case "autoCommentingCompleted": {
-            // await this.destroy();
-            // if (process.env.NODE_ENV !== "test") {
-            //   await this.prisma.autoCommentRun.update({
-            //     where: { id: data.payload.autoCommentRunId },
-            //     data: {
-            //       status: data.payload.success ? "completed" : "errored",
-            //       error: data.payload.error,
-            //       endedAt: new Date(),
-            //     },
-            //   });
-            // }
-            break;
-          }
-        }
+        onBrowserMessage.call(this, data);
       },
     );
+
+    // listen to messages from contentscript and then call the exposed function
+    await page.evaluateOnNewDocument(() => {
+      window.addEventListener("message", (event) => {
+        if (event.source !== window) return;
+        if (
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+          event.data?.source !== "engagekit_sendMessageToPuppeteerBackend"
+        ) {
+          return;
+        }
+
+        // check if payload is empty
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        if (!event.data?.payload?.payload) {
+          return;
+        }
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+        (window as any)._sendMessageToPuppeteerBackend(
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+          event.data.payload.payload,
+        );
+      });
+    });
   }
 
   async bringToFront(page: "linkedin" | "engagekitExtension") {

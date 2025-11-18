@@ -216,6 +216,7 @@ export const autoCommentRouter = {
             // use ulid here because we wanna paginate by creation time + id
             id: ulid(),
             userId: ctx.user.id,
+            accountId: input.accountId,
             status: "pending",
             liveUrl: instance.liveUrl,
           },
@@ -332,7 +333,8 @@ export const autoCommentRouter = {
         where: { id: input.autoCommentRunId },
       });
 
-      if (autoCommentRun === null) {
+      // if autocomment is not made by user or not found, return error
+      if (autoCommentRun === null || autoCommentRun.userId !== ctx.user.id) {
         return {
           status: "error",
           code: 404,
@@ -347,7 +349,7 @@ export const autoCommentRouter = {
         } as const;
       }
 
-      const session = browserRegistry.get(ctx.user.id);
+      const session = browserRegistry.get(autoCommentRun.accountId);
 
       if (session === undefined) {
         return {
