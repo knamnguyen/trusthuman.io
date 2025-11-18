@@ -1,7 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
+
+import { toast } from "@sassy/ui/toast";
 
 import { BrowserLiveviewDialog } from "~/_components/liveview-dialog";
 import { useTRPC } from "~/trpc/react";
@@ -17,7 +23,28 @@ export function AutoCommentRunsList() {
     ),
   );
 
-  const [liveUrl, setLiveUrl] = useState<string | null>(null);
+  const [selectedRun, setSelectedRun] = useState<{
+    liveUrl: string;
+    id: string;
+  } | null>(null);
+
+  const queryClient = useQueryClient();
+
+  const stopSession = useMutation(
+    trpc.autocomment.stop.mutationOptions({
+      onSuccess(data) {
+        if (data.status === "error") {
+          toast.error(`Error stopping autocommenting: ${data.message}`);
+          return;
+        }
+
+        toast.success("Autocommenting stopped successfully");
+        queryClient.invalidateQueries({
+          queryKey: trpc.autocomment.runs.infiniteQueryKey(),
+        });
+      },
+    }),
+  );
 
   const runs = useMemo(() => {
     return query.data?.pages.flatMap((page) => page.data) ?? [];
@@ -26,11 +53,11 @@ export function AutoCommentRunsList() {
   return (
     <>
       <BrowserLiveviewDialog
-        open={liveUrl !== null}
+        open={selectedRun !== null}
         onClose={() => {
-          setLiveUrl(null);
+          setSelectedRun(null);
         }}
-        liveUrl={liveUrl}
+        liveUrl={selectedRun?.liveUrl ?? null}
       />
       <div className="space-y-4">
         {runs.length > 0 ? (
@@ -39,7 +66,12 @@ export function AutoCommentRunsList() {
               <h3>Run ID: {run.id}</h3>
               <p>Started At: {new Date(run.startedAt).toLocaleString()}</p>
               <p>Status: {run.status}</p>
-              <button>View session</button>
+              <button onClick={() => setSelectedRun(run)}>View session</button>
+              <button
+                onClick={() => stopSession.mutate({ autoCommentRunId: run.id })}
+              >
+                Stop session
+              </button>
             </div>
           ))
         ) : (
