@@ -1,0 +1,71 @@
+=== PRODUCTION TESTING CHECKLIST ===
+Date: November 2, 2024
+New Database: aws-1-us-east-1.pooler.supabase.com
+
+SMOKE TESTS TO PERFORM:
+------------------------
+
+Test 1: Application Loads
+☐ Open production URL
+☐ Homepage loads without errors
+☐ No errors in browser console
+☐ Page renders correctly
+
+Test 2: User Authentication (Clerk)
+☐ Try logging in with existing account
+☐ User authentication works
+☐ User profile loads correctly
+☐ No authentication errors
+
+Test 3: Read User Data
+☐ Navigate to dashboard/profile page
+☐ User data displays (name, email)
+☐ Access type/subscription shows correctly
+☐ Clerk user properties visible
+
+Test 4: Database Write Operation
+☐ Create a new ProfileImportRun (or any write operation)
+☐ Data saves successfully
+☐ Can retrieve saved data
+☐ No database errors
+
+Test 5: LinkedIn Profile Scraping
+☐ Trigger LinkedIn import (if safe to test)
+☐ Job starts successfully
+☐ Profiles save to database
+☐ Import status updates correctly
+
+Test 6: Vercel Logs Check
+☐ Open Vercel deployment logs
+☐ No database connection errors
+☐ No authentication errors
+☐ No unusual error spikes
+☐ Successful database queries visible
+
+PERFORMANCE CHECK:
+☐ Page load times normal
+☐ Database queries responsive
+☐ No timeout errors
+
+ISSUES FOUND:
+(Document any problems here)
+
+
+SIGN-OFF:
+☐ All tests passed
+☐ Application fully functional
+☐ Ready for extended monitoring
+
+Tested By: _______________
+Date/Time: _______________
+Status: PASS / FAIL / ROLLBACK
+
+
+
+
+
+
+
+
+
+

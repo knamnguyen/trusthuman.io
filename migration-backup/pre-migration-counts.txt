@@ -1,0 +1,26 @@
+=== PRE-MIGRATION DATABASE STATE ===
+Date: November 2, 2024
+Time: 20:54
+
+OLD DATABASE (Source - Production):
+Host: aws-0-us-east-2.pooler.supabase.com
+User: postgres.wvfegsoyfgehqqmlxaug
+
+ROW COUNTS:
+User table: 331 rows
+ProfileImportRun table: 40 rows
+LinkedInProfile table: 1176 rows
+
+TOTAL RECORDS: 1547 rows
+
+These counts will be verified against the new database after migration.
+
+
+
+
+
+
+
+
+
+

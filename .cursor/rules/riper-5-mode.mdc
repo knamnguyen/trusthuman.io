@@ -17,6 +17,28 @@ YOU MUST BEGIN EVERY SINGLE RESPONSE WITH YOUR CURRENT MODE IN BRACKETS. NO EXCE
 
 IMPORTANT: FOR EVERY RESPONSE, ONLY RESPOND IN ONE MODE. DO NOT MOVE TO THE NEXT MODE OR INCLUDE MANY MODES IN ONE PROMPT/RESPONSE. ONLY FOCUS ON 1 PHASE AT A TIME. THE ONLY EXCEPTION IS WHEN YOU ARE IN [FAST MODE] WHICH ALLOWS YOU TO GO THROUGH ALL PHASE AT ONCE
 
+AUTO-DETECTION AND DEFAULT MODE
+
+**DEFAULT BEHAVIOR: Every conversation starts in RESEARCH mode**
+
+When a new conversation begins:
+
+1. Auto-detect user intent (see 005-auto-detection-agent.mdc for patterns)
+2. Default to [MODE: RESEARCH] unless explicit mode command given
+3. Check for `.cursor/context/all-context.md` - suggest generation if missing
+4. Classify request: Question vs Feature vs Trivial Fix
+5. Auto-trigger appropriate workflow based on classification
+
+**Auto-Trigger Rules** (from 005-auto-detection-agent.mdc):
+
+- Feature requests → Auto-suggest plan generation after RESEARCH
+- Questions → Stay in RESEARCH, answer directly
+- Trivial fixes → Offer direct solution, skip plan
+- Missing context → Suggest `@generate-context.md`
+- Existing plan file → Auto-resume from last phase
+
+**Manual Override**: Explicit commands (`@generate-plan.md`, `ENTER [MODE] MODE`) always take precedence over auto-detection.
+
 THE RIPER-5 MODES
 
 MODE 1: RESEARCH
@@ -29,6 +51,19 @@ Forbidden: Suggestions, implementations, planning, or any hint of action
 Requirement: You may ONLY seek to understand what exists, not what could be
 Duration: Until I explicitly signal to move to next mode
 Output Format: Begin with [MODE: RESEARCH], then ONLY observations and questions
+
+**CONTEXT FILE VALIDATION**
+
+During RESEARCH (or INNOVATE), reference `.cursor/context/all-context.md` to validate understanding:
+
+- Environment variables match documented requirements
+- Import paths use documented aliases (`~/*` for Next app)
+- Existing services follow domain co-location principle
+- TypeScript export maps are current
+- tRPC procedures align with API surface documentation
+- Product name and branding are consistent
+
+If context file appears outdated or contradicts codebase, flag for regeneration.
 
 PHASE-LOCKED ACTIVITY: Todo creation belongs EXCLUSIVELY to PLAN mode
 PHASE-LOCKED ACTIVITY: File modifications belong EXCLUSIVELY to EXECUTE mode
@@ -84,17 +119,88 @@ Permitted: Detailed plans with exact file paths, function names, and changes
 Forbidden: Any implementation or code writing, even "example code"
 Requirement: Plan must be comprehensive enough that no creative decisions are needed during implementation
 Mandatory Final Step: Convert the entire plan into a numbered, sequential CHECKLIST with each atomic action as a separate item
-Checklist Format:
-Copy
+**Plan Artifact Exception:** After the user confirms the drafted plan content, the assistant may create or update `.cursor/plans/[feature]_PLAN_[dd-mm-yy].md` while remaining in PLAN mode. This exception applies only to plan files; no source code or other repository files may be modified while still in PLAN mode.
 
-IMPLEMENTATION CHECKLIST:
+**PLANNING WORKFLOW INTEGRATION**
 
-1. [Specific action 1]
-2. [Specific action 2]
+PLAN mode synthesizes findings from RESEARCH and INNOVATE into actionable specifications:
+
+**Step 1: Check for Existing Plan**
+
+- Look for `[feature]_PLAN_*.md` pattern in `.cursor/plans/` directory (date-stamped plans)
+- If exists: proceed to Step 2 (Update)
+- If missing and task is non-trivial: proceed to Step 3 (Create)
+- If missing and task is simple: proceed to Step 4 (Inline)
+
+**Step 2: Update Existing Plan (when `[feature]_PLAN_[dd-mm-yy].md` exists)**
+
+- Integrate RESEARCH findings:
+  - Validate against `.cursor/context/all-context.md` (env vars, aliases, services, API surface)
+  - Note existing patterns, components, and conventions discovered
+  - Flag any drift between plan assumptions and current codebase
+- Incorporate INNOVATE refinements:
+  - Update architecture decisions if better approaches identified
+  - Revise implementation strategy based on technical discoveries
+  - Adjust complexity classification if scope changed
+- Update plan sections:
+  - Refine Implementation Checklist with concrete file paths and function names
+  - Update Dependencies if new ones discovered
+  - Revise Acceptance Criteria based on technical constraints
+  - For COMPLEX: update Phase status (✅/🚧/⏳) and "What's Functional Now"
+- Run Change Management section if scope or approach changed significantly
+
+**Step 3: Create New Plan (no existing plan found)**
+
+- For non-trivial features, recommend user run `@generate-plan.md` first (generates date-stamped file in `.cursor/plans/`), OR
+- Create `[feature]_PLAN_[dd-mm-yy].md` inline using RESEARCH/INNOVATE findings:
+  - Get current date: run `date +%d-%m-%y` command
+  - RESEARCH inputs: codebase context, existing patterns, technical constraints
+  - INNOVATE inputs: chosen approach, architecture decisions, trade-offs
+  - Classify as SIMPLE (one-session, 8–15 steps) or COMPLEX (multi-phase, RFCs)
+  - Reference `.cursor/context/example-complex-prd.md` for COMPLEX depth calibration
+  - Include: Overview, Goals, Scope, Implementation Checklist, Acceptance Criteria
+  - Create `.cursor/plans/` directory if it doesn't exist
+  - Save to `.cursor/plans/[feature]_PLAN_[dd-mm-yy].md` for persistence
+
+**Step 4: Inline Plan (quick fixes/small changes)**
+
+- Create ad-hoc checklist in response (no file created)
+- Use for: single-file changes, config updates, minor refactors
+
+**Benefits of formal plans:**
+
+- Persistent context across sessions (`[feature]_PLAN_[dd-mm-yy].md` reattachable)
+- RESEARCH/INNOVATE insights preserved in single artifact
+- Acceptance criteria and success metrics defined upfront
+- Change management process for scope drift
+- Integration with Cursor Plan mode for checklist execution
+- Date stamping enables versioning and tracking plan evolution
+
+**Checklist Output:**
+
+- If `[feature]_PLAN_[dd-mm-yy].md` exists (Step 2):
+  - Extract "Implementation Checklist" section from the plan file
+  - Display the actual checklist items
+  - Any refinements made update the checklist in the plan file
+- If creating new plan (Step 3):
+  - Generate checklist and include in `[feature]_PLAN_[dd-mm-yy].md`
+  - Format as numbered list with atomic actions
+- If inline plan (Step 4):
+  - Display checklist in response only (not persisted to file)
+
+Example format when displaying checklist:
+
+```
+IMPLEMENTATION CHECKLIST (from [feature]_PLAN_[dd-mm-yy].md):
+
+1. [Actual action from plan file]
+2. [Actual action from plan file]
    ...
-   n. [Final action]
-   Duration: Until I explicitly approve plan and signal to move to next mode
-   Output Format: Begin with [MODE: PLAN], then ONLY specifications and implementation details
+   n. [Final action from plan file]
+```
+
+Duration: Until I explicitly approve plan and signal to move to next mode
+Output Format: Begin with [MODE: PLAN], then ONLY specifications and implementation details
 
 MODE 4: EXECUTE
 
@@ -132,19 +238,64 @@ Before entering EXECUTE mode, implement mandatory decision gates:
 
 Output Format: Begin with [MODE: EXECUTE], then ONLY implementation matching the plan
 
-MODE 5: REVIEW
+**SELF-REVIEW AFTER EXECUTION**
 
-[MODE: REVIEW]
+- After completing implementation, perform a line-by-line verification against the approved plan.
+- Explicitly flag any deviation, no matter how minor, with exact file path and brief rationale.
+- Summarize with one of:
+  - ":white_check_mark: Implementation matches plan"
+  - ":cross_mark: Deviations detected" (list concise bullets)
+- If material deviations require changes to scope/approach, STOP and proceed to UPDATE PROCESS to reconcile plan and rules before continuing.
 
-Purpose: Ruthlessly validate implementation against the plan
-Permitted: Line-by-line comparison between plan and implementation
-Required: EXPLICITLY FLAG ANY DEVIATION, no matter how minor
-Deviation Format: ":warning: DEVIATION DETECTED: [description of exact deviation]"
-Reporting: Must report whether implementation is IDENTICAL to plan or NOT
-Conclusion Format: ":white_check_mark: IMPLEMENTATION MATCHES PLAN EXACTLY" or ":cross_mark: IMPLEMENTATION DEVIATES FROM PLAN"
-Output Format: Begin with [MODE: REVIEW], then systematic comparison and explicit verdict
+### EXECUTION CONTINUATION FROM EXISTING PLANS
 
-MODE 6: FAST
+**When to Fast-Track to EXECUTE Mode:**
+
+If ALL of the following conditions are met:
+
+1. User says "continue [plan-name]" or references existing plan file
+2. Comprehensive plan exists with:
+   - Clear phase breakdown with status markers (✅/🚧/⏳)
+   - Detailed implementation checklist with specific file paths
+   - RFCs or acceptance criteria defined
+   - Sample data/fixtures available (if applicable)
+3. Current phase has clear, unambiguous specifications
+4. No architecture decisions or approach selection needed
+
+**Fast-Track Protocol:**
+
+1. RESEARCH mode: Read plan, identify current phase, examine relevant files
+2. Offer direct transition: "Should I proceed with implementation? Reply 'ENTER EXECUTE MODE'"
+3. Skip INNOVATE and PLAN modes (specifications already finalized)
+4. Proceed directly to EXECUTE upon user approval
+
+**Example:**
+
+```
+User: "continue @feature_PLAN_07-11-25.md"
+
+AI Response:
+[MODE: RESEARCH]
+
+Current Status: Phase 2 complete, Phase 3 next (implement Facebook parsing)
+
+Phase 3 has clear specs:
+- Sample data: sample-response-format/facebook.json
+- Field paths: likes, num_comments, num_shares
+- Acceptance: accurate counts or zero fallbacks
+
+Should I proceed with implementation? Reply "ENTER EXECUTE MODE"
+```
+
+**When NOT to Fast-Track:**
+
+- Plan has ambiguities or missing specifications
+- Technical approach unclear or needs validation
+- User asks exploratory questions ("how should we...", "what's the best way...")
+- Phase requires architectural decisions
+- No existing plan or plan is outdated
+
+MODE 5: FAST
 
 [MODE: FAST]
 
@@ -153,8 +304,10 @@ Permitted: Complete end-to-end solution delivery in one response
 Required: Must still follow structured thinking process internally, you must include in your response [RESEARCH] + [INNOVATE] + [PLAN] + [EXECUTE] step by step, don't jump or skip any step and include everything in your response.
 Activation: ONLY enters this mode with explicit "ENTER FAST MODE" command
 Output Format: Begin with [MODE: FAST], then deliver complete solution
+- FAST mode must pause after the planning phase; do not perform EXECUTE tasks until the user explicitly authorizes implementation (e.g., "ENTER EXECUTE MODE").
+- After presenting the combined RESEARCH/INNOVATE/PLAN summary, wait for user approval before moving forward with execution.
 
-MODE 7: UPDATE PROCESS
+MODE 6: UPDATE PROCESS
 
 [MODE: UPDATE PROCESS]
 
@@ -184,6 +337,51 @@ Phase 2: Improvement Generation
   Text to add: [Specific content]
   Location: [Where in file - section name or append location]
 
+**Critical: Always Include Plan & Context Updates**
+
+Phase 2 MUST include these as numbered improvements when applicable:
+
+**Plan File Updates** (if `[feature]_PLAN_*.md` exists - note to reference the correct plan as previous or other irrelevant plans mist exist in the plan folder):
+
+- Number it as an improvement (e.g., "Improvement 5: Update Plan File")
+- Specify EXACTLY what will be updated:
+  - Mark Phase X as complete (✅)
+  - Update "What's Functional Now" with [specific additions]
+  - Document deviations: [list specific deviations]
+  - Add to lessons learned: [specific lessons]
+- Include the actual text changes to be made
+
+**Context File Updates** (if architectural/API/convention changes made):
+
+- Number it as an improvement (e.g., "Improvement 6: Update Context File")
+- Specify EXACTLY which sections will be updated:
+  - API Surface: [new endpoints to add]
+  - Monorepo Layout: [new packages/features to document]
+  - Tech Stack: [version changes]
+  - Conventions: [new patterns established]
+  - Environment Variables: [new vars added]
+- Include the actual text changes to be made
+
+**Example Format**:
+
+```
+5. Plan File Update - social-referral-extension_PLAN_06-11-25.md
+   Summary: Mark Phase 2 complete and document Threads implementation
+   Changes:
+   - Update Phase 2 status: ⏳ → ✅
+   - "What's Functional Now" section: Add "Threads keyword verification working end-to-end via unified CLI script"
+   - Document deviation: Apify input format required nested structure, not flat array
+
+6. Context File Update - all-context.md
+   Summary: Document Threads support and multi-platform detection
+   Changes:
+   - API Surface section: Update social.verifyTweetKeywords → social.verifyKeywords with platform auto-detection
+   - Monorepo Layout section: Update @sassy/social-referral description to include "X/Threads keyword verification (Facebook/LinkedIn planned)"
+   - Tech Stack table: Confirm Apify version ^2.10.x
+```
+
+**Rationale**: Users must approve ALL changes before implementation. Hiding plan/context updates in Phase 4 execution bypasses user review.
+
 Phase 3: User Approval Collection
 
 - Present all numbered improvements in list format
@@ -195,7 +393,44 @@ For each approved improvement:
 
 - Memory Storage: Use add_to_memory with context summary
 - Rule File Update: Read target file, check for overlap, append to relevant section or integrate contextually
+- Plan Update: Update the current feature's plan file (`[feature or system's name]_PLAN_[dd-mm-yy].md`) to reflect approved changes and deviations identified during execution/self-review.
+- Context Update: Update `.cursor/context/all-context.md` if conventions, stack choices, or cross-cutting process changes were introduced or clarified.
 - Validation: Ensure cursor rule file format compliance and no contradictions
+- Completed Plan Archiving: If every phase/status indicator in the plan is ✅ and no outstanding items remain, move the plan file from `.cursor/plans/` to `.cursor/plans/completed/` (create the `completed` directory if it does not exist). After moving, rename it to `completed_[feature or system's name]_PLAN_[dd-mm-yy].md` and mention the new path in your summary so future sessions can locate the archive.
+
+for example
+
+```
+mv /Users/knamnguyen/Documents/0-Programming/gifavatar/.cursor/plans/social-referral-extension_PLAN_06-11-25.md /Users/knamnguyen/Documents/0-Programming/gifavatar/.cursor/plans/completed/completed_social-referral-extension_PLAN_06-11-25.md
+```
+
+**Plan File Archiving Pattern - CRITICAL:**
+
+When archiving completed plans, follow this sequence to prevent duplicates:
+
+1. **Update Status First:** Make all status changes (✅ markers, checklist updates) while file is in original location
+2. **Accept Changes:** Wait for user to accept file changes before archiving
+3. **Create Archive Directory:** `mkdir -p .cursor/plans/completed`
+4. **Move Operation:** Use `mv` command to move (not copy) file
+5. **Verify & Cleanup:** After move, explicitly verify source file is gone and delete if it remains
+
+**Implementation sequence:**
+
+```bash
+# 1. All search_replace operations to update plan status
+# 2. Wait for user acceptance
+# 3. Create archive directory
+mkdir -p .cursor/plans/completed
+
+# 4. Move file with rename
+mv .cursor/plans/feature_PLAN_dd-mm-yy.md .cursor/plans/completed/completed_feature_PLAN_dd-mm-yy.md
+
+# 5. Explicit cleanup verification
+# If source file still exists (Cursor IDE may re-save with pending edits):
+delete_file .cursor/plans/feature_PLAN_dd-mm-yy.md
+```
+
+**Rationale:** Cursor IDE may re-save files with pending edits after `mv` command executes, causing original to remain. Explicit `delete_file` ensures no duplicates remain in source directory.
 
 Phase 5: Final Review
 
@@ -224,7 +459,7 @@ Output Format: Begin with [MODE: UPDATE PROCESS], then systematic analysis and i
 
 [MODE: PLAN]
 
-- FORBIDDEN: Any file creation, editing, or writing
+- FORBIDDEN: Any file creation, editing, or writing **except for the Plan Artifact Exception described above**
 - FORBIDDEN: Any code implementation
 - PERMITTED: Detailed specifications and implementation plans only
 
@@ -315,7 +550,6 @@ Only transition modes when I explicitly signal with:
 "ENTER INNOVATE MODE"
 "ENTER PLAN MODE"
 "ENTER EXECUTE MODE"
-"ENTER REVIEW MODE"
 "ENTER FAST MODE"
 "ENTER UPDATE PROCESS MODE"
 
@@ -325,8 +559,7 @@ SIMPLIFIED COMMAND:
 • From INNOVATE → ARCHITECTURE VALIDATION (when uncertainty indicators present) OR PLAN (when approach is clear)
 • From ARCHITECTURE VALIDATION → PLAN (user must approve recommended approach)
 • From PLAN → EXECUTE (user must confirm implementation readiness)
-• From EXECUTE → REVIEW
-• From REVIEW → UPDATE PROCESS
+• From EXECUTE → UPDATE PROCESS
 • From UPDATE PROCESS → RESEARCH (cycles back to beginning)
 • From FAST → RESEARCH
 
