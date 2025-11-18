@@ -118,6 +118,9 @@ export type BrowserBackendChannelMessage =
         success: boolean;
         error?: string;
       };
+    }
+  | {
+      action: "ready";
     };
 
 export interface LinkedInBrowserSessionParams {
@@ -145,6 +148,8 @@ export class LinkedInBrowserSession {
   public pageInView: "linkedin" | "engagekitExtension" = "linkedin";
   private controller = new AbortController();
   public signal = this.controller.signal;
+  private readyResolver = Promise.withResolvers<void>();
+  public ready = this.readyResolver.promise;
 
   private extensionWorker: WebWorker | null = null;
   constructor(
@@ -244,16 +249,24 @@ export class LinkedInBrowserSession {
   }
 
   private async setupBackendChannel(page: Page) {
-    const onBrowserMessage = this.opts.onBrowserMessage;
-    if (onBrowserMessage === undefined) {
-      return;
-    }
+    const onBrowserMessage = (message: BrowserBackendChannelMessage) => {
+      if (this.opts.onBrowserMessage !== undefined) {
+        this.opts.onBrowserMessage.call(this, message);
+      }
+
+      switch (message.action) {
+        case "ready": {
+          this.readyResolver.resolve();
+          break;
+        }
+      }
+    };
 
     // expose _sendMessageToPuppeteerBackend to the page
     await page.exposeFunction(
       "_sendMessageToPuppeteerBackend",
       (data: BrowserBackendChannelMessage) => {
-        onBrowserMessage.call(this, data);
+        onBrowserMessage(data);
       },
     );
 
@@ -346,6 +359,7 @@ export class LinkedInBrowserSession {
     blacklistAuthors?: string[];
   }) {
     await this.bringToFront("linkedin");
+    await this.ready;
 
     const worker = await this.getExtensionWorker();
 

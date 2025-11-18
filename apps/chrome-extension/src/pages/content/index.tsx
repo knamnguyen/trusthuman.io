@@ -481,10 +481,32 @@ function showStartButton() {
 async function sendMessageToPuppeteerBackend(
   message: BrowserBackendChannelMessage,
 ) {
-  await chrome.runtime.sendMessage({
-    action: "sendMessageToPuppeteerBackend",
+  window.postMessage({
+    source: "engagekit_sendMessageToPuppeteerBackend",
     payload: message,
   });
+}
+
+let backgroundScriptReady = false;
+
+async function setupHandshakeWithBackgroundScript() {
+  while (true) {
+    const response = await chrome.runtime.sendMessage({
+      action: "engagekit_contentscript_handshake",
+    });
+
+    if (response && response.status === "ok") {
+      console.log("🤝 Handshake with background script successful");
+      backgroundScriptReady = true;
+      await sendMessageToPuppeteerBackend({
+        action: "ready",
+      });
+      break;
+    }
+
+    console.log("⏳ Handshake failed, retrying in 1 second...");
+    await wait(1000);
+  }
 }
 
 // (Audio logic moved to tab-audio.ts)
@@ -495,6 +517,15 @@ chrome.runtime.onMessage.addListener(
     console.log("Content script received message:", request);
 
     switch (request.action) {
+      case "sendMessageToPuppeteerBackend": {
+        window.postMessage({
+          source: "engagekit_sendMessageToPuppeteerBackend",
+          payload: request.payload,
+        });
+        sendResponse({ success: true });
+        break;
+      }
+
       case "showStartButton": {
         console.log("📱 Popup requested to show start button");
         showStartButton();
@@ -1417,3 +1448,5 @@ async function processAllPostsFeed(
 // (Audio stop moved to tab-audio.ts)
 
 console.log("EngageKit content script loaded");
+
+void setupHandshakeWithBackgroundScript();

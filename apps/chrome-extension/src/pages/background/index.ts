@@ -431,10 +431,23 @@ export const backgroundScriptFunctions = createBackgroundScriptFunctions();
 // expose functions to be called in linkedin-browser-session
 (globalThis as any)._backgroundScriptFunctions = backgroundScriptFunctions;
 
+console.info("injected background script");
+
+let contentScriptTabId: number | null = null;
+
 // Message listener with comprehensive authentication service
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   // Handle authentication requests directly in background
   switch (request.action) {
+    case "engagekit_contentscript_handshake": {
+      if (sender.tab?.id) {
+        sendResponse({ status: "ok" });
+        contentScriptTabId = sender.tab?.id ?? null;
+      } else {
+        sendResponse({ status: "error", message: "No tab ID in sender" });
+      }
+      return true;
+    }
     case "getFreshToken":
       console.log("Background: Received getFreshToken request");
       authService
@@ -655,10 +668,27 @@ console.log(
   "Background: Auth monitoring and service worker lifecycle handlers initialized",
 );
 
-const sendMessageToPuppeteerBackend = (window as any)
-  ._sendMessageToPuppeteerBackend as (
-  data: BrowserBackendChannelMessage,
-) => void;
+function sendMessageToPuppeteerBackend(message: BrowserBackendChannelMessage) {
+  if (contentScriptTabId === null) {
+    console.warn(
+      `No content script tab ID available to send message to Puppeteer backend`,
+    );
+    return;
+  }
+
+  chrome.tabs.sendMessage(
+    contentScriptTabId,
+    {
+      action: "sendMessageToPuppeteerBackend",
+      payload: message,
+    },
+    () => {
+      console.log(
+        `Sent message to Puppeteer backend via content script in tab ${tab.id}`,
+      );
+    },
+  );
+}
 
 export type ContentScriptMessage =
   | {
@@ -699,4 +729,8 @@ export type ContentScriptMessage =
   | {
       action: "sendMessageToPuppeteerBackend";
       payload: BrowserBackendChannelMessage;
+    }
+  | {
+      action: "relay";
+      payload: any;
     };
