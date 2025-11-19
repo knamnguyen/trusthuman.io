@@ -729,8 +729,4 @@ export type ContentScriptMessage =
   | {
       action: "sendMessageToPuppeteerBackend";
       payload: BrowserBackendChannelMessage;
-    }
-  | {
-      action: "relay";
-      payload: any;
     };
