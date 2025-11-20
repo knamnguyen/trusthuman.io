@@ -72,6 +72,10 @@ export default function RootLayout(props: { children: React.ReactNode }) {
         data-endorsely="2fb18c3c-7198-4c86-b16b-714f8e177932"
         strategy="afterInteractive"
       />
+      {/* tracking for leads generation from visits */}
+      <Script>
+        {`!function(key) {if (window.reb2b) return;window.reb2b = {loaded: true};var s = document.createElement("script");s.async = true;s.src = "https://ddwl4m2hdecbv.cloudfront.net/b/" + key + "/" + key + ".js.gz";document.getElementsByTagName("script")[0].parentNode.insertBefore(s, document.getElementsByTagName("script")[0]);}("9NMMZHR79ZNW");`}
+      </Script>
       <body
         className={cn(
           "bg-background text-foreground min-h-screen font-sans antialiased",
