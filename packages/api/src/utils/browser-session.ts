@@ -413,29 +413,33 @@ export class BrowserSession {
     });
 
     console.info("running start autocomementing");
-    const result = await this.pages.linkedin.evaluate((params) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (window as any)
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        .postMessage({
-          source: "engagekit_page_to_contentscript",
-          payload: {
-            action: "setAssumedUserToken",
-            token: assumedUserToken,
-          },
-        });
+    const result = await this.pages.linkedin.evaluate(
+      (params, assumedUserToken) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (window as any)
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+          .postMessage({
+            source: "engagekit_page_to_contentscript",
+            payload: {
+              action: "setAssumedUserToken",
+              token: assumedUserToken,
+            },
+          });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (window as any)
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        .postMessage({
-          source: "engagekit_page_to_contentscript",
-          payload: {
-            action: "startNewCommentingFlow",
-            params,
-          },
-        });
-    }, params);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (window as any)
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+          .postMessage({
+            source: "engagekit_page_to_contentscript",
+            payload: {
+              action: "startNewCommentingFlow",
+              params,
+            },
+          });
+      },
+      params,
+      assumedUserToken,
+    );
     console.info("ran start autocomementing");
 
     return {
