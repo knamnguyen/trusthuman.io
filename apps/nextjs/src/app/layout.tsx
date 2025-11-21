@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import Script from "next/script";
 import { ClerkProvider } from "@clerk/nextjs";
-import { Analytics } from "@vercel/analytics/next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
+import { SpeedInsights as VercelSpeedInsights } from "@vercel/speed-insights/next";
 
 import { ThemeProvider } from "@sassy/ui/theme";
 import { Toaster } from "@sassy/ui/toast";
@@ -72,9 +72,26 @@ export default function RootLayout(props: { children: React.ReactNode }) {
         data-endorsely="2fb18c3c-7198-4c86-b16b-714f8e177932"
         strategy="afterInteractive"
       />
-      {/* tracking for leads generation from visits */}
+      {/* tracking for leads generation from visits rb2b */}
       <Script>
         {`!function(key) {if (window.reb2b) return;window.reb2b = {loaded: true};var s = document.createElement("script");s.async = true;s.src = "https://ddwl4m2hdecbv.cloudfront.net/b/" + key + "/" + key + ".js.gz";document.getElementsByTagName("script")[0].parentNode.insertBefore(s, document.getElementsByTagName("script")[0]);}("9NMMZHR79ZNW");`}
+      </Script>
+      {/* tracking for google analytics */}
+      {/* Load Google Analytics script asynchronously */}
+      <Script
+        src="https://www.googletagmanager.com/gtag/js?id=G-6V2N8LZDBF"
+        strategy="afterInteractive"
+      />
+      {/* Initialize and configure GA4 */}
+      <Script id="google-analytics" strategy="afterInteractive">
+        {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-6V2N8LZDBF', {
+              page_path: window.location.pathname,
+            });
+          `}
       </Script>
       <body
         className={cn(
@@ -86,8 +103,8 @@ export default function RootLayout(props: { children: React.ReactNode }) {
           <ThemeProvider attribute="class" defaultTheme="light">
             <TRPCReactProvider>{props.children}</TRPCReactProvider>
             <Toaster />
-            {env.VERCEL_ENV === "production" && <Analytics />}
-            {env.VERCEL_ENV === "production" && <SpeedInsights />}
+            {env.VERCEL_ENV === "production" && <VercelAnalytics />}
+            {env.VERCEL_ENV === "production" && <VercelSpeedInsights />}
           </ThemeProvider>
         </ClerkProvider>
       </body>
