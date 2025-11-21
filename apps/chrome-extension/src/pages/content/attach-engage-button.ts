@@ -3,14 +3,13 @@
 // populates the comment editor. Clicking again regenerates/replaces the text.
 // important: at this moment, there is no limit client or server side to limit how many comments the user can generate
 
-import { getStandaloneTRPCClient } from "@src/trpc/react";
-
 import {
   hasCommentedOnPostHash,
   saveCommentedPostHash,
 } from "./check-duplicate/check-duplicate-commented-post-hash";
 import { saveCommentedPostUrn } from "./check-duplicate/check-duplicate-commented-post-urns";
 import normalizeAndHashContent from "./check-duplicate/normalize-and-hash-content";
+import { contentScriptContext } from "./context";
 import extractAuthorInfo from "./extract-author-info";
 import loadAndExtractComments from "./extract-post-comments";
 import extractPostContent from "./extract-post-content";
@@ -360,15 +359,17 @@ function addEngageButton(form: HTMLFormElement): void {
                     promises.push(saveCommentedPostHash([hashToSave]));
 
                   promises.push(
-                    getStandaloneTRPCClient().account.saveComments.mutate(
-                      urnsToSave.map((urn, index) => ({
-                        urn,
-                        hash: hashToSave ?? null,
-                        comment: generated,
-                        postContentHtml: extractedPostContent.html,
-                        isDuplicate: index !== 0,
-                      })),
-                    ),
+                    contentScriptContext
+                      .getTrpcClient()
+                      .autocomment.saveComments.mutate(
+                        urnsToSave.map((urn, index) => ({
+                          urn,
+                          hash: hashToSave ?? null,
+                          comment: generated,
+                          postContentHtml: extractedPostContent.html,
+                          isDuplicate: index !== 0,
+                        })),
+                      ),
                   );
                   await Promise.all(promises);
                 } catch {}

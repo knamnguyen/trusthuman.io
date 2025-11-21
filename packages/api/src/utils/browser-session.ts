@@ -103,6 +103,7 @@ export class BrowserSession {
     linkedin: Page;
     engagekitExtension: Page;
   };
+  private engagekitBuildExtensionId = "ofpificfhbopdfmlcmnmhhhmdbepgfbh";
   public pageInView: "linkedin" | "engagekitExtension" = "linkedin";
   private controller = new AbortController();
   public signal = this.controller.signal;
@@ -151,7 +152,7 @@ export class BrowserSession {
 
     const filepath = path.join(
       __dirname,
-      "../../../../apps/chrome-extension/dist_chrome",
+      "../../../../apps/chrome-extension/dist_hyperbrowser",
     );
     console.info({ filepath });
 
@@ -212,21 +213,21 @@ export class BrowserSession {
         // // but somehow this is getting the wrong id, maybe manifest.dev.json's key is wrong idk
         // console.info({ extensionId });
         await page.goto(
-          `chrome-extension://ofpificfhbopdfmlcmnmhhhmdbepgfbh/src/pages/popup/index.html?userJwt=${accountJwt}`,
+          `chrome-extension://${this.engagekitBuildExtensionId}/src/pages/popup/index.html?userJwt=${accountJwt}`,
           {
             waitUntil: "networkidle0",
           },
         );
 
-        await this.setupBackendChannel(page);
-
         return page;
       });
 
     const linkedinPagePromise = this.browser.newPage().then(async (page) => {
+      await this.setupBackendChannel(page);
       await page.goto("https://www.linkedin.com", {
         timeout: 0,
       });
+
       return page;
     });
 
@@ -234,6 +235,8 @@ export class BrowserSession {
       linkedinPagePromise,
       engagekitExtensionPagePromise,
     ]);
+
+    await linkedin.bringToFront();
 
     this.pages = {
       linkedin,
@@ -268,6 +271,7 @@ export class BrowserSession {
     await page.exposeFunction(
       "_sendMessageToPuppeteerBackend",
       (data: BrowserBackendChannelMessage) => {
+        console.info({ data });
         onBrowserMessage(data);
       },
     );
@@ -285,14 +289,14 @@ export class BrowserSession {
 
         // check if payload is empty
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        if (!event.data?.payload?.payload) {
+        if (!event.data?.payload) {
           return;
         }
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
         (window as any)._sendMessageToPuppeteerBackend(
           // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-          event.data.payload.payload,
+          event.data.payload,
         );
       });
     });
@@ -306,14 +310,55 @@ export class BrowserSession {
     await this.pages[page].bringToFront();
   }
 
+  async waitForSigninSuccess(signal: AbortSignal) {
+    // just keep polling until we hit the feed page or an error
+    // if we hit the feed page, means signin has succeeded
+    // 5 minute timeout
+    const time = Date.now();
+    while (time + 5 * 60 * 1000 > Date.now() || signal.aborted === false) {
+      try {
+        const url = this.pages.linkedin.url();
+        console.info("Polling LinkedIn URL:", url);
+        if (url.includes("linkedin.com/feed")) {
+          return true;
+        }
+
+        await new Promise((resolve, reject) => {
+          const timeoutId = setTimeout(resolve, 2000);
+          signal.addEventListener("abort", () => {
+            clearTimeout(timeoutId);
+            reject(new Error("Aborted"));
+          });
+        });
+      } catch (err) {
+        console.error("Error polling LinkedIn URL:", err);
+        return false;
+      }
+    }
+
+    throw new Error("Timeout waiting for signin success");
+  }
+
   async getExtensionWorker() {
     if (this.extensionWorker !== null) {
       return this.extensionWorker;
     }
 
-    const target = await this.browser.waitForTarget(
-      (target) => target.type() === TargetType.SERVICE_WORKER,
-    );
+    const target = await this.browser.waitForTarget((target) => {
+      if (target.type() !== TargetType.SERVICE_WORKER) {
+        return false;
+      }
+      const url = target.url();
+      console.info(
+        url,
+        url.includes(this.engagekitBuildExtensionId) &&
+          url.includes("service-worker-loader.js"),
+      );
+      return (
+        url.includes(this.engagekitBuildExtensionId) &&
+        url.includes("service-worker-loader.js")
+      );
+    });
 
     let attempts = 0;
 
@@ -331,7 +376,7 @@ export class BrowserSession {
         attempts++;
 
         if (attempts > 5) {
-          throw err;
+          return null;
         }
 
         await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -363,26 +408,35 @@ export class BrowserSession {
     await this.bringToFront("linkedin");
     await this.ready;
 
-    const worker = await this.getExtensionWorker();
+    const assumedUserToken = await assumedAccountJwt.encode({
+      accountId: this.opts.accountId,
+    });
 
-    // test for target exists to verify the extension is loaded?
-    if (worker === null) {
-      return {
-        status: "error",
-        error: "extension target not found",
-      } as const;
-    }
-
-    const result = await worker.evaluate(async (params) => {
-      const fn =
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (globalThis as any)
-        // prettier-ignore
+    console.info("running start autocomementing");
+    const result = await this.pages.linkedin.evaluate((params) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (window as any)
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-          ._backgroundScriptFunctions as BrowserFunctions;
+        .postMessage({
+          source: "engagekit_page_to_contentscript",
+          payload: {
+            action: "setAssumedUserToken",
+            token: assumedUserToken,
+          },
+        });
 
-      return await fn.startAutoCommenting(params);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (window as any)
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        .postMessage({
+          source: "engagekit_page_to_contentscript",
+          payload: {
+            action: "startNewCommentingFlow",
+            params,
+          },
+        });
     }, params);
+    console.info("ran start autocomementing");
 
     return {
       status: "success",
@@ -391,22 +445,16 @@ export class BrowserSession {
   }
 
   async stopAutoCommenting() {
-    const worker = await this.getExtensionWorker();
-    if (worker === null) {
-      return {
-        status: "error",
-        error: "extension target not found",
-      } as const;
-    }
-
-    const result = await worker.evaluate(async () => {
-      const fn =
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (globalThis as any)
-        // prettier-ignore
+    const result = await this.pages.linkedin.evaluate(() => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (window as any)
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-          ._backgroundScriptFunctions as BrowserFunctions;
-      return await fn.stopAutoCommenting();
+        .postMessage({
+          source: "engagekit_page_to_contentscript",
+          payload: {
+            action: "stopAutoCommenting",
+          },
+        });
     });
 
     return {

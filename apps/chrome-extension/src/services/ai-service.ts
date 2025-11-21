@@ -13,7 +13,14 @@ export interface AICommentConfig {
 }
 
 export class AIService {
-  private trpcClient = getStandaloneTRPCClient();
+  private trpcClient;
+  constructor(config?: { assumedUserToken?: string }) {
+    this.trpcClient = getStandaloneTRPCClient(config);
+  }
+
+  resetTrpcClient(config?: { assumedUserToken?: string }) {
+    this.trpcClient = getStandaloneTRPCClient(config);
+  }
 
   /**
    * Generate AI comment using server-side tRPC API

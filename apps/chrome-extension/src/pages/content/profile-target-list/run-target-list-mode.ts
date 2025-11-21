@@ -1,4 +1,3 @@
-import { getStandaloneTRPCClient } from "@src/trpc/react";
 import wait from "@src/utils/wait";
 
 import { runManualApproveList } from "../approve-flow/manual-approve-list";
@@ -17,6 +16,7 @@ import {
 } from "../check-duplicate/check-duplicate-commented-post-urns";
 import normalizeAndHashContent from "../check-duplicate/normalize-and-hash-content";
 import checkFriendsActivity from "../check-friends-activity";
+import { contentScriptContext } from "../context";
 import extractAuthorInfo from "../extract-author-info";
 import extractBioAuthor from "../extract-bio-author";
 import loadAndExtractComments from "../extract-post-comments";
@@ -407,7 +407,8 @@ export async function runListMode(params: {
         });
       }
 
-      await getStandaloneTRPCClient()
+      await contentScriptContext
+        .getTrpcClient()
         .autocomment.saveComments.mutate(comments)
         .catch((err) => {
           // just catch this error here and continue

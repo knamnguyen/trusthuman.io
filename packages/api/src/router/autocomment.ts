@@ -13,6 +13,7 @@ import {
 
 import { protectedProcedure } from "../trpc";
 import { browserRegistry } from "../utils/browser-session";
+import { chunkify } from "../utils/commons";
 import { paginate } from "../utils/pagination";
 import { registerOrGetBrowserSession } from "./browser";
 
@@ -42,24 +43,30 @@ export const autoCommentRouter = {
       }[] = [];
 
       for (const run of runs) {
-        if (run.status === "pending") {
-          if (!browserRegistry.has(run.accountId)) {
-            toUpdate.push({
-              id: run.id,
-              status: "errored",
-            });
-            // just mutate it here and update asynchronously later
-            run.status = "errored";
-          }
+        if (run.status === "pending" && !browserRegistry.has(run.accountId)) {
+          toUpdate.push({
+            id: run.id,
+            status: "errored",
+          });
+          // just mutate it here and update asynchronously later
+          run.status = "errored";
         }
       }
 
-      // try to upsert many here at once bcs we dont wanna have so many damn roundtrips
-      void ctx.db.autoCommentRun({
-        create: {
-          id: "",
-        },
-      });
+      // technically wont exceed parameter limits but just to be safe chunk it
+      for (const chunk of chunkify(toUpdate, 500)) {
+        // try to upsert many here at once bcs we dont wanna have so many damn roundtrips
+        void ctx.db.autoCommentRun.updateMany({
+          where: {
+            id: {
+              in: chunk.map((u) => u.id),
+            },
+          },
+          data: {
+            status: "errored",
+          },
+        });
+      }
 
       return paginate(runs, {
         key: "id",

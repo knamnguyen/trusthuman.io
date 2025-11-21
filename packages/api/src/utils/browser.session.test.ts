@@ -7,8 +7,12 @@ describe("LinkedInBrowserSession", () => {
   let registry!: BrowserSessionRegistry;
   beforeAll(async () => {
     registry = new BrowserSessionRegistry();
-    const session = registry;
-    const registered = await BrowserSession.getOrCreate(registry);
+    const registered = await BrowserSession.getOrCreate(registry, {
+      accountId: "mock",
+      location: "US",
+      engagekitExtensionId: "engagekit-mock-id",
+      browserProfileId: "mock-profile-id",
+    });
     session = registered.instance;
   });
 
@@ -34,14 +38,25 @@ describe("LinkedInBrowserSession", () => {
     "startAutoCommenting",
     async () => {
       await session.bringToFront("linkedin");
+      const signedin = await session.waitForSigninSuccess(
+        new AbortController().signal,
+      );
+      expect(signedin).toBe(true);
+      console.info("sending start autocommenting");
+      try {
+        const result = await session.startAutoCommenting({
+          autoCommentRunId: "",
+          scrollDuration: 10,
+          maxPosts: 5,
+          commentDelay: 30,
+          styleGuide: "PROFESSIONAL",
+          duplicateWindow: 24,
+        });
+        console.info({ result });
+      } catch (e) {
+        console.error(e);
+      }
       await new Promise(() => {});
-      await session.startAutoCommenting({
-        scrollDuration: 10,
-        maxPosts: 5,
-        commentDelay: 30,
-        styleGuide: "PROFESSIONAL",
-        duplicateWindow: 24,
-      });
     },
     Infinity,
   );

@@ -49,6 +49,7 @@ import { getStandaloneTRPCClient } from "@src/trpc/react";
 import { BrowserBackendChannelMessage } from "@sassy/api";
 
 import { type ContentScriptMessage } from "../background";
+import { contentScriptContext } from "./context";
 
 // Pronoun rule for company mode
 const COMPANY_PRONOUN_RULE =
@@ -481,6 +482,7 @@ function showStartButton() {
 async function sendMessageToPuppeteerBackend(
   message: BrowserBackendChannelMessage,
 ) {
+  console.info("sending message to page:", message);
   window.postMessage({
     source: "engagekit_sendMessageToPuppeteerBackend",
     payload: message,
@@ -511,110 +513,135 @@ async function setupHandshakeWithBackgroundScript() {
 
 // (Audio logic moved to tab-audio.ts)
 
+window.addEventListener("message", (event) => {
+  console.info("Content script received window message:", event);
+  if (event.data.source !== "engagekit_page_to_contentscript") {
+    return;
+  }
+
+  if (event.data.payload?.action === "setAssumedUserToken") {
+    contentScriptContext.setAssumedUserToken(
+      event.data.payload.assumedUserToken,
+    );
+    // send this to background script to refresh the assumed user tokens there
+    chrome.runtime.sendMessage({
+      action: "engagekit_setAssumedUserToken",
+      payload: {
+        token: event.data.payload.assumedUserToken,
+      },
+    });
+  }
+
+  handleContentScriptMessage(event.data.payload);
+});
+
+function handleContentScriptMessage(
+  request: ContentScriptMessage,
+  sendResponse?: (payload: any) => void,
+) {
+  console.info("Handling content script message:", request);
+  switch (request.action) {
+    case "sendMessageToPuppeteerBackend": {
+      window.postMessage({
+        source: "engagekit_sendMessageToPuppeteerBackend",
+        payload: request.payload,
+      });
+      sendResponse?.({ success: true });
+      break;
+    }
+
+    case "showStartButton": {
+      console.log("📱 Popup requested to show start button");
+      showStartButton();
+      sendResponse?.({ success: true });
+      break;
+    }
+    case "startNewCommentingFlow": {
+      console.info("Received start new commenting flow:", request);
+      (async () => {
+        try {
+          const settings = await appStorage.get([
+            "timeFilterEnabled",
+            "minPostAge",
+            "manualApproveEnabled",
+          ]);
+          const timeFilterEnabled = settings.timeFilterEnabled ?? false;
+          const minPostAge = settings.minPostAge ?? 1;
+          const manualApproveEnabled = !!settings.manualApproveEnabled;
+          await startNewCommentingFlowWithDelayedTabSwitch({
+            autoCommentRunId: request.params.autoCommentRunId,
+            scrollDuration: request.params.scrollDuration,
+            commentDelay: request.params.commentDelay,
+            maxPosts: request.params.maxPosts,
+            styleGuide: request.params.styleGuide,
+            duplicateWindow: request.params.duplicateWindow || 24,
+            commentAsCompanyEnabled:
+              request.params.commentAsCompanyEnabled ?? false,
+            timeFilterEnabled:
+              request.params.timeFilterEnabled ?? timeFilterEnabled,
+            minPostAge: request.params.minPostAge ?? minPostAge,
+            manualApproveEnabled:
+              request.params.manualApproveEnabled ?? manualApproveEnabled,
+            authenticityBoostEnabled: request.params.authenticityBoostEnabled,
+            commentProfileName: request.params.commentProfileName,
+            languageAwareEnabled: request.params.languageAwareEnabled,
+            skipCompanyPagesEnabled: request.params.skipCompanyPagesEnabled,
+            skipPromotedPostsEnabled: request.params.skipPromotedPostsEnabled,
+            skipFriendsActivitiesEnabled:
+              request.params.skipFriendsActivitiesEnabled,
+            blacklistEnabled:
+              request.params.blacklistAuthors !== undefined &&
+              request.params.blacklistAuthors.length > 0,
+            blacklistAuthors: request.params.blacklistAuthors,
+          });
+          sendResponse?.({ success: true });
+          chrome.runtime.sendMessage({
+            action: "autoCommentingCompleted",
+            payload: {
+              success: true,
+              autoCommentRunId: request.params.autoCommentRunId,
+            },
+          });
+        } catch (err) {
+          await sendMessageToPuppeteerBackend({
+            action: "autoCommentingCompleted",
+            payload: {
+              success: false,
+              autoCommentRunId: request.params.autoCommentRunId,
+              error: err instanceof Error ? err.message : String(err),
+            },
+          });
+        }
+      })();
+      break;
+    }
+    case "stopCommentingFlow": {
+      console.log("Received stop signal - stopping commenting flow");
+      isCommentingActive = false;
+      try {
+        cleanupManualApproveUI();
+      } catch {}
+      tabAudio.stop();
+      sendResponse?.({ success: true });
+      break;
+    }
+    case "statusUpdate": {
+      if (request.error) {
+        // Log error details to the website console for debugging
+        console.group("🚨 EngageKit Error Details");
+        console.error("Error Message:", request.error.message);
+      }
+      break;
+    }
+  }
+}
+
 // Listen for messages from the background script
 chrome.runtime.onMessage.addListener(
   (request: ContentScriptMessage, sender, sendResponse) => {
     console.log("Content script received message:", request);
 
-    switch (request.action) {
-      case "sendMessageToPuppeteerBackend": {
-        window.postMessage({
-          source: "engagekit_sendMessageToPuppeteerBackend",
-          payload: request.payload,
-        });
-        sendResponse({ success: true });
-        break;
-      }
-
-      case "showStartButton": {
-        console.log("📱 Popup requested to show start button");
-        showStartButton();
-        sendResponse({ success: true });
-        break;
-      }
-      case "startNewCommentingFlow": {
-        console.info("Received start new commenting flow:", request);
-        (async () => {
-          let success = false;
-          try {
-            const settings = await appStorage.get([
-              "timeFilterEnabled",
-              "minPostAge",
-              "manualApproveEnabled",
-            ]);
-            const timeFilterEnabled = settings.timeFilterEnabled ?? false;
-            const minPostAge = settings.minPostAge ?? 1;
-            const manualApproveEnabled = !!settings.manualApproveEnabled;
-            await startNewCommentingFlowWithDelayedTabSwitch({
-              autoCommentRunId: request.params.autoCommentRunId,
-              scrollDuration: request.params.scrollDuration,
-              commentDelay: request.params.commentDelay,
-              maxPosts: request.params.maxPosts,
-              styleGuide: request.params.styleGuide,
-              duplicateWindow: request.params.duplicateWindow || 24,
-              commentAsCompanyEnabled:
-                request.params.commentAsCompanyEnabled ?? false,
-              timeFilterEnabled:
-                request.params.timeFilterEnabled ?? timeFilterEnabled,
-              minPostAge: request.params.minPostAge ?? minPostAge,
-              manualApproveEnabled:
-                request.params.manualApproveEnabled ?? manualApproveEnabled,
-              authenticityBoostEnabled: request.params.authenticityBoostEnabled,
-              commentProfileName: request.params.commentProfileName,
-              languageAwareEnabled: request.params.languageAwareEnabled,
-              skipCompanyPagesEnabled: request.params.skipCompanyPagesEnabled,
-              skipPromotedPostsEnabled: request.params.skipPromotedPostsEnabled,
-              skipFriendsActivitiesEnabled:
-                request.params.skipFriendsActivitiesEnabled,
-              blacklistEnabled:
-                request.params.blacklistAuthors !== undefined &&
-                request.params.blacklistAuthors.length > 0,
-              blacklistAuthors: request.params.blacklistAuthors,
-            });
-            sendResponse({ success: true });
-            chrome.runtime.sendMessage({
-              action: "autoCommentingCompleted",
-              payload: {
-                success: true,
-                autoCommentRunId: request.params.autoCommentRunId,
-              },
-            });
-          } catch (err) {
-            await sendMessageToPuppeteerBackend({
-              action: "autoCommentingCompleted",
-              payload: {
-                success: false,
-                autoCommentRunId: request.params.autoCommentRunId,
-                error: err instanceof Error ? err.message : String(err),
-              },
-            });
-          }
-        })();
-        break;
-      }
-      case "stopCommentingFlow": {
-        console.log("Received stop signal - stopping commenting flow");
-        isCommentingActive = false;
-        try {
-          cleanupManualApproveUI();
-        } catch {}
-        tabAudio.stop();
-        sendResponse({ success: true });
-        break;
-      }
-      case "statusUpdate": {
-        if (request.error) {
-          // Log error details to the website console for debugging
-          console.group("🚨 EngageKit Error Details");
-          console.error("Error Message:", request.error.message);
-        }
-        break;
-      }
-      case "sendMessageToPuppeteerBackend": {
-        // access sendMessageToPuppeteerBackend which is exposed in setupBackendChannel()
-        sendMessageToPuppeteerBackend(request.payload);
-      }
-    }
+    handleContentScriptMessage(request, sendResponse);
   },
 );
 
@@ -904,8 +931,9 @@ async function getUncommentedPostContainers(
     hashes.push(hash.hash);
   }
 
-  const result =
-    await getStandaloneTRPCClient().autocomment.hasCommentedBefore.query({
+  const result = await contentScriptContext
+    .getTrpcClient()
+    .autocomment.hasCommentedBefore.query({
       urns: Array.from(urnMap.keys()),
       hashes,
       duplicateWindow,
@@ -1305,7 +1333,8 @@ async function processAllPostsFeed(
         promises.push(updateCommentCounts());
 
         promises.push(
-          getStandaloneTRPCClient()
+          contentScriptContext
+            .getTrpcClient()
             .autocomment.saveComments.mutate(comments)
             .catch((err) => {
               // just catch this error here and continue

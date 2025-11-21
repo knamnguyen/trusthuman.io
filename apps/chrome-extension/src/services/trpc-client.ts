@@ -70,7 +70,7 @@ const getClerkToken = async (): Promise<string | null> => {
  * Create tRPC client instance
  */
 export const createExtensionTRPCClient = (opts?: {
-  assumedUserTokenGetter?: () => string | null;
+  assumedUserToken?: string;
 }) => {
   return createTRPCProxyClient<AppRouter>({
     links: [
@@ -86,8 +86,8 @@ export const createExtensionTRPCClient = (opts?: {
             "Content-Type": "application/json",
           };
 
-          if (opts?.assumedUserTokenGetter) {
-            const assumedJwt = opts.assumedUserTokenGetter();
+          if (opts?.assumedUserToken) {
+            const assumedJwt = opts.assumedUserToken;
             if (assumedJwt !== null) {
               headers["x-assumed-user-token"] = assumedJwt;
               console.log(
@@ -136,23 +136,30 @@ export const createExtensionTRPCClient = (opts?: {
 /**
  * Singleton instance of the tRPC client
  */
-let trpcClient: ReturnType<typeof createExtensionTRPCClient> | null = null;
+
+const trpcClientCache = new Map<
+  string,
+  ReturnType<typeof createExtensionTRPCClient>
+>();
 
 /**
  * Get or create the tRPC client instance
  */
-export const getTRPCClient = (opts?: {
-  assumedUserTokenGetter?: () => string | null;
-}) => {
-  if (!trpcClient) {
-    trpcClient = createExtensionTRPCClient(opts);
+export const getTRPCClient = (opts?: { assumedUserToken?: string }) => {
+  const cacheKey = JSON.stringify(opts ?? {});
+
+  if (trpcClientCache.has(cacheKey)) {
+    return trpcClientCache.get(cacheKey)!;
   }
-  return trpcClient;
+
+  const client = createExtensionTRPCClient(opts);
+  trpcClientCache.set(cacheKey, client);
+  return client;
 };
 
 /**
  * Reset the tRPC client (useful for auth state changes)
  */
 export const resetTRPCClient = () => {
-  trpcClient = null;
+  trpcClientCache.clear();
 };

@@ -1,5 +1,4 @@
 import type { TRPCRouterRecord } from "@trpc/server";
-import type { Page } from "puppeteer-core";
 import { ulid } from "ulidx";
 import z from "zod";
 
@@ -34,7 +33,7 @@ export const accountRouter = {
           location: countrySchema,
         }),
       )
-      .mutation(async function* ({ ctx, input }) {
+      .mutation(async function* ({ ctx, input, signal }) {
         const existingAccount = await ctx.db.linkedInAccount.findFirst({
           where: { email: input.email, userId: ctx.user.id },
         });
@@ -91,9 +90,8 @@ export const accountRouter = {
           liveUrl: instance.liveUrl,
         } as const;
 
-        const signedIn = await waitForSigninSuccess(
-          instance.pages.linkedin,
-          instance.signal,
+        const signedIn = await instance.waitForSigninSuccess(
+          signal ?? instance.signal,
         );
 
         if (signedIn) {
@@ -202,30 +200,3 @@ export const accountRouter = {
   //     }
   //   }),
 } satisfies TRPCRouterRecord;
-
-async function waitForSigninSuccess(page: Page, signal: AbortSignal) {
-  // just keep polling until we hit the feed page or an error
-  // if we hit the feed page, means signin has succeeded
-  // 5 minute timeout
-  const time = Date.now();
-  while (time + 5 * 60 * 1000 > Date.now() || signal.aborted === false) {
-    try {
-      const url = page.url();
-      console.info("Polling LinkedIn URL:", url);
-      if (url.includes("linkedin.com/feed")) {
-        return true;
-      }
-
-      await new Promise((resolve, reject) => {
-        const timeoutId = setTimeout(resolve, 2000);
-        signal.addEventListener("abort", () => {
-          clearTimeout(timeoutId);
-          reject(new Error("Aborted"));
-        });
-      });
-    } catch (err) {
-      console.error("Error polling LinkedIn URL:", err);
-      return false;
-    }
-  }
-}

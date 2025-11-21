@@ -40,9 +40,26 @@ const getClerkClient = async () => {
   });
 };
 
-const trpc = getTRPCClient({
-  assumedUserTokenGetter: () => authService.assumedUserToken,
-});
+class BackgroundScriptContext {
+  private trpcClient: ReturnType<typeof getTRPCClient>;
+
+  constructor() {
+    this.trpcClient = getTRPCClient();
+  }
+
+  setAssumedUserToken(token: string) {
+    authService.assumedUserToken = token;
+    this.trpcClient = getTRPCClient({
+      assumedUserToken: token,
+    });
+  }
+
+  getTRPCClient() {
+    return this.trpcClient;
+  }
+}
+
+const ctx = new BackgroundScriptContext();
 
 /**
  * Authentication Service - handles all auth operations in background
@@ -119,7 +136,9 @@ const authService = {
 
   async attachTokenToSession(token: string) {
     this.assumedUserToken = token;
-    const response = await trpc.account.verifyJwt.mutate({ token });
+    const response = await ctx
+      .getTRPCClient()
+      .account.verifyJwt.mutate({ token });
     if (response.status === "error") {
       return { success: false };
     }
@@ -379,10 +398,13 @@ const createBackgroundScriptFunctions = () => {
       currentWindow: true,
     });
 
+    console.info({ tabs });
+
     const feedTab = tabs.find(
       (tab) =>
         tab.url !== undefined && tab.url.startsWith("https://www.linkedin.com"),
     );
+    console.info({ feedTab });
 
     // if no linkedin tabs, just create one and assign it to tab id
     if (feedTab === undefined) {
@@ -439,6 +461,14 @@ let contentScriptTabId: number | null = null;
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   // Handle authentication requests directly in background
   switch (request.action) {
+    case "engagekit_setAssumedUserToken": {
+      ctx.setAssumedUserToken(request.payload.token);
+      aiService.resetTrpcClient({
+        assumedUserToken: request.payload.token,
+      });
+      sendResponse({ status: "ok" });
+      return false;
+    }
     case "engagekit_contentscript_handshake": {
       if (sender.tab?.id) {
         sendResponse({ status: "ok" });
@@ -684,7 +714,7 @@ function sendMessageToPuppeteerBackend(message: BrowserBackendChannelMessage) {
     },
     () => {
       console.log(
-        `Sent message to Puppeteer backend via content script in tab ${tab.id}`,
+        `Sent message to Puppeteer backend via content script in tab ${contentScriptTabId}`,
       );
     },
   );
