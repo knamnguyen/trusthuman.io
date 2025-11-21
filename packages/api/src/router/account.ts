@@ -10,7 +10,7 @@ import {
   assumedAccountJwt,
   browserRegistry,
   hyperbrowser,
-} from "../utils/linkedin-browser-session";
+} from "../utils/browser-session";
 import { paginate } from "../utils/pagination";
 import { registerOrGetBrowserSession } from "./browser";
 

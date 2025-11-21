@@ -12,7 +12,7 @@ import {
 // } from "@sassy/db/schema-validators";
 
 import { protectedProcedure } from "../trpc";
-import { browserRegistry } from "../utils/linkedin-browser-session";
+import { browserRegistry } from "../utils/browser-session";
 import { paginate } from "../utils/pagination";
 import { registerOrGetBrowserSession } from "./browser";
 
@@ -26,11 +26,39 @@ export const autoCommentRouter = {
         .optional(),
     )
     .query(async ({ ctx, input }) => {
+      // before returning to users here, just do a registry check and update status if stale
       const runs = await ctx.db.autoCommentRun.findMany({
         where: { userId: ctx.user.id },
         orderBy: { id: "desc" },
         cursor: input?.cursor ? { id: input.cursor } : undefined,
         take: 20,
+      });
+
+      const toUpdate: {
+        id: string;
+        // if browser registry has no session we can assume its errored out
+        // else if run.status is pending and registry does not have session means its some non-graceful exit
+        status: "errored";
+      }[] = [];
+
+      for (const run of runs) {
+        if (run.status === "pending") {
+          if (!browserRegistry.has(run.accountId)) {
+            toUpdate.push({
+              id: run.id,
+              status: "errored",
+            });
+            // just mutate it here and update asynchronously later
+            run.status = "errored";
+          }
+        }
+      }
+
+      // try to upsert many here at once bcs we dont wanna have so many damn roundtrips
+      void ctx.db.autoCommentRun({
+        create: {
+          id: "",
+        },
       });
 
       return paginate(runs, {

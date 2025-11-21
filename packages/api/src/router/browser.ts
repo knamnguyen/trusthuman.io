@@ -5,15 +5,15 @@ import type { PrismaClient } from "@sassy/db";
 import { storageStateSchema } from "@sassy/validators";
 
 import type {
-  LinkedInBrowserSessionParams,
+  BrowserSessionParams,
   ProxyLocation,
-} from "../utils/linkedin-browser-session";
+} from "../utils/browser-session";
 import { protectedProcedure } from "../trpc";
 import {
   browserRegistry,
+  BrowserSession,
   hyperbrowser,
-  LinkedInBrowserSession,
-} from "../utils/linkedin-browser-session";
+} from "../utils/browser-session";
 
 function getLatestEngagekitExtensionId(db: PrismaClient) {
   return db.extensionDeploymentMeta.findFirst({
@@ -26,7 +26,7 @@ export async function registerOrGetBrowserSession(
   userId: string,
   linkedInAccountId: string,
   opts?: Pick<
-    LinkedInBrowserSessionParams,
+    BrowserSessionParams,
     "onBrowserMessage" | "liveviewViewOnlyMode"
   >,
 ) {
@@ -52,7 +52,7 @@ export async function registerOrGetBrowserSession(
     } as const;
   }
 
-  const { instance, status } = await LinkedInBrowserSession.getOrCreate(
+  const { instance, status } = await BrowserSession.getOrCreate(
     browserRegistry,
     {
       accountId: account.id,

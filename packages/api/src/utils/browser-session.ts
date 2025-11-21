@@ -24,14 +24,6 @@ export type ProxyLocation = NonNullable<
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-interface BrowserSession {
-  session: {
-    id: string;
-    liveUrl: string;
-  };
-  browser: Browser;
-}
-
 if (process.env.JWT_SECRET === undefined) {
   throw new Error("JWT_SECRET is not defined");
 }
@@ -45,40 +37,6 @@ export const assumedAccountJwt = jwtFactory(
   86_400_000, // put a day
   process.env.JWT_SECRET,
 );
-
-async function getExtensionId(manifestJsonPath: string) {
-  const json = (await import(manifestJsonPath)) as { key?: string };
-  if (!json.key) {
-    throw new Error("Extension key not found in manifest.json");
-  }
-
-  const binaryKey = Buffer.from(json.key, "base64");
-
-  // SHA-256 hash
-  const hash = await crypto.subtle.digest("SHA-256", binaryKey);
-
-  // Convert to hex string
-  const hashArray = Array.from(new Uint8Array(hash));
-  const hashHex = hashArray
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-
-  // Take first 32 characters and translate 0-9a-f to a-p
-  const extensionId = hashHex
-    .slice(0, 32)
-    .split("")
-    .map((char) => {
-      const code = char.charCodeAt(0);
-      if (code >= 48 && code <= 57) {
-        // 0-9
-        return String.fromCharCode(code + 49); // converts to a-j
-      }
-      return char; // a-f stays as is
-    })
-    .join("");
-
-  return extensionId;
-}
 
 export interface BrowserFunctions {
   startAutoCommenting: (params: {
@@ -123,7 +81,7 @@ export type BrowserBackendChannelMessage =
       action: "ready";
     };
 
-export interface LinkedInBrowserSessionParams {
+export interface BrowserSessionParams {
   accountId: string;
   location: ProxyLocation;
   staticIpId?: string;
@@ -131,12 +89,12 @@ export interface LinkedInBrowserSessionParams {
   browserProfileId: string;
   liveviewViewOnlyMode?: boolean;
   onBrowserMessage?: (
-    this: LinkedInBrowserSession,
+    this: BrowserSession,
     data: BrowserBackendChannelMessage,
   ) => unknown;
 }
 
-export class LinkedInBrowserSession {
+export class BrowserSession {
   public id: string;
   public sessionId!: string;
   public browser!: Browser;
@@ -154,7 +112,7 @@ export class LinkedInBrowserSession {
   private extensionWorker: WebWorker | null = null;
   constructor(
     private readonly registry: BrowserSessionRegistry,
-    private readonly opts: LinkedInBrowserSessionParams,
+    private readonly opts: BrowserSessionParams,
     private readonly logger: Logger = console,
   ) {
     this.id = opts.accountId;
@@ -162,22 +120,66 @@ export class LinkedInBrowserSession {
 
   static async getOrCreate(
     registry: BrowserSessionRegistry,
-    opts: LinkedInBrowserSessionParams,
+    opts: BrowserSessionParams,
     logger: Logger = console,
   ) {
-    return await registry.register(
-      new LinkedInBrowserSession(registry, opts, logger),
-    );
+    return await registry.register(new BrowserSession(registry, opts, logger));
   }
 
-  async init(): Promise<LinkedInBrowserSession> {
+  private async createSession(params: CreateHyperbrowserSessionParams) {
+    if (process.env.NODE_ENV !== "test") {
+      const session = await hyperbrowser.sessions.create(params);
+      const browser = await connect({
+        browserWSEndpoint: session.wsEndpoint,
+        defaultViewport: null,
+      });
+
+      if (session.liveUrl === undefined) {
+        // docs say that liveUrl is always defined but not sure why its undefined here
+        // so just throw error for now
+        throw new Error("liveUrl is undefined");
+      }
+
+      return {
+        session: {
+          id: session.id,
+          liveUrl: session.liveUrl,
+        },
+        browser,
+      };
+    }
+
+    const filepath = path.join(
+      __dirname,
+      "../../../../apps/chrome-extension/dist_chrome",
+    );
+    console.info({ filepath });
+
+    const browser = (await puppeteer.launch({
+      defaultViewport: null,
+      headless: false,
+      pipe: true,
+      userDataDir: path.join(process.cwd(), ".puppeteer", "user_data"),
+      enableExtensions: [filepath],
+    })) as unknown as Browser;
+
+    return {
+      session: {
+        id: "mock",
+        liveUrl: "http://localhost/mock-live-view",
+      },
+      browser,
+    };
+  }
+
+  async init(): Promise<BrowserSession> {
     const accountJwt = await assumedAccountJwt.encode({
       accountId: this.opts.accountId,
     });
 
     this.controller = new AbortController();
 
-    const result = await createBrowserSession({
+    const instance = await this.createSession({
       useProxy: true,
       useStealth: true,
       viewOnlyLiveView: this.opts.liveviewViewOnlyMode ?? false,
@@ -191,11 +193,11 @@ export class LinkedInBrowserSession {
       staticIpId: this.opts.staticIpId,
     });
 
-    this.liveUrl = result.instance.session.liveUrl;
+    this.liveUrl = instance.session.liveUrl;
 
-    this.sessionId = result.instance.session.id;
+    this.sessionId = instance.session.id;
 
-    this.browser = result.instance.browser;
+    this.browser = instance.browser;
 
     const engagekitExtensionPagePromise = this.browser
       .newPage()
@@ -415,13 +417,13 @@ export class LinkedInBrowserSession {
 }
 
 export class BrowserSessionRegistry {
-  private readonly registry = new Map<string, LinkedInBrowserSession>();
+  private readonly registry = new Map<string, BrowserSession>();
 
   get(id: string) {
     return this.registry.get(id);
   }
 
-  async register(session: LinkedInBrowserSession) {
+  async register(session: BrowserSession) {
     const existing = this.get(session.id);
     if (existing !== undefined) {
       const status = await hyperbrowser.sessions.get(existing.sessionId);
@@ -444,6 +446,10 @@ export class BrowserSessionRegistry {
       status: "new",
       instance: browserSession,
     } as const;
+  }
+
+  has(id: string) {
+    return this.registry.has(id);
   }
 
   async destroy(accountId: string) {
@@ -473,68 +479,3 @@ export class BrowserSessionRegistry {
 }
 
 export const browserRegistry = new BrowserSessionRegistry();
-
-async function createBrowserSession(
-  params: CreateHyperbrowserSessionParams,
-): Promise<{
-  status: "new" | "existing";
-  instance: BrowserSession;
-}> {
-  // if there is existing, then check it's status, if its active then just return the existing instance
-  // else destroy and create a new one
-
-  const session = await createHyperbrowserSession(params);
-
-  return {
-    status: "new",
-    instance: session,
-  } as const;
-}
-
-async function createHyperbrowserSession(
-  params: CreateHyperbrowserSessionParams,
-): Promise<BrowserSession> {
-  if (process.env.NODE_ENV !== "test") {
-    const session = await hyperbrowser.sessions.create(params);
-    const browser = await connect({
-      browserWSEndpoint: session.wsEndpoint,
-      defaultViewport: null,
-    });
-
-    if (session.liveUrl === undefined) {
-      // docs say that liveUrl is always defined but not sure why its undefined here
-      // so just throw error for now
-      throw new Error("liveUrl is undefined");
-    }
-
-    return {
-      session: {
-        id: session.id,
-        liveUrl: session.liveUrl,
-      },
-      browser,
-    };
-  }
-
-  const filepath = path.join(
-    __dirname,
-    "../../../../apps/chrome-extension/dist_chrome",
-  );
-  console.info({ filepath });
-
-  const browser = (await puppeteer.launch({
-    defaultViewport: null,
-    headless: false,
-    pipe: true,
-    userDataDir: path.join(process.cwd(), ".puppeteer", "user_data"),
-    enableExtensions: [filepath],
-  })) as unknown as Browser;
-
-  return {
-    session: {
-      id: "mock",
-      liveUrl: "http://localhost/mock-live-view",
-    },
-    browser,
-  };
-}

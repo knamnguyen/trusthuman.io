@@ -17,7 +17,7 @@ import { ZodError } from "zod";
 import type { Prisma, PrismaClient } from "@sassy/db";
 import { db } from "@sassy/db";
 
-import { assumedAccountJwt } from "./utils/linkedin-browser-session";
+import { assumedAccountJwt } from "./utils/browser-session";
 
 /**
  * 1. CONTEXT
