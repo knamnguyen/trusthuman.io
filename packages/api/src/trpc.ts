@@ -47,9 +47,7 @@ export interface TRPCContext {
   headers: Headers;
 }
 
-export const createTRPCContext = async (opts: {
-  headers: Headers;
-}): Promise<TRPCContext> => {
+export const createTRPCContext = (opts: { headers: Headers }): TRPCContext => {
   const source = opts.headers.get("x-trpc-source");
   console.log(">>> tRPC Request from", source ?? "nextjs");
 
@@ -94,16 +92,32 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
   // check for assumedUserToken
   if (assumedUserToken !== null) {
     const decoded = await assumedAccountJwt.decode(assumedUserToken);
-    if (decoded.success) {
-      const user = await getOrInsertUser(ctx.db, decoded.payload.accountId);
-
-      return next({
-        ctx: {
-          ...ctx,
-          user,
-        },
+    if (!decoded.success) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "Invalid assumed user token",
       });
     }
+
+    const result = await getAccount(decoded.payload.accountId);
+
+    if (result === null) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "Assumed account not found",
+      });
+    }
+
+    const { user, ...account } = result;
+
+    return next({
+      ctx: {
+        ...ctx,
+        user,
+        // we need to cast here bcs somehow type inference is not catching that account is nullable
+        account: account as typeof account | null,
+      },
+    });
   }
 
   const source = ctx.headers.get("x-trpc-source");
@@ -135,6 +149,7 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
       ctx: {
         ...ctx,
         user,
+        account: null,
       },
     });
   }
@@ -154,6 +169,7 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
     ctx: {
       ...ctx, // Keep existing context with db and headers
       user, // Add the user to the context
+      account: null,
     },
   });
 });
@@ -190,24 +206,24 @@ async function getUserIdFromClerkToken(token: string) {
   }
 }
 
+const userFields = {
+  id: true,
+  accessType: true,
+  dailyAIcomments: true,
+  firstName: true,
+  primaryEmailAddress: true,
+} as const;
+
 export async function getOrInsertUser(
   db: PrismaClient,
   userId: string,
   clerkUser?: User,
 ) {
-  const fields = {
-    id: true,
-    accessType: true,
-    dailyAIcomments: true,
-    firstName: true,
-    primaryEmailAddress: true,
-  } as const;
-
   const dbUser = await db.user.findUnique({
     where: {
       id: userId,
     },
-    select: fields,
+    select: userFields,
   });
 
   if (dbUser !== null) {
@@ -244,10 +260,21 @@ export async function getOrInsertUser(
       primaryEmailAddress,
       imageUrl: clerkUser.imageUrl,
     },
-    select: fields,
+    select: userFields,
   });
 
   return newUser;
+}
+
+function getAccount(accountId: string) {
+  return db.linkedInAccount.findFirst({
+    where: { id: accountId },
+    include: {
+      user: {
+        select: userFields,
+      },
+    },
+  });
 }
 
 /**

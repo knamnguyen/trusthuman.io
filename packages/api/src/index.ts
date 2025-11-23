@@ -28,8 +28,8 @@ type AppRouterCaller = ReturnType<typeof createCaller>;
  * This is useful for server-side operations where you need to call tRPC procedures
  * But don't use this inside the trpc procedures themselves because it will create a new context
  */
-export const createServerClient = async (): Promise<AppRouterCaller> => {
-  const ctx = await createTRPCContext({
+export const createServerClient = (): AppRouterCaller => {
+  const ctx = createTRPCContext({
     headers: new Headers(),
   });
   return appRouter.createCaller(ctx);

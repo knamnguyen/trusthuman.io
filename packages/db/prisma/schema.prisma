@@ -66,6 +66,7 @@ model LinkedInAccount {
   BlacklistedProfile BlacklistedProfile[]
   AutoCommentRun     AutoCommentRun[]
   BrowserInstance    BrowserInstance[]
+  userComments       UserComment[]
 }
 
 enum LinkedInAccountStatus {
@@ -160,18 +161,20 @@ model LinkedInProfile {
 }
 
 model UserComment {
-  id               String          @id
+  id               String           @id
   urn              String
   postContentHtml  String?
   hash             String?
   autoCommentRunId String?
   comment          String
-  userId           String
+  userId           String?
+  accountId        String?
   commentedAt      DateTime?
-  isDuplicate      Boolean         @default(false)
-  isAutoCommented  Boolean         @default(true)
-  user             User            @relation(fields: [userId], references: [id])
-  autoCommentRun   AutoCommentRun? @relation(fields: [autoCommentRunId], references: [id])
+  isDuplicate      Boolean          @default(false)
+  isAutoCommented  Boolean          @default(true)
+  user             User             @relation(fields: [userId], references: [id])
+  autoCommentRun   AutoCommentRun?  @relation(fields: [autoCommentRunId], references: [id])
+  account          LinkedInAccount? @relation(fields: [accountId], references: [id])
 
   @@index([hash])
   @@index([urn])

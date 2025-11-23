@@ -190,6 +190,18 @@ export const autoCommentRouter = {
                   commentedAt: { lt: commentedBefore, not: null },
                 }
               : {},
+            {
+              OR: [
+                { userId: ctx.user.id },
+                ...(ctx.account !== null
+                  ? [
+                      {
+                        accountId: ctx.account.id,
+                      },
+                    ]
+                  : []),
+              ],
+            },
           ],
         },
         select: { urn: true },
