@@ -97,6 +97,7 @@ export interface BrowserSessionParams {
   ) => unknown;
 }
 
+// TODO: store instance in postgres and then shut down on restart (should technically gracefully update statuses, so if running without an instance in the registry, means it should be shut down)
 export class BrowserSession {
   public id: string;
   public sessionId!: string;
