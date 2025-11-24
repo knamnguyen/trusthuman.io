@@ -64,6 +64,9 @@ export interface BrowserFunctions {
 
 export type BrowserBackendChannelMessage =
   | {
+      action: "ping";
+    }
+  | {
       action: "stopAutoCommenting";
     }
   | {
@@ -109,6 +112,12 @@ export class BrowserSession {
   public signal = this.controller.signal;
   private readyResolver = Promise.withResolvers<void>();
   public ready = this.readyResolver.promise;
+  public lastPingAt = Date.now();
+  private LATEST_HEARTBEAT_THRESHOLD_MS = 15_000;
+  private destroying = false;
+  private browserMessageCallbacks = new Set<
+    (data: BrowserBackendChannelMessage) => unknown
+  >();
 
   private extensionWorker: WebWorker | null = null;
   constructor(
@@ -194,6 +203,10 @@ export class BrowserSession {
       staticIpId: this.opts.staticIpId,
     });
 
+    if (this.opts.onBrowserMessage !== undefined) {
+      this.browserMessageCallbacks.add(this.opts.onBrowserMessage.bind(this));
+    }
+
     this.liveUrl = instance.session.liveUrl;
 
     this.sessionId = instance.session.id;
@@ -249,21 +262,51 @@ export class BrowserSession {
   }
 
   public async destroy() {
+    if (this.destroying) {
+      return;
+    }
+    this.destroying = true;
     await this.registry.destroy(this.id);
     this.controller.abort();
   }
 
+  public setupHeartbeat() {
+    const interval = setInterval(() => {
+      if (Date.now() - this.lastPingAt > this.LATEST_HEARTBEAT_THRESHOLD_MS) {
+        this.logger.warn(
+          `No ping received from browser session ${this.id} in the last ${this.LATEST_HEARTBEAT_THRESHOLD_MS} seconds, destroying session`,
+        );
+        clearInterval(interval);
+        void this.destroy().catch((err) => {
+          this.logger.error(
+            `Error destroying browser session ${this.id}: ${err}`,
+          );
+        });
+      }
+    }, 5_000);
+  }
+
+  public onBrowserMessage(
+    messageCallback: (data: BrowserBackendChannelMessage) => unknown,
+  ) {
+    this.browserMessageCallbacks.add(messageCallback);
+
+    return () => {
+      this.browserMessageCallbacks.delete(messageCallback);
+    };
+  }
+
   private async setupBackendChannel(page: Page) {
     const onBrowserMessage = (message: BrowserBackendChannelMessage) => {
-      if (this.opts.onBrowserMessage !== undefined) {
-        this.opts.onBrowserMessage.call(this, message);
-      }
-
       switch (message.action) {
         case "ready": {
           this.readyResolver.resolve();
           break;
         }
+      }
+
+      for (const cb of this.browserMessageCallbacks) {
+        cb(message);
       }
     };
 
@@ -271,13 +314,31 @@ export class BrowserSession {
     await page.exposeFunction(
       "_sendMessageToPuppeteerBackend",
       (data: BrowserBackendChannelMessage) => {
-        console.info({ data });
         onBrowserMessage(data);
+
+        switch (data.action) {
+          case "ping": {
+            this.lastPingAt = Date.now();
+            break;
+          }
+        }
       },
     );
 
     // listen to messages from contentscript and then call the exposed function
     await page.evaluateOnNewDocument(() => {
+      function ping() {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+        (window as any)._sendMessageToPuppeteerBackend({
+          action: "ping",
+        });
+        setTimeout(() => {
+          ping();
+        }, 5000);
+      }
+
+      ping();
+
       window.addEventListener("message", (event) => {
         if (event.source !== window) return;
         if (
