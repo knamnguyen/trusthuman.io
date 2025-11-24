@@ -112,7 +112,7 @@ export class BrowserSession {
   public signal = this.controller.signal;
   private readyResolver = Promise.withResolvers<void>();
   public ready = this.readyResolver.promise;
-  public lastPingAt = Date.now();
+  public lastHeartbeatAt = Date.now();
   private LATEST_HEARTBEAT_THRESHOLD_MS = 15_000;
   private destroying = false;
   private browserMessageCallbacks = new Set<
@@ -272,7 +272,10 @@ export class BrowserSession {
 
   public setupHeartbeat() {
     const interval = setInterval(() => {
-      if (Date.now() - this.lastPingAt > this.LATEST_HEARTBEAT_THRESHOLD_MS) {
+      if (
+        Date.now() - this.lastHeartbeatAt >
+        this.LATEST_HEARTBEAT_THRESHOLD_MS
+      ) {
         this.logger.warn(
           `No ping received from browser session ${this.id} in the last ${this.LATEST_HEARTBEAT_THRESHOLD_MS} seconds, destroying session`,
         );
@@ -284,6 +287,14 @@ export class BrowserSession {
         });
       }
     }, 5_000);
+
+    this.onBrowserMessage((message) => {
+      if (message.action !== "ping") {
+        return;
+      }
+
+      this.lastHeartbeatAt = Date.now();
+    });
   }
 
   public onBrowserMessage(
@@ -315,13 +326,6 @@ export class BrowserSession {
       "_sendMessageToPuppeteerBackend",
       (data: BrowserBackendChannelMessage) => {
         onBrowserMessage(data);
-
-        switch (data.action) {
-          case "ping": {
-            this.lastPingAt = Date.now();
-            break;
-          }
-        }
       },
     );
 
