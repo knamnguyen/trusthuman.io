@@ -128,7 +128,7 @@ export class BrowserSession {
   }
 
   private async createSession(params: CreateHyperbrowserSessionParams) {
-    if (process.env.NODE_ENV !== "test") {
+    if (process.env.NODE_ENV === "production") {
       const session = await hyperbrowser.sessions.create(params);
       const browser = await connect({
         browserWSEndpoint: session.wsEndpoint,

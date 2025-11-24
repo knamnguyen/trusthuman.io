@@ -8,6 +8,7 @@ class ContentScriptContext {
   }
 
   setAssumedUserToken(assumedUserToken: string) {
+    console.info("setting assumed user token in content script context");
     this.trpcClient = getStandaloneTRPCClient({ assumedUserToken });
   }
 

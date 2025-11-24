@@ -172,7 +172,7 @@ model UserComment {
   commentedAt      DateTime?
   isDuplicate      Boolean          @default(false)
   isAutoCommented  Boolean          @default(true)
-  user             User             @relation(fields: [userId], references: [id])
+  user             User?            @relation(fields: [userId], references: [id])
   autoCommentRun   AutoCommentRun?  @relation(fields: [autoCommentRunId], references: [id])
   account          LinkedInAccount? @relation(fields: [accountId], references: [id])
 

@@ -311,62 +311,74 @@ export const autoCommentRouter = {
           })
         : [];
 
-      await instance.startAutoCommenting({
-        autoCommentRunId: autoCommentRun.id,
-        scrollDuration:
-          autocommentConfig?.scrollDuration ??
-          autoCommentConfigurationDefaults.scrollDuration,
-        commentDelay:
-          autocommentConfig?.commentDelay ??
-          autoCommentConfigurationDefaults.commentDelay,
-        maxPosts:
-          autocommentConfig?.maxPosts ??
-          autoCommentConfigurationDefaults.maxPosts,
-        styleGuide,
-        duplicateWindow:
-          autocommentConfig?.duplicateWindow ??
-          autoCommentConfigurationDefaults.duplicateWindow,
-        commentAsCompanyEnabled:
-          autocommentConfig?.commentAsCompanyEnabled ??
-          autoCommentConfigurationDefaults.commentAsCompanyEnabled,
-        timeFilterEnabled:
-          autocommentConfig?.timeFilterEnabled ??
-          autoCommentConfigurationDefaults.timeFilterEnabled,
-        minPostAge:
-          autocommentConfig?.minPostAge ??
-          autoCommentConfigurationDefaults.minPostAge,
-        manualApproveEnabled:
-          autocommentConfig?.manualApproveEnabled ??
-          autoCommentConfigurationDefaults.manualApproveEnabled,
-        authenticityBoostEnabled:
-          autocommentConfig?.authenticityBoostEnabled ??
-          autoCommentConfigurationDefaults.authenticityBoostEnabled,
-        commentProfileName:
-          autocommentConfig?.commentProfileName ??
-          autoCommentConfigurationDefaults.commentProfileName,
-        languageAwareEnabled:
-          autocommentConfig?.languageAwareEnabled ??
-          autoCommentConfigurationDefaults.languageAwareEnabled,
-        skipCompanyPagesEnabled:
-          autocommentConfig?.skipCompanyPagesEnabled ??
-          autoCommentConfigurationDefaults.skipCompanyPagesEnabled,
-        skipPromotedPostsEnabled:
-          autocommentConfig?.skipPromotedPostsEnabled ??
-          autoCommentConfigurationDefaults.skipPromotedPostsEnabled,
-        skipFriendsActivitiesEnabled:
-          autocommentConfig?.skipFriendActivitiesEnabled ??
-          autoCommentConfigurationDefaults.skipFriendActivitiesEnabled,
-        blacklistEnabled:
-          autocommentConfig?.blacklistEnabled ??
-          autoCommentConfigurationDefaults.blacklistEnabled,
-        blacklistAuthors: blacklisted.map((b) => b.profileUrn),
-      });
+      try {
+        await instance.startAutoCommenting({
+          autoCommentRunId: autoCommentRun.id,
+          scrollDuration:
+            autocommentConfig?.scrollDuration ??
+            autoCommentConfigurationDefaults.scrollDuration,
+          commentDelay:
+            autocommentConfig?.commentDelay ??
+            autoCommentConfigurationDefaults.commentDelay,
+          maxPosts:
+            autocommentConfig?.maxPosts ??
+            autoCommentConfigurationDefaults.maxPosts,
+          styleGuide,
+          duplicateWindow:
+            autocommentConfig?.duplicateWindow ??
+            autoCommentConfigurationDefaults.duplicateWindow,
+          commentAsCompanyEnabled:
+            autocommentConfig?.commentAsCompanyEnabled ??
+            autoCommentConfigurationDefaults.commentAsCompanyEnabled,
+          timeFilterEnabled:
+            autocommentConfig?.timeFilterEnabled ??
+            autoCommentConfigurationDefaults.timeFilterEnabled,
+          minPostAge:
+            autocommentConfig?.minPostAge ??
+            autoCommentConfigurationDefaults.minPostAge,
+          manualApproveEnabled:
+            autocommentConfig?.manualApproveEnabled ??
+            autoCommentConfigurationDefaults.manualApproveEnabled,
+          authenticityBoostEnabled:
+            autocommentConfig?.authenticityBoostEnabled ??
+            autoCommentConfigurationDefaults.authenticityBoostEnabled,
+          commentProfileName:
+            autocommentConfig?.commentProfileName ??
+            autoCommentConfigurationDefaults.commentProfileName,
+          languageAwareEnabled:
+            autocommentConfig?.languageAwareEnabled ??
+            autoCommentConfigurationDefaults.languageAwareEnabled,
+          skipCompanyPagesEnabled:
+            autocommentConfig?.skipCompanyPagesEnabled ??
+            autoCommentConfigurationDefaults.skipCompanyPagesEnabled,
+          skipPromotedPostsEnabled:
+            autocommentConfig?.skipPromotedPostsEnabled ??
+            autoCommentConfigurationDefaults.skipPromotedPostsEnabled,
+          skipFriendsActivitiesEnabled:
+            autocommentConfig?.skipFriendActivitiesEnabled ??
+            autoCommentConfigurationDefaults.skipFriendActivitiesEnabled,
+          blacklistEnabled:
+            autocommentConfig?.blacklistEnabled ??
+            autoCommentConfigurationDefaults.blacklistEnabled,
+          blacklistAuthors: blacklisted.map((b) => b.profileUrn),
+        });
 
-      return {
-        status: "success",
-        liveUrl: instance.liveUrl,
-        runId: autoCommentRun.id,
-      } as const;
+        return {
+          status: "success",
+          liveUrl: instance.liveUrl,
+          runId: autoCommentRun.id,
+        } as const;
+      } catch (error) {
+        await ctx.db.autoCommentRun.update({
+          where: { id: autoCommentRun.id },
+          data: {
+            status: "errored",
+            error:
+              error instanceof Error ? error.message : "Unknown error occurred",
+            endedAt: new Date(),
+          },
+        });
+      }
     }),
 
   stop: protectedProcedure

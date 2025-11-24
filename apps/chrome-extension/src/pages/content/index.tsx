@@ -520,14 +520,13 @@ window.addEventListener("message", (event) => {
   }
 
   if (event.data.payload?.action === "setAssumedUserToken") {
-    contentScriptContext.setAssumedUserToken(
-      event.data.payload.assumedUserToken,
-    );
+    contentScriptContext.setAssumedUserToken(event.data.payload.token);
+    console.info("setting assumed user token in content script context");
     // send this to background script to refresh the assumed user tokens there
     chrome.runtime.sendMessage({
       action: "engagekit_setAssumedUserToken",
       payload: {
-        token: event.data.payload.assumedUserToken,
+        token: event.data.payload.token,
       },
     });
   }
@@ -596,6 +595,13 @@ function handleContentScriptMessage(
           });
           sendResponse?.({ success: true });
           chrome.runtime.sendMessage({
+            action: "autoCommentingCompleted",
+            payload: {
+              success: true,
+              autoCommentRunId: request.params.autoCommentRunId,
+            },
+          });
+          await sendMessageToPuppeteerBackend({
             action: "autoCommentingCompleted",
             payload: {
               success: true,
