@@ -115,9 +115,10 @@ export class BrowserSession {
   public lastHeartbeatAt = Date.now();
   private LATEST_HEARTBEAT_THRESHOLD_MS = 15_000;
   private destroying = false;
-  private browserMessageCallbacks = new Set<
+  private onBrowserMessageCallbacks = new Set<
     (data: BrowserBackendChannelMessage) => unknown
   >();
+  private onDestroyCallbacks = new Set<() => unknown>();
 
   private extensionWorker: WebWorker | null = null;
   constructor(
@@ -204,7 +205,7 @@ export class BrowserSession {
     });
 
     if (this.opts.onBrowserMessage !== undefined) {
-      this.browserMessageCallbacks.add(this.opts.onBrowserMessage.bind(this));
+      this.onBrowserMessageCallbacks.add(this.opts.onBrowserMessage.bind(this));
     }
 
     this.liveUrl = instance.session.liveUrl;
@@ -261,13 +262,33 @@ export class BrowserSession {
     return this;
   }
 
+  public onDestroy(callback: () => unknown) {
+    this.onDestroyCallbacks.add(callback);
+
+    return () => {
+      this.onDestroyCallbacks.delete(callback);
+    };
+  }
+
   public async destroy() {
     if (this.destroying) {
       return;
     }
     this.destroying = true;
     await this.registry.destroy(this.id);
+    const callbacks: Promise<unknown>[] = [];
+    for (const cb of this.onDestroyCallbacks) {
+      try {
+        callbacks.push(Promise.resolve(cb()));
+      } catch (err) {
+        this.logger.error(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          `Error in onDestroy callback for browser session ${this.id}: ${err as any}`,
+        );
+      }
+    }
     this.controller.abort();
+    await Promise.all(callbacks);
   }
 
   public setupHeartbeat() {
@@ -298,12 +319,15 @@ export class BrowserSession {
   }
 
   public onBrowserMessage(
-    messageCallback: (data: BrowserBackendChannelMessage) => unknown,
+    messageCallback: (
+      this: BrowserSession,
+      data: BrowserBackendChannelMessage,
+    ) => unknown,
   ) {
-    this.browserMessageCallbacks.add(messageCallback);
+    this.onBrowserMessageCallbacks.add(messageCallback);
 
     return () => {
-      this.browserMessageCallbacks.delete(messageCallback);
+      this.onBrowserMessageCallbacks.delete(messageCallback);
     };
   }
 
@@ -316,7 +340,7 @@ export class BrowserSession {
         }
       }
 
-      for (const cb of this.browserMessageCallbacks) {
+      for (const cb of this.onBrowserMessageCallbacks) {
         cb(message);
       }
     };

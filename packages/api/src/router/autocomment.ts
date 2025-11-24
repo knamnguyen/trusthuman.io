@@ -227,33 +227,34 @@ export const autoCommentRouter = {
         input.accountId,
         {
           liveviewViewOnlyMode: process.env.NODE_ENV === "production",
-          onBrowserMessage: async function (data) {
-            switch (data.action) {
-              case "stopAutoCommenting": {
-                await this.destroy();
-                break;
-              }
-              case "autoCommentingCompleted": {
-                await Promise.all([
-                  this.destroy(),
-                  ctx.db.autoCommentRun.update({
-                    where: { id: data.payload.autoCommentRunId },
-                    data: {
-                      status: data.payload.success ? "completed" : "errored",
-                      error: data.payload.error,
-                      endedAt: new Date(),
-                    },
-                  }),
-                ]);
-              }
-            }
-          },
         },
       );
 
       if (browserSession.status === "error") {
         return browserSession;
       }
+
+      browserSession.instance.onBrowserMessage(async function (data) {
+        switch (data.action) {
+          case "stopAutoCommenting": {
+            await this.destroy();
+            break;
+          }
+          case "autoCommentingCompleted": {
+            await Promise.all([
+              this.destroy(),
+              ctx.db.autoCommentRun.update({
+                where: { id: data.payload.autoCommentRunId },
+                data: {
+                  status: data.payload.success ? "completed" : "errored",
+                  error: data.payload.error,
+                  endedAt: new Date(),
+                },
+              }),
+            ]);
+          }
+        }
+      });
 
       const instance = browserSession.instance;
 
