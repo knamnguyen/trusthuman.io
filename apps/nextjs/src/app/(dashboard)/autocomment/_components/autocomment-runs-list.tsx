@@ -39,7 +39,7 @@ export function AutoCommentRunsList() {
         }
 
         toast.success("Autocommenting stopped successfully");
-        queryClient.invalidateQueries({
+        void queryClient.invalidateQueries({
           queryKey: trpc.autocomment.runs.infiniteQueryKey(),
         });
       },
