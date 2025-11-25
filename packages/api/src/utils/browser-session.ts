@@ -4,6 +4,7 @@ import type { Browser, Page, WebWorker } from "puppeteer-core";
 import { Hyperbrowser } from "@hyperbrowser/sdk";
 import puppeteer from "puppeteer";
 import { connect, TargetType } from "puppeteer-core";
+import { ulid } from "ulidx";
 import { z } from "zod";
 
 import type { PrismaClient } from "@sassy/db";
@@ -592,6 +593,12 @@ export class BrowserSessionRegistry {
       const promises: Promise<any>[] = [];
       for (const instance of browserInstances) {
         if (!this.registry.has(instance.id)) {
+          // stop hyperbrowser session deliberately
+          // bcs this.destroy(instance.id) will skip stopping hyperbrowser session
+          // if if does not exist in the registry
+          promises.push(
+            this.stopHyperbrowserSession(instance.hyperbrowserSessionId),
+          );
           promises.push(this.destroy(instance.id));
           promises.push(
             this.db.browserInstance.update({
@@ -645,10 +652,10 @@ export class BrowserSessionRegistry {
 
     await this.db.browserInstance.upsert({
       where: {
-        id: session.id,
+        hyperbrowserSessionId: session.sessionId,
       },
       create: {
-        id: session.id,
+        id: ulid(),
         accountId: session.accountId,
         hyperbrowserSessionId: existing.instance.sessionId,
         status: "RUNNING",
@@ -665,6 +672,13 @@ export class BrowserSessionRegistry {
     return this.registry.has(id);
   }
 
+  private async stopHyperbrowserSession(sessionId: string) {
+    if (sessionId === "mock") {
+      return;
+    }
+    await hyperbrowser.sessions.stop(sessionId);
+  }
+
   async destroy(accountId: string) {
     const entry = this.registry.get(accountId);
     if (entry === undefined) {
@@ -672,7 +686,7 @@ export class BrowserSessionRegistry {
     }
     await Promise.all([
       entry.browser.close(),
-      hyperbrowser.sessions.stop(entry.sessionId),
+      this.stopHyperbrowserSession(entry.sessionId),
     ]);
     this.registry.delete(accountId);
   }
