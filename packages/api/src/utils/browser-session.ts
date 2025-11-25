@@ -6,6 +6,9 @@ import puppeteer from "puppeteer";
 import { connect, TargetType } from "puppeteer-core";
 import { z } from "zod";
 
+import type { PrismaClient } from "@sassy/db";
+import { db } from "@sassy/db";
+
 import type { Logger } from "./commons";
 import { env } from "./env";
 import { jwtFactory } from "./jwt";
@@ -100,6 +103,8 @@ export interface BrowserSessionParams {
 // TODO: store instance in postgres and then shut down on restart (should technically gracefully update statuses, so if running without an instance in the registry, means it should be shut down)
 export class BrowserSession {
   public id: string;
+  // accountId should be equal to id for now
+  public accountId!: string;
   public sessionId!: string;
   public browser!: Browser;
   public liveUrl!: string;
@@ -128,6 +133,7 @@ export class BrowserSession {
     private readonly logger: Logger = console,
   ) {
     this.id = opts.accountId;
+    this.accountId = opts.accountId;
   }
 
   static async getOrCreate(
@@ -299,7 +305,7 @@ export class BrowserSession {
         this.LATEST_HEARTBEAT_THRESHOLD_MS
       ) {
         this.logger.warn(
-          `No ping received from browser session ${this.id} in the last ${this.LATEST_HEARTBEAT_THRESHOLD_MS} seconds, destroying session`,
+          `No ping received from browser session ${this.id} in the last ${this.LATEST_HEARTBEAT_THRESHOLD_MS} ms, destroying session`,
         );
         clearInterval(interval);
         void this.destroy().catch((err) => {
@@ -559,13 +565,56 @@ export class BrowserSession {
 }
 
 export class BrowserSessionRegistry {
+  constructor(private readonly db: PrismaClient) {}
+
   private readonly registry = new Map<string, BrowserSession>();
+
+  async sync() {
+    // check for remote db if any running or initializing sessions
+    // these sessions are hung sessions that were not cleaned up properly
+    // we need to destroy them locally (if they exist)
+    // and set the state to STOPPED in the remote db
+    while (true) {
+      const browserInstances = await this.db.browserInstance.findMany({
+        where: {
+          OR: [
+            {
+              status: "RUNNING",
+            },
+            {
+              status: "INITIALIZING",
+            },
+          ],
+        },
+      });
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const promises: Promise<any>[] = [];
+      for (const instance of browserInstances) {
+        if (!this.registry.has(instance.id)) {
+          promises.push(this.destroy(instance.id));
+          promises.push(
+            this.db.browserInstance.update({
+              where: {
+                id: instance.id,
+              },
+              data: {
+                status: "STOPPED",
+              },
+            }),
+          );
+        }
+      }
+
+      await Promise.all(promises);
+    }
+  }
 
   get(id: string) {
     return this.registry.get(id);
   }
 
-  async register(session: BrowserSession) {
+  private async createIfNotExists(session: BrowserSession) {
     const existing = this.get(session.id);
     if (existing !== undefined) {
       const status = await hyperbrowser.sessions.get(existing.sessionId);
@@ -576,7 +625,8 @@ export class BrowserSessionRegistry {
         } as const;
       }
 
-      // if existing session exists but status is not active, we destroy it and create it again below
+      // if existing session exists but status is not active
+      // we destroy it and create it again below
       await this.destroy(session.id);
     }
 
@@ -588,6 +638,27 @@ export class BrowserSessionRegistry {
       status: "new",
       instance: browserSession,
     } as const;
+  }
+
+  async register(session: BrowserSession) {
+    const existing = await this.createIfNotExists(session);
+
+    await this.db.browserInstance.upsert({
+      where: {
+        id: session.id,
+      },
+      create: {
+        id: session.id,
+        accountId: session.accountId,
+        hyperbrowserSessionId: existing.instance.sessionId,
+        status: "RUNNING",
+      },
+      update: {
+        status: "RUNNING",
+      },
+    });
+
+    return existing;
   }
 
   has(id: string) {
@@ -611,13 +682,9 @@ export class BrowserSessionRegistry {
     await Promise.all(
       entries
         .filter(([_, entry]) => entry.sessionId !== "mock")
-        .map(async ([id, entry]) => {
-          await entry.browser.close();
-          await hyperbrowser.sessions.stop(id);
-          this.registry.delete(id);
-        }),
+        .map(([id]) => this.destroy(id)),
     );
   }
 }
 
-export const browserRegistry = new BrowserSessionRegistry();
+export const browserRegistry = new BrowserSessionRegistry(db);
