@@ -621,7 +621,7 @@ export class BrowserSessionRegistry {
     return this.registry.get(id);
   }
 
-  private async createIfNotExists(session: BrowserSession) {
+  private async getOrRegister(session: BrowserSession) {
     const existing = this.get(session.id);
     if (existing !== undefined) {
       const status = await hyperbrowser.sessions.get(existing.sessionId);
@@ -648,7 +648,7 @@ export class BrowserSessionRegistry {
   }
 
   async register(session: BrowserSession) {
-    const existing = await this.createIfNotExists(session);
+    const existing = await this.getOrRegister(session);
 
     await this.db.browserInstance.upsert({
       where: {
