@@ -34,6 +34,16 @@ const config = {
     ],
   },
 
+  async redirects() {
+    return [
+      {
+        source: '/blog/:slug*',
+        destination: 'https://blog.engagekit.io/:slug*',
+        permanent: true,
+      },
+    ];
+  },
+
   /** Add Prisma plugin to make it works with turbo deployment vercel*/
   webpack: (config, { isServer }) => {
     if (isServer) {
