@@ -250,6 +250,7 @@ export async function getOrInsertUser(
       username: clerkUser.username,
       primaryEmailAddress,
       imageUrl: clerkUser.imageUrl,
+      clerkUserProperties: clerkUser as unknown as Prisma.InputJsonValue,
       updatedAt: new Date(),
     },
     create: {
