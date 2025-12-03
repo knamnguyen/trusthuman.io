@@ -24,21 +24,6 @@ export type GetPublicTimelineInput = z.infer<
   typeof getPublicTimelineInputSchema
 >;
 
-// Individual video segment schema (shared between packages)
-export const VideoSegmentSchema = z.object({
-  caption: z
-    .string()
-    .min(1, "Caption is required and should be less than 150 characters"),
-  start: z
-    .number()
-    .int()
-    .nonnegative("Start time must be a non-negative integer"),
-  end: z.number().int().positive("End time must be a positive integer"),
-});
-
-// Type export for video segment
-export type VideoSegment = z.infer<typeof VideoSegmentSchema>;
-
 export const storageStateSchema = z.object({
   scrollDuration: z.number(),
   commentDelay: z.number(),

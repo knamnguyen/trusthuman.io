@@ -14,7 +14,8 @@
   "scripts": {
     "build": "tsc",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
-    "db:generate": "pnpm with-env prisma generate",
+    "db:generate": "pnpm with-env prisma generate && pnpm fix-prisma-names",
+    "fix-prisma-names": "tsx scripts/fix-prisma-package-names.ts",
     "db:push": "pnpm with-env prisma db push --skip-generate",
     "db:migrate": "pnpm with-env prisma migrate dev",
     "db:studio": "pnpm with-env prisma studio",
