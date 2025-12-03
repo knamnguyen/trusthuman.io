@@ -4,8 +4,10 @@
   "version": "1.4.9",
   "description": "Automatically comment on LinkedIn posts using AI",
   "action": {
-    "default_icon": "icon-32.png",
-    "default_popup": "src/pages/popup/index.html"
+    "default_popup": "src/pages/popup/index.html",
+    "default_icon": {
+      "32": "icon-32.png"
+    }
   },
   "options_page": "src/pages/options/index.html",
   "icons": {
@@ -35,7 +37,7 @@
   "content_scripts": [
     {
       "js": [
-        "assets/index.tsx-loader-xi4yzTTn.js"
+        "assets/index.tsx-loader-xiR51wmG.js"
       ],
       "matches": [
         "https://*.linkedin.com/*"
@@ -54,12 +56,11 @@
         "contentStyle.css",
         "icon-128.png",
         "icon-32.png",
-        "assets/get-sync-host-Cl3UakQu.js",
+        "assets/react-Dlr6nuqz.js",
         "assets/profile-extract-button-E_OM6-m_.js",
-        "assets/storage-DBwVD2h_.js",
-        "assets/index.ts-DNh3-lfh.js",
-        "assets/index-C4GW0my_.js",
-        "assets/index.tsx-DeFAYqbm.js"
+        "assets/storage-Bsaabweh.js",
+        "assets/index-CP-b3-11.js",
+        "assets/index.tsx-CvHNA2wC.js"
       ],
       "use_dynamic_url": false
     }

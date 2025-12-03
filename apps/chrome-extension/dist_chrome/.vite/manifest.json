@@ -1,42 +1,64 @@
 {
-  "../../../../../../@crx/manifest": {
-    "file": "assets/crx-manifest.js-Dw6Y1s8U.js",
+  "../../../../../../../../../@crx/manifest": {
+    "file": "assets/crx-manifest.js-DNbPthow.js",
     "name": "crx-manifest.js",
-    "src": "../../../../../../@crx/manifest",
+    "src": "../../../../../../../../../@crx/manifest",
     "isEntry": true
   },
-  "_get-sync-host-Cl3UakQu.js": {
-    "file": "assets/get-sync-host-Cl3UakQu.js",
+  "_get-sync-host-CCHy64Z3.js": {
+    "file": "assets/get-sync-host-CCHy64Z3.js",
     "name": "get-sync-host",
     "imports": [
-      "_index-C4GW0my_.js"
+      "_index-CP-b3-11.js",
+      "_index-Dr715SCd.js"
     ]
   },
-  "_index-C4GW0my_.js": {
-    "file": "assets/index-C4GW0my_.js",
+  "_index-CP-b3-11.js": {
+    "file": "assets/index-CP-b3-11.js",
     "name": "index"
   },
-  "_index.tsx-loader-xi4yzTTn.js": {
-    "file": "assets/index.tsx-loader-xi4yzTTn.js",
-    "src": "_index.tsx-loader-xi4yzTTn.js"
+  "_index-Dr715SCd.js": {
+    "file": "assets/index-Dr715SCd.js",
+    "name": "index",
+    "imports": [
+      "_index-CP-b3-11.js"
+    ]
+  },
+  "_index.tsx-loader-xiR51wmG.js": {
+    "file": "assets/index.tsx-loader-xiR51wmG.js",
+    "src": "_index.tsx-loader-xiR51wmG.js"
   },
   "_profile-extract-button-E_OM6-m_.js": {
     "file": "assets/profile-extract-button-E_OM6-m_.js",
     "name": "profile-extract-button"
   },
-  "_react-icons.esm-ChaHjZKj.js": {
-    "file": "assets/react-icons.esm-ChaHjZKj.js",
-    "name": "react-icons.esm",
+  "_react-Dlr6nuqz.js": {
+    "file": "assets/react-Dlr6nuqz.js",
+    "name": "react",
     "imports": [
-      "_index-C4GW0my_.js"
+      "_index-CP-b3-11.js"
     ]
   },
-  "_storage-DBwVD2h_.js": {
-    "file": "assets/storage-DBwVD2h_.js",
+  "_react-icons-DeoNdmsK.css": {
+    "file": "assets/react-icons-DeoNdmsK.css",
+    "src": "_react-icons-DeoNdmsK.css"
+  },
+  "_react-icons.esm-CYlWsFaW.js": {
+    "file": "assets/react-icons.esm-CYlWsFaW.js",
+    "name": "react-icons.esm",
+    "imports": [
+      "_index-CP-b3-11.js"
+    ],
+    "css": [
+      "assets/react-icons-DeoNdmsK.css"
+    ]
+  },
+  "_storage-Bsaabweh.js": {
+    "file": "assets/storage-Bsaabweh.js",
     "name": "storage",
     "imports": [
-      "_index-C4GW0my_.js",
-      "_get-sync-host-Cl3UakQu.js"
+      "_index-CP-b3-11.js",
+      "_react-Dlr6nuqz.js"
     ]
   },
   "public/icon-128.png": {
@@ -44,52 +66,56 @@
     "src": "public/icon-128.png"
   },
   "src/pages/background/index.ts": {
-    "file": "assets/index.ts-DNh3-lfh.js",
+    "file": "assets/index.ts-BNkTF4_U.js",
     "name": "index.ts",
     "src": "src/pages/background/index.ts",
     "isEntry": true,
     "imports": [
-      "_get-sync-host-Cl3UakQu.js",
-      "_index-C4GW0my_.js"
+      "_get-sync-host-CCHy64Z3.js",
+      "_react-Dlr6nuqz.js",
+      "_index-CP-b3-11.js",
+      "_index-Dr715SCd.js"
     ]
   },
   "src/pages/content/index.tsx": {
-    "file": "assets/index.tsx-DeFAYqbm.js",
+    "file": "assets/index.tsx-CvHNA2wC.js",
     "name": "index.tsx",
     "src": "src/pages/content/index.tsx",
     "isEntry": true,
     "imports": [
-      "_get-sync-host-Cl3UakQu.js",
+      "_react-Dlr6nuqz.js",
       "_profile-extract-button-E_OM6-m_.js",
-      "_storage-DBwVD2h_.js",
-      "src/pages/background/index.ts",
-      "_index-C4GW0my_.js"
+      "_storage-Bsaabweh.js",
+      "_index-CP-b3-11.js"
     ]
   },
   "src/pages/options/index.html": {
-    "file": "assets/index.html-C57nAWLH.js",
+    "file": "assets/index.html-DLFt-ODc.js",
     "name": "index.html",
     "src": "src/pages/options/index.html",
     "isEntry": true,
     "imports": [
-      "_react-icons.esm-ChaHjZKj.js",
-      "_index-C4GW0my_.js",
-      "_profile-extract-button-E_OM6-m_.js"
+      "_react-icons.esm-CYlWsFaW.js",
+      "_index-CP-b3-11.js",
+      "_profile-extract-button-E_OM6-m_.js",
+      "_index-Dr715SCd.js"
     ]
   },
   "src/pages/popup/index.html": {
-    "file": "assets/index.html-DEHhjVim.js",
+    "file": "assets/index.html-TlNf1mEF.js",
     "name": "index.html",
     "src": "src/pages/popup/index.html",
     "isEntry": true,
     "imports": [
-      "_react-icons.esm-ChaHjZKj.js",
-      "_index-C4GW0my_.js",
-      "_get-sync-host-Cl3UakQu.js",
-      "_storage-DBwVD2h_.js"
+      "_react-icons.esm-CYlWsFaW.js",
+      "_index-CP-b3-11.js",
+      "_react-Dlr6nuqz.js",
+      "_get-sync-host-CCHy64Z3.js",
+      "_storage-Bsaabweh.js",
+      "_index-Dr715SCd.js"
     ],
     "css": [
-      "assets/index-CAZtBAyg.css"
+      "assets/index-addibwyn.css"
     ],
     "assets": [
       "assets/icon-128-C-YV5z2v.png"
