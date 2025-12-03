@@ -8,18 +8,10 @@ import {
 } from "../schema-validators";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
-// Get Google GenAI API key from environment
-const apiKey = process.env.GOOGLE_GENAI_API_KEY;
-if (!apiKey) {
-  console.error(
-    "AI Comments Router: GOOGLE_GENAI_API_KEY not found in environment",
-  );
-  throw new TRPCError({
-    code: "INTERNAL_SERVER_ERROR",
-    message: "AI service configuration error",
-  });
-}
-
+// Instantiate at module load like Stripe/Apify routers
+// Use fallback empty string to avoid throwing during Next.js build time
+// The service will only be used at runtime when mutations are called
+const apiKey = process.env.GOOGLE_GENAI_API_KEY ?? "";
 const ai = new GoogleGenAI({ apiKey });
 
 /**
@@ -250,6 +242,15 @@ Lastly but most importantly, you must ahere to the style guide below given by th
       const groundingTool = {
         googleSearch: {},
       };
+
+      // Validate API key at runtime when actually using the service
+      if (!apiKey) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            "AI service configuration error: GOOGLE_GENAI_API_KEY not found",
+        });
+      }
 
       try {
         const response = await ai.models.generateContent({
