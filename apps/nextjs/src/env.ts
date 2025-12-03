@@ -22,6 +22,9 @@ export const env = createEnv({
     STRIPE_SECRET_KEY: z.string(),
     STRIPE_WEBHOOK_SECRET: z.string(),
     LOOPS_API_KEY: z.string(),
+    LINKEDIN_PASSWORD_SECRET_KEY: z.string(),
+    LINKEDIN_TWO_FA_SECRET_KEY: z.string(),
+    HYPERBROWSER_API_KEY: z.string(),
   },
 
   /**
