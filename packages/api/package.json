@@ -14,29 +14,37 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
     "with-env": "dotenv --override -e ../../.env --",
+    "deploy-extension-hyperbrowser": "pnpm with-env pnpm tsx ./scripts/deploy-extension.ts",
     "apify:test": "pnpm with-env bun ./scripts/test-linkedin-scrape-apify.ts",
     "import:profiles": "pnpm with-env bun ./scripts/import-linkedin-profiles.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.12.5",
     "@google/genai": "^1.5.1",
+    "@hyperbrowser/sdk": "^0.65.0",
     "@sassy/db": "workspace:*",
+    "@sassy/feature-flags": "workspace:*",
     "@sassy/linkedin-scrape-apify": "workspace:*",
     "@sassy/stripe": "workspace:*",
     "@sassy/validators": "workspace:*",
     "@trpc/server": "catalog:",
-    "data-fns": "^1.1.0",
     "date-fns": "^4.1.0",
+    "otplib": "^12.0.1",
+    "puppeteer-core": "^24.22.3",
     "superjson": "2.2.2",
+    "ulidx": "^2.4.1",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@sassy/eslint-config": "workspace:*",
     "@sassy/prettier-config": "workspace:*",
     "@sassy/tsconfig": "workspace:*",
+    "@types/bun": "^1.2.23",
+    "bun": "^1.2.23",
     "dotenv-cli": "^8.0.0",
     "eslint": "catalog:",
     "prettier": "catalog:",
+    "puppeteer": "^24.24.0",
     "typescript": "catalog:"
   },
   "prettier": "@sassy/prettier-config"

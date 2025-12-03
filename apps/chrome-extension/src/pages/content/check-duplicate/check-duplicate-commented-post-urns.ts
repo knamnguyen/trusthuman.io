@@ -23,15 +23,18 @@ async function loadCommentedPostUrns(): Promise<void> {
 /**
  * Persist a new commented post URN into storage and the in-memory cache.
  */
-async function saveCommentedPostUrn(urn: string): Promise<void> {
+async function saveCommentedPostUrn(urns: string[]): Promise<void> {
   const timestamp = Date.now();
-  commentedPostUrns.set(urn, timestamp);
+
+  for (const urn of urns) {
+    commentedPostUrns.set(urn, timestamp);
+  }
 
   return new Promise((resolve) => {
     const urnsObject = Object.fromEntries(commentedPostUrns);
     chrome.storage.local.set({ commented_post_urns: urnsObject }, () => {
       console.log(
-        `Saved commented post URN: ${urn} at timestamp: ${timestamp}`,
+        `Saved commented post URN: ${urns} at timestamp: ${timestamp}`,
       );
       resolve();
     });

@@ -29,7 +29,7 @@ model User {
   firstName            String?
   lastName             String?
   username             String?    @unique
-  primaryEmailAddress  String    @unique
+  primaryEmailAddress  String     @unique
   imageUrl             String?
   clerkUserProperties  Json?
   stripeCustomerId     String?    @unique
@@ -39,7 +39,40 @@ model User {
   createdAt            DateTime   @default(now())
   updatedAt            DateTime   @updatedAt
 
-  profileImportRuns    ProfileImportRun[]
+  profileImportRuns ProfileImportRun[]
+  linkedInAccounts  LinkedInAccount[]
+
+  UserBrowserState   UserBrowserState[]
+  Comments           UserComment[]
+  AutoCommentRun     AutoCommentRun[]
+  CommentStyle       CommentStyle[]
+  AutoCommentConfig  AutoCommentConfig[]
+  BlacklistedProfile BlacklistedProfile[]
+}
+
+model LinkedInAccount {
+  id                 String                @id @default(uuid())
+  user               User                  @relation(fields: [userId], references: [id])
+  userId             String
+  email              String                @unique
+  status             LinkedInAccountStatus
+  createdAt          DateTime              @default(now())
+  staticIpId         String?
+  browserProfileId   String
+  location           String
+  name               String?
+  isRunning          Boolean               @default(false)
+  AutoCommentConfig  AutoCommentConfig[]
+  BlacklistedProfile BlacklistedProfile[]
+  AutoCommentRun     AutoCommentRun[]
+  BrowserInstance    BrowserInstance[]
+  userComments       UserComment[]
+}
+
+enum LinkedInAccountStatus {
+  ACTIVE
+  CONNECTING
+  SUSPENDED
 }
 
 enum AccessType {
@@ -56,24 +89,24 @@ enum ImportStatus {
 }
 
 model ProfileImportRun {
-  id        String   @id @default(uuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  urls      String[]
-  status    ImportStatus @default(NOT_STARTED)
-  urlsSucceeded String[] @default([])
-  urlsFailed    String[] @default([])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String       @id @default(uuid())
+  userId        String
+  user          User         @relation(fields: [userId], references: [id])
+  urls          String[]
+  status        ImportStatus @default(NOT_STARTED)
+  urlsSucceeded String[]     @default([])
+  urlsFailed    String[]     @default([])
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 }
 
 model LinkedInProfile {
-  id                      String   @id @default(uuid())                // Unique identifier
-  linkedinUrl             String                                      // Required
-  fullName                String                                      // Required
-  headline                String                                      // Required
-  urn                     String   @unique                            // Required, globally unique
-  profilePic              String                                      // Required
+  id          String @id @default(uuid()) // Unique identifier
+  linkedinUrl String // Required
+  fullName    String // Required
+  headline    String // Required
+  urn         String @unique // Required, globally unique
+  profilePic  String // Required
 
   firstName               String?
   lastName                String?
@@ -122,6 +155,150 @@ model LinkedInProfile {
   interests               Json?
   recommendations         Json?
 
-  createdAt               DateTime @default(now())
-  updatedAt               DateTime @updatedAt
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  targetProfiles TargetProfile[]
+}
+
+model UserComment {
+  id               String           @id
+  urn              String
+  postContentHtml  String?
+  hash             String?
+  autoCommentRunId String?
+  comment          String
+  userId           String?
+  accountId        String?
+  commentedAt      DateTime?
+  isDuplicate      Boolean          @default(false)
+  isAutoCommented  Boolean          @default(true)
+  user             User?            @relation(fields: [userId], references: [id])
+  autoCommentRun   AutoCommentRun?  @relation(fields: [autoCommentRunId], references: [id])
+  account          LinkedInAccount? @relation(fields: [accountId], references: [id])
+
+  @@index([hash])
+  @@index([urn])
+  @@index([commentedAt])
+}
+
+model AutoCommentRun {
+  id        String        @id
+  userId    String
+  accountId String
+  liveUrl   String
+  startedAt DateTime      @default(now())
+  endedAt   DateTime?
+  error     String?
+  status    String
+  comments  UserComment[]
+
+  user    User            @relation(fields: [userId], references: [id])
+  account LinkedInAccount @relation(fields: [accountId], references: [id])
+}
+
+model UserBrowserState {
+  userId String @id
+  state  String
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+model TargetList {
+  id             String          @id
+  userId         String
+  name           String
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  targetProfiles TargetProfile[]
+}
+
+model TargetProfile {
+  id         String          @id
+  listId     String
+  userId     String
+  profileUrn String          @unique
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  list       TargetList      @relation(fields: [listId], references: [id])
+  profile    LinkedInProfile @relation(fields: [profileUrn], references: [urn])
+
+  @@unique([listId, profileUrn])
+}
+
+model BlacklistedProfile {
+  id         String   @id
+  accountId  String
+  userId     String
+  profileUrn String
+  createdAt  DateTime @default(now())
+
+  user    User            @relation(fields: [userId], references: [id])
+  account LinkedInAccount @relation(fields: [accountId], references: [id])
+
+  @@unique([accountId, profileUrn])
+}
+
+model ExtensionDeploymentMeta {
+  id        String   @id
+  createdAt DateTime @default(now())
+}
+
+model CommentStyle {
+  id        String   @id
+  userId    String
+  name      String
+  prompt    String
+  createdAt DateTime @default(now())
+
+  user              User                @relation(fields: [userId], references: [id])
+  AutoCommentConfig AutoCommentConfig[]
+}
+
+model AutoCommentConfig {
+  accountId                   String  @id
+  userId                      String
+  scrollDuration              Int
+  commentDelay                Int
+  maxPosts                    Int
+  duplicateWindow             Int
+  finishListModeEnabled       Boolean
+  commentAsCompanyEnabled     Boolean
+  timeFilterEnabled           Boolean
+  minPostAge                  Int?
+  manualApproveEnabled        Boolean
+  authenticityBoostEnabled    Boolean
+  targetListId                String?
+  defaultCommentStyle         String?
+  // commentStyleId is custom style id
+  // defaultCommentStyle is from ready made prompts
+  commentStyleId              String?
+  commentProfileName          String?
+  languageAwareEnabled        Boolean
+  blacklistEnabled            Boolean
+  skipPromotedPostsEnabled    Boolean
+  skipFriendActivitiesEnabled Boolean
+  skipCompanyPagesEnabled     Boolean
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  linkedInAccount LinkedInAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  commentStyle    CommentStyle?   @relation(fields: [commentStyleId], references: [id], onDelete: SetNull)
+}
+
+enum BrowserInstanceStatus {
+  INITIALIZING
+  RUNNING
+  STOPPED
+  ERROR
+}
+
+model BrowserInstance {
+  id                    String                @id
+  hyperbrowserSessionId String                @unique
+  accountId             String
+  status                BrowserInstanceStatus
+  createdAt             DateTime              @default(now())
+
+  linkedInAccount LinkedInAccount @relation(fields: [accountId], references: [id])
 }

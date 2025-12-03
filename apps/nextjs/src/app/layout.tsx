@@ -5,15 +5,13 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
 import { SpeedInsights as VercelSpeedInsights } from "@vercel/speed-insights/next";
 
-import { ThemeProvider } from "@sassy/ui/theme";
 import { Toaster } from "@sassy/ui/toast";
 import { cn } from "@sassy/ui/utils";
-
-import { TRPCReactProvider } from "~/trpc/react";
 
 import "~/app/globals.css";
 
 import { env } from "~/env";
+import { Providers } from "./providers";
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -99,14 +97,12 @@ export default function RootLayout(props: { children: React.ReactNode }) {
           plusJakartaSans.variable,
         )}
       >
-        <ClerkProvider afterSignOutUrl="/" redirectUrl="/extension-auth">
-          <ThemeProvider attribute="class" defaultTheme="light">
-            <TRPCReactProvider>{props.children}</TRPCReactProvider>
-            <Toaster />
-            {env.VERCEL_ENV === "production" && <VercelAnalytics />}
-            {env.VERCEL_ENV === "production" && <VercelSpeedInsights />}
-          </ThemeProvider>
-        </ClerkProvider>
+        <Providers>
+          {props.children}
+          <Toaster />
+          {env.VERCEL_ENV === "production" && <Analytics />}
+          {env.VERCEL_ENV === "production" && <SpeedInsights />}
+        </Providers>
       </body>
     </html>
   );

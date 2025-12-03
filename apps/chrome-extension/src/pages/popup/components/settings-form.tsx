@@ -1,9 +1,12 @@
 import React from "react";
 import { PlusIcon, TrashIcon } from "@radix-ui/react-icons";
 
-import { DEFAULT_STYLE_GUIDES_FREE } from "../../../config/default-style-guides-free";
-import { DEFAULT_STYLE_GUIDES_PREMIUM } from "../../../config/default-style-guides-premium";
-import { FEATURE_CONFIG } from "../../../config/features";
+import {
+  DEFAULT_STYLE_GUIDES_FREE,
+  DEFAULT_STYLE_GUIDES_PREMIUM,
+  FEATURE_CONFIG,
+} from "@sassy/feature-flags";
+
 import { UpgradeLink } from "./comment-limit-status";
 
 /**

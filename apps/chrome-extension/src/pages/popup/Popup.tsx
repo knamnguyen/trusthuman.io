@@ -1,9 +1,12 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+
+import {
+  DEFAULT_STYLE_GUIDES_FREE,
+  DEFAULT_STYLE_GUIDES_PREMIUM,
+  FEATURE_CONFIG,
+} from "@sassy/feature-flags";
 
 import engageKitLogo from "../../../public/icon-128.png";
-import { DEFAULT_STYLE_GUIDES_FREE } from "../../config/default-style-guides-free";
-import { DEFAULT_STYLE_GUIDES_PREMIUM } from "../../config/default-style-guides-premium";
-import { FEATURE_CONFIG } from "../../config/features";
 import { useBackgroundAuth } from "../../hooks/use-background-auth";
 import { useDailyCommentCount } from "../../hooks/use-daily-comment-count";
 import { usePremiumStatus } from "../../hooks/use-premium-status";
@@ -51,9 +54,55 @@ const getStyleGuidePrompt = (
   return DEFAULT_STYLE_GUIDES_FREE.PROFESSIONAL.prompt;
 };
 
+export function useAttachUserJwt() {
+  const [userJwt] = useState(() => {
+    const url = new URL(document.URL);
+    const userJwt = url.searchParams.get("userJwt");
+    return userJwt;
+  });
+  // pending denotes that the attachTokenToSession is still pending
+  const [pending, setPending] = useState(true);
+  const [valid, setValid] = useState(false);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    async function run() {
+      if (userJwt !== null) {
+        try {
+          const attached = await chrome.runtime.sendMessage({
+            action: "attachTokenToSession",
+            payload: {
+              token: userJwt,
+            },
+          });
+
+          setValid(!!attached.success);
+
+          const ready = await chrome.runtime.sendMessage({
+            action: "readyForAction",
+          });
+
+          if (ready.success) {
+            setReady(true);
+          }
+        } finally {
+          setPending(false);
+        }
+      }
+    }
+
+    void run();
+  }, [userJwt]);
+
+  return { valid, userJwt, pending, ready };
+}
+
 export default function Popup() {
+  const attachUserJwt = useAttachUserJwt();
+
   const { user, isLoaded, isSignedIn, signOut, isSigningOut } =
     useBackgroundAuth();
+
   const {
     isPremium,
     isLoading: isPremiumLoading,
@@ -771,6 +820,20 @@ export default function Popup() {
     }
   };
 
+  const handleAutoCommentOpenConfigPage = () => {
+    try {
+      if (chrome.runtime?.openOptionsPage) {
+        chrome.runtime.openOptionsPage();
+      } else {
+        chrome.tabs.create?.({
+          url: chrome.runtime.getURL("options.html#autocomment"),
+        });
+      }
+    } catch (err) {
+      console.error("Failed to open config page", err);
+    }
+  };
+
   const handleOpenListFeed = async () => {
     try {
       if (!targetListEnabled) {
@@ -911,6 +974,9 @@ export default function Popup() {
     }
   };
 
+  // TODO: figure out what's the best way to start autocommenting scripts and all here in browserbase mode
+  // we might not even need to do it in react, just call it from background directly or something
+
   // If user has never signed in, show sign-in UI (skip loading entirely)
   if (!hasEverSignedIn) return <Auth />;
 
@@ -972,6 +1038,18 @@ export default function Popup() {
                 Start Auto Commenting
               </button>
             )}
+            <button
+              onClick={handleAutoCommentOpenConfigPage}
+              className="mt-2 w-full cursor-pointer rounded-md border-2 border-blue-500 px-4 py-3 font-medium text-blue-600 transition-colors hover:bg-blue-200 disabled:cursor-not-allowed disabled:border-transparent disabled:bg-gray-400 disabled:text-white"
+              disabled={
+                isInitialDataLoading ||
+                !styleGuide.trim() ||
+                isDailyLimitReached ||
+                styleGuideTooLong
+              }
+            >
+              Configure Cloud Mode
+            </button>
           </div>
 
           <StatisticsDashboard

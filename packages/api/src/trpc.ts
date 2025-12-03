@@ -9,12 +9,15 @@
 
 import type { User } from "@clerk/nextjs/server";
 import { createClerkClient, verifyToken } from "@clerk/backend";
-import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
 
+import type { Prisma, PrismaClient } from "@sassy/db";
 import { db } from "@sassy/db";
+
+import { assumedAccountJwt } from "./utils/browser-session";
 
 /**
  * 1. CONTEXT
@@ -29,15 +32,22 @@ import { db } from "@sassy/db";
  * @see https://trpc.io/docs/server/context
  */
 
+export type DbUser = Prisma.UserGetPayload<{
+  select: {
+    id: true;
+    accessType: true;
+    dailyAIcomments: true;
+    firstName: true;
+    primaryEmailAddress: true;
+  };
+}>;
 export interface TRPCContext {
   db: typeof db;
-  user?: User;
+  user?: DbUser;
   headers: Headers;
 }
 
-export const createTRPCContext = async (opts: {
-  headers: Headers;
-}): Promise<TRPCContext> => {
+export const createTRPCContext = (opts: { headers: Headers }): TRPCContext => {
   const source = opts.headers.get("x-trpc-source");
   console.log(">>> tRPC Request from", source ?? "nextjs");
 
@@ -77,8 +87,40 @@ const clerkClient = createClerkClient({
  * - Chrome extension requests: Uses Backend SDK to verify Authorization header
  */
 const isAuthed = t.middleware(async ({ ctx, next }) => {
+  const assumedUserToken = ctx.headers.get("x-assumed-user-token");
+
+  // check for assumedUserToken
+  if (assumedUserToken !== null) {
+    const decoded = await assumedAccountJwt.decode(assumedUserToken);
+    if (!decoded.success) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "Invalid assumed user token",
+      });
+    }
+
+    const result = await getAccount(decoded.payload.accountId);
+
+    if (result === null) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "Assumed account not found",
+      });
+    }
+
+    const { user, ...account } = result;
+
+    return next({
+      ctx: {
+        ...ctx,
+        user,
+        // we need to cast here bcs somehow type inference is not catching that account is nullable
+        account: account as typeof account | null,
+      },
+    });
+  }
+
   const source = ctx.headers.get("x-trpc-source");
-  let user: User | null = null;
 
   if (source === "chrome-extension") {
     // Handle Chrome extension authentication using Backend SDK
@@ -99,82 +141,141 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
       token.split(".").length,
     );
 
-    try {
-      // Check if this is a JWT (3 parts separated by dots) or a session ID
-      if (token.split(".").length === 3) {
-        // This is a JWT - use verifyToken
-        console.log("Attempting JWT verification...");
-        const verifiedToken = await verifyToken(token, {
-          secretKey: process.env.CLERK_SECRET_KEY,
-        });
+    const userId = await getUserIdFromClerkToken(token);
 
-        if (verifiedToken.sub) {
-          user = await clerkClient.users.getUser(verifiedToken.sub);
-          console.log("Chrome extension JWT auth success for user:", user.id);
-        }
-      } else {
-        // This is likely a session ID - use Clerk client directly
-        console.log("Attempting session ID verification...");
+    const user = await getOrInsertUser(ctx.db, userId);
 
-        try {
-          // Try to get session information using the token as a session ID
-          const session = await clerkClient.sessions.getSession(token);
-
-          if (session.userId) {
-            user = await clerkClient.users.getUser(session.userId);
-            console.log(
-              "Chrome extension session auth success for user:",
-              user.id,
-            );
-          }
-        } catch (sessionError: unknown) {
-          const errorMessage =
-            sessionError instanceof Error
-              ? sessionError.message
-              : String(sessionError);
-          console.log("Session verification failed:", errorMessage);
-
-          // If session lookup fails, try to verify as a JWT anyway (fallback)
-          console.log("Falling back to JWT verification...");
-          const verifiedToken = await verifyToken(token, {
-            secretKey: process.env.CLERK_SECRET_KEY,
-          });
-
-          if (verifiedToken.sub) {
-            user = await clerkClient.users.getUser(verifiedToken.sub);
-            console.log(
-              "Chrome extension fallback JWT auth success for user:",
-              user.id,
-            );
-          }
-        }
-      }
-    } catch (error) {
-      console.error("Chrome extension auth error:", error);
-      throw new TRPCError({
-        code: "UNAUTHORIZED",
-        message: "Invalid session token",
-      });
-    }
-  } else {
-    // Handle Next.js authentication using currentUser()
-    user = await currentUser();
+    return next({
+      ctx: {
+        ...ctx,
+        user,
+        account: null,
+      },
+    });
   }
 
-  if (!user) {
+  const { isAuthenticated, userId } = await auth();
+
+  if (!isAuthenticated) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
       message: "Not authenticated",
     });
   }
 
+  const user = await getOrInsertUser(ctx.db, userId);
+
   return next({
     ctx: {
       ...ctx, // Keep existing context with db and headers
       user, // Add the user to the context
+      account: null,
     },
   });
 });
+
+async function getUserIdFromClerkToken(token: string) {
+  if (token.split(".").length === 3) {
+    // This is a JWT - use verifyToken
+    console.log("Attempting JWT verification...");
+    const verifiedToken = await verifyToken(token, {
+      secretKey: process.env.CLERK_SECRET_KEY,
+    });
+
+    return verifiedToken.sub;
+  }
+
+  // This is likely a session ID - use Clerk client directly
+  console.log("Attempting session ID verification...");
+
+  try {
+    // Try to get session information using the token as a session ID
+    const session = await clerkClient.sessions.getSession(token);
+
+    return session.userId;
+  } catch (sessionError) {
+    console.error("Session verification failed:", sessionError);
+
+    // If session lookup fails, try to verify as a JWT anyway (fallback)
+    console.log("Falling back to JWT verification...");
+    const verifiedToken = await verifyToken(token, {
+      secretKey: process.env.CLERK_SECRET_KEY,
+    });
+
+    return verifiedToken.sub;
+  }
+}
+
+const userFields = {
+  id: true,
+  accessType: true,
+  dailyAIcomments: true,
+  firstName: true,
+  primaryEmailAddress: true,
+} as const;
+
+export async function getOrInsertUser(
+  db: PrismaClient,
+  userId: string,
+  clerkUser?: User,
+) {
+  const dbUser = await db.user.findUnique({
+    where: {
+      id: userId,
+    },
+    select: userFields,
+  });
+
+  if (dbUser !== null) {
+    return dbUser;
+  }
+
+  // query for clerk user if not provided in function argument
+  clerkUser ??= await clerkClient.users.getUser(userId);
+
+  const primaryEmailAddress = clerkUser.primaryEmailAddress?.emailAddress;
+
+  if (primaryEmailAddress === undefined) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "User must have a primary email address",
+    });
+  }
+
+  const newUser = await db.user.upsert({
+    where: { id: clerkUser.id },
+    update: {
+      firstName: clerkUser.firstName,
+      lastName: clerkUser.lastName,
+      username: clerkUser.username,
+      primaryEmailAddress,
+      imageUrl: clerkUser.imageUrl,
+      updatedAt: new Date(),
+    },
+    create: {
+      id: clerkUser.id,
+      firstName: clerkUser.firstName,
+      lastName: clerkUser.lastName,
+      username: clerkUser.username,
+      primaryEmailAddress,
+      imageUrl: clerkUser.imageUrl,
+    },
+    select: userFields,
+  });
+
+  return newUser;
+}
+
+function getAccount(accountId: string) {
+  return db.linkedInAccount.findFirst({
+    where: { id: accountId },
+    include: {
+      user: {
+        select: userFields,
+      },
+    },
+  });
+}
 
 /**
  * Create a server-side caller

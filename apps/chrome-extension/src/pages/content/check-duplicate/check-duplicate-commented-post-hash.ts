@@ -22,15 +22,18 @@ async function loadCommentedPostHashes(): Promise<void> {
 /**
  * Persist a new commented post content hash into storage and the in-memory cache.
  */
-async function saveCommentedPostHash(hash: string): Promise<void> {
+async function saveCommentedPostHash(hashes: string[]): Promise<void> {
   const timestamp = Date.now();
-  commentedPostHashes.set(hash, timestamp);
+
+  for (let i = 0; i < hashes.length; i++) {
+    commentedPostHashes.set(hashes[i]!, timestamp);
+  }
 
   return new Promise((resolve) => {
     const hashesObject = Object.fromEntries(commentedPostHashes);
     chrome.storage.local.set({ commented_post_hashes: hashesObject }, () => {
       console.log(
-        `Saved commented post hash: ${hash.slice(0, 12)}... at timestamp: ${timestamp}`,
+        `Saved commented ${hashes.length} post hashes, at timestamp: ${timestamp}`,
       );
       resolve();
     });

@@ -1,15 +1,8 @@
 import wait from "@src/utils/wait";
 
 import { cleanupManualApproveUI } from "./approve-flow/cleanup";
-import { runManualApproveList } from "./approve-flow/manual-approve-list";
 import { runManualApproveStandard } from "./approve-flow/manual-approve-standard";
-import {
-  backgroundError,
-  backgroundGroup,
-  backgroundGroupEnd,
-  backgroundLog,
-  backgroundWarn,
-} from "./background-log";
+import { backgroundError, backgroundLog } from "./background-log";
 import {
   hasCommentedOnAuthorRecently,
   loadCommentedAuthorsWithTimestamps,
@@ -23,7 +16,6 @@ import {
 } from "./check-duplicate/check-duplicate-commented-post-hash";
 import {
   commentedPostUrns,
-  hasCommentedOnPostUrn,
   loadCommentedPostUrns,
   saveCommentedPostUrn,
 } from "./check-duplicate/check-duplicate-commented-post-urns";
@@ -50,6 +42,14 @@ import updateCommentCounts from "./update-comment-counts";
 import "./attach-engage-button";
 import "./init-comment-history";
 import "./profile-target-list";
+
+import { appStorage } from "@src/services/storage";
+import { getStandaloneTRPCClient } from "@src/trpc/react";
+
+import { BrowserBackendChannelMessage } from "@sassy/api";
+
+import { type ContentScriptMessage } from "../background";
+import { contentScriptContext } from "./context";
 
 // Pronoun rule for company mode
 const COMPANY_PRONOUN_RULE =
@@ -95,6 +95,9 @@ if (document.readyState !== "loading") {
 
 // Function to show the start button overlay
 function showStartButton() {
+  // TODO: refactor this to be runnable by pupetteer
+  // or even just run this fn and stream the session to hyperbrowser clients
+  // https://www.hyperbrowser.ai/docs/sessions/recordings#get-video-recording-url
   console.log("🚀 Showing start button for EngageKit...");
 
   // Don't show multiple buttons
@@ -429,7 +432,7 @@ function showStartButton() {
                   tabAudio.stop();
                 }
               } else {
-                startNewCommentingFlowWithDelayedTabSwitch(
+                startNewCommentingFlowWithDelayedTabSwitch({
                   scrollDuration,
                   commentDelay,
                   maxPosts,
@@ -442,9 +445,9 @@ function showStartButton() {
                   commentAsCompanyEnabled,
                   timeFilterEnabled,
                   minPostAge,
-                  !!cfg.manualApproveEnabled,
-                  authenticityBoostEnabledCfg,
-                );
+                  manualApproveEnabled: !!cfg.manualApproveEnabled,
+                  authenticityBoostEnabled: authenticityBoostEnabledCfg,
+                });
               }
             },
           );
@@ -476,55 +479,177 @@ function showStartButton() {
   console.log("🚀 Start button overlay displayed");
 }
 
+async function sendMessageToPuppeteerBackend(
+  message: BrowserBackendChannelMessage,
+) {
+  console.info("sending message to page:", message);
+  window.postMessage({
+    source: "engagekit_sendMessageToPuppeteerBackend",
+    payload: message,
+  });
+}
+
+let backgroundScriptReady = false;
+
+async function setupHandshakeWithBackgroundScript() {
+  while (true) {
+    const response = await chrome.runtime.sendMessage({
+      action: "engagekit_contentscript_handshake",
+    });
+
+    if (response && response.status === "ok") {
+      console.log("🤝 Handshake with background script successful");
+      backgroundScriptReady = true;
+      await sendMessageToPuppeteerBackend({
+        action: "ready",
+      });
+      break;
+    }
+
+    console.log("⏳ Handshake failed, retrying in 1 second...");
+    await wait(1000);
+  }
+}
+
 // (Audio logic moved to tab-audio.ts)
 
-// Listen for messages from the background script
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log("Content script received message:", request);
-
-  if (request.action === "showStartButton") {
-    console.log("📱 Popup requested to show start button");
-    showStartButton();
-    sendResponse({ success: true });
-  } else if (request.action === "startNewCommentingFlow") {
-    chrome.storage.local.get(
-      ["timeFilterEnabled", "minPostAge", "manualApproveEnabled"],
-      (r) => {
-        const timeFilterEnabled = r.timeFilterEnabled ?? false;
-        const minPostAge = r.minPostAge ?? 1;
-        const manualApproveEnabled = !!r.manualApproveEnabled;
-        startNewCommentingFlowWithDelayedTabSwitch(
-          request.scrollDuration,
-          request.commentDelay,
-          request.maxPosts,
-          request.styleGuide,
-          request.duplicateWindow || 24,
-          null as any,
-          null as any,
-          null as any,
-          null as any,
-          false,
-          timeFilterEnabled,
-          minPostAge,
-          manualApproveEnabled,
-        );
-      },
-    );
-    sendResponse({ success: true });
-  } else if (request.action === "stopCommentingFlow") {
-    console.log("Received stop signal - stopping commenting flow");
-    isCommentingActive = false;
-    try {
-      cleanupManualApproveUI();
-    } catch {}
-    tabAudio.stop();
-    sendResponse({ success: true });
-  } else if (request.action === "statusUpdate" && request.error) {
-    // Log error details to the website console for debugging
-    console.group("🚨 EngageKit Error Details");
-    console.error("Error Message:", request.error.message);
+window.addEventListener("message", (event) => {
+  console.info("Content script received window message:", event);
+  if (event.data.source !== "engagekit_page_to_contentscript") {
+    return;
   }
+
+  if (event.data.payload?.action === "setAssumedUserToken") {
+    contentScriptContext.setAssumedUserToken(event.data.payload.token);
+    console.info("setting assumed user token in content script context");
+    // send this to background script to refresh the assumed user tokens there
+    chrome.runtime.sendMessage({
+      action: "engagekit_setAssumedUserToken",
+      payload: {
+        token: event.data.payload.token,
+      },
+    });
+  }
+
+  handleContentScriptMessage(event.data.payload);
 });
+
+function handleContentScriptMessage(
+  request: ContentScriptMessage,
+  sendResponse?: (payload: any) => void,
+) {
+  console.info("Handling content script message:", request);
+  switch (request.action) {
+    case "sendMessageToPuppeteerBackend": {
+      window.postMessage({
+        source: "engagekit_sendMessageToPuppeteerBackend",
+        payload: request.payload,
+      });
+      sendResponse?.({ success: true });
+      break;
+    }
+
+    case "showStartButton": {
+      console.log("📱 Popup requested to show start button");
+      showStartButton();
+      sendResponse?.({ success: true });
+      break;
+    }
+    case "startNewCommentingFlow": {
+      console.info("Received start new commenting flow:", request);
+      (async () => {
+        try {
+          const settings = await appStorage.get([
+            "timeFilterEnabled",
+            "minPostAge",
+            "manualApproveEnabled",
+          ]);
+          const timeFilterEnabled = settings.timeFilterEnabled ?? false;
+          const minPostAge = settings.minPostAge ?? 1;
+          const manualApproveEnabled = !!settings.manualApproveEnabled;
+          await startNewCommentingFlowWithDelayedTabSwitch({
+            autoCommentRunId: request.params.autoCommentRunId,
+            scrollDuration: request.params.scrollDuration,
+            commentDelay: request.params.commentDelay,
+            maxPosts: request.params.maxPosts,
+            styleGuide: request.params.styleGuide,
+            duplicateWindow: request.params.duplicateWindow || 24,
+            commentAsCompanyEnabled:
+              request.params.commentAsCompanyEnabled ?? false,
+            timeFilterEnabled:
+              request.params.timeFilterEnabled ?? timeFilterEnabled,
+            minPostAge: request.params.minPostAge ?? minPostAge,
+            manualApproveEnabled:
+              request.params.manualApproveEnabled ?? manualApproveEnabled,
+            authenticityBoostEnabled: request.params.authenticityBoostEnabled,
+            commentProfileName: request.params.commentProfileName,
+            languageAwareEnabled: request.params.languageAwareEnabled,
+            skipCompanyPagesEnabled: request.params.skipCompanyPagesEnabled,
+            skipPromotedPostsEnabled: request.params.skipPromotedPostsEnabled,
+            skipFriendsActivitiesEnabled:
+              request.params.skipFriendsActivitiesEnabled,
+            blacklistEnabled:
+              request.params.blacklistAuthors !== undefined &&
+              request.params.blacklistAuthors.length > 0,
+            blacklistAuthors: request.params.blacklistAuthors,
+          });
+          sendResponse?.({ success: true });
+          chrome.runtime.sendMessage({
+            action: "autoCommentingCompleted",
+            payload: {
+              success: true,
+              autoCommentRunId: request.params.autoCommentRunId,
+            },
+          });
+          await sendMessageToPuppeteerBackend({
+            action: "autoCommentingCompleted",
+            payload: {
+              success: true,
+              autoCommentRunId: request.params.autoCommentRunId,
+            },
+          });
+        } catch (err) {
+          await sendMessageToPuppeteerBackend({
+            action: "autoCommentingCompleted",
+            payload: {
+              success: false,
+              autoCommentRunId: request.params.autoCommentRunId,
+              error: err instanceof Error ? err.message : String(err),
+            },
+          });
+        }
+      })();
+      break;
+    }
+    case "stopCommentingFlow": {
+      console.log("Received stop signal - stopping commenting flow");
+      isCommentingActive = false;
+      try {
+        cleanupManualApproveUI();
+      } catch {}
+      tabAudio.stop();
+      sendResponse?.({ success: true });
+      break;
+    }
+    case "statusUpdate": {
+      if (request.error) {
+        // Log error details to the website console for debugging
+        console.group("🚨 EngageKit Error Details");
+        console.error("Error Message:", request.error.message);
+      }
+      break;
+    }
+  }
+}
+
+// Listen for messages from the background script
+chrome.runtime.onMessage.addListener(
+  (request: ContentScriptMessage, sender, sendResponse) => {
+    console.log("Content script received message:", request);
+
+    handleContentScriptMessage(request, sendResponse);
+  },
+);
 
 // saveCommentedAuthorWithTimestamp, loadCommentedAuthorsWithTimestamps, hasCommentedOnAuthorRecently are imported from check-duplicate/check-duplicate-author-recency
 
@@ -567,22 +692,53 @@ async function loadCounters(): Promise<void> {
 }
 
 // Main function to start the new commenting flow with delayed tab switching
-async function startNewCommentingFlowWithDelayedTabSwitch(
-  scrollDuration: number,
-  commentDelay: number,
-  maxPosts: number,
-  styleGuide: string,
-  duplicateWindow: number,
-  overlay: HTMLDivElement,
-  startButton: HTMLButtonElement,
-  subtitle: HTMLParagraphElement,
-  statusPanel: HTMLDivElement,
-  commentAsCompanyEnabled: boolean = false,
-  timeFilterEnabled: boolean = false,
-  minPostAge: number = 1,
-  manualApproveEnabled: boolean = false,
-  authenticityBoostEnabled: boolean = false,
-) {
+async function startNewCommentingFlowWithDelayedTabSwitch(params: {
+  autoCommentRunId?: string;
+  scrollDuration: number;
+  commentDelay: number;
+  maxPosts: number;
+  styleGuide: string;
+  duplicateWindow: number;
+  overlay?: HTMLDivElement;
+  startButton?: HTMLButtonElement;
+  subtitle?: HTMLParagraphElement;
+  statusPanel?: HTMLDivElement;
+  commentAsCompanyEnabled?: boolean;
+  timeFilterEnabled?: boolean;
+  minPostAge?: number;
+  manualApproveEnabled?: boolean;
+  authenticityBoostEnabled?: boolean;
+  commentProfileName?: string;
+  languageAwareEnabled?: boolean;
+  skipCompanyPagesEnabled?: boolean;
+  skipPromotedPostsEnabled?: boolean;
+  skipFriendsActivitiesEnabled?: boolean;
+  blacklistEnabled?: boolean;
+  blacklistAuthors?: string[];
+}) {
+  const {
+    scrollDuration,
+    blacklistEnabled = false,
+    blacklistAuthors = [],
+    commentDelay,
+    maxPosts,
+    styleGuide,
+    duplicateWindow,
+    overlay,
+    startButton,
+    subtitle,
+    statusPanel,
+    commentAsCompanyEnabled = false,
+    timeFilterEnabled = false,
+    minPostAge = 1,
+    manualApproveEnabled = false,
+    authenticityBoostEnabled = false,
+    commentProfileName = "",
+    languageAwareEnabled = false,
+    skipCompanyPagesEnabled = false,
+    skipPromotedPostsEnabled = false,
+    skipFriendsActivitiesEnabled = false,
+  } = params;
   // ➡️ Persist the current LinkedIn username path for later usage in popup
   saveCurrentUsernameUrl();
 
@@ -609,41 +765,6 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
   console.log("CHECKpoinn 1");
 
   // Retrieve desired company profile name (if any) and language flag from storage once per session
-  const {
-    commentProfileName,
-    languageAwareEnabled,
-    skipCompanyPagesEnabled,
-    skipPromotedPostsEnabled,
-    skipFriendsActivitiesEnabled,
-  } = await new Promise<{
-    commentProfileName: string;
-    languageAwareEnabled: boolean;
-    skipCompanyPagesEnabled: boolean;
-    skipPromotedPostsEnabled: boolean;
-    skipFriendsActivitiesEnabled: boolean;
-    authenticityBoostEnabled: boolean;
-  }>((resolve) => {
-    chrome.storage.local.get(
-      [
-        "commentProfileName",
-        "languageAwareEnabled",
-        "skipCompanyPagesEnabled",
-        "skipPromotedPostsEnabled",
-        "skipFriendsActivitiesEnabled",
-        "authenticityBoostEnabled",
-      ],
-      (r) => {
-        resolve({
-          commentProfileName: (r.commentProfileName as string) || "",
-          languageAwareEnabled: r.languageAwareEnabled || false,
-          skipCompanyPagesEnabled: r.skipCompanyPagesEnabled || false,
-          skipPromotedPostsEnabled: r.skipPromotedPostsEnabled || false,
-          skipFriendsActivitiesEnabled: r.skipFriendsActivitiesEnabled || false,
-          authenticityBoostEnabled: r.authenticityBoostEnabled || false,
-        });
-      },
-    );
-  });
   console.log("CHECK POINT REACHED");
   const skipCompanyPages = skipCompanyPagesEnabled;
   const skipPromotedPosts = skipPromotedPostsEnabled;
@@ -651,26 +772,6 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
   console.log("CHECK POINT 2");
   // authenticityBoostEnabled already available from storage destructuring
   // Retrieve blacklist settings once per session
-  const { blacklistEnabled: blacklistEnabled, blacklistAuthors } =
-    await new Promise<{
-      blacklistEnabled: boolean;
-      blacklistAuthors: string;
-    }>((resolve) => {
-      chrome.storage.local.get(
-        ["blacklistEnabled", "blacklistAuthors"],
-        (r) => {
-          resolve({
-            blacklistEnabled: r.blacklistEnabled ?? false,
-            blacklistAuthors: (r.blacklistAuthors as string) ?? "",
-          });
-        },
-      );
-    });
-
-  const blacklistList = blacklistAuthors
-    .split(",")
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean);
 
   // Clean up old timestamp entries and post URNs to prevent storage bloat
   await cleanupOldTimestampsAuthor();
@@ -749,7 +850,7 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
         skipPromotedPosts,
         skipFriendsActivities,
         blacklistEnabled,
-        blacklistList,
+        blacklistList: blacklistAuthors,
         styleGuide,
         duplicateWindow,
         authenticityBoostEnabled,
@@ -768,7 +869,7 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
         timeFilterEnabled,
         minPostAge,
         blacklistEnabled,
-        blacklistList,
+        blacklistAuthors,
         skipCompanyPages,
         skipPromotedPosts,
         skipFriendsActivities,
@@ -802,6 +903,59 @@ async function startNewCommentingFlowWithDelayedTabSwitch(
   }
 }
 
+async function getUncommentedPostContainers(
+  containers: NodeListOf<Element>,
+  duplicateWindow?: number,
+) {
+  const filteredPostContainers: HTMLElement[] = [];
+
+  const urnMap: Map<string, HTMLElement> = new Map();
+
+  const hashes: string[] = [];
+
+  for (let i = 0; i < containers.length; i++) {
+    const container = containers[i] as HTMLElement;
+    const urns = extractPostUrns(container);
+    for (const urn of urns) {
+      urnMap.set(urn, container);
+    }
+
+    const { content: postContent } = extractPostContent(container);
+    if (!postContent) {
+      console.log(`⏭️ SKIPPING post ${i + 1} - could not extract post content`);
+      console.groupEnd();
+      continue;
+    }
+
+    // Hash-based duplicate detection (content-level)
+    const hash = await normalizeAndHashContent(postContent);
+    if (hash === null) {
+      console.log(`⏭️ SKIPPING post ${i + 1} - could not extract post hash`);
+
+      continue;
+    }
+    hashes.push(hash.hash);
+  }
+
+  const result = await contentScriptContext
+    .getTrpcClient()
+    .autocomment.hasCommentedBefore.query({
+      urns: Array.from(urnMap.keys()),
+      hashes,
+      duplicateWindow,
+    });
+
+  const uncommentedUrns = new Set(result.uncommentedUrns);
+
+  for (const [urn, container] of urnMap.entries()) {
+    if (uncommentedUrns.has(urn)) {
+      filteredPostContainers.push(container);
+    }
+  }
+
+  return filteredPostContainers;
+}
+
 // Function to process all posts on the feed
 async function processAllPostsFeed(
   commentDelay: number,
@@ -819,6 +973,7 @@ async function processAllPostsFeed(
   skipPromotedPosts: boolean,
   skipFriendsActivities: boolean,
   authenticityBoostEnabled: boolean,
+  autoCommentRunId?: string,
 ): Promise<void> {
   console.group("🎯 PROCESSING ALL POSTS - DETAILED DEBUG");
 
@@ -827,15 +982,16 @@ async function processAllPostsFeed(
   );
 
   // Prefer div[data-urn] (search/list feed), fallback to div[data-id] (home feed)
-  let postContainers = document.querySelectorAll("div[data-urn]");
-  if (postContainers.length > 0) {
+  let allPostContainers = document.querySelectorAll("div[data-urn]");
+  // urn:li:activity:7389124229595742208
+  if (allPostContainers.length > 0) {
     console.log(
-      `🎯 Found ${postContainers.length} post containers with selector: div[data-urn]`,
+      `🎯 Found ${allPostContainers.length} post containers with selector: div[data-urn]`,
     );
   } else {
-    postContainers = document.querySelectorAll("div[data-id]");
+    allPostContainers = document.querySelectorAll("div[data-id]");
     console.log(
-      `🎯 Found ${postContainers.length} post containers with selector: div[data-id]`,
+      `🎯 Found ${allPostContainers.length} post containers with selector: div[data-id]`,
     );
   }
 
@@ -848,7 +1004,7 @@ async function processAllPostsFeed(
     ".feed-shared-update-v2__content",
   );
 
-  if (postContainers.length === 0) {
+  if (allPostContainers.length === 0) {
     console.error(
       "🚨 NO POSTS FOUND! This is why the automation stops immediately.",
     );
@@ -869,11 +1025,21 @@ async function processAllPostsFeed(
     `🎯 Starting loop: commentCount=${commentCount}, maxPosts=${maxPosts}, isActive=${isCommentingActive}`,
   );
 
-  for (
-    let i = 0;
-    i < postContainers.length && isCommentingActive && commentCount < maxPosts;
-    i++
-  ) {
+  const postContainers = await getUncommentedPostContainers(
+    allPostContainers,
+    duplicateWindow,
+  );
+
+  const comments: {
+    autoCommentRunId?: string;
+    postContentHtml: string | null;
+    comment: string;
+    urn: string;
+    hash: string | null;
+    isDuplicate: boolean;
+  }[] = [];
+
+  for (let i = 0; i < postContainers.length; i++) {
     console.group(
       `🔄 POST ${i + 1}/${postContainers.length} - DETAILED PROCESSING`,
     );
@@ -965,27 +1131,11 @@ async function processAllPostsFeed(
         break;
       }
 
+      // TODO: maybe remove this since we have a db check already
       // STEP 1: Check for post URN duplicates (if we've already commented on this specific post)
       const postUrns = extractPostUrns(postContainer);
       if (postUrns.length === 0) {
         console.log(`⏭️ SKIPPING post ${i + 1} - could not extract post URNs`);
-        console.groupEnd();
-        continue;
-      }
-
-      // Check if we've commented on any of these URNs before
-      let hasCommentedOnThisPost = false;
-      for (const urn of postUrns) {
-        if (hasCommentedOnPostUrn(urn)) {
-          console.log(
-            `⏭️ SKIPPING post ${i + 1} - already commented on post URN: ${urn}`,
-          );
-          hasCommentedOnThisPost = true;
-          break;
-        }
-      }
-
-      if (hasCommentedOnThisPost) {
         console.groupEnd();
         continue;
       }
@@ -1040,7 +1190,8 @@ async function processAllPostsFeed(
       }
 
       // Extract post content
-      const postContent = extractPostContent(postContainer);
+      const { content: postContent, html: contentHtml } =
+        extractPostContent(postContainer);
       if (!postContent) {
         console.log(
           `⏭️ SKIPPING post ${i + 1} - could not extract post content`,
@@ -1158,24 +1309,46 @@ async function processAllPostsFeed(
       );
 
       if (success) {
+        for (const [index, urn] of postUrns.entries()) {
+          comments.push({
+            urn,
+            comment,
+            autoCommentRunId,
+            postContentHtml: contentHtml,
+            hash: hashRes?.hash ?? null,
+            isDuplicate: index !== 0,
+          });
+        }
         commentCount++;
         commentedAuthors.add(authorInfo.name);
 
+        const promises = [];
+
         // Save author with timestamp and update counts
-        await saveCommentedAuthorWithTimestamp(authorInfo.name); // new timestamp-based storage
+        promises.push(saveCommentedAuthorWithTimestamp(authorInfo.name)); // new timestamp-based storage
         commentedAuthorsWithTimestamps.set(authorInfo.name, Date.now()); // update in-memory data
 
         // Save all post URNs to prevent commenting on this post again
-        for (const urn of postUrns) {
-          await saveCommentedPostUrn(urn);
-        }
+        promises.push(saveCommentedPostUrn(postUrns));
 
         // Save content hash as well
         if (hashRes?.hash) {
-          await saveCommentedPostHash(hashRes.hash);
+          promises.push(saveCommentedPostHash([hashRes.hash]));
         }
 
-        await updateCommentCounts();
+        promises.push(updateCommentCounts());
+
+        promises.push(
+          contentScriptContext
+            .getTrpcClient()
+            .autocomment.saveComments.mutate(comments)
+            .catch((err) => {
+              // just catch this error here and continue
+              console.error("error saving comments:", err);
+            }),
+        );
+
+        await Promise.all(promises);
 
         console.log(
           `🎉 Successfully posted comment ${commentCount}/${maxPosts} on post by ${authorInfo.name}`,
@@ -1310,3 +1483,5 @@ async function processAllPostsFeed(
 // (Audio stop moved to tab-audio.ts)
 
 console.log("EngageKit content script loaded");
+
+void setupHandshakeWithBackgroundScript();

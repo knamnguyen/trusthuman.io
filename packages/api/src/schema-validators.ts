@@ -20,7 +20,8 @@ export const commentGenerationInputSchema = z.object({
       }),
     )
     .min(0)
-    .or(z.string()),
+    .or(z.string())
+    .optional(),
 });
 
 // Output schema for AI comment generation
