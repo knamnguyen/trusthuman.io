@@ -1,8 +1,8 @@
 {
-  "../../../../../../../../../@crx/manifest": {
-    "file": "assets/crx-manifest.js-DNbPthow.js",
+  "../../../../../../../@crx/manifest": {
+    "file": "assets/crx-manifest.js-B3utcL77.js",
     "name": "crx-manifest.js",
-    "src": "../../../../../../../../../@crx/manifest",
+    "src": "../../../../../../../@crx/manifest",
     "isEntry": true
   },
   "_get-sync-host-CCHy64Z3.js": {

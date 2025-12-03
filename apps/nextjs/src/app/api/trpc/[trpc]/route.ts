@@ -42,3 +42,7 @@ const handler = async (req: Request) => {
 };
 
 export { handler as GET, handler as POST };
+
+// Ensure this route is always dynamically evaluated (no static analysis during build)
+// This prevents Next.js from trying to instantiate PrismaClient during build time
+export const dynamic = "force-dynamic";
