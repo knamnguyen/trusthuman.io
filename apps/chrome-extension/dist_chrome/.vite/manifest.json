@@ -1,111 +1,95 @@
 {
-  "../../../../../../../@crx/manifest": {
-    "file": "assets/crx-manifest.js-B3utcL77.js",
+  "../../../../../../@crx/manifest": {
+    "file": "assets/crx-manifest.js-Dw6Y1s8U.js",
     "name": "crx-manifest.js",
-    "src": "../../../../../../../@crx/manifest",
+    "src": "../../../../../../@crx/manifest",
     "isEntry": true
   },
-  "_get-sync-host-CCHy64Z3.js": {
-    "file": "assets/get-sync-host-CCHy64Z3.js",
+  "_get-sync-host-Cl3UakQu.js": {
+    "file": "assets/get-sync-host-Cl3UakQu.js",
     "name": "get-sync-host",
     "imports": [
-      "_index-CP-b3-11.js",
-      "_index-Dr715SCd.js"
+      "_index-C4GW0my_.js"
     ]
   },
-  "_index-CP-b3-11.js": {
-    "file": "assets/index-CP-b3-11.js",
+  "_index-C4GW0my_.js": {
+    "file": "assets/index-C4GW0my_.js",
     "name": "index"
   },
-  "_index-Dr715SCd.js": {
-    "file": "assets/index-Dr715SCd.js",
-    "name": "index",
-    "imports": [
-      "_index-CP-b3-11.js"
-    ]
-  },
-  "_index.tsx-loader-CHLvpZUU.js": {
-    "file": "assets/index.tsx-loader-CHLvpZUU.js",
-    "src": "_index.tsx-loader-CHLvpZUU.js"
+  "_index.tsx-loader-xi4yzTTn.js": {
+    "file": "assets/index.tsx-loader-xi4yzTTn.js",
+    "src": "_index.tsx-loader-xi4yzTTn.js"
   },
   "_profile-extract-button-E_OM6-m_.js": {
     "file": "assets/profile-extract-button-E_OM6-m_.js",
     "name": "profile-extract-button"
   },
-  "_react-BvlFoRqi.js": {
-    "file": "assets/react-BvlFoRqi.js",
-    "name": "react",
+  "_react-icons.esm-ChaHjZKj.js": {
+    "file": "assets/react-icons.esm-ChaHjZKj.js",
+    "name": "react-icons.esm",
     "imports": [
-      "_index-CP-b3-11.js"
+      "_index-C4GW0my_.js"
     ]
   },
-  "_tailwind-D6sM018g.js": {
-    "file": "assets/tailwind-D6sM018g.js",
-    "name": "tailwind",
+  "_storage-DBwVD2h_.js": {
+    "file": "assets/storage-DBwVD2h_.js",
+    "name": "storage",
     "imports": [
-      "_index-CP-b3-11.js"
-    ],
-    "css": [
-      "assets/tailwind-DFgyg9cl.css"
+      "_index-C4GW0my_.js",
+      "_get-sync-host-Cl3UakQu.js"
     ]
-  },
-  "_tailwind-DFgyg9cl.css": {
-    "file": "assets/tailwind-DFgyg9cl.css",
-    "src": "_tailwind-DFgyg9cl.css"
   },
   "public/icon-128.png": {
     "file": "assets/icon-128-C-YV5z2v.png",
     "src": "public/icon-128.png"
   },
   "src/pages/background/index.ts": {
-    "file": "assets/index.ts-CT63LoH7.js",
+    "file": "assets/index.ts-DNh3-lfh.js",
     "name": "index.ts",
     "src": "src/pages/background/index.ts",
     "isEntry": true,
     "imports": [
-      "_get-sync-host-CCHy64Z3.js",
-      "_react-BvlFoRqi.js",
-      "_index-CP-b3-11.js",
-      "_index-Dr715SCd.js"
+      "_get-sync-host-Cl3UakQu.js",
+      "_index-C4GW0my_.js"
     ]
   },
   "src/pages/content/index.tsx": {
-    "file": "assets/index.tsx-BlHx3axl.js",
+    "file": "assets/index.tsx-DeFAYqbm.js",
     "name": "index.tsx",
     "src": "src/pages/content/index.tsx",
     "isEntry": true,
     "imports": [
-      "_react-BvlFoRqi.js",
+      "_get-sync-host-Cl3UakQu.js",
       "_profile-extract-button-E_OM6-m_.js",
-      "_index-CP-b3-11.js"
+      "_storage-DBwVD2h_.js",
+      "src/pages/background/index.ts",
+      "_index-C4GW0my_.js"
     ]
   },
   "src/pages/options/index.html": {
-    "file": "assets/index.html-CvZVT1LQ.js",
+    "file": "assets/index.html-C57nAWLH.js",
     "name": "index.html",
     "src": "src/pages/options/index.html",
     "isEntry": true,
     "imports": [
-      "_tailwind-D6sM018g.js",
-      "_index-CP-b3-11.js",
-      "_profile-extract-button-E_OM6-m_.js",
-      "_index-Dr715SCd.js"
+      "_react-icons.esm-ChaHjZKj.js",
+      "_index-C4GW0my_.js",
+      "_profile-extract-button-E_OM6-m_.js"
     ]
   },
   "src/pages/popup/index.html": {
-    "file": "assets/index.html-O8bXLIb0.js",
+    "file": "assets/index.html-DEHhjVim.js",
     "name": "index.html",
     "src": "src/pages/popup/index.html",
     "isEntry": true,
     "imports": [
-      "_tailwind-D6sM018g.js",
-      "_index-CP-b3-11.js",
-      "_react-BvlFoRqi.js",
-      "_get-sync-host-CCHy64Z3.js",
-      "_index-Dr715SCd.js"
+      "_react-icons.esm-ChaHjZKj.js",
+      "_index-C4GW0my_.js",
+      "_get-sync-host-Cl3UakQu.js",
+      "_storage-DBwVD2h_.js"
     ],
     "css": [
-      "assets/index-addibwyn.css"
+      "assets/index-CAZtBAyg.css"
     ],
     "assets": [
       "assets/icon-128-C-YV5z2v.png"

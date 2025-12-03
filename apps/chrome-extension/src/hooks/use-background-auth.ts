@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import type { AuthStatus, AuthUser } from "../services/auth-service";
+import type { AuthStatus } from "../services/auth-service";
 import { authService } from "../services/auth-service";
 
 /**

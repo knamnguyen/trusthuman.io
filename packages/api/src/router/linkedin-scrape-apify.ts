@@ -2,10 +2,8 @@ import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import type { ApifyLinkedInItem } from "@sassy/linkedin-scrape-apify";
 import { LinkedInScrapeApifyService } from "@sassy/linkedin-scrape-apify";
 
-import type { TRPCContext } from "../trpc";
 import { protectedProcedure } from "../trpc";
 import { checkPremiumAccess } from "../utils/check-premium-access";
 

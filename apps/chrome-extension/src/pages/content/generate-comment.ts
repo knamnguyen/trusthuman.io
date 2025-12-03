@@ -1,5 +1,5 @@
 // Function to generate comment using direct tRPC call
-import { getStandaloneTRPCClient } from "@src/trpc/react";
+import { contentScriptContext } from "./context";
 
 export type AdjacentComment = {
   commentContent: string;
@@ -22,8 +22,9 @@ export default async function generateComment(
 
     console.log("adjacentComments", adjacentComments);
     // Direct tRPC call to aiComments.generateComment
-    const response =
-      await getStandaloneTRPCClient().aiComments.generateComment.mutate({
+    const response = await contentScriptContext
+      .getTrpcClient()
+      .aiComments.generateComment.mutate({
         postContent,
         styleGuide,
         adjacentComments,

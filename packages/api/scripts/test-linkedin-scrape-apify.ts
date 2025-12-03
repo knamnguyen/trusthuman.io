@@ -18,7 +18,7 @@ async function main() {
     console.error("Missing --url argument");
     process.exit(1);
   }
-  const trpc = await createServerClient();
+  const trpc = createServerClient();
   const result = await trpc.linkedinScrapeApify.scrapeByUrl({ url });
   console.log("ProfileData:", result);
 }

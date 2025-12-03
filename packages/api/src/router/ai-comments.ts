@@ -8,6 +8,20 @@ import {
 } from "../schema-validators";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
+// Get Google GenAI API key from environment
+const apiKey = process.env.GOOGLE_GENAI_API_KEY;
+if (!apiKey) {
+  console.error(
+    "AI Comments Router: GOOGLE_GENAI_API_KEY not found in environment",
+  );
+  throw new TRPCError({
+    code: "INTERNAL_SERVER_ERROR",
+    message: "AI service configuration error",
+  });
+}
+
+const ai = new GoogleGenAI({ apiKey });
+
 /**
  * Check if two dates are on different days in user's local timezone
  */
@@ -78,36 +92,35 @@ export const aiCommentsRouter = createTRPCRouter({
     .input(commentGenerationInputSchema)
     .output(commentGenerationOutputSchema)
     .mutation(async ({ input, ctx }): Promise<CommentGenerationOutput> => {
-      const { postContent, styleGuide, adjacentComments } = input as any;
+      const { postContent, styleGuide, adjacentComments } = input;
 
       console.log(
         "AI Comments Router: Starting comment generation for content length:",
-        postContent?.length || 0,
+        postContent.length || 0,
       );
-
-      // First, update the user's daily comment count
-      if (!ctx.user?.id) {
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message: "User ID not found in context",
-        });
-      }
 
       try {
         // Get current user to check last update timestamp
-        const currentUser = await ctx.db.user.findUnique({
+        const currentUser = await ctx.db.user.findUniqueOrThrow({
           where: { id: ctx.user.id },
+          select: {
+            updatedAt: true,
+            dailyAIcomments: true,
+          },
         });
-
-        if (!currentUser) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "User not found",
-          });
-        }
 
         const now = new Date();
         const needsReset = isDifferentDay(currentUser.updatedAt, now);
+        const newDailyCommentsCount = needsReset
+          ? 1
+          : currentUser.dailyAIcomments + 1;
+
+        if (newDailyCommentsCount > 100) {
+          throw new TRPCError({
+            code: "TOO_MANY_REQUESTS",
+            message: "You have exceeded the daily comment counts",
+          });
+        }
 
         // Update daily comment count (reset if different day, otherwise increment)
         await ctx.db.user.update({
@@ -134,23 +147,7 @@ export const aiCommentsRouter = createTRPCRouter({
         });
       }
 
-      // Get Google GenAI API key from environment
-      const apiKey = process.env.GOOGLE_GENAI_API_KEY;
-      if (!apiKey) {
-        console.error(
-          "AI Comments Router: GOOGLE_GENAI_API_KEY not found in environment",
-        );
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "AI service configuration error",
-        });
-      }
-
-      const ai = new GoogleGenAI({ apiKey });
-
-      const existingComments = JSON.stringify(
-        adjacentComments ?? "No existing comments",
-      );
+      const existingComments = JSON.stringify(adjacentComments);
 
       const systemPrompt = `
 You are a LinkedIn influencer commenting on a post. 
@@ -269,7 +266,7 @@ Lastly but most importantly, you must ahere to the style guide below given by th
         });
 
         const generatedComment =
-          response.text || "Great post! Thanks for sharing.";
+          response.text ?? "Great post! Thanks for sharing.";
         const isFallback = !response.text;
 
         // Sanitize the comment to remove any residual AI artefacts.

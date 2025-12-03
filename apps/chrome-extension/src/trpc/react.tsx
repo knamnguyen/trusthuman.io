@@ -61,10 +61,20 @@ const getClerkToken = async (): Promise<string | null> => {
   }
 };
 
-// Create a singleton trpc client
-let _trpcClient: ReturnType<typeof createTRPCClient<AppRouter>> | undefined;
-const getTrpcClient = () => {
-  return (_trpcClient ??= createTRPCClient<AppRouter>({
+const _trpcClientCache = new Map<
+  string,
+  ReturnType<typeof createTRPCClient<AppRouter>>
+>();
+
+// just cache based on config json stringification so we can have multiple clients if needed
+const getTrpcClient = (opts?: { assumedUserToken?: string }) => {
+  const cacheKey = JSON.stringify(opts ?? {});
+
+  if (_trpcClientCache.has(cacheKey)) {
+    return _trpcClientCache.get(cacheKey)!;
+  }
+
+  const client = createTRPCClient<AppRouter>({
     links: [
       loggerLink({
         enabled: (op) =>
@@ -82,6 +92,12 @@ const getTrpcClient = () => {
             "Content-Type": "application/json",
           };
 
+          if (opts?.assumedUserToken !== undefined) {
+            headers["x-assumed-user-token"] = opts.assumedUserToken;
+          }
+
+          console.info({ headers });
+
           if (clerkToken) {
             headers.Authorization = `Bearer ${clerkToken}`;
           }
@@ -90,15 +106,21 @@ const getTrpcClient = () => {
         },
       }),
     ],
-  }));
+  });
+
+  _trpcClientCache.set(cacheKey, client);
+
+  return client;
 };
 
 /**
  * Get standalone tRPC client for use outside React context
  * This is useful for services that need to make tRPC calls without React Query
  */
-export const getStandaloneTRPCClient = () => {
-  return getTrpcClient();
+export const getStandaloneTRPCClient = (config?: {
+  assumedUserToken?: string;
+}) => {
+  return getTrpcClient(config);
 };
 
 export function TRPCReactProvider(props: { children: React.ReactNode }) {

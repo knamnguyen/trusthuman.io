@@ -53,7 +53,9 @@ secrets.json
 dist_chrome/
 dist_firefox/
 dist_opera/
+dist_build/
 dist/
+dist_hyperbrowser/
 .cache
 
 # turbo
@@ -61,11 +63,7 @@ dist/
 
 # db
 ../generated/prisma
-.clinerules/byterover-rules.md
-.kilocode/rules/byterover-rules.md
-.roo/rules/byterover-rules.md
-.windsurf/rules/byterover-rules.md
-.cursor/rules/byterover-rules.mdc
-.kiro/steering/byterover-rules.md
-.qoder/rules/byterover-rules.md
-.augment/rules/byterover-rules.md
+
+packages/db/generated
+
+.puppeteer

@@ -1,4 +1,10 @@
 import { createClerkClient } from "@clerk/chrome-extension/background";
+import { getTRPCClient } from "@src/services/trpc-client";
+
+import type {
+  BrowserBackendChannelMessage,
+  BrowserFunctions,
+} from "@sassy/api";
 
 import type { AutoCommentingState } from "./background-types";
 import { AIService } from "../../services/ai-service";
@@ -34,10 +40,32 @@ const getClerkClient = async () => {
   });
 };
 
+class BackgroundScriptContext {
+  private trpcClient: ReturnType<typeof getTRPCClient>;
+
+  constructor() {
+    this.trpcClient = getTRPCClient();
+  }
+
+  setAssumedUserToken(token: string) {
+    authService.assumedUserToken = token;
+    this.trpcClient = getTRPCClient({
+      assumedUserToken: token,
+    });
+  }
+
+  getTRPCClient() {
+    return this.trpcClient;
+  }
+}
+
+const ctx = new BackgroundScriptContext();
+
 /**
  * Authentication Service - handles all auth operations in background
  */
 const authService = {
+  assumedUserToken: null as string | null,
   /**
    * Get fresh token from Clerk session
    */
@@ -104,6 +132,18 @@ const authService = {
       console.error("Background: Error signing out:", error);
       return { success: false };
     }
+  },
+
+  async attachTokenToSession(token: string) {
+    this.assumedUserToken = token;
+    const response = await ctx
+      .getTRPCClient()
+      .account.verifyJwt.mutate({ token });
+    if (response.status === "error") {
+      return { success: false };
+    }
+
+    return { success: true };
   },
 
   /**
@@ -329,10 +369,115 @@ const messageRouter = new MessageRouter({
   generateComment: generateCommentBackground,
 });
 
+interface BackgroundScriptFunctions extends BrowserFunctions {
+  sendMessageToContentScriptTab: (
+    message: ContentScriptMessage,
+  ) => Promise<void>;
+}
+
+const createBackgroundScriptFunctions = () => {
+  let tabId: number | null = null;
+
+  async function sendMessageToContentScriptTab(
+    tabId: number,
+    message: ContentScriptMessage,
+  ) {
+    await chrome.tabs.sendMessage(tabId, message);
+    return true;
+  }
+
+  async function getPinnedTabId() {
+    // if a tab id is already set, just return
+    if (tabId !== null) {
+      return tabId;
+    }
+
+    // query for tabs to see if there are any linkedin tabs
+    const tabs = await chrome.tabs.query({
+      active: false,
+      currentWindow: true,
+    });
+
+    console.info({ tabs });
+
+    const feedTab = tabs.find(
+      (tab) =>
+        tab.url !== undefined && tab.url.startsWith("https://www.linkedin.com"),
+    );
+    console.info({ feedTab });
+
+    // if no linkedin tabs, just create one and assign it to tab id
+    if (feedTab === undefined) {
+      console.log("No pinned LinkedIn tab found, creating one...");
+      const tab = await chrome.tabs.create({
+        url: "https://www.linkedin.com/feed/",
+        active: false,
+        pinned: true,
+      });
+
+      // can use null assertion because chrome.tabs.create and chrome.tabs.query should return an id
+      tabId = tab.id!;
+      console.log("Pinned LinkedIn tab created.");
+    } else {
+      // can use null assertion because chrome.tabs.create and chrome.tabs.query should return an id
+      tabId = feedTab.id!;
+    }
+
+    return tabId;
+  }
+
+  return {
+    async startAutoCommenting(params) {
+      const tabId = await getPinnedTabId();
+      await sendMessageToContentScriptTab(tabId, {
+        action: "startNewCommentingFlow",
+        params,
+      });
+    },
+    async stopAutoCommenting() {
+      const tabId = await getPinnedTabId();
+      await sendMessageToContentScriptTab(tabId, {
+        action: "stopCommentingFlow",
+      });
+    },
+    async sendMessageToContentScriptTab(message) {
+      const pinnedTabId = await getPinnedTabId();
+      await sendMessageToContentScriptTab(pinnedTabId, message);
+    },
+  } satisfies BackgroundScriptFunctions;
+};
+
+export const backgroundScriptFunctions = createBackgroundScriptFunctions();
+
+// TODO: some error here that it's not exposed properly so when backend calls it fails
+// expose functions to be called in linkedin-browser-session
+(globalThis as any)._backgroundScriptFunctions = backgroundScriptFunctions;
+
+console.info("injected background script");
+
+let contentScriptTabId: number | null = null;
+
 // Message listener with comprehensive authentication service
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   // Handle authentication requests directly in background
   switch (request.action) {
+    case "engagekit_setAssumedUserToken": {
+      ctx.setAssumedUserToken(request.payload.token);
+      aiService.resetTrpcClient({
+        assumedUserToken: request.payload.token,
+      });
+      sendResponse({ status: "ok" });
+      return false;
+    }
+    case "engagekit_contentscript_handshake": {
+      if (sender.tab?.id) {
+        sendResponse({ status: "ok" });
+        contentScriptTabId = sender.tab?.id ?? null;
+      } else {
+        sendResponse({ status: "error", message: "No tab ID in sender" });
+      }
+      return true;
+    }
     case "getFreshToken":
       console.log("Background: Received getFreshToken request");
       authService
@@ -347,6 +492,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         .catch((error) => {
           console.error("Background: Error getting fresh token:", error);
           sendResponse({ token: null });
+        });
+      return true;
+
+    case "attachTokenToSession":
+      console.info(request);
+      console.log(
+        "Background: Received requestAssumedUserTokenAndAttachToSession request",
+      );
+      authService
+        .attachTokenToSession(request.payload.token)
+        .then((response) => {
+          sendResponse(response);
         });
       return true;
 
@@ -393,6 +550,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           console.error("Background: Error checking session:", error);
           sendResponse({ isValid: false });
         });
+      return true;
+
+    case "sendMessageToPuppeteerBackend":
+      console.log("Background: Received sendMessageToPuppeteerBackend request");
+      sendMessageToPuppeteerBackend(request.payload);
+      sendResponse({ success: true });
       return true;
 
     default:
@@ -534,3 +697,66 @@ chrome.alarms.create("authCheck", { periodInMinutes: 2 });
 console.log(
   "Background: Auth monitoring and service worker lifecycle handlers initialized",
 );
+
+function sendMessageToPuppeteerBackend(message: BrowserBackendChannelMessage) {
+  if (contentScriptTabId === null) {
+    console.warn(
+      `No content script tab ID available to send message to Puppeteer backend`,
+    );
+    return;
+  }
+
+  chrome.tabs.sendMessage(
+    contentScriptTabId,
+    {
+      action: "sendMessageToPuppeteerBackend",
+      payload: message,
+    },
+    () => {
+      console.log(
+        `Sent message to Puppeteer backend via content script in tab ${contentScriptTabId}`,
+      );
+    },
+  );
+}
+
+export type ContentScriptMessage =
+  | {
+      action: "startNewCommentingFlow";
+      params: {
+        autoCommentRunId: string;
+        scrollDuration: number;
+        commentDelay: number;
+        maxPosts: number;
+        styleGuide: string;
+        duplicateWindow: number;
+        commentAsCompanyEnabled?: boolean;
+        timeFilterEnabled?: boolean;
+        minPostAge?: number;
+        manualApproveEnabled?: boolean;
+        authenticityBoostEnabled?: boolean;
+        commentProfileName?: string;
+        languageAwareEnabled?: boolean;
+        skipCompanyPagesEnabled?: boolean;
+        skipPromotedPostsEnabled?: boolean;
+        skipFriendsActivitiesEnabled?: boolean;
+        blacklistEnabled?: boolean;
+        blacklistAuthors?: string[];
+      };
+    }
+  | {
+      action: "showStartButton";
+    }
+  | {
+      action: "stopCommentingFlow";
+    }
+  | ({
+      action: "statusUpdate";
+      status: string;
+    } & {
+      [k in string]: any;
+    })
+  | {
+      action: "sendMessageToPuppeteerBackend";
+      payload: BrowserBackendChannelMessage;
+    };

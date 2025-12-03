@@ -429,7 +429,7 @@ export function addApproveRow(
             mapping.authorName ||
             ""
           ).trim();
-          const content: string = extractPostContent(mapping.postContainer);
+          const { content } = extractPostContent(mapping.postContainer);
           const submitButton = mapping.postContainer.querySelector(
             ".comments-comment-box__submit-button--cr",
           ) as HTMLButtonElement | null;
@@ -438,11 +438,11 @@ export function addApproveRow(
             // Persist URNs and content hash and author recency
             try {
               // save URNs
-              for (const u of urns) await saveCommentedPostUrn(u);
+              await saveCommentedPostUrn(urns);
               // hash
               const hashRes = await normalizeAndHashContent(content);
               if (hashRes?.hash) {
-                await saveCommentedPostHash(hashRes.hash);
+                await saveCommentedPostHash([hashRes.hash]);
               }
               // author recency
               if (authorNameFinal) {

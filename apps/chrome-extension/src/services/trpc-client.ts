@@ -69,7 +69,9 @@ const getClerkToken = async (): Promise<string | null> => {
 /**
  * Create tRPC client instance
  */
-export const createExtensionTRPCClient = () => {
+export const createExtensionTRPCClient = (opts?: {
+  assumedUserToken?: string;
+}) => {
   return createTRPCProxyClient<AppRouter>({
     links: [
       httpBatchLink({
@@ -83,6 +85,17 @@ export const createExtensionTRPCClient = () => {
             "ngrok-skip-browser-warning": "true",
             "Content-Type": "application/json",
           };
+
+          if (opts?.assumedUserToken) {
+            const assumedJwt = opts.assumedUserToken;
+            if (assumedJwt !== null) {
+              headers["x-assumed-user-token"] = assumedJwt;
+              console.log(
+                "tRPC Client: Adding x-assumed-user-jwt header, length:",
+                assumedJwt.length,
+              );
+            }
+          }
 
           if (clerkToken) {
             headers.Authorization = `Bearer ${clerkToken}`;
@@ -106,7 +119,7 @@ export const createExtensionTRPCClient = () => {
           try {
             const response = await fetch(input, {
               ...init,
-              signal: controller.signal,
+              signal: AbortSignal.timeout(30000),
             });
             clearTimeout(timeoutId);
             return response;
@@ -123,21 +136,30 @@ export const createExtensionTRPCClient = () => {
 /**
  * Singleton instance of the tRPC client
  */
-let trpcClient: ReturnType<typeof createExtensionTRPCClient> | null = null;
+
+const trpcClientCache = new Map<
+  string,
+  ReturnType<typeof createExtensionTRPCClient>
+>();
 
 /**
  * Get or create the tRPC client instance
  */
-export const getTRPCClient = () => {
-  if (!trpcClient) {
-    trpcClient = createExtensionTRPCClient();
+export const getTRPCClient = (opts?: { assumedUserToken?: string }) => {
+  const cacheKey = JSON.stringify(opts ?? {});
+
+  if (trpcClientCache.has(cacheKey)) {
+    return trpcClientCache.get(cacheKey)!;
   }
-  return trpcClient;
+
+  const client = createExtensionTRPCClient(opts);
+  trpcClientCache.set(cacheKey, client);
+  return client;
 };
 
 /**
  * Reset the tRPC client (useful for auth state changes)
  */
 export const resetTRPCClient = () => {
-  trpcClient = null;
+  trpcClientCache.clear();
 };

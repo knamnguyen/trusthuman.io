@@ -1,5 +1,4 @@
 // import Script from "next/script"; // Commented out: Tally embed script
-
 import { FaqSection } from "./_components/landing/faq-section";
 import { FeaturesSection } from "./_components/landing/features-section";
 import { FinalCTASection } from "./_components/landing/final-cta-section";

@@ -9,6 +9,7 @@ import {
 } from "./check-duplicate/check-duplicate-commented-post-hash";
 import { saveCommentedPostUrn } from "./check-duplicate/check-duplicate-commented-post-urns";
 import normalizeAndHashContent from "./check-duplicate/normalize-and-hash-content";
+import { contentScriptContext } from "./context";
 import extractAuthorInfo from "./extract-author-info";
 import loadAndExtractComments from "./extract-post-comments";
 import extractPostContent from "./extract-post-content";
@@ -228,7 +229,8 @@ function addEngageButton(form: HTMLFormElement): void {
         return;
       }
 
-      let postContent = extractPostContent(postContainer);
+      const extractedPostContent = extractPostContent(postContainer);
+      let postContent = extractedPostContent.content;
       // Fallback: If extraction failed, attempt to use innerText of first paragraph within postContainer
       if (!postContent) {
         const fallbackPara = postContainer.querySelector("p");
@@ -350,8 +352,26 @@ function addEngageButton(form: HTMLFormElement): void {
               "click",
               async () => {
                 try {
-                  for (const u of urnsToSave) await saveCommentedPostUrn(u);
-                  if (hashToSave) await saveCommentedPostHash(hashToSave);
+                  const promises = [];
+                  promises.push(saveCommentedPostUrn(urnsToSave));
+
+                  if (hashToSave)
+                    promises.push(saveCommentedPostHash([hashToSave]));
+
+                  promises.push(
+                    contentScriptContext
+                      .getTrpcClient()
+                      .autocomment.saveComments.mutate(
+                        urnsToSave.map((urn, index) => ({
+                          urn,
+                          hash: hashToSave ?? null,
+                          comment: generated,
+                          postContentHtml: extractedPostContent.html,
+                          isDuplicate: index !== 0,
+                        })),
+                      ),
+                  );
+                  await Promise.all(promises);
                 } catch {}
               },
               { capture: true, once: true },
