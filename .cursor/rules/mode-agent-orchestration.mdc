@@ -13,7 +13,7 @@ alwaysApply: true
 **On every NEW conversation (no prior context):**
 
 1. **Check for context file existence**:
-   - If `.cursor/context/all-context.md` is MISSING or EMPTY:
+   - If `process/context/all-context.md` is MISSING or EMPTY:
      - Auto-suggest: "I notice this project doesn't have a context file yet. Should I run `@generate-context.md` to scan your codebase? (Recommended for existing projects)"
      - Wait for user confirmation before scanning
 2. **Auto-enter RESEARCH mode** by default:
@@ -111,7 +111,7 @@ Should I apply this? (yes/no)
 **When to auto-suggest context generation:**
 
 - First conversation in a project
-- `.cursor/context/all-context.md` doesn't exist
+- `process/context/all-context.md` doesn't exist
 - User mentions "existing project" or "my codebase"
 
 **Auto-suggestion format:**
@@ -134,7 +134,7 @@ Run: @generate-context.md? (yes/no)
 
 ### 6. Plan File Auto-Detection
 
-**When plan file exists** (`.cursor/plans/[feature]_PLAN_*.md` attached or mentioned):
+**When plan file exists** (`process/plans/[feature]_PLAN_*.md` attached or mentioned):
 
 1. **Auto-read "What's Functional Now" section**
 2. **Auto-detect current phase** (✅/🚧/⏳)

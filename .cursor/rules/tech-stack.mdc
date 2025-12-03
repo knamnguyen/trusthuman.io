@@ -4,13 +4,6 @@ globs:
 alwaysApply: true
 ---
 
----
-
-description:
-globs:
-alwaysApply: true
-
----
 
 # T3 Turbo Stack Architecture Overview
 
@@ -124,7 +117,7 @@ import { DomainService } from "@sassy/domain";
 
 ## Repository Context Management
 
-**Context File:** `.cursor/context/all-context.md`
+**Context File:** `process/context/all-context.md`
 
 - Single authoritative source of repository structure, tech stack, conventions
 - Regenerated via `.cursor/commands/generate-context.md` command
