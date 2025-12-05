@@ -1,0 +1,77 @@
+/* custom-overrides.css */
+
+.gh-header-inner,  .gh-container.is-grid .gh-feed {
+  overflow: visible !important;
+}
+
+html {
+  font-size: 100%;
+}
+
+[class*="gh-"] {
+  font-size: 100%;
+}
+
+h1 {
+  font-size: 300% !important;
+}
+
+.gh-viewport {
+  padding-top: 100px;
+}
+
+
+/* Example neo-brutalism for .gh-card */
+.gh-card {
+  display: block;
+  padding: 1.5rem;
+  border-radius: 0.75em;
+  background: #fbf6e5;
+  color: #111;
+  border: 1.5px solid #000;
+  box-shadow: 3px 3px 0 #000;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  font-weight: 600;
+  transition:
+    transform 0.12s ease-out,
+    box-shadow 0.12s ease-out;
+}
+
+.gh-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 #000;
+}
+
+.gh-card:active {
+  transform: translate(2px, 2px);
+  box-shadow: 3px 3px 0 #000;
+}
+
+img:not(.author-profile-image) {
+  border-radius: 0.75em;
+  border: 1.5px solid #000;
+}
+
+td,
+th {
+  border: 1px solid;
+  padding: 5px;
+}
+
+.gh-article-image {
+  grid-column: main-start !important;
+}
+
+.gh-container {
+  margin-top: 0;
+}
+
+.post-template .gh-container {
+  margin-top: 0;
+}
+
