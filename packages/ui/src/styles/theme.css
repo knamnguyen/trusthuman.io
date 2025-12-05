@@ -1,3 +1,5 @@
+@layer theme, base, components, utilities;
+
 /* Neobrutalist theme from tweakcn */
 @layer base {
   :root {
