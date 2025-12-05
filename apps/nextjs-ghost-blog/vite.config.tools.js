@@ -8,6 +8,30 @@ import { defineConfig } from "vite";
 console.log("🔍 Building tools bundles...");
 
 // ---------------------------------------------------------
+// PostCSS plugin to strip @layer wrappers from CSS output
+// ---------------------------------------------------------
+// Tailwind v4 wraps everything in @layer (base, utilities, etc.)
+// When embedding widgets in external sites like Ghost, the host
+// site's unlayered CSS (e.g., `img { height: auto }`) always beats
+// layered CSS regardless of specificity.
+//
+// By stripping layers, our CSS becomes flat like Tailwind v3 output,
+// allowing normal CSS specificity rules to apply:
+// - `.h-8` (class, 0,1,0) beats `img` (element, 0,0,1)
+// ---------------------------------------------------------
+function stripCssLayers() {
+  return {
+    postcssPlugin: "strip-css-layers",
+    Once(root) {
+      root.walkAtRules("layer", (atRule) => {
+        atRule.replaceWith(atRule.nodes);
+      });
+    },
+  };
+}
+stripCssLayers.postcss = true;
+
+// ---------------------------------------------------------
 // ✅ Tools Build Configuration
 // ---------------------------------------------------------
 // Scans src/tools/ directory and builds each tool separately
