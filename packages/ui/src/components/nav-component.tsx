@@ -6,11 +6,8 @@ import { ChevronDown, Menu, X } from "lucide-react";
 import { Button } from "@sassy/ui/button";
 import { cn } from "@sassy/ui/utils";
 
-import {
-  BLOG_LABEL,
-  BlogDropdown,
-  type DropdownItem,
-} from "./nav-component/blog-dropdown";
+import type { DropdownItem } from "./nav-component/blog-dropdown";
+import { BLOG_LABEL, BlogDropdown } from "./nav-component/blog-dropdown";
 // Import dropdown data and components
 import {
   alternativesData,
@@ -199,7 +196,7 @@ export function NavComponent({
               className="mx-auto flex items-center gap-2 md:mx-0"
             >
               <img
-                src="https://engagekit-blog.vercel.app/media/engagekit-logo.svg"
+                src="https://engagekit-ghost-blog.vercel.app/media/engagekit-logo.svg"
                 alt="EngageKit"
                 className="h-8 w-auto"
                 style={{ border: "none" }}

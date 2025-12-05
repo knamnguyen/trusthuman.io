@@ -63,7 +63,7 @@ export function FooterComponent() {
                 linkedin <span style={{ color: "#e5486c" }}>hero</span> blog
               </h2>
               <img
-                src="https://engagekit-blog.vercel.app/media/engagekit-logo.svg"
+                src="https://engagekit-ghost-blog.vercel.app/media/engagekit-logo.svg"
                 alt="EngageKit"
                 className="h-16 w-auto sm:h-20"
                 style={{
