@@ -335,7 +335,7 @@ export function TableContentComponent() {
                   "hover:bg-muted rounded-sm px-2 py-1",
                 )}
               >
-                {`${index + 1}. ${heading.text}`}
+                {`${heading.text}`}
               </button>
             </li>
           ))}
