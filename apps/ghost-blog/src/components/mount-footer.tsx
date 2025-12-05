@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client";
 
 import { FooterComponent } from "@sassy/ui/components/footer-component";
 
-import "~/app/globals.css";
+import "~/globals.css";
 
 export function mountFooter(rootSelector = "#footer-component-root") {
   let mountPoint = document.querySelector(rootSelector);

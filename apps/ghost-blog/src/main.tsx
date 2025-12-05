@@ -1,13 +1,16 @@
-"use client";
+import React from "react";
+import ReactDOM from "react-dom/client";
 
 import { FooterComponent } from "@sassy/ui/components/footer-component";
 import { NavComponent } from "@sassy/ui/components/nav-component";
 import { TableContentComponent } from "@sassy/ui/components/table-content-component";
 
 import { useBlogPosts } from "~/hooks/use-blog-posts";
-import { LinkedInPreviewTool } from "~/tools/linkedinpreview";
+import { LinkedInPreviewTool } from "~/tools/linkedinpreview/linkedin-preview-tool";
 
-export default function HomePage() {
+import "~/globals.css";
+
+function App() {
   const { blogItems, isLoading: blogItemsLoading } = useBlogPosts();
 
   return (
@@ -43,7 +46,7 @@ export default function HomePage() {
             <p>Use the share buttons below the TOC to share the article.</p>
 
             <h2>Conclusion</h2>
-            <p>That&apos;s all for this demo!</p>
+            <p>That's all for this demo!</p>
           </div>
         </article>
         <TableContentComponent />
@@ -52,3 +55,9 @@ export default function HomePage() {
     </div>
   );
 }
+
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+);

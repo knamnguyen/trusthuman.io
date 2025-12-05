@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client";
 
 import { NavComponent } from "@sassy/ui/components/nav-component";
 
-import "~/app/globals.css";
+import "~/globals.css";
 
 import { useBlogPosts } from "~/hooks/use-blog-posts";
 

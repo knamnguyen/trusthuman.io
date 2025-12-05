@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { LinkedInPreviewTool } from './linkedin-preview-tool'
-import '~/app/globals.css' // Import global styles
+import '~/globals.css' // Import global styles
 
 export function mountLinkedInPreview(rootSelector = '#linkedin-preview-root') {
     let mountPoint = document.querySelector(rootSelector)

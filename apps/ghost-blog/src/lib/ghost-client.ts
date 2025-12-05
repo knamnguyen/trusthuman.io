@@ -4,7 +4,8 @@ import GhostContentAPI from "@tryghost/content-api";
 const api = new GhostContentAPI({
   url: import.meta.env.VITE_GHOST_URL || "https://engagekit.ghost.io",
   key:
-    import.meta.env.VITE_GHOST_CONTENT_API_KEY || "3a08d7890dfcb6561b8fd70729",
+    import.meta.env.VITE_GHOST_CONTENT_API_KEY ||
+    "3a08d7890dfcb6561b8fd70729",
   version: "v5.0",
 });
 

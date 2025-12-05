@@ -1,0 +1,63 @@
+import path from "path";
+import tailwindcss from "@tailwindcss/postcss";
+import react from "@vitejs/plugin-react";
+import { defineConfig, loadEnv } from "vite";
+
+// ---------------------------------------------------------
+// Main Vite Dev Server Configuration
+// ---------------------------------------------------------
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), "");
+
+  return {
+    plugins: [react()],
+
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "./src"),
+        "~": path.resolve(__dirname, "./src"),
+        "@sassy/ui/utils": path.resolve(
+          __dirname,
+          "../../packages/ui/src/utils.ts",
+        ),
+        "@sassy/ui/components": path.resolve(
+          __dirname,
+          "../../packages/ui/src/components",
+        ),
+        "@sassy/ui/hooks": path.resolve(
+          __dirname,
+          "../../packages/ui/src/hooks",
+        ),
+        "@sassy/ui/styles": path.resolve(
+          __dirname,
+          "../../packages/ui/src/styles",
+        ),
+        "@sassy/ui": path.resolve(__dirname, "../../packages/ui/src/ui"),
+      },
+    },
+
+    css: {
+      postcss: {
+        plugins: [tailwindcss()],
+      },
+    },
+
+    define: {
+      "import.meta.env.VITE_GHOST_URL": JSON.stringify(
+        env.VITE_GHOST_URL || "https://engagekit.ghost.io",
+      ),
+      "import.meta.env.VITE_GHOST_CONTENT_API_KEY": JSON.stringify(
+        env.VITE_GHOST_CONTENT_API_KEY || "3a08d7890dfcb6561b8fd70729",
+      ),
+    },
+
+    server: {
+      port: 3000,
+      open: true,
+    },
+
+    build: {
+      outDir: "dist",
+    },
+  };
+});
