@@ -2,7 +2,7 @@ import path from "path";
 import replace from "@rollup/plugin-replace";
 import tailwindcss from "@tailwindcss/postcss";
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 
 console.log("🔍 Building unified components bundle...");
 
@@ -36,7 +36,10 @@ stripCssLayers.postcss = true;
 // Single entry point: src/components/index.ts
 // Outputs: public/components.js and public/components.css
 // ---------------------------------------------------------
-export default defineConfig(() => {
+export default defineConfig(({ mode }) => {
+  // Load env vars
+  const env = loadEnv(mode, process.cwd(), "");
+
   return {
     plugins: [react()],
 
@@ -74,6 +77,12 @@ export default defineConfig(() => {
 
     define: {
       "process.env.NODE_ENV": JSON.stringify("production"),
+      "import.meta.env.VITE_GHOST_URL": JSON.stringify(
+        env.VITE_GHOST_URL || "https://engagekit.ghost.io",
+      ),
+      "import.meta.env.VITE_GHOST_CONTENT_API_KEY": JSON.stringify(
+        env.VITE_GHOST_CONTENT_API_KEY || "3a08d7890dfcb6561b8fd70729",
+      ),
     },
 
     build: {
