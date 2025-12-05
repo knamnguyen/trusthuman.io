@@ -1,23 +1,10 @@
-"use client";
-
 import GhostContentAPI from "@tryghost/content-api";
-
-// Get env vars - support both Next.js (process.env) and Vite (import.meta.env)
-const ghostUrl =
-  process.env.NEXT_PUBLIC_GHOST_URL ||
-  (typeof import.meta !== "undefined" && import.meta.env?.VITE_GHOST_URL) ||
-  "https://engagekit.ghost.io";
-
-const ghostApiKey =
-  process.env.NEXT_PUBLIC_GHOST_CONTENT_API_KEY ||
-  (typeof import.meta !== "undefined" &&
-    import.meta.env?.VITE_GHOST_CONTENT_API_KEY) ||
-  "3a08d7890dfcb6561b8fd70729";
 
 // Create Ghost API instance
 const api = new GhostContentAPI({
-  url: ghostUrl,
-  key: ghostApiKey,
+  url: import.meta.env.VITE_GHOST_URL || "https://engagekit.ghost.io",
+  key:
+    import.meta.env.VITE_GHOST_CONTENT_API_KEY || "3a08d7890dfcb6561b8fd70729",
   version: "v5.0",
 });
 
