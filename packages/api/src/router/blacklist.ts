@@ -17,6 +17,8 @@ export const blacklistRouter = {
           id: ulid(),
           userId: ctx.user.id,
           profileUrn: input.profileUrn,
+          // TODO: by default create an account id for the user
+          accountId: ctx.account?.id,
         },
         skipDuplicates: true,
       });

@@ -19,4 +19,5 @@ export const autoCommentConfigurationDefaults = {
   skipPromotedPostsEnabled: false,
   skipFriendActivitiesEnabled: false,
   targetListEnabled: false,
+  hitlMode: false,
 };

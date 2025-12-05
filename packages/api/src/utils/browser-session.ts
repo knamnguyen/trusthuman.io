@@ -501,6 +501,7 @@ export class BrowserSession {
     skipFriendsActivitiesEnabled?: boolean;
     blacklistEnabled?: boolean;
     blacklistAuthors?: string[];
+    hitlMode?: boolean;
   }) {
     await this.bringToFront("linkedin");
     await this.ready;

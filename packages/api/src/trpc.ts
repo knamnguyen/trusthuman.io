@@ -114,6 +114,7 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
       ctx: {
         ...ctx,
         user,
+        // TODO: remove this in the future when we make sure that each signed in user has a linked in account created and linked
         // we need to cast here bcs somehow type inference is not catching that account is nullable
         account: account as typeof account | null,
       },

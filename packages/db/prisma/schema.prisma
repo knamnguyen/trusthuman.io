@@ -191,6 +191,7 @@ model AutoCommentRun {
   error     String?
   status    String
   comments  UserComment[]
+  hitlMode  Boolean       @default(false)
 
   user    User            @relation(fields: [userId], references: [id])
   account LinkedInAccount @relation(fields: [accountId], references: [id])
@@ -277,6 +278,7 @@ model AutoCommentConfig {
   skipPromotedPostsEnabled    Boolean
   skipFriendActivitiesEnabled Boolean
   skipCompanyPagesEnabled     Boolean
+  hitlMode                    Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

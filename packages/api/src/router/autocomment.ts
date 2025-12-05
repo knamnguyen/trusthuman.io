@@ -123,6 +123,7 @@ export const autoCommentRouter = {
           isDuplicate: z.boolean().default(false),
           isAutoCommented: z.boolean().default(true),
           commentedAt: z.date().optional(),
+          hitlMode: z.boolean().optional(),
         })
         .array()
         .min(1),
@@ -138,7 +139,8 @@ export const autoCommentRouter = {
           hash: row.hash,
           comment: row.comment,
           postContentHtml: row.postContentHtml,
-          commentedAt: row.commentedAt ?? now,
+          // if hitlmode is true we leave commentedAt as null to indicate that the comment is still pending human review
+          commentedAt: row.hitlMode === true ? null : (row.commentedAt ?? now),
           isDuplicate: row.isDuplicate,
           isAutoCommented: row.isAutoCommented,
         })),
@@ -149,6 +151,32 @@ export const autoCommentRouter = {
         status: "success",
         inserted: result.count,
       } as const;
+    }),
+
+  pending: protectedProcedure
+    .input(
+      z.object({
+        cursor: z.string().optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const comments = await ctx.db.userComment.findMany({
+        where: {
+          userId: ctx.user.id,
+          commentedAt: null,
+          id: {
+            gt: input.cursor,
+          },
+        },
+        orderBy: {
+          id: "asc",
+        },
+      });
+
+      return paginate(comments, {
+        key: "id",
+        size: 20,
+      });
     }),
 
   hasCommentedBefore: protectedProcedure
@@ -362,6 +390,9 @@ export const autoCommentRouter = {
             autocommentConfig?.blacklistEnabled ??
             autoCommentConfigurationDefaults.blacklistEnabled,
           blacklistAuthors: blacklisted.map((b) => b.profileUrn),
+          hitlMode:
+            autocommentConfig?.hitlMode ??
+            autoCommentConfigurationDefaults.hitlMode,
         });
 
         return {
@@ -455,6 +486,7 @@ export const autoCommentRouter = {
           blacklistEnabled: z.boolean().optional(),
           skipPromotedPostsEnabled: z.boolean().optional(),
           skipFriendsActivitiesEnabled: z.boolean().optional(),
+          hitlMode: z.boolean().optional(),
         }),
       )
       .mutation(async ({ ctx, input }) => {
@@ -499,6 +531,7 @@ export const autoCommentRouter = {
             skipPromotedPostsEnabled: input.skipPromotedPostsEnabled ?? false,
             skipFriendActivitiesEnabled:
               input.skipFriendsActivitiesEnabled ?? false,
+            hitlMode: input.hitlMode ?? false,
           },
           update: {
             scrollDuration: input.scrollDuration,
@@ -520,6 +553,7 @@ export const autoCommentRouter = {
             blacklistEnabled: input.blacklistEnabled,
             skipPromotedPostsEnabled: input.skipPromotedPostsEnabled,
             skipFriendActivitiesEnabled: input.skipFriendsActivitiesEnabled,
+            hitlMode: input.hitlMode ?? false,
           },
         });
 
