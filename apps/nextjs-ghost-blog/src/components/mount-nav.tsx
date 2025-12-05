@@ -4,6 +4,7 @@ import ReactDOM from "react-dom/client";
 import { NavComponent } from "@sassy/ui/components/nav-component";
 
 import "~/app/globals.css";
+
 import { useBlogPosts } from "~/hooks/use-blog-posts";
 
 // Wrapper component that fetches Ghost blog data
@@ -21,5 +22,5 @@ export function mountNav(rootSelector = "#nav-component-root") {
   }
   // Add scoping class to prevent CSS conflicts with host site
   mountPoint.classList.add("ek-component-container");
-  ReactDOM.createRoot(mountPoint).render(<NavWithData />);
+  ReactDOM.createRoot(mountPoint).render(React.createElement(NavWithData));
 }
