@@ -1,6 +1,5 @@
 @import "tailwindcss";
 @import "@sassy/ui/styles/theme.css";
-
 @config '../../tailwind.config.ts';
 
 /* Bounce animation for affiliate banner */

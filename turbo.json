@@ -14,7 +14,8 @@
       "outputs": [
         ".cache/tsbuildinfo.json",
         "dist/**",
-        "dist_chrome/**"
+        "dist_chrome/**",
+        ".output/**"
       ]
     },
     "dev": {

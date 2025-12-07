@@ -1,0 +1,10 @@
+{
+  "$schema": "https://sherif.dev/schema.json",
+  "ignoreRules": [
+    {
+      "rule": "multiple-dependency-versions",
+      "packages": ["tailwindcss"],
+      "reason": "wxt-extension intentionally uses Tailwind v3 for shadow DOM compatibility, while rest of monorepo uses v4"
+    }
+  ]
+}
