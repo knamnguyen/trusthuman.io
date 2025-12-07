@@ -3,50 +3,28 @@
   "ui": "tui",
   "tasks": {
     "topo": {
-      "dependsOn": [
-        "^topo"
-      ]
+      "dependsOn": ["^topo"]
     },
     "build": {
-      "dependsOn": [
-        "^build"
-      ],
-      "outputs": [
-        ".cache/tsbuildinfo.json",
-        "dist/**",
-        "dist_chrome/**"
-      ]
+      "dependsOn": ["^build"],
+      "outputs": [".cache/tsbuildinfo.json", "dist/**", "dist_chrome/**"]
     },
     "dev": {
-      "dependsOn": [
-        "^dev"
-      ],
+      "dependsOn": ["^dev"],
       "cache": false,
       "persistent": false
     },
     "format": {
-      "outputs": [
-        ".cache/.prettiercache"
-      ],
+      "outputs": [".cache/.prettiercache"],
       "outputLogs": "new-only"
     },
     "lint": {
-      "dependsOn": [
-        "^topo",
-        "^build"
-      ],
-      "outputs": [
-        ".cache/.eslintcache"
-      ]
+      "dependsOn": ["^topo", "^build"],
+      "outputs": [".cache/.eslintcache"]
     },
     "typecheck": {
-      "dependsOn": [
-        "^topo",
-        "^build"
-      ],
-      "outputs": [
-        ".cache/tsbuildinfo.json"
-      ]
+      "dependsOn": ["^topo", "^build"],
+      "outputs": [".cache/tsbuildinfo.json"]
     },
     "clean": {
       "cache": false
@@ -95,7 +73,8 @@
     "LINKEDIN_TEST_ACCOUNT_2FA_SECRET_KEY",
     "LINKEDIN_PASSWORD_SECRET_KEY",
     "LINKEDIN_TWO_FA_SECRET_KEY",
-    "JWT_SECRET"
+    "JWT_SECRET",
+    "DBOS_SYSTEM_DATABASE_URL"
   ],
   "globalPassThroughEnv": [
     "NODE_ENV",

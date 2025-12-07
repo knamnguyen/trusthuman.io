@@ -232,3 +232,29 @@ export const countrySchema = z.enum(
 );
 
 export type CountrySchema = z.output<typeof countrySchema>;
+
+export const startAutoCommentingParamsSchema = z.object({
+  autoCommentRunId: z.string(),
+  scrollDuration: z.number(),
+  commentDelay: z.number(),
+  maxPosts: z.number(),
+  styleGuide: z.string(),
+  duplicateWindow: z.number(),
+  commentAsCompanyEnabled: z.boolean().optional(),
+  timeFilterEnabled: z.boolean().optional(),
+  minPostAge: z.number().optional(),
+  manualApproveEnabled: z.boolean().optional(),
+  authenticityBoostEnabled: z.boolean().optional(),
+  commentProfileName: z.string().optional(),
+  languageAwareEnabled: z.boolean().optional(),
+  skipCompanyPagesEnabled: z.boolean().optional(),
+  skipPromotedPostsEnabled: z.boolean().optional(),
+  skipFriendsActivitiesEnabled: z.boolean().optional(),
+  blacklistEnabled: z.boolean().optional(),
+  blacklistAuthors: z.array(z.string()).optional(),
+  hitlMode: z.boolean().optional(),
+});
+
+export type StartAutoCommentingParams = z.output<
+  typeof startAutoCommentingParamsSchema
+>;

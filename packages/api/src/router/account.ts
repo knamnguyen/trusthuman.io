@@ -8,10 +8,10 @@ import { protectedProcedure, publicProcedure } from "../trpc";
 import {
   assumedAccountJwt,
   browserRegistry,
+  BrowserSession,
   hyperbrowser,
 } from "../utils/browser-session";
 import { paginate } from "../utils/pagination";
-import { registerOrGetBrowserSession } from "./browser";
 
 export const accountRouter = {
   get: protectedProcedure
@@ -39,6 +39,7 @@ export const accountRouter = {
         });
 
         let accountId;
+        let profileId;
 
         if (existingAccount !== null && existingAccount.status === "ACTIVE") {
           yield {
@@ -49,11 +50,13 @@ export const accountRouter = {
 
         if (existingAccount !== null) {
           accountId = existingAccount.id;
+          profileId = existingAccount.browserProfileId;
         } else {
           accountId = ulid();
           const profile = await hyperbrowser.profiles.create({
             name: input.email,
           });
+          profileId = profile.id;
 
           await ctx.db.linkedInAccount.create({
             data: {
@@ -68,30 +71,21 @@ export const accountRouter = {
           });
         }
 
-        const result = await registerOrGetBrowserSession(
-          ctx.db,
-          ctx.user.id,
-          accountId,
-        );
+        const browserSession = new BrowserSession(ctx.db, accountId, {
+          location: input.location,
+          browserProfileId: profileId,
+        });
 
-        if (result.status === "error") {
-          yield {
-            status: "error",
-            reason: "Failed to start browser session",
-          } as const;
-          return;
-        }
-
-        const instance = result.instance;
+        await browserSession.ready;
 
         yield {
           status: "initialized",
           accountId,
-          liveUrl: instance.liveUrl,
+          liveUrl: browserSession.liveUrl,
         } as const;
 
-        const signedIn = await instance.waitForSigninSuccess(
-          signal ?? instance.signal,
+        const signedIn = await browserSession.waitForSigninSuccess(
+          signal ?? browserSession.signal,
         );
 
         if (signedIn) {
@@ -106,7 +100,7 @@ export const accountRouter = {
           yield {
             status: "signed_in",
           } as const;
-          await instance.destroy();
+          await browserSession.destroy();
         } else {
           yield {
             status: "failed_to_sign_in",

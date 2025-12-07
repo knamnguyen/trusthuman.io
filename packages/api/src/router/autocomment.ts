@@ -1,21 +1,23 @@
 import { ulid } from "ulidx";
 import z from "zod";
 
+import type { PrismaClient } from "@sassy/db";
+import type { StartAutoCommentingParams } from "@sassy/validators";
 import {
   autoCommentConfigurationDefaults,
   DEFAULT_STYLE_GUIDES,
 } from "@sassy/feature-flags";
 
+import type { ProxyLocation } from "../utils/browser-session";
 // import {
 //   userCreateSchema,
 //   userUpdateSchema,
 // } from "@sassy/db/schema-validators";
 
 import { protectedProcedure } from "../trpc";
-import { browserRegistry } from "../utils/browser-session";
-import { chunkify } from "../utils/commons";
+import { browserRegistry, BrowserSession } from "../utils/browser-session";
+import { chunkify, transformValuesIfMatch } from "../utils/commons";
 import { paginate } from "../utils/pagination";
-import { registerOrGetBrowserSession } from "./browser";
 
 export const autoCommentRouter = {
   runs: protectedProcedure
@@ -43,7 +45,10 @@ export const autoCommentRouter = {
       }[] = [];
 
       for (const run of runs) {
-        if (run.status === "pending" && !browserRegistry.has(run.accountId)) {
+        if (
+          run.status === "pending" &&
+          !(await BrowserSession.isInstanceRunning(ctx.db, run.accountId))
+        ) {
           toUpdate.push({
             id: run.id,
             status: "errored",
@@ -179,6 +184,113 @@ export const autoCommentRouter = {
       });
     }),
 
+  editComment: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        comment: z.string(),
+        schedulePostAt: z.date().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const comment = await ctx.db.userComment.findFirst({
+        where: {
+          id: input.id,
+          userId: ctx.user.id,
+        },
+        select: {
+          commentedAt: true,
+        },
+      });
+
+      if (comment === null) {
+        return {
+          status: "error",
+          code: 404,
+          message: "Comment not found",
+        } as const;
+      }
+
+      if (comment.commentedAt !== null) {
+        return {
+          status: "error",
+          code: 400,
+          message: "Cannot edit a comment that has already been posted",
+        } as const;
+      }
+
+      await ctx.db.userComment.updateMany({
+        where: {
+          id: input.id,
+          userId: ctx.user.id,
+        },
+        data: {
+          comment: input.comment,
+          schedulePostAt: input.schedulePostAt,
+        },
+      });
+
+      // should technically be accountId instead of userId
+      void trySubmitScheduledComments(ctx.db, ctx.user.id);
+
+      return {
+        status: "success",
+      } as const;
+    }),
+
+  postComment: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const comment = await ctx.db.userComment.findFirst({
+        where: {
+          id: input.id,
+          userId: ctx.user.id,
+        },
+        select: {
+          commentedAt: true,
+          accountId: true,
+        },
+      });
+
+      if (comment === null) {
+        return {
+          status: "error",
+          code: 404,
+          message: "Comment not found",
+        } as const;
+      }
+
+      if (comment.commentedAt !== null) {
+        return {
+          status: "error",
+          code: 400,
+          message: "Comment has already been posted",
+        } as const;
+      }
+
+      // just set schedulePostAt to now to indicate it should be posted immediately
+      await ctx.db.userComment.updateMany({
+        where: {
+          id: input.id,
+        },
+        data: {
+          schedulePostAt: new Date(),
+        },
+      });
+
+      // TODO: accountId has to be non-null
+      // this will be fixed once we implement the 1-to-1 account linking flow
+      void trySubmitScheduledComments(ctx.db, comment.accountId);
+
+      return {
+        status: "success",
+      } as const;
+    }),
+
   hasCommentedBefore: protectedProcedure
     .input(
       z.object({
@@ -249,168 +361,44 @@ export const autoCommentRouter = {
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const browserSession = await registerOrGetBrowserSession(
-        ctx.db,
-        ctx.user.id,
-        input.accountId,
-        {
-          liveviewViewOnlyMode: process.env.NODE_ENV === "production",
+      const account = await ctx.db.linkedInAccount.findUnique({
+        where: { id: input.accountId, userId: ctx.user.id },
+        select: {
+          id: true,
+          location: true,
+          browserProfileId: true,
         },
-      );
-
-      if (browserSession.status === "error") {
-        return browserSession;
-      }
-
-      browserSession.instance.onBrowserMessage(async function (data) {
-        switch (data.action) {
-          case "stopAutoCommenting": {
-            await this.destroy();
-            break;
-          }
-          case "autoCommentingCompleted": {
-            await Promise.all([
-              this.destroy(),
-              ctx.db.autoCommentRun.update({
-                where: { id: data.payload.autoCommentRunId },
-                data: {
-                  status: data.payload.success ? "completed" : "errored",
-                  error: data.payload.error,
-                  endedAt: new Date(),
-                },
-              }),
-            ]);
-          }
-        }
       });
 
-      const instance = browserSession.instance;
-
-      const [autoCommentRun, autocommentConfig] = await Promise.all([
-        ctx.db.autoCommentRun.create({
-          data: {
-            // use ulid here because we wanna paginate by creation time + id
-            id: ulid(),
-            userId: ctx.user.id,
-            accountId: input.accountId,
-            status: "pending",
-            liveUrl: instance.liveUrl,
-          },
-
-          select: {
-            id: true,
-          },
-        }),
-        ctx.db.autoCommentConfig.findFirst({
-          where: { accountId: input.accountId },
-          include: {
-            commentStyle: true,
-          },
-        }),
-      ]);
-
-      let styleGuide: string | undefined = undefined;
-
-      // if a custom comment style is selected, use that
-      if (autocommentConfig?.commentStyle) {
-        styleGuide = autocommentConfig.commentStyle.prompt;
-      }
-
-      // if not fallback to defaultCommentStyle if provided by user
-      if (styleGuide === undefined) {
-        if (
-          autocommentConfig?.defaultCommentStyle &&
-          autocommentConfig.defaultCommentStyle in DEFAULT_STYLE_GUIDES
-        ) {
-          styleGuide =
-            DEFAULT_STYLE_GUIDES[
-              autocommentConfig.defaultCommentStyle as keyof typeof DEFAULT_STYLE_GUIDES
-            ].prompt;
-        }
-      }
-
-      // if still undefined, use PROFESSIONAL as default
-      styleGuide ??= DEFAULT_STYLE_GUIDES.PROFESSIONAL.prompt;
-
-      const blacklisted = autocommentConfig?.blacklistEnabled
-        ? await ctx.db.blacklistedProfile.findMany({
-            where: {
-              accountId: input.accountId,
-            },
-          })
-        : [];
-
-      try {
-        await instance.startAutoCommenting({
-          autoCommentRunId: autoCommentRun.id,
-          scrollDuration:
-            autocommentConfig?.scrollDuration ??
-            autoCommentConfigurationDefaults.scrollDuration,
-          commentDelay:
-            autocommentConfig?.commentDelay ??
-            autoCommentConfigurationDefaults.commentDelay,
-          maxPosts:
-            autocommentConfig?.maxPosts ??
-            autoCommentConfigurationDefaults.maxPosts,
-          styleGuide,
-          duplicateWindow:
-            autocommentConfig?.duplicateWindow ??
-            autoCommentConfigurationDefaults.duplicateWindow,
-          commentAsCompanyEnabled:
-            autocommentConfig?.commentAsCompanyEnabled ??
-            autoCommentConfigurationDefaults.commentAsCompanyEnabled,
-          timeFilterEnabled:
-            autocommentConfig?.timeFilterEnabled ??
-            autoCommentConfigurationDefaults.timeFilterEnabled,
-          minPostAge:
-            autocommentConfig?.minPostAge ??
-            autoCommentConfigurationDefaults.minPostAge,
-          manualApproveEnabled:
-            autocommentConfig?.manualApproveEnabled ??
-            autoCommentConfigurationDefaults.manualApproveEnabled,
-          authenticityBoostEnabled:
-            autocommentConfig?.authenticityBoostEnabled ??
-            autoCommentConfigurationDefaults.authenticityBoostEnabled,
-          commentProfileName:
-            autocommentConfig?.commentProfileName ??
-            autoCommentConfigurationDefaults.commentProfileName,
-          languageAwareEnabled:
-            autocommentConfig?.languageAwareEnabled ??
-            autoCommentConfigurationDefaults.languageAwareEnabled,
-          skipCompanyPagesEnabled:
-            autocommentConfig?.skipCompanyPagesEnabled ??
-            autoCommentConfigurationDefaults.skipCompanyPagesEnabled,
-          skipPromotedPostsEnabled:
-            autocommentConfig?.skipPromotedPostsEnabled ??
-            autoCommentConfigurationDefaults.skipPromotedPostsEnabled,
-          skipFriendsActivitiesEnabled:
-            autocommentConfig?.skipFriendActivitiesEnabled ??
-            autoCommentConfigurationDefaults.skipFriendActivitiesEnabled,
-          blacklistEnabled:
-            autocommentConfig?.blacklistEnabled ??
-            autoCommentConfigurationDefaults.blacklistEnabled,
-          blacklistAuthors: blacklisted.map((b) => b.profileUrn),
-          hitlMode:
-            autocommentConfig?.hitlMode ??
-            autoCommentConfigurationDefaults.hitlMode,
-        });
-
+      if (account === null) {
         return {
-          status: "success",
-          liveUrl: instance.liveUrl,
-          runId: autoCommentRun.id,
+          status: "error",
+          code: 400,
+          message: "LinkedIn account not found",
         } as const;
-      } catch (error) {
-        await ctx.db.autoCommentRun.update({
-          where: { id: autoCommentRun.id },
-          data: {
-            status: "errored",
-            error:
-              error instanceof Error ? error.message : "Unknown error occurred",
-            endedAt: new Date(),
-          },
-        });
       }
+
+      const runId = ulid();
+
+      const anySessionRunning = await BrowserSession.isAnySessionRunning(
+        ctx.db,
+        account.id,
+      );
+
+      if (anySessionRunning) {
+        return {
+          status: "error",
+          code: 429,
+          message: "Another action is currently running on this account.",
+        } as const;
+      }
+
+      void startAutoComment(ctx.db, runId, ctx.user.id, input.accountId);
+
+      return {
+        status: "success",
+        runId,
+      } as const;
     }),
 
   stop: protectedProcedure
@@ -669,3 +657,227 @@ export const autoCommentRouter = {
       } as const;
     }),
 };
+
+export async function trySubmitScheduledComments(
+  db: PrismaClient,
+  accountId: string,
+) {
+  const now = new Date();
+
+  const accout = await db.linkedInAccount.findUnique({
+    where: { id: accountId },
+    select: {
+      id: true,
+      location: true,
+      browserProfileId: true,
+    },
+  });
+
+  if (accout === null) {
+    return {
+      status: "account_not_found",
+    } as const;
+  }
+
+  const anySessionRunning = await BrowserSession.isInstanceRunning(
+    db,
+    accountId,
+  );
+
+  if (anySessionRunning === true) {
+    return {
+      status: "some_session_running",
+    } as const;
+  }
+
+  const session = new BrowserSession(db, accountId, {
+    location: accout.location as ProxyLocation,
+    browserProfileId: accout.browserProfileId,
+    liveviewViewOnlyMode: process.env.NODE_ENV === "production",
+  });
+
+  await session.ready;
+
+  while (true) {
+    const comment = await db.userComment.findFirst({
+      where: {
+        accountId,
+        commentedAt: null,
+        OR: [
+          {
+            schedulePostAt: {
+              lte: now,
+            },
+          },
+          {
+            schedulePostAt: null,
+          },
+        ],
+      },
+      orderBy: {
+        schedulePostAt: "asc",
+      },
+    });
+
+    if (comment === null) {
+      break;
+    }
+
+    const result = await session.commentOnPost(comment.urn, comment.comment);
+
+    if (result.status === "error") {
+      console.error(`Failed to post comment on ${comment.urn}`);
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+    }
+
+    await db.userComment.updateMany({
+      where: {
+        id: comment.id,
+      },
+      data: {
+        commentedAt: new Date(),
+      },
+    });
+  }
+
+  return {
+    status: "complete",
+  } as const;
+}
+
+async function startAutoComment(
+  db: PrismaClient,
+  runId: string,
+  userId: string,
+  accountId: string,
+  params?: StartAutoCommentingParams,
+) {
+  const account = await db.linkedInAccount.findFirst({
+    where: { id: accountId },
+    select: {
+      id: true,
+      location: true,
+      browserProfileId: true,
+    },
+  });
+
+  if (account === null) {
+    return {
+      status: "error",
+      message: "LinkedIn account not found",
+    } as const;
+  }
+
+  const browserSession = new BrowserSession(db, accountId, {
+    location: account.location as ProxyLocation,
+    browserProfileId: account.browserProfileId,
+    liveviewViewOnlyMode: process.env.NODE_ENV === "production",
+  });
+
+  await browserSession.ready;
+
+  const [autoCommentRun, autocommentConfig] = await Promise.all([
+    db.autoCommentRun.create({
+      data: {
+        // use ulid here because we wanna paginate by creation time + id
+        id: runId,
+        userId,
+        accountId,
+        status: "pending",
+        liveUrl: browserSession.liveUrl,
+      },
+      select: {
+        id: true,
+      },
+    }),
+    db.autoCommentConfig.findFirst({
+      where: { accountId },
+      include: {
+        commentStyle: true,
+      },
+    }),
+  ]);
+
+  let styleGuide: string | undefined = undefined;
+
+  // if a custom comment style is selected, use that
+  if (autocommentConfig?.commentStyle) {
+    styleGuide = autocommentConfig.commentStyle.prompt;
+  }
+
+  // if not fallback to defaultCommentStyle if provided by user
+  if (styleGuide === undefined) {
+    if (
+      autocommentConfig?.defaultCommentStyle &&
+      autocommentConfig.defaultCommentStyle in DEFAULT_STYLE_GUIDES
+    ) {
+      styleGuide =
+        DEFAULT_STYLE_GUIDES[
+          autocommentConfig.defaultCommentStyle as keyof typeof DEFAULT_STYLE_GUIDES
+        ].prompt;
+    }
+  }
+
+  // if still undefined, use PROFESSIONAL as default
+  styleGuide ??= DEFAULT_STYLE_GUIDES.PROFESSIONAL.prompt;
+
+  const blacklisted = autocommentConfig?.blacklistEnabled
+    ? await db.blacklistedProfile.findMany({
+        where: {
+          accountId,
+        },
+      })
+    : [];
+
+  try {
+    const result = await browserSession.startAutoCommenting({
+      autoCommentRunId: autoCommentRun.id,
+      styleGuide,
+      ...autoCommentConfigurationDefaults,
+      ...(autocommentConfig !== null
+        ? transformValuesIfMatch(autocommentConfig, {
+            from: null,
+            to: undefined,
+          })
+        : {}),
+      ...params,
+      blacklistAuthors: blacklisted.map((b) => b.profileUrn),
+    });
+
+    if (result.status === "errored") {
+      await db.autoCommentRun.update({
+        where: { id: autoCommentRun.id },
+        data: {
+          status: "errored",
+          error: result.error,
+          endedAt: new Date(),
+        },
+      });
+      return {
+        status: "error",
+        message: result.error,
+      } as const;
+    }
+
+    return {
+      status: "success",
+      liveUrl: browserSession.liveUrl,
+      runId: autoCommentRun.id,
+    } as const;
+  } catch (error) {
+    const errMessage = error instanceof Error ? error.message : String(error);
+    await db.autoCommentRun.update({
+      where: { id: autoCommentRun.id },
+      data: {
+        status: "errored",
+        error: errMessage,
+        endedAt: new Date(),
+      },
+    });
+
+    return {
+      status: "error",
+      message: errMessage,
+    } as const;
+  }
+}

@@ -6,8 +6,8 @@ describe("LinkedInBrowserSession", () => {
   let session!: BrowserSession;
   let registry!: BrowserSessionRegistry;
   beforeAll(async () => {
-    registry = new BrowserSessionRegistry();
-    const registered = await BrowserSession.getOrCreate(registry, {
+    // figure out how to stub and test
+    const registered = new BrowserSession.getOrCreate(registry, {
       accountId: "mock",
       location: "US",
       engagekitExtensionId: "engagekit-mock-id",
