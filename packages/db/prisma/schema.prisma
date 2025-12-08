@@ -163,6 +163,7 @@ model LinkedInProfile {
 model UserComment {
   id               String           @id
   urn              String
+  postUrl          String
   postContentHtml  String?
   hash             String?
   autoCommentRunId String?
