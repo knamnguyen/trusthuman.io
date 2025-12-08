@@ -93,6 +93,23 @@ export default defineConfig(() => {
   return {
     plugins: [
       react(),
+      // Clean up old tool files before building (preserve asset subdirectories)
+      {
+        name: "clean-old-tools",
+        buildStart() {
+          const publicToolsDir = path.resolve(__dirname, "public/tools");
+          if (fs.existsSync(publicToolsDir)) {
+            const entries = fs.readdirSync(publicToolsDir, { withFileTypes: true });
+            for (const entry of entries) {
+              // Only delete .js and .css files, not subdirectories (which contain assets)
+              if (entry.isFile() && (entry.name.endsWith('.js') || entry.name.endsWith('.css'))) {
+                fs.unlinkSync(path.join(publicToolsDir, entry.name));
+                console.log(`  ✓ Cleaned: ${entry.name}`);
+              }
+            }
+          }
+        }
+      },
       // Custom plugin to rename CSS files per entry
       {
         name: "rename-css-per-entry",
@@ -178,7 +195,7 @@ export default defineConfig(() => {
       outDir: "public/tools",
       target: "esnext",
       minify: true,
-      emptyOutDir: true, // Clear tools directory on build
+      emptyOutDir: false, // Don't empty entire directory - preserve asset subdirectories
       cssCodeSplit: false, // Extract CSS to single file per entry (not split across chunks)
       rollupOptions: {
         input,

@@ -27,7 +27,7 @@ function EmbedLinkedInPreviewTool() {
         license="GPLv3"
         log="collapsed"
         checkOrigin={false}
-        sandbox="allow-scripts allow-same-origin allow-top-navigation"
+        sandbox="allow-scripts allow-same-origin allow-top-navigation allow-popups allow-popups-to-escape-sandbox"
         allow="accelerometer; ambient-light-sensor; autoplay; battery; camera; clipboard-read; clipboard-write; display-capture; document-domain; encrypted-media; fullscreen; gamepad; geolocation; gyroscope; microphone; midi; payment; picture-in-picture; publickey-credentials-create; publickey-credentials-get; speaker-selection; usb; web-share; xr-spatial-tracking"
         title="LinkedIn Preview Tool"
       />
