@@ -15,9 +15,9 @@ export default function LinkedInPreviewEmbedPage() {
   const { user } = useUser();
 
   return (
-    <div className="bg-gray-50">
+    <div className="bg-gray-50 py-16">
       {user ? (
-        <section className="container flex max-w-7xl flex-col items-center justify-center gap-2 pt-8 text-center text-2xl font-bold">
+        <section className="container flex max-w-7xl flex-col items-center justify-center gap-2 text-center text-2xl font-bold">
           {" "}
           <h1 className="">Welcome to LinkedIn Post Previewer</h1>
           <p className="">
@@ -38,7 +38,7 @@ export default function LinkedInPreviewEmbedPage() {
           </div>
         </section>
       ) : (
-        <section className="container flex max-w-7xl flex-col items-center justify-center gap-2 pt-8 text-center text-2xl font-bold">
+        <section className="container flex max-w-7xl flex-col items-center justify-center gap-2 text-center text-2xl font-bold">
           <h1 className="">Welcome to LinkedIn Post Previewer, traveller.</h1>
           <p className="">
             Please sign in to save your previews and get a result link to share
