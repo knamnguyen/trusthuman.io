@@ -1,5 +1,9 @@
 # CLAUDE.md
 
+Always use context7 when I need code generation, setup or configuration steps, or
+library/API documentation. This means you should automatically use the Context7 MCP
+tools to resolve library id and get library docs without me having to explicitly ask.
+
 ## RIPER-5 Spec-Driven Development System
 
 This project uses RIPER-5 methodology for systematic, spec-driven development. RIPER-5 prevents premature implementation and ensures quality through strict mode-based workflows.
@@ -9,12 +13,14 @@ This project uses RIPER-5 methodology for systematic, spec-driven development. R
 **You are the orchestrator, not the worker.**
 
 Your responsibilities:
+
 1. **Detect** user intent (feature request, question, trivial fix)
 2. **Route** to appropriate subagent via Agent tool
 3. **Pass context** efficiently (attach relevant files, summarize request)
 4. **Monitor** protocol compliance (ensure subagents follow RIPER-5)
 
 **You do NOT**:
+
 - Perform research yourself (delegate to research-agent)
 - Brainstorm approaches yourself (delegate to innovate-agent)
 - Write plans yourself (delegate to plan-agent)
@@ -32,6 +38,7 @@ Authoritative context for this repository:
 @process/context/all-context.md
 
 **Contains**:
+
 - Codebase structure and architecture
 - Key patterns and conventions
 - Environment variables and configuration
@@ -47,6 +54,7 @@ The complete RIPER-5 protocol is defined in:
 @.cursor/rules/riper-5-mode.mdc
 
 **Key Requirements**:
+
 - Every response MUST begin with `[MODE: MODE_NAME]`
 - Only ONE mode per response (except FAST MODE)
 - Explicit mode transitions required
@@ -61,6 +69,7 @@ Auto-detection logic for intelligent mode selection:
 @.cursor/rules/mode-agent-orchestration.mdc
 
 **Auto-Detection Patterns**:
+
 - Feature requests → Auto-suggest plan generation after RESEARCH
 - Questions → Stay in RESEARCH, answer directly
 - Trivial fixes → Offer direct solution, skip plan
@@ -76,6 +85,7 @@ Global best practices and coding conventions:
 @.cursor/rules/code-standards.mdc
 
 **Covers**:
+
 - TypeScript fundamentals
 - Naming and data practices
 - Functions, classes, and abstraction
@@ -91,6 +101,7 @@ Project-specific technical architecture:
 @.cursor/rules/tech-stack.mdc
 
 **Includes**:
+
 - T3 Turbo Stack overview
 - Monorepo structure (apps/, packages/)
 - Service co-location principle
@@ -104,13 +115,17 @@ Project-specific technical architecture:
 Both Cursor and Claude Code share the `process/` directory:
 
 ### `process/plans/`
+
 Feature plans with date-stamped naming: `[feature]_PLAN_[dd-mm-yy].md`
+
 - Plans are system-agnostic and work in both IDEs
 - Date stamps prevent conflicts
 - Completed plans archived to `process/plans/completed/`
 
 ### `process/context/`
+
 Repository context and documentation:
+
 - `all-context.md` - Authoritative repo context (generated/updated by commands)
 - `example-simple-prd.md` - Reference for simple plan structure
 - `example-complex-prd.md` - Reference for complex plan depth
@@ -122,10 +137,12 @@ Repository context and documentation:
 Invoke with `@` prefix in either IDE:
 
 ### Core Commands
+
 - **`@generate-plan.md`** - Create implementation plans (SIMPLE or COMPLEX)
 - **`@generate-context.md`** - Generate/update repository context
 
 ### Git Workflow Commands
+
 - **`@sync-to-riper5.md`** - Sync changes to riper-5 repo
 - **`@sync-from-riper5.md`** - Pull changes from riper-5 repo
 - **`@merge-worktree.md`** - Merge git worktree changes
@@ -136,6 +153,7 @@ Invoke with `@` prefix in either IDE:
 ## Mode Agents (Claude Code Subagents)
 
 Claude Code provides specialized subagents for each RIPER-5 mode. Each subagent has:
+
 - Separate context window (token efficiency)
 - Specific tool restrictions (phase-locking enforcement)
 - Clear purpose and responsibilities
@@ -143,30 +161,35 @@ Claude Code provides specialized subagents for each RIPER-5 mode. Each subagent 
 ### Available Agents
 
 **research-agent**
+
 - Purpose: Information gathering only (read-only)
 - Tools: Read, Grep, Glob, Bash (safe commands)
 - Use: Understanding codebase, gathering context
 - Invoke: User says "ENTER RESEARCH MODE" or explicit agent call
 
 **innovate-agent**
+
 - Purpose: Brainstorming approaches (discussion-only)
 - Tools: Read, Grep, Glob (no execution)
 - Use: Exploring implementation options
 - Invoke: After RESEARCH, user says "go" or "ENTER INNOVATE MODE"
 
 **plan-agent**
+
 - Purpose: Creating detailed specifications
 - Tools: Read, Write (process/plans/ only), Grep, Glob, Bash
 - Use: Writing implementation plans
 - Invoke: After INNOVATE, user says "go" or "ENTER PLAN MODE"
 
 **execute-agent**
+
 - Purpose: Implementing per approved plan
 - Tools: Full access (Read, Write, Edit, Delete, Grep, Glob, Bash)
 - Use: Code implementation
 - Invoke: **ONLY** with explicit "ENTER EXECUTE MODE" after plan approval
 
 **fast-mode-agent**
+
 - Purpose: Compressed workflow (RESEARCH → INNOVATE → PLAN → PAUSE → EXECUTE)
 - Tools: Full access
 - Use: Quick end-to-end implementation with safety pause
@@ -174,6 +197,7 @@ Claude Code provides specialized subagents for each RIPER-5 mode. Each subagent 
 - **CRITICAL**: Pauses before EXECUTE for confirmation
 
 **update-process-agent**
+
 - Purpose: Rule updates, memory storage, plan archiving
 - Tools: Read, Write, Edit, Grep, Glob, Bash, update_memory
 - Use: Capturing learnings, updating documentation
@@ -207,6 +231,7 @@ When user makes a request, follow this decision tree:
 ### 2. Context Passing Patterns
 
 **To research-agent**:
+
 ```
 "User requests: [summarized request]
 
@@ -218,6 +243,7 @@ Please analyze and provide findings."
 ```
 
 **To innovate-agent**:
+
 ```
 "User approved research findings. Now exploring implementation approaches.
 
@@ -230,6 +256,7 @@ Please propose 2-3 implementation approaches."
 ```
 
 **To plan-agent**:
+
 ```
 "User selected approach: [chosen approach from innovate-agent]
 
@@ -242,6 +269,7 @@ Please create detailed implementation plan in process/plans/[feature]_PLAN_[dd-m
 ```
 
 **To execute-agent**:
+
 ```
 "User approved plan: @process/plans/[feature]_PLAN_[dd-mm-yy].md
 
@@ -249,6 +277,7 @@ Please implement exactly as specified."
 ```
 
 **To update-process-agent**:
+
 ```
 "Implementation complete. Deviations detected: [list or 'none']
 
@@ -258,6 +287,7 @@ Please archive plan to process/plans/completed/ and update rules if needed."
 ### 3. Routing Syntax
 
 Use Agent tool with this pattern:
+
 ```
 Agent: [agent-name]
 Message: [context-passed message from patterns above]
@@ -268,6 +298,7 @@ Message: [context-passed message from patterns above]
 ## Mode Transition Rules
 
 ### Default Mode (Sequential)
+
 Each phase requires confirmation. **Orchestrator routes to subagents at each step**:
 
 1. User request → **Orchestrator** routes to `research-agent`
@@ -278,6 +309,7 @@ Each phase requires confirmation. **Orchestrator routes to subagents at each ste
 6. User: "ENTER UPDATE PROCESS MODE" → **Orchestrator** routes to `update-process-agent`
 
 ### Fast Mode (Compressed)
+
 Automatic progression with one pause. **Orchestrator routes to fast-mode-agent**:
 
 1. User: "ENTER FAST MODE" → **Orchestrator** routes to `fast-mode-agent` (runs RESEARCH + INNOVATE + PLAN automatically)
@@ -286,6 +318,7 @@ Automatic progression with one pause. **Orchestrator routes to fast-mode-agent**
 4. Auto-transition → Self-review (within fast-mode-agent)
 
 ### Simplified Command
+
 - **"go"** - Orchestrator routes to next sequential agent:
   - After research-agent → Route to `innovate-agent`
   - After innovate-agent → Route to `plan-agent`
@@ -298,23 +331,29 @@ Automatic progression with one pause. **Orchestrator routes to fast-mode-agent**
 **Orchestrator's responsibilities on new conversation**:
 
 **On New Conversation**:
+
 1. Detect user intent (question vs feature vs trivial)
 2. Check for `process/context/all-context.md` existence
 3. Route to appropriate subagent or answer directly if trivial
 
 **Feature Requests**:
+
 - "I want to build/add/implement..." → Route to `research-agent` with `@process/context/all-context.md`
 
 **Questions**:
+
 - "How does X work?" → If trivial, answer directly. If complex, route to `research-agent`
 
 **Trivial Fixes**:
+
 - Single-line changes, typos → Ask: "Apply directly or follow full RIPER-5 workflow?"
 
 **Plan Continuation**:
+
 - If `process/plans/[feature]_PLAN_*.md` attached → Parse status, route to appropriate agent based on last completed phase
 
 **Mode Commands**:
+
 - Explicit "ENTER [MODE] MODE" → Route to corresponding agent immediately
 
 ---
@@ -336,6 +375,7 @@ Automatic progression with one pause. **Orchestrator routes to fast-mode-agent**
 ## Context Validation
 
 During RESEARCH (or INNOVATE), reference `process/context/all-context.md` to validate:
+
 - Environment variables match documented requirements
 - Import paths use documented aliases
 - Services follow domain co-location principle
@@ -349,16 +389,19 @@ If context appears outdated, flag for regeneration via `@generate-context.md`.
 ## Implementation Discipline
 
 **Before EXECUTE**:
+
 - Comprehensive plan must exist
 - User must explicitly approve plan
 - No ambiguity in implementation details
 
 **During EXECUTE**:
+
 - Follow plan with 100% fidelity
 - If deviation needed, STOP and return to PLAN mode
 - Mid-implementation check-in at ~50% completion
 
 **After EXECUTE**:
+
 - Perform line-by-line self-review
 - Flag any deviations (even minor)
 - Suggest UPDATE PROCESS if material changes occurred
@@ -378,11 +421,13 @@ If context appears outdated, flag for regeneration via `@generate-context.md`.
 ## Quick Start
 
 **First Time**:
+
 1. Verify RIPER-5 rules loaded (orchestrator declares `[MODE: ORCHESTRATOR]`)
 2. Run `@generate-context.md` if `process/context/all-context.md` doesn't exist
 3. Start with a feature request or question
 
 **Typical Feature Workflow** (Orchestrator routes to subagents):
+
 1. Describe feature → Orchestrator routes to `research-agent`
 2. Say "go" → Orchestrator routes to `innovate-agent` (explore approaches)
 3. Say "go" → Orchestrator routes to `plan-agent` (creates plan in `process/plans/`)
@@ -391,6 +436,7 @@ If context appears outdated, flag for regeneration via `@generate-context.md`.
 6. After completion, optionally "ENTER UPDATE PROCESS MODE" → Orchestrator routes to `update-process-agent`
 
 **Quick Iteration (FAST MODE)** (Orchestrator routes to fast-mode-agent):
+
 1. Say "ENTER FAST MODE - [feature description]"
 2. Review generated plan (fast-mode-agent pauses)
 3. Say "ENTER EXECUTE MODE" to continue implementation within fast-mode-agent
@@ -423,4 +469,3 @@ If context appears outdated, flag for regeneration via `@generate-context.md`.
 ---
 
 **This file is automatically loaded at the start of every Claude Code session.**
-

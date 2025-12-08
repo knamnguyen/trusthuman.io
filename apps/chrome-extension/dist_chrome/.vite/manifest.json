@@ -39,18 +39,18 @@
       "_index-CP-b3-11.js"
     ]
   },
-  "_react-icons-DeoNdmsK.css": {
-    "file": "assets/react-icons-DeoNdmsK.css",
-    "src": "_react-icons-DeoNdmsK.css"
+  "_react-icons-BBqLKdrr.css": {
+    "file": "assets/react-icons-BBqLKdrr.css",
+    "src": "_react-icons-BBqLKdrr.css"
   },
-  "_react-icons.esm-CYlWsFaW.js": {
-    "file": "assets/react-icons.esm-CYlWsFaW.js",
+  "_react-icons.esm-CNcOZddv.js": {
+    "file": "assets/react-icons.esm-CNcOZddv.js",
     "name": "react-icons.esm",
     "imports": [
       "_index-CP-b3-11.js"
     ],
     "css": [
-      "assets/react-icons-DeoNdmsK.css"
+      "assets/react-icons-BBqLKdrr.css"
     ]
   },
   "_storage-Bsaabweh.js": {
@@ -90,24 +90,24 @@
     ]
   },
   "src/pages/options/index.html": {
-    "file": "assets/index.html-DLFt-ODc.js",
+    "file": "assets/index.html-CnsKZx9P.js",
     "name": "index.html",
     "src": "src/pages/options/index.html",
     "isEntry": true,
     "imports": [
-      "_react-icons.esm-CYlWsFaW.js",
+      "_react-icons.esm-CNcOZddv.js",
       "_index-CP-b3-11.js",
       "_profile-extract-button-E_OM6-m_.js",
       "_index-Dr715SCd.js"
     ]
   },
   "src/pages/popup/index.html": {
-    "file": "assets/index.html-TlNf1mEF.js",
+    "file": "assets/index.html-3ulaG4ZS.js",
     "name": "index.html",
     "src": "src/pages/popup/index.html",
     "isEntry": true,
     "imports": [
-      "_react-icons.esm-CYlWsFaW.js",
+      "_react-icons.esm-CNcOZddv.js",
       "_index-CP-b3-11.js",
       "_react-Dlr6nuqz.js",
       "_get-sync-host-CCHy64Z3.js",

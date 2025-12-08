@@ -7,7 +7,7 @@ import { XIcon } from "lucide-react";
 import { cn } from "../utils";
 
 function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
-  return <SheetPrimitive.Root data-slot="sheet" {...props} />;
+  return <SheetPrimitive.Root data-slot="sheet" modal={false} {...props} />;
 }
 
 function SheetTrigger({
@@ -48,13 +48,15 @@ function SheetContent({
   className,
   children,
   side = "right",
+  portalContainer,
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Content> & {
   side?: "top" | "right" | "bottom" | "left";
+  portalContainer?: HTMLElement | null;
 }) {
   return (
-    <SheetPortal>
-      <SheetOverlay />
+    <SheetPortal container={portalContainer}>
+      {/* No overlay for non-modal sheet */}
       <SheetPrimitive.Content
         data-slot="sheet-content"
         className={cn(
@@ -69,6 +71,8 @@ function SheetContent({
             "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom inset-x-0 bottom-0 h-auto border-t",
           className,
         )}
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
         {...props}
       >
         {children}
