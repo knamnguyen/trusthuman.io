@@ -1,4 +1,5 @@
 import React from "react";
+import IframeResizer from "@iframe-resizer/react";
 import ReactDOM from "react-dom/client";
 
 import { LinkedInPreviewTool } from "./linkedin-preview-tool";
@@ -8,12 +9,16 @@ import "~/globals.css"; // Import global styles
 const embedLinkedInPreview = () => {
   return (
     <div>
-      <iframe
+      <IframeResizer
         id="myIframe"
         src="https://engagekit.io/tools/linkedinpreview/embed"
-        className="h-[100vh] w-full border-none"
+        className="w-full border-none"
+        style={{ width: "100%", height: "100vh" }}
+        license="GPLv3"
+        log="collapsed"
+        checkOrigin={false}
         title="LinkedIn Preview Tool"
-      ></iframe>
+      />
     </div>
   );
 };
@@ -45,29 +50,8 @@ export { LinkedInPreviewTool } from "./linkedin-preview-tool";
 
 // Auto-mount when script loads
 // Creates mount point automatically if it doesn't exist
-async function autoMount() {
+function autoMount() {
   mountLinkedInPreview();
-
-  // Initialize iframe-resizer on the created iframe
-  if (typeof window !== "undefined") {
-    // Dynamically import iframe-resizer parent and access the global it sets up
-    await import("@iframe-resizer/parent");
-
-    // Wait a bit for iframe to be rendered and for iframeResize to be available globally
-    setTimeout(() => {
-      const iframe = document.querySelector("#myIframe");
-      if (iframe && typeof (window as any).iframeResize === "function") {
-        (window as any).iframeResize(
-          {
-            license: "GPLv3",
-            log: true,
-            checkOrigin: false,
-          },
-          iframe,
-        );
-      }
-    }, 100);
-  }
 }
 
 if (typeof window !== "undefined") {
