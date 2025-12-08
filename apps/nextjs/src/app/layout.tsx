@@ -93,7 +93,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
       </Script>
       <body
         className={cn(
-          "bg-background text-foreground min-h-screen font-sans antialiased",
+          "bg-background text-foreground min-h-full font-sans antialiased",
           plusJakartaSans.variable,
         )}
       >
