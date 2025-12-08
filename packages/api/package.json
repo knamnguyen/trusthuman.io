@@ -25,6 +25,7 @@
     "@sassy/db": "workspace:*",
     "@sassy/feature-flags": "workspace:*",
     "@sassy/linkedin-scrape-apify": "workspace:*",
+    "@sassy/s3": "workspace:*",
     "@sassy/stripe": "workspace:*",
     "@sassy/validators": "workspace:*",
     "@trpc/server": "catalog:",

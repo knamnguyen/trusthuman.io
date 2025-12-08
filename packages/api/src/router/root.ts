@@ -5,6 +5,7 @@ import { autoCommentRouter } from "./autocomment";
 import { blacklistRouter } from "./blacklist";
 import { browserRouter } from "./browser";
 import { linkedinScrapeApifyRouter } from "./linkedin-scrape-apify";
+import { linkedInPreviewRouter } from "./linkedin-preview";
 import { profileImportRouter } from "./profile-import";
 import { stripeRouter } from "./stripe";
 import { targetListRouter } from "./target-list";
@@ -21,6 +22,7 @@ export const appRouter = createTRPCRouter({
   targetList: targetListRouter,
   blacklist: blacklistRouter,
   account: accountRouter,
+  linkedInPreview: linkedInPreviewRouter,
 });
 
 // export type definition of API

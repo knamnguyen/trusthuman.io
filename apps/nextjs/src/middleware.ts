@@ -11,6 +11,7 @@ const isPublicRoute = createRouteMatcher([
   "/api/webhooks/stripe", // Allow Stripe webhooks
   "/api/webhooks/clerk", // Allow Clerk webhooks
   "/api/cron(.*)", // Allow cron jobs to bypass authentication
+  "/tools/linkedinpreview(.*)", // Allow LinkedIn preview tool (public routes)
   // Generation routes are protected - removed from public routes
   // Add more public routes as needed
 ]);
