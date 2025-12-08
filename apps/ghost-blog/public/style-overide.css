@@ -1,6 +1,7 @@
 /* custom-overrides.css */
 
-.gh-header-inner,  .gh-container.is-grid .gh-feed {
+.gh-header-inner,
+.gh-container.is-grid .gh-feed {
   overflow: visible !important;
 }
 
@@ -17,9 +18,8 @@ h1 {
 }
 
 .gh-viewport {
-  padding-top: 100px;
+  /* padding-top: 100px; */
 }
-
 
 /* Example neo-brutalism for .gh-card */
 .gh-card {
@@ -74,4 +74,3 @@ th {
 .post-template .gh-container {
   margin-top: 0;
 }
-

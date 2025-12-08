@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { formatDistanceToNow } from "date-fns";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { formatDistanceToNow } from "date-fns";
+
 import { Button } from "@sassy/ui/button";
 import { Card } from "@sassy/ui/card";
+
 import { useTRPC } from "~/trpc/react";
 
 interface Generation {
@@ -45,16 +47,20 @@ export function GenerationCard({ generation }: { generation: Generation }) {
 
   return (
     <Card className="overflow-hidden">
-      <img src={generation.s3Url} alt="" className="w-full h-48 object-cover" />
+      <img src={generation.s3Url} alt="" className="h-48 w-full object-cover" />
       <div className="p-4">
-        <h3 className="font-semibold truncate">{generation.title || "Untitled"}</h3>
-        <p className="text-sm text-gray-500 line-clamp-2 mt-1">
+        <h3 className="truncate font-semibold">
+          {generation.title || "Untitled"}
+        </h3>
+        <p className="mt-1 line-clamp-2 text-sm text-gray-500">
           {generation.contentText}
         </p>
-        <p className="text-xs text-gray-400 mt-2">
-          {formatDistanceToNow(new Date(generation.createdAt), { addSuffix: true })}
+        <p className="mt-2 text-xs text-gray-400">
+          {formatDistanceToNow(new Date(generation.createdAt), {
+            addSuffix: true,
+          })}
         </p>
-        <div className="flex gap-2 mt-4">
+        <div className="mt-4 flex gap-2">
           <Button size="sm" variant="outline" onClick={handleCopyLink}>
             {isCopied ? "Copied!" : "Copy Link"}
           </Button>

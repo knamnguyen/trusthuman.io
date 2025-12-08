@@ -28,10 +28,7 @@ export function LinkedInPreviewTool() {
   return (
     <>
       <Toaster />
-      <section
-        id="linkedin-preview-tool"
-        className="container max-w-7xl py-16 md:py-24"
-      >
+      <section id="linkedin-preview-tool" className="container max-w-7xl py-8">
         <div className="flex min-h-full flex-1 rounded-sm border">
           <div className="flex flex-1 flex-col">
             <EditorPanel
