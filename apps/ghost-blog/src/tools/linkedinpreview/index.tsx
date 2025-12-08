@@ -9,8 +9,9 @@ const embedLinkedInPreview = () => {
   return (
     <div>
       <iframe
+        id="myIframe"
         src="https://engagekit.io/tools/linkedinpreview/embed"
-        className="h-full w-full border-none"
+        className="h-[100vh] w-full border-none"
         title="LinkedIn Preview Tool"
       ></iframe>
     </div>
