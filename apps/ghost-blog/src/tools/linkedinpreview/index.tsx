@@ -1,12 +1,22 @@
-import React from "react";
+import React, { useEffect } from "react";
 import IframeResizer from "@iframe-resizer/react";
 import ReactDOM from "react-dom/client";
 
-import { LinkedInPreviewTool } from "./linkedin-preview-tool";
-
 import "~/globals.css"; // Import global styles
 
-const embedLinkedInPreview = () => {
+import { FAQs } from "./components/faqs";
+import { Features } from "./components/features";
+// Landing page components
+import { Hero } from "./components/hero";
+import { HowToUse } from "./components/how-to-use";
+import { MainFeatures } from "./components/main-features";
+import { OpenSource } from "./components/opensource";
+import { Reason } from "./components/reason";
+
+/**
+ * Embedded iframe component - existing tool
+ */
+function EmbedLinkedInPreviewTool() {
   return (
     <div>
       <IframeResizer
@@ -23,7 +33,83 @@ const embedLinkedInPreview = () => {
       />
     </div>
   );
-};
+}
+
+/**
+ * Main LinkedIn Preview Tool Landing Page
+ * Includes full landing page with all marketing sections + embedded tool
+ */
+function LinkedInPreviewLanding() {
+  useEffect(() => {
+    // Inject additional SEO structured data
+    const webAppSchema = {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      name: "LinkedIn Preview Tool",
+      url: "https://engagekit-ghost-blog.vercel.app/tools/linkedinpreview",
+      description:
+        "Free LinkedIn post preview tool. See how your posts will look before publishing.",
+      applicationCategory: "BusinessApplication",
+      offers: {
+        "@type": "Offer",
+        price: "0",
+        priceCurrency: "USD",
+      },
+      author: {
+        "@type": "Organization",
+        name: "EngageKit",
+        url: "https://engagekit.io",
+      },
+    };
+
+    const breadcrumbSchema = {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Tools",
+          item: "https://engagekit-ghost-blog.vercel.app/tools",
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "LinkedIn Preview Tool",
+          item: "https://engagekit-ghost-blog.vercel.app/tools/linkedinpreview",
+        },
+      ],
+    };
+
+    const script1 = document.createElement("script");
+    script1.type = "application/ld+json";
+    script1.text = JSON.stringify(webAppSchema);
+    document.head.appendChild(script1);
+
+    const script2 = document.createElement("script");
+    script2.type = "application/ld+json";
+    script2.text = JSON.stringify(breadcrumbSchema);
+    document.head.appendChild(script2);
+
+    return () => {
+      document.head.removeChild(script1);
+      document.head.removeChild(script2);
+    };
+  }, []);
+
+  return (
+    <div className="ek-component-container w-full">
+      <Hero />
+      <EmbedLinkedInPreviewTool />
+      <MainFeatures />
+      <HowToUse />
+      <Reason />
+      <Features />
+      <FAQs />
+      <OpenSource />
+    </div>
+  );
+}
 
 export function mountLinkedInPreview(rootSelector = "#linkedin-preview-root") {
   let mountPoint = document.querySelector(rootSelector);
@@ -39,16 +125,10 @@ export function mountLinkedInPreview(rootSelector = "#linkedin-preview-root") {
   }
   // Add scoping class to prevent CSS conflicts with host site
   mountPoint.classList.add("ek-component-container");
-  //   ReactDOM.createRoot(mountPoint).render(
-  //     React.createElement(LinkedInPreviewTool),
-  //   );
   ReactDOM.createRoot(mountPoint).render(
-    React.createElement(embedLinkedInPreview),
+    React.createElement(LinkedInPreviewLanding),
   );
 }
-
-// Export component for direct use
-export { LinkedInPreviewTool } from "./linkedin-preview-tool";
 
 // Auto-mount when script loads
 // Creates mount point automatically if it doesn't exist

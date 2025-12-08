@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import ReactDOM from "react-dom/client";
 
 import { FooterComponent } from "@sassy/ui/components/footer-component";
@@ -6,19 +6,25 @@ import { NavComponent } from "@sassy/ui/components/nav-component";
 import { TableContentComponent } from "@sassy/ui/components/table-content-component";
 
 import { useBlogPosts } from "~/hooks/use-blog-posts";
-import { LinkedInPreviewTool } from "~/tools/linkedinpreview/linkedin-preview-tool";
+// Import LinkedIn Preview Tool for dev preview
+import { mountLinkedInPreview } from "~/tools/linkedinpreview";
 
 import "~/globals.css";
 
 function App() {
   const { blogItems, isLoading: blogItemsLoading } = useBlogPosts();
 
+  useEffect(() => {
+    mountLinkedInPreview();
+  }, []);
+
+  // Uncomment below to preview the LinkedIn Preview Tool landing page
+  // return <div id="linkedin-preview-root" />;
+
   return (
     <div className="bg-background flex min-h-screen flex-col">
       <NavComponent blogItems={blogItems} blogItemsLoading={blogItemsLoading} />
       <main className="container mx-auto mt-20 flex-1 px-4 py-8">
-        <LinkedInPreviewTool />
-
         {/* Mock article for TableContentComponent preview */}
         <article className="gh-article mx-auto mt-16 max-w-2xl">
           <h1 className="gh-article-title mb-8 text-3xl font-bold">

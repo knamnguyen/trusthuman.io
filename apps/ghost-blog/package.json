@@ -23,6 +23,7 @@
     "@iframe-resizer/child": "^5.5.7",
     "@iframe-resizer/react": "^5.5.7",
     "@sassy/ui": "workspace:*",
+    "@tabler/icons-react": "3.29.0",
     "@tiptap/extension-placeholder": "^3.11.1",
     "@tiptap/extension-underline": "^3.11.1",
     "@tiptap/react": "^3.11.1",

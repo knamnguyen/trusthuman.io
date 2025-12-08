@@ -15,7 +15,7 @@ export default function LinkedInPreviewEmbedPage() {
   const { user } = useUser();
 
   return (
-    <div className="bg-gray-50 py-16">
+    <div className="py-16">
       {user ? (
         <section className="container flex max-w-7xl flex-col items-center justify-center gap-2 text-center text-2xl font-bold">
           {" "}
