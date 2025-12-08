@@ -1,10 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useUser, SignInButton } from "@clerk/nextjs";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@sassy/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@sassy/ui/dialog";
 import { useTRPC } from "~/trpc/react";
 
 interface Props {
@@ -16,8 +23,11 @@ interface Props {
 
 export function SaveGenerationButton({ contentJson, contentText, imageFile, title }: Props) {
   const { isSignedIn } = useUser();
-  const router = useRouter();
+  const queryClient = useQueryClient();
   const [isUploading, setIsUploading] = useState(false);
+  const [showDialog, setShowDialog] = useState(false);
+  const [savedGenerationId, setSavedGenerationId] = useState<string | null>(null);
+  const [isCopied, setIsCopied] = useState(false);
   const trpc = useTRPC();
 
   const { mutateAsync: generatePresignedUrl } = useMutation(
@@ -64,8 +74,14 @@ export function SaveGenerationButton({ contentJson, contentText, imageFile, titl
         title,
       });
 
-      // Redirect to saved generation
-      router.push(`/tools/linkedinpreview/${generation.id}`);
+      // Invalidate and refetch the generation list
+      await queryClient.invalidateQueries({
+        queryKey: trpc.linkedInPreview.list.queryKey(),
+      });
+
+      // Show dialog instead of redirecting
+      setSavedGenerationId(generation.id);
+      setShowDialog(true);
     } catch (error) {
       console.error("Save failed:", error);
       const errorMessage = error instanceof Error ? error.message : "Failed to save. Please try again.";
@@ -73,6 +89,20 @@ export function SaveGenerationButton({ contentJson, contentText, imageFile, titl
     } finally {
       setIsUploading(false);
     }
+  };
+
+  const handleCopyLink = () => {
+    if (!savedGenerationId) return;
+    const url = `${window.location.origin}/tools/linkedinpreview/${savedGenerationId}`;
+    navigator.clipboard.writeText(url);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
+  };
+
+  const handleSeePreview = () => {
+    if (!savedGenerationId) return;
+    window.open(`/tools/linkedinpreview/${savedGenerationId}`, "_blank");
+    setShowDialog(false);
   };
 
   if (!isSignedIn) {
@@ -84,8 +114,29 @@ export function SaveGenerationButton({ contentJson, contentText, imageFile, titl
   }
 
   return (
-    <Button onClick={handleSave} disabled={isUploading || !imageFile}>
-      {isUploading ? "Saving..." : "Save and share preview"}
-    </Button>
+    <>
+      <Button onClick={handleSave} disabled={isUploading || !imageFile}>
+        {isUploading ? "Saving..." : "Save and share preview"}
+      </Button>
+
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Preview saved successfully!</DialogTitle>
+            <DialogDescription>
+              Your LinkedIn preview has been saved. You can copy the link to share or view the preview.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={handleCopyLink}>
+              {isCopied ? "Copied!" : "Copy link"}
+            </Button>
+            <Button onClick={handleSeePreview}>
+              See preview
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

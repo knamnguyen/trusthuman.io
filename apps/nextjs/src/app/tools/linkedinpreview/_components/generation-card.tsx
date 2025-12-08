@@ -1,13 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
+import { Copy, ExternalLink } from "lucide-react";
 
 import { Button } from "@sassy/ui/button";
 import { Card } from "@sassy/ui/card";
-
-import { useTRPC } from "~/trpc/react";
 
 interface Generation {
   id: string;
@@ -18,19 +16,7 @@ interface Generation {
 }
 
 export function GenerationCard({ generation }: { generation: Generation }) {
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
   const [isCopied, setIsCopied] = useState(false);
-
-  const { mutateAsync: deleteGeneration } = useMutation({
-    ...trpc.linkedInPreview.delete.mutationOptions({}),
-    onSuccess: async () => {
-      // Invalidate and refetch the list
-      await queryClient.invalidateQueries({
-        queryKey: trpc.linkedInPreview.list.queryKey(),
-      });
-    },
-  });
 
   const handleCopyLink = () => {
     const url = `${window.location.origin}/tools/linkedinpreview/${generation.id}`;
@@ -39,16 +25,14 @@ export function GenerationCard({ generation }: { generation: Generation }) {
     setTimeout(() => setIsCopied(false), 2000);
   };
 
-  const handleDelete = async () => {
-    if (confirm("Delete this preview?")) {
-      await deleteGeneration({ id: generation.id });
-    }
+  const handleSeePreview = () => {
+    window.open(`/tools/linkedinpreview/${generation.id}`, "_blank");
   };
 
   return (
     <Card className="overflow-hidden">
       <img src={generation.s3Url} alt="" className="h-48 w-full object-cover" />
-      <div className="p-4">
+      <div className="flex flex-col items-center p-4">
         <h3 className="truncate font-semibold">
           {generation.title || "Untitled"}
         </h3>
@@ -62,10 +46,12 @@ export function GenerationCard({ generation }: { generation: Generation }) {
         </p>
         <div className="mt-4 flex gap-2">
           <Button size="sm" variant="outline" onClick={handleCopyLink}>
-            {isCopied ? "Copied!" : "Copy Link"}
+            <Copy className="size-4" />
+            {isCopied ? "Copied!" : "Link"}
           </Button>
-          <Button size="sm" variant="destructive" onClick={handleDelete}>
-            Delete
+          <Button size="sm" onClick={handleSeePreview}>
+            <ExternalLink className="size-4" />
+            View
           </Button>
         </div>
       </div>
