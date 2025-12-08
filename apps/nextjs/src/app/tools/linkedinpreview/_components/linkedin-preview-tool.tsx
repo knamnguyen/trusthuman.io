@@ -32,7 +32,7 @@ export function LinkedInPreviewTool() {
         id="linkedin-preview-tool"
         className="container max-w-7xl py-16 md:py-24"
       >
-        <div className="flex min-h-[520px] flex-1 rounded-sm border">
+        <div className="flex min-h-full flex-1 rounded-sm border">
           <div className="flex flex-1 flex-col">
             <EditorPanel
               onChange={handleContentChange}
