@@ -341,6 +341,12 @@ importers:
       '@google/genai':
         specifier: ^1.5.1
         version: 1.7.0
+      '@iframe-resizer/child':
+        specifier: ^5.5.7
+        version: 5.5.7
+      '@iframe-resizer/parent':
+        specifier: ^5.5.7
+        version: 5.5.7
       '@sassy/api':
         specifier: workspace:*
         version: link:../../packages/api
@@ -1946,6 +1952,12 @@ packages:
 
   '@iframe-resizer/child@5.5.7':
     resolution: {integrity: sha512-+/t5E9/wbB+sWg6xM6fRWvNZ48WcZSJXHwXt58EdsWnb1vW+N4wf0Tp6Bwq9JPN4GR64yjXAhb0bBq67ECr/lg==}
+
+  '@iframe-resizer/core@5.5.7':
+    resolution: {integrity: sha512-jxKF0uGS8RfJSkDoRJ697JbmuykGvEhl9nOLnBXdkaARcsFgTT1/Uvz3mxNHw3AqDgNCxCySuI5jYpYM7M4Xbw==}
+
+  '@iframe-resizer/parent@5.5.7':
+    resolution: {integrity: sha512-1dDlHFl7TOgu7odDcz/AQkJRcm9Ztpw2F8af/IU5ZAJhVlQkj8pjdnc5RfniGqY3AHOnryFATtrk7TDgZqPQFg==}
 
   '@img/colour@1.0.0':
     resolution: {integrity: sha512-A5P/LfWGFSl6nsckYtjw9da+19jB8hkJ6ACTGcDfEJ0aE+l2n2El7dsVM7UVHZQ9s2lmYMWlrS21YLy2IR1LUw==}
@@ -10904,6 +10916,15 @@ snapshots:
 
   '@iframe-resizer/child@5.5.7':
     dependencies:
+      auto-console-group: 1.2.11
+
+  '@iframe-resizer/core@5.5.7':
+    dependencies:
+      auto-console-group: 1.2.11
+
+  '@iframe-resizer/parent@5.5.7':
+    dependencies:
+      '@iframe-resizer/core': 5.5.7
       auto-console-group: 1.2.11
 
   '@img/colour@1.0.0':

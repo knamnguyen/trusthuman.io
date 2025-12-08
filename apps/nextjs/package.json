@@ -17,6 +17,8 @@
     "@aws-sdk/client-s3": "^3.525.0",
     "@clerk/nextjs": "^6.12.5",
     "@google/genai": "^1.5.1",
+    "@iframe-resizer/child": "^5.5.7",
+    "@iframe-resizer/parent": "^5.5.7",
     "@sassy/api": "workspace:*",
     "@sassy/db": "workspace:*",
     "@sassy/feature-flags": "workspace:*",

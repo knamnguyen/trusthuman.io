@@ -1,8 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 
-import "@iframe-resizer/child";
-
 import { LinkedInPreviewTool } from "./linkedin-preview-tool";
 
 import "~/globals.css"; // Import global styles
@@ -47,8 +45,29 @@ export { LinkedInPreviewTool } from "./linkedin-preview-tool";
 
 // Auto-mount when script loads
 // Creates mount point automatically if it doesn't exist
-function autoMount() {
+async function autoMount() {
   mountLinkedInPreview();
+
+  // Initialize iframe-resizer on the created iframe
+  if (typeof window !== "undefined") {
+    // Dynamically import iframe-resizer parent
+    const { iframeResize } = (await import("@iframe-resizer/parent")) as any;
+
+    // Wait a bit for iframe to be rendered
+    setTimeout(() => {
+      const iframe = document.querySelector("#myIframe");
+      if (iframe) {
+        iframeResize(
+          {
+            license: "GPLv3",
+            log: true,
+            checkOrigin: false,
+          },
+          iframe,
+        );
+      }
+    }, 100);
+  }
 }
 
 if (typeof window !== "undefined") {
