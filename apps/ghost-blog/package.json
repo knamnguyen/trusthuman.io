@@ -20,6 +20,7 @@
     "@fortawesome/fontawesome-svg-core": "^7.1.0",
     "@fortawesome/free-brands-svg-icons": "^7.1.0",
     "@fortawesome/react-fontawesome": "^3.1.0",
+    "@iframe-resizer/child": "^5.5.7",
     "@sassy/ui": "workspace:*",
     "@tiptap/extension-placeholder": "^3.11.1",
     "@tiptap/extension-underline": "^3.11.1",

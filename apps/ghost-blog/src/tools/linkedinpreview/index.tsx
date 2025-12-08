@@ -1,6 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 
+import "@iframe-resizer/child";
+
 import { LinkedInPreviewTool } from "./linkedin-preview-tool";
 
 import "~/globals.css"; // Import global styles
