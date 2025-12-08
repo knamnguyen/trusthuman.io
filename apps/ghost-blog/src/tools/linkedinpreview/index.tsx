@@ -50,14 +50,14 @@ async function autoMount() {
 
   // Initialize iframe-resizer on the created iframe
   if (typeof window !== "undefined") {
-    // Dynamically import iframe-resizer parent
-    const { iframeResize } = (await import("@iframe-resizer/parent")) as any;
+    // Dynamically import iframe-resizer parent and access the global it sets up
+    await import("@iframe-resizer/parent");
 
-    // Wait a bit for iframe to be rendered
+    // Wait a bit for iframe to be rendered and for iframeResize to be available globally
     setTimeout(() => {
       const iframe = document.querySelector("#myIframe");
-      if (iframe) {
-        iframeResize(
+      if (iframe && typeof (window as any).iframeResize === "function") {
+        (window as any).iframeResize(
           {
             license: "GPLv3",
             log: true,
