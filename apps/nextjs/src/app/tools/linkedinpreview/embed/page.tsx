@@ -11,16 +11,6 @@ import { Button } from "@sassy/ui/button";
 import { GenerationList } from "../_components/generation-list";
 import { LinkedInPreviewTool } from "../_components/linkedin-preview-tool";
 
-// import { LinkedInPreviewTool } from "../_components/linkedin-preview-tool";
-
-// export default function LinkedInPreviewEmbedPage() {
-//   return (
-//     <div className="bg-white">
-//       <LinkedInPreviewTool />
-//     </div>
-//   );
-// }
-
 export default function LinkedInPreviewEmbedPage() {
   const { user } = useUser();
 

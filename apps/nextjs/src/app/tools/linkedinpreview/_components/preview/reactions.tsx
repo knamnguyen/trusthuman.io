@@ -15,10 +15,10 @@ export const Reactions: React.FC = () => {
         <img
           alt="post reactions"
           loading="lazy"
-          width={24}
-          height={24}
-          className="h-5 w-auto"
-          src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciI+CjxwYXRoIGQ9Ik04OC40MSA4NC42N2EzMS45MyAzMS45MyAwIDAwMjQuNDEtMTEuMzMgNjYuMTMgNjYuMTMgMCAwMC00OC44MiAwQTMxLjkzIDMxLjkzIDAgMDA2NCA5NnoiIGZpbGw9IiM1NjY4N2EiLz4KPC9zdmc+"
+          width={76}
+          height={25}
+          className="h-6 w-auto"
+          src="/tools/post-reactions.svg"
         />
         <span
           className={cn(
@@ -26,7 +26,7 @@ export const Reactions: React.FC = () => {
             screenSize === "mobile" ? "hidden" : "text-xs",
           )}
         >
-          Devv and 88 others
+          Ky-Nam and 88 others
         </span>
       </div>
       <div className="flex items-center justify-end gap-2">

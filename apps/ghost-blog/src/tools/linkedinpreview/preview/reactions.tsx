@@ -24,7 +24,7 @@ export const Reactions: React.FC = () => {
             screenSize === "mobile" ? "hidden" : "text-xs",
           )}
         >
-          Devv and 88 others
+          Ky-Nam and 88 others
         </span>
       </div>
       <div className="flex items-center justify-end gap-2">

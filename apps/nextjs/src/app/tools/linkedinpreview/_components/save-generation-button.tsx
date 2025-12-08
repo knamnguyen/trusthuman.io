@@ -38,34 +38,37 @@ export function SaveGenerationButton({ contentJson, contentText, imageFile, titl
   );
 
   const handleSave = async () => {
-    if (!imageFile) {
-      alert("Please upload an image first");
-      return;
-    }
-
     setIsUploading(true);
 
     try {
-      // Step 1: Get presigned URL
-      const { presignedUrl, s3Key, s3Url } = await generatePresignedUrl({
-        fileName: imageFile.name,
-        contentType: imageFile.type,
-      });
+      let s3Key = "";
+      let s3Url = "";
 
-      // Step 2: Upload to S3
-      const uploadResponse = await fetch(presignedUrl, {
-        method: "PUT",
-        body: imageFile,
-        headers: {
-          "Content-Type": imageFile.type,
-        },
-      });
+      // Only upload image if one exists
+      if (imageFile) {
+        // Step 1: Get presigned URL
+        const presignedData = await generatePresignedUrl({
+          fileName: imageFile.name,
+          contentType: imageFile.type,
+        });
+        s3Key = presignedData.s3Key;
+        s3Url = presignedData.s3Url;
 
-      if (!uploadResponse.ok) {
-        throw new Error("Failed to upload image to S3");
+        // Step 2: Upload to S3
+        const uploadResponse = await fetch(presignedData.presignedUrl, {
+          method: "PUT",
+          body: imageFile,
+          headers: {
+            "Content-Type": imageFile.type,
+          },
+        });
+
+        if (!uploadResponse.ok) {
+          throw new Error("Failed to upload image to S3");
+        }
       }
 
-      // Step 3: Save metadata
+      // Step 3: Save metadata (with or without image)
       const generation = await saveResult({
         s3Key,
         s3Url,
@@ -115,7 +118,7 @@ export function SaveGenerationButton({ contentJson, contentText, imageFile, titl
 
   return (
     <>
-      <Button onClick={handleSave} disabled={isUploading || !imageFile}>
+      <Button onClick={handleSave} disabled={isUploading}>
         {isUploading ? "Saving..." : "Save and share preview"}
       </Button>
 
