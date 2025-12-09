@@ -44,7 +44,7 @@ export default function LinkedInPreviewEmbedPage() {
             Please sign in to save your previews and get a result link to share
             with your friends.
           </p>
-          <SignInButton mode="redirect">
+          <SignInButton mode="modal">
             <Button>Sign in to Save</Button>
           </SignInButton>
         </section>
@@ -64,7 +64,7 @@ export default function LinkedInPreviewEmbedPage() {
               No saved previews - please sign in to save your previews and get a
               result link to share with your friends.
             </p>
-            <SignInButton mode="redirect">
+            <SignInButton mode="modal">
               <Button>Sign in to Save</Button>
             </SignInButton>
           </div>

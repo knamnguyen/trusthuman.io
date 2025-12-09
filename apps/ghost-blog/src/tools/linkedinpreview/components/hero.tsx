@@ -46,7 +46,7 @@ export function Hero() {
               />
             ))}
             <span className="text-muted-foreground pl-2 text-sm font-semibold">
-              from 3342 Reviews
+              from 4652 Reviews
             </span>
           </div>
 

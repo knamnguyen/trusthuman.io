@@ -6,8 +6,8 @@ import { ChevronDown, Menu, X } from "lucide-react";
 import { Button } from "@sassy/ui/button";
 import { cn } from "@sassy/ui/utils";
 
-import type { DropdownItem } from "./nav-component/blog-dropdown";
-import { BLOG_LABEL, BlogDropdown } from "./nav-component/blog-dropdown";
+import type { DropdownItem } from "./nav-blog/blog-dropdown";
+import { BLOG_LABEL, BlogDropdown } from "./nav-blog/blog-dropdown";
 // Import dropdown data and components
 import {
   alternativesData,
@@ -15,8 +15,8 @@ import {
   expertGuideData,
   freeToolsData,
   growthDirectoriesData,
-} from "./nav-component/dropdown-data";
-import { NavDropdownContainer } from "./nav-component/nav-dropdown-container";
+} from "./nav-blog/dropdown-data";
+import { NavDropdownContainer } from "./nav-blog/nav-dropdown-container";
 
 // Re-export DropdownItem for consumers
 export type { DropdownItem };
@@ -172,15 +172,12 @@ function MobileMenu({
   );
 }
 
-interface NavComponentProps {
+interface NavBlogProps {
   blogItems?: DropdownItem[];
   blogItemsLoading?: boolean;
 }
 
-export function NavComponent({
-  blogItems,
-  blogItemsLoading,
-}: NavComponentProps = {}) {
+export function NavBlog({ blogItems, blogItemsLoading }: NavBlogProps = {}) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (

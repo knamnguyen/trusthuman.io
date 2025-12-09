@@ -256,9 +256,15 @@ importers:
       '@tryghost/content-api':
         specifier: ^1.11.21
         version: 1.12.2
+      emoji-from-text:
+        specifier: ^1.1.14
+        version: 1.1.14
       lucide-react:
         specifier: ^0.511.0
         version: 0.511.0(react@19.0.0)
+      node-emoji:
+        specifier: ^2.2.0
+        version: 2.2.0
       react:
         specifier: catalog:react19
         version: 19.0.0
@@ -5120,6 +5126,10 @@ packages:
   change-case@3.1.0:
     resolution: {integrity: sha512-2AZp7uJZbYEzRPsFoa+ijKdvp9zsrnnt6+yFokfwEpeJm0xuJDVoxiRCAaTzyJND8GJkofo2IcKWaUZ/OECVzw==}
 
+  char-regex@1.0.2:
+    resolution: {integrity: sha512-kWWXztvZ5SBQV+eRgKFeh8q5sLuZY2+8WUIzlxWVTg+oGwY14qylx1KbKzHd8P6ZYkAg0xyIDU9JMHhyJMZ1jw==}
+    engines: {node: '>=10'}
+
   chardet@0.7.0:
     resolution: {integrity: sha512-mT8iDcrh03qDGRRmoA2hmBJnxpllMR+0/0qlzjqZES6NdiWDcZkCNAk4rPFZ9Q85r27unkiNNg8ZOiwZXBHwcA==}
 
@@ -5380,6 +5390,12 @@ packages:
       typescript:
         optional: true
 
+  count-words-array@1.0.14:
+    resolution: {integrity: sha512-CQDpcpdTOS3mC0LLGGIS+/JAqY5w7/rkJ+f7f6WUHL95ncUxR1IK9v79oGj0uclfRnbson/rXygmEtjwUB0Ipg==}
+
+  count-words@1.0.14:
+    resolution: {integrity: sha512-GUNbgOasDlpATWp4UP5Sc6RzX4ccyo+oAtJUh6geDzwt0TJofYl7hLTYJdD+Yg7r7YkkoxBSE9Nz26FGkX7v9g==}
+
   countries-list@3.1.1:
     resolution: {integrity: sha512-nPklKJ5qtmY5MdBKw1NiBAoyx5Sa7p2yPpljZyQ7gyCN1m+eMFs9I6CT37Mxt8zvR5L3VzD3DJBE4WQzX3WF4A==}
 
@@ -5522,6 +5538,9 @@ packages:
   defer-to-connect@2.0.1:
     resolution: {integrity: sha512-4tvttepXG1VaYGrRibk5EwJd1t4udunSOVMdLSAL6mId1ix438oPwPZMALY41FCijukO1L0twNcGsdzS7dHgDg==}
     engines: {node: '>=10'}
+
+  deffy@2.2.5:
+    resolution: {integrity: sha512-6TX2cfIo97eKqWmqgMDAUulCwnveAe3K+4VGsTGPJsL3NtSEnSBFZ3sUXdS4EBhZ8GbdaZBzXQ04ton18dJrug==}
 
   define-data-property@1.1.4:
     resolution: {integrity: sha512-rBMvIzlpA8v6E+SJZoo++HAYqsLrkg7MSfIinMPFhmkorw7X+dOXVJQs+QT69zGkzMyfDnIMN2Wid1+NbL3T+A==}
@@ -5705,6 +5724,12 @@ packages:
   embla-carousel@8.6.0:
     resolution: {integrity: sha512-SjWyZBHJPbqxHOzckOfo8lHisEaJWmwd23XppYFYVh10bU66/Pn5tkVkbkCMZVdbUE5eTCI2nD8OyIP4Z+uwkA==}
 
+  emoji-from-text@1.1.14:
+    resolution: {integrity: sha512-rp59lPsJlj+AnVs9S1lgGs5HkOj98hOEPKs/O06vDg5SfPSZj0e8nibPfaL7visxHbnIny8FHIOnes7jof3OpQ==}
+
+  emoji-from-word@1.2.13:
+    resolution: {integrity: sha512-HZjGXezTwXEVSMMax+gE3XPbLR7KmhDgRLGrXa6KnUTJeRTs2BQ2qdKep0h4pO2hhqEh4mFLWXwda3Y3tYiygw==}
+
   emoji-regex@10.5.0:
     resolution: {integrity: sha512-lb49vf1Xzfx080OKA0o6l8DQQpV+6Vg95zyCJX9VB/BqKYlhG7N4wgROUUHRA+ZPUefLnteQOad7z1kT2bV7bg==}
 
@@ -5713,6 +5738,12 @@ packages:
 
   emoji-regex@9.2.2:
     resolution: {integrity: sha512-L18DaJsXSUk2+42pv8mLs5jJT2hqFkFE4j21wOmgbUqsZ2hL72NsUU785g9RXgo3s0ZNgVl42TiHp3ZtOv/Vyg==}
+
+  emojilib@1.1.0:
+    resolution: {integrity: sha512-OItSVrbYs38A8cbssqny5xH9qsyTzJ+vcTUjgwowlugmLOmOCceVMAraNcEle/6PuqI8J+wS70MzbbWRfW1cIQ==}
+
+  emojilib@2.4.0:
+    resolution: {integrity: sha512-5U0rVMU5Y2n2+ykNLQqMoqklN9ICBT/KsvC1Gz6vqHbz2AXXGkG+Pm5rMWk/8Vjrr/mY9985Hi8DYzn1F09Nyw==}
 
   encodeurl@2.0.0:
     resolution: {integrity: sha512-Q0n9HRi4m6JuGIV1eFlmvJB7ZEVxu93IrMyiMsGC0lrMJMWzRgx6WGquyfQgZVb31vhGgXnfmPNNXmxnOkRBrg==}
@@ -6209,6 +6240,9 @@ packages:
 
   function-bind@1.1.2:
     resolution: {integrity: sha512-7XHNxH7qX9xG5mIwxkhumTox/MIRNcOgDrxWsMt2pAr23WHp6MrRlN7FBSFpCpr+oVO0F744iUgR82nJMfG2SA==}
+
+  function.name@1.0.14:
+    resolution: {integrity: sha512-s99L814NRuLxwF2sJMIcLhkQhueGXb3oKyvorzrUKKwlVB0SBbWrgZt4+EwKAo3ujCXnT7vshmCvXgZA09kCMw==}
 
   function.prototype.name@1.1.8:
     resolution: {integrity: sha512-e5iwyodOHhbMr/yNrc7fDYG4qlbIvI5gajyzPnb5TCwyhjApznQh1BMFou9b30SevY43gCJKXycoCBjMbsuW0Q==}
@@ -6895,6 +6929,9 @@ packages:
     resolution: {integrity: sha512-5mbUj3SiZXCuRf9fT3ibzbSSEWiy63gFfksmGfdOzujPjW3k+z8WvIBxcJHBoQNlaZaiyB25deviif2+osLmLw==}
     engines: {node: '>=4'}
 
+  iterate-object@1.3.5:
+    resolution: {integrity: sha512-eL23u8oFooYTq6TtJKjp2RYjZnCkUYQvC0T/6fJfWykXJ3quvdDdzKZ3CEjy8b3JGOvLTjDYMEMIp5243R906A==}
+
   iterator.prototype@1.1.5:
     resolution: {integrity: sha512-H0dkQoCa3b2VEeKQBOxFph+JAbcrQdE7KC0UkqwpLmv2EC4P41QXP+rqo9wYodACiG5/WM5s9oDApTU8utwj9g==}
     engines: {node: '>= 0.4'}
@@ -7498,6 +7535,10 @@ packages:
   node-addon-api@7.1.1:
     resolution: {integrity: sha512-5m3bsyrjFWE1xf7nz7YXdN4udnVtXK6/Yfgn5qnahL6bCkf2yKt4k3nuTKAtT4r3IG8JNR2ncsIMdZuAzJjHQQ==}
 
+  node-emoji@2.2.0:
+    resolution: {integrity: sha512-Z3lTE9pLaJF47NyMhd4ww1yFTAP8YhYI8SleJiHzM46Fgpm5cnNzSl9XfzFNqbaz+VlJrIj3fXQ4DeN1Rjm6cw==}
+    engines: {node: '>=18'}
+
   node-fetch-native@1.6.7:
     resolution: {integrity: sha512-g9yhqoedzIUm0nTnTqAQvueMPVOuIY16bqgAJJC8XOOubYFNwz6IER9qs0Gq2Xd0+CecCKFjtdDTMA4u4xG06Q==}
 
@@ -7528,6 +7569,9 @@ packages:
     resolution: {integrity: sha512-WDjw3pJ0/0jMFmyNDp3gvY2YizjLmmOUQo6DEBY+JgdvW/yQ9mEeSw6H5ythl5Ny2ytb7f9C2nIbjSxMNzbJXw==}
     engines: {node: '>=10'}
     hasBin: true
+
+  noop6@1.0.10:
+    resolution: {integrity: sha512-WZvuCILZFZHK+WuqCQwxLBGllkBK1ct8s8Mu9FMDbEsBE6/bqNxyFGbX7Xky+6bYFL8X2Ou4Cis4CJyrwXLvQA==}
 
   normalize-path@3.0.0:
     resolution: {integrity: sha512-6eZs5Ls3WtCisHWp9S2GUy8dqkpGi4BVSz3GaqiE6ezub0512ESztXUwUB6C6IKbQkY2Pnb/mD4WYojCRwcwLA==}
@@ -8589,6 +8633,9 @@ packages:
     resolution: {integrity: sha512-7PGFlmtwsEADb0WYyvCMa1t+yke6daIG4Wirafur5kcf+MhUnPms1UeR0CKQdTZD81yESwMHbtn+TR+dMviakQ==}
     engines: {node: '>= 0.4'}
 
+  set-or-get@1.2.12:
+    resolution: {integrity: sha512-sZyW42TLKMZtCHuVktuQsP559RI4+BNwDzXYhlfYnbXyH4VcclHfSAOmXkPV+ML78HGxKBETuLo4Hc6n2u/8kw==}
+
   set-proto@1.0.0:
     resolution: {integrity: sha512-RJRdvCo6IAnPdsvP/7m6bsQqNnn1FCBX5ZNtFL98MmFF/4xAIJTIg1YbHW5DC2W5SKZanrC6i4HsJqlajw/dZw==}
     engines: {node: '>= 0.4'}
@@ -8658,6 +8705,10 @@ packages:
 
   sisteransi@1.0.5:
     resolution: {integrity: sha512-bLGGlR1QxBcynn2d5YmDX4MGjlZvy2MRBDRNHLJ8VI6l6+9FUiyTFNJ0IveOSP0bcXgVDPRcfGqA0pjaqUpfVg==}
+
+  skin-tone@2.0.0:
+    resolution: {integrity: sha512-kUMbT1oBJCpgrnKoSr0o6wPtvRWT9W9UKvGLwfJYO2WuahZRHOpEyL1ckyMGgMWh0UdpmaoFqKKD29WTomNEGA==}
+    engines: {node: '>=8'}
 
   slash@3.0.0:
     resolution: {integrity: sha512-g9Q1haeby36OSStwb4ntCGGGaKsaVSjQ68fBxoQcutl5fS1vuY18H3wSt3jFyFtrkx+Kz0V1G85A4MyAdDMi2Q==}
@@ -9212,6 +9263,9 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
+  typpy@2.4.0:
+    resolution: {integrity: sha512-a16Uv5doNtvHzaG4wZCHmXN+l9xxmTMpyODtPz7B3DSTsDVNXilTSJGuNw68sUh0Un4bf+ghRMbEcJCI6r06mQ==}
+
   uc.micro@2.1.0:
     resolution: {integrity: sha512-ARDJmphmdvUk6Glw7y9DQ2bFkKBHwQHLi2lsaH6PPmz/Ka9sFOBsBluozhDltWmnv9u/cF6Rt87znRTPV+yp/A==}
 
@@ -9247,6 +9301,10 @@ packages:
   undici@7.11.0:
     resolution: {integrity: sha512-heTSIac3iLhsmZhUCjyS3JQEkZELateufzZuBaVM5RHXdSBMb1LPMQf5x+FH7qjsZYDP0ttAc3nnVpUB+wYbOg==}
     engines: {node: '>=20.18.1'}
+
+  unicode-emoji-modifier-base@1.0.0:
+    resolution: {integrity: sha512-yLSH4py7oFH3oG/9K+XWrz1pSi3dfUrWEnInbxMfArOfc1+33BlGPQtLsOYwvdMy11AwUBetYuaRxSPqgkq+8g==}
+    engines: {node: '>=4'}
 
   unicorn-magic@0.3.0:
     resolution: {integrity: sha512-+QBBXBCvifc56fsbuxZQ6Sic3wqqc3WWaqxs58gvJrcOuN83HGTCwz3oS5phzU9LthRNE9VrJCFCLUgHeeFnfA==}
@@ -9489,6 +9547,9 @@ packages:
   word-wrap@1.2.5:
     resolution: {integrity: sha512-BN22B5eaMMI9UMtjrGd5g5eCYPpCPDUy0FJXbYsaT5zYxjFOckS53SQDE3pWkVoWpHXVb3BrYcEN4Twa55B5cA==}
     engines: {node: '>=0.10.0'}
+
+  worder@1.1.2:
+    resolution: {integrity: sha512-rcpQOGI14sfCVHQsTRm4vaMW2ioUlGk+t1oR4mLesYR/CNa9FCyQBlYZTwghV7+XlugPPewpESGmhUBGjy/CQA==}
 
   wordwrap@1.0.0:
     resolution: {integrity: sha512-gvVzJFlPycKc5dZN4yPkP8w7Dc37BtP1yczEneOb4uq34pXZcvrtRTmWV8W+Ume+XCxKgbjM+nevkyFPMybd4Q==}
@@ -14519,6 +14580,8 @@ snapshots:
       upper-case: 1.1.3
       upper-case-first: 1.1.2
 
+  char-regex@1.0.2: {}
+
   chardet@0.7.0: {}
 
   cheerio-select@2.1.0:
@@ -14804,6 +14867,15 @@ snapshots:
     optionalDependencies:
       typescript: 5.8.3
 
+  count-words-array@1.0.14:
+    dependencies:
+      count-words: 1.0.14
+
+  count-words@1.0.14:
+    dependencies:
+      set-or-get: 1.2.12
+      worder: 1.1.2
+
   countries-list@3.1.1: {}
 
   crc-32@1.2.2: {}
@@ -14917,6 +14989,10 @@ snapshots:
       clone: 1.0.4
 
   defer-to-connect@2.0.1: {}
+
+  deffy@2.2.5:
+    dependencies:
+      typpy: 2.4.0
 
   define-data-property@1.1.4:
     dependencies:
@@ -15087,11 +15163,25 @@ snapshots:
 
   embla-carousel@8.6.0: {}
 
+  emoji-from-text@1.1.14:
+    dependencies:
+      count-words-array: 1.0.14
+      emoji-from-word: 1.2.13
+
+  emoji-from-word@1.2.13:
+    dependencies:
+      emojilib: 1.1.0
+      iterate-object: 1.3.5
+
   emoji-regex@10.5.0: {}
 
   emoji-regex@8.0.0: {}
 
   emoji-regex@9.2.2: {}
+
+  emojilib@1.1.0: {}
+
+  emojilib@2.4.0: {}
 
   encodeurl@2.0.0: {}
 
@@ -15893,6 +15983,10 @@ snapshots:
 
   function-bind@1.1.2: {}
 
+  function.name@1.0.14:
+    dependencies:
+      noop6: 1.0.10
+
   function.prototype.name@1.1.8:
     dependencies:
       call-bind: 1.0.8
@@ -16643,6 +16737,8 @@ snapshots:
       editions: 6.22.0
       textextensions: 6.11.0
 
+  iterate-object@1.3.5: {}
+
   iterator.prototype@1.1.5:
     dependencies:
       define-data-property: 1.1.4
@@ -17190,6 +17286,13 @@ snapshots:
   node-addon-api@7.1.1:
     optional: true
 
+  node-emoji@2.2.0:
+    dependencies:
+      '@sindresorhus/is': 4.6.0
+      char-regex: 1.0.2
+      emojilib: 2.4.0
+      skin-tone: 2.0.0
+
   node-fetch-native@1.6.7: {}
 
   node-fetch@2.7.0:
@@ -17235,6 +17338,8 @@ snapshots:
       supports-color: 5.5.0
       touch: 3.1.1
       undefsafe: 2.0.5
+
+  noop6@1.0.10: {}
 
   normalize-path@3.0.0: {}
 
@@ -18470,6 +18575,10 @@ snapshots:
       functions-have-names: 1.2.3
       has-property-descriptors: 1.0.2
 
+  set-or-get@1.2.12:
+    dependencies:
+      deffy: 2.2.5
+
   set-proto@1.0.0:
     dependencies:
       dunder-proto: 1.0.1
@@ -18573,6 +18682,10 @@ snapshots:
       semver: 7.7.2
 
   sisteransi@1.0.5: {}
+
+  skin-tone@2.0.0:
+    dependencies:
+      unicode-emoji-modifier-base: 1.0.0
 
   slash@3.0.0: {}
 
@@ -19207,6 +19320,10 @@ snapshots:
 
   typescript@5.8.3: {}
 
+  typpy@2.4.0:
+    dependencies:
+      function.name: 1.0.14
+
   uc.micro@2.1.0: {}
 
   ufo@1.6.1: {}
@@ -19234,6 +19351,8 @@ snapshots:
   undici-types@6.21.0: {}
 
   undici@7.11.0: {}
+
+  unicode-emoji-modifier-base@1.0.0: {}
 
   unicorn-magic@0.3.0: {}
 
@@ -19546,6 +19665,8 @@ snapshots:
   winreg@0.0.12: {}
 
   word-wrap@1.2.5: {}
+
+  worder@1.1.2: {}
 
   wordwrap@1.0.0: {}
 

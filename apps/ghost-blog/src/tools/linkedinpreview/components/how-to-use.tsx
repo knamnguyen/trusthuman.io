@@ -72,16 +72,18 @@ export function HowToUse() {
               autoPlay
               loop
               muted
+              playsInline
               style={{
                 transform:
-                  "scale(2.5) perspective(1040px) rotateY(-11deg) rotateX(2deg) rotate(2deg)",
+                  "scale(1.5) perspective(1040px) rotateY(-11deg) rotateX(2deg) rotate(2deg)",
               }}
               className="over m-auto rounded-lg border shadow-xl md:max-h-[400px] md:object-cover md:object-left"
             >
               <source
                 src={`${ASSET_BASE}/linkedinpreviewer.mp4`}
-                type="video/quicktime"
+                type="video/mp4"
               />
+              Your browser does not support the video tag.
             </video>
           </div>
         </div>

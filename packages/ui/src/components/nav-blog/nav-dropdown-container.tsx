@@ -63,7 +63,7 @@ function DefaultPreview({ item }: { item: DropdownItem | null }) {
       </div>
       <div
         className={cn(
-          "flex-1 overflow-hidden rounded-sm",
+          "flex-1 overflow-hidden",
           "border-[1.5px] border-black shadow-[2px_2px_0_#000]",
           "bg-white",
         )}
@@ -104,7 +104,7 @@ export function NavDropdownContainer({
       clearTimeout(closeTimeoutRef.current);
       closeTimeoutRef.current = null;
     }
-    // Find the parent nav-component's nav element
+    // Find the parent nav-blog's nav element
     if (triggerRef.current) {
       const parentNav = triggerRef.current.closest("nav");
       if (parentNav) {
@@ -115,7 +115,7 @@ export function NavDropdownContainer({
     setIsOpen(true);
     // Set first item as default preview when opening
     if (items.length > 0 && !hoveredItem) {
-      setHoveredItem(items[0]);
+      setHoveredItem(items[0] || null);
     }
   };
 
@@ -156,7 +156,7 @@ export function NavDropdownContainer({
     };
   }, []);
 
-  // Measure parent nav-component's nav height for dropdown positioning
+  // Measure parent nav-blog's nav height for dropdown positioning
   useEffect(() => {
     const updateNavHeight = () => {
       if (triggerRef.current) {
@@ -181,7 +181,7 @@ export function NavDropdownContainer({
   // Set first item as default preview when dropdown opens
   useEffect(() => {
     if (isOpen && items.length > 0 && !hoveredItem) {
-      setHoveredItem(items[0]);
+      setHoveredItem(items[0] || null);
     }
   }, [isOpen, items, hoveredItem]);
 

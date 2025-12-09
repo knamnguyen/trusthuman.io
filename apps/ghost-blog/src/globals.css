@@ -4,22 +4,10 @@
 @config '../tailwind.config.ts';
 
 /* Component-specific styles */
-#nav-component-root {
+#nav-blog-root {
   margin-top: 10px;
-}
-
-.ek-component-container {
-}
-
-/* Prevent horizontal overflow on nav menu component */
-#nav-menu-component-root {
   overflow-x: hidden;
   width: 100%;
-}
-
-/* Ensure nav menu dropdown doesn't cause overflow */
-#nav-menu-component-root nav {
-  overflow-x: hidden;
 }
 
 /* Slide down animation for dropdown - appears from under nav bar */

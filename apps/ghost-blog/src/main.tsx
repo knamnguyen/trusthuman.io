@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import ReactDOM from "react-dom/client";
 
 import { FooterComponent } from "@sassy/ui/components/footer-component";
-import { NavComponent } from "@sassy/ui/components/nav-component";
+import { NavBlog } from "@sassy/ui/components/nav-blog";
 import { TableContentComponent } from "@sassy/ui/components/table-content-component";
 
 import { useBlogPosts } from "~/hooks/use-blog-posts";
@@ -20,7 +20,7 @@ function App() {
 
   return (
     <div className="bg-background flex min-h-screen flex-col">
-      <NavComponent blogItems={blogItems} blogItemsLoading={blogItemsLoading} />
+      <NavBlog blogItems={blogItems} blogItemsLoading={blogItemsLoading} />
       <main className="container mx-auto mt-20 flex-1 px-4 py-8">
         {/* Mock article for TableContentComponent preview */}
         <article className="gh-article mx-auto mt-16 max-w-2xl">

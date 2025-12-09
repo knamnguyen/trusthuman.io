@@ -122,7 +122,7 @@ export function SaveGenerationButton({
 
   if (!isSignedIn) {
     return (
-      <SignInButton mode="redirect">
+      <SignInButton mode="modal">
         <Button className="w-full sm:w-auto">Sign in to Save</Button>
       </SignInButton>
     );
