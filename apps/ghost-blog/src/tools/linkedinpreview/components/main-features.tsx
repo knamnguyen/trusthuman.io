@@ -5,19 +5,34 @@ import { Icon, Icons } from "../lib/icons";
 
 const Features = [
   {
-    icon: "formatting",
-    title: "Advanced Formatting: Make Your Posts Look Great",
-    body: "Our formatting tool makes your posts stand out with rich text and clean layouts, making sure they catch people's eyes right away.",
+    icon: "save",
+    title: "Save & Manage Multiple Post Drafts",
+    body: "Create and save unlimited LinkedIn post drafts to your account. Test different headlines, formatting, and calls-to-action without publishing yet. Access your saved posts anytime to refine, A/B test, or repurpose. Perfect for LinkedIn content strategy and version testing.",
   },
   {
-    icon: "preview",
-    title: "Real-Time Preview: See It Before You Share It",
-    body: "Check out how your post will look on different screens before you go live. This way, you can be sure it looks perfect, no matter where it's viewed.",
+    icon: "link",
+    title: "Generate Shareable Preview Links for Team Feedback",
+    body: "Generate a unique, shareable link for each LinkedIn post draft. Send to your manager, team members, client, or agency for real-time feedback. Reviewers don't need to create an account—they just click the link and see your formatted post exactly as LinkedIn will display it. Faster feedback loop than email screenshots.",
+  },
+  {
+    icon: "mobile",
+    title: "Accurate Multi-Device Preview (Mobile, Tablet, Desktop)",
+    body: "Your LinkedIn hook (opening line) is critical—it's what appears before 'see more' on mobile. 85% of LinkedIn users access via mobile, so mobile rendering matters most. Our preview shows exactly where LinkedIn truncates your text on iPhone, Android, Samsung, and desktop browsers. Optimize your hook to maximize first-impression impact. No guessing about formatting or device rendering.",
+  },
+  {
+    icon: "formatting",
+    title: "Professional Text Formatting Tools",
+    body: "Add bold text to emphasize key points. Use italic for quotes and technical terms. Create bullet point lists for clarity. Use numbered lists for step-by-step processes. Include emojis strategically for visual distinction. Support for Unicode special characters (★, ●, ◆, →, ✓). Watch all formatting changes update instantly in the preview pane. Test combinations: bold + italic, bullets with bold text, emoji with formatting—all supported.",
   },
   {
     icon: "dollar",
-    title: "Completely Free and Open Source",
-    body: "Access full functionality without any fees — perfect for professionals and companies of all sizes.",
+    title: "Completely Free—No Signup Required (Optional Account)",
+    body: "Use the core tool completely free: formatting, live preview, device simulation, and copy-to-clipboard. No ads. No limitations on preview count. No registration required. Create an account only if you want to save drafts or generate shareable links. Free account, forever free—no credit card required, no upsell, no subscription.",
+  },
+  {
+    icon: "chart",
+    title: "Performance Insights (Coming 2025)",
+    body: "Saved posts will display performance metrics after you publish to LinkedIn. Track engagement (likes, comments, shares), reach, impressions, and click-through rates. Understand what formatting, hooks, and structures perform best. Refine your LinkedIn content strategy based on real data. (Feature launching Q1 2025)",
   },
 ];
 
@@ -27,19 +42,17 @@ export function MainFeatures() {
       <div className="flex flex-col gap-16">
         <div className="mx-auto max-w-2xl space-y-6 md:text-center">
           <h2 className="text-2xl font-bold sm:text-4xl md:text-5xl">
-            The{" "}
+            Professional Features for{" "}
             <span className="from-primary/60 to-primary bg-gradient-to-b bg-clip-text text-transparent">
-              Key Features{" "}
+              LinkedIn Content Teams
             </span>
-            of this Linkedin Post Writing Tool{" "}
           </h2>
 
           <p className="text-muted-foreground max-w-[800px] text-balance md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-            From intuitive formatting options to real-time preview, this tool is
-            everything you need to create perfect linkedin posts.
+            Save multiple drafts, share preview links with your team, and preview across all devices. Everything you need to create professional, team-approved LinkedIn posts before publishing.
           </p>
           <Button asChild>
-            <a href="#myIframe">Focus Tool</a>
+            <a href="#linkedinpreviewer-tool">Focus Tool</a>
           </Button>
         </div>
         <Card className="divide-border grid divide-y sm:grid-cols-2 sm:divide-x lg:grid-cols-3 lg:divide-y-0">

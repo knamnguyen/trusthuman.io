@@ -8,6 +8,7 @@ import { cn } from "@sassy/ui/utils";
 
 import type { DropdownItem } from "./nav-blog/blog-dropdown";
 import { BLOG_LABEL, BlogDropdown } from "./nav-blog/blog-dropdown";
+import { TOOLS_LABEL, ToolDropdown } from "./nav-tools/tool-dropdown";
 // Import dropdown data and components
 import {
   alternativesData,
@@ -61,10 +62,10 @@ function DropdownTrigger({
 const mobileMenuItems = [
   { label: "Free Tools", tag: "tool" },
   { label: "Blogs", tag: "blog" },
-  { label: "Growth Directories", tag: "directory" },
-  { label: "Case Studies", tag: "case" },
-  { label: "Expert Guide", tag: "guide" },
-  { label: "Alternatives", tag: "alternative" },
+  // { label: "Growth Directories", tag: "directory" },
+  // { label: "Case Studies", tag: "case" },
+  // { label: "Expert Guide", tag: "guide" },
+  // { label: "Alternatives", tag: "alternative" },
 ];
 
 function MobileMenu({
@@ -175,9 +176,11 @@ function MobileMenu({
 interface NavBlogProps {
   blogItems?: DropdownItem[];
   blogItemsLoading?: boolean;
+  toolItems?: DropdownItem[];
+  toolItemsLoading?: boolean;
 }
 
-export function NavBlog({ blogItems, blogItemsLoading }: NavBlogProps = {}) {
+export function NavBlog({ blogItems, blogItemsLoading, toolItems, toolItemsLoading }: NavBlogProps = {}) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
@@ -206,9 +209,10 @@ export function NavBlog({ blogItems, blogItemsLoading }: NavBlogProps = {}) {
 
           {/* Desktop: Dropdown menus */}
           <div className="hidden items-center gap-0 md:flex">
-            <NavDropdownContainer
-              trigger={<DropdownTrigger label="Free Tools" />}
-              items={freeToolsData}
+            <ToolDropdown
+              trigger={<DropdownTrigger label={TOOLS_LABEL} />}
+              items={toolItems}
+              isLoading={toolItemsLoading}
             />
             <BlogDropdown
               trigger={<DropdownTrigger label={BLOG_LABEL} />}

@@ -1,56 +1,59 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Test iframe-resizer</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 20px;
-      font-family: Arial, sans-serif;
-      background: #f5f5f5;
-    }
-    h1 {
-      color: #333;
-    }
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-    }
-    #linkedin-preview-root {
-      border: 2px solid #ccc;
-      border-radius: 4px;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>LinkedIn Preview Tool Test</h1>
-    <p>This page tests the iframe-resizer integration locally.</p>
-
-    <div id="linkedin-preview-root"></div>
-
-    <script src="public/tools/linkedinpreview.js"></script>
-    <link rel="stylesheet" href="public/tools/linkedinpreview.css" />
-  </div>
-
-  <script>
-    console.log("Test page loaded");
-    console.log("window.iframeResize available:", typeof window.iframeResize);
-
-    // Monitor for iframe creation
-    setTimeout(() => {
-      const iframe = document.querySelector("#myIframe");
-      console.log("Iframe found:", !!iframe);
-      if (iframe) {
-        console.log("Iframe src:", iframe.src);
-        console.log("window.iframeResize available:", typeof window.iframeResize);
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Test iframe-resizer</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 20px;
+        font-family: Arial, sans-serif;
+        background: #f5f5f5;
       }
-    }, 500);
-  </script>
-</body>
+      h1 {
+        color: #333;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+      }
+      #linkedin-preview-root {
+        border: 2px solid #ccc;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>LinkedIn Preview Tool Test</h1>
+      <p>This page tests the iframe-resizer integration locally.</p>
+
+      <div id="linkedin-preview-root"></div>
+
+      <script src="public/tools/linkedinpreview.js"></script>
+      <link rel="stylesheet" href="public/tools/linkedinpreview.css" />
+    </div>
+
+    <script>
+      console.log("Test page loaded");
+      console.log("window.iframeResize available:", typeof window.iframeResize);
+
+      // Monitor for iframe creation
+      setTimeout(() => {
+        const iframe = document.querySelector("#linkedinpreviewer-tool");
+        console.log("Iframe found:", !!iframe);
+        if (iframe) {
+          console.log("Iframe src:", iframe.src);
+          console.log(
+            "window.iframeResize available:",
+            typeof window.iframeResize,
+          );
+        }
+      }, 500);
+    </script>
+  </body>
 </html>

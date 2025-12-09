@@ -6,6 +6,7 @@ import { NavBlog } from "@sassy/ui/components/nav-blog";
 import { TableContentComponent } from "@sassy/ui/components/table-content-component";
 
 import { useBlogPosts } from "~/hooks/use-blog-posts";
+import { useTools } from "~/hooks/use-tools";
 // Import LinkedIn Preview Tool for dev preview
 import { mountLinkedInPreview } from "~/tools/linkedinpreview";
 
@@ -13,6 +14,7 @@ import "~/globals.css";
 
 function App() {
   const { blogItems, isLoading: blogItemsLoading } = useBlogPosts();
+  const { toolItems, isLoading: toolItemsLoading } = useTools();
 
   useEffect(() => {
     mountLinkedInPreview();
@@ -20,7 +22,12 @@ function App() {
 
   return (
     <div className="bg-background flex min-h-screen flex-col">
-      <NavBlog blogItems={blogItems} blogItemsLoading={blogItemsLoading} />
+      <NavBlog
+        blogItems={blogItems}
+        blogItemsLoading={blogItemsLoading}
+        toolItems={toolItems}
+        toolItemsLoading={toolItemsLoading}
+      />
       <main className="container mx-auto mt-20 flex-1 px-4 py-8">
         {/* Mock article for TableContentComponent preview */}
         <article className="gh-article mx-auto mt-16 max-w-2xl">

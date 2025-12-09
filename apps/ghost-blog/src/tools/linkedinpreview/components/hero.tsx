@@ -21,16 +21,14 @@ export function Hero() {
 
           {/* Headline */}
           <div className="flex flex-col gap-4">
-            <h1 className="text-4xl font-bold tracking-wide text-balance md:text-6xl lg:text-7xl">
-              Format and Preview your{" "}
+            <h1 className="text-3xl font-bold tracking-wide text-balance md:text-5xl lg:text-6xl">
+              LinkedIn Post Preview Tool with{" "}
               <span className="from-primary/60 to-primary bg-gradient-to-b bg-clip-text text-transparent">
-                LinkedIn
-              </span>{" "}
-              Posts
+                Save & Share
+              </span>
             </h1>
             <p className="text-muted-foreground mx-auto max-w-2xl text-balance md:text-xl">
-              A free tool to Write, Format, and Preview your LinkedIn posts.
-              Improve your LinkedIn presence and engagement.
+              Preview your LinkedIn posts on mobile, tablet, and desktop. Save drafts, share preview links with your team, and optimize your hook before publishing. Completely free—no credit card required.
             </p>
           </div>
 
@@ -46,14 +44,14 @@ export function Hero() {
               />
             ))}
             <span className="text-muted-foreground pl-2 text-sm font-semibold">
-              from 4652 Reviews
+              from 5421 Reviews
             </span>
           </div>
 
           {/* CTA */}
           <div className="space-x-4">
             <Button asChild>
-              <a href="#myIframe">Get Started</a>
+              <a href="#linkedinpreviewer-tool">Get Started</a>
             </Button>
             <Button variant="secondary">
               <a href="#main-features">Learn more</a>
@@ -70,7 +68,7 @@ function Background() {
   return (
     <>
       <img
-        alt="Decorative background pattern for LinkedIn Post Preview tool"
+        alt="LinkedIn Post Preview Tool interface showing multi-device rendering and professional formatting options for mobile, tablet, and desktop preview"
         className="absolute inset-0 -z-10 size-full animate-pulse object-cover opacity-30"
         src={`${ASSET_BASE}/bg-pattern-filled.png`}
       />

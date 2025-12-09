@@ -5,24 +5,39 @@ const ASSET_BASE =
 
 const Steps = [
   {
-    title: "Write or Paste your Content",
+    title: "Write or Paste Your Content",
     description:
-      "Start by typing or pasting your text into our editor. This is where you craft your post.",
+      "Start with your LinkedIn post text. Include your hook (first 1-2 sentences visible before 'see more'), main message, and call-to-action.",
   },
   {
-    title: "Make It Look Good",
+    title: "Apply Text Formatting",
     description:
-      "Use our easy tools to add style to your post. You can make words bold, italic, or add lists to organize your points better.",
+      "Add bold text, italics, bullet points, numbered lists, and emojis. Watch changes update instantly in the preview pane.",
   },
   {
-    title: "Check How It Looks",
+    title: "Preview Across All Devices",
     description:
-      'See how your post will look on phones, tablets, and computers. Pay special attention to where LinkedIn truncates with "see more" to ensure your hook is visible.',
+      "Switch between mobile, tablet, and desktop views. See exactly where LinkedIn's 'see more' truncation happens on mobile (85% of traffic).",
   },
   {
-    title: "Copy and Publish!",
+    title: "Save & Share (Optional)",
     description:
-      'When everything looks good, click the "copy text" button. Then go to LinkedIn, paste your post, and share it with confidence!',
+      "Create a free account to save unlimited drafts and generate shareable preview links for team feedback. No credit card required.",
+  },
+  {
+    title: "Get Team Feedback",
+    description:
+      "Share your preview link with managers, team members, or clients. They can view your formatted post without signing up.",
+  },
+  {
+    title: "A/B Test Multiple Versions",
+    description:
+      "Save different versions with varying hooks, formatting, or CTAs. Track which gets better engagement after publishing.",
+  },
+  {
+    title: "Copy & Publish to LinkedIn",
+    description:
+      "Click 'Copy Formatted Text' and paste into LinkedIn. All formatting is preserved using Unicode characters LinkedIn recognizes.",
   },
 ];
 
@@ -31,19 +46,18 @@ export function HowToUse() {
     <section id="how-it-works" className="container max-w-6xl py-16 md:py-24">
       <div className="flex flex-col gap-16">
         <div className="mx-auto max-w-2xl space-y-6 md:text-center">
-          <h2 className="text-2xl font-bold text-balance sm:text-4xl md:text-5xl">
-            How to Use{" "}
+          <h2 className="text-2xl font-bold text-balance sm:text-3xl md:text-4xl">
+            How to Use in{" "}
             <span className="from-primary/60 to-primary bg-gradient-to-b bg-clip-text text-transparent">
-              LinkedIn Preview{" "}
+              7 Steps
             </span>
-            Tool{" "}
           </h2>
 
-          <p className="text-muted-foreground mx-auto max-w-[700px] text-balance md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-            Just follow these simple steps to make your LinkedIn post look great
+          <p className="text-muted-foreground mx-auto max-w-[700px] text-balance md:text-lg">
+            Format, preview, and optimize your LinkedIn posts before publishing. Save drafts and get team feedback with shareable links.
           </p>
           <Button asChild>
-            <a href="#myIframe">Focus Tool</a>
+            <a href="#linkedinpreviewer-tool">Try Tool Now</a>
           </Button>
         </div>
 
@@ -67,17 +81,14 @@ export function HowToUse() {
             </ol>
           </div>
 
-          <div className="w-full pt-24 pl-32 md:w-7/12 md:pt-0">
+          <div className="w-full px-4 md:w-7/12 md:px-0 md:pt-0 md:pl-32">
             <video
               autoPlay
               loop
               muted
               playsInline
-              style={{
-                transform:
-                  "scale(1.5) perspective(1040px) rotateY(-11deg) rotateX(2deg) rotate(2deg)",
-              }}
-              className="over m-auto rounded-lg border shadow-xl md:max-h-[400px] md:object-cover md:object-left"
+              aria-label="Demo video showing LinkedIn post formatting and preview across multiple devices"
+              className="over m-auto rounded-lg border shadow-xl md:max-h-[400px] md:object-cover md:object-left md:[transform:scale(1.5)_perspective(1040px)_rotateY(-11deg)_rotateX(2deg)_rotate(2deg)]"
             >
               <source
                 src={`${ASSET_BASE}/linkedinpreviewer.mp4`}

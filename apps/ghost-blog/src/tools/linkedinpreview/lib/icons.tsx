@@ -19,12 +19,15 @@ import {
 } from '@tabler/icons-react'
 import {
     Bold,
+    Bookmark,
+    ChartBar,
     CheckCircle,
     Clipboard,
     DollarSign,
     GalleryHorizontalEnd,
     Image,
     Italic,
+    Link,
     List,
     ListOrdered,
     Loader2,
@@ -180,6 +183,9 @@ export const Icons = {
     formatting: RemoveFormatting,
     preview: ScanEye,
     dollar: DollarSign,
+    save: Bookmark,
+    link: Link,
+    chart: ChartBar,
 
     instagram: IconBrandInstagram,
     tiktok: IconBrandTiktok,

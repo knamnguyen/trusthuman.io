@@ -51,7 +51,7 @@ export function Reason() {
             any device.
           </p>
           <Button asChild>
-            <a href="#myIframe">Focus Tool</a>
+            <a href="#linkedinpreviewer-tool">Focus Tool</a>
           </Button>
         </div>
 
