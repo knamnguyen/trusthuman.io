@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useUser, SignInButton } from "@clerk/nextjs";
+import { SignInButton, useUser } from "@clerk/nextjs";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+
 import { Button } from "@sassy/ui/button";
 import {
   Dialog,
@@ -12,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@sassy/ui/dialog";
+
 import { useTRPC } from "~/trpc/react";
 
 interface Props {
@@ -21,20 +23,27 @@ interface Props {
   title?: string;
 }
 
-export function SaveGenerationButton({ contentJson, contentText, imageFile, title }: Props) {
+export function SaveGenerationButton({
+  contentJson,
+  contentText,
+  imageFile,
+  title,
+}: Props) {
   const { isSignedIn } = useUser();
   const queryClient = useQueryClient();
   const [isUploading, setIsUploading] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
-  const [savedGenerationId, setSavedGenerationId] = useState<string | null>(null);
+  const [savedGenerationId, setSavedGenerationId] = useState<string | null>(
+    null,
+  );
   const [isCopied, setIsCopied] = useState(false);
   const trpc = useTRPC();
 
   const { mutateAsync: generatePresignedUrl } = useMutation(
-    trpc.linkedInPreview.generatePresignedUrl.mutationOptions({})
+    trpc.linkedInPreview.generatePresignedUrl.mutationOptions({}),
   );
   const { mutateAsync: saveResult } = useMutation(
-    trpc.linkedInPreview.saveResult.mutationOptions({})
+    trpc.linkedInPreview.saveResult.mutationOptions({}),
   );
 
   const handleSave = async () => {
@@ -87,7 +96,10 @@ export function SaveGenerationButton({ contentJson, contentText, imageFile, titl
       setShowDialog(true);
     } catch (error) {
       console.error("Save failed:", error);
-      const errorMessage = error instanceof Error ? error.message : "Failed to save. Please try again.";
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to save. Please try again.";
       alert(`Error: ${errorMessage}`);
     } finally {
       setIsUploading(false);
@@ -111,14 +123,18 @@ export function SaveGenerationButton({ contentJson, contentText, imageFile, titl
   if (!isSignedIn) {
     return (
       <SignInButton mode="modal">
-        <Button>Sign in to Save</Button>
+        <Button className="w-full sm:w-auto">Sign in to Save</Button>
       </SignInButton>
     );
   }
 
   return (
     <>
-      <Button onClick={handleSave} disabled={isUploading}>
+      <Button
+        onClick={handleSave}
+        disabled={isUploading}
+        className="w-full sm:w-auto"
+      >
         {isUploading ? "Saving..." : "Save and share preview"}
       </Button>
 
@@ -127,16 +143,15 @@ export function SaveGenerationButton({ contentJson, contentText, imageFile, titl
           <DialogHeader>
             <DialogTitle>Preview saved successfully!</DialogTitle>
             <DialogDescription>
-              Your LinkedIn preview has been saved. You can copy the link to share or view the preview.
+              Your LinkedIn preview has been saved. You can copy the link to
+              share or view the preview.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="outline" onClick={handleCopyLink}>
               {isCopied ? "Copied!" : "Copy link"}
             </Button>
-            <Button onClick={handleSeePreview}>
-              See preview
-            </Button>
+            <Button onClick={handleSeePreview}>See preview</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

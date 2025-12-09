@@ -28,9 +28,12 @@ export function LinkedInPreviewTool() {
   return (
     <>
       <Toaster />
-      <section id="linkedin-preview-tool" className="container max-w-7xl py-8">
-        <div className="flex min-h-full flex-1 rounded-sm border">
-          <div className="flex flex-1 flex-col">
+      <section
+        id="linkedin-preview-tool"
+        className="container max-w-7xl px-2 py-4 sm:px-4 sm:py-8"
+      >
+        <div className="flex min-h-full flex-1 flex-col rounded-sm border lg:flex-row">
+          <div className="flex min-w-0 flex-1 flex-col">
             <EditorPanel
               onChange={handleContentChange}
               onImageChange={handleImageChange}
@@ -39,7 +42,7 @@ export function LinkedInPreviewTool() {
               imageFile={imageFile}
             />
           </div>
-          <div className="hidden w-full max-w-[600px] flex-1 flex-col border-l md:flex">
+          <div className="w-full min-w-0 flex-1 flex-col border-t lg:max-w-[600px] lg:border-t-0 lg:border-l">
             <PreviewPanel content={content} image={image} />
           </div>
         </div>
