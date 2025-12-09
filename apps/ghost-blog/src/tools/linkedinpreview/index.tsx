@@ -10,7 +10,6 @@ import { Features } from "./components/features";
 import { Hero } from "./components/hero";
 import { HowToUse } from "./components/how-to-use";
 import { MainFeatures } from "./components/main-features";
-import { OpenSource } from "./components/opensource";
 import { Reason } from "./components/reason";
 
 /**
@@ -106,7 +105,6 @@ function LinkedInPreviewLanding() {
       <Reason />
       <Features />
       <FAQs />
-      <OpenSource />
     </div>
   );
 }

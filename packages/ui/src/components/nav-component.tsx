@@ -218,7 +218,7 @@ export function NavComponent({
               items={blogItems}
               isLoading={blogItemsLoading}
             />
-            <NavDropdownContainer
+            {/* <NavDropdownContainer
               trigger={<DropdownTrigger label="Growth Directories" />}
               items={growthDirectoriesData}
             />
@@ -233,7 +233,7 @@ export function NavComponent({
             <NavDropdownContainer
               trigger={<DropdownTrigger label="Alternatives" />}
               items={alternativesData}
-            />
+            /> */}
           </div>
 
           {/* Desktop: CTA Button */}

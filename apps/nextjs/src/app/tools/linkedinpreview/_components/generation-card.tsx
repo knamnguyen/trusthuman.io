@@ -45,7 +45,7 @@ export function GenerationCard({ generation }: { generation: Generation }) {
       : "";
 
   return (
-    <Card className="flex h-[350px] w-[250px] flex-shrink-0 flex-col overflow-hidden">
+    <Card className="flex h-[370px] w-[250px] flex-shrink-0 flex-col overflow-hidden">
       {generation.s3Url && (
         <img
           src={generation.s3Url}

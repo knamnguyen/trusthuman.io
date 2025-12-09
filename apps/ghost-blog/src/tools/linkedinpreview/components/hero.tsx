@@ -1,7 +1,6 @@
 import { Badge } from "@sassy/ui/badge";
 import { Button } from "@sassy/ui/button";
 
-import { ExternalLinks } from "../config/urls";
 import { Icons } from "../lib/icons";
 
 const ASSET_BASE =
@@ -18,15 +17,6 @@ export function Hero() {
           {/* Tagline */}
           <div className="flex items-center gap-6">
             <Badge>Completely Free</Badge>
-            <a
-              className="text-muted-foreground hover:text-foreground inline-flex items-center space-x-1 text-sm transition-colors"
-              href={ExternalLinks.GitHub}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Icons.github className="size-4" />
-              <span>View Source</span>
-            </a>
           </div>
 
           {/* Headline */}
@@ -62,8 +52,12 @@ export function Hero() {
 
           {/* CTA */}
           <div className="space-x-4">
-            <Button>Get Started</Button>
-            <Button variant="secondary">Learn more</Button>
+            <Button asChild>
+              <a href="#myIframe">Get Started</a>
+            </Button>
+            <Button variant="secondary">
+              <a href="#main-features">Learn more</a>
+            </Button>
           </div>
         </div>
         <Background />
