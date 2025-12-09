@@ -8,6 +8,16 @@ export function loadFonts() {
     },
     {
       family: "Fira Sans",
+      weight: 500,
+      file: "fira-sans-latin-500-normal.woff2",
+    },
+    {
+      family: "Fira Sans",
+      weight: 600,
+      file: "fira-sans-latin-600-normal.woff2",
+    },
+    {
+      family: "Fira Sans",
       weight: 700,
       file: "fira-sans-latin-700-normal.woff2",
     },
@@ -15,6 +25,16 @@ export function loadFonts() {
       family: "JetBrains Mono",
       weight: 400,
       file: "jetbrains-mono-latin-400-normal.woff2",
+    },
+    {
+      family: "JetBrains Mono",
+      weight: 500,
+      file: "jetbrains-mono-latin-500-normal.woff2",
+    },
+    {
+      family: "JetBrains Mono",
+      weight: 600,
+      file: "jetbrains-mono-latin-600-normal.woff2",
     },
     {
       family: "JetBrains Mono",
