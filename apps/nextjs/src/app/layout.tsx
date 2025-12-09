@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
 import Script from "next/script";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
@@ -48,11 +47,6 @@ export const metadata: Metadata = {
   },
 };
 
-const plusJakartaSans = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  variable: "--font-sans",
-});
-
 export const viewport: Viewport = {
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "white" },
@@ -91,12 +85,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
             });
           `}
       </Script>
-      <body
-        className={cn(
-          "bg-background text-foreground min-h-full font-sans antialiased",
-          plusJakartaSans.variable,
-        )}
-      >
+      <body className="bg-background text-foreground min-h-full font-sans antialiased">
         <Providers>
           {props.children}
           <Toaster />

@@ -1,6 +1,7 @@
 import ReactDOM from "react-dom/client";
 
 import App from "./App";
+import { loadFonts } from "../../assets/fonts-loader";
 
 import "../../assets/globals.css";
 
@@ -10,6 +11,9 @@ export default defineContentScript({
 
   async main(ctx) {
     console.log("EngageKit WXT: LinkedIn content script loaded");
+
+    // Load custom fonts
+    loadFonts();
 
     const ui = await createShadowRootUi(ctx, {
       name: "engagekit-sidebar",

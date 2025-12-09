@@ -18,6 +18,12 @@ export default defineConfig({
     version: "0.0.1",
     permissions: ["activeTab", "storage"],
     host_permissions: ["https://*.linkedin.com/*"],
+    web_accessible_resources: [
+      {
+        resources: ["fonts/*"],
+        matches: ["https://*.linkedin.com/*"],
+      },
+    ],
   },
 
   vite: () => ({

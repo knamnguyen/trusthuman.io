@@ -18,9 +18,6 @@ function App() {
     mountLinkedInPreview();
   }, []);
 
-  // Uncomment below to preview the LinkedIn Preview Tool landing page
-  // return <div id="linkedin-preview-root" />;
-
   return (
     <div className="bg-background flex min-h-screen flex-col">
       <NavComponent blogItems={blogItems} blogItemsLoading={blogItemsLoading} />

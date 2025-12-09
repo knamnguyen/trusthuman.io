@@ -34,26 +34,32 @@ export function GenerationCard({ generation }: { generation: Generation }) {
   const titleWords = words.slice(0, 5);
   const descriptionWords = words.slice(5, 20); // 5 + 15 = 20
 
-  const displayTitle = titleWords.length > 0
-    ? titleWords.join(" ") + (words.length > 5 ? "..." : "")
-    : generation.title || "Untitled";
+  const displayTitle =
+    titleWords.length > 0
+      ? titleWords.join(" ") + (words.length > 5 ? "..." : "")
+      : generation.title || "Untitled";
 
-  const displayDescription = descriptionWords.length > 0
-    ? descriptionWords.join(" ") + (words.length > 20 ? "..." : "")
-    : "";
+  const displayDescription =
+    descriptionWords.length > 0
+      ? descriptionWords.join(" ") + (words.length > 20 ? "..." : "")
+      : "";
 
   return (
-    <Card className="flex h-full flex-col overflow-hidden">
+    <Card className="flex h-[350px] w-[250px] flex-shrink-0 flex-col overflow-hidden">
       {generation.s3Url && (
-        <img src={generation.s3Url} alt="" className="h-48 w-full flex-shrink-0 object-cover" />
+        <img
+          src={generation.s3Url}
+          alt=""
+          className="h-48 w-full flex-shrink-0 object-cover"
+        />
       )}
       <div className="flex flex-grow flex-col p-4">
         <div className="flex-grow text-center">
-          <h3 className="w-full overflow-hidden text-ellipsis font-semibold">
+          <h3 className="w-full overflow-hidden font-semibold text-ellipsis">
             {displayTitle}
           </h3>
           {displayDescription && (
-            <p className="mt-1 w-full break-words text-sm text-gray-500 line-clamp-2">
+            <p className="mt-1 line-clamp-2 w-full text-sm break-words text-gray-500">
               {displayDescription}
             </p>
           )}

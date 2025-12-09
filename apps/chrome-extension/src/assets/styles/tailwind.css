@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "@sassy/ui/styles/theme.css";
 @config "../../../tailwind.config.ts";
 
 @layer base {
