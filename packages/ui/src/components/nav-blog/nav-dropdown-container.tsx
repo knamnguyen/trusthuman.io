@@ -64,7 +64,7 @@ function DefaultPreview({ item }: { item: DropdownItem | null }) {
       <div
         className={cn(
           "flex-1 overflow-hidden",
-          "border-[1.5px] border-black shadow-[2px_2px_0_#000]",
+          "shadow-[2px_2px_0_#000]",
           "bg-white",
         )}
       >

@@ -6,11 +6,20 @@ import { NavBlog } from "@sassy/ui/components/nav-blog";
 import "~/globals.css";
 
 import { useBlogPosts } from "~/hooks/use-blog-posts";
+import { useTools } from "~/hooks/use-tools";
 
-// Wrapper component that fetches Ghost blog data
+// Wrapper component that fetches Ghost blog and tools data
 function NavWithData() {
-  const { blogItems, isLoading } = useBlogPosts();
-  return <NavBlog blogItems={blogItems} blogItemsLoading={isLoading} />;
+  const { blogItems, isLoading: blogItemsLoading } = useBlogPosts();
+  const { toolItems, isLoading: toolItemsLoading } = useTools();
+  return (
+    <NavBlog
+      blogItems={blogItems}
+      blogItemsLoading={blogItemsLoading}
+      toolItems={toolItems}
+      toolItemsLoading={toolItemsLoading}
+    />
+  );
 }
 
 export function mountNav(rootSelector = "#nav-blog-root") {

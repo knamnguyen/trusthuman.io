@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import type { DropdownItem } from "@sassy/ui/components/nav-tools";
+import type { DropdownItem } from "@sassy/ui/components/nav-blog";
 
 import { generateEmojiFromText } from "~/lib/emoji-utils";
 import type { GhostPost } from "~/lib/ghost-client";
