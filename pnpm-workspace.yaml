@@ -15,6 +15,7 @@ catalog:
   "@trpc/client": ^11.0.0-rc.824
   "@trpc/tanstack-react-query": ^11.0.0-rc.824
   "@trpc/server": ^11.0.0-rc.824
+  "@types/node": ^22.10.10
 catalogs:
   react19:
     react: 19.0.0

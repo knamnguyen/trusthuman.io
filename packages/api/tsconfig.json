@@ -4,9 +4,7 @@
     "lib": ["ES2022", "dom", "dom.iterable"],
     //preserve jsx because this is a jit package, consuming app will build it later into javascript
     "jsx": "preserve",
-    "paths": {
-      "@sassy/api/*": ["./src/*"]
-    }
+    "paths": {}
   },
   "include": ["src", "scripts"],
   "exclude": ["node_modules"]

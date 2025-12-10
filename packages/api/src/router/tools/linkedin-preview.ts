@@ -1,24 +1,32 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+
 import { S3BucketService } from "@sassy/s3";
 
-import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  publicProcedure,
+} from "../../trpc";
 
 // Initialize S3 service
 const s3Service = new S3BucketService({
   region: process.env.AWS_REGION || "us-west-2",
   accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
-  bucket: process.env.AWS_S3_LINKEDIN_PREVIEW_BUCKET || "engagekit-linkedin-preview",
+  bucket:
+    process.env.AWS_S3_LINKEDIN_PREVIEW_BUCKET || "engagekit-linkedin-preview",
 });
 
 export const linkedInPreviewRouter = createTRPCRouter({
   // Generate presigned URL for S3 upload
   generatePresignedUrl: protectedProcedure
-    .input(z.object({
-      fileName: z.string(),
-      contentType: z.string().optional(),
-    }))
+    .input(
+      z.object({
+        fileName: z.string(),
+        contentType: z.string().optional(),
+      }),
+    )
     .mutation(async ({ input, ctx }) => {
       const s3Key = s3Service.generateUniqueKey(ctx.user.id, input.fileName);
       const presignedUrl = await s3Service.getPresignedUploadUrl(
@@ -38,13 +46,15 @@ export const linkedInPreviewRouter = createTRPCRouter({
 
   // Save generation after S3 upload completes
   saveResult: protectedProcedure
-    .input(z.object({
-      s3Key: z.string(),
-      s3Url: z.string(),
-      contentJson: z.any(),
-      contentText: z.string(),
-      title: z.string().optional(),
-    }))
+    .input(
+      z.object({
+        s3Key: z.string(),
+        s3Url: z.string(),
+        contentJson: z.any(),
+        contentText: z.string(),
+        title: z.string().optional(),
+      }),
+    )
     .mutation(async ({ input, ctx }) => {
       const generation = await ctx.db.linkedInPostPreview.create({
         data: {
@@ -79,25 +89,30 @@ export const linkedInPreviewRouter = createTRPCRouter({
       });
 
       if (!generation) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Generation not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Generation not found",
+        });
       }
 
       if (!generation.isPublic) {
-        throw new TRPCError({ code: "FORBIDDEN", message: "This generation is private" });
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "This generation is private",
+        });
       }
 
       return generation;
     }),
 
   // List user's generations
-  list: protectedProcedure
-    .query(async ({ ctx }) => {
-      return await ctx.db.linkedInPostPreview.findMany({
-        where: { userId: ctx.user.id },
-        orderBy: { createdAt: "desc" },
-        take: 50,
-      });
-    }),
+  list: protectedProcedure.query(async ({ ctx }) => {
+    return await ctx.db.linkedInPostPreview.findMany({
+      where: { userId: ctx.user.id },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    });
+  }),
 
   // Delete generation
   delete: protectedProcedure
@@ -108,7 +123,10 @@ export const linkedInPreviewRouter = createTRPCRouter({
       });
 
       if (!generation) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Generation not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Generation not found",
+        });
       }
 
       if (generation.userId !== ctx.user.id) {
