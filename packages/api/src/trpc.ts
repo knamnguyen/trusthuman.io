@@ -10,6 +10,7 @@
 import type { User } from "@clerk/nextjs/server";
 import { createClerkClient, verifyToken } from "@clerk/backend";
 import { auth } from "@clerk/nextjs/server";
+import { Hyperbrowser } from "@hyperbrowser/sdk";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
@@ -17,7 +18,9 @@ import { ZodError } from "zod";
 import type { Prisma, PrismaClient } from "@sassy/db";
 import { db } from "@sassy/db";
 
+import { BrowserJobWorker } from "./utils/browser-job";
 import { assumedAccountJwt } from "./utils/browser-session";
+import { env } from "./utils/env";
 
 /**
  * 1. CONTEXT
@@ -42,10 +45,18 @@ export type DbUser = Prisma.UserGetPayload<{
   };
 }>;
 export interface TRPCContext {
-  db: typeof db;
+  db: PrismaClient;
   user?: DbUser;
   headers: Headers;
+  hyperbrowser: Hyperbrowser;
+  browserJobs: BrowserJobWorker;
 }
+
+const hb = new Hyperbrowser({
+  apiKey: env.HYPERBROWSER_API_KEY,
+});
+
+const browserJobs = new BrowserJobWorker(hb, db);
 
 export const createTRPCContext = (opts: { headers: Headers }): TRPCContext => {
   const source = opts.headers.get("x-trpc-source");
@@ -54,6 +65,8 @@ export const createTRPCContext = (opts: { headers: Headers }): TRPCContext => {
   return {
     db,
     headers: opts.headers,
+    hyperbrowser: hb,
+    browserJobs,
     // Note: User will be added by the auth middleware when needed
   };
 };

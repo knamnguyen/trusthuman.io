@@ -68,6 +68,7 @@ model LinkedInAccount {
   AutoCommentRun     AutoCommentRun[]
   BrowserInstance    BrowserInstance[]
   userComments       UserComment[]
+  browserJobs        BrowserJob[]
 }
 
 enum LinkedInAccountStatus {
@@ -169,7 +170,10 @@ model UserComment {
   hash             String?
   autoCommentRunId String?
   comment          String
+  // TODO: make this field required, in the new version of the app
+  // every user is ensured to have a linked in account 
   userId           String?
+  // TODO: make this field required
   accountId        String?
   commentedAt      DateTime?
   isDuplicate      Boolean          @default(false)
@@ -185,16 +189,17 @@ model UserComment {
 }
 
 model AutoCommentRun {
-  id        String        @id
-  userId    String
-  accountId String
-  liveUrl   String
-  startedAt DateTime      @default(now())
-  endedAt   DateTime?
-  error     String?
-  status    String
-  comments  UserComment[]
-  hitlMode  Boolean       @default(false)
+  id          String        @id
+  userId      String
+  accountId   String
+  liveUrl     String
+  startedAt   DateTime?
+  endedAt     DateTime?
+  scheduledAt DateTime
+  error       String?
+  status      String
+  comments    UserComment[]
+  hitlMode    Boolean       @default(false)
 
   user    User            @relation(fields: [userId], references: [id])
   account LinkedInAccount @relation(fields: [accountId], references: [id])
@@ -324,4 +329,27 @@ model LinkedInPostPreview {
 
   @@index([userId])
   @@index([createdAt])
+}
+
+enum BrowserJobStatus {
+  QUEUED
+  RUNNING
+  TERMINATED
+  COMPLETED
+  FAILED
+}
+
+model BrowserJob {
+  id              String           @id
+  status          BrowserJobStatus
+  accountId       String
+  error           String?
+  output          String?
+  createdAt       DateTime         @default(now())
+  startAt         DateTime
+  completedAt     DateTime?
+  lastRunAt       DateTime?
+  linkedInAccount LinkedInAccount  @relation(fields: [accountId], references: [id])
+
+  @@index([status])
 }

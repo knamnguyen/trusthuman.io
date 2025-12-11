@@ -129,6 +129,7 @@ export const autoCommentRouter = {
           isAutoCommented: z.boolean().default(true),
           commentedAt: z.date().optional(),
           hitlMode: z.boolean().optional(),
+          postUrl: z.string(),
         })
         .array()
         .min(1),
@@ -143,6 +144,7 @@ export const autoCommentRouter = {
           autoCommentRunId: row.autoCommentRunId,
           hash: row.hash,
           comment: row.comment,
+          postUrl: row.postUrl,
           postContentHtml: row.postContentHtml,
           // if hitlmode is true we leave commentedAt as null to indicate that the comment is still pending human review
           commentedAt: row.hitlMode === true ? null : (row.commentedAt ?? now),
@@ -230,8 +232,7 @@ export const autoCommentRouter = {
         },
       });
 
-      // should technically be accountId instead of userId
-      void trySubmitScheduledComments(ctx.db, ctx.user.id);
+      await ctx.browserJobs.queue(ctx.user.id);
 
       return {
         status: "success",
@@ -248,6 +249,7 @@ export const autoCommentRouter = {
       const comment = await ctx.db.userComment.findFirst({
         where: {
           id: input.id,
+          // filter by user here cause we dont wanna let users post others comments
           userId: ctx.user.id,
         },
         select: {
@@ -261,6 +263,17 @@ export const autoCommentRouter = {
           status: "error",
           code: 404,
           message: "Comment not found",
+        } as const;
+      }
+
+      // this wont be neccessary when we implement the 1-to-1 account linking flow
+      // because comment.accountId will be nullable
+      if (comment.accountId === null) {
+        return {
+          status: "error",
+          code: 400,
+          // we need accountId to post the comment
+          message: "Comment is not associated with any LinkedIn account",
         } as const;
       }
 
@@ -282,9 +295,7 @@ export const autoCommentRouter = {
         },
       });
 
-      // TODO: accountId has to be non-null
-      // this will be fixed once we implement the 1-to-1 account linking flow
-      void trySubmitScheduledComments(ctx.db, comment.accountId);
+      await ctx.browserJobs.queue(comment.accountId, new Date());
 
       return {
         status: "success",
@@ -393,7 +404,7 @@ export const autoCommentRouter = {
         } as const;
       }
 
-      void startAutoComment(ctx.db, runId, ctx.user.id, input.accountId);
+      void startAutoComment(ctx.db, runId, input.accountId);
 
       return {
         status: "success",
@@ -658,97 +669,68 @@ export const autoCommentRouter = {
     }),
 };
 
-export async function trySubmitScheduledComments(
+export async function getAutocommentParamsWithFallback(
   db: PrismaClient,
   accountId: string,
 ) {
-  const now = new Date();
-
-  const accout = await db.linkedInAccount.findUnique({
-    where: { id: accountId },
-    select: {
-      id: true,
-      location: true,
-      browserProfileId: true,
+  const userConfig = await db.autoCommentConfig.findFirst({
+    where: {
+      accountId,
+    },
+    include: {
+      commentStyle: true,
     },
   });
 
-  if (accout === null) {
-    return {
-      status: "account_not_found",
-    } as const;
+  // TODO: in the future we want to make the frontend check for blacklisted profiles at every comment
+  // instead of passing this list of blacklisted authors to the caller
+  const blacklisted = userConfig?.blacklistEnabled
+    ? await db.blacklistedProfile.findMany({
+        where: {
+          accountId,
+        },
+      })
+    : [];
+
+  let styleGuide: string | undefined = undefined;
+
+  // if a custom comment style is selected, use that
+  if (userConfig?.commentStyle) {
+    styleGuide = userConfig.commentStyle.prompt;
   }
 
-  const anySessionRunning = await BrowserSession.isInstanceRunning(
-    db,
-    accountId,
-  );
-
-  if (anySessionRunning === true) {
-    return {
-      status: "some_session_running",
-    } as const;
-  }
-
-  const session = new BrowserSession(db, accountId, {
-    location: accout.location as ProxyLocation,
-    browserProfileId: accout.browserProfileId,
-    liveviewViewOnlyMode: process.env.NODE_ENV === "production",
-  });
-
-  await session.ready;
-
-  while (true) {
-    const comment = await db.userComment.findFirst({
-      where: {
-        accountId,
-        commentedAt: null,
-        OR: [
-          {
-            schedulePostAt: {
-              lte: now,
-            },
-          },
-          {
-            schedulePostAt: null,
-          },
-        ],
-      },
-      orderBy: {
-        schedulePostAt: "asc",
-      },
-    });
-
-    if (comment === null) {
-      break;
+  // if not fallback to defaultCommentStyle if provided by user
+  if (styleGuide === undefined) {
+    if (
+      userConfig?.defaultCommentStyle &&
+      userConfig.defaultCommentStyle in DEFAULT_STYLE_GUIDES
+    ) {
+      styleGuide =
+        DEFAULT_STYLE_GUIDES[
+          userConfig.defaultCommentStyle as keyof typeof DEFAULT_STYLE_GUIDES
+        ].prompt;
     }
-
-    const result = await session.commentOnPost(comment.urn, comment.comment);
-
-    if (result.status === "error") {
-      console.error(`Failed to post comment on ${comment.urn}`);
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-    }
-
-    await db.userComment.updateMany({
-      where: {
-        id: comment.id,
-      },
-      data: {
-        commentedAt: new Date(),
-      },
-    });
   }
+
+  // if still undefined, use PROFESSIONAL as default
+  styleGuide ??= DEFAULT_STYLE_GUIDES.PROFESSIONAL.prompt;
 
   return {
-    status: "complete",
-  } as const;
+    styleGuide,
+    ...autoCommentConfigurationDefaults,
+    ...(userConfig !== null
+      ? transformValuesIfMatch(userConfig, {
+          from: null,
+          to: undefined,
+        })
+      : {}),
+    blacklistAuthors: blacklisted.map((b) => b.profileUrn),
+  };
 }
 
 async function startAutoComment(
   db: PrismaClient,
   runId: string,
-  userId: string,
   accountId: string,
   params?: StartAutoCommentingParams,
 ) {
@@ -758,6 +740,7 @@ async function startAutoComment(
       id: true,
       location: true,
       browserProfileId: true,
+      userId: true,
     },
   });
 
@@ -765,6 +748,18 @@ async function startAutoComment(
     return {
       status: "error",
       message: "LinkedIn account not found",
+    } as const;
+  }
+
+  const anySessionRunning = await BrowserSession.isAnySessionRunning(
+    db,
+    account.id,
+  );
+
+  if (anySessionRunning) {
+    return {
+      status: "error",
+      message: "Another action is currently running on this account.",
     } as const;
   }
 
@@ -781,67 +776,24 @@ async function startAutoComment(
       data: {
         // use ulid here because we wanna paginate by creation time + id
         id: runId,
-        userId,
+        userId: account.userId,
         accountId,
         status: "pending",
+        scheduledAt: new Date(),
         liveUrl: browserSession.liveUrl,
       },
       select: {
         id: true,
       },
     }),
-    db.autoCommentConfig.findFirst({
-      where: { accountId },
-      include: {
-        commentStyle: true,
-      },
-    }),
+    getAutocommentParamsWithFallback(db, accountId),
   ]);
-
-  let styleGuide: string | undefined = undefined;
-
-  // if a custom comment style is selected, use that
-  if (autocommentConfig?.commentStyle) {
-    styleGuide = autocommentConfig.commentStyle.prompt;
-  }
-
-  // if not fallback to defaultCommentStyle if provided by user
-  if (styleGuide === undefined) {
-    if (
-      autocommentConfig?.defaultCommentStyle &&
-      autocommentConfig.defaultCommentStyle in DEFAULT_STYLE_GUIDES
-    ) {
-      styleGuide =
-        DEFAULT_STYLE_GUIDES[
-          autocommentConfig.defaultCommentStyle as keyof typeof DEFAULT_STYLE_GUIDES
-        ].prompt;
-    }
-  }
-
-  // if still undefined, use PROFESSIONAL as default
-  styleGuide ??= DEFAULT_STYLE_GUIDES.PROFESSIONAL.prompt;
-
-  const blacklisted = autocommentConfig?.blacklistEnabled
-    ? await db.blacklistedProfile.findMany({
-        where: {
-          accountId,
-        },
-      })
-    : [];
 
   try {
     const result = await browserSession.startAutoCommenting({
       autoCommentRunId: autoCommentRun.id,
-      styleGuide,
-      ...autoCommentConfigurationDefaults,
-      ...(autocommentConfig !== null
-        ? transformValuesIfMatch(autocommentConfig, {
-            from: null,
-            to: undefined,
-          })
-        : {}),
+      ...autocommentConfig,
       ...params,
-      blacklistAuthors: blacklisted.map((b) => b.profileUrn),
     });
 
     if (result.status === "errored") {
