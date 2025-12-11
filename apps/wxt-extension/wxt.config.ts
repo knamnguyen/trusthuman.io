@@ -1,6 +1,12 @@
 import tsconfigPaths from "vite-tsconfig-paths";
 import { defineConfig } from "wxt";
 
+// Calculate port based on PORT env var (PORT + 2)
+// Main repo: PORT=3000 → WXT=3002
+// Worktree with PORT=3010 → WXT=3012
+const basePort = parseInt(process.env.PORT || "3000");
+const wxtPort = basePort + 2;
+
 // See https://wxt.dev/api/config.html
 export default defineConfig({
   extensionApi: "chrome",
@@ -10,6 +16,13 @@ export default defineConfig({
   // Disable auto-opening browser on dev
   runner: {
     disabled: true,
+  },
+
+  // Configure dev server port to avoid conflicts
+  dev: {
+    server: {
+      port: wxtPort,
+    },
   },
 
   manifest: {

@@ -9,6 +9,12 @@ import { defineConfig, loadEnv } from "vite";
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
 
+  // Calculate port based on PORT env var (PORT + 1)
+  // Main repo: PORT=3000 → Ghost Blog=3001
+  // Worktree with PORT=3010 → Ghost Blog=3011
+  const basePort = parseInt(env.PORT || process.env.PORT || "3000");
+  const ghostBlogPort = basePort + 1;
+
   return {
     plugins: [react()],
 
@@ -52,7 +58,7 @@ export default defineConfig(({ mode }) => {
     },
 
     server: {
-      port: 3000,
+      port: ghostBlogPort,
       open: true,
     },
 
