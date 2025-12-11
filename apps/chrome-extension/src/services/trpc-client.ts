@@ -22,8 +22,9 @@ const getServerUrl = (): string => {
   } else if (import.meta.env.VITE_NEXTJS_URL) {
     url = `${import.meta.env.VITE_NEXTJS_URL}/api/trpc`;
   } else if (import.meta.env.DEV) {
-    // For development with localhost
-    url = "http://localhost:3000/api/trpc";
+    // For development with localhost - use PORT env var if available
+    const port = import.meta.env.VITE_PORT ?? "3000";
+    url = `http://localhost:${port}/api/trpc`;
   } else {
     // For production
     url = "https://engagekit.io/api/trpc";

@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(
     env.VERCEL_ENV === "production"
       ? "https://engagekit.io"
-      : "http://localhost:3000",
+      : (process.env.NEXTJS_URL ?? `http://localhost:${process.env.PORT ?? "3000"}`),
   ),
   title: "EngageKit",
   description: "The ultimate AI-powered LinkedIn engagement assistant",

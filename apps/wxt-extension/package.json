@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "pnpm with-env wxt",
-    "with-env": "dotenv -e ../../.env -e ../../.env.local --",
+    "with-env": "dotenv --override -e ../../.env -e ../../.env.local --",
     "dev:firefox": "wxt -b firefox",
     "build": "wxt build",
     "build:firefox": "wxt build -b firefox",

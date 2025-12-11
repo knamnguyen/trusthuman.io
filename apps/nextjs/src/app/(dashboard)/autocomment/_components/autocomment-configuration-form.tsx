@@ -38,7 +38,7 @@ import { useTRPC } from "~/trpc/react";
 
 export const getSyncHostUrl = () => {
   if (env.NODE_ENV !== "production") {
-    return "http://localhost:3000";
+    return process.env.NEXTJS_URL ?? `http://localhost:${process.env.PORT ?? "3000"}`;
   }
   return "https://engagekit.io";
 };
