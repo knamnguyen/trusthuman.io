@@ -1038,6 +1038,7 @@ async function processAllPostsFeed(
     postContentHtml: string | null;
     comment: string;
     urn: string;
+    postUrl: string;
     hash: string | null;
     isDuplicate: boolean;
     hitlMode?: boolean;
@@ -1330,6 +1331,7 @@ async function processAllPostsFeed(
 
       for (const [index, urn] of postUrns.entries()) {
         comments.push({
+          postUrl: `https://www.linkedin.com/feed/update/${urn}`,
           urn,
           comment,
           autoCommentRunId,
