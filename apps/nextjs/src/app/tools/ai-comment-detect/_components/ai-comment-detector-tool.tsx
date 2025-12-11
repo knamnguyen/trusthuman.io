@@ -1,12 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useUser } from "@clerk/nextjs";
 import { useMutation } from "@tanstack/react-query";
 import { toast, Toaster } from "sonner";
 
 import { useTRPC } from "~/trpc/react";
-import { InputPanel } from "./input-panel";
 import { AnalysisPanel } from "./analysis-panel";
+import { InputPanel } from "./input-panel";
+import { ShareDialog } from "./share-dialog";
 
 export interface CommentData {
   urn: string;
@@ -38,6 +40,14 @@ export function AICommentDetectorTool() {
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(
     null,
   );
+  const [url, setUrl] = useState<string>("");
+  const { isSignedIn, user } = useUser();
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [savedAnalysisId, setSavedAnalysisId] = useState<string | null>(null);
+  const [pendingAnalysisData, setPendingAnalysisData] = useState<{
+    commentData: CommentData;
+    analysisResult: AnalysisResult;
+  } | null>(null);
   const trpc = useTRPC();
 
   // Fetch comment from URN
@@ -50,8 +60,44 @@ export function AICommentDetectorTool() {
     trpc.commentAiDetector.detectAIContent.mutationOptions({}),
   );
 
+  // Save analysis mutation
+  const saveAnalysisMutation = useMutation(
+    trpc.commentAiDetector.saveAnalysis.mutationOptions({
+      onSuccess: (data) => {
+        setSavedAnalysisId(data.id);
+        toast.success("Analysis saved!");
+      },
+      onError: (error) => {
+        toast.error(`Failed to save analysis: ${error.message}`);
+        setShareDialogOpen(false);
+      },
+    }),
+  );
+
+  // Auto-save after sign-in
+  useEffect(() => {
+    if (isSignedIn && pendingAnalysisData && !savedAnalysisId) {
+      const { commentData, analysisResult } = pendingAnalysisData;
+
+      saveAnalysisMutation.mutate({
+        commentUrl: url,
+        commentText: commentData.text,
+        authorName: commentData.author.name,
+        authorHeadline: commentData.author.headline,
+        authorProfileUrl: commentData.author.profileUrl,
+        avatarUrl: commentData.author.avatarUrl,
+        analysisJson: analysisResult,
+        overallScore: analysisResult.overallHumanScore,
+        aiScore: 100 - analysisResult.overallHumanScore,
+      });
+
+      setPendingAnalysisData(null);
+    }
+  }, [isSignedIn, pendingAnalysisData, savedAnalysisId]);
+
   const handleFetchComment = async (url: string) => {
     setAnalysisResult(null); // Clear previous analysis
+    setUrl(url); // Store URL for later use in save
 
     try {
       const result = await fetchCommentMutation.mutateAsync({ url });
@@ -102,7 +148,9 @@ export function AICommentDetectorTool() {
     if (!commentData) return;
 
     try {
-      const result = await detectAIMutation.mutateAsync({ text: commentData.text });
+      const result = await detectAIMutation.mutateAsync({
+        text: commentData.text,
+      });
 
       if (!result.success) {
         toast.error(result.error?.message ?? "AI analysis failed");
@@ -128,12 +176,38 @@ export function AICommentDetectorTool() {
         aiProbability: Math.round(block.result.fake * 100),
       }));
 
-      setAnalysisResult({
+      const transformedResult = {
         overallHumanScore,
         blocks,
-      });
+      };
+
+      setAnalysisResult(transformedResult);
 
       toast.success("AI analysis complete!");
+
+      // Auto-save logic
+      if (isSignedIn) {
+        // User is authenticated - save immediately
+        saveAnalysisMutation.mutate({
+          commentUrl: url,
+          commentText: commentData.text,
+          authorName: commentData.author.name,
+          authorHeadline: commentData.author.headline,
+          authorProfileUrl: commentData.author.profileUrl,
+          avatarUrl: commentData.author.avatarUrl,
+          analysisJson: data,
+          overallScore: data.original,
+          aiScore: data.ai,
+        });
+        setShareDialogOpen(true);
+      } else {
+        // User is not authenticated - store data and show sign-in prompt
+        setPendingAnalysisData({
+          commentData,
+          analysisResult: transformedResult,
+        });
+        setShareDialogOpen(true);
+      }
     } catch (error) {
       const errorMessage =
         error instanceof Error
@@ -165,10 +239,20 @@ export function AICommentDetectorTool() {
             />
           </div>
           <div className="w-full min-w-0 flex-1 flex-col border-t lg:max-w-[600px] lg:border-t-0 lg:border-l">
-            <AnalysisPanel analysisResult={analysisResult} isLoading={isLoading} />
+            <AnalysisPanel
+              analysisResult={analysisResult}
+              isLoading={isLoading}
+            />
           </div>
         </div>
       </section>
+
+      <ShareDialog
+        open={shareDialogOpen}
+        onOpenChange={setShareDialogOpen}
+        analysisId={savedAnalysisId}
+        isAuthenticated={!!isSignedIn}
+      />
     </>
   );
 }

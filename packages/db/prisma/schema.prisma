@@ -49,6 +49,7 @@ model User {
   AutoCommentConfig    AutoCommentConfig[]
   BlacklistedProfile   BlacklistedProfile[]
   linkedInPostPreviews LinkedInPostPreview[]
+  commentAnalyses      CommentAnalysis[]
 }
 
 model LinkedInAccount {
@@ -315,6 +316,35 @@ model LinkedInPostPreview {
   isPublic    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model CommentAnalysis {
+  id              String   @id @default(uuid())
+  userId          String
+
+  // Comment metadata
+  commentUrl      String   @db.Text
+  commentText     String   @db.Text
+  authorName      String
+  authorHeadline  String?
+  authorProfileUrl String?
+  avatarS3Key     String?  // Stored in S3 to avoid LinkedIn URL expiration
+  avatarS3Url     String?  // Public S3 URL
+
+  // Analysis results (stored as JSON for flexibility)
+  analysisJson    Json     // Full AI detector output
+  overallScore    Float    // Original percentage (0-100)
+  aiScore         Float    // AI percentage (0-100)
+
+  // Metadata
+  isPublic        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

@@ -1,18 +1,6 @@
-import type { Metadata } from "next";
+"use client";
 
 import { AICommentDetectorTool } from "./_components/ai-comment-detector-tool";
-
-export const metadata: Metadata = {
-  title: "AI Comment Detector - EngageKit",
-  description:
-    "Detect AI-generated LinkedIn comments with our powerful analysis tool. Identify artificial engagement and maintain authentic conversations.",
-  openGraph: {
-    title: "AI Comment Detector - EngageKit",
-    description:
-      "Detect AI-generated LinkedIn comments with our powerful analysis tool. Identify artificial engagement and maintain authentic conversations.",
-    type: "website",
-  },
-};
 
 export default function AICommentDetectPage() {
   return (

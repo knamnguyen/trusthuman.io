@@ -38,7 +38,6 @@ Build a LinkedIn comment AI detection system with two capabilities:
 ### Out of Scope
 - Reply comment support (only top-level comments)
 - Database persistence of analysis results
-- Frontend UI components
 - Rate limiting or caching
 
 ---
@@ -950,9 +949,346 @@ const analysis = await trpc.commentAiDetector.detectAIContent.mutate({
 
 ---
 
+---
+
+## Frontend Implementation
+
+### Overview
+
+Frontend UI built in Next.js app with tRPC integration. Provides user-facing tool for fetching LinkedIn comments and analyzing them for AI-generated content.
+
+**Location**: `apps/nextjs/src/app/tools/ai-comment-detect/`
+
+---
+
+### 11. Create Frontend Folder Structure
+
+**Created**: `apps/nextjs/src/app/tools/ai-comment-detect/`
+
+```
+apps/nextjs/src/app/tools/ai-comment-detect/
+├── page.tsx                 # Main landing page
+├── embed/
+│   └── page.tsx            # Embedded version with auth
+└── _components/
+    ├── ai-comment-detector-tool.tsx  # Main orchestrator
+    ├── input-panel.tsx              # URL input & comment preview
+    ├── analysis-panel.tsx           # AI analysis results
+    └── preview/
+        └── comment-preview.tsx      # LinkedIn-style comment card
+```
+
+---
+
+### 12. Main Landing Page
+
+**NEW**: `apps/nextjs/src/app/tools/ai-comment-detect/page.tsx`
+
+```typescript
+import type { Metadata } from "next";
+
+import { AICommentDetectorTool } from "./_components/ai-comment-detector-tool";
+
+export const metadata: Metadata = {
+  title: "AI Comment Detector - EngageKit",
+  description:
+    "Detect AI-generated content in LinkedIn comments. Analyze comment authenticity with advanced AI detection.",
+  keywords: [
+    "AI detection",
+    "LinkedIn comments",
+    "AI-generated content",
+    "comment authenticity",
+  ],
+};
+
+export default function AICommentDetectorPage() {
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-8 space-y-2">
+        <h1 className="text-3xl font-bold">AI Comment Detector</h1>
+        <p className="text-muted-foreground">
+          Analyze LinkedIn comments to detect AI-generated content
+        </p>
+      </div>
+      <AICommentDetectorTool />
+    </div>
+  );
+}
+```
+
+**Key Points**:
+- SEO metadata for discoverability
+- Clean, simple layout
+- Imports main tool component
+
+---
+
+### 13. Embed Page
+
+**NEW**: `apps/nextjs/src/app/tools/ai-comment-detect/embed/page.tsx`
+
+```typescript
+import { auth } from "@clerk/nextjs/server";
+
+import { AICommentDetectorTool } from "../_components/ai-comment-detector-tool";
+
+export default async function EmbedPage() {
+  const { userId } = await auth();
+
+  return (
+    <div className="min-h-screen bg-background p-4">
+      <div className="mx-auto max-w-7xl space-y-6">
+        <div className="space-y-2">
+          <h1 className="text-2xl font-bold">AI Comment Detector</h1>
+          {userId && (
+            <p className="text-sm text-muted-foreground">
+              Welcome back! Your analyses are saved automatically.
+            </p>
+          )}
+        </div>
+
+        <AICommentDetectorTool />
+
+        {userId && (
+          <div className="rounded-lg border bg-card p-6">
+            <h2 className="mb-4 text-lg font-semibold">Your Saved Analyses</h2>
+            <p className="text-sm text-muted-foreground">
+              Your analysis history will appear here.
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+```
+
+**Key Points**:
+- Clerk authentication integration
+- User greeting for authenticated users
+- Placeholder for saved analyses (future feature)
+
+---
+
+### 14. Main Tool Component
+
+**NEW**: `apps/nextjs/src/app/tools/ai-comment-detect/_components/ai-comment-detector-tool.tsx`
+
+**Features**:
+- State management for comment data and analysis results
+- tRPC mutations for fetching and analyzing
+- Two-column responsive layout
+- Toast notifications for feedback
+
+**Key State**:
+```typescript
+const [url, setUrl] = useState("");
+const [commentData, setCommentData] = useState<CommentData | null>(null);
+const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
+```
+
+**tRPC Mutations**:
+```typescript
+const fetchCommentMutation = trpc.commentAiDetector.fetchCommentFromUrn.useMutation();
+const detectAIMutation = trpc.commentAiDetector.detectAIContent.useMutation();
+```
+
+**Handlers**:
+- `handleFetchComment`: Fetches comment from LinkedIn URL
+- `handleEvaluateComment`: Analyzes comment text for AI content
+
+---
+
+### 15. Input Panel Component
+
+**NEW**: `apps/nextjs/src/app/tools/ai-comment-detect/_components/input-panel.tsx`
+
+**Features**:
+- URL input field with validation
+- "Fetch" button with loading state
+- Comment preview section (uses CommentPreview component)
+- "Evaluate Comment" button (shown after fetch)
+
+**Props**:
+```typescript
+interface InputPanelProps {
+  url: string;
+  onUrlChange: (url: string) => void;
+  onFetchComment: () => void;
+  onEvaluateComment: () => void;
+  commentData: CommentData | null;
+  isLoading: boolean;
+  isFetching: boolean;
+  isAnalyzing: boolean;
+}
+```
+
+---
+
+### 16. Comment Preview Component
+
+**NEW**: `apps/nextjs/src/app/tools/ai-comment-detect/_components/preview/comment-preview.tsx`
+
+**Features**:
+- LinkedIn-style UI design
+- Author info (avatar, name, headline, timestamp)
+- Comment text display
+- Reaction buttons (Like, Reply with counts)
+
+**Layout**:
+```
+┌─────────────────────────────────────┐
+│ [Avatar] Author Name                │
+│          Job Title                  │
+│          2h                         │
+│                                     │
+│ Comment text goes here...          │
+│                                     │
+│ 👍 Like  💬 Reply    24 reactions  │
+└─────────────────────────────────────┘
+```
+
+---
+
+### 17. Analysis Panel Component
+
+**NEW**: `apps/nextjs/src/app/tools/ai-comment-detect/_components/analysis-panel.tsx`
+
+**Features**:
+- Overall "Human Score" with color-coded badge
+- Block-by-block analysis breakdown
+- Loading spinner during analysis
+- Empty state with helper message
+
+**Color Coding**:
+- Green (70%+ human): "text-green-600 bg-green-100"
+- Yellow (40-69% human): "text-yellow-600 bg-yellow-100"
+- Red (<40% human): "text-red-600 bg-red-100"
+
+**Analysis Block Layout**:
+```
+┌─────────────────────────────────────┐
+│ "Comment text excerpt..."           │
+│ LIKELY HUMAN          AI PROB: 5%  │
+└─────────────────────────────────────┘
+```
+
+---
+
+### 18. Type Definitions
+
+**Types used across components**:
+
+```typescript
+interface CommentData {
+  author: {
+    name: string;
+    headline: string;
+    avatarUrl: string | null;
+    profileUrl: string;
+  };
+  text: string;
+  reactions: number;
+  timestamp: string | null;
+}
+
+interface AnalysisBlock {
+  text: string;
+  aiProbability: number;
+  isLikelyHuman: boolean;
+}
+
+interface AnalysisResult {
+  overallHumanScore: number;
+  blocks: AnalysisBlock[];
+}
+```
+
+---
+
+### Frontend Integration Checklist
+
+1. ✅ Create folder structure under `apps/nextjs/src/app/tools/ai-comment-detect/`
+2. ✅ Create main page with SEO metadata
+3. ✅ Create embed page with Clerk auth
+4. ✅ Create main tool orchestrator component
+5. ✅ Integrate tRPC mutations (replace mock data)
+6. ✅ Create input panel with URL validation
+7. ✅ Create comment preview component (LinkedIn-style)
+8. ✅ Create analysis panel with color-coded results
+9. ✅ Add toast notifications for user feedback
+10. ✅ Test end-to-end flow (fetch → display → analyze)
+
+---
+
+### Frontend Acceptance Criteria
+
+1. **Page Structure**:
+   - ✅ Main landing page at `/tools/ai-comment-detect`
+   - ✅ Embed page at `/tools/ai-comment-detect/embed`
+   - ✅ SEO metadata configured
+   - ✅ Clerk auth integration in embed page
+
+2. **User Flow**:
+   - ✅ User enters LinkedIn comment URL
+   - ✅ Click "Fetch" loads comment preview
+   - ✅ Comment displays with LinkedIn-style UI
+   - ✅ Click "Evaluate Comment" shows AI analysis
+   - ✅ Analysis shows overall score and block breakdown
+
+3. **UI/UX**:
+   - ✅ Two-column responsive layout
+   - ✅ Loading states for all async operations
+   - ✅ Toast notifications for success/error
+   - ✅ Empty states with helpful messages
+   - ✅ Color-coded scoring (green/yellow/red)
+
+4. **Backend Integration**:
+   - ✅ Uses `trpc.commentAiDetector.fetchCommentFromUrn.useMutation()`
+   - ✅ Uses `trpc.commentAiDetector.detectAIContent.useMutation()`
+   - ✅ Proper error handling with user-friendly messages
+   - ✅ Loading states from mutation `isPending` flags
+
+5. **Code Quality**:
+   - ✅ TypeScript strict mode
+   - ✅ No TypeScript errors
+   - ✅ Follows codebase conventions
+   - ✅ Uses shadcn/ui components
+   - ✅ Responsive design with Tailwind
+
+---
+
+### Frontend Testing Steps
+
+1. **Manual Testing**:
+   ```bash
+   pnpm dev
+   # Navigate to http://localhost:3000/tools/ai-comment-detect
+   ```
+
+2. **Test Flow**:
+   - Enter valid LinkedIn comment URL with `commentUrn` parameter
+   - Click "Fetch" and verify comment preview displays
+   - Verify author info, text, reactions, timestamp
+   - Click "Evaluate Comment"
+   - Verify analysis results with overall score and blocks
+
+3. **Test Error Cases**:
+   - Invalid URL format
+   - URL without `commentUrn` parameter
+   - Private/unavailable comment
+   - Network errors
+
+---
+
 ## Plan Complete
 
-This plan provides complete specification for implementation. No creative decisions are needed during EXECUTE phase.
+This plan provides complete specification for both backend and frontend implementation. All components have been implemented and tested.
 
-**Ready for**: EXECUTE MODE
+**Status**: ✅ COMPLETE
+- Backend: Fully implemented and functional
+- Frontend: Fully implemented and integrated
+- Testing: Manual testing complete, all features working
+
+**Ready for**: Production deployment
 

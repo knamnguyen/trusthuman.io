@@ -3,11 +3,11 @@
 import "@iframe-resizer/child";
 
 import { SignInButton, useUser } from "@clerk/nextjs";
-
 import { Avatar, AvatarFallback, AvatarImage } from "@sassy/ui/avatar";
 import { Button } from "@sassy/ui/button";
 
 import { AICommentDetectorTool } from "../_components/ai-comment-detector-tool";
+import { SavedAnalysesList } from "../_components/saved-analyses-list";
 
 export default function AICommentDetectEmbedPage() {
   const { user } = useUser();
@@ -47,26 +47,10 @@ export default function AICommentDetectEmbedPage() {
       )}
       <AICommentDetectorTool />
 
-      {user ? (
+      {user && (
         <section className="container max-w-7xl">
-          <h2 className="mb-8 text-2xl font-bold">Your Saved Analyses</h2>
-          <div className="flex flex-col items-center justify-center gap-2">
-            <p className="text-gray-600">
-              Your saved comment analyses will appear here.
-            </p>
-          </div>
-        </section>
-      ) : (
-        <section className="container max-w-7xl">
-          <h2 className="mb-8 text-2xl font-bold">Your Saved Analyses</h2>
-          <div className="flex flex-col items-center justify-center gap-2">
-            <p className="">
-              No saved analyses - please sign in to save your results and get
-              shareable links.
-            </p>
-            <SignInButton mode="modal">
-              <Button>Sign in to Save</Button>
-            </SignInButton>
+          <div className="rounded-lg border bg-card p-6">
+            <SavedAnalysesList />
           </div>
         </section>
       )}
