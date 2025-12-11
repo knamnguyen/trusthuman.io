@@ -6,6 +6,7 @@ import type { PrismaClient } from "@sassy/db";
 import type { ProxyLocation } from "./browser-session";
 import { getAutocommentParamsWithFallback } from "../router/autocomment";
 import { BrowserSession } from "./browser-session";
+import { safe } from "./commons";
 import { Semaphore } from "./mutex";
 
 export class BrowserJobWorker {
@@ -38,8 +39,10 @@ export class BrowserJobWorker {
         throw new Error(`Failed to start session: ${session.reason}`);
       }
 
-      await trySubmitScheduledComments(session.instance, this.db, accountId);
-      await tryRunAutocomment(session.instance, this.db, accountId);
+      await safe(() =>
+        trySubmitScheduledComments(session.instance, this.db, accountId),
+      );
+      await safe(() => tryRunAutocomment(session.instance, this.db, accountId));
     } catch (error) {
       await this.db.browserJob.update({
         where: { id: jobId },

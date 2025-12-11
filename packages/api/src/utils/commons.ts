@@ -48,3 +48,43 @@ export function transformValuesIfMatch<T extends Record<string, any>, M, V>(
     [K in keyof T]: T[K] extends M | T[K] ? V | Exclude<T[K], M> : T[K];
   };
 }
+
+type Result<T, E = unknown> =
+  | {
+      status: "success";
+      output: T;
+    }
+  | {
+      status: "error";
+      error: E;
+    };
+
+type SafeResult<T> =
+  T extends Promise<infer U> ? Promise<Result<U>> : Result<T>;
+
+export function safe<T>(fn: () => T): SafeResult<T> {
+  try {
+    const output = fn();
+    if (output instanceof Promise) {
+      return output
+        .then((res: T) => ({
+          status: "success" as const,
+          output: res,
+        }))
+        .catch((error: unknown) => ({
+          status: "error" as const,
+          error,
+        })) as SafeResult<T>;
+    }
+
+    return {
+      status: "success",
+      output,
+    } as SafeResult<T>;
+  } catch (error) {
+    return {
+      status: "error",
+      error,
+    } as SafeResult<T>;
+  }
+}
