@@ -39,7 +39,6 @@ export class BrowserJobWorker {
       }
 
       await trySubmitScheduledComments(session.instance, this.db, accountId);
-
       await tryRunAutocomment(session.instance, this.db, accountId);
     } catch (error) {
       await this.db.browserJob.update({
