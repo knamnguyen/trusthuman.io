@@ -51,39 +51,45 @@ export function transformValuesIfMatch<T extends Record<string, any>, M, V>(
 
 type Result<T, E = unknown> =
   | {
-      status: "success";
+      ok: true;
       output: T;
     }
   | {
-      status: "error";
+      ok: false;
       error: E;
     };
 
 type SafeResult<T> =
   T extends Promise<infer U> ? Promise<Result<U>> : Result<T>;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function isPromise(value: any): value is Promise<any> {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+  return typeof value?.then === "function";
+}
+
 export function safe<T>(fn: () => T): SafeResult<T> {
   try {
     const output = fn();
-    if (output instanceof Promise) {
+    if (isPromise(output)) {
       return output
         .then((res: T) => ({
-          status: "success" as const,
+          ok: true as const,
           output: res,
         }))
         .catch((error: unknown) => ({
-          status: "error" as const,
+          ok: false as const,
           error,
         })) as SafeResult<T>;
     }
 
     return {
-      status: "success",
+      ok: true,
       output,
     } as SafeResult<T>;
   } catch (error) {
     return {
-      status: "error",
+      ok: false,
       error,
     } as SafeResult<T>;
   }

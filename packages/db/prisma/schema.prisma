@@ -169,6 +169,7 @@ model UserComment {
   postContentHtml  String?
   hash             String?
   autoCommentRunId String?
+  autoCommentError String?
   comment          String
   // TODO: make this field required, in the new version of the app
   // every user is ensured to have a linked in account 

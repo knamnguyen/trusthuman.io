@@ -232,7 +232,7 @@ export const autoCommentRouter = {
         },
       });
 
-      await ctx.browserJobs.queue(ctx.user.id);
+      await ctx.browserJobs.tryQueue(ctx.user.id);
 
       return {
         status: "success",
@@ -295,7 +295,7 @@ export const autoCommentRouter = {
         },
       });
 
-      await ctx.browserJobs.queue(comment.accountId, new Date());
+      await ctx.browserJobs.tryQueue(comment.accountId, new Date());
 
       return {
         status: "success",

@@ -43,6 +43,7 @@ export class BrowserJobWorker {
         trySubmitScheduledComments(session.instance, this.db, accountId),
       );
       await safe(() => tryRunAutocomment(session.instance, this.db, accountId));
+      await session.instance.destroy();
     } catch (error) {
       await this.db.browserJob.update({
         where: { id: jobId },
@@ -99,7 +100,7 @@ export class BrowserJobWorker {
     return this.waiter.promise;
   }
 
-  async queue(accountId: string, startAt = new Date()) {
+  async tryQueue(accountId: string, startAt = new Date()) {
     const existing = await this.db.browserJob.findFirst({
       where: {
         accountId,
@@ -252,6 +253,7 @@ async function trySubmitScheduledComments(
       where: {
         accountId,
         commentedAt: null,
+        autoCommentError: null,
         OR: [
           {
             schedulePostAt: {
@@ -277,16 +279,24 @@ async function trySubmitScheduledComments(
     if (result.status === "error") {
       console.error(`Failed to post comment on ${comment.urn}`);
       await new Promise((resolve) => setTimeout(resolve, 5000));
+      await db.userComment.updateMany({
+        where: {
+          id: comment.id,
+        },
+        data: {
+          autoCommentError: result.reason,
+        },
+      });
+    } else {
+      await db.userComment.updateMany({
+        where: {
+          id: comment.id,
+        },
+        data: {
+          commentedAt: new Date(),
+        },
+      });
     }
-
-    await db.userComment.updateMany({
-      where: {
-        id: comment.id,
-      },
-      data: {
-        commentedAt: new Date(),
-      },
-    });
   }
 
   return {

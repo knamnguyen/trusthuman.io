@@ -611,17 +611,136 @@ export class BrowserSession {
     } as const;
   }
 
-  async commentOnPost(postUrn: string, comment: string) {
-    // TODO: comment on post logic
-    if (1) {
-      return {
-        status: "error",
-      } as const;
-    }
+  async commentOnPost(postUrl: string, comment: string) {
+    await Promise.all([
+      this.pages.linkedin.waitForNavigation(),
+      this.pages.linkedin.goto(postUrl),
+    ]);
 
-    return {
-      status: "success",
-    } as const;
+    return await this.pages.linkedin.evaluate(async (comment) => {
+      // TODO: implement the post container proper selection logic
+      const postContainer = document.querySelector("div.feed-shared-update-v2");
+
+      if (postContainer === null) {
+        return {
+          status: "error",
+          reason: "Post container not found",
+        } as const;
+      }
+
+      const commentButton = postContainer.querySelector(
+        'button[aria-label="Comment"]',
+      ) as HTMLButtonElement | null;
+
+      if (commentButton === null) {
+        return {
+          status: "error",
+          reason: "Comment button not found",
+        } as const;
+      }
+
+      commentButton.click();
+
+      async function getEditableField() {
+        const timeout = Date.now() + 10_000;
+        while (Date.now() < timeout) {
+          const commentEditor = postContainer!.querySelector(
+            ".comments-comment-box-comment__text-editor",
+          );
+
+          if (commentEditor === null) {
+            await new Promise((resolve) => setTimeout(resolve, 500));
+            continue;
+          }
+
+          const editableField = commentEditor.querySelector(
+            'div[contenteditable="true"]',
+          ) as HTMLElement | null;
+
+          if (editableField !== null) {
+            return editableField;
+          }
+
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        }
+
+        return null;
+      }
+
+      const editableField = await getEditableField();
+      if (editableField === null) {
+        return {
+          status: "error",
+          reason: "Editable field not found",
+        } as const;
+      }
+
+      editableField.focus();
+      editableField.click();
+      editableField.innerHTML = "";
+
+      // Input the comment text
+      const lines = comment.split("\n");
+      lines.forEach((lineText) => {
+        const p = document.createElement("p");
+        if (lineText === "") {
+          p.appendChild(document.createElement("br"));
+        } else {
+          p.textContent = lineText;
+        }
+        editableField.appendChild(p);
+      });
+
+      // Set cursor position and trigger input event
+      const selection = window.getSelection();
+      if (selection) {
+        const range = document.createRange();
+        if (editableField.lastChild) {
+          range.setStartAfter(editableField.lastChild);
+        } else {
+          range.selectNodeContents(editableField);
+        }
+        range.collapse(true);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+      editableField.focus();
+
+      const inputEvent = new Event("input", {
+        bubbles: true,
+        cancelable: true,
+      });
+      editableField.dispatchEvent(inputEvent);
+
+      console.log("✅ Comment text inputted successfully");
+
+      // Wait for submit button to become enabled
+      console.log("⏳ Waiting for submit button to become enabled...");
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // Step 5: Find and click the submit button
+      console.log("🔍 Looking for submit button...");
+      const submitButton = postContainer.querySelector(
+        ".comments-comment-box__submit-button--cr",
+      ) as HTMLButtonElement | null;
+      if (!submitButton || submitButton.disabled) {
+        console.error("❌ Submit button not found or disabled");
+        console.groupEnd();
+        return {
+          status: "error",
+          reason: "Submit button not found or disabled",
+        } as const;
+      }
+
+      console.log("🚀 Clicking submit button...");
+      submitButton.click();
+
+      // TODO: add some condition here to check if comment was posted successfully
+
+      return {
+        status: "success",
+      } as const;
+    }, comment);
   }
 
   static async isAnySessionRunning(db: PrismaClient, accountId: string) {
