@@ -14,11 +14,12 @@
   "scripts": {
     "build": "tsc",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
-    "db:generate": "pnpm with-env prisma generate && pnpm fix-prisma-names",
+    "db:generate": "pnpm with-env prisma generate && pnpm fix-prisma-names && pnpm db:schema",
     "fix-prisma-names": "tsx scripts/fix-prisma-package-names.ts",
     "db:push": "pnpm with-env prisma db push --skip-generate",
     "db:migrate": "pnpm with-env prisma migrate dev",
     "db:studio": "pnpm with-env prisma studio",
+    "db:schema": "prisma migrate diff --from-empty --to-schema-datamodel ./prisma//schema.prisma --script > schema.sql",
     "db:zod": "pnpm with-env  prisma generate zod",
     "dev": "tsc --watch",
     "format": "prettier --check . --ignore-path ../../.gitignore",
@@ -35,11 +36,13 @@
     "zod-prisma-types": "^3.2.4"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.3.14",
     "@sassy/eslint-config": "workspace:*",
     "@sassy/prettier-config": "workspace:*",
     "@sassy/tsconfig": "workspace:*",
     "dotenv-cli": "^8.0.0",
     "eslint": "catalog:",
+    "pglite-prisma-adapter": "^0.6.1",
     "prettier": "catalog:",
     "prisma": "^6.8.2",
     "tsx": "^4.19.3",

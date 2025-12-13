@@ -15,7 +15,7 @@ import type { ProxyLocation } from "../utils/browser-session";
 // } from "@sassy/db/schema-validators";
 
 import { protectedProcedure } from "../trpc";
-import { browserRegistry, BrowserSession } from "../utils/browser-session";
+import { BrowserSession } from "../utils/browser-session";
 import { chunkify, transformValuesIfMatch } from "../utils/commons";
 import { paginate } from "../utils/pagination";
 
@@ -439,17 +439,18 @@ export const autoCommentRouter = {
         } as const;
       }
 
-      const session = browserRegistry.get(autoCommentRun.accountId);
+      // TODO: figure out a way to do this with the new BrowserSession thing
+      // const session = browserRegistry.get(autoCommentRun.accountId);
 
-      if (session === undefined) {
-        return {
-          status: "error",
-          code: 400,
-          message: "No active browser session found",
-        } as const;
-      }
-
-      await session.stopAutoCommenting();
+      // if (session === undefined) {
+      //   return {
+      //     status: "error",
+      //     code: 400,
+      //     message: "No active browser session found",
+      //   } as const;
+      // }
+      //
+      // await session.stopAutoCommenting();
 
       await ctx.db.autoCommentRun.update({
         where: { id: input.autoCommentRunId },

@@ -9,7 +9,6 @@ import { z } from "zod";
 
 import type { PrismaClient } from "@sassy/db";
 import type { StartAutoCommentingParams } from "@sassy/validators";
-import { db } from "@sassy/db";
 
 import type { Logger } from "./commons";
 import { env } from "./env";
@@ -116,8 +115,8 @@ export class BrowserSession {
   public pageInView: "linkedin" | "engagekitExtension" = "linkedin";
   private controller = new AbortController();
   public signal = this.controller.signal;
-  private readyResolver = Promise.withResolvers<void>();
-  public ready = this.readyResolver.promise;
+  private pageLoadedResolver = Promise.withResolvers<void>();
+  public ready: Promise<BrowserSession>;
   public lastHeartbeatAt = Date.now();
   private LATEST_HEARTBEAT_THRESHOLD_MS = 15_000;
   private destroying = false;
@@ -134,7 +133,7 @@ export class BrowserSession {
     private readonly logger: Logger = console,
   ) {
     this.id = accountId;
-    void this.init();
+    this.ready = this.init();
   }
 
   private async createSession(params: CreateHyperbrowserSessionParams) {
@@ -164,7 +163,6 @@ export class BrowserSession {
       __dirname,
       "../../../../apps/chrome-extension/dist_hyperbrowser",
     );
-    console.info({ filepath });
 
     const browser = (await puppeteer.launch({
       defaultViewport: null,
@@ -186,44 +184,36 @@ export class BrowserSession {
   async init(): Promise<BrowserSession> {
     const instanceId = ulid();
 
-    await this.db.browserInstance.upsert({
-      where: {
-        hyperbrowserSessionId: this.sessionId,
-      },
-      create: {
-        id: instanceId,
-        accountId: this.accountId,
-        hyperbrowserSessionId: this.sessionId,
-        status: "INITIALIZING",
-      },
-      update: {
-        status: "INITIALIZING",
-      },
-    });
-
     const accountJwt = await assumedAccountJwt.encode({
       accountId: this.id,
     });
 
     this.controller = new AbortController();
 
-    // technically wont throw bcs we have at least one extension deployed
-    const { id: engagekitExtensionId } =
-      await this.db.extensionDeploymentMeta.findFirstOrThrow({
-        orderBy: {
-          createdAt: "desc",
-        },
-        select: {
-          id: true,
-        },
-      });
+    let engagekitExtensionId = null;
+
+    if (process.env.NODE_ENV !== "test") {
+      // technically wont throw bcs we have at least one extension deployed
+      const engagekitExtension =
+        await this.db.extensionDeploymentMeta.findFirstOrThrow({
+          orderBy: {
+            createdAt: "desc",
+          },
+          select: {
+            id: true,
+          },
+        });
+
+      engagekitExtensionId = engagekitExtension.id;
+    }
 
     const instance = await this.createSession({
       useProxy: true,
       useStealth: true,
       viewOnlyLiveView: this.opts.liveviewViewOnlyMode ?? false,
       solveCaptchas: true,
-      extensionIds: [engagekitExtensionId],
+      // safe to just fallback to mock here because findFirstOrThrow will throw if no extension found in production
+      extensionIds: [engagekitExtensionId ?? "mock"],
       proxyCountry: this.opts.location,
       profile: {
         id: this.opts.browserProfileId,
@@ -241,6 +231,21 @@ export class BrowserSession {
     this.sessionId = instance.session.id;
 
     this.browser = instance.browser;
+
+    await this.db.browserInstance.upsert({
+      where: {
+        hyperbrowserSessionId: this.sessionId,
+      },
+      create: {
+        id: instanceId,
+        accountId: this.accountId,
+        hyperbrowserSessionId: this.sessionId,
+        status: "INITIALIZING",
+      },
+      update: {
+        status: "INITIALIZING",
+      },
+    });
 
     const engagekitExtensionPagePromise = this.browser
       .newPage()
@@ -296,6 +301,8 @@ export class BrowserSession {
       },
     });
 
+    await this.pageLoadedResolver.promise;
+
     return this;
   }
 
@@ -329,7 +336,7 @@ export class BrowserSession {
 
     await Promise.all([
       this.browser.close(),
-      this.sessionId === "mock"
+      process.env.NODE_ENV === "production"
         ? hyperbrowser.sessions.stop(this.sessionId)
         : null,
     ]);
@@ -393,7 +400,7 @@ export class BrowserSession {
     const onBrowserMessage = (message: BrowserBackendChannelMessage) => {
       switch (message.action) {
         case "ready": {
-          this.readyResolver.resolve();
+          this.pageLoadedResolver.resolve();
           break;
         }
       }
@@ -603,7 +610,7 @@ export class BrowserSession {
           case "autoCommentingCompleted": {
             await Promise.all([
               this.destroy(),
-              db.autoCommentRun.update({
+              this.db.autoCommentRun.update({
                 where: { id: data.payload.autoCommentRunId },
                 data: {
                   status: data.payload.success ? "completed" : "errored",
@@ -650,11 +657,14 @@ export class BrowserSession {
   }
 
   async commentOnPost(postUrn: string, comment: string) {
+    await this.ready;
     const pathname = new URL(postUrn).pathname;
+    console.info(this.pages);
     await Promise.all([
       this.pages.linkedin.waitForNavigation(),
       this.pages.linkedin.evaluate((pathname) => {
         // use window.history.pushstate for client side spa navigation
+        // TODO: check properly here why pathname
         window.history.pushState({}, "", pathname);
         window.dispatchEvent(new PopStateEvent("popstate"));
       }, pathname),
@@ -977,5 +987,3 @@ export class BrowserSessionRegistry {
     );
   }
 }
-
-export const browserRegistry = new BrowserSessionRegistry(db);
