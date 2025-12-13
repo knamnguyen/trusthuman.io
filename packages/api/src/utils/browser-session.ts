@@ -785,8 +785,6 @@ export class BrowserSession {
         } as const;
       }
 
-      console.log("🚀 Clicking submit button...");
-
       async function getFirstCommentUrn() {
         const result = await window._retry(() => {
           const commentsContainer = document.querySelector(
@@ -810,21 +808,22 @@ export class BrowserSession {
         return result.ok ? result.data : null;
       }
 
-      const firstCommentBefore = await getFirstCommentUrn();
+      const firstCommentUrnBeforePosting = await getFirstCommentUrn();
 
       submitButton.data.click();
 
       const commentPosted = await window._retry(
         async () => {
+          // get first comment urn again, and compare with firstCommentUrnBeforePosting
           const urn = await getFirstCommentUrn();
-          if (urn === null || urn === firstCommentBefore) {
+          if (urn === null || urn === firstCommentUrnBeforePosting) {
             throw new Error("Comment not posted yet, throwing for retry");
           }
 
           return true;
         },
         {
-          timeout: 10_000,
+          timeout: 20_000,
           interval: 500,
         },
       );
