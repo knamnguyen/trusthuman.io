@@ -81,6 +81,26 @@ export interface BrowserSessionParams {
   ) => unknown;
 }
 
+declare const window: Window & {
+  _sendMessageToPuppeteerBackend: (data: BrowserBackendChannelMessage) => void;
+  _retry<TOutput>(
+    fn: () => TOutput,
+    opts?: {
+      timeout?: number;
+      interval?: number;
+    },
+  ): Promise<
+    | {
+        ok: true;
+        data: TOutput;
+      }
+    | {
+        ok: false;
+        error: Error;
+      }
+  >;
+};
+
 // TODO: store instance in postgres and then shut down on restart (should technically gracefully update statuses, so if running without an instance in the registry, means it should be shut down)
 export class BrowserSession {
   // accountId should be equal to id for now
@@ -394,8 +414,7 @@ export class BrowserSession {
     // listen to messages from contentscript and then call the exposed function
     await page.evaluateOnNewDocument(() => {
       function ping() {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-        (window as any)._sendMessageToPuppeteerBackend({
+        window._sendMessageToPuppeteerBackend({
           action: "ping",
         });
         setTimeout(() => {
@@ -420,12 +439,40 @@ export class BrowserSession {
           return;
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-        (window as any)._sendMessageToPuppeteerBackend(
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-          event.data.payload,
-        );
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
+        window._sendMessageToPuppeteerBackend(event.data.payload);
       });
+
+      window._retry = async <TOutput>(
+        fn: () => TOutput,
+        opts?: {
+          timeout?: number;
+          interval?: number;
+          retryOn?: (output: TOutput) => boolean;
+        },
+      ) => {
+        const { timeout = 10000, interval = 200 } = opts ?? {};
+        const start = Date.now();
+        while (Date.now() - start < timeout) {
+          try {
+            const result = await Promise.resolve(fn());
+
+            return {
+              ok: true,
+              data: result,
+            };
+          } catch (err) {
+            console.error("Retryable function met error:", err);
+            await new Promise((resolve) => setTimeout(resolve, interval));
+            // ignore
+          }
+        }
+
+        return {
+          ok: false,
+          error: new Error("timeout"),
+        };
+      };
     });
   }
 
@@ -526,27 +573,21 @@ export class BrowserSession {
     try {
       await this.pages.linkedin.evaluate(
         (params, assumedUserToken) => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (window as any)
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-            .postMessage({
-              source: "engagekit_page_to_contentscript",
-              payload: {
-                action: "setAssumedUserToken",
-                token: assumedUserToken,
-              },
-            });
+          window.postMessage({
+            source: "engagekit_page_to_contentscript",
+            payload: {
+              action: "setAssumedUserToken",
+              token: assumedUserToken,
+            },
+          });
 
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (window as any)
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-            .postMessage({
-              source: "engagekit_page_to_contentscript",
-              payload: {
-                action: "startNewCommentingFlow",
-                params,
-              },
-            });
+          window.postMessage({
+            source: "engagekit_page_to_contentscript",
+            payload: {
+              action: "startNewCommentingFlow",
+              params,
+            },
+          });
         },
         params,
         assumedUserToken,
@@ -594,15 +635,12 @@ export class BrowserSession {
 
   async stopAutoCommenting() {
     const result = await this.pages.linkedin.evaluate(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (window as any)
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        .postMessage({
-          source: "engagekit_page_to_contentscript",
-          payload: {
-            action: "stopAutoCommenting",
-          },
-        });
+      window.postMessage({
+        source: "engagekit_page_to_contentscript",
+        payload: {
+          action: "stopAutoCommenting",
+        },
+      });
     });
 
     return {
@@ -611,14 +649,18 @@ export class BrowserSession {
     } as const;
   }
 
-  async commentOnPost(postUrl: string, comment: string) {
+  async commentOnPost(postUrn: string, comment: string) {
+    const pathname = new URL(postUrn).pathname;
     await Promise.all([
       this.pages.linkedin.waitForNavigation(),
-      this.pages.linkedin.goto(postUrl),
+      this.pages.linkedin.evaluate((pathname) => {
+        // use window.history.pushstate for client side spa navigation
+        window.history.pushState({}, "", pathname);
+        window.dispatchEvent(new PopStateEvent("popstate"));
+      }, pathname),
     ]);
 
     return await this.pages.linkedin.evaluate(async (comment) => {
-      // TODO: implement the post container proper selection logic
       const postContainer = document.querySelector("div.feed-shared-update-v2");
 
       if (postContainer === null) {
@@ -642,29 +684,37 @@ export class BrowserSession {
       commentButton.click();
 
       async function getEditableField() {
-        const timeout = Date.now() + 10_000;
-        while (Date.now() < timeout) {
-          const commentEditor = postContainer!.querySelector(
+        const commentEditor = await window._retry(() => {
+          const element = document.querySelector(
             ".comments-comment-box-comment__text-editor",
           );
-
-          if (commentEditor === null) {
-            await new Promise((resolve) => setTimeout(resolve, 500));
-            continue;
+          if (element === null) {
+            throw new Error("Comment editor not found, throwing for retry");
           }
 
-          const editableField = commentEditor.querySelector(
-            'div[contenteditable="true"]',
-          ) as HTMLElement | null;
+          return element as HTMLDivElement;
+        });
 
-          if (editableField !== null) {
-            return editableField;
-          }
-
-          await new Promise((resolve) => setTimeout(resolve, 500));
+        if (!commentEditor.ok) {
+          return null;
         }
 
-        return null;
+        const result = await window._retry(() => {
+          const editable = commentEditor.data.querySelector(
+            "[contenteditable='true']",
+          );
+          if (editable === null) {
+            throw new Error("Editable field not found, throwing for retry");
+          }
+
+          return editable as HTMLDivElement;
+        });
+
+        if (!result.ok) {
+          return null;
+        }
+
+        return result.data;
       }
 
       const editableField = await getEditableField();
@@ -712,20 +762,23 @@ export class BrowserSession {
       });
       editableField.dispatchEvent(inputEvent);
 
-      console.log("✅ Comment text inputted successfully");
+      const submitButton = await window._retry(() => {
+        const button = document.querySelector(
+          ".comments-comment-box__submit-button--cr",
+        ) as HTMLButtonElement | null;
 
-      // Wait for submit button to become enabled
-      console.log("⏳ Waiting for submit button to become enabled...");
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+        if (button === null) {
+          throw new Error("Submit button not found, throwing for retry");
+        }
 
-      // Step 5: Find and click the submit button
-      console.log("🔍 Looking for submit button...");
-      const submitButton = postContainer.querySelector(
-        ".comments-comment-box__submit-button--cr",
-      ) as HTMLButtonElement | null;
-      if (!submitButton || submitButton.disabled) {
-        console.error("❌ Submit button not found or disabled");
-        console.groupEnd();
+        if (button.disabled) {
+          throw new Error("Submit button is disabled, throwing for retry");
+        }
+
+        return button;
+      });
+
+      if (!submitButton.ok) {
         return {
           status: "error",
           reason: "Submit button not found or disabled",
@@ -733,9 +786,55 @@ export class BrowserSession {
       }
 
       console.log("🚀 Clicking submit button...");
-      submitButton.click();
 
-      // TODO: add some condition here to check if comment was posted successfully
+      async function getFirstCommentUrn() {
+        const result = await window._retry(() => {
+          const commentsContainer = document.querySelector(
+            "scaffold-finite-scroll__content",
+          ) as HTMLDivElement | null;
+          if (commentsContainer === null) {
+            return null;
+          }
+
+          const firstComment = commentsContainer.querySelector(
+            "article",
+          ) as HTMLElement | null;
+
+          if (firstComment === null) {
+            throw new Error("First comment not found, throwing for retry");
+          }
+
+          return firstComment.getAttribute("data-id");
+        });
+
+        return result.ok ? result.data : null;
+      }
+
+      const firstCommentBefore = await getFirstCommentUrn();
+
+      submitButton.data.click();
+
+      const commentPosted = await window._retry(
+        async () => {
+          const urn = await getFirstCommentUrn();
+          if (urn === null || urn === firstCommentBefore) {
+            throw new Error("Comment not posted yet, throwing for retry");
+          }
+
+          return true;
+        },
+        {
+          timeout: 10_000,
+          interval: 500,
+        },
+      );
+
+      if (!commentPosted.ok) {
+        return {
+          status: "error",
+          reason: "Comment not posted within timeout",
+        } as const;
+      }
 
       return {
         status: "success",

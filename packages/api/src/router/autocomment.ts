@@ -123,7 +123,7 @@ export const autoCommentRouter = {
           comment: z.string(),
           postContentHtml: z.string().nullable(),
           autoCommentRunId: z.string().optional(),
-          urn: z.string(),
+          postUrn: z.string(),
           hash: z.string().nullable(),
           isDuplicate: z.boolean().default(false),
           isAutoCommented: z.boolean().default(true),
@@ -139,7 +139,7 @@ export const autoCommentRouter = {
       const result = await ctx.db.userComment.createMany({
         data: input.map((row) => ({
           id: ulid(),
-          urn: row.urn,
+          postUrn: row.postUrn,
           userId: ctx.user.id,
           autoCommentRunId: row.autoCommentRunId,
           hash: row.hash,
@@ -315,7 +315,7 @@ export const autoCommentRouter = {
 
       if (input.urns.length > 0) {
         clause.push({
-          urn: { in: input.urns },
+          postUrn: { in: input.urns },
         } as const);
       }
 
@@ -355,10 +355,10 @@ export const autoCommentRouter = {
             },
           ],
         },
-        select: { urn: true },
+        select: { postUrn: true },
       });
 
-      const commentedUrns = new Set(comments.map((comment) => comment.urn));
+      const commentedUrns = new Set(comments.map((comment) => comment.postUrn));
 
       return {
         uncommentedUrns: input.urns.filter((urn) => !commentedUrns.has(urn)),

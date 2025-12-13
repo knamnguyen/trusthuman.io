@@ -164,7 +164,7 @@ model LinkedInProfile {
 
 model UserComment {
   id               String           @id
-  urn              String
+  postUrn          String
   postUrl          String
   postContentHtml  String?
   hash             String?
@@ -185,7 +185,7 @@ model UserComment {
   account          LinkedInAccount? @relation(fields: [accountId], references: [id])
 
   @@index([hash])
-  @@index([urn])
+  @@index([postUrn])
   @@index([commentedAt])
 }
 

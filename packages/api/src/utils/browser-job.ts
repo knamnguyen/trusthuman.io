@@ -19,7 +19,7 @@ export class BrowserJobWorker {
     private readonly db: PrismaClient,
   ) {}
 
-  async numSessionsRunning() {
+  private async numSessionsRunning() {
     const sessions = await this.hyperbrowser.sessions.list({ limit: 1 });
     return sessions.totalCount;
   }
@@ -274,11 +274,13 @@ async function trySubmitScheduledComments(
       break;
     }
 
-    const result = await session.commentOnPost(comment.urn, comment.comment);
+    const result = await session.commentOnPost(
+      comment.postUrn,
+      comment.comment,
+    );
 
     if (result.status === "error") {
-      console.error(`Failed to post comment on ${comment.urn}`);
-      await new Promise((resolve) => setTimeout(resolve, 5000));
+      console.error(`Failed to post comment on ${comment.postUrn}`);
       await db.userComment.updateMany({
         where: {
           id: comment.id,
