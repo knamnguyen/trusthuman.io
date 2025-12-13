@@ -82,17 +82,23 @@ describe("LinkedInBrowserSession", () => {
   //   Infinity,
   // );
 
-  test("commentOnPost", async () => {
-    // eslint-disable-next-line turbo/no-undeclared-env-vars
-    if (process.env.TEST_LINKEDIN_POST_URN === undefined) {
-      throw new Error("TEST_LINKEDIN_POST_URN is not defined");
-    }
-    const result = await session.commentOnPost(
+  test(
+    "commentOnPost",
+    async () => {
       // eslint-disable-next-line turbo/no-undeclared-env-vars
-      process.env.TEST_LINKEDIN_POST_URN,
-      "Thanks for sharing!",
-    );
+      if (process.env.TEST_LINKEDIN_POST_URN === undefined) {
+        throw new Error("TEST_LINKEDIN_POST_URN is not defined");
+      }
+      const result = await session.commentOnPost(
+        // eslint-disable-next-line turbo/no-undeclared-env-vars
+        process.env.TEST_LINKEDIN_POST_URN,
+        "what a cute doggo!",
+      );
+      console.info({ result });
 
-    expect(result.status === "success");
-  });
+      expect(result.status === "success");
+      await new Promise(() => {});
+    },
+    Infinity,
+  );
 });

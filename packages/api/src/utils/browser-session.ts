@@ -658,29 +658,32 @@ export class BrowserSession {
 
   async commentOnPost(postUrn: string, comment: string) {
     await this.ready;
-    const pathname = new URL(postUrn).pathname;
-    console.info(this.pages);
-    await Promise.all([
-      this.pages.linkedin.waitForNavigation(),
-      this.pages.linkedin.evaluate((pathname) => {
-        // use window.history.pushstate for client side spa navigation
-        // TODO: check properly here why pathname
-        window.history.pushState({}, "", pathname);
-        window.dispatchEvent(new PopStateEvent("popstate"));
-      }, pathname),
-    ]);
+
+    await this.pages.linkedin.evaluate((postUrn) => {
+      // use window.history.pushstate for client side spa navigation
+      // TODO: check properly here why pathname
+      window.history.pushState({}, "", `/feed/update/${postUrn}`);
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    }, postUrn);
 
     return await this.pages.linkedin.evaluate(async (comment) => {
-      const postContainer = document.querySelector("div.feed-shared-update-v2");
+      const postContainer = await window._retry(() => {
+        const element = document.querySelector("div.feed-shared-update-v2");
+        if (element === null) {
+          throw new Error("Post container not found, throwing for retry");
+        }
 
-      if (postContainer === null) {
+        return element as HTMLDivElement;
+      });
+
+      if (postContainer.ok === false) {
         return {
           status: "error",
           reason: "Post container not found",
         } as const;
       }
 
-      const commentButton = postContainer.querySelector(
+      const commentButton = postContainer.data.querySelector(
         'button[aria-label="Comment"]',
       ) as HTMLButtonElement | null;
 
@@ -811,6 +814,7 @@ export class BrowserSession {
           if (firstComment === null) {
             throw new Error("First comment not found, throwing for retry");
           }
+          console.info({ firstComment });
 
           return firstComment.getAttribute("data-id");
         });
@@ -819,6 +823,7 @@ export class BrowserSession {
       }
 
       const firstCommentUrnBeforePosting = await getFirstCommentUrn();
+      console.info({ firstCommentUrnBeforePosting });
 
       submitButton.data.click();
 
@@ -826,6 +831,8 @@ export class BrowserSession {
         async () => {
           // get first comment urn again, and compare with firstCommentUrnBeforePosting
           const urn = await getFirstCommentUrn();
+          // TODO: debug why newUrn here is null
+          console.info({ newUrn: urn });
           if (urn === null || urn === firstCommentUrnBeforePosting) {
             throw new Error("Comment not posted yet, throwing for retry");
           }
