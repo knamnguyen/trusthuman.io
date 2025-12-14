@@ -801,8 +801,9 @@ export class BrowserSession {
       async function getFirstCommentUrn() {
         const result = await window._retry(() => {
           const commentsContainer = document.querySelector(
-            "scaffold-finite-scroll__content",
+            ".scaffold-finite-scroll__content",
           ) as HTMLDivElement | null;
+
           if (commentsContainer === null) {
             return null;
           }
@@ -814,7 +815,6 @@ export class BrowserSession {
           if (firstComment === null) {
             throw new Error("First comment not found, throwing for retry");
           }
-          console.info({ firstComment });
 
           return firstComment.getAttribute("data-id");
         });
@@ -823,7 +823,6 @@ export class BrowserSession {
       }
 
       const firstCommentUrnBeforePosting = await getFirstCommentUrn();
-      console.info({ firstCommentUrnBeforePosting });
 
       submitButton.data.click();
 
@@ -831,8 +830,6 @@ export class BrowserSession {
         async () => {
           // get first comment urn again, and compare with firstCommentUrnBeforePosting
           const urn = await getFirstCommentUrn();
-          // TODO: debug why newUrn here is null
-          console.info({ newUrn: urn });
           if (urn === null || urn === firstCommentUrnBeforePosting) {
             throw new Error("Comment not posted yet, throwing for retry");
           }
@@ -840,7 +837,7 @@ export class BrowserSession {
           return true;
         },
         {
-          timeout: 20_000,
+          timeout: 50_000,
           interval: 500,
         },
       );

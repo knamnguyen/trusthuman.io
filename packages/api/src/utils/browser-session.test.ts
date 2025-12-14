@@ -92,7 +92,7 @@ describe("LinkedInBrowserSession", () => {
       const result = await session.commentOnPost(
         // eslint-disable-next-line turbo/no-undeclared-env-vars
         process.env.TEST_LINKEDIN_POST_URN,
-        "what a cute doggo!",
+        "best feeling ever!",
       );
       console.info({ result });
 
