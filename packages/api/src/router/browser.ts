@@ -4,7 +4,7 @@ import z from "zod";
 import { storageStateSchema } from "@sassy/validators";
 
 import { protectedProcedure } from "../trpc";
-import { browserRegistry, hyperbrowser } from "../utils/browser-session";
+import { hyperbrowser } from "../utils/browser-session";
 
 export const browserRouter = {
   browserSessionStatus: protectedProcedure
@@ -28,21 +28,22 @@ export const browserRouter = {
         });
       }
 
-      const session = browserRegistry.get(account.id);
+      // implement registry lookup here
+      const session = await ctx.db.browserInstance.findFirst({
+        where: {
+          accountId: account.id,
+        },
+      });
 
-      if (session === undefined) {
+      if (session === null) {
         return {
           status: "offline",
         } as const;
       }
 
-      if (session.sessionId === "mock") {
-        return {
-          status: "online",
-        } as const;
-      }
-
-      const details = await hyperbrowser.sessions.get(session.sessionId);
+      const details = await hyperbrowser.sessions.get(
+        session.hyperbrowserSessionId,
+      );
 
       return {
         status: details.status,

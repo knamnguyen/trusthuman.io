@@ -134,6 +134,7 @@ export class BrowserSession {
   ) {
     this.id = accountId;
     this.ready = this.init();
+    // setup postgres listen notify to destroy sessions on demand
   }
 
   private async createSession(params: CreateHyperbrowserSessionParams) {

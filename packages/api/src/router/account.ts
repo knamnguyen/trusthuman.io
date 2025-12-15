@@ -7,7 +7,6 @@ import { countrySchema } from "@sassy/validators";
 import { protectedProcedure, publicProcedure } from "../trpc";
 import {
   assumedAccountJwt,
-  browserRegistry,
   BrowserSession,
   hyperbrowser,
 } from "../utils/browser-session";
@@ -128,7 +127,8 @@ export const accountRouter = {
           } as const;
         }
 
-        await browserRegistry.destroy(input.accountId);
+        // TODO: find a way to destroy browser session
+        // await browserRegistry.destroy(input.accountId);
 
         return {
           status: "success",
