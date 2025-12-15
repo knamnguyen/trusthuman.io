@@ -118,39 +118,36 @@ export const autoCommentRouter = {
     }),
   saveComments: protectedProcedure
     .input(
-      z
-        .object({
-          comment: z.string(),
-          postContentHtml: z.string().nullable(),
-          autoCommentRunId: z.string().optional(),
-          postUrn: z.string(),
-          hash: z.string().nullable(),
-          isDuplicate: z.boolean().default(false),
-          isAutoCommented: z.boolean().default(true),
-          commentedAt: z.date().optional(),
-          hitlMode: z.boolean().optional(),
-          postUrl: z.string(),
-        })
-        .array()
-        .min(1),
+      z.object({
+        comment: z.string(),
+        postContentHtml: z.string().nullable(),
+        autoCommentRunId: z.string().optional(),
+        postUrn: z.string(),
+        urns: z.string().array().optional(),
+        hash: z.string().nullable(),
+        isDuplicate: z.boolean().default(false),
+        isAutoCommented: z.boolean().default(true),
+        commentedAt: z.date().optional(),
+        hitlMode: z.boolean().optional(),
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const now = new Date();
       const result = await ctx.db.userComment.createMany({
-        data: input.map((row) => ({
+        data: {
           id: ulid(),
-          postUrn: row.postUrn,
+          postUrn: input.postUrn,
+          urns: input.urns,
           userId: ctx.user.id,
-          autoCommentRunId: row.autoCommentRunId,
-          hash: row.hash,
-          comment: row.comment,
-          postUrl: row.postUrl,
-          postContentHtml: row.postContentHtml,
+          autoCommentRunId: input.autoCommentRunId,
+          hash: input.hash,
+          comment: input.comment,
+          postContentHtml: input.postContentHtml,
           // if hitlmode is true we leave commentedAt as null to indicate that the comment is still pending human review
-          commentedAt: row.hitlMode === true ? null : (row.commentedAt ?? now),
-          isDuplicate: row.isDuplicate,
-          isAutoCommented: row.isAutoCommented,
-        })),
+          commentedAt:
+            input.hitlMode === true ? null : (input.commentedAt ?? now),
+          isAutoCommented: input.isAutoCommented,
+        },
         skipDuplicates: true,
       });
 
@@ -316,6 +313,7 @@ export const autoCommentRouter = {
       if (input.urns.length > 0) {
         clause.push({
           postUrn: { in: input.urns },
+          urns: { hasSome: input.urns },
         } as const);
       }
 

@@ -1,5 +1,5 @@
 -- CreateExtension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA "extensions";
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- CreateExtension
 CREATE EXTENSION IF NOT EXISTS "vector";
@@ -130,12 +130,12 @@ CREATE TABLE "LinkedInProfile" (
 CREATE TABLE "UserComment" (
     "id" TEXT NOT NULL,
     "postUrn" TEXT NOT NULL,
-    "postUrl" TEXT NOT NULL,
     "postContentHtml" TEXT,
     "hash" TEXT,
     "autoCommentRunId" TEXT,
     "autoCommentError" TEXT,
     "comment" TEXT NOT NULL,
+    "urns" TEXT[],
     "userId" TEXT,
     "accountId" TEXT,
     "commentedAt" TIMESTAMP(3),

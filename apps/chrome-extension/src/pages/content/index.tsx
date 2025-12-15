@@ -44,7 +44,6 @@ import "./init-comment-history";
 import "./profile-target-list";
 
 import { appStorage } from "@src/services/storage";
-import { getStandaloneTRPCClient } from "@src/trpc/react";
 
 import { BrowserBackendChannelMessage } from "@sassy/api";
 
@@ -1033,17 +1032,6 @@ async function processAllPostsFeed(
     duplicateWindow,
   );
 
-  const comments: {
-    autoCommentRunId?: string;
-    postContentHtml: string | null;
-    comment: string;
-    postUrn: string;
-    postUrl: string;
-    hash: string | null;
-    isDuplicate: boolean;
-    hitlMode?: boolean;
-  }[] = [];
-
   for (let i = 0; i < postContainers.length; i++) {
     console.group(
       `🔄 POST ${i + 1}/${postContainers.length} - DETAILED PROCESSING`,
@@ -1329,18 +1317,6 @@ async function processAllPostsFeed(
         continue;
       }
 
-      for (const [index, urn] of postUrns.entries()) {
-        comments.push({
-          postUrl: `https://www.linkedin.com/feed/update/${urn}`,
-          postUrn: urn,
-          comment,
-          autoCommentRunId,
-          postContentHtml: contentHtml,
-          hash: hashRes?.hash ?? null,
-          isDuplicate: index !== 0,
-          hitlMode,
-        });
-      }
       commentCount++;
       commentedAuthors.add(authorInfo.name);
 
@@ -1360,15 +1336,27 @@ async function processAllPostsFeed(
 
       promises.push(updateCommentCounts());
 
-      promises.push(
-        contentScriptContext
-          .getTrpcClient()
-          .autocomment.saveComments.mutate(comments)
-          .catch((err) => {
-            // just catch this error here and continue
-            console.error("error saving comments:", err);
-          }),
-      );
+      const postUrn = postUrns[0];
+
+      if (postUrn !== undefined) {
+        promises.push(
+          contentScriptContext
+            .getTrpcClient()
+            .autocomment.saveComments.mutate({
+              comment,
+              postUrn,
+              urns: postUrns,
+              postContentHtml: contentHtml,
+              autoCommentRunId,
+              hash: hashRes?.hash ?? null,
+              hitlMode,
+            })
+            .catch((err) => {
+              // just catch this error here and continue
+              console.error("error saving comments:", err);
+            }),
+        );
+      }
 
       await Promise.all(promises);
 
