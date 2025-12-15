@@ -660,7 +660,6 @@ export class BrowserSession {
 
     await this.pages.linkedin.evaluate((postUrn) => {
       // use window.history.pushstate for client side spa navigation
-      // TODO: check properly here why pathname
       window.history.pushState({}, "", `/feed/update/${postUrn}`);
       window.dispatchEvent(new PopStateEvent("popstate"));
     }, postUrn);
