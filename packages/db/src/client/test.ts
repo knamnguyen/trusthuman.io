@@ -18,9 +18,6 @@ async function migrate(
 
   const buffer = await readFile(migrationFilepath);
   const sql = buffer.toString();
-  // TODO: investiage why "extension" schema does not exist but somehow uuid-ossp can be added `with schema "extension"`
-  // for now just create the schema manually
-  await pg.exec(`create schema "extensions"`);
   await pg.exec(sql);
 }
 
