@@ -94,7 +94,6 @@ describe("LinkedInBrowserSession", () => {
         process.env.TEST_LINKEDIN_POST_URN,
         "best feeling ever!",
       );
-      console.info({ result });
 
       expect(result.status === "success");
       await new Promise(() => {});

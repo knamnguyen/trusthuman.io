@@ -469,7 +469,6 @@ export class BrowserSession {
               data: result,
             };
           } catch (err) {
-            console.error("Retryable function met error:", err);
             await new Promise((resolve) => setTimeout(resolve, interval));
             // ignore
           }
