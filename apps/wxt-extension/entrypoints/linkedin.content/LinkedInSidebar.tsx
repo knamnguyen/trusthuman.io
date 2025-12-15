@@ -13,8 +13,12 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@sassy/ui/sheet";
+import { Button } from "@sassy/ui/button";
 
 import { ToggleButton } from "./ToggleButton";
+import { useBackgroundAuth } from "../../hooks/use-background-auth";
+import { getSyncHostUrl } from "../../lib/get-sync-host";
+import { useLinkedInProfile } from "./use-linkedin-profile";
 
 interface LinkedInSidebarProps {
   portalContainer: HTMLElement;
@@ -25,6 +29,15 @@ export function LinkedInSidebar({
   portalContainer,
   onClose,
 }: LinkedInSidebarProps) {
+  const { isSignedIn, isLoaded, user, refreshAuth } = useBackgroundAuth();
+  const linkedInProfile = useLinkedInProfile();
+
+  const handleSignIn = () => {
+    const syncHost = getSyncHostUrl();
+    const authUrl = `${syncHost}/extension-auth`;
+    window.open(authUrl, "_blank");
+  };
+
   return (
     <SheetContent
       side="right"
@@ -48,62 +61,171 @@ export function LinkedInSidebar({
       </SheetHeader>
 
       <div className="flex-1 overflow-y-auto py-4">
-        <div className="flex flex-col gap-4 px-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Welcome to EngageKit</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CardDescription>
-                This is a proof of concept for the WXT-based LinkedIn sidebar
-                using components from @sassy/ui with Tailwind CSS.
-              </CardDescription>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>POC Status</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="flex flex-col gap-2">
-                {[
-                  "Shadow DOM isolation",
-                  "WXT framework",
-                  "@sassy/ui Sheet",
-                  "Tailwind CSS v4",
-                  "Slide animation",
-                ].map((item) => (
-                  <li
-                    key={item}
-                    className="text-muted-foreground flex items-center gap-2 text-sm"
+        {!isLoaded ? (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-muted-foreground text-sm">Loading...</p>
+          </div>
+        ) : !isSignedIn ? (
+          // Not signed in - show sign-in UI
+          <div className="flex flex-col gap-4 px-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Welcome to EngageKit</CardTitle>
+                <CardDescription>
+                  Sign in to access AI-powered LinkedIn engagement features
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-4">
+                <Button onClick={handleSignIn} className="w-full">
+                  Sign In to EngageKit
+                </Button>
+                <p className="text-muted-foreground text-xs text-center">
+                  Already signed in?{" "}
+                  <button
+                    onClick={refreshAuth}
+                    className="text-primary hover:underline"
                   >
-                    <span className="text-green-500">✓</span> {item}
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
+                    Refresh
+                  </button>
+                </p>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Future Features</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="flex flex-col gap-1">
-                {[
-                  "Clerk authentication",
-                  "tRPC integration",
-                  "Comment generation",
-                ].map((item) => (
-                  <li key={item} className="text-muted-foreground text-sm">
-                    • {item}
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Features</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="flex flex-col gap-2">
+                  {[
+                    "AI-powered comment generation",
+                    "LinkedIn engagement automation",
+                    "Style guide customization",
+                  ].map((item) => (
+                    <li
+                      key={item}
+                      className="text-muted-foreground flex items-center gap-2 text-sm"
+                    >
+                      <span className="text-primary">✓</span> {item}
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+        ) : (
+          // Signed in - show features UI
+          <div className="flex flex-col gap-4 px-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Welcome back, {user?.firstName || "User"}!</CardTitle>
+                <CardDescription>
+                  You're signed in and ready to engage on LinkedIn
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-3">
+                  {user?.imageUrl && (
+                    <img
+                      src={user.imageUrl}
+                      alt="Profile"
+                      className="h-10 w-10 rounded-full"
+                    />
+                  )}
+                  <div>
+                    <p className="text-sm font-medium">
+                      {user?.firstName} {user?.lastName}
+                    </p>
+                    <p className="text-muted-foreground text-xs">
+                      {user?.emailAddress}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {linkedInProfile.isLoaded && linkedInProfile.profileUrl && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>LinkedIn Account</CardTitle>
+                  <CardDescription>
+                    Currently logged in to LinkedIn
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-col gap-2">
+                    <div>
+                      <p className="text-muted-foreground text-xs">Profile URL</p>
+                      <a
+                        href={linkedInProfile.profileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline text-sm break-all"
+                      >
+                        {linkedInProfile.profileUrl}
+                      </a>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs">Username</p>
+                      <p className="text-sm font-mono">
+                        {linkedInProfile.publicIdentifier}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs">Profile ID</p>
+                      <p className="text-sm font-mono text-xs break-all">
+                        {linkedInProfile.miniProfileId}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Implementation Status</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="flex flex-col gap-2">
+                  {[
+                    "Shadow DOM isolation",
+                    "WXT framework",
+                    "Clerk authentication",
+                    "tRPC integration",
+                    "Auto-refresh on sign-in",
+                  ].map((item) => (
+                    <li
+                      key={item}
+                      className="text-muted-foreground flex items-center gap-2 text-sm"
+                    >
+                      <span className="text-green-500">✓</span> {item}
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Coming Soon</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="flex flex-col gap-1">
+                  {[
+                    "Comment generation UI",
+                    "Style guide editor",
+                    "Engagement analytics",
+                  ].map((item) => (
+                    <li key={item} className="text-muted-foreground text-sm">
+                      • {item}
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
 
       <SheetFooter>

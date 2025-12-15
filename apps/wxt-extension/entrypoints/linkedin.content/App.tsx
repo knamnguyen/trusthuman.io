@@ -13,6 +13,18 @@ export default function App({ portalContainer }: AppProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [showOpenButton, setShowOpenButton] = useState(true);
 
+  // Handle first install: auto-open sidebar
+  useEffect(() => {
+    chrome.storage.local.get(["hasOpenedSidebar"], (result) => {
+      if (!result.hasOpenedSidebar) {
+        // First install - auto-open sidebar
+        console.log("EngageKit WXT: First install detected, auto-opening sidebar");
+        setIsOpen(true);
+        chrome.storage.local.set({ hasOpenedSidebar: true });
+      }
+    });
+  }, []);
+
   // Handle button visibility with animation delay
   useEffect(() => {
     if (isOpen) {

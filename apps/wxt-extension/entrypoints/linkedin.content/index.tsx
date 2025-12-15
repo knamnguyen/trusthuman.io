@@ -2,6 +2,7 @@ import ReactDOM from "react-dom/client";
 
 import App from "./App";
 import { loadFonts } from "../../assets/fonts-loader";
+import { TRPCReactProvider } from "../../lib/trpc/client";
 
 import "../../assets/globals.css";
 
@@ -26,9 +27,15 @@ export default defineContentScript({
         container.append(app);
 
         // Create React root and render
+        // NO ClerkProvider - content script runs on linkedin.com origin
+        // Auth handled via background worker + message passing
         const root = ReactDOM.createRoot(app);
 
-        root.render(<App portalContainer={container} />);
+        root.render(
+          <TRPCReactProvider>
+            <App portalContainer={container} />
+          </TRPCReactProvider>
+        );
 
         console.log("EngageKit WXT: Sidebar mounted");
         return root;

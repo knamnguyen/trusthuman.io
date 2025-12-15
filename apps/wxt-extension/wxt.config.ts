@@ -26,11 +26,23 @@ export default defineConfig({
   },
 
   manifest: {
-    name: "EngageKit WXT POC",
-    description: "POC for WXT-based LinkedIn sidebar extension",
+    name: "EngageKit WXT Extension",
+    description: "AI-powered LinkedIn engagement with Clerk authentication",
     version: "0.0.1",
-    permissions: ["activeTab", "storage"],
-    host_permissions: ["https://*.linkedin.com/*"],
+    permissions: [
+      "activeTab",
+      "storage",
+      "alarms",
+      "tabs",
+      "cookies",
+    ],
+    host_permissions: [
+      "https://*.linkedin.com/*",
+      // Allow access to web app for auth sync (dynamic based on environment)
+      ...(process.env.VITE_APP_URL ? [process.env.VITE_APP_URL + "/*"] : []),
+      // Add localhost for development
+      "http://localhost/*",
+    ],
     web_accessible_resources: [
       {
         resources: ["fonts/*"],
