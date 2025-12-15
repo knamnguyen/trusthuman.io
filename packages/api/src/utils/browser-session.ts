@@ -468,7 +468,7 @@ export class BrowserSession {
               ok: true,
               data: result,
             };
-          } catch (err) {
+          } catch {
             await new Promise((resolve) => setTimeout(resolve, interval));
             // ignore
           }
