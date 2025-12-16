@@ -70,10 +70,15 @@ export const accountRouter = {
           });
         }
 
-        const browserSession = new BrowserSession(ctx.db, accountId, {
-          location: input.location,
-          browserProfileId: profileId,
-        });
+        const browserSession = new BrowserSession(
+          ctx.db,
+          ctx.browserRegistry,
+          accountId,
+          {
+            location: input.location,
+            browserProfileId: profileId,
+          },
+        );
 
         await browserSession.ready;
 
@@ -127,8 +132,11 @@ export const accountRouter = {
           } as const;
         }
 
-        // TODO: find a way to destroy browser session
-        // await browserRegistry.destroy(input.accountId);
+        const registry = ctx.browserRegistry.get(input.accountId);
+
+        if (registry !== undefined) {
+          await registry.destroy();
+        }
 
         return {
           status: "success",

@@ -8,7 +8,10 @@ import {
   DEFAULT_STYLE_GUIDES,
 } from "@sassy/feature-flags";
 
-import type { ProxyLocation } from "../utils/browser-session";
+import type {
+  BrowserSessionRegistry,
+  ProxyLocation,
+} from "../utils/browser-session";
 import { protectedProcedure } from "../trpc";
 // import {
 //   userCreateSchema,
@@ -402,61 +405,16 @@ export const autoCommentRouter = {
         } as const;
       }
 
-      void startAutoComment(ctx.db, runId, input.accountId);
+      void startAutoComment(
+        ctx.db,
+        ctx.browserRegistry,
+        runId,
+        input.accountId,
+      );
 
       return {
         status: "success",
         runId,
-      } as const;
-    }),
-
-  stop: protectedProcedure
-    .input(
-      z.object({
-        autoCommentRunId: z.string(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const autoCommentRun = await ctx.db.autoCommentRun.findUnique({
-        where: { id: input.autoCommentRunId },
-      });
-
-      // if autocomment is not made by user or not found, return error
-      if (autoCommentRun === null || autoCommentRun.userId !== ctx.user.id) {
-        return {
-          status: "error",
-          code: 404,
-          message: "Auto comment run not found",
-        } as const;
-      }
-
-      if (autoCommentRun.status !== "pending") {
-        return {
-          status: "success",
-          message: "auto commenting already stopped",
-        } as const;
-      }
-
-      // TODO: figure out a way to do this with the new BrowserSession thing
-      // const session = browserRegistry.get(autoCommentRun.accountId);
-
-      // if (session === undefined) {
-      //   return {
-      //     status: "error",
-      //     code: 400,
-      //     message: "No active browser session found",
-      //   } as const;
-      // }
-      //
-      // await session.stopAutoCommenting();
-
-      await ctx.db.autoCommentRun.update({
-        where: { id: input.autoCommentRunId },
-        data: { status: "terminated", endedAt: new Date() },
-      });
-
-      return {
-        status: "success",
       } as const;
     }),
 
@@ -729,6 +687,7 @@ export async function getAutocommentParamsWithFallback(
 
 async function startAutoComment(
   db: PrismaClient,
+  browserRegistry: BrowserSessionRegistry,
   runId: string,
   accountId: string,
   params?: StartAutoCommentingParams,
@@ -762,7 +721,7 @@ async function startAutoComment(
     } as const;
   }
 
-  const browserSession = new BrowserSession(db, accountId, {
+  const browserSession = new BrowserSession(db, browserRegistry, accountId, {
     location: account.location as ProxyLocation,
     browserProfileId: account.browserProfileId,
     liveviewViewOnlyMode: process.env.NODE_ENV === "production",

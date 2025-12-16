@@ -3,8 +3,7 @@ import { ulid } from "ulidx";
 
 import { createTestPrismaClient } from "@sassy/db/client/test";
 
-import type { BrowserSessionRegistry } from "./browser-session";
-import { BrowserSession } from "./browser-session";
+import { browserRegistry, BrowserSession } from "./browser-session";
 
 describe("LinkedInBrowserSession", () => {
   let session!: BrowserSession;
@@ -30,7 +29,7 @@ describe("LinkedInBrowserSession", () => {
     });
 
     // figure out how to stub and test
-    session = new BrowserSession(prisma, accountId, {
+    session = new BrowserSession(prisma, browserRegistry, accountId, {
       location: "US",
       browserProfileId: "mock-profile-id",
     });

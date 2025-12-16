@@ -14,6 +14,7 @@ import type { Logger } from "./commons";
 import { env } from "./env";
 import { jwtFactory } from "./jwt";
 
+console.info("accesing here");
 export const hyperbrowser = new Hyperbrowser({
   apiKey: env.HYPERBROWSER_API_KEY,
 });
@@ -128,13 +129,24 @@ export class BrowserSession {
   private extensionWorker: WebWorker | null = null;
   constructor(
     private readonly db: PrismaClient,
+    private readonly registry: BrowserSessionRegistry,
     public readonly accountId: string,
     private readonly opts: BrowserSessionParams,
     private readonly logger: Logger = console,
   ) {
     this.id = accountId;
     this.ready = this.init();
-    // setup postgres listen notify to destroy sessions on demand
+    this.registry.register(this);
+    this.onDestroy(async () => {
+      await this.db.browserInstance.update({
+        where: {
+          id: this.id,
+        },
+        data: {
+          status: "STOPPED",
+        },
+      });
+    });
   }
 
   private async createSession(params: CreateHyperbrowserSessionParams) {
@@ -333,7 +345,9 @@ export class BrowserSession {
     if (this.destroying) {
       return;
     }
+
     this.destroying = true;
+    this.controller.abort();
 
     await Promise.all([
       this.browser.close(),
@@ -353,12 +367,13 @@ export class BrowserSession {
         );
       }
     }
-    this.controller.abort();
     await Promise.all(callbacks);
   }
 
   public setupHeartbeat() {
-    const interval = setInterval(() => {
+    let timeoutId: ReturnType<typeof setTimeout> | undefined = undefined;
+
+    const pingCheck = () => {
       if (
         Date.now() - this.lastHeartbeatAt >
         this.LATEST_HEARTBEAT_THRESHOLD_MS
@@ -366,14 +381,23 @@ export class BrowserSession {
         this.logger.warn(
           `No ping received from browser session ${this.id} in the last ${this.LATEST_HEARTBEAT_THRESHOLD_MS} ms, destroying session`,
         );
-        clearInterval(interval);
+
+        if (timeoutId !== undefined) {
+          clearTimeout(timeoutId);
+        }
+
         void this.destroy().catch((err) => {
           this.logger.error(
             `Error destroying browser session ${this.id}: ${err}`,
           );
         });
+        return;
       }
-    }, 5_000);
+
+      timeoutId = setTimeout(pingCheck, 5000);
+    };
+
+    pingCheck();
 
     this.onBrowserMessage((message) => {
       if (message.action !== "ping") {
@@ -870,123 +894,39 @@ export class BrowserSession {
 }
 
 export class BrowserSessionRegistry {
-  constructor(private readonly db: PrismaClient) {}
-
   private readonly registry = new Map<string, BrowserSession>();
-
-  async sync() {
-    // check for remote db if any running or initializing sessions
-    // these sessions are hung sessions that were not cleaned up properly
-    // we need to destroy them locally (if they exist)
-    // and set the state to STOPPED in the remote db
-    while (true) {
-      const browserInstances = await this.db.browserInstance.findMany({
-        where: {
-          OR: [
-            {
-              status: "RUNNING",
-            },
-            {
-              status: "INITIALIZING",
-            },
-          ],
-        },
-      });
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const promises: Promise<any>[] = [];
-      for (const instance of browserInstances) {
-        if (!this.registry.has(instance.id)) {
-          // stop hyperbrowser session deliberately
-          // bcs this.destroy(instance.id) will skip stopping hyperbrowser session
-          // if if does not exist in the registry
-          promises.push(
-            this.stopHyperbrowserSession(instance.hyperbrowserSessionId),
-          );
-          promises.push(this.destroy(instance.id));
-          promises.push(
-            this.db.browserInstance.update({
-              where: {
-                id: instance.id,
-              },
-              data: {
-                status: "STOPPED",
-              },
-            }),
-          );
-        }
-      }
-
-      await Promise.all(promises);
-    }
-  }
 
   get(id: string) {
     return this.registry.get(id);
   }
 
-  private async getOrRegister(session: BrowserSession) {
-    const existing = this.get(session.id);
-    if (existing !== undefined) {
-      const status = await hyperbrowser.sessions.get(existing.sessionId);
-      if (status.status === "active") {
-        return {
-          status: "existing",
-          instance: existing,
-        } as const;
-      }
-
-      // if existing session exists but status is not active
-      // we destroy it and create it again below
-      await this.destroy(session.id);
+  register(session: BrowserSession) {
+    if (this.has(session.id)) {
+      throw new Error(
+        `Browser session with id ${session.id} is already registered`,
+      );
     }
-
-    const browserSession = await session.init();
-
-    this.registry.set(session.id, browserSession);
-
-    return {
-      status: "new",
-      instance: browserSession,
-    } as const;
-  }
-
-  async register(session: BrowserSession) {
-    const existing = await this.getOrRegister(session);
-
-    existing.instance.onDestroy(() => {
-      this.registry.delete(session.id);
-    });
-
-    return existing;
+    this.registry.set(session.id, session);
   }
 
   has(id: string) {
     return this.registry.has(id);
   }
 
-  private async stopHyperbrowserSession(sessionId: string) {
-    if (sessionId === "mock") {
+  async destroy(id: string) {
+    const session = this.registry.get(id);
+    if (session === undefined) {
       return;
     }
-    await hyperbrowser.sessions.stop(sessionId);
-  }
 
-  async destroy(accountId: string) {
-    const entry = this.registry.get(accountId);
-    if (entry === undefined) {
-      return;
-    }
-    await entry.destroy();
-    this.registry.delete(accountId);
+    await session.destroy();
+    this.registry.delete(id);
   }
 
   async destroyAll() {
     const entries = Array.from(this.registry.entries());
-    await Promise.all(
-      entries
-        .filter(([_, entry]) => entry.sessionId !== "mock")
-        .map(([id]) => this.destroy(id)),
-    );
+    await Promise.all(entries.map(([id]) => this.destroy(id)));
   }
 }
+
+export const browserRegistry = new BrowserSessionRegistry();

@@ -94,3 +94,33 @@ export function safe<T>(fn: () => T): SafeResult<T> {
     } as SafeResult<T>;
   }
 }
+
+export async function retry<TOutput>(
+  fn: () => TOutput,
+  opts?: {
+    timeout?: number;
+    interval?: number;
+    retryOn?: (output: TOutput) => boolean;
+  },
+) {
+  const { timeout = 10000, interval = 200 } = opts ?? {};
+  const start = Date.now();
+  while (Date.now() - start < timeout) {
+    try {
+      const result = await Promise.resolve(fn());
+
+      return {
+        ok: true,
+        data: result,
+      };
+    } catch {
+      await new Promise((resolve) => setTimeout(resolve, interval));
+      // ignore
+    }
+  }
+
+  return {
+    ok: false,
+    error: new Error("timeout"),
+  };
+}

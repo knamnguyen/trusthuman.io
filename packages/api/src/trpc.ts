@@ -18,8 +18,13 @@ import { ZodError } from "zod";
 import type { Prisma, PrismaClient } from "@sassy/db";
 import { db } from "@sassy/db";
 
-import { BrowserJobWorker } from "./utils/browser-job";
-import { assumedAccountJwt } from "./utils/browser-session";
+import type { BrowserSessionRegistry } from "./utils/browser-session";
+import {
+  browserJobRegistry,
+  browserJobs,
+  registerJobs,
+} from "./utils/browser-job";
+import { assumedAccountJwt, browserRegistry } from "./utils/browser-session";
 import { env } from "./utils/env";
 
 /**
@@ -49,14 +54,15 @@ export interface TRPCContext {
   user?: DbUser;
   headers: Headers;
   hyperbrowser: Hyperbrowser;
-  browserJobs: BrowserJobWorker;
+  browserJobs: typeof browserJobs;
+  browserRegistry: BrowserSessionRegistry;
 }
+
+registerJobs(browserJobRegistry);
 
 const hb = new Hyperbrowser({
   apiKey: env.HYPERBROWSER_API_KEY,
 });
-
-const browserJobs = new BrowserJobWorker(hb, db);
 
 export const createTRPCContext = (opts: { headers: Headers }): TRPCContext => {
   const source = opts.headers.get("x-trpc-source");
@@ -67,6 +73,7 @@ export const createTRPCContext = (opts: { headers: Headers }): TRPCContext => {
     headers: opts.headers,
     hyperbrowser: hb,
     browserJobs,
+    browserRegistry,
     // Note: User will be added by the auth middleware when needed
   };
 };
