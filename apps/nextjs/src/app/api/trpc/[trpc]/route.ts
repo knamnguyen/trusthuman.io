@@ -26,7 +26,7 @@ const handler = async (req: Request) => {
     endpoint: "/api/trpc",
     router: appRouter,
     req,
-    createContext: async () => {
+    createContext: () => {
       // Pass the request headers to the context
       // This allows Clerk to work properly with currentUser()
       return createTRPCContext({
