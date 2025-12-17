@@ -62,6 +62,8 @@ model LinkedInAccount {
   browserProfileId   String
   location           String
   name               String?
+  autocommentEnabled Boolean               @default(false)
+  runDailyAt         String?
   isRunning          Boolean               @default(false)
   AutoCommentConfig  AutoCommentConfig[]
   BlacklistedProfile BlacklistedProfile[]

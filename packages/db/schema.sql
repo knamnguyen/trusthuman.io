@@ -49,6 +49,8 @@ CREATE TABLE "LinkedInAccount" (
     "browserProfileId" TEXT NOT NULL,
     "location" TEXT NOT NULL,
     "name" TEXT,
+    "autocommentEnabled" BOOLEAN NOT NULL DEFAULT false,
+    "runDailyAt" TIMESTAMP(3),
     "isRunning" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "LinkedInAccount_pkey" PRIMARY KEY ("id")
@@ -318,6 +320,9 @@ CREATE INDEX "UserComment_postUrn_idx" ON "UserComment"("postUrn");
 
 -- CreateIndex
 CREATE INDEX "UserComment_commentedAt_idx" ON "UserComment"("commentedAt");
+
+-- CreateIndex
+CREATE INDEX "UserComment_urns_idx" ON "UserComment" USING GIN ("urns");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "TargetProfile_profileUrn_key" ON "TargetProfile"("profileUrn");

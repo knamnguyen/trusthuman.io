@@ -58,8 +58,6 @@ export interface TRPCContext {
   browserRegistry: BrowserSessionRegistry;
 }
 
-registerJobs(browserJobRegistry);
-
 const hb = new Hyperbrowser({
   apiKey: env.HYPERBROWSER_API_KEY,
 });

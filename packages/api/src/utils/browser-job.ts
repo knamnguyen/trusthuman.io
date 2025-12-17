@@ -18,39 +18,67 @@ import { safe, transformValuesIfMatch } from "./commons";
 import { Semaphore } from "./mutex";
 
 export class BrowserJobWorker<TWorkerContext = unknown, TJobContext = unknown> {
-  private waiter = Promise.withResolvers();
+  private sleepResolver: {
+    resolve: () => void;
+    promise: Promise<void>;
+    timeoutId: ReturnType<typeof setTimeout> | null;
+  } | null = null;
   private readonly maxConcurrentSessions: number;
   private semaphore: Semaphore;
+  private readonly db: PrismaClient;
+  private readonly hyperbrowser: Hyperbrowser;
+  private readonly browserRegistry: BrowserSessionRegistry;
+  private readonly jobRegistry: BrowserJobRegistry<TWorkerContext, TJobContext>;
+  private readonly createJobContextFactory: (
+    ctx: NoInfer<TWorkerContext>,
+    accountId: string,
+  ) => Promise<TJobContext> | TJobContext;
+  private readonly onJobCompleted?: (
+    ctx: NoInfer<TWorkerContext>,
+    jobCtx: TJobContext,
+  ) => Promise<void> | void;
 
-  constructor(
-    private readonly deps: {
-      readonly hyperbrowser: Hyperbrowser;
-      readonly db: PrismaClient;
-      readonly browserRegistry: BrowserSessionRegistry;
-      readonly jobRegistry: BrowserJobRegistry<TWorkerContext, TJobContext>;
-      readonly createJobContextFactory: (
-        ctx: NoInfer<TWorkerContext>,
-        accountId: string,
-      ) => Promise<TJobContext> | TJobContext;
-      readonly onJobCompleted?: (
-        ctx: NoInfer<TWorkerContext>,
-        jobCtx: TJobContext,
-      ) => Promise<void> | void;
-      readonly maxConcurrentJobs?: number;
-    },
-  ) {
-    this.maxConcurrentSessions = deps.maxConcurrentJobs ?? 25;
+  constructor({
+    hyperbrowser,
+    db,
+    browserRegistry,
+    jobRegistry,
+    createJobContextFactory,
+    onJobCompleted,
+    maxConcurrentJobs,
+  }: {
+    readonly hyperbrowser: Hyperbrowser;
+    readonly db: PrismaClient;
+    readonly browserRegistry: BrowserSessionRegistry;
+    readonly jobRegistry: BrowserJobRegistry<TWorkerContext, TJobContext>;
+    readonly createJobContextFactory: (
+      ctx: NoInfer<TWorkerContext>,
+      accountId: string,
+    ) => Promise<TJobContext> | TJobContext;
+    readonly onJobCompleted?: (
+      ctx: NoInfer<TWorkerContext>,
+      jobCtx: TJobContext,
+    ) => Promise<void> | void;
+    readonly maxConcurrentJobs?: number;
+  }) {
+    this.hyperbrowser = hyperbrowser;
+    this.db = db;
+    this.browserRegistry = browserRegistry;
+    this.jobRegistry = jobRegistry;
+    this.createJobContextFactory = createJobContextFactory;
+    this.onJobCompleted = onJobCompleted;
+    this.maxConcurrentSessions = maxConcurrentJobs ?? 25;
     this.semaphore = new Semaphore(this.maxConcurrentSessions);
   }
 
   private async numSessionsRunning() {
-    const sessions = await this.deps.hyperbrowser.sessions.list({ limit: 1 });
+    const sessions = await this.hyperbrowser.sessions.list({ limit: 1 });
     return sessions.totalCount;
   }
 
   async processJob(ctx: TWorkerContext, jobId: string) {
     try {
-      const result = await this.deps.db.browserJob.update({
+      const result = await this.db.browserJob.update({
         where: { id: jobId },
         data: {
           status: "RUNNING",
@@ -61,17 +89,17 @@ export class BrowserJobWorker<TWorkerContext = unknown, TJobContext = unknown> {
       });
 
       if (process.env.NODE_ENV !== "test") {
-        const jobContext = await this.deps.createJobContextFactory(
+        const jobContext = await this.createJobContextFactory(
           ctx,
           result.accountId,
         );
 
-        for (const job of this.deps.jobRegistry.values()) {
+        for (const job of this.jobRegistry.values()) {
           await safe(() => job(ctx, jobContext));
         }
 
         try {
-          await this.deps.onJobCompleted?.(ctx, jobContext);
+          await this.onJobCompleted?.(ctx, jobContext);
         } catch (error) {
           console.error(
             `Error in onJobCompleted for browser job ${jobId}:`,
@@ -80,7 +108,7 @@ export class BrowserJobWorker<TWorkerContext = unknown, TJobContext = unknown> {
         }
       }
     } catch (error) {
-      await this.deps.db.browserJob.update({
+      await this.db.browserJob.update({
         where: { id: jobId },
         data: {
           status: "FAILED",
@@ -90,7 +118,7 @@ export class BrowserJobWorker<TWorkerContext = unknown, TJobContext = unknown> {
       console.error(`Browser job ${jobId} failed:`, error);
       return;
     } finally {
-      await this.deps.db.browserJob.update({
+      await this.db.browserJob.update({
         where: { id: jobId },
         data: {
           status: "COMPLETED",
@@ -101,7 +129,7 @@ export class BrowserJobWorker<TWorkerContext = unknown, TJobContext = unknown> {
 
   async work(ctx: TWorkerContext) {
     while (true) {
-      const job = await this.deps.db.browserJob.findFirst({
+      const job = await this.db.browserJob.findFirst({
         where: {
           status: "QUEUED",
           startAt: {
@@ -119,24 +147,61 @@ export class BrowserJobWorker<TWorkerContext = unknown, TJobContext = unknown> {
         void this.processJob(ctx, job.id).finally(() => {
           this.semaphore.release();
         });
+        continue;
       }
 
-      await this.sleep;
+      const nextJob = await this.db.browserJob.findFirst({
+        where: {
+          status: "QUEUED",
+        },
+        orderBy: {
+          startAt: "asc",
+        },
+      });
+
+      // sleep till next job or just sleep indefinitely untill resumed
+      await this.sleep(nextJob?.startAt);
     }
   }
 
   private resume() {
-    const resolve = this.waiter.resolve;
-    this.waiter = Promise.withResolvers();
-    resolve();
+    if (this.sleepResolver === null) return;
+    this.sleepResolver.resolve();
+    if (this.sleepResolver.timeoutId !== null) {
+      clearTimeout(this.sleepResolver.timeoutId);
+    }
+    this.sleepResolver = null;
   }
 
-  private get sleep() {
-    return this.waiter.promise;
+  private sleep(until?: Date) {
+    if (this.sleepResolver !== null) {
+      if (this.sleepResolver.timeoutId !== null)
+        clearTimeout(this.sleepResolver.timeoutId);
+      this.sleepResolver.resolve();
+    }
+
+    const resolver = Promise.withResolvers<void>();
+
+    this.sleepResolver = {
+      promise: resolver.promise,
+      resolve: resolver.resolve,
+      timeoutId:
+        until !== undefined
+          ? setTimeout(
+              () => {
+                resolver.resolve();
+                this.sleepResolver = null;
+              },
+              Math.max(0, until.getTime() - Date.now()),
+            )
+          : null,
+    };
+
+    return resolver.promise;
   }
 
   async tryQueue(accountId: string, startAt = new Date()) {
-    const existing = await this.deps.db.browserJob.findFirst({
+    const existing = await this.db.browserJob.findFirst({
       where: {
         accountId,
         status: "QUEUED",
@@ -157,7 +222,7 @@ export class BrowserJobWorker<TWorkerContext = unknown, TJobContext = unknown> {
       } as const;
     }
 
-    const result = await this.deps.db.browserJob.create({
+    const result = await this.db.browserJob.create({
       data: {
         id: ulid(),
         accountId,
@@ -176,6 +241,94 @@ export class BrowserJobWorker<TWorkerContext = unknown, TJobContext = unknown> {
       id: result.id,
       startAt,
     } as const;
+  }
+
+  public async scheduleJobs(scheduleAt: Date, intervalMs: number) {
+    const now = new Date();
+    const initialDelay = scheduleAt.getTime() - now.getTime();
+    if (initialDelay > 0) {
+      await new Promise((resolve) => setTimeout(resolve, initialDelay));
+    }
+
+    while (true) {
+      try {
+        await this.enqueueJobs();
+        this.resume();
+      } catch (error) {
+        console.error("Error enqueueing browser jobs:", error);
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, intervalMs));
+    }
+  }
+
+  private async enqueueJobs(now: Date = new Date()) {
+    let cursor = null as string | null;
+
+    const BATCH_SIZE = 20;
+    while (true) {
+      // this is not thread safe and might get deadlocked if multiple workers run this function at the same time
+      const result = await this.db.$transaction(async (tx) => {
+        // selecting accounts that have autocomment enabled and are active
+        // and do not have a queued browser job already
+        const accounts = await tx.$queryRaw<
+          { id: string; runDailyAt: string }[]
+        >`
+          select id, "runDailyAt" from "LinkedInAccount"
+          where "autocommentEnabled" = true
+            and "LinkedInAccount".status = 'ACTIVE'
+            and "runDailyAt" is not null
+            and not exists (
+              select 1 from "BrowserJob"
+              where "BrowserJob"."accountId" = "LinkedInAccount".id
+                and "BrowserJob".status = 'QUEUED'
+            )
+            ${cursor !== null ? ` and id >= ${cursor}` : ""}
+          order by id
+          limit ${BATCH_SIZE + 1}
+        `;
+
+        if (accounts.length === 0) {
+          return {
+            next: null,
+          };
+        }
+
+        await tx.browserJob.createMany({
+          data: accounts.slice(0, BATCH_SIZE).map((account) => {
+            const [hours, minutes] = account.runDailyAt.split(":").map(Number);
+            const scheduledAt = new Date(
+              now.getFullYear(),
+              now.getMonth(),
+              now.getDate(),
+              hours,
+              minutes,
+              0,
+              0,
+            );
+            if (scheduledAt < now) {
+              scheduledAt.setDate(scheduledAt.getDate() + 1);
+            }
+
+            return {
+              id: ulid(),
+              accountId: account.id,
+              status: "QUEUED",
+              startAt: scheduledAt,
+            };
+          }),
+        });
+
+        return {
+          next:
+            accounts.length > BATCH_SIZE
+              ? (accounts[BATCH_SIZE - 1]?.id ?? null)
+              : null,
+        };
+      });
+
+      cursor = result.next;
+    }
   }
 }
 
@@ -328,6 +481,13 @@ export async function tryRunAutocomment(
     const config = await getAutocommentParamsWithFallback(db, accountId);
 
     try {
+      await db.linkedInAccount.update({
+        where: { id: accountId },
+        data: {
+          isRunning: true,
+        },
+      });
+
       const result = await session.startAutoCommenting({
         autoCommentRunId: pendingRun.id,
         ...config,
@@ -366,6 +526,13 @@ export async function tryRunAutocomment(
         status: "error",
         message: errMessage,
       } as const;
+    } finally {
+      await db.linkedInAccount.update({
+        where: { id: accountId },
+        data: {
+          isRunning: false,
+        },
+      });
     }
   }
 }
@@ -414,11 +581,16 @@ export const browserJobs = new BrowserJobWorker<WorkerContext, JobContext>({
         id: true,
         location: true,
         browserProfileId: true,
+        status: true,
       },
     });
 
     if (account === null) {
       throw new Error("LinkedIn account not found");
+    }
+
+    if (account.status !== "ACTIVE") {
+      throw new Error("LinkedIn account is not active");
     }
 
     const session = new BrowserSession(ctx.db, ctx.browserRegistry, accountId, {
@@ -450,3 +622,5 @@ export function registerJobs(
     await tryRunAutocomment(ctx.db, jobCtx.session, jobCtx.accountId);
   });
 }
+
+registerJobs(browserJobRegistry);
