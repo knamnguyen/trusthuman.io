@@ -6,9 +6,9 @@ import { createTRPCContext } from "./trpc";
 import { browserJobs } from "./utils/browser-job";
 
 // schedule browser jobs to run daily at 13:00 UTC
-const scheduledDailyAt = new Date();
-scheduledDailyAt.setUTCHours(13, 0, 0, 0);
-void browserJobs.scheduleJobs(scheduledDailyAt, 24 * 60 * 60_000);
+const startAt = new Date();
+startAt.setUTCHours(13, 0, 0, 0);
+void browserJobs.scheduleJobsEvery(startAt, 24 * 60 * 60_000);
 
 Bun.serve({
   port: Number(process.env.PORT ?? 3000),

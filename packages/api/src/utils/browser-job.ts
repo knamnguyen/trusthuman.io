@@ -243,9 +243,8 @@ export class BrowserJobWorker<TWorkerContext = unknown, TJobContext = unknown> {
     } as const;
   }
 
-  public async scheduleJobs(scheduleAt: Date, intervalMs: number) {
-    const now = new Date();
-    const initialDelay = scheduleAt.getTime() - now.getTime();
+  public async scheduleJobsEvery(startAt: Date, intervalMs: number) {
+    const initialDelay = startAt.getTime() - Date.now();
     if (initialDelay > 0) {
       await new Promise((resolve) => setTimeout(resolve, initialDelay));
     }
