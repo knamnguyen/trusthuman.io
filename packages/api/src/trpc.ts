@@ -19,11 +19,7 @@ import type { Prisma, PrismaClient } from "@sassy/db";
 import { db } from "@sassy/db";
 
 import type { BrowserSessionRegistry } from "./utils/browser-session";
-import {
-  browserJobRegistry,
-  browserJobs,
-  registerJobs,
-} from "./utils/browser-job";
+import { browserJobs } from "./utils/browser-job";
 import { assumedAccountJwt, browserRegistry } from "./utils/browser-session";
 import { env } from "./utils/env";
 
