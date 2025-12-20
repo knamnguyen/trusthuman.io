@@ -1,3 +1,7 @@
+import { OrganizationSwitcher, UserButton } from "@clerk/chrome-extension";
+import { useQuery } from "@tanstack/react-query";
+
+import { Button } from "@sassy/ui/button";
 import {
   Card,
   CardContent,
@@ -13,11 +17,11 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@sassy/ui/sheet";
-import { Button } from "@sassy/ui/button";
 
-import { ToggleButton } from "./ToggleButton";
 import { useBackgroundAuth } from "../../hooks/use-background-auth";
-import { getSyncHostUrl } from "../../lib/get-sync-host";
+import { getSyncHostUrl } from "../../lib/get-sync-host-url";
+import { useTRPC } from "../../lib/trpc/client";
+import { ToggleButton } from "./ToggleButton";
 import { useLinkedInProfile } from "./use-linkedin-profile";
 
 interface LinkedInSidebarProps {
@@ -31,6 +35,29 @@ export function LinkedInSidebar({
 }: LinkedInSidebarProps) {
   const { isSignedIn, isLoaded, user, refreshAuth } = useBackgroundAuth();
   const linkedInProfile = useLinkedInProfile();
+
+  // tRPC v11 pattern: useTRPC + useQuery
+  const trpc = useTRPC();
+  const {
+    data: userDb,
+    isLoading: isUserDbLoading,
+    error: userDbError,
+    status,
+    fetchStatus,
+  } = useQuery(
+    trpc.user.meDb.queryOptions(undefined, {
+      enabled: isSignedIn,
+    }),
+  );
+
+  // Debug logging
+  console.log("tRPC Query Debug:", {
+    isSignedIn,
+    status,
+    fetchStatus,
+    userDb,
+    error: userDbError?.message,
+  });
 
   const handleSignIn = () => {
     const syncHost = getSyncHostUrl();
@@ -61,8 +88,9 @@ export function LinkedInSidebar({
       </SheetHeader>
 
       <div className="flex-1 overflow-y-auto py-4">
+        <div>User clerk buttons here</div>
         {!isLoaded ? (
-          <div className="flex items-center justify-center h-full">
+          <div className="flex h-full items-center justify-center">
             <p className="text-muted-foreground text-sm">Loading...</p>
           </div>
         ) : !isSignedIn ? (
@@ -79,7 +107,7 @@ export function LinkedInSidebar({
                 <Button onClick={handleSignIn} className="w-full">
                   Sign In to EngageKit
                 </Button>
-                <p className="text-muted-foreground text-xs text-center">
+                <p className="text-muted-foreground text-center text-xs">
                   Already signed in?{" "}
                   <button
                     onClick={refreshAuth}
@@ -118,7 +146,9 @@ export function LinkedInSidebar({
           <div className="flex flex-col gap-4 px-4">
             <Card>
               <CardHeader>
-                <CardTitle>Welcome back, {user?.firstName || "User"}!</CardTitle>
+                <CardTitle>
+                  Welcome back, {user?.firstName || "User"}!
+                </CardTitle>
                 <CardDescription>
                   You're signed in and ready to engage on LinkedIn
                 </CardDescription>
@@ -155,25 +185,29 @@ export function LinkedInSidebar({
                 <CardContent>
                   <div className="flex flex-col gap-2">
                     <div>
-                      <p className="text-muted-foreground text-xs">Profile URL</p>
+                      <p className="text-muted-foreground text-xs">
+                        Profile URL
+                      </p>
                       <a
                         href={linkedInProfile.profileUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-primary hover:underline text-sm break-all"
+                        className="text-primary text-sm break-all hover:underline"
                       >
                         {linkedInProfile.profileUrl}
                       </a>
                     </div>
                     <div>
                       <p className="text-muted-foreground text-xs">Username</p>
-                      <p className="text-sm font-mono">
+                      <p className="font-mono text-sm">
                         {linkedInProfile.publicIdentifier}
                       </p>
                     </div>
                     <div>
-                      <p className="text-muted-foreground text-xs">Profile ID</p>
-                      <p className="text-sm font-mono text-xs break-all">
+                      <p className="text-muted-foreground text-xs">
+                        Profile ID
+                      </p>
+                      <p className="font-mono text-sm text-xs break-all">
                         {linkedInProfile.miniProfileId}
                       </p>
                     </div>
@@ -181,6 +215,50 @@ export function LinkedInSidebar({
                 </CardContent>
               </Card>
             )}
+
+            {/* tRPC Test: User Database Fields */}
+            <Card>
+              <CardHeader>
+                <CardTitle>User Database (tRPC Test)</CardTitle>
+                <CardDescription>Data from user.meDb route</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {/* Debug info */}
+                <div className="mb-2 rounded bg-gray-100 p-2 text-xs">
+                  <p>status: {status}</p>
+                  <p>fetchStatus: {fetchStatus}</p>
+                  <p>isSignedIn: {String(isSignedIn)}</p>
+                </div>
+
+                {userDbError ? (
+                  <div className="text-sm text-red-500">
+                    <p className="font-semibold">Error:</p>
+                    <p className="font-mono text-xs break-all">
+                      {userDbError.message}
+                    </p>
+                  </div>
+                ) : isUserDbLoading ? (
+                  <p className="text-muted-foreground text-sm">Loading...</p>
+                ) : userDb ? (
+                  <div className="flex flex-col gap-2">
+                    {Object.entries(userDb).map(([key, value]) => (
+                      <div key={key}>
+                        <p className="text-muted-foreground text-xs">{key}</p>
+                        <p className="font-mono text-xs break-all">
+                          {value === null
+                            ? "null"
+                            : typeof value === "object"
+                              ? JSON.stringify(value, null, 2)
+                              : String(value)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-sm">No data</p>
+                )}
+              </CardContent>
+            </Card>
 
             <Card>
               <CardHeader>
