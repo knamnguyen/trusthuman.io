@@ -27,7 +27,6 @@ export class BrowserJobWorker<TWorkerContext = unknown, TJobContext = unknown> {
   private semaphore: Semaphore;
   private readonly db: PrismaClient;
   private readonly hyperbrowser: Hyperbrowser;
-  private readonly browserRegistry: BrowserSessionRegistry;
   private readonly jobRegistry: BrowserJobRegistry<TWorkerContext, TJobContext>;
   private readonly createJobContext: (
     ctx: NoInfer<TWorkerContext>,
@@ -41,9 +40,8 @@ export class BrowserJobWorker<TWorkerContext = unknown, TJobContext = unknown> {
   constructor({
     hyperbrowser,
     db,
-    browserRegistry,
     jobRegistry,
-    createJobContextFactory,
+    createJobContext,
     onJobCompleted,
     maxConcurrentJobs,
   }: {
@@ -51,7 +49,7 @@ export class BrowserJobWorker<TWorkerContext = unknown, TJobContext = unknown> {
     readonly db: PrismaClient;
     readonly browserRegistry: BrowserSessionRegistry;
     readonly jobRegistry: BrowserJobRegistry<TWorkerContext, TJobContext>;
-    readonly createJobContextFactory: (
+    readonly createJobContext: (
       ctx: NoInfer<TWorkerContext>,
       accountId: string,
     ) => Promise<TJobContext> | TJobContext;
@@ -63,9 +61,8 @@ export class BrowserJobWorker<TWorkerContext = unknown, TJobContext = unknown> {
   }) {
     this.hyperbrowser = hyperbrowser;
     this.db = db;
-    this.browserRegistry = browserRegistry;
     this.jobRegistry = jobRegistry;
-    this.createJobContext = createJobContextFactory;
+    this.createJobContext = createJobContext;
     this.onJobCompleted = onJobCompleted;
     this.maxConcurrentSessions = maxConcurrentJobs ?? 25;
     this.semaphore = new Semaphore(this.maxConcurrentSessions);
@@ -93,6 +90,7 @@ export class BrowserJobWorker<TWorkerContext = unknown, TJobContext = unknown> {
       console.info("running functions");
 
       for (const job of this.jobRegistry.values()) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         await safe(() => job(ctx, jobContext));
       }
 
@@ -306,7 +304,7 @@ export class BrowserJobWorker<TWorkerContext = unknown, TJobContext = unknown> {
                 and "BrowserJob".status = 'QUEUED'
             )
             and (
-              ${cursor}::bigint is null 
+              ${cursor}::text is null 
               or id >= ${cursor}
             )
           order by id
@@ -361,70 +359,78 @@ export class BrowserJobWorker<TWorkerContext = unknown, TJobContext = unknown> {
   }
 }
 
-export async function trySubmitScheduledComments(
-  db: PrismaClient,
-  session: BrowserSession,
-  accountId: string,
-) {
-  const now = new Date();
-  while (true) {
-    const comment = await db.userComment.findFirst({
-      where: {
-        accountId,
-        commentedAt: null,
-        autoCommentError: null,
-        OR: [
-          {
-            schedulePostAt: {
-              lte: now,
-            },
-          },
-          {
-            schedulePostAt: null,
-          },
-        ],
-      },
-      orderBy: {
-        schedulePostAt: "asc",
+export class BrowserJobRegistry<
+  TWorkerContext = unknown,
+  TJobContext = unknown,
+> extends Map<
+  string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (ctx: TWorkerContext, jobCtx: TJobContext) => any
+> {
+  public register<T>(job: (ctx: TWorkerContext, jobCtx: TJobContext) => T) {
+    if (this.has(job.name)) {
+      throw new Error(`Job with name ${job.name} is already registered`);
+    }
+    this.set(job.name, job);
+  }
+}
+
+export interface WorkerContext {
+  db: PrismaClient;
+  browserRegistry: BrowserSessionRegistry;
+}
+
+export interface JobContext {
+  session: BrowserSession;
+  accountId: string;
+}
+
+export const browserJobRegistry = new BrowserJobRegistry<
+  WorkerContext,
+  JobContext
+>();
+
+export const browserJobs = new BrowserJobWorker<WorkerContext, JobContext>({
+  hyperbrowser,
+  db,
+  browserRegistry,
+  jobRegistry: browserJobRegistry,
+  createJobContext: async (ctx, accountId) => {
+    const account = await ctx.db.linkedInAccount.findUnique({
+      where: { id: accountId },
+      select: {
+        id: true,
+        location: true,
+        browserProfileId: true,
+        status: true,
       },
     });
 
-    if (comment === null) {
-      break;
+    if (account === null) {
+      throw new Error("LinkedIn account not found");
     }
 
-    const result = await session.commentOnPost(
-      comment.postUrn,
-      comment.comment,
-    );
-
-    if (result.status === "error") {
-      console.error(`Failed to post comment on ${comment.postUrn}`);
-      await db.userComment.updateMany({
-        where: {
-          id: comment.id,
-        },
-        data: {
-          autoCommentError: result.reason,
-        },
-      });
-    } else {
-      await db.userComment.updateMany({
-        where: {
-          id: comment.id,
-        },
-        data: {
-          commentedAt: new Date(),
-        },
-      });
+    if (account.status !== "ACTIVE") {
+      throw new Error("LinkedIn account is not active");
     }
-  }
 
-  return {
-    status: "complete",
-    session,
-  } as const;
-}
+    const session = new BrowserSession(ctx.db, ctx.browserRegistry, accountId, {
+      location: account.location as ProxyLocation,
+      browserProfileId: account.browserProfileId,
+      liveviewViewOnlyMode: process.env.NODE_ENV === "production",
+    });
+
+    await session.ready;
+
+    return {
+      accountId,
+      session,
+    };
+  },
+  onJobCompleted: async (_, jobCtx) => {
+    await jobCtx.session.destroy();
+  },
+});
 
 async function getAutocommentParamsWithFallback(
   db: PrismaClient,
@@ -485,10 +491,9 @@ async function getAutocommentParamsWithFallback(
   };
 }
 
-export async function tryRunAutocomment(
-  db: PrismaClient,
-  session: BrowserSession,
-  accountId: string,
+browserJobRegistry.register(async function tryRunAutocomment(
+  { db },
+  { accountId, session },
 ) {
   while (true) {
     const pendingRun = await db.autoCommentRun.findFirst({
@@ -564,90 +569,68 @@ export async function tryRunAutocomment(
       });
     }
   }
-}
+});
 
-export class BrowserJobRegistry<
-  TWorkerContext = unknown,
-  TJobContext = unknown,
-> extends Map<
-  string,
-  (ctx: TWorkerContext, jobCtx: TJobContext) => Promise<void>
-> {
-  public register(
-    job: (ctx: TWorkerContext, jobCtx: TJobContext) => Promise<void>,
-  ) {
-    if (this.has(job.name)) {
-      throw new Error(`Job with name ${job.name} is already registered`);
-    }
-    this.set(job.name, job);
-  }
-}
-
-export interface WorkerContext {
-  db: PrismaClient;
-  browserRegistry: BrowserSessionRegistry;
-}
-
-export interface JobContext {
-  session: BrowserSession;
-  accountId: string;
-}
-
-export const browserJobRegistry = new BrowserJobRegistry<
-  WorkerContext,
-  JobContext
->();
-
-export const browserJobs = new BrowserJobWorker<WorkerContext, JobContext>({
-  hyperbrowser,
-  db,
-  browserRegistry,
-  jobRegistry: browserJobRegistry,
-  createJobContextFactory: async (ctx, accountId) => {
-    const account = await ctx.db.linkedInAccount.findUnique({
-      where: { id: accountId },
-      select: {
-        id: true,
-        location: true,
-        browserProfileId: true,
-        status: true,
+browserJobRegistry.register(async function trySubmitScheduledComments(
+  { db },
+  { session, accountId },
+) {
+  const now = new Date();
+  while (true) {
+    const comment = await db.userComment.findFirst({
+      where: {
+        accountId,
+        commentedAt: null,
+        autoCommentError: null,
+        OR: [
+          {
+            schedulePostAt: {
+              lte: now,
+            },
+          },
+          {
+            schedulePostAt: null,
+          },
+        ],
+      },
+      orderBy: {
+        schedulePostAt: "asc",
       },
     });
 
-    if (account === null) {
-      throw new Error("LinkedIn account not found");
+    if (comment === null) {
+      break;
     }
 
-    if (account.status !== "ACTIVE") {
-      throw new Error("LinkedIn account is not active");
+    const result = await session.commentOnPost(
+      comment.postUrn,
+      comment.comment,
+    );
+
+    if (result.status === "error") {
+      console.error(`Failed to post comment on ${comment.postUrn}`);
+      await db.userComment.updateMany({
+        where: {
+          id: comment.id,
+        },
+        data: {
+          autoCommentError: result.reason,
+        },
+      });
+    } else {
+      await db.userComment.updateMany({
+        where: {
+          id: comment.id,
+        },
+        data: {
+          commentedAt: new Date(),
+        },
+      });
     }
+  }
 
-    const session = new BrowserSession(ctx.db, ctx.browserRegistry, accountId, {
-      location: account.location as ProxyLocation,
-      browserProfileId: account.browserProfileId,
-      liveviewViewOnlyMode: process.env.NODE_ENV === "production",
-    });
-
-    await session.ready;
-
-    return {
-      accountId,
-      session,
-    };
-  },
-  onJobCompleted: async (_, jobCtx) => {
-    await jobCtx.session.destroy();
-  },
+  return {
+    status: "complete",
+    session,
+  } as const;
 });
-
-export function registerJobs(
-  browserJobRegistry: BrowserJobRegistry<WorkerContext, JobContext>,
-) {
-  browserJobRegistry.register(async (ctx, jobCtx) => {
-    await trySubmitScheduledComments(ctx.db, jobCtx.session, jobCtx.accountId);
-  });
-
-  browserJobRegistry.register(async (ctx, jobCtx) => {
-    await tryRunAutocomment(ctx.db, jobCtx.session, jobCtx.accountId);
-  });
-}

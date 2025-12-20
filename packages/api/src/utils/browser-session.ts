@@ -679,8 +679,33 @@ export class BrowserSession {
     } as const;
   }
 
-  async commentOnPost(postUrn: string, comment: string) {
+  async commentOnPost(postUrn: string, comment: string, now = new Date()) {
     await this.ready;
+
+    const startOfDay = new Date(now);
+    startOfDay.setUTCHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(startOfDay);
+    endOfDay.setUTCDate(endOfDay.getUTCDate() + 1);
+
+    const numCommentedToday = await this.db.userComment.count({
+      where: {
+        accountId: this.accountId,
+        commentedAt: {
+          not: null,
+          gte: startOfDay,
+          lte: endOfDay,
+        },
+      },
+    });
+
+    // TODO: refactor this daily comment limit to be shared as a global constant
+    if (numCommentedToday >= 100) {
+      return {
+        status: "error",
+        reason: "Daily comment limit reached",
+      } as const;
+    }
 
     await this.pages.linkedin.evaluate((postUrn) => {
       // use window.history.pushstate for client side spa navigation

@@ -12,6 +12,12 @@ export default defineConfig({
     disabled: true,
   },
 
+  dev: {
+    server: {
+      port: 3002,
+    },
+  },
+
   manifest: {
     name: "EngageKit WXT POC",
     description: "POC for WXT-based LinkedIn sidebar extension",

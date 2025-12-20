@@ -18,7 +18,7 @@ beforeEach(async () => {
     db,
     browserRegistry,
     jobRegistry: new BrowserJobRegistry(),
-    createJobContextFactory: () => ({}),
+    createJobContext: () => ({}),
   });
 });
 

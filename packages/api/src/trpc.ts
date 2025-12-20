@@ -19,11 +19,7 @@ import type { Prisma, PrismaClient } from "@sassy/db";
 import { db } from "@sassy/db";
 
 import type { BrowserSessionRegistry } from "./utils/browser-session";
-import {
-  browserJobRegistry,
-  browserJobs,
-  registerJobs,
-} from "./utils/browser-job";
+import { browserJobs } from "./utils/browser-job";
 import { assumedAccountJwt, browserRegistry } from "./utils/browser-session";
 import { env } from "./utils/env";
 
@@ -61,8 +57,6 @@ export interface TRPCContext {
 const hb = new Hyperbrowser({
   apiKey: env.HYPERBROWSER_API_KEY,
 });
-
-registerJobs(browserJobRegistry);
 
 export const createTRPCContext = (opts: { headers: Headers }): TRPCContext => {
   const source = opts.headers.get("x-trpc-source");
