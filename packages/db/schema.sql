@@ -50,7 +50,7 @@ CREATE TABLE "LinkedInAccount" (
     "location" TEXT NOT NULL,
     "name" TEXT,
     "autocommentEnabled" BOOLEAN NOT NULL DEFAULT false,
-    "runDailyAt" TIMESTAMP(3),
+    "runDailyAt" TEXT,
     "isRunning" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "LinkedInAccount_pkey" PRIMARY KEY ("id")

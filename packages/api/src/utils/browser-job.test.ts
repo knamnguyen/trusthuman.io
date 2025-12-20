@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { ulid } from "ulidx";
 
 import type { PrismaClient } from "@sassy/db";
@@ -10,7 +10,7 @@ import { BrowserSessionRegistry, hyperbrowser } from "./browser-session";
 let worker!: BrowserJobWorker;
 let db!: PrismaClient;
 
-beforeAll(async () => {
+beforeEach(async () => {
   db = await createTestPrismaClient();
   const browserRegistry = new BrowserSessionRegistry();
   worker = new BrowserJobWorker({
@@ -20,6 +20,10 @@ beforeAll(async () => {
     jobRegistry: new BrowserJobRegistry(),
     createJobContextFactory: () => ({}),
   });
+});
+
+afterEach(async () => {
+  await db.$disconnect();
 });
 
 describe("BrowserJobWorker", () => {

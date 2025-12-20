@@ -29,7 +29,7 @@ export class BrowserJobWorker<TWorkerContext = unknown, TJobContext = unknown> {
   private readonly hyperbrowser: Hyperbrowser;
   private readonly browserRegistry: BrowserSessionRegistry;
   private readonly jobRegistry: BrowserJobRegistry<TWorkerContext, TJobContext>;
-  private readonly createJobContextFactory: (
+  private readonly createJobContext: (
     ctx: NoInfer<TWorkerContext>,
     accountId: string,
   ) => Promise<TJobContext> | TJobContext;
@@ -65,7 +65,7 @@ export class BrowserJobWorker<TWorkerContext = unknown, TJobContext = unknown> {
     this.db = db;
     this.browserRegistry = browserRegistry;
     this.jobRegistry = jobRegistry;
-    this.createJobContextFactory = createJobContextFactory;
+    this.createJobContext = createJobContextFactory;
     this.onJobCompleted = onJobCompleted;
     this.maxConcurrentSessions = maxConcurrentJobs ?? 25;
     this.semaphore = new Semaphore(this.maxConcurrentSessions);
@@ -88,24 +88,21 @@ export class BrowserJobWorker<TWorkerContext = unknown, TJobContext = unknown> {
         },
       });
 
-      if (process.env.NODE_ENV !== "test") {
-        const jobContext = await this.createJobContextFactory(
-          ctx,
-          result.accountId,
+      const jobContext = await this.createJobContext(ctx, result.accountId);
+
+      console.info("running functions");
+
+      for (const job of this.jobRegistry.values()) {
+        await safe(() => job(ctx, jobContext));
+      }
+
+      try {
+        await this.onJobCompleted?.(ctx, jobContext);
+      } catch (error) {
+        console.error(
+          `Error in onJobCompleted for browser job ${jobId}:`,
+          error,
         );
-
-        for (const job of this.jobRegistry.values()) {
-          await safe(() => job(ctx, jobContext));
-        }
-
-        try {
-          await this.onJobCompleted?.(ctx, jobContext);
-        } catch (error) {
-          console.error(
-            `Error in onJobCompleted for browser job ${jobId}:`,
-            error,
-          );
-        }
       }
     } catch (error) {
       await this.db.browserJob.update({
@@ -159,8 +156,8 @@ export class BrowserJobWorker<TWorkerContext = unknown, TJobContext = unknown> {
         },
       });
 
-      // sleep till next job or just sleep indefinitely untill resumed
-      await this.sleep(nextJob?.startAt);
+      // wait till next job or just wait indefinitely untill resumed
+      await this.waitForJob(nextJob?.startAt);
     }
   }
 
@@ -173,7 +170,7 @@ export class BrowserJobWorker<TWorkerContext = unknown, TJobContext = unknown> {
     this.sleepResolver = null;
   }
 
-  private sleep(until?: Date) {
+  private waitForJob(until?: Date) {
     if (this.sleepResolver !== null) {
       if (this.sleepResolver.timeoutId !== null)
         clearTimeout(this.sleepResolver.timeoutId);
@@ -198,6 +195,21 @@ export class BrowserJobWorker<TWorkerContext = unknown, TJobContext = unknown> {
     };
 
     return resolver.promise;
+  }
+
+  private sleep(delayMs: number, signal?: AbortSignal) {
+    return new Promise<"woke" | "aborted">((resolve) => {
+      const timeoutId = setTimeout(() => resolve("woke"), delayMs);
+      if (signal === undefined) return;
+
+      const abortHandler = () => {
+        resolve("aborted");
+        clearTimeout(timeoutId);
+        signal.removeEventListener("abort", abortHandler);
+      };
+
+      signal.addEventListener("abort", abortHandler);
+    });
   }
 
   async tryQueue(accountId: string, startAt = new Date()) {
@@ -243,10 +255,17 @@ export class BrowserJobWorker<TWorkerContext = unknown, TJobContext = unknown> {
     } as const;
   }
 
-  public async scheduleJobsEvery(startAt: Date, intervalMs: number) {
+  public async scheduleJobsEvery(
+    startAt: Date,
+    intervalMs: number,
+    signal?: AbortSignal,
+  ) {
     const initialDelay = startAt.getTime() - Date.now();
     if (initialDelay > 0) {
-      await new Promise((resolve) => setTimeout(resolve, initialDelay));
+      const status = await this.sleep(initialDelay, signal);
+      if (status === "aborted") {
+        return;
+      }
     }
 
     while (true) {
@@ -257,14 +276,18 @@ export class BrowserJobWorker<TWorkerContext = unknown, TJobContext = unknown> {
         console.error("Error enqueueing browser jobs:", error);
       }
 
-      await new Promise((resolve) => setTimeout(resolve, intervalMs));
+      const status = await this.sleep(intervalMs, signal);
+      if (status === "aborted") {
+        return;
+      }
     }
   }
 
   private async enqueueJobs(now: Date = new Date()) {
+    const BATCH_SIZE = 20;
+
     let cursor = null as string | null;
 
-    const BATCH_SIZE = 20;
     while (true) {
       // this is not thread safe and might get deadlocked if multiple workers run this function at the same time
       const result = await this.db.$transaction(async (tx) => {
@@ -282,10 +305,13 @@ export class BrowserJobWorker<TWorkerContext = unknown, TJobContext = unknown> {
               where "BrowserJob"."accountId" = "LinkedInAccount".id
                 and "BrowserJob".status = 'QUEUED'
             )
-            ${cursor !== null ? ` and id >= ${cursor}` : ""}
+            and (
+              ${cursor}::bigint is null 
+              or id >= ${cursor}
+            )
           order by id
           limit ${BATCH_SIZE + 1}
-        `;
+        `; // the ::bigint cast is needed to make sure no "ERROR: could not determine data type of parameter" error
 
         if (accounts.length === 0) {
           return {
@@ -325,6 +351,10 @@ export class BrowserJobWorker<TWorkerContext = unknown, TJobContext = unknown> {
               : null,
         };
       });
+
+      if (result.next === null) {
+        return;
+      }
 
       cursor = result.next;
     }
@@ -621,5 +651,3 @@ export function registerJobs(
     await tryRunAutocomment(ctx.db, jobCtx.session, jobCtx.accountId);
   });
 }
-
-registerJobs(browserJobRegistry);

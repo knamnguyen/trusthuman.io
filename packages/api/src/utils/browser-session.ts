@@ -14,7 +14,6 @@ import type { Logger } from "./commons";
 import { env } from "./env";
 import { jwtFactory } from "./jwt";
 
-console.info("accesing here");
 export const hyperbrowser = new Hyperbrowser({
   apiKey: env.HYPERBROWSER_API_KEY,
 });
