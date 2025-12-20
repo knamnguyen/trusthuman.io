@@ -16,7 +16,9 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
     "with-env": "dotenv -e ../../.env -e ../../.env.local --",
     "stripe:prices": "pnpm with-env bun ./scripts/importProductsAndPrices.ts",
-    "stripe:portal": "pnpm with-env bun ./scripts/setupCustomerPortal.ts"
+    "stripe:portal": "pnpm with-env bun ./scripts/setupCustomerPortal.ts",
+    "stripe:quantity": "pnpm with-env bun ./scripts/importQuantityProducts.ts",
+    "stripe:quantity:dry-run": "pnpm with-env bun ./scripts/importQuantityProducts.ts --dry-run"
   },
   "dependencies": {
     "@sassy/db": "workspace:*",
