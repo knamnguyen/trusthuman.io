@@ -42,14 +42,45 @@ model User {
   profileImportRuns ProfileImportRun[]
   linkedInAccounts  LinkedInAccount[]
 
-  UserBrowserState     UserBrowserState[]
-  Comments             UserComment[]
-  AutoCommentRun       AutoCommentRun[]
-  CommentStyle         CommentStyle[]
-  AutoCommentConfig    AutoCommentConfig[]
-  BlacklistedProfile   BlacklistedProfile[]
-  linkedInPostPreviews LinkedInPostPreview[]
-  commentAnalyses      CommentAnalysis[]
+  UserBrowserState        UserBrowserState[]
+  Comments                UserComment[]
+  AutoCommentRun          AutoCommentRun[]
+  CommentStyle            CommentStyle[]
+  AutoCommentConfig       AutoCommentConfig[]
+  BlacklistedProfile      BlacklistedProfile[]
+  linkedInPostPreviews    LinkedInPostPreview[]
+  commentAnalyses         CommentAnalysis[]
+  organizationMemberships OrganizationMember[]
+}
+
+// ============================================================================
+// ORGANIZATION (Clerk-synced)
+// ============================================================================
+
+model Organization {
+  id               String   @id // Clerk organization ID
+  name             String
+  stripeCustomerId String?  @unique
+  purchasedSlots   Int      @default(1)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  members          OrganizationMember[]
+  linkedInAccounts LinkedInAccount[]
+}
+
+model OrganizationMember {
+  id       String   @id @default(uuid())
+  orgId    String
+  userId   String
+  role     String // "admin" | "member"
+  joinedAt DateTime @default(now())
+
+  org  Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, userId])
+  @@index([userId])
 }
 
 model LinkedInAccount {
@@ -64,6 +95,14 @@ model LinkedInAccount {
   location           String
   name               String?
   isRunning          Boolean               @default(false)
+
+  // Organization-based fields (new multi-tenant flow)
+  organizationId     String?
+  profileUrl         String?
+  profileSlug        String?               @unique // Globally unique - one LinkedIn per system
+  registrationStatus String?               // "registered" | "connected" | null
+
+  org                Organization?         @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   AutoCommentConfig  AutoCommentConfig[]
   BlacklistedProfile BlacklistedProfile[]
   AutoCommentRun     AutoCommentRun[]

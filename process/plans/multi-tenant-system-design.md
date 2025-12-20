@@ -323,7 +323,6 @@ Free user wants teammates or scheduling or more comments
 → User clicks "Connect via Hyperbrowser"
 → Hyperbrowser session opens → user logs in → URN extracted
 → LinkedInAccount updated:
-  - connectedByUserId = user
   - status = "connected"
   - urn set
 → Scheduling enabled, 100 comments/day
@@ -484,7 +483,7 @@ User opens Extension
   → No: "Switch to a LinkedIn account connected to your workspace"
 → User performs action (comment, like, etc.)
 → Check daily limit (10 free, 100 paid)
-→ API saves: { linkedInAccountId, performedByUserId, ... }
+→ API saves: { linkedInAccountId, ... }
 ```
 
 **Reasoning:** Extension works on any device if logged into matching LinkedIn. No Hyperbrowser needed for Extension.
