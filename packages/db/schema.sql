@@ -39,6 +39,29 @@ CREATE TABLE "User" (
 );
 
 -- CreateTable
+CREATE TABLE "Organization" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "stripeCustomerId" TEXT,
+    "purchasedSlots" INTEGER NOT NULL DEFAULT 1,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Organization_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "OrganizationMember" (
+    "id" TEXT NOT NULL,
+    "orgId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "role" TEXT NOT NULL,
+    "joinedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "OrganizationMember_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "LinkedInAccount" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
@@ -52,6 +75,10 @@ CREATE TABLE "LinkedInAccount" (
     "autocommentEnabled" BOOLEAN NOT NULL DEFAULT false,
     "runDailyAt" TEXT,
     "isRunning" BOOLEAN NOT NULL DEFAULT false,
+    "organizationId" TEXT,
+    "profileUrl" TEXT,
+    "profileSlug" TEXT,
+    "registrationStatus" TEXT,
 
     CONSTRAINT "LinkedInAccount_pkey" PRIMARY KEY ("id")
 );
@@ -297,6 +324,27 @@ CREATE TABLE "BrowserJob" (
     CONSTRAINT "BrowserJob_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "CommentAnalysis" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "commentUrl" TEXT NOT NULL,
+    "commentText" TEXT NOT NULL,
+    "authorName" TEXT NOT NULL,
+    "authorHeadline" TEXT,
+    "authorProfileUrl" TEXT,
+    "avatarS3Key" TEXT,
+    "avatarS3Url" TEXT,
+    "analysisJson" JSONB NOT NULL,
+    "overallScore" DOUBLE PRECISION NOT NULL,
+    "aiScore" DOUBLE PRECISION NOT NULL,
+    "isPublic" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "CommentAnalysis_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
 
@@ -307,7 +355,19 @@ CREATE UNIQUE INDEX "User_primaryEmailAddress_key" ON "User"("primaryEmailAddres
 CREATE UNIQUE INDEX "User_stripeCustomerId_key" ON "User"("stripeCustomerId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Organization_stripeCustomerId_key" ON "Organization"("stripeCustomerId");
+
+-- CreateIndex
+CREATE INDEX "OrganizationMember_userId_idx" ON "OrganizationMember"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "OrganizationMember_orgId_userId_key" ON "OrganizationMember"("orgId", "userId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "LinkedInAccount_email_key" ON "LinkedInAccount"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "LinkedInAccount_profileSlug_key" ON "LinkedInAccount"("profileSlug");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "LinkedInProfile_urn_key" ON "LinkedInProfile"("urn");
@@ -345,8 +405,23 @@ CREATE INDEX "LinkedInPostPreview_createdAt_idx" ON "LinkedInPostPreview"("creat
 -- CreateIndex
 CREATE INDEX "BrowserJob_status_idx" ON "BrowserJob"("status");
 
+-- CreateIndex
+CREATE INDEX "CommentAnalysis_userId_idx" ON "CommentAnalysis"("userId");
+
+-- CreateIndex
+CREATE INDEX "CommentAnalysis_createdAt_idx" ON "CommentAnalysis"("createdAt");
+
+-- AddForeignKey
+ALTER TABLE "OrganizationMember" ADD CONSTRAINT "OrganizationMember_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "OrganizationMember" ADD CONSTRAINT "OrganizationMember_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
 -- AddForeignKey
 ALTER TABLE "LinkedInAccount" ADD CONSTRAINT "LinkedInAccount_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "LinkedInAccount" ADD CONSTRAINT "LinkedInAccount_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ProfileImportRun" ADD CONSTRAINT "ProfileImportRun_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -401,4 +476,7 @@ ALTER TABLE "LinkedInPostPreview" ADD CONSTRAINT "LinkedInPostPreview_userId_fke
 
 -- AddForeignKey
 ALTER TABLE "BrowserJob" ADD CONSTRAINT "BrowserJob_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "CommentAnalysis" ADD CONSTRAINT "CommentAnalysis_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 

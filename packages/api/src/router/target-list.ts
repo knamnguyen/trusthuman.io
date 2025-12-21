@@ -2,9 +2,36 @@ import { ulid } from "ulidx";
 import { z } from "zod/v4";
 
 import { protectedProcedure } from "../trpc";
+import { LinkedInIndustrySearch } from "../utils/industry-search";
 import { paginate } from "../utils/pagination";
 
+const linkedInIndustrySearch = new LinkedInIndustrySearch();
+
 export const targetListRouter = {
+  industries: {
+    list: protectedProcedure
+      .input(
+        z.object({
+          offset: z.number().optional(),
+          limit: z.number().optional(),
+        }),
+      )
+      .query(({ input }) => {
+        return linkedInIndustrySearch.list({
+          offset: input.offset,
+          limit: input.limit,
+        });
+      }),
+    search: protectedProcedure
+      .input(
+        z.object({
+          query: z.string().trim().optional(),
+        }),
+      )
+      .query(({ input }) => {
+        return linkedInIndustrySearch.search(input.query ?? null, 20);
+      }),
+  },
   addList: protectedProcedure
     .input(
       z.object({

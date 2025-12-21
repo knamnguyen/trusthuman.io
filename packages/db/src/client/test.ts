@@ -1,4 +1,5 @@
-import { exists, readFile } from "fs/promises";
+import { existsSync } from "fs";
+import { readFile } from "fs/promises";
 import { resolve } from "path";
 import { PGlite } from "@electric-sql/pglite";
 import { uuid_ossp } from "@electric-sql/pglite/contrib/uuid_ossp";
@@ -12,7 +13,7 @@ async function migrate(
   pg: PGlite,
   migrationFilepath = resolve(__dirname, "../../schema.sql"),
 ) {
-  if ((await exists(migrationFilepath)) === false) {
+  if (existsSync(migrationFilepath) === false) {
     throw new Error(`Migration file not found at path: ${migrationFilepath}`);
   }
 
