@@ -491,7 +491,7 @@ async function getAutocommentParamsWithFallback(
   };
 }
 
-browserJobRegistry.register(async function tryRunAutocomment(
+browserJobRegistry.register(async function runAutocomment(
   { db },
   { accountId, session },
 ) {
@@ -571,11 +571,12 @@ browserJobRegistry.register(async function tryRunAutocomment(
   }
 });
 
-browserJobRegistry.register(async function trySubmitScheduledComments(
+browserJobRegistry.register(async function submitScheduledComments(
   { db },
   { session, accountId },
 ) {
   const now = new Date();
+
   while (true) {
     const comment = await db.userComment.findFirst({
       where: {
@@ -627,6 +628,11 @@ browserJobRegistry.register(async function trySubmitScheduledComments(
         },
       });
     }
+
+    // random of 1-5 seconds between comments to mimic human behavior
+    await new Promise((resolve) =>
+      setTimeout(resolve, Math.random() * 4000 + 1000),
+    );
   }
 
   return {
