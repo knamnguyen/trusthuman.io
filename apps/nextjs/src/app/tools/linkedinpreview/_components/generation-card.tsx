@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Copy, ExternalLink } from "lucide-react";
+
 import { Button } from "@sassy/ui/button";
 import { Card } from "@sassy/ui/card";
-import { useTRPC } from "~/trpc/react";
 
 interface Generation {
   id: string;
@@ -16,19 +16,7 @@ interface Generation {
 }
 
 export function GenerationCard({ generation }: { generation: Generation }) {
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
   const [isCopied, setIsCopied] = useState(false);
-
-  const { mutateAsync: deleteGeneration } = useMutation({
-    ...trpc.linkedInPreview.delete.mutationOptions({}),
-    onSuccess: async () => {
-      // Invalidate and refetch the list
-      await queryClient.invalidateQueries({
-        queryKey: trpc.linkedInPreview.list.queryKey(),
-      });
-    },
-  });
 
   const handleCopyLink = () => {
     const url = `${window.location.origin}/tools/linkedinpreview/${generation.id}`;
@@ -37,29 +25,58 @@ export function GenerationCard({ generation }: { generation: Generation }) {
     setTimeout(() => setIsCopied(false), 2000);
   };
 
-  const handleDelete = async () => {
-    if (confirm("Delete this preview?")) {
-      await deleteGeneration({ id: generation.id });
-    }
+  const handleSeePreview = () => {
+    window.open(`/tools/linkedinpreview/${generation.id}`, "_blank");
   };
 
+  // Extract first 5 words as title, next 15 as description
+  const words = generation.contentText.trim().split(/\s+/);
+  const titleWords = words.slice(0, 5);
+  const descriptionWords = words.slice(5, 20); // 5 + 15 = 20
+
+  const displayTitle =
+    titleWords.length > 0
+      ? titleWords.join(" ") + (words.length > 5 ? "..." : "")
+      : generation.title || "Untitled";
+
+  const displayDescription =
+    descriptionWords.length > 0
+      ? descriptionWords.join(" ") + (words.length > 20 ? "..." : "")
+      : "";
+
   return (
-    <Card className="overflow-hidden">
-      <img src={generation.s3Url} alt="" className="w-full h-48 object-cover" />
-      <div className="p-4">
-        <h3 className="font-semibold truncate">{generation.title || "Untitled"}</h3>
-        <p className="text-sm text-gray-500 line-clamp-2 mt-1">
-          {generation.contentText}
-        </p>
-        <p className="text-xs text-gray-400 mt-2">
-          {formatDistanceToNow(new Date(generation.createdAt), { addSuffix: true })}
-        </p>
-        <div className="flex gap-2 mt-4">
+    <Card className="flex h-[370px] w-[250px] flex-shrink-0 flex-col overflow-hidden">
+      {generation.s3Url && (
+        <img
+          src={generation.s3Url}
+          alt=""
+          className="h-48 w-full flex-shrink-0 object-cover"
+        />
+      )}
+      <div className="flex flex-grow flex-col p-4">
+        <div className="flex-grow text-center">
+          <h3 className="w-full overflow-hidden font-semibold text-ellipsis">
+            {displayTitle}
+          </h3>
+          {displayDescription && (
+            <p className="mt-1 line-clamp-2 w-full text-sm break-words text-gray-500">
+              {displayDescription}
+            </p>
+          )}
+          <p className="mt-2 text-xs text-gray-400">
+            {formatDistanceToNow(new Date(generation.createdAt), {
+              addSuffix: true,
+            })}
+          </p>
+        </div>
+        <div className="mt-4 flex justify-center gap-2">
           <Button size="sm" variant="outline" onClick={handleCopyLink}>
-            {isCopied ? "Copied!" : "Copy Link"}
+            <Copy className="size-4" />
+            {isCopied ? "Copied!" : "Link"}
           </Button>
-          <Button size="sm" variant="destructive" onClick={handleDelete}>
-            Delete
+          <Button size="sm" onClick={handleSeePreview}>
+            <ExternalLink className="size-4" />
+            View
           </Button>
         </div>
       </div>

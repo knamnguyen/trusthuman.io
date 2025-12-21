@@ -1,12 +1,12 @@
 {
-  "../../../../../../../@crx/manifest": {
-    "file": "assets/crx-manifest.js-B3utcL77.js",
+  "../../../../../../@crx/manifest": {
+    "file": "assets/crx-manifest.js-Dw6Y1s8U.js",
     "name": "crx-manifest.js",
-    "src": "../../../../../../../@crx/manifest",
+    "src": "../../../../../../@crx/manifest",
     "isEntry": true
   },
-  "_get-sync-host-CCHy64Z3.js": {
-    "file": "assets/get-sync-host-CCHy64Z3.js",
+  "_get-sync-host-KsVsLNO-.js": {
+    "file": "assets/get-sync-host-KsVsLNO-.js",
     "name": "get-sync-host",
     "imports": [
       "_index-CP-b3-11.js",
@@ -24,9 +24,9 @@
       "_index-CP-b3-11.js"
     ]
   },
-  "_index.tsx-loader-xiR51wmG.js": {
-    "file": "assets/index.tsx-loader-xiR51wmG.js",
-    "src": "_index.tsx-loader-xiR51wmG.js"
+  "_index.tsx-loader-DeH8ietA.js": {
+    "file": "assets/index.tsx-loader-DeH8ietA.js",
+    "src": "_index.tsx-loader-DeH8ietA.js"
   },
   "_profile-extract-button-E_OM6-m_.js": {
     "file": "assets/profile-extract-button-E_OM6-m_.js",
@@ -66,19 +66,19 @@
     "src": "public/icon-128.png"
   },
   "src/pages/background/index.ts": {
-    "file": "assets/index.ts-BNkTF4_U.js",
+    "file": "assets/index.ts-B4eAArZY.js",
     "name": "index.ts",
     "src": "src/pages/background/index.ts",
     "isEntry": true,
     "imports": [
-      "_get-sync-host-CCHy64Z3.js",
+      "_get-sync-host-KsVsLNO-.js",
       "_react-Dlr6nuqz.js",
       "_index-CP-b3-11.js",
       "_index-Dr715SCd.js"
     ]
   },
   "src/pages/content/index.tsx": {
-    "file": "assets/index.tsx-CvHNA2wC.js",
+    "file": "assets/index.tsx-BIP0ZPnN.js",
     "name": "index.tsx",
     "src": "src/pages/content/index.tsx",
     "isEntry": true,
@@ -102,7 +102,7 @@
     ]
   },
   "src/pages/popup/index.html": {
-    "file": "assets/index.html-3ulaG4ZS.js",
+    "file": "assets/index.html-G4vuJNBH.js",
     "name": "index.html",
     "src": "src/pages/popup/index.html",
     "isEntry": true,
@@ -110,7 +110,7 @@
       "_react-icons.esm-CNcOZddv.js",
       "_index-CP-b3-11.js",
       "_react-Dlr6nuqz.js",
-      "_get-sync-host-CCHy64Z3.js",
+      "_get-sync-host-KsVsLNO-.js",
       "_storage-Bsaabweh.js",
       "_index-Dr715SCd.js"
     ],

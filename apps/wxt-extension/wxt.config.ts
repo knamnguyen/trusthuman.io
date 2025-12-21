@@ -1,6 +1,12 @@
 import tsconfigPaths from "vite-tsconfig-paths";
 import { defineConfig } from "wxt";
 
+// Calculate port based on PORT env var (PORT + 2)
+// Main repo: PORT=3000 → WXT=3002
+// Worktree with PORT=3010 → WXT=3012
+const basePort = parseInt(process.env.PORT || "3000");
+const wxtPort = basePort + 2;
+
 // See https://wxt.dev/api/config.html
 export default defineConfig({
   extensionApi: "chrome",
@@ -12,18 +18,31 @@ export default defineConfig({
     disabled: true,
   },
 
+  // Configure dev server port to avoid conflicts
   dev: {
     server: {
-      port: 3002,
+      port: wxtPort,
     },
   },
 
   manifest: {
-    name: "EngageKit WXT POC",
-    description: "POC for WXT-based LinkedIn sidebar extension",
+    name: "EngageKit WXT Extension",
+    description: "AI-powered LinkedIn engagement with Clerk authentication",
     version: "0.0.1",
-    permissions: ["activeTab", "storage"],
-    host_permissions: ["https://*.linkedin.com/*"],
+    permissions: ["activeTab", "storage", "alarms", "tabs", "cookies"],
+    host_permissions: [
+      "https://*.linkedin.com/*",
+      // Allow access to web app for auth sync (dynamic based on environment)
+      ...(process.env.VITE_APP_URL ? [process.env.VITE_APP_URL + "/*"] : []),
+      // Add localhost for development
+      "http://localhost/*",
+    ],
+    web_accessible_resources: [
+      {
+        resources: ["fonts/*"],
+        matches: ["https://*.linkedin.com/*"],
+      },
+    ],
   },
 
   vite: () => ({

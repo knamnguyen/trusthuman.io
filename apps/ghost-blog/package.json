@@ -14,7 +14,7 @@
     "lint": "eslint",
     "preview": "pnpm with-env vite preview",
     "typecheck": "tsc --noEmit",
-    "with-env": "dotenv --override -e ../../.env --"
+    "with-env": "dotenv --override -e ../../.env -e ../../.env.local --"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^7.1.0",
@@ -23,12 +23,15 @@
     "@iframe-resizer/child": "^5.5.7",
     "@iframe-resizer/react": "^5.5.7",
     "@sassy/ui": "workspace:*",
+    "@tabler/icons-react": "3.29.0",
     "@tiptap/extension-placeholder": "^3.11.1",
     "@tiptap/extension-underline": "^3.11.1",
     "@tiptap/react": "^3.11.1",
     "@tiptap/starter-kit": "^3.11.1",
     "@tryghost/content-api": "^1.11.21",
+    "emoji-from-text": "^1.1.14",
     "lucide-react": "^0.511.0",
+    "node-emoji": "^2.2.0",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
     "runes": "^0.4.3",

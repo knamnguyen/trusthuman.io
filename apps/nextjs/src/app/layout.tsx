@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
 import Script from "next/script";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
@@ -17,7 +16,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(
     env.VERCEL_ENV === "production"
       ? "https://engagekit.io"
-      : "http://localhost:3000",
+      : (process.env.NEXTJS_URL ?? `http://localhost:${process.env.PORT ?? "3000"}`),
   ),
   title: "EngageKit",
   description: "The ultimate AI-powered LinkedIn engagement assistant",
@@ -47,11 +46,6 @@ export const metadata: Metadata = {
     apple: "/engagekit-logo.svg",
   },
 };
-
-const plusJakartaSans = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  variable: "--font-sans",
-});
 
 export const viewport: Viewport = {
   themeColor: [
@@ -91,12 +85,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
             });
           `}
       </Script>
-      <body
-        className={cn(
-          "bg-background text-foreground min-h-full font-sans antialiased",
-          plusJakartaSans.variable,
-        )}
-      >
+      <body className="bg-background text-foreground min-h-full font-sans antialiased">
         <Providers>
           {props.children}
           <Toaster />

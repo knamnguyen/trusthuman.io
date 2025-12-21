@@ -1,6 +1,6 @@
-// const PROD_SYNC_HOST = "https://clerk.engagekit.io";
 const PROD_SYNC_HOST = "https://clerk.engagekit.io";
-const DEV_SYNC_HOST = "http://localhost:3000";
+// Use VITE_NEXTJS_URL in dev, or construct from PORT env var
+const DEV_SYNC_HOST = import.meta.env.VITE_NEXTJS_URL ?? `http://localhost:${import.meta.env.VITE_PORT ?? "3000"}`;
 
 /**
  * Returns the correct Clerk sync host URL based on the Vite build mode.

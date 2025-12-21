@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 
-import type { DropdownItem } from "@sassy/ui/components/nav-component";
+import type { DropdownItem } from "@sassy/ui/components/nav-blog";
 
-import { fetchGhostPosts, type GhostPost } from "~/lib/ghost-client";
+import { generateEmojiFromText } from "~/lib/emoji-utils";
+import type { GhostPost } from "~/lib/ghost-client";
+import { fetchGhostPosts } from "~/lib/ghost-client";
 
 // Helper to extract text from HTML and truncate
 function extractTextFromHtml(
@@ -28,7 +30,7 @@ function ghostPostToDropdownItem(post: GhostPost): DropdownItem {
     id: post.id,
     title: post.title,
     href: post.url || `https://engagekit.ghost.io/${post.slug}/`,
-    iconEmoji: "📄",
+    iconEmoji: generateEmojiFromText(post.title),
     description: post.excerpt || extractTextFromHtml(post.html, 15),
     previewImage: post.feature_image,
   };

@@ -100,6 +100,21 @@ export class S3BucketService {
 
     return `images/${userId}/${timestamp}-${randomString}.${ext}`;
   }
+
+  /**
+   * Generate a unique key for comment avatar uploads
+   * Uses a separate folder structure: comment-screenshots/{userId}/avatar-{timestamp}-{random}.{ext}
+   * @param userId - The user ID for folder organization
+   * @param fileName - The original file name or default to 'avatar.jpg'
+   * @returns A unique key for the avatar file
+   */
+  generateAvatarKey(userId: string, fileName: string = 'avatar.jpg'): string {
+    const timestamp = Date.now();
+    const randomString = Math.random().toString(36).substring(2, 10);
+    const ext = fileName.split('.').pop() || 'jpg';
+
+    return `comment-screenshots/${userId}/avatar-${timestamp}-${randomString}.${ext}`;
+  }
 }
 
 // Re-export schema validators

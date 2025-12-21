@@ -7,7 +7,9 @@ export const getSyncHostUrl = () => {
     return import.meta.env.VITE_NEXTJS_URL;
   }
   if (import.meta.env.MODE !== "production") {
-    return "http://localhost:3000";
+    // Use PORT env var if available
+    const port = import.meta.env.VITE_PORT ?? "3000";
+    return `http://localhost:${port}`;
   }
   return "https://engagekit.io";
 };

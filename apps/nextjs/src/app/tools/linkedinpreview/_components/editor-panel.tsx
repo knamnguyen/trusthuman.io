@@ -16,6 +16,19 @@ import { Toolbar } from "./toolbar";
 import { processNodes, toPlainText } from "./utils";
 
 const listStyles = `
+  .ProseMirror {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+  .ProseMirror * {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    max-width: 100%;
+  }
   .ProseMirror ul, .ProseMirror ol {
     padding-left: 1.5em;
   }
@@ -74,7 +87,7 @@ export function EditorPanel({
     editorProps: {
       attributes: {
         class:
-          "prose-md focus:outline-none resize-none block w-full p-0 text-gray-900 border-none appearance-none placeholder:text-gray-500 focus:ring-0 overflow-y-auto h-full",
+          "prose-md focus:outline-none resize-none block w-full p-0 text-gray-900 border-none appearance-none placeholder:text-gray-500 focus:ring-0 overflow-y-auto overflow-x-hidden h-full break-words",
       },
     },
     onUpdate: ({ editor }) => {
@@ -160,24 +173,24 @@ export function EditorPanel({
     <div className="flex size-full flex-col">
       <style>{listStyles}</style>
       {/** Panel title */}
-      <div className="flex h-16 border-b px-4 sm:px-6">
-        <div className="flex grow items-center justify-between">
+      <div className="flex min-h-16 border-b px-2 py-2 sm:px-4 sm:py-0 lg:px-6">
+        <div className="flex w-full items-center justify-start overflow-x-auto">
           <Toolbar editor={editor} />
         </div>
       </div>
 
       {/** Editor */}
-      <div className="grow overflow-y-auto px-4 py-5 sm:px-6">
-        <div className="not-prose relative text-sm font-normal">
+      <div className="grow overflow-x-hidden overflow-y-auto px-2 py-4 sm:px-4 sm:py-5 lg:px-6">
+        <div className="not-prose relative min-w-0 text-sm font-normal">
           <EditorContent editor={editor} />
         </div>
       </div>
 
       {/** Actions */}
-      <div className="border-t px-4 py-3 sm:px-6">
-        <div className="flex flex-row gap-2 sm:items-center sm:justify-between sm:gap-6">
-          <div className="flex items-center justify-start gap-2">
-            <div className="group relative">
+      <div className="border-t px-2 py-2 sm:px-4 sm:py-3 lg:px-6">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+          <div className="flex items-center justify-center gap-2 overflow-x-auto sm:justify-start">
+            <div className="group relative shrink-0">
               <Button
                 variant="outline"
                 size="icon"
@@ -190,7 +203,7 @@ export function EditorPanel({
               </span>
             </div>
 
-            <div className="group relative">
+            <div className="group relative shrink-0">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -221,7 +234,7 @@ export function EditorPanel({
               </span>
             </div>
 
-            <div className="group relative">
+            <div className="group relative shrink-0">
               <Button
                 variant="outline"
                 size="icon"
@@ -234,7 +247,7 @@ export function EditorPanel({
               </span>
             </div>
 
-            <div className="group relative">
+            <div className="group relative shrink-0">
               <Button
                 variant="outline"
                 size="icon"
@@ -247,8 +260,12 @@ export function EditorPanel({
               </span>
             </div>
           </div>
-          <div className="flex flex-1 items-center justify-end gap-2 sm:gap-4">
-            <Button variant="secondary" onClick={handleCopy}>
+          <div className="flex flex-col gap-2 sm:flex-1 sm:flex-row sm:items-center sm:justify-end sm:gap-4">
+            <Button
+              variant="secondary"
+              onClick={handleCopy}
+              className="w-full sm:w-auto"
+            >
               <Icon name="copy" className="mr-2 size-4" />
               Copy Text
             </Button>

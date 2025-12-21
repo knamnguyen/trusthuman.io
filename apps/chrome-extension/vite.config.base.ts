@@ -54,7 +54,7 @@ export default defineConfig(({ mode }) => {
       // Expose production app URL
       "import.meta.env.VITE_APP_URL": JSON.stringify(
         isDev
-          ? "http://localhost:3000"
+          ? (process.env.NEXTJS_URL ?? `http://localhost:${process.env.PORT ?? "3000"}`)
           : (process.env.VITE_APP_URL ?? "https://engagekit.io"),
       ),
       // Explicitly expose Clerk environment variable
@@ -67,6 +67,8 @@ export default defineConfig(({ mode }) => {
       ),
       // Expose Next.js URL (which could be ngrok or localhost)
       "import.meta.env.VITE_NEXTJS_URL": JSON.stringify(process.env.NEXTJS_URL),
+      // Expose PORT for dynamic URL construction
+      "import.meta.env.VITE_PORT": JSON.stringify(process.env.PORT),
     },
     build: baseBuildOptions,
     // Provide manifest and build options to consumers
