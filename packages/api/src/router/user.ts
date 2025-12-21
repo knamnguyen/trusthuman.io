@@ -79,6 +79,14 @@ export const userRouter = {
    */
   me: protectedProcedure.query(({ ctx }) => ctx.user),
 
+  //get user object from our db
+
+  meDb: protectedProcedure.query(async ({ ctx }) => {
+    return await ctx.db.user.findUnique({
+      where: { id: ctx.user.id },
+    });
+  }),
+
   /**
    * Get a user by ID
    * This is primarily used by client applications

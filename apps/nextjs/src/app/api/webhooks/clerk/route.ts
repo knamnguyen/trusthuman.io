@@ -8,8 +8,11 @@ import { db } from "@sassy/db";
 
 /**
  * Clerk webhook handler
- * This receives events from Clerk when users are created, updated, or deleted
- * It syncs the user data to our database
+ * This receives events from Clerk when:
+ * - Users are created, updated, or deleted
+ * - Organizations are created, updated, or deleted
+ * - Organization memberships change
+ * It syncs the data to our database
  */
 
 export async function POST(req: NextRequest) {
@@ -170,12 +173,189 @@ export async function POST(req: NextRequest) {
 
         console.log("🗑️ Deleting user from database...");
 
-        // Delete user from database
-        await db.user.delete({
+        // Use deleteMany to gracefully handle case where user doesn't exist
+        const deleteResult = await db.user.deleteMany({
           where: { id: userId },
         });
 
-        console.log(`✅ User deleted from database: ${userId}`);
+        if (deleteResult.count === 0) {
+          console.log(`⚠️ User not found in database (already deleted or never synced): ${userId}`);
+        } else {
+          console.log(`✅ User deleted from database: ${userId}`);
+        }
+        break;
+      }
+
+      // ========================================================================
+      // ORGANIZATION EVENTS
+      // ========================================================================
+
+      case "organization.created": {
+        console.log("🏢 Processing organization.created event");
+
+        const orgId = data.id;
+        const orgName = data.name;
+
+        console.log(`- Org ID: ${orgId}`);
+        console.log(`- Org Name: ${orgName}`);
+
+        console.log("💾 Creating organization in database...");
+
+        await db.organization.create({
+          data: {
+            id: orgId,
+            name: orgName,
+          },
+        });
+
+        console.log(`✅ Organization created in database: ${orgId}`);
+        break;
+      }
+
+      case "organization.updated": {
+        console.log("🏢 Processing organization.updated event");
+
+        const orgId = data.id;
+        const orgName = data.name;
+
+        console.log(`- Org ID: ${orgId}`);
+        console.log(`- Org Name: ${orgName}`);
+
+        console.log("💾 Updating organization in database...");
+
+        await db.organization.update({
+          where: { id: orgId },
+          data: {
+            name: orgName,
+            updatedAt: new Date(),
+          },
+        });
+
+        console.log(`✅ Organization updated in database: ${orgId}`);
+        break;
+      }
+
+      case "organization.deleted": {
+        console.log("🏢 Processing organization.deleted event");
+
+        const orgId = data.id;
+        console.log(`- Org ID: ${orgId}`);
+
+        console.log("🗑️ Deleting organization from database...");
+
+        // Use deleteMany to gracefully handle case where org doesn't exist
+        // Members will be cascade deleted due to onDelete: Cascade
+        const deleteResult = await db.organization.deleteMany({
+          where: { id: orgId },
+        });
+
+        if (deleteResult.count === 0) {
+          console.log(`⚠️ Organization not found in database (already deleted or never synced): ${orgId}`);
+        } else {
+          console.log(`✅ Organization deleted from database: ${orgId}`);
+        }
+        break;
+      }
+
+      // ========================================================================
+      // ORGANIZATION MEMBERSHIP EVENTS
+      // ========================================================================
+
+      case "organizationMembership.created": {
+        console.log("👥 Processing organizationMembership.created event");
+
+        const orgId = data.organization.id;
+        const userId = data.public_user_data.user_id;
+        const role = data.role; // "admin" or "org:member" -> normalize to "member"
+
+        console.log(`- Org ID: ${orgId}`);
+        console.log(`- User ID: ${userId}`);
+        console.log(`- Role: ${role}`);
+
+        // Normalize Clerk role to our simplified role
+        const normalizedRole = role === "org:admin" ? "admin" : "member";
+
+        console.log("💾 Creating organization membership in database...");
+
+        await db.organizationMember.upsert({
+          where: {
+            orgId_userId: { orgId, userId },
+          },
+          update: {
+            role: normalizedRole,
+          },
+          create: {
+            orgId,
+            userId,
+            role: normalizedRole,
+          },
+        });
+
+        console.log(
+          `✅ Organization membership created: ${userId} -> ${orgId} (${normalizedRole})`,
+        );
+        break;
+      }
+
+      case "organizationMembership.updated": {
+        console.log("👥 Processing organizationMembership.updated event");
+
+        const orgId = data.organization.id;
+        const userId = data.public_user_data.user_id;
+        const role = data.role;
+
+        console.log(`- Org ID: ${orgId}`);
+        console.log(`- User ID: ${userId}`);
+        console.log(`- Role: ${role}`);
+
+        // Normalize Clerk role to our simplified role
+        const normalizedRole = role === "org:admin" ? "admin" : "member";
+
+        console.log("💾 Updating organization membership in database...");
+
+        await db.organizationMember.update({
+          where: {
+            orgId_userId: { orgId, userId },
+          },
+          data: {
+            role: normalizedRole,
+          },
+        });
+
+        console.log(
+          `✅ Organization membership updated: ${userId} -> ${orgId} (${normalizedRole})`,
+        );
+        break;
+      }
+
+      case "organizationMembership.deleted": {
+        console.log("👥 Processing organizationMembership.deleted event");
+
+        const orgId = data.organization.id;
+        const userId = data.public_user_data.user_id;
+
+        console.log(`- Org ID: ${orgId}`);
+        console.log(`- User ID: ${userId}`);
+
+        console.log("🗑️ Deleting organization membership from database...");
+
+        // Use deleteMany to gracefully handle case where membership doesn't exist
+        const deleteResult = await db.organizationMember.deleteMany({
+          where: {
+            orgId,
+            userId,
+          },
+        });
+
+        if (deleteResult.count === 0) {
+          console.log(
+            `⚠️ Membership not found in database (already deleted or never synced): ${userId} -> ${orgId}`,
+          );
+        } else {
+          console.log(
+            `✅ Organization membership deleted: ${userId} -> ${orgId}`,
+          );
+        }
         break;
       }
 

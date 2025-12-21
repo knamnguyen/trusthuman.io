@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { UserButton } from "@clerk/nextjs";
+import { OrganizationSwitcher, UserButton } from "@clerk/nextjs";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import {
   BanIcon,
@@ -88,6 +88,22 @@ export function DashboardSidebar() {
 
   return (
     <Sidebar collapsible="icon">
+      {/* Organization Switcher - select which workspace/org to work in */}
+      <div className="border-b p-2">
+        <OrganizationSwitcher
+          hidePersonal={false}
+          afterCreateOrganizationUrl="/seats"
+          afterSelectOrganizationUrl="/seats"
+          afterSelectPersonalUrl="/seats"
+          appearance={{
+            elements: {
+              rootBox: "w-full",
+              organizationSwitcherTrigger: "w-full justify-start",
+            },
+          }}
+        />
+      </div>
+      {/* LinkedIn Account Switcher - select which LinkedIn account within the org */}
       <AccountSwitcher />
       <SidebarContent>
         <SidebarGroup>

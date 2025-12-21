@@ -1,0 +1,73 @@
+{
+  "products": [
+    {
+      "id": "prod_quantity_monthly",
+      "name": "LinkedIn Accounts - Monthly",
+      "description": "Multi-account LinkedIn automation with flat per-slot pricing. Pay monthly.",
+      "type": "service",
+      "metadata": {
+        "billing_type": "quantity",
+        "billing_cycle": "monthly"
+      }
+    },
+    {
+      "id": "prod_quantity_yearly",
+      "name": "LinkedIn Accounts - Yearly",
+      "description": "Multi-account LinkedIn automation with flat per-slot pricing. Pay yearly and save.",
+      "type": "service",
+      "metadata": {
+        "billing_type": "quantity",
+        "billing_cycle": "yearly"
+      }
+    }
+  ],
+  "prices": [
+    {
+      "product_id": "prod_quantity_monthly",
+      "currency": "usd",
+      "billing_scheme": "per_unit",
+      "unit_amount": 2499,
+      "recurring": {
+        "interval": "month",
+        "interval_count": 1,
+        "usage_type": "licensed"
+      },
+      "metadata": {
+        "pricing_type": "quantity",
+        "max_quantity": "24"
+      }
+    },
+    {
+      "product_id": "prod_quantity_yearly",
+      "currency": "usd",
+      "billing_scheme": "per_unit",
+      "unit_amount": 24900,
+      "recurring": {
+        "interval": "year",
+        "interval_count": 1,
+        "usage_type": "licensed"
+      },
+      "metadata": {
+        "pricing_type": "quantity",
+        "max_quantity": "24"
+      }
+    }
+  ],
+  "pricing_display": {
+    "monthly": {
+      "slots": "1-24",
+      "price_per_slot": "$24.99/slot/mo"
+    },
+    "yearly": {
+      "slots": "1-24",
+      "price_per_slot": "$249/slot/yr",
+      "yearly_equivalent": "$20.75/slot/mo",
+      "savings": "17%"
+    },
+    "enterprise": {
+      "slots": "25+",
+      "monthly": "Contact sales",
+      "yearly": "Contact sales"
+    }
+  }
+}

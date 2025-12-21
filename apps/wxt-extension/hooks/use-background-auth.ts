@@ -12,6 +12,7 @@
  */
 
 import { useEffect, useState } from "react";
+
 import type { AuthStatus } from "../lib/auth-service";
 import { authService } from "../lib/auth-service";
 
@@ -31,7 +32,8 @@ export const useBackgroundAuth = () => {
       console.log("useBackgroundAuth: Received auth status:", {
         isSignedIn: status.isSignedIn,
         userId: status.user?.id,
-        sessionId: status.session?.id
+        sessionId: status.session?.id,
+        userObject: status.user,
       });
       setAuthStatus(status);
     } catch (error) {
@@ -58,7 +60,7 @@ export const useBackgroundAuth = () => {
       console.log("useBackgroundAuth: Received message:", message);
       if (message.action === "authStateChanged") {
         console.log("useBackgroundAuth: Auth state changed, refreshing...", {
-          isSignedIn: message.isSignedIn
+          isSignedIn: message.isSignedIn,
         });
         refreshAuth();
       }
@@ -68,17 +70,19 @@ export const useBackgroundAuth = () => {
 
     // Auto-refresh when user returns to tab (after signing in on web)
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && !authStatus.isSignedIn) {
-        console.log("useBackgroundAuth: Tab visible and not signed in, checking auth...");
+      if (document.visibilityState === "visible" && !authStatus.isSignedIn) {
+        console.log(
+          "useBackgroundAuth: Tab visible and not signed in, checking auth...",
+        );
         refreshAuth();
       }
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       chrome.runtime.onMessage.removeListener(listener);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []); // Run once on mount
 

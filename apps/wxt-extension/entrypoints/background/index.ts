@@ -9,36 +9,15 @@
  */
 
 import { createClerkClient } from "@clerk/chrome-extension/background";
-import { MessageRouter } from "./background/message-router";
-import type { MessageRouterDependencies } from "./background/background-types";
+
+import type { MessageRouterDependencies } from "./background-types";
+import { getSyncHostUrl } from "../../lib/get-sync-host-url";
+import { MessageRouter } from "./message-router";
 
 export default defineBackground(() => {
   console.log("EngageKit WXT Extension - Background script loaded", {
     id: browser.runtime.id,
   });
-
-  /**
-   * Get syncHost URL from environment
-   * This must be imported differently in background worker
-   */
-  const getSyncHostUrl = (): string => {
-    // VITE_APP_URL is set in .env (or .env.local for worktrees)
-    // Examples:
-    // - Main repo: http://localhost:3000
-    // - Worktree: http://localhost:3010
-    // - Production: https://engagekit.io
-
-    // In WXT background workers, we need to check both import.meta.env and process.env
-    const syncHost = import.meta.env.VITE_APP_URL;
-
-    if (!syncHost) {
-      throw new Error(
-        "VITE_APP_URL is not defined. Please check your .env file."
-      );
-    }
-
-    return syncHost;
-  };
 
   /**
    * Initialize Clerk client (lazy, on-demand)
@@ -86,16 +65,12 @@ export default defineBackground(() => {
         `${syncHost}/sign-up`,
       ];
 
-      const signOutUrls = [
-        `${syncHost}/sign-out`,
-      ];
+      const signOutUrls = [`${syncHost}/sign-out`];
 
-      const isAuthUrl = authDomains.some((domain) =>
-        tab.url?.includes(domain)
-      );
+      const isAuthUrl = authDomains.some((domain) => tab.url?.includes(domain));
 
       const isSignOutUrl = signOutUrls.some((domain) =>
-        tab.url?.includes(domain)
+        tab.url?.includes(domain),
       );
 
       if (isAuthUrl || isSignOutUrl) {
@@ -103,17 +78,21 @@ export default defineBackground(() => {
           url: tab.url,
           isAuthUrl,
           isSignOutUrl,
-          syncHost
+          syncHost,
         });
 
         // Refresh auth status after potential sign-in/sign-out
         // Invalidate cached client to force fresh check
         const hadCachedClient = clerkClientPromise !== null;
         clerkClientPromise = null;
-        console.log("Background: Invalidated Clerk client cache:", { hadCachedClient });
+        console.log("Background: Invalidated Clerk client cache:", {
+          hadCachedClient,
+        });
 
         setTimeout(async () => {
-          console.log("Background: Creating fresh Clerk client after URL visit...");
+          console.log(
+            "Background: Creating fresh Clerk client after URL visit...",
+          );
           const clerk = await getClerkClient();
           const isSignedIn = !!clerk.session;
 
@@ -122,17 +101,24 @@ export default defineBackground(() => {
             wasSignOut: isSignOutUrl,
             hasSession: !!clerk.session,
             sessionId: clerk.session?.id,
-            userId: clerk.user?.id
+            userId: clerk.user?.id,
           });
 
           // Notify content scripts of auth state change
-          console.log("Background: Broadcasting authStateChanged message:", { isSignedIn });
-          chrome.runtime.sendMessage({
-            action: "authStateChanged",
-            isSignedIn
-          }).catch((error) => {
-            console.log("Background: Failed to broadcast message (content script may not be loaded):", error);
+          console.log("Background: Broadcasting authStateChanged message:", {
+            isSignedIn,
           });
+          chrome.runtime
+            .sendMessage({
+              action: "authStateChanged",
+              isSignedIn,
+            })
+            .catch((error) => {
+              console.log(
+                "Background: Failed to broadcast message (content script may not be loaded):",
+                error,
+              );
+            });
         }, 2000);
       }
     }
@@ -157,4 +143,3 @@ export default defineBackground(() => {
 
   console.log("Background: Initialized with syncHost:", getSyncHostUrl());
 });
-

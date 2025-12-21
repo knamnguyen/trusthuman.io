@@ -12,20 +12,21 @@
  * 5. API request is made with authentication
  */
 
-import React from "react";
-import { QueryClient } from "@tanstack/react-query";
-import { createTRPCReact, httpBatchLink } from "@trpc/react-query";
+import { useState } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { createTRPCClient, httpBatchLink } from "@trpc/client";
+import { createTRPCContext } from "@trpc/tanstack-react-query";
 import superjson from "superjson";
 
 import type { AppRouter } from "@sassy/api";
 
 import { authService } from "../auth-service";
-import { getSyncHostUrl } from "../get-sync-host";
+import { getSyncHostUrl } from "../get-sync-host-url";
 
 /**
- * tRPC React client for type-safe API calls
+ * Create tRPC context with useTRPC hook (tRPC v11 pattern)
  */
-export const trpc = createTRPCReact<AppRouter>();
+export const { useTRPC, TRPCProvider } = createTRPCContext<AppRouter>();
 
 /**
  * Get the tRPC server URL based on environment
@@ -36,18 +37,20 @@ const getServerUrl = (): string => {
   // - Main repo: http://localhost:3000/api/trpc
   // - Worktree: http://localhost:3010/api/trpc
   // - Production: https://engagekit.io/api/trpc
-  const baseUrl = getSyncHostUrl();
-  return `${baseUrl}/api/trpc`;
+  // const baseUrl = getSyncHostUrl();
+  const baseUrl = "https://cow-pretty-titmouse.ngrok-free.app";
+  const url = `${baseUrl}/api/trpc`;
+  console.log("tRPC Client: Server URL:", url);
+  return url;
 };
 
 /**
- * Create tRPC client with React Query integration
- *
- * This client automatically gets fresh tokens from the background worker
- * before each request.
+ * Create tRPC client singleton for the extension
  */
-export function createTRPCClient() {
-  return trpc.createClient({
+let _trpcClient: ReturnType<typeof createTRPCClient<AppRouter>> | undefined;
+
+export const getTrpcClient = () => {
+  return (_trpcClient ??= createTRPCClient<AppRouter>({
     links: [
       httpBatchLink({
         url: getServerUrl(),
@@ -66,50 +69,26 @@ export function createTRPCClient() {
           if (token) {
             headers.Authorization = `Bearer ${token}`;
             console.log(
-              "tRPC Client: Adding Authorization header with token from background worker"
+              "tRPC Client: Adding Authorization header with token from background worker",
             );
           } else {
             console.warn(
-              "tRPC Client: No token available - request will be unauthenticated"
+              "tRPC Client: No token available - request will be unauthenticated",
             );
           }
 
           return headers;
         },
-        // Handle network timeouts
-        fetch: async (input, init) => {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-
-          try {
-            const response = await fetch(input, {
-              ...init,
-              signal: AbortSignal.timeout(30000),
-            });
-            clearTimeout(timeoutId);
-            return response;
-          } catch (error) {
-            clearTimeout(timeoutId);
-            throw error;
-          }
-        },
       }),
     ],
-  });
-}
+  }));
+};
 
 /**
- * TRPCReactProvider component
- *
- * Wraps the app with tRPC and React Query providers.
- * Use in content script (NO ClerkProvider needed).
+ * Create QueryClient with extension-specific defaults
  */
-interface TRPCReactProviderProps {
-  children: React.ReactNode;
-}
-
-export function TRPCReactProvider({ children }: TRPCReactProviderProps) {
-  const [queryClient] = React.useState(() => new QueryClient({
+const createQueryClient = () =>
+  new QueryClient({
     defaultOptions: {
       queries: {
         // Disable automatic refetching in extension context
@@ -123,13 +102,27 @@ export function TRPCReactProvider({ children }: TRPCReactProviderProps) {
         retry: 1,
       },
     },
-  }));
+  });
 
-  const [trpcClient] = React.useState(() => createTRPCClient());
+/**
+ * TRPCReactProvider component
+ *
+ * Wraps the app with tRPC and React Query providers.
+ * Use in content script (NO ClerkProvider needed).
+ */
+interface TRPCReactProviderProps {
+  children: React.ReactNode;
+}
+
+export function TRPCReactProvider({ children }: TRPCReactProviderProps) {
+  const [queryClient] = useState(createQueryClient);
+  const [trpcClient] = useState(getTrpcClient);
 
   return (
-    <trpc.Provider client={trpcClient} queryClient={queryClient}>
-      {children}
-    </trpc.Provider>
+    <QueryClientProvider client={queryClient}>
+      <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
+        {children}
+      </TRPCProvider>
+    </QueryClientProvider>
   );
 }
