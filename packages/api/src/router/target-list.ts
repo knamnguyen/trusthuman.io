@@ -8,7 +8,7 @@ import { linkedinProfileSearchInputSchema } from "@sassy/apify-runners/linkedin-
 import { protectedProcedure } from "../trpc";
 import { LinkedInIndustrySearch } from "../utils/industry-search";
 import { paginate } from "../utils/pagination";
-import { buildTargetListWorkflow } from "../workflows/build-target-list.workflow";
+import { buildTargetListWorkflow } from "../workflows";
 
 const linkedInIndustrySearch = new LinkedInIndustrySearch();
 

@@ -1,10 +1,15 @@
 import { DBOS } from "@dbos-inc/dbos-sdk";
 
+// we must import workflows so they get registered to DBOS before DBOS.launch is called
+import { buildTargetListWorkflow } from "./build-target-list.workflow";
+
+export { buildTargetListWorkflow };
+
 if (process.env.DBOS_SYSTEM_DATABASE_URL === undefined) {
   throw new Error("DBOS_SYSTEM_DATABASE_URL is not defined");
 }
 
-export async function executeWorkflows() {
+export async function initDBOS() {
   DBOS.setConfig({
     name: "engagekit",
     systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
