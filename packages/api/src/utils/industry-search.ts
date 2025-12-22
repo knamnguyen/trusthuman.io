@@ -20,7 +20,7 @@ export class LinkedInIndustrySearch {
     return this._index;
   }
 
-  async init() {
+  private async init() {
     const index = new Document<
       {
         id: string;
