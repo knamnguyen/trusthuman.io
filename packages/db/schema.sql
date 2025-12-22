@@ -14,10 +14,16 @@ CREATE TYPE "AccessType" AS ENUM ('FREE', 'WEEKLY', 'MONTHLY', 'YEARLY');
 CREATE TYPE "ImportStatus" AS ENUM ('NOT_STARTED', 'RUNNING', 'FINISHED');
 
 -- CreateEnum
+CREATE TYPE "TargetListStatus" AS ENUM ('BUILDING', 'COMPLETED');
+
+-- CreateEnum
 CREATE TYPE "BrowserInstanceStatus" AS ENUM ('INITIALIZING', 'RUNNING', 'STOPPED', 'ERROR');
 
 -- CreateEnum
 CREATE TYPE "BrowserJobStatus" AS ENUM ('QUEUED', 'RUNNING', 'TERMINATED', 'COMPLETED', 'FAILED');
+
+-- CreateEnum
+CREATE TYPE "ProfileScraperMode" AS ENUM ('Full', 'Short', 'FullEmailSearch');
 
 -- CreateTable
 CREATE TABLE "User" (
@@ -149,6 +155,7 @@ CREATE TABLE "LinkedInProfile" (
     "volunteerCauses" JSONB,
     "interests" JSONB,
     "recommendations" JSONB,
+    "location" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -202,10 +209,11 @@ CREATE TABLE "UserBrowserState" (
 -- CreateTable
 CREATE TABLE "TargetList" (
     "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
+    "accountId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "status" "TargetListStatus" NOT NULL,
 
     CONSTRAINT "TargetList_pkey" PRIMARY KEY ("id")
 );
@@ -214,7 +222,7 @@ CREATE TABLE "TargetList" (
 CREATE TABLE "TargetProfile" (
     "id" TEXT NOT NULL,
     "listId" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
+    "accountId" TEXT NOT NULL,
     "profileUrn" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -345,6 +353,41 @@ CREATE TABLE "CommentAnalysis" (
     CONSTRAINT "CommentAnalysis_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "BuildTargetListJob" (
+    "id" TEXT NOT NULL,
+    "profileScraperMode" "ProfileScraperMode",
+    "searchQuery" TEXT NOT NULL,
+    "locations" TEXT[],
+    "currentCompanies" TEXT[],
+    "pastCompanies" TEXT[],
+    "schools" TEXT[],
+    "currentJobTitles" TEXT[],
+    "pastJobTitles" TEXT[],
+    "yearsOfExperienceIds" INTEGER[],
+    "yearsAtCurrencyCompanyIds" INTEGER[],
+    "seniorityLevelIds" INTEGER[],
+    "functionIds" INTEGER[],
+    "industryIds" INTEGER[],
+    "firstName" TEXT[],
+    "lastName" TEXT[],
+    "profileLanguages" TEXT[],
+    "recentlyChangesJobs" BOOLEAN,
+    "excludeLocations" TEXT[],
+    "excludeCurrentCompanies" TEXT[],
+    "excludePastCompanies" TEXT[],
+    "excludeSchools" TEXT[],
+    "excludeCurrentJobTitles" TEXT[],
+    "excludePastJobTitles" TEXT[],
+    "excludeIndustryIds" INTEGER[],
+    "excludeFunctionIds" INTEGER[],
+    "excludeSeniorityLevelIds" INTEGER[],
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "BuildTargetListJob_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
 
@@ -445,10 +488,16 @@ ALTER TABLE "AutoCommentRun" ADD CONSTRAINT "AutoCommentRun_accountId_fkey" FORE
 ALTER TABLE "UserBrowserState" ADD CONSTRAINT "UserBrowserState_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "TargetList" ADD CONSTRAINT "TargetList_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "TargetProfile" ADD CONSTRAINT "TargetProfile_listId_fkey" FOREIGN KEY ("listId") REFERENCES "TargetList"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "TargetProfile" ADD CONSTRAINT "TargetProfile_profileUrn_fkey" FOREIGN KEY ("profileUrn") REFERENCES "LinkedInProfile"("urn") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "TargetProfile" ADD CONSTRAINT "TargetProfile_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "BlacklistedProfile" ADD CONSTRAINT "BlacklistedProfile_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -1,4 +1,3 @@
-import type { ApifyClient } from "apify-client";
 import z from "zod";
 
 import { ApifyActor } from "./actor";
@@ -6,7 +5,7 @@ import { ApifyActor } from "./actor";
 const inputSchema = z.object({
   profileScraperMode: z
     .enum(["Full", "Short", "Full + email search"])
-    .default("Full"),
+    .optional(),
   searchQuery: z.string().trim().min(1),
   maxItems: z.number().min(1).max(100).optional(),
   locations: z.array(z.string()).optional(),
@@ -80,10 +79,13 @@ const outputSchema = z.object({
   }),
 });
 
+export const linkedinProfileSearchInputSchema = inputSchema;
+export type LinkedinProfileSearchInput = z.output<typeof inputSchema>;
+
 export class LinkedInProfileExplorer {
   private readonly actor;
-  constructor(private readonly client: ApifyClient) {
-    this.actor = new ApifyActor(this.client, {
+  constructor(token: string) {
+    this.actor = new ApifyActor(token, {
       input: inputSchema,
       output: outputSchema,
       actorId: "M2FMdjRVeF1HPGFcc",

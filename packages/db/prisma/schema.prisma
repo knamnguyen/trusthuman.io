@@ -101,16 +101,18 @@ model LinkedInAccount {
   // Organization-based fields (new multi-tenant flow)
   organizationId     String?
   profileUrl         String?
-  profileSlug        String?               @unique // Globally unique - one LinkedIn per system
-  registrationStatus String?               // "registered" | "connected" | null
+  profileSlug        String? @unique // Globally unique - one LinkedIn per system
+  registrationStatus String? // "registered" | "connected" | null
 
-  org                Organization?         @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  org                Organization?        @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   AutoCommentConfig  AutoCommentConfig[]
   BlacklistedProfile BlacklistedProfile[]
   AutoCommentRun     AutoCommentRun[]
   BrowserInstance    BrowserInstance[]
   userComments       UserComment[]
   browserJobs        BrowserJob[]
+  targetLists        TargetList[]
+  targetProfiles     TargetProfile[]
 }
 
 enum LinkedInAccountStatus {
@@ -198,6 +200,7 @@ model LinkedInProfile {
   volunteerCauses         Json?
   interests               Json?
   recommendations         Json?
+  location                String?
 
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
@@ -255,24 +258,34 @@ model UserBrowserState {
   user   User   @relation(fields: [userId], references: [id])
 }
 
+enum TargetListStatus {
+  BUILDING
+  COMPLETED
+}
+
 model TargetList {
-  id             String          @id
-  userId         String
+  id             String           @id
+  accountId      String
   name           String
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  status         TargetListStatus
   targetProfiles TargetProfile[]
+
+  linkedInAccount LinkedInAccount @relation(fields: [accountId], references: [id])
 }
 
 model TargetProfile {
   id         String          @id
   listId     String
-  userId     String
+  accountId  String
   profileUrn String          @unique
   createdAt  DateTime        @default(now())
   updatedAt  DateTime        @updatedAt
   list       TargetList      @relation(fields: [listId], references: [id])
   profile    LinkedInProfile @relation(fields: [profileUrn], references: [urn])
+
+  linkedInAccount LinkedInAccount @relation(fields: [accountId], references: [id])
 
   @@unique([listId, profileUrn])
 }
@@ -425,4 +438,47 @@ model CommentAnalysis {
 
   @@index([userId])
   @@index([createdAt])
+}
+
+model BuildTargetListJob {
+  id                 String              @id
+  profileScraperMode ProfileScraperMode?
+  searchQuery        String
+
+  // Include filters
+  locations                 String[]
+  currentCompanies          String[]
+  pastCompanies             String[]
+  schools                   String[]
+  currentJobTitles          String[]
+  pastJobTitles             String[]
+  yearsOfExperienceIds      Int[]
+  yearsAtCurrencyCompanyIds Int[]
+  seniorityLevelIds         Int[]
+  functionIds               Int[]
+  industryIds               Int[]
+  firstName                 String[]
+  lastName                  String[]
+  profileLanguages          String[]
+  recentlyChangesJobs       Boolean?
+
+  // Exclude filters
+  excludeLocations         String[]
+  excludeCurrentCompanies  String[]
+  excludePastCompanies     String[]
+  excludeSchools           String[]
+  excludeCurrentJobTitles  String[]
+  excludePastJobTitles     String[]
+  excludeIndustryIds       Int[]
+  excludeFunctionIds       Int[]
+  excludeSeniorityLevelIds Int[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum ProfileScraperMode {
+  Full
+  Short
+  FullEmailSearch
 }
