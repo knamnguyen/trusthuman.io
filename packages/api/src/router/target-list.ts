@@ -61,7 +61,7 @@ export const targetListRouter = {
       // TODO: target list building rate limits for account subscriptions
 
       const workflow = await DBOS.startWorkflow(buildTargetListWorkflow, {
-        workflowID: "build-target-list-workflow",
+        workflowID: targetListId,
       })({
         targetListId,
         accountId: ctx.account.id,
