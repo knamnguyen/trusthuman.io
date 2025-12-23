@@ -29,6 +29,7 @@
     "lucide-react": "^0.511.0",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
+    "react-sprite-animator": "^2.0.2",
     "superjson": "2.2.2",
     "tailwind-merge": "^2.6.0"
   },

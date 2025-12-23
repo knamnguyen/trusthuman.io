@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import { Sheet } from "@sassy/ui/sheet";
 
+import { ButtonPortalManager } from "./ButtonPortalManager";
 import { LinkedInSidebar } from "./LinkedInSidebar";
 import { ToggleButton } from "./ToggleButton";
 
@@ -54,6 +55,9 @@ export default function App({ portalContainer }: AppProps) {
           onClose={() => setIsOpen(false)}
         />
       </Sheet>
+
+      {/* Single React tree manages all injected engage buttons */}
+      <ButtonPortalManager />
     </>
   );
 }
