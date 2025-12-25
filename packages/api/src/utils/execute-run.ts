@@ -1,4 +1,4 @@
-import { ImportStatus, Prisma } from "@sassy/db";
+import { ImportStatus } from "@sassy/db";
 import { LinkedInScrapeApifyService } from "@sassy/linkedin-scrape-apify";
 
 import type { TRPCContext } from "../trpc";
