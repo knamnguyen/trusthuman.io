@@ -85,9 +85,11 @@ export class BrowserJobWorker<TWorkerContext = unknown, TJobContext = unknown> {
         },
       });
 
-      const jobContext = await this.createJobContext(ctx, result.accountId);
+      if (this.jobRegistry.size === 0) {
+        return;
+      }
 
-      console.info("running functions");
+      const jobContext = await this.createJobContext(ctx, result.accountId);
 
       for (const job of this.jobRegistry.values()) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
@@ -381,7 +383,8 @@ export interface WorkerContext {
 }
 
 export interface JobContext {
-  session: BrowserSession;
+  // we use a promise here to allow lazy initialization of the session
+  getSession: () => Promise<BrowserSession>;
   accountId: string;
 }
 
@@ -414,21 +417,37 @@ export const browserJobs = new BrowserJobWorker<WorkerContext, JobContext>({
       throw new Error("LinkedIn account is not active");
     }
 
-    const session = new BrowserSession(ctx.db, ctx.browserRegistry, accountId, {
-      location: account.location as ProxyLocation,
-      browserProfileId: account.browserProfileId,
-      liveviewViewOnlyMode: process.env.NODE_ENV === "production",
-    });
+    let _session: BrowserSession | null = null;
 
-    await session.ready;
+    async function getSession() {
+      if (_session !== null) {
+        return _session;
+      }
+
+      const session = new BrowserSession(
+        ctx.db,
+        ctx.browserRegistry,
+        accountId,
+        {
+          location: account!.location as ProxyLocation,
+          browserProfileId: account!.browserProfileId,
+          liveviewViewOnlyMode: process.env.NODE_ENV === "production",
+        },
+      );
+
+      _session = await session.ready;
+
+      return _session;
+    }
 
     return {
       accountId,
-      session,
+      getSession,
     };
   },
   onJobCompleted: async (_, jobCtx) => {
-    await jobCtx.session.destroy();
+    const session = await jobCtx.getSession();
+    await session.destroy();
   },
 });
 
@@ -493,7 +512,7 @@ async function getAutocommentParamsWithFallback(
 
 browserJobRegistry.register(async function runAutocomment(
   { db },
-  { accountId, session },
+  { accountId, getSession },
 ) {
   while (true) {
     const pendingRun = await db.autoCommentRun.findFirst({
@@ -522,10 +541,12 @@ browserJobRegistry.register(async function runAutocomment(
         },
       });
 
-      const result = await session.startAutoCommenting({
-        autoCommentRunId: pendingRun.id,
-        ...config,
-      });
+      const result = await getSession().then((session) =>
+        session.startAutoCommenting({
+          autoCommentRunId: pendingRun.id,
+          ...config,
+        }),
+      );
 
       if (result.status === "errored") {
         await db.autoCommentRun.update({
@@ -573,7 +594,7 @@ browserJobRegistry.register(async function runAutocomment(
 
 browserJobRegistry.register(async function submitScheduledComments(
   { db },
-  { session, accountId },
+  { getSession, accountId },
 ) {
   const now = new Date();
 
@@ -603,9 +624,8 @@ browserJobRegistry.register(async function submitScheduledComments(
       break;
     }
 
-    const result = await session.commentOnPost(
-      comment.postUrn,
-      comment.comment,
+    const result = await getSession().then((session) =>
+      session.commentOnPost(comment.postUrn, comment.comment),
     );
 
     if (result.status === "error") {
@@ -637,6 +657,5 @@ browserJobRegistry.register(async function submitScheduledComments(
 
   return {
     status: "complete",
-    session,
   } as const;
 });
