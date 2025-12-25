@@ -45,6 +45,7 @@ export default defineConfig({
           "engagekit-sprite-loading.svg",
           "engagekit-sprite-default.svg",
           "engagekit-sprite-blink.svg",
+          "engagekit-sprite-breathe.svg",
         ],
         matches: ["https://*.linkedin.com/*"],
       },

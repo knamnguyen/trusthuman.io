@@ -6,6 +6,7 @@ import { LinkedInScrapeApifyService } from "@sassy/linkedin-scrape-apify";
 
 import { protectedProcedure } from "../trpc";
 import { checkPremiumAccess } from "../utils/check-premium-access";
+import { findExistingLinkedInProfile } from "../utils/check-exist-linkedin-profile";
 
 const apifyService = new LinkedInScrapeApifyService({
   token: process.env.APIFY_API_TOKEN ?? "",
@@ -34,9 +35,7 @@ export const linkedinScrapeApifyRouter = {
         });
       }
       // 1) Dedup by linkedinUrl
-      const existing = await ctx.db.linkedInProfile.findFirst({
-        where: { linkedinUrl: input.url },
-      });
+      const existing = await findExistingLinkedInProfile(ctx, input.url);
       if (existing) {
         console.log("linkedin profile already exists in database");
         return mapDbToProfileData(existing);

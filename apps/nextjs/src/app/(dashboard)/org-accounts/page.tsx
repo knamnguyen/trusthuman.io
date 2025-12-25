@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { currentUser } from "@clerk/nextjs/server";
 
 import { EngageKitSprite } from "@sassy/ui/components/engagekit-sprite";
+import { Switch } from "@sassy/ui/switch";
 
 import { OrgAccountsTest } from "./_components/org-accounts-test";
 
@@ -19,12 +20,19 @@ async function Page() {
         <p className="mb-6 text-gray-600">
           Test page for multi-tenant LinkedIn account management
         </p>
+        <Switch />
         <EngageKitSprite
           size={300}
           fps={6}
           frameCount={3}
           delayBetweenCycles={2000}
           spriteUrl="/engagekit-sprite-blink.svg"
+        />
+        <EngageKitSprite
+          size={300}
+          fps={10}
+          frameCount={10}
+          spriteUrl="/engagekit-sprite-breathe.svg"
         />
         <EngageKitSprite
           size={300}

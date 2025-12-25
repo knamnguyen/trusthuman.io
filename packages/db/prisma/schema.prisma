@@ -146,7 +146,7 @@ model LinkedInProfile {
   linkedinUrl String // Required
   fullName    String // Required
   headline    String // Required
-  urn         String @unique // Required, globally unique
+  urn         String @unique // Required, globally unique (maps to "id" from new API)
   profilePic  String // Required
 
   firstName               String?
@@ -173,7 +173,7 @@ model LinkedInProfile {
   publicIdentifier        String?
   openConnection          Boolean?
 
-  // Nested/complex structures stored as JSON
+  // Nested/complex structures stored as JSON (old API format)
   experiences             Json?
   updates                 Json?
   skills                  Json?
@@ -196,9 +196,57 @@ model LinkedInProfile {
   interests               Json?
   recommendations         Json?
 
+  // ============================================================================
+  // NEW API FIELDS (LpVuK3Zozwuipa5bp actor)
+  // ============================================================================
+
+  // Additional identifiers
+  objectUrn String? // Numeric URN (e.g., "251749025")
+
+  // Profile status flags
+  openToWork   Boolean?
+  hiring       Boolean?
+  premium      Boolean?
+  influencer   Boolean?
+  memorialized Boolean?
+  verified     Boolean?
+
+  // Rich location data
+  location Json? // { linkedinText, countryCode, parsed: { city, state, country, ... } }
+
+  // Profile pictures (structured)
+  profilePictureUrl   String? // Best URL from profilePicture
+  coverPictureUrl     String? // Best URL from coverPicture
+  profilePictureSizes Json? // Full sizes array with expiration
+  coverPictureSizes   Json? // Full sizes array with expiration
+
+  // New arrays
+  websites        Json? // String array of websites
+  currentPosition Json? // Array of current positions with company info
+  profileActions  Json? // Array of profile action buttons
+  moreProfiles    Json? // Related/suggested profiles array
+
+  // New structured arrays (different format from old API)
+  experience              Json? // New experience array with logos
+  education               Json? // New education array with logos
+  certifications          Json?
+  volunteering            Json?
+  receivedRecommendations Json?
+  causes                  Json?
+  featured                Json?
+  services                Json?
+
+  // Additional metadata
+  topSkills        String? // Different from topSkillsByEndorsements
+  connectionsCount Int? // Explicit connections count
+  followerCount    Int? // Explicit follower count
+  registeredAt     DateTime? // When user registered on LinkedIn
+
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   targetProfiles TargetProfile[]
+
+  @@index([linkedinUrl])
 }
 
 model UserComment {
@@ -253,16 +301,17 @@ model TargetList {
 }
 
 model TargetProfile {
-  id         String          @id
-  listId     String
-  userId     String
-  profileUrn String          @unique
-  createdAt  DateTime        @default(now())
-  updatedAt  DateTime        @updatedAt
-  list       TargetList      @relation(fields: [listId], references: [id])
-  profile    LinkedInProfile @relation(fields: [profileUrn], references: [urn])
+  id          String           @id
+  listId      String
+  userId      String
+  linkedinUrl String           // What user provided (raw URL)
+  profileUrn  String?          // Filled after profile is scraped
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  list        TargetList       @relation(fields: [listId], references: [id])
+  profile     LinkedInProfile? @relation(fields: [profileUrn], references: [urn])
 
-  @@unique([listId, profileUrn])
+  @@unique([listId, linkedinUrl]) // Prevent duplicate URLs per list
 }
 
 model BlacklistedProfile {

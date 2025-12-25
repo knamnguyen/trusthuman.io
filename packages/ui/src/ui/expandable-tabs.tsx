@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useOnClickOutside } from "usehooks-ts";
 import { LucideIcon } from "lucide-react";
 
 import { cn } from "../utils";
@@ -25,7 +24,12 @@ interface ExpandableTabsProps {
   tabs: TabItem[];
   className?: string;
   activeColor?: string;
-  onChange?: (index: number | null) => void;
+  /** Controlled value - the active tab index */
+  value?: number;
+  /** Default tab index (uncontrolled mode) */
+  defaultValue?: number;
+  /** Called when the active tab changes - always passes a number */
+  onChange?: (index: number) => void;
 }
 
 const buttonVariants = {
@@ -47,24 +51,24 @@ const spanVariants = {
   exit: { width: 0, opacity: 0 },
 };
 
-const transition = { delay: 0.1, type: "spring", bounce: 0, duration: 0.6 };
+const transition = { delay: 0.1, type: "spring" as const, bounce: 0, duration: 0.6 };
 
 export function ExpandableTabs({
   tabs,
   className,
   activeColor = "text-primary",
+  value,
+  defaultValue = 0,
   onChange,
 }: ExpandableTabsProps) {
-  const [selected, setSelected] = React.useState<number | null>(null);
-  const outsideClickRef = React.useRef(null);
-
-  useOnClickOutside(outsideClickRef, () => {
-    setSelected(null);
-    onChange?.(null);
-  });
+  // Support both controlled (value prop) and uncontrolled (internal state) modes
+  const [internalSelected, setInternalSelected] = React.useState(defaultValue);
+  const selected = value !== undefined ? value : internalSelected;
 
   const handleSelect = (index: number) => {
-    setSelected(index);
+    if (value === undefined) {
+      setInternalSelected(index);
+    }
     onChange?.(index);
   };
 
@@ -74,7 +78,6 @@ export function ExpandableTabs({
 
   return (
     <div
-      ref={outsideClickRef}
       className={cn(
         "flex flex-wrap items-center gap-2 rounded-2xl border bg-background p-1 shadow-sm",
         className

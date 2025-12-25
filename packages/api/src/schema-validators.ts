@@ -10,7 +10,7 @@ import { z } from "zod";
 // Input schema for generating AI comments
 export const commentGenerationInputSchema = z.object({
   postContent: z.string().min(1, "Post content is required"),
-  styleGuide: z.string().min(1, "Style guide is required"),
+  styleGuide: z.string().min(1, "Style guide is required").optional(),
   adjacentComments: z
     .array(
       z.object({
