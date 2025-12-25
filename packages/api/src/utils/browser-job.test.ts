@@ -4,7 +4,7 @@ import { ulid } from "ulidx";
 import type { PrismaClient } from "@sassy/db";
 import { createTestPrismaClient } from "@sassy/db/client/test";
 
-import { BrowserJobRegistry, BrowserJobWorker } from "./browser-job";
+import { BrowserJobWorker } from "./browser-job";
 import { BrowserSessionRegistry, hyperbrowser } from "./browser-session";
 
 let worker!: BrowserJobWorker;
@@ -17,8 +17,8 @@ beforeEach(async () => {
     hyperbrowser,
     db,
     browserRegistry,
-    jobRegistry: new BrowserJobRegistry(),
-    createJobContext: () => ({}),
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    processJobFn: () => {},
   });
 });
 

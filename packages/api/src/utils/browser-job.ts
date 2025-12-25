@@ -17,7 +17,7 @@ import {
 import { safe, transformValuesIfMatch } from "./commons";
 import { Semaphore } from "./mutex";
 
-export class BrowserJobWorker<TWorkerContext = unknown, TJobContext = unknown> {
+export class BrowserJobWorker<TWorkerContext = unknown> {
   private sleepResolver: {
     resolve: () => void;
     promise: Promise<void>;
@@ -27,42 +27,40 @@ export class BrowserJobWorker<TWorkerContext = unknown, TJobContext = unknown> {
   private semaphore: Semaphore;
   private readonly db: PrismaClient;
   private readonly hyperbrowser: Hyperbrowser;
-  private readonly jobRegistry: BrowserJobRegistry<TWorkerContext, TJobContext>;
-  private readonly createJobContext: (
+  private readonly processJobFn: (
     ctx: NoInfer<TWorkerContext>,
-    accountId: string,
-  ) => Promise<TJobContext> | TJobContext;
+    jobCtx: { jobId: string; accountId: string },
+  ) => Promise<void> | void;
   private readonly onJobCompleted?: (
     ctx: NoInfer<TWorkerContext>,
-    jobCtx: TJobContext,
+    jobId: string,
   ) => Promise<void> | void;
 
   constructor({
     hyperbrowser,
     db,
-    jobRegistry,
-    createJobContext,
+    processJobFn,
     onJobCompleted,
     maxConcurrentJobs,
   }: {
     readonly hyperbrowser: Hyperbrowser;
     readonly db: PrismaClient;
     readonly browserRegistry: BrowserSessionRegistry;
-    readonly jobRegistry: BrowserJobRegistry<TWorkerContext, TJobContext>;
-    readonly createJobContext: (
+    readonly processJobFn: (
       ctx: NoInfer<TWorkerContext>,
-      accountId: string,
-    ) => Promise<TJobContext> | TJobContext;
+      jobCtx: { jobId: string; accountId: string },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ) => any;
     readonly onJobCompleted?: (
       ctx: NoInfer<TWorkerContext>,
-      jobCtx: TJobContext,
-    ) => Promise<void> | void;
+      jobId: string,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ) => any;
     readonly maxConcurrentJobs?: number;
   }) {
     this.hyperbrowser = hyperbrowser;
     this.db = db;
-    this.jobRegistry = jobRegistry;
-    this.createJobContext = createJobContext;
+    this.processJobFn = processJobFn;
     this.onJobCompleted = onJobCompleted;
     this.maxConcurrentSessions = maxConcurrentJobs ?? 25;
     this.semaphore = new Semaphore(this.maxConcurrentSessions);
@@ -75,7 +73,7 @@ export class BrowserJobWorker<TWorkerContext = unknown, TJobContext = unknown> {
 
   async processJob(ctx: TWorkerContext, jobId: string) {
     try {
-      const result = await this.db.browserJob.update({
+      const job = await this.db.browserJob.update({
         where: { id: jobId },
         data: {
           status: "RUNNING",
@@ -85,19 +83,19 @@ export class BrowserJobWorker<TWorkerContext = unknown, TJobContext = unknown> {
         },
       });
 
-      if (this.jobRegistry.size === 0) {
-        return;
-      }
+      const jobContext = { jobId, accountId: job.accountId };
 
-      const jobContext = await this.createJobContext(ctx, result.accountId);
-
-      for (const job of this.jobRegistry.values()) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        await safe(() => job(ctx, jobContext));
-      }
+      await safe(() => this.processJobFn(ctx, jobContext));
 
       try {
-        await this.onJobCompleted?.(ctx, jobContext);
+        await this.onJobCompleted?.(ctx, jobId);
+
+        await this.db.browserJob.update({
+          where: { id: jobId },
+          data: {
+            status: "COMPLETED",
+          },
+        });
       } catch (error) {
         console.error(
           `Error in onJobCompleted for browser job ${jobId}:`,
@@ -114,13 +112,6 @@ export class BrowserJobWorker<TWorkerContext = unknown, TJobContext = unknown> {
       });
       console.error(`Browser job ${jobId} failed:`, error);
       return;
-    } finally {
-      await this.db.browserJob.update({
-        where: { id: jobId },
-        data: {
-          status: "COMPLETED",
-        },
-      });
     }
   }
 
@@ -382,25 +373,15 @@ export interface WorkerContext {
   browserRegistry: BrowserSessionRegistry;
 }
 
-export interface JobContext {
-  // we use a promise here to allow lazy initialization of the session
-  getSession: () => Promise<BrowserSession>;
-  accountId: string;
-}
+export const browserJobRegistry = new BrowserJobRegistry<WorkerContext>();
 
-export const browserJobRegistry = new BrowserJobRegistry<
-  WorkerContext,
-  JobContext
->();
-
-export const browserJobs = new BrowserJobWorker<WorkerContext, JobContext>({
+export const browserJobs = new BrowserJobWorker<WorkerContext>({
   hyperbrowser,
   db,
   browserRegistry,
-  jobRegistry: browserJobRegistry,
-  createJobContext: async (ctx, accountId) => {
+  processJobFn: async (ctx, jobCtx) => {
     const account = await ctx.db.linkedInAccount.findUnique({
-      where: { id: accountId },
+      where: { id: jobCtx.accountId },
       select: {
         id: true,
         location: true,
@@ -417,17 +398,21 @@ export const browserJobs = new BrowserJobWorker<WorkerContext, JobContext>({
       throw new Error("LinkedIn account is not active");
     }
 
-    let _session: BrowserSession | null = null;
+    const internalCtx: {
+      session: BrowserSession | null;
+    } = {
+      session: null,
+    };
 
     async function getSession() {
-      if (_session !== null) {
-        return _session;
+      if (internalCtx.session !== null) {
+        return internalCtx.session;
       }
 
       const session = new BrowserSession(
         ctx.db,
         ctx.browserRegistry,
-        accountId,
+        jobCtx.accountId,
         {
           location: account!.location as ProxyLocation,
           browserProfileId: account!.browserProfileId,
@@ -435,85 +420,42 @@ export const browserJobs = new BrowserJobWorker<WorkerContext, JobContext>({
         },
       );
 
-      _session = await session.ready;
+      internalCtx.session = await session.ready;
 
-      return _session;
+      return internalCtx.session;
     }
 
-    return {
-      accountId,
-      getSession,
-    };
-  },
-  onJobCompleted: async (_, jobCtx) => {
-    const session = await jobCtx.getSession();
-    await session.destroy();
+    await safe(() =>
+      runAutocomment({
+        db: ctx.db,
+        getSession,
+        accountId: jobCtx.accountId,
+      }),
+    );
+
+    await safe(() =>
+      submitScheduledComments({
+        db: ctx.db,
+        getSession,
+        accountId: jobCtx.accountId,
+      }),
+    );
+
+    if (internalCtx.session !== null) {
+      await internalCtx.session.destroy();
+    }
   },
 });
 
-async function getAutocommentParamsWithFallback(
-  db: PrismaClient,
-  accountId: string,
-) {
-  const userConfig = await db.autoCommentConfig.findFirst({
-    where: {
-      accountId,
-    },
-    include: {
-      commentStyle: true,
-    },
-  });
-
-  // TODO: in the future we want to make the frontend check for blacklisted profiles at every comment
-  // instead of passing this list of blacklisted authors to the caller
-  const blacklisted = userConfig?.blacklistEnabled
-    ? await db.blacklistedProfile.findMany({
-        where: {
-          accountId,
-        },
-      })
-    : [];
-
-  let styleGuide: string | undefined = undefined;
-
-  // if a custom comment style is selected, use that
-  if (userConfig?.commentStyle) {
-    styleGuide = userConfig.commentStyle.prompt;
-  }
-
-  // if not fallback to defaultCommentStyle if provided by user
-  if (styleGuide === undefined) {
-    if (
-      userConfig?.defaultCommentStyle &&
-      userConfig.defaultCommentStyle in DEFAULT_STYLE_GUIDES
-    ) {
-      styleGuide =
-        DEFAULT_STYLE_GUIDES[
-          userConfig.defaultCommentStyle as keyof typeof DEFAULT_STYLE_GUIDES
-        ].prompt;
-    }
-  }
-
-  // if still undefined, use PROFESSIONAL as default
-  styleGuide ??= DEFAULT_STYLE_GUIDES.PROFESSIONAL.prompt;
-
-  return {
-    styleGuide,
-    ...autoCommentConfigurationDefaults,
-    ...(userConfig !== null
-      ? transformValuesIfMatch(userConfig, {
-          from: null,
-          to: undefined,
-        })
-      : {}),
-    blacklistAuthors: blacklisted.map((b) => b.profileUrn),
-  };
-}
-
-browserJobRegistry.register(async function runAutocomment(
-  { db },
-  { accountId, getSession },
-) {
+async function runAutocomment({
+  db,
+  getSession,
+  accountId,
+}: {
+  db: PrismaClient;
+  getSession: () => Promise<BrowserSession>;
+  accountId: string;
+}) {
   while (true) {
     const pendingRun = await db.autoCommentRun.findFirst({
       where: {
@@ -590,12 +532,76 @@ browserJobRegistry.register(async function runAutocomment(
       });
     }
   }
-});
+}
 
-browserJobRegistry.register(async function submitScheduledComments(
-  { db },
-  { getSession, accountId },
+async function getAutocommentParamsWithFallback(
+  db: PrismaClient,
+  accountId: string,
 ) {
+  const userConfig = await db.autoCommentConfig.findFirst({
+    where: {
+      accountId,
+    },
+    include: {
+      commentStyle: true,
+    },
+  });
+
+  // TODO: in the future we want to make the frontend check for blacklisted profiles at every comment
+  // instead of passing this list of blacklisted authors to the caller
+  const blacklisted = userConfig?.blacklistEnabled
+    ? await db.blacklistedProfile.findMany({
+        where: {
+          accountId,
+        },
+      })
+    : [];
+
+  let styleGuide: string | undefined = undefined;
+
+  // if a custom comment style is selected, use that
+  if (userConfig?.commentStyle) {
+    styleGuide = userConfig.commentStyle.prompt;
+  }
+
+  // if not fallback to defaultCommentStyle if provided by user
+  if (styleGuide === undefined) {
+    if (
+      userConfig?.defaultCommentStyle &&
+      userConfig.defaultCommentStyle in DEFAULT_STYLE_GUIDES
+    ) {
+      styleGuide =
+        DEFAULT_STYLE_GUIDES[
+          userConfig.defaultCommentStyle as keyof typeof DEFAULT_STYLE_GUIDES
+        ].prompt;
+    }
+  }
+
+  // if still undefined, use PROFESSIONAL as default
+  styleGuide ??= DEFAULT_STYLE_GUIDES.PROFESSIONAL.prompt;
+
+  return {
+    styleGuide,
+    ...autoCommentConfigurationDefaults,
+    ...(userConfig !== null
+      ? transformValuesIfMatch(userConfig, {
+          from: null,
+          to: undefined,
+        })
+      : {}),
+    blacklistAuthors: blacklisted.map((b) => b.profileUrn),
+  };
+}
+
+async function submitScheduledComments({
+  db,
+  getSession,
+  accountId,
+}: {
+  db: PrismaClient;
+  getSession: () => Promise<BrowserSession>;
+  accountId: string;
+}) {
   const now = new Date();
 
   while (true) {
@@ -658,4 +664,4 @@ browserJobRegistry.register(async function submitScheduledComments(
   return {
     status: "complete",
   } as const;
-});
+}
