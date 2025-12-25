@@ -624,8 +624,8 @@ importers:
         specifier: ^6.12.5
         version: 6.23.2(next@15.5.7(@opentelemetry/api@1.9.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(sass@1.94.2))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@dbos-inc/dbos-sdk':
-        specifier: ^4.4.9
-        version: 4.4.9
+        specifier: ^4.5
+        version: 4.5.13
       '@google/genai':
         specifier: ^1.5.1
         version: 1.7.0
@@ -1685,8 +1685,8 @@ packages:
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
     engines: {node: '>=12'}
 
-  '@dbos-inc/dbos-sdk@4.4.9':
-    resolution: {integrity: sha512-8HHTMn3pO0QP5XAGvgYHrL33VW3ZyahU5+6Vs6LYzExRZN9sBVsgEBYVuvMaXXEd2TcZKStw7CnF9IK0HnZpIA==}
+  '@dbos-inc/dbos-sdk@4.5.13':
+    resolution: {integrity: sha512-BVcvxW7I45WwXSrs7vWYf8uUaZxRMWv+07ndtQ3IMPrEhUV7TbYjSAuzVdhcNaQKLpURwoKhdiOm7LbLbKzZtQ==}
     engines: {node: '>=20'}
     hasBin: true
 
@@ -10878,7 +10878,7 @@ snapshots:
     dependencies:
       '@jridgewell/trace-mapping': 0.3.9
 
-  '@dbos-inc/dbos-sdk@4.4.9':
+  '@dbos-inc/dbos-sdk@4.5.13':
     dependencies:
       commander: 12.0.0
       pg: 8.11.3
@@ -15605,7 +15605,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 9.30.0(jiti@2.6.1)
       eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.12.1(@typescript-eslint/parser@7.18.0(eslint@9.30.0(jiti@2.6.1))(typescript@5.8.3))(eslint-import-resolver-node@0.3.9)(eslint@9.30.0(jiti@2.6.1))
+      eslint-module-utils: 2.12.1(@typescript-eslint/parser@8.35.0(eslint@9.30.0(jiti@2.6.1))(typescript@5.8.3))(eslint-import-resolver-node@0.3.9)(eslint@9.30.0(jiti@2.6.1))
       hasown: 2.0.2
       is-core-module: 2.16.1
       is-glob: 4.0.3
