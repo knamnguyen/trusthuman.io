@@ -22,6 +22,7 @@
   "dependencies": {
     "@clerk/nextjs": "^6.12.5",
     "@dbos-inc/dbos-sdk": "^4.5",
+    "@dbos-inc/otel": "^4.5.13",
     "@google/genai": "^1.5.1",
     "@hyperbrowser/sdk": "^0.65.0",
     "@sassy/apify-runners": "workspace:*",

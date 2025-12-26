@@ -1,6 +1,6 @@
 import { DBOS } from "@dbos-inc/dbos-sdk";
 import { ulid } from "ulidx";
-import { z } from "zod/v4";
+import { z } from "zod";
 
 import type { LinkedinProfileSearchInput } from "@sassy/apify-runners/linkedin-profile-explorer";
 import { linkedinProfileSearchInputSchema } from "@sassy/apify-runners/linkedin-profile-explorer";
@@ -113,7 +113,11 @@ export const targetListRouter = {
     )
     .query(async ({ ctx, input }) => {
       if (ctx.account === null) {
-        return [] as const;
+        return {
+          data: [],
+          next: null,
+          hasNextPage: false,
+        };
       }
       const lists = await ctx.db.targetList.findMany({
         where: {

@@ -144,3 +144,11 @@ export function sleep(ms: number, signal?: AbortSignal) {
     signal.addEventListener("abort", abortHandler);
   });
 }
+
+export type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: JsonValue }
+  | JsonValue[];

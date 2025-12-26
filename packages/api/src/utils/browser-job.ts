@@ -9,6 +9,7 @@ import {
 } from "@sassy/feature-flags";
 
 import type { BrowserSessionRegistry, ProxyLocation } from "./browser-session";
+import type { JsonValue } from "./commons";
 import {
   browserRegistry,
   BrowserSession,
@@ -30,7 +31,7 @@ export class BrowserJobWorker<TWorkerContext = unknown> {
   private readonly processJobFn: (
     ctx: NoInfer<TWorkerContext>,
     jobCtx: { jobId: string; accountId: string },
-  ) => Promise<unknown>;
+  ) => JsonValue | Promise<JsonValue> | void | Promise<void>;
   private readonly onJobCompleted?: (
     ctx: NoInfer<TWorkerContext>,
     jobId: string,
@@ -49,8 +50,7 @@ export class BrowserJobWorker<TWorkerContext = unknown> {
     readonly processJobFn: (
       ctx: NoInfer<TWorkerContext>,
       jobCtx: { jobId: string; accountId: string },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ) => any;
+    ) => JsonValue | Promise<JsonValue> | void | Promise<void>;
     readonly onJobCompleted?: (
       ctx: NoInfer<TWorkerContext>,
       jobId: string,
