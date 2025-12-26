@@ -29,7 +29,7 @@ export default defineConfig({
     name: "EngageKit WXT Extension",
     description: "AI-powered LinkedIn engagement with Clerk authentication",
     version: "0.0.1",
-    permissions: ["activeTab", "storage", "alarms", "tabs", "cookies"],
+    permissions: ["activeTab", "storage", "alarms", "tabs", "cookies", "webRequest"],
     host_permissions: [
       "https://*.linkedin.com/*",
       // Allow access to web app for auth sync (dynamic based on environment)

@@ -9,6 +9,7 @@
  */
 
 import { createClerkClient } from "@clerk/chrome-extension/background";
+import { storage } from "wxt/storage";
 
 import type { MessageRouterDependencies } from "./background-types";
 import { getSyncHostUrl } from "../../lib/get-sync-host-url";
@@ -142,4 +143,31 @@ export default defineBackground(() => {
   });
 
   console.log("Background: Initialized with syncHost:", getSyncHostUrl());
+
+  /**
+   * Intercept LinkedIn Auth Headers from realtime/connect requests
+   * Captures cookies, csrf-token, and tracking headers for API calls
+   */
+  chrome.webRequest.onBeforeSendHeaders.addListener(
+    (details) => {
+      if (!details.url.includes("/realtime/connect")) return;
+
+      const headers = Object.fromEntries(
+        details.requestHeaders?.map((h) => [h.name.toLowerCase(), h.value]) ||
+          [],
+      );
+
+      if (headers["cookie"] && headers["csrf-token"]) {
+        storage.setItem("local:auth", {
+          cookie: headers["cookie"],
+          csrfToken: headers["csrf-token"],
+          pageInstance: headers["x-li-page-instance"],
+          track: headers["x-li-track"],
+        });
+        console.log("Background: Captured LinkedIn Auth Headers");
+      }
+    },
+    { urls: ["https://*.linkedin.com/realtime/connect*"] },
+    ["requestHeaders", "extraHeaders"],
+  );
 });

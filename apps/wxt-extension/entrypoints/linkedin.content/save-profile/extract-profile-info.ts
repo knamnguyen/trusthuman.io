@@ -7,6 +7,7 @@ export interface ProfileInfo {
   linkedinUrl: string | null;
   photoUrl: string | null;
   headline: string | null;
+  urn: string | null;
 }
 
 /**
@@ -17,6 +18,34 @@ function extractLinkedInUrl(href: string | null): string | null {
   if (!href) return null;
   const urlWithoutParams = href.split("?")[0];
   return urlWithoutParams || null;
+}
+
+/**
+ * Extracts profile URN ID from the miniProfileUrn query parameter
+ * e.g., "...?miniProfileUrn=urn%3Ali%3Afsd_profile%3AACoAAEjGgeABxDXPoubs3XfseZ_a62DYx20aoCo"
+ *       => "ACoAAEjGgeABxDXPoubs3XfseZ_a62DYx20aoCo"
+ */
+function extractProfileUrn(href: string | null): string | null {
+  if (!href) return null;
+
+  let fullUrn: string | null = null;
+
+  try {
+    const url = new URL(href);
+    fullUrn = url.searchParams.get("miniProfileUrn");
+  } catch {
+    // If URL parsing fails, try regex fallback
+    const match = href.match(/miniProfileUrn=([^&]+)/);
+    if (match?.[1]) {
+      fullUrn = decodeURIComponent(match[1]);
+    }
+  }
+
+  if (!fullUrn) return null;
+
+  // Extract just the ID from "urn:li:fsd_profile:ACoAAEjGgeABxDXPoubs3XfseZ_a62DYx20aoCo"
+  const parts = fullUrn.split(":");
+  return parts[parts.length - 1] || null;
 }
 
 /**
@@ -88,6 +117,9 @@ export function extractProfileInfo(
   const photoUrl = img?.getAttribute("src") || null;
   const name = extractNameFromAlt(img?.getAttribute("alt") || null);
 
+  // Extract URN from the miniProfileUrn query parameter in the href
+  const urn = extractProfileUrn(href);
+
   // Extract headline from sibling element
   const headline = extractHeadline(buttonContainer);
 
@@ -96,5 +128,6 @@ export function extractProfileInfo(
     linkedinUrl,
     photoUrl,
     headline,
+    urn,
   };
 }

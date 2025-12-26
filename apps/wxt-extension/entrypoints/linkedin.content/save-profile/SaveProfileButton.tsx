@@ -3,10 +3,13 @@ import { IoPersonAdd } from "react-icons/io5";
 
 import { useSavedProfileStore } from "../stores/saved-profile-store";
 import { SIDEBAR_TABS, useSidebarStore } from "../stores/sidebar-store";
+import { fetchMemberComments } from "../utils/linkedin-comments-fetcher";
+import type { ProfileInfo } from "./extract-profile-info";
 import { extractProfileInfo } from "./extract-profile-info";
 
 interface SaveProfileButtonProps {
-  anchorElement: Element;
+  anchorElement?: Element;
+  extractProfile?: () => ProfileInfo;
 }
 
 /**
@@ -14,35 +17,53 @@ interface SaveProfileButtonProps {
  * Used to save profile of commenter or post author.
  * Uses inline styles since it renders via portal outside shadow DOM.
  */
-export function SaveProfileButton({ anchorElement }: SaveProfileButtonProps) {
+export function SaveProfileButton({ anchorElement, extractProfile }: SaveProfileButtonProps) {
   const [isHovered, setIsHovered] = useState(false);
-  const { setSelectedProfile } = useSavedProfileStore();
+  const { setSelectedProfile, processComments, setIsLoadingComments } =
+    useSavedProfileStore();
   const { openToTab } = useSidebarStore();
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    // Get the button container (parent of this button)
-    const buttonContainer = (e.currentTarget as HTMLElement).parentElement;
-    if (!buttonContainer) {
-      console.warn("SaveProfile: button container not found");
+    let profileInfo: ProfileInfo;
+
+    if (extractProfile) {
+      // Use provided extractor (for profile pages)
+      profileInfo = extractProfile();
+    } else if (anchorElement) {
+      // Use default extractor (for feed/post)
+      const buttonContainer = (e.currentTarget as HTMLElement).parentElement;
+      if (!buttonContainer) {
+        console.warn("SaveProfile: button container not found");
+        return;
+      }
+      profileInfo = extractProfileInfo(anchorElement, buttonContainer);
+    } else {
+      console.warn("SaveProfile: no extractor or anchor element provided");
       return;
     }
-
-    // Extract profile info from DOM
-    const profileInfo = extractProfileInfo(anchorElement, buttonContainer);
 
     console.log("SaveProfile: Profile Info from DOM", {
       name: profileInfo.name,
       linkedinUrl: profileInfo.linkedinUrl,
       photoUrl: profileInfo.photoUrl,
       headline: profileInfo.headline,
+      profileUrn: profileInfo.urn || "no urn available",
     });
 
     // Store profile and open sidebar to Share tab
     setSelectedProfile(profileInfo);
     openToTab(SIDEBAR_TABS.SHARE);
+
+    // Fetch recent comments if URN is available
+    if (profileInfo.urn) {
+      setIsLoadingComments(true);
+      fetchMemberComments(profileInfo.urn)
+        .then((comments) => processComments(comments, profileInfo.name))
+        .finally(() => setIsLoadingComments(false));
+    }
   };
 
   const iconSize = 16;
