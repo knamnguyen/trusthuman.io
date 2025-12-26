@@ -14,7 +14,7 @@ import {
   BrowserSession,
   hyperbrowser,
 } from "./browser-session";
-import { safe, transformValuesIfMatch } from "./commons";
+import { safe, sleep, transformValuesIfMatch } from "./commons";
 import { Semaphore } from "./mutex";
 
 export class BrowserJobWorker<TWorkerContext = unknown> {
@@ -30,7 +30,7 @@ export class BrowserJobWorker<TWorkerContext = unknown> {
   private readonly processJobFn: (
     ctx: NoInfer<TWorkerContext>,
     jobCtx: { jobId: string; accountId: string },
-  ) => Promise<void> | void;
+  ) => Promise<unknown>;
   private readonly onJobCompleted?: (
     ctx: NoInfer<TWorkerContext>,
     jobId: string,
@@ -85,7 +85,7 @@ export class BrowserJobWorker<TWorkerContext = unknown> {
 
       const jobContext = { jobId, accountId: job.accountId };
 
-      await safe(() => this.processJobFn(ctx, jobContext));
+      const result = await safe(() => this.processJobFn(ctx, jobContext));
 
       try {
         await this.onJobCompleted?.(ctx, jobId);
@@ -94,6 +94,7 @@ export class BrowserJobWorker<TWorkerContext = unknown> {
           where: { id: jobId },
           data: {
             status: "COMPLETED",
+            output: JSON.stringify(result),
           },
         });
       } catch (error) {
@@ -188,21 +189,6 @@ export class BrowserJobWorker<TWorkerContext = unknown> {
     return resolver.promise;
   }
 
-  private sleep(delayMs: number, signal?: AbortSignal) {
-    return new Promise<"woke" | "aborted">((resolve) => {
-      const timeoutId = setTimeout(() => resolve("woke"), delayMs);
-      if (signal === undefined) return;
-
-      const abortHandler = () => {
-        resolve("aborted");
-        clearTimeout(timeoutId);
-        signal.removeEventListener("abort", abortHandler);
-      };
-
-      signal.addEventListener("abort", abortHandler);
-    });
-  }
-
   async tryQueue(accountId: string, startAt = new Date()) {
     const existing = await this.db.browserJob.findFirst({
       where: {
@@ -253,7 +239,7 @@ export class BrowserJobWorker<TWorkerContext = unknown> {
   ) {
     const initialDelay = startAt.getTime() - Date.now();
     if (initialDelay > 0) {
-      const status = await this.sleep(initialDelay, signal);
+      const status = await sleep(initialDelay, signal);
       if (status === "aborted") {
         return;
       }
@@ -267,7 +253,7 @@ export class BrowserJobWorker<TWorkerContext = unknown> {
         console.error("Error enqueueing browser jobs:", error);
       }
 
-      const status = await this.sleep(intervalMs, signal);
+      const status = await sleep(intervalMs, signal);
       if (status === "aborted") {
         return;
       }

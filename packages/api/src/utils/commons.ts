@@ -124,3 +124,23 @@ export async function retry<TOutput>(
     error: new Error("timeout"),
   };
 }
+
+export function sleep(ms: number, signal?: AbortSignal) {
+  return new Promise<"woke" | "aborted">((resolve) => {
+    const timeoutId = setTimeout(() => resolve("woke"), ms);
+    if (signal === undefined) return;
+
+    const abortHandler = () => {
+      resolve("aborted");
+      clearTimeout(timeoutId);
+      signal.removeEventListener("abort", abortHandler);
+    };
+
+    if (signal.aborted) {
+      abortHandler();
+      return;
+    }
+
+    signal.addEventListener("abort", abortHandler);
+  });
+}
