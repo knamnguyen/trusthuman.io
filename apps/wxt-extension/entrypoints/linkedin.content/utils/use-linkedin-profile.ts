@@ -28,7 +28,9 @@ export const useLinkedInProfile = () => {
 
   useEffect(() => {
     const extractProfile = () => {
-      console.log("useLinkedInProfile: Extracting LinkedIn profile from page...");
+      console.log(
+        "useLinkedInProfile: Extracting LinkedIn profile from page...",
+      );
 
       const codeEls = document.querySelectorAll("code");
 
@@ -43,14 +45,15 @@ export const useLinkedInProfile = () => {
           continue;
         }
 
-        if (json?.data?.["$type"] !== "com.linkedin.voyager.common.Me") continue;
+        if (json?.data?.["$type"] !== "com.linkedin.voyager.common.Me")
+          continue;
 
         // URN of the miniProfile from the Me object
         const miniProfileUrn = json.data["*miniProfile"];
 
         // Find the miniProfile object
         const miniProfile = json.included?.find(
-          (item: any) => item.entityUrn === miniProfileUrn
+          (item: any) => item.entityUrn === miniProfileUrn,
         );
         if (!miniProfile) continue;
 
@@ -87,21 +90,21 @@ export const useLinkedInProfile = () => {
     // Try to extract immediately
     extractProfile();
 
-    // Also listen for DOM changes (in case LinkedIn loads data dynamically)
-    const observer = new MutationObserver(() => {
-      if (!profile.miniProfileId) {
-        extractProfile();
-      }
-    });
+    // // Also listen for DOM changes (in case LinkedIn loads data dynamically)
+    // const observer = new MutationObserver(() => {
+    //   if (!profile.miniProfileId) {
+    //     extractProfile();
+    //   }
+    // });
 
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-    });
+    // observer.observe(document.body, {
+    //   childList: true,
+    //   subtree: true,
+    // });
 
-    return () => {
-      observer.disconnect();
-    };
+    // return () => {
+    //   observer.disconnect();
+    // };
   }, []);
 
   return {

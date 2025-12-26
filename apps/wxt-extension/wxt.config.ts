@@ -39,7 +39,14 @@ export default defineConfig({
     ],
     web_accessible_resources: [
       {
-        resources: ["fonts/*"],
+        resources: [
+          "fonts/*",
+          "engagekit-logo.svg",
+          "engagekit-sprite-loading.svg",
+          "engagekit-sprite-default.svg",
+          "engagekit-sprite-blink.svg",
+          "engagekit-sprite-breathe.svg",
+        ],
         matches: ["https://*.linkedin.com/*"],
       },
     ],

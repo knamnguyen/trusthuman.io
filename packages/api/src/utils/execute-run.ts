@@ -2,6 +2,7 @@ import { ImportStatus } from "@sassy/db";
 import { LinkedInScrapeApifyService } from "@sassy/linkedin-scrape-apify";
 
 import type { TRPCContext } from "../trpc";
+import { checkExistLinkedInProfile } from "./check-exist-linkedin-profile";
 import { normalizeLinkedInUrl } from "./normalize-linkedin-url";
 
 export const executeRun = async (ctx: TRPCContext, runId: string) => {
@@ -21,8 +22,7 @@ export const executeRun = async (ctx: TRPCContext, runId: string) => {
   });
 
   // 1) Batch-resolve which URLs already exist in DB
-  const urls = run.urls.map((u) => normalizeLinkedInUrl(u));
-  if (urls.length === 0) {
+  if (run.urls.length === 0) {
     await ctx.db.profileImportRun.update({
       where: { id: runId },
       data: { status: ImportStatus.FINISHED },
@@ -30,15 +30,10 @@ export const executeRun = async (ctx: TRPCContext, runId: string) => {
     return;
   }
 
-  const existing = await ctx.db.linkedInProfile.findMany({
-    where: { linkedinUrl: { in: urls } },
-    select: { linkedinUrl: true },
-  });
-  const existingSet = new Set(
-    existing.map((e) => normalizeLinkedInUrl(e.linkedinUrl)),
+  const { existingUrls, toScrapeUrls } = await checkExistLinkedInProfile(
+    ctx,
+    run.urls,
   );
-  const existingUrls = urls.filter((u) => existingSet.has(u));
-  const toScrapeUrls = urls.filter((u) => !existingSet.has(u));
 
   if (existingUrls.length > 0) {
     await ctx.db.profileImportRun.update({

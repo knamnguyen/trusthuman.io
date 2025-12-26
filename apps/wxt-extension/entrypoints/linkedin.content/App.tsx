@@ -2,28 +2,40 @@ import { useEffect, useState } from "react";
 
 import { Sheet } from "@sassy/ui/sheet";
 
+import { ToggleButton } from "./_components/ToggleButton";
+import { ButtonPortalManager } from "./engage-button/ButtonPortalManager";
 import { LinkedInSidebar } from "./LinkedInSidebar";
-import { ToggleButton } from "./ToggleButton";
+import { SaveProfilePortalManager } from "./save-profile";
+import { useShadowRootStore, useSidebarStore } from "./stores";
 
 interface AppProps {
-  portalContainer: HTMLElement;
+  shadowRoot: HTMLElement;
 }
 
-export default function App({ portalContainer }: AppProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export default function App({ shadowRoot }: AppProps) {
+  // Sidebar state from Zustand store (allows EngageButton to open it)
+  const { isOpen, setIsOpen } = useSidebarStore();
+  const setShadowRoot = useShadowRootStore((s) => s.setShadowRoot);
   const [showOpenButton, setShowOpenButton] = useState(true);
+
+  // Set shadow root in store for Radix portals (popover, dialog, etc.)
+  useEffect(() => {
+    setShadowRoot(shadowRoot);
+  }, [shadowRoot, setShadowRoot]);
 
   // Handle first install: auto-open sidebar
   useEffect(() => {
     chrome.storage.local.get(["hasOpenedSidebar"], (result) => {
       if (!result.hasOpenedSidebar) {
         // First install - auto-open sidebar
-        console.log("EngageKit WXT: First install detected, auto-opening sidebar");
+        console.log(
+          "EngageKit WXT: First install detected, auto-opening sidebar",
+        );
         setIsOpen(true);
         chrome.storage.local.set({ hasOpenedSidebar: true });
       }
     });
-  }, []);
+  }, [setIsOpen]);
 
   // Handle button visibility with animation delay
   useEffect(() => {
@@ -43,17 +55,20 @@ export default function App({ portalContainer }: AppProps) {
     <>
       {/* Open button - only visible when sidebar is closed and animation finished */}
       {showOpenButton && (
-        <div className="fixed top-1/2 right-0 -translate-y-1/2 z-[9999]">
+        <div className="fixed top-1/2 right-0 z-[9999] -translate-y-1/2">
           <ToggleButton isOpen={false} onToggle={() => setIsOpen(true)} />
         </div>
       )}
 
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
-        <LinkedInSidebar
-          portalContainer={portalContainer}
-          onClose={() => setIsOpen(false)}
-        />
+        <LinkedInSidebar onClose={() => setIsOpen(false)} />
       </Sheet>
+
+      {/* Single React tree manages all injected engage buttons */}
+      <ButtonPortalManager />
+
+      {/* Single React tree manages all injected save profile buttons */}
+      <SaveProfilePortalManager />
     </>
   );
 }

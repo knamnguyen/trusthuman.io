@@ -5,13 +5,27 @@
     "src": "../../../../../../@crx/manifest",
     "isEntry": true
   },
-  "_get-sync-host-KsVsLNO-.js": {
-    "file": "assets/get-sync-host-KsVsLNO-.js",
+  "_get-sync-host-BP0LuDEj.js": {
+    "file": "assets/get-sync-host-BP0LuDEj.js",
     "name": "get-sync-host",
     "imports": [
       "_index-CP-b3-11.js",
       "_index-Dr715SCd.js"
     ]
+  },
+  "_index-3yVWAQZ8.js": {
+    "file": "assets/index-3yVWAQZ8.js",
+    "name": "index",
+    "imports": [
+      "_index-CP-b3-11.js"
+    ],
+    "css": [
+      "assets/index-4lmNZ798.css"
+    ]
+  },
+  "_index-4lmNZ798.css": {
+    "file": "assets/index-4lmNZ798.css",
+    "src": "_index-4lmNZ798.css"
   },
   "_index-CP-b3-11.js": {
     "file": "assets/index-CP-b3-11.js",
@@ -39,20 +53,6 @@
       "_index-CP-b3-11.js"
     ]
   },
-  "_react-icons-BBqLKdrr.css": {
-    "file": "assets/react-icons-BBqLKdrr.css",
-    "src": "_react-icons-BBqLKdrr.css"
-  },
-  "_react-icons.esm-CNcOZddv.js": {
-    "file": "assets/react-icons.esm-CNcOZddv.js",
-    "name": "react-icons.esm",
-    "imports": [
-      "_index-CP-b3-11.js"
-    ],
-    "css": [
-      "assets/react-icons-BBqLKdrr.css"
-    ]
-  },
   "_storage-Bsaabweh.js": {
     "file": "assets/storage-Bsaabweh.js",
     "name": "storage",
@@ -66,12 +66,12 @@
     "src": "public/icon-128.png"
   },
   "src/pages/background/index.ts": {
-    "file": "assets/index.ts-B4eAArZY.js",
+    "file": "assets/index.ts-Cc6jTBJH.js",
     "name": "index.ts",
     "src": "src/pages/background/index.ts",
     "isEntry": true,
     "imports": [
-      "_get-sync-host-KsVsLNO-.js",
+      "_get-sync-host-BP0LuDEj.js",
       "_react-Dlr6nuqz.js",
       "_index-CP-b3-11.js",
       "_index-Dr715SCd.js"
@@ -90,27 +90,27 @@
     ]
   },
   "src/pages/options/index.html": {
-    "file": "assets/index.html-CnsKZx9P.js",
+    "file": "assets/index.html-DUzmfwpj.js",
     "name": "index.html",
     "src": "src/pages/options/index.html",
     "isEntry": true,
     "imports": [
-      "_react-icons.esm-CNcOZddv.js",
+      "_index-3yVWAQZ8.js",
       "_index-CP-b3-11.js",
       "_profile-extract-button-E_OM6-m_.js",
       "_index-Dr715SCd.js"
     ]
   },
   "src/pages/popup/index.html": {
-    "file": "assets/index.html-G4vuJNBH.js",
+    "file": "assets/index.html-Aao4QlTQ.js",
     "name": "index.html",
     "src": "src/pages/popup/index.html",
     "isEntry": true,
     "imports": [
-      "_react-icons.esm-CNcOZddv.js",
+      "_index-3yVWAQZ8.js",
       "_index-CP-b3-11.js",
       "_react-Dlr6nuqz.js",
-      "_get-sync-host-KsVsLNO-.js",
+      "_get-sync-host-BP0LuDEj.js",
       "_storage-Bsaabweh.js",
       "_index-Dr715SCd.js"
     ],

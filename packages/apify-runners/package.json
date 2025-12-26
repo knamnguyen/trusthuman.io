@@ -5,7 +5,9 @@
   "type": "module",
   "exports": {
     "./ai-detector-service": "./src/ai-detector-service.ts",
-    "./linkedin-profile-explorer": "./src/linkedin-profile-explorer.ts"
+    "./linkedin-profile-explorer": "./src/linkedin-profile-explorer.ts",
+    "./linkedin-profile-scrape-service": "./src/linkedin-profile-scrape-service.ts",
+    "./schema-validators": "./src/schema-validators.ts"
   },
   "license": "MIT",
   "scripts": {

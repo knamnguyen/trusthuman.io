@@ -155,7 +155,34 @@ CREATE TABLE "LinkedInProfile" (
     "volunteerCauses" JSONB,
     "interests" JSONB,
     "recommendations" JSONB,
-    "location" TEXT,
+    "objectUrn" TEXT,
+    "openToWork" BOOLEAN,
+    "hiring" BOOLEAN,
+    "premium" BOOLEAN,
+    "influencer" BOOLEAN,
+    "memorialized" BOOLEAN,
+    "verified" BOOLEAN,
+    "location" JSONB,
+    "profilePictureUrl" TEXT,
+    "coverPictureUrl" TEXT,
+    "profilePictureSizes" JSONB,
+    "coverPictureSizes" JSONB,
+    "websites" JSONB,
+    "currentPosition" JSONB,
+    "profileActions" JSONB,
+    "moreProfiles" JSONB,
+    "experience" JSONB,
+    "education" JSONB,
+    "certifications" JSONB,
+    "volunteering" JSONB,
+    "receivedRecommendations" JSONB,
+    "causes" JSONB,
+    "featured" JSONB,
+    "services" JSONB,
+    "topSkills" TEXT,
+    "connectionsCount" INTEGER,
+    "followerCount" INTEGER,
+    "registeredAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -223,7 +250,8 @@ CREATE TABLE "TargetProfile" (
     "id" TEXT NOT NULL,
     "listId" TEXT NOT NULL,
     "accountId" TEXT NOT NULL,
-    "profileUrn" TEXT NOT NULL,
+    "linkedinUrl" TEXT NOT NULL,
+    "profileUrn" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -234,9 +262,9 @@ CREATE TABLE "TargetProfile" (
 CREATE TABLE "BlacklistedProfile" (
     "id" TEXT NOT NULL,
     "accountId" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
     "profileUrn" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "userId" TEXT,
 
     CONSTRAINT "BlacklistedProfile_pkey" PRIMARY KEY ("id")
 );
@@ -416,6 +444,9 @@ CREATE UNIQUE INDEX "LinkedInAccount_profileSlug_key" ON "LinkedInAccount"("prof
 CREATE UNIQUE INDEX "LinkedInProfile_urn_key" ON "LinkedInProfile"("urn");
 
 -- CreateIndex
+CREATE INDEX "LinkedInProfile_linkedinUrl_idx" ON "LinkedInProfile"("linkedinUrl");
+
+-- CreateIndex
 CREATE INDEX "UserComment_hash_idx" ON "UserComment"("hash");
 
 -- CreateIndex
@@ -428,10 +459,7 @@ CREATE INDEX "UserComment_commentedAt_idx" ON "UserComment"("commentedAt");
 CREATE INDEX "UserComment_urns_idx" ON "UserComment" USING GIN ("urns");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "TargetProfile_profileUrn_key" ON "TargetProfile"("profileUrn");
-
--- CreateIndex
-CREATE UNIQUE INDEX "TargetProfile_listId_profileUrn_key" ON "TargetProfile"("listId", "profileUrn");
+CREATE UNIQUE INDEX "TargetProfile_listId_linkedinUrl_key" ON "TargetProfile"("listId", "linkedinUrl");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "BlacklistedProfile_accountId_profileUrn_key" ON "BlacklistedProfile"("accountId", "profileUrn");
@@ -494,16 +522,16 @@ ALTER TABLE "TargetList" ADD CONSTRAINT "TargetList_accountId_fkey" FOREIGN KEY 
 ALTER TABLE "TargetProfile" ADD CONSTRAINT "TargetProfile_listId_fkey" FOREIGN KEY ("listId") REFERENCES "TargetList"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "TargetProfile" ADD CONSTRAINT "TargetProfile_profileUrn_fkey" FOREIGN KEY ("profileUrn") REFERENCES "LinkedInProfile"("urn") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "TargetProfile" ADD CONSTRAINT "TargetProfile_profileUrn_fkey" FOREIGN KEY ("profileUrn") REFERENCES "LinkedInProfile"("urn") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "TargetProfile" ADD CONSTRAINT "TargetProfile_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "BlacklistedProfile" ADD CONSTRAINT "BlacklistedProfile_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "BlacklistedProfile" ADD CONSTRAINT "BlacklistedProfile_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "BlacklistedProfile" ADD CONSTRAINT "BlacklistedProfile_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "BlacklistedProfile" ADD CONSTRAINT "BlacklistedProfile_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "CommentStyle" ADD CONSTRAINT "CommentStyle_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

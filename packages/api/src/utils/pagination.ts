@@ -14,6 +14,5 @@ export function paginate<T, K extends keyof T>(
   return {
     data: paginatedItems,
     next: cursor,
-    hasNextPage,
   };
 }

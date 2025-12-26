@@ -33,7 +33,7 @@ export default defineContentScript({
 
         root.render(
           <TRPCReactProvider>
-            <App portalContainer={container} />
+            <App shadowRoot={container} />
           </TRPCReactProvider>
         );
 

@@ -153,6 +153,7 @@ export const buildTargetListWorkflow = DBOS.registerWorkflow(
               id: await DBOS.randomUUID(),
               listId: input.targetListId,
               profileUrn: `url:${profile.linkedinUrl}`,
+              linkedinUrl: profile.linkedinUrl,
               accountId: input.accountId,
             })),
           ),

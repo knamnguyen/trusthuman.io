@@ -4,6 +4,7 @@ import { aiCommentsRouter } from "./ai-comments";
 import { autoCommentRouter } from "./autocomment";
 import { blacklistRouter } from "./blacklist";
 import { browserRouter } from "./browser";
+import { linkedinProfileScrapeRouter } from "./linkedin-profile-scrape";
 import { linkedinScrapeApifyRouter } from "./linkedin-scrape-apify";
 import { organizationRouter } from "./organization";
 import { profileImportRouter } from "./profile-import";
@@ -20,6 +21,7 @@ export const appRouter = createTRPCRouter({
   organization: organizationRouter,
   profileImport: profileImportRouter,
   linkedinScrapeApify: linkedinScrapeApifyRouter,
+  linkedinProfileScrape: linkedinProfileScrapeRouter,
   browser: browserRouter,
   autocomment: autoCommentRouter,
   targetList: targetListRouter,
