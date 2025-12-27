@@ -31,6 +31,75 @@ function extractProfileSlug(url: string): string {
 }
 
 export const accountRouter = {
+  getDefaultAccount: protectedProcedure.query(async ({ ctx }) => {
+    const account = await ctx.db.linkedInAccount.findFirst({
+      where: {
+        OR: [
+          {
+            ownerId: ctx.user.id,
+          },
+          {
+            organizationMemberships: {
+              some: {
+                userId: ctx.user.id,
+              },
+            },
+          },
+        ],
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        status: true,
+        ownerId: true,
+        owner: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (account === null) {
+      return null;
+    }
+
+    return {
+      account,
+      assumedUserToken: await assumedAccountJwt.encode({
+        accountId: account.id,
+        userId: ctx.user.id,
+      }),
+    };
+  }),
+
+  token: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const permitted = await hasPermissionToAccessAccount(
+        ctx.db,
+        ctx.user.id,
+        input.id,
+      );
+
+      if (permitted === false) {
+        return null;
+      }
+
+      return await assumedAccountJwt.encode({
+        accountId: input.id,
+        userId: ctx.user.id,
+      });
+    }),
+
   get: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
@@ -51,6 +120,8 @@ export const accountRouter = {
         }),
       )
       .mutation(async function* ({ ctx, input, signal }) {
+        // TODO: add some more access control checks or validation here
+        // the email check is sus
         const existingAccount = await ctx.db.linkedInAccount.findFirst({
           where: { email: input.email, ownerId: ctx.user.id },
         });
@@ -58,11 +129,26 @@ export const accountRouter = {
         let accountId;
         let profileId;
 
-        if (existingAccount !== null && existingAccount.status === "ACTIVE") {
-          yield {
-            status: "signed_in",
-          } as const;
-          return;
+        if (existingAccount !== null) {
+          const permitted = await hasPermissionToAccessAccount(ctx.db, {
+            userId: ctx.user.id,
+            accountId: existingAccount.id,
+          });
+
+          if (permitted === false) {
+            yield {
+              status: "error",
+              error: "Not permitted",
+            } as const;
+            return;
+          }
+
+          if (existingAccount.status === "ACTIVE") {
+            yield {
+              status: "signed_in",
+            } as const;
+            return;
+          }
         }
 
         if (existingAccount !== null) {
@@ -92,6 +178,7 @@ export const accountRouter = {
           ctx.db,
           ctx.browserRegistry,
           accountId,
+          ctx.user.id,
           {
             location: input.location,
             browserProfileId: profileId,
@@ -169,11 +256,10 @@ export const accountRouter = {
   switch: protectedProcedure
     .input(z.object({ accountId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const permitted = await hasPermissionToAccessAccount(
-        ctx.db,
-        ctx.user.id,
-        input.accountId,
-      );
+      const permitted = await hasPermissionToAccessAccount(ctx.db, {
+        userId: ctx.user.id,
+        accountId: input.accountId,
+      });
 
       if (permitted === false) {
         return {
@@ -186,6 +272,7 @@ export const accountRouter = {
         status: "success",
         assumedUserToken: await assumedAccountJwt.encode({
           accountId: input.accountId,
+          userId: ctx.user.id,
         }),
       } as const;
     }),
@@ -428,22 +515,17 @@ export const accountRouter = {
     }),
 } satisfies TRPCRouterRecord;
 
-async function hasPermissionToAccessAccount(
+export async function hasPermissionToAccessAccount(
   db: PrismaClient,
-  userId: string,
-  accountId: string,
+  { userId, accountId }: { userId: string; accountId: string },
 ) {
   const canAccess = await db.$queryRaw<{ permitted: boolean }[]>`
-    select (
-      select exists (
-        select 1 from "LinkedInAccount" la 
-        where la.id = ${accountId} and la."ownerId" = ${userId}
-      ) or
-      select exists (
-        select 1 from "LinkedInAccount" la 
-        join "OrganizationMember" om on la."organizationId" = om."orgId"
-        where la.id = ${accountId} 
-          and om."userId" = ${userId}
+    select exists (
+      select 1 from "LinkedInAccount" la 
+      where la.id = ${accountId} and la."ownerId" = ${userId}
+      or exists (
+        select 1 from "OrganizationMember" om 
+        where om."orgId" = la."organizationId" and om."userId" = ${userId}
       )
     ) as permitted
   `;

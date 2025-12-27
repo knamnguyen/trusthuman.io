@@ -63,6 +63,7 @@ CREATE TABLE "OrganizationMember" (
     "userId" TEXT NOT NULL,
     "role" TEXT NOT NULL,
     "joinedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "linkedInAccountId" TEXT,
 
     CONSTRAINT "OrganizationMember_pkey" PRIMARY KEY ("id")
 );
@@ -212,7 +213,6 @@ CREATE TABLE "UserComment" (
 -- CreateTable
 CREATE TABLE "AutoCommentRun" (
     "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
     "accountId" TEXT NOT NULL,
     "liveUrl" TEXT NOT NULL,
     "startedAt" TIMESTAMP(3),
@@ -221,6 +221,7 @@ CREATE TABLE "AutoCommentRun" (
     "error" TEXT,
     "status" TEXT NOT NULL,
     "hitlMode" BOOLEAN NOT NULL DEFAULT false,
+    "userId" TEXT,
 
     CONSTRAINT "AutoCommentRun_pkey" PRIMARY KEY ("id")
 );
@@ -489,6 +490,9 @@ ALTER TABLE "OrganizationMember" ADD CONSTRAINT "OrganizationMember_orgId_fkey" 
 ALTER TABLE "OrganizationMember" ADD CONSTRAINT "OrganizationMember_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "OrganizationMember" ADD CONSTRAINT "OrganizationMember_linkedInAccountId_fkey" FOREIGN KEY ("linkedInAccountId") REFERENCES "LinkedInAccount"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "LinkedInAccount" ADD CONSTRAINT "LinkedInAccount_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -507,10 +511,10 @@ ALTER TABLE "UserComment" ADD CONSTRAINT "UserComment_autoCommentRunId_fkey" FOR
 ALTER TABLE "UserComment" ADD CONSTRAINT "UserComment_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "AutoCommentRun" ADD CONSTRAINT "AutoCommentRun_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "AutoCommentRun" ADD CONSTRAINT "AutoCommentRun_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "AutoCommentRun" ADD CONSTRAINT "AutoCommentRun_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "AutoCommentRun" ADD CONSTRAINT "AutoCommentRun_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "UserBrowserState" ADD CONSTRAINT "UserBrowserState_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

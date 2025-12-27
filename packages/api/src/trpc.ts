@@ -52,23 +52,18 @@ export interface TRPCContext {
   hyperbrowser: Hyperbrowser;
   browserJobs: typeof browserJobs;
   browserRegistry: BrowserSessionRegistry;
-  req: Request;
 }
 
 const hb = new Hyperbrowser({
   apiKey: env.HYPERBROWSER_API_KEY,
 });
 
-export const createTRPCContext = (opts: {
-  headers: Headers;
-  req: Request;
-}): TRPCContext => {
+export const createTRPCContext = (opts: { headers: Headers }): TRPCContext => {
   const source = opts.headers.get("x-trpc-source");
   console.log(">>> tRPC Request from", source ?? "nextjs");
 
   return {
     db,
-    req: opts.req,
     headers: opts.headers,
     hyperbrowser: hb,
     browserJobs,
@@ -118,7 +113,11 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
       });
     }
 
-    const result = await getAccount(decoded.payload.accountId);
+    const result = await getAccount(
+      ctx.db,
+      decoded.payload.userId,
+      decoded.payload.accountId,
+    );
 
     if (result === null) {
       throw new TRPCError({
@@ -296,9 +295,9 @@ export async function getOrInsertUser(
   return newUser;
 }
 
-async function getAccount(accountId: string) {
+async function getAccount(db: PrismaClient, userId: string, accountId: string) {
   const row = await db.user.findFirst({
-    where: { id: accountId },
+    where: { id: userId },
     include: {
       linkedInAccounts: {
         where: { id: accountId },

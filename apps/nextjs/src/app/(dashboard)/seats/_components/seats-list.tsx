@@ -12,7 +12,7 @@ import type { CountrySchema } from "@sassy/validators";
 import { Dialog, DialogContent } from "@sassy/ui/dialog";
 import { countrySchema } from "@sassy/validators";
 
-import { trpcStandalone, useTRPC } from "~/trpc/react";
+import { trpcStandalone, useTRPC, useTRPCClient } from "~/trpc/react";
 
 const formSchema = z.object({
   email: z.string().trim().email(),
@@ -30,6 +30,8 @@ export function SeatsList() {
       },
     ),
   );
+
+  const trpcClient = useTRPCClient();
 
   const {
     register,
@@ -63,7 +65,7 @@ export function SeatsList() {
       name: string;
       location: CountrySchema;
     }) => {
-      for await (const status of await trpcStandalone.account.init.create.mutate(
+      for await (const status of await trpcClient.account.init.create.mutate(
         input,
       )) {
         if (status.status === "error") {

@@ -21,6 +21,7 @@ import { protectedProcedure } from "../trpc";
 import { BrowserSession } from "../utils/browser-session";
 import { chunkify, transformValuesIfMatch } from "../utils/commons";
 import { paginate } from "../utils/pagination";
+import { hasPermissionToAccessAccount } from "./account";
 
 export const autoCommentRouter = {
   runs: protectedProcedure
@@ -374,7 +375,7 @@ export const autoCommentRouter = {
     )
     .mutation(async ({ ctx, input }) => {
       const account = await ctx.db.linkedInAccount.findUnique({
-        where: { id: input.accountId, userId: ctx.user.id },
+        where: { id: input.accountId },
         select: {
           id: true,
           location: true,
@@ -387,6 +388,19 @@ export const autoCommentRouter = {
           status: "error",
           code: 400,
           message: "LinkedIn account not found",
+        } as const;
+      }
+
+      const permitted = await hasPermissionToAccessAccount(ctx.db, {
+        userId: ctx.user.id,
+        accountId: account.id,
+      });
+
+      if (permitted === false) {
+        return {
+          status: "error",
+          code: 403,
+          message: "You do not have permission to access this account.",
         } as const;
       }
 
@@ -409,6 +423,7 @@ export const autoCommentRouter = {
         ctx.db,
         ctx.browserRegistry,
         runId,
+        ctx.user.id,
         input.accountId,
       );
 
@@ -450,16 +465,32 @@ export const autoCommentRouter = {
           where: {
             id: input.linkedInAccountId,
           },
+          select: {
+            id: true,
+          },
         });
 
-        if (account?.userId !== ctx.user.id) {
+        if (account === null) {
+          return {
+            status: "error",
+            code: 400,
+            message: "LinkedIn account not found",
+          } as const;
+        }
+
+        const permitted = await hasPermissionToAccessAccount(ctx.db, {
+          userId: ctx.user.id,
+          accountId: account.id,
+        });
+
+        if (permitted === false) {
           return {
             status: "error",
             code: 403,
-            message:
-              "You do not have permission to modify this account's configuration",
+            message: "You do not have permission to access this account.",
           } as const;
         }
+
         await ctx.db.autoCommentConfig.upsert({
           where: {
             accountId: input.linkedInAccountId,
@@ -689,6 +720,7 @@ async function startAutoComment(
   db: PrismaClient,
   browserRegistry: BrowserSessionRegistry,
   runId: string,
+  userId: string,
   accountId: string,
   params?: StartAutoCommentingParams,
 ) {
@@ -698,7 +730,7 @@ async function startAutoComment(
       id: true,
       location: true,
       browserProfileId: true,
-      userId: true,
+      ownerId: true,
     },
   });
 
@@ -721,11 +753,17 @@ async function startAutoComment(
     } as const;
   }
 
-  const browserSession = new BrowserSession(db, browserRegistry, accountId, {
-    location: account.location as ProxyLocation,
-    browserProfileId: account.browserProfileId,
-    liveviewViewOnlyMode: process.env.NODE_ENV === "production",
-  });
+  const browserSession = new BrowserSession(
+    db,
+    browserRegistry,
+    accountId,
+    userId,
+    {
+      location: account.location as ProxyLocation,
+      browserProfileId: account.browserProfileId,
+      liveviewViewOnlyMode: process.env.NODE_ENV === "production",
+    },
+  );
 
   await browserSession.ready;
 
@@ -734,7 +772,6 @@ async function startAutoComment(
       data: {
         // use ulid here because we wanna paginate by creation time + id
         id: runId,
-        userId: account.userId,
         accountId,
         status: "pending",
         scheduledAt: new Date(),

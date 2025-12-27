@@ -79,7 +79,9 @@
     "LINKEDIN_PASSWORD_SECRET_KEY",
     "LINKEDIN_TWO_FA_SECRET_KEY",
     "JWT_SECRET",
-    "DBOS_SYSTEM_DATABASE_URL"
+    "DBOS_SYSTEM_DATABASE_URL",
+    "NEXTJS_URL",
+    "PORT"
   ],
   "globalPassThroughEnv": [
     "NODE_ENV",

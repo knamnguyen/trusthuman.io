@@ -37,6 +37,7 @@ if (process.env.JWT_SECRET === undefined) {
 export const assumedAccountJwt = jwtFactory(
   z.object({
     accountId: z.string(),
+    userId: z.string(),
   }),
   86_400_000, // put a day
   process.env.JWT_SECRET,
@@ -130,6 +131,7 @@ export class BrowserSession {
     private readonly db: PrismaClient,
     private readonly registry: BrowserSessionRegistry,
     public readonly accountId: string,
+    public readonly userId: string,
     private readonly opts: BrowserSessionParams,
     private readonly logger: Logger = console,
   ) {
@@ -198,6 +200,7 @@ export class BrowserSession {
 
     const accountJwt = await assumedAccountJwt.encode({
       accountId: this.id,
+      userId: this.userId,
     });
 
     this.controller = new AbortController();
@@ -594,6 +597,7 @@ export class BrowserSession {
 
     const assumedUserToken = await assumedAccountJwt.encode({
       accountId: this.accountId,
+      userId: this.userId,
     });
 
     // can return an async iterator in the future to stream updates back to caller
