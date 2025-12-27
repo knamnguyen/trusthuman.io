@@ -2,7 +2,7 @@ import { cache } from "react";
 
 import { SidebarInset, SidebarProvider } from "@sassy/ui/sidebar";
 
-import { LinkedInAccountProvider } from "~/hooks/use-current-linkedin-account-id";
+import { LinkedInAccountProvider } from "~/stores/linkedin-account-store";
 import { getQueryClient, HydrateClient, trpc } from "~/trpc/server";
 import { DashboardSidebar } from "./_components/dashboard-sidebar";
 

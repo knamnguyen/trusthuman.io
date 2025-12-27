@@ -97,8 +97,6 @@ const getTrpcClient = (opts?: { assumedUserToken?: string }) => {
             headers["x-assumed-user-token"] = opts.assumedUserToken;
           }
 
-          console.info({ headers });
-
           if (clerkToken) {
             headers.Authorization = `Bearer ${clerkToken}`;
           }
@@ -120,6 +118,7 @@ const getTrpcClient = (opts?: { assumedUserToken?: string }) => {
  */
 export const getStandaloneTRPCClient = (config?: {
   assumedUserToken?: string;
+  accountId?: string;
 }) => {
   return getTrpcClient(config);
 };

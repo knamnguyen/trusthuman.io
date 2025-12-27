@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
+import { useStore } from "@tanstack/react-store";
 import { LoaderCircleIcon } from "lucide-react";
 import {
   Controller,
@@ -32,13 +33,15 @@ import {
 } from "@sassy/ui/select";
 
 import { env } from "~/env";
-import { useCurrentLinkedInAccountId } from "~/hooks/use-current-linkedin-account-id";
 import { usePremiumStatus } from "~/hooks/use-premium-status";
+import { useCurrentLinkedInAccountId } from "~/stores/linkedin-account-store";
 import { useTRPC } from "~/trpc/react";
 
 export const getSyncHostUrl = () => {
   if (env.NODE_ENV !== "production") {
-    return process.env.NEXTJS_URL ?? `http://localhost:${process.env.PORT ?? "3000"}`;
+    return (
+      process.env.NEXTJS_URL ?? `http://localhost:${process.env.PORT ?? "3000"}`
+    );
   }
   return "https://engagekit.io";
 };
@@ -71,7 +74,7 @@ const getMaxPostsLimit = (isPremium: boolean | null) =>
 export function AutoCommentConfigurationForm() {
   const { control, watch, setValue } = useFormContext<FormState>();
   const trpc = useTRPC();
-  const { accountId } = useCurrentLinkedInAccountId();
+  const accountId = useCurrentLinkedInAccountId();
   const { isPremium, isLoading: isPremiumLoading } = usePremiumStatus();
 
   const maxPostsLimit = getMaxPostsLimit(isPremium);
@@ -1152,7 +1155,7 @@ export function AutoCommentConfigurationFormHeader() {
     trpc.autocomment.configuration.save.mutationOptions(),
   );
   const { getValues } = useFormContext<FormState>();
-  const { accountId } = useCurrentLinkedInAccountId();
+  const accountId = useCurrentLinkedInAccountId();
   return (
     <div className="bg-background sticky top-0 mb-3 flex items-center justify-between px-4 py-2 shadow-sm">
       <div className="text-lg font-semibold">Auto commenting configuration</div>
