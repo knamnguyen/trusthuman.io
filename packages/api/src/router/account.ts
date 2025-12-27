@@ -3,7 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { ulid } from "ulidx";
 import z from "zod";
 
-import { PrismaClient } from "@sassy/db";
+import type { PrismaClient } from "@sassy/db";
 import { countrySchema } from "@sassy/validators";
 
 import { protectedProcedure, publicProcedure } from "../trpc";
@@ -84,11 +84,10 @@ export const accountRouter = {
       }),
     )
     .query(async ({ ctx, input }) => {
-      const permitted = await hasPermissionToAccessAccount(
-        ctx.db,
-        ctx.user.id,
-        input.id,
-      );
+      const permitted = await hasPermissionToAccessAccount(ctx.db, {
+        userId: ctx.user.id,
+        accountId: input.id,
+      });
 
       if (permitted === false) {
         return null;
@@ -252,30 +251,6 @@ export const accountRouter = {
         } as const;
       }),
   },
-
-  switch: protectedProcedure
-    .input(z.object({ accountId: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      const permitted = await hasPermissionToAccessAccount(ctx.db, {
-        userId: ctx.user.id,
-        accountId: input.accountId,
-      });
-
-      if (permitted === false) {
-        return {
-          status: "error",
-          error: "Not permitted",
-        } as const;
-      }
-
-      return {
-        status: "success",
-        assumedUserToken: await assumedAccountJwt.encode({
-          accountId: input.accountId,
-          userId: ctx.user.id,
-        }),
-      } as const;
-    }),
 
   list: protectedProcedure
     .input(
