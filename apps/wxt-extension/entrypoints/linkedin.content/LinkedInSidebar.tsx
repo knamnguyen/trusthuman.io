@@ -36,6 +36,7 @@ import { useBackgroundAuth } from "../../hooks/use-background-auth";
 import { getSyncHostUrl } from "../../lib/get-sync-host-url";
 import { useTRPC } from "../../lib/trpc/client";
 import { ToggleButton } from "./_components/ToggleButton";
+import { ExploreTab } from "./explore-tab/ExploreTab";
 import { useCommentStore, useShadowRootStore, useSidebarStore } from "./stores";
 import { ShareTab } from "./target-profile-tab/ShareTab";
 import { insertIntoCurrentField } from "./utils";
@@ -454,7 +455,7 @@ export function LinkedInSidebar({ onClose }: LinkedInSidebarProps) {
   return (
     <SheetContent
       side="right"
-      className="w-[25vw] max-w-[400px] min-w-[320px]"
+      className="w-[25vw] max-w-[400px] min-w-[320px] gap-0"
       portalContainer={shadowRoot}
     >
       {/* Close button attached to the left edge of sidebar */}
@@ -462,7 +463,7 @@ export function LinkedInSidebar({ onClose }: LinkedInSidebarProps) {
         <ToggleButton isOpen={true} onToggle={onClose} />
       </div>
       <SheetHeader>
-        <div className="flex justify-center px-4">
+        <div className="bg-background z-10 flex justify-center">
           <ExpandableTabs
             tabs={tabs}
             value={selectedTab}
@@ -470,8 +471,7 @@ export function LinkedInSidebar({ onClose }: LinkedInSidebarProps) {
           />
         </div>
       </SheetHeader>
-
-      <div className="flex-1 overflow-y-auto py-4">
+      <div className="flex-1 overflow-y-auto">
         {/* Tab 0: Messages - All existing content */}
         {selectedTab === 0 && (
           <>
@@ -717,14 +717,8 @@ export function LinkedInSidebar({ onClose }: LinkedInSidebarProps) {
           </div>
         )}
 
-        {/* Tab 2: Explore - Placeholder */}
-        {selectedTab === 2 && (
-          <div className="flex h-full items-center justify-center px-4">
-            <p className="text-muted-foreground text-sm">
-              Explore content coming soon...
-            </p>
-          </div>
-        )}
+        {/* Tab 2: Explore - Feed Explorer */}
+        {selectedTab === 2 && <ExploreTab />}
 
         {/* Tab 3: Share - Saved Profile Display */}
         {selectedTab === 3 && <ShareTab />}
@@ -732,15 +726,6 @@ export function LinkedInSidebar({ onClose }: LinkedInSidebarProps) {
         {/* Tab 4: Write - Generated Comment Display */}
         {selectedTab === 4 && <WriteTab postContent={postContent} />}
       </div>
-
-      <SheetFooter>
-        <p className="text-muted-foreground w-full text-center text-xs">
-          EngageKit WXT POC v0.0.1
-        </p>
-        <SheetClose asChild>
-          <button className="sr-only">Close</button>
-        </SheetClose>
-      </SheetFooter>
     </SheetContent>
   );
 }
