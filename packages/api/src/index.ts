@@ -23,6 +23,8 @@ export type {
 const createCaller = createCallerFactory(appRouter);
 type AppRouterCaller = ReturnType<typeof createCaller>;
 
+// TODO: TO BE DEPRECATED, we dont want or need SSR for now as it just creates complexity
+// with no added benefits that we need
 /**
  * Helper to create a server-side caller with the required context
  * This is useful for server-side operations where you need to call tRPC procedures
@@ -31,6 +33,8 @@ type AppRouterCaller = ReturnType<typeof createCaller>;
 export const createServerClient = (): AppRouterCaller => {
   const ctx = createTRPCContext({
     headers: new Headers(),
+    // TODO: just a placeholder, server side requests technically have no request object
+    req: new Request("http://localhost"),
   });
   return appRouter.createCaller(ctx);
 };

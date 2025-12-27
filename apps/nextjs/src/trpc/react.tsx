@@ -14,6 +14,7 @@ import SuperJSON from "superjson";
 import type { AppRouter } from "@sassy/api";
 
 import { env } from "~/env";
+import { useLinkedInAccountStore } from "~/stores/linkedin-account-store";
 import { createQueryClient } from "./query-client";
 
 let clientQueryClientSingleton: QueryClient | undefined = undefined;
@@ -39,7 +40,7 @@ const getBaseUrl = () => {
 
 // Create a singleton trpc client that will be used in the global provider
 let _trpcClient: ReturnType<typeof createTRPCClient<AppRouter>> | undefined;
-export const getTrpcClient = () => {
+export const getTrpcClient = (config?: { assumedUserToken?: string }) => {
   if (typeof window === "undefined") {
     return createTRPCClient<AppRouter>({
       links: [
@@ -54,6 +55,11 @@ export const getTrpcClient = () => {
           headers() {
             const headers = new Headers();
             headers.set("x-trpc-source", "nextjs-ssr");
+
+            if (config?.assumedUserToken !== undefined) {
+              headers.set("x-assumed-user-token", config.assumedUserToken);
+            }
+
             return headers;
           },
         }),
@@ -74,6 +80,11 @@ export const getTrpcClient = () => {
           headers() {
             const headers = new Headers();
             headers.set("x-trpc-source", "nextjs-react");
+
+            if (config?.assumedUserToken !== undefined) {
+              headers.set("x-assumed-user-token", config.assumedUserToken);
+            }
+
             return headers;
           },
         }),
@@ -85,7 +96,17 @@ export const getTrpcClient = () => {
 export function TRPCReactProvider(props: { children: React.ReactNode }) {
   const queryClient = getQueryClient();
 
-  const [trpcClient] = useState(getTrpcClient);
+  const store = useLinkedInAccountStore();
+
+  const [trpcClient] = useState(() =>
+    getTrpcClient({
+      // must use getter here bcs we want to always get latest value from store
+      // instead of value at time of initialization
+      get assumedUserToken() {
+        return store.state.accountId ?? undefined;
+      },
+    }),
+  );
 
   return (
     <QueryClientProvider client={queryClient}>

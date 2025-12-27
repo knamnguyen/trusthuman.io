@@ -52,18 +52,23 @@ export interface TRPCContext {
   hyperbrowser: Hyperbrowser;
   browserJobs: typeof browserJobs;
   browserRegistry: BrowserSessionRegistry;
+  req: Request;
 }
 
 const hb = new Hyperbrowser({
   apiKey: env.HYPERBROWSER_API_KEY,
 });
 
-export const createTRPCContext = (opts: { headers: Headers }): TRPCContext => {
+export const createTRPCContext = (opts: {
+  headers: Headers;
+  req: Request;
+}): TRPCContext => {
   const source = opts.headers.get("x-trpc-source");
   console.log(">>> tRPC Request from", source ?? "nextjs");
 
   return {
     db,
+    req: opts.req,
     headers: opts.headers,
     hyperbrowser: hb,
     browserJobs,
@@ -118,19 +123,16 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
     if (result === null) {
       throw new TRPCError({
         code: "UNAUTHORIZED",
-        message: "Assumed account not found",
+        message: "Invalid assumed user token - user not found",
       });
     }
-
-    const { user, ...account } = result;
 
     return next({
       ctx: {
         ...ctx,
-        user,
-        // TODO: remove this in the future when we make sure that each signed in user has a linked in account created and linked
-        // we need to cast here bcs somehow type inference is not catching that account is nullable
-        account: account as typeof account | null,
+        user: result.user,
+        account: result.account,
+        memberships: result.memberships,
       },
     });
   }
@@ -165,6 +167,7 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
         ...ctx,
         user,
         account: null,
+        memberships: [],
       },
     });
   }
@@ -185,6 +188,7 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
       ...ctx, // Keep existing context with db and headers
       user, // Add the user to the context
       account: null,
+      memberships: [],
     },
   });
 });
@@ -232,13 +236,23 @@ const userFields = {
 export async function getOrInsertUser(
   db: PrismaClient,
   userId: string,
+  currentAccountId?: string,
   clerkUser?: User,
 ) {
   const dbUser = await db.user.findUnique({
     where: {
       id: userId,
     },
-    select: userFields,
+    include: {
+      linkedInAccounts:
+        currentAccountId !== undefined
+          ? {
+              where: {
+                id: currentAccountId,
+              },
+            }
+          : false,
+    },
   });
 
   if (dbUser !== null) {
@@ -282,15 +296,38 @@ export async function getOrInsertUser(
   return newUser;
 }
 
-function getAccount(accountId: string) {
-  return db.linkedInAccount.findFirst({
+async function getAccount(accountId: string) {
+  const row = await db.user.findFirst({
     where: { id: accountId },
     include: {
-      user: {
-        select: userFields,
+      linkedInAccounts: {
+        where: { id: accountId },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          profileUrl: true,
+        },
+      },
+      organizationMemberships: {
+        select: {
+          orgId: true,
+        },
       },
     },
   });
+
+  if (row === null) {
+    return null;
+  }
+
+  const { linkedInAccounts, ...user } = row;
+
+  return {
+    user,
+    account: linkedInAccounts[0] ?? null,
+    memberships: row.organizationMemberships,
+  };
 }
 
 /**
