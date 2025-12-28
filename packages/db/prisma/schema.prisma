@@ -106,7 +106,7 @@ model LinkedInAccount {
   profileSlug        String? @unique // Globally unique - one LinkedIn per system
   registrationStatus String? // "registered" | "connected" | null
 
-  org                     Organization?        @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  org                     Organization?          @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   AutoCommentConfig       AutoCommentConfig[]
   BlacklistedProfile      BlacklistedProfile[]
   AutoCommentRun          AutoCommentRun[]
@@ -116,6 +116,7 @@ model LinkedInAccount {
   targetLists             TargetList[]
   targetProfiles          TargetProfile[]
   organizationMemberships OrganizationMember[]
+  linkedInAccountStats    LinkedInAccountStats[]
 }
 
 enum LinkedInAccountStatus {
@@ -490,8 +491,19 @@ model CommentAnalysis {
   @@index([createdAt])
 }
 
+enum BuildTargetListJobStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
 model BuildTargetListJob {
-  id                 String              @id
+  id                String                   @id
+  linkedInAccountId String
+  listId            String
+  status            BuildTargetListJobStatus
+
   profileScraperMode ProfileScraperMode?
   searchQuery        String
 
@@ -525,6 +537,9 @@ model BuildTargetListJob {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  linkedInAccount LinkedInAccount @relation(fields: [linkedInAccountId], references: [id], onDelete: Cascade)
+  list            TargetList      @relation(fields: [listId], references: [id], onDelete: Cascade)
 }
 
 enum ProfileScraperMode {

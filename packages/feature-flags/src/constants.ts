@@ -21,3 +21,16 @@ export const autoCommentConfigurationDefaults = {
   targetListEnabled: false,
   hitlMode: false,
 };
+
+export const FREE_BUILD_TARGET_LIST_WEEKLY_LIMIT = 10;
+export const PREMIUM_BUILD_TARGET_LIST_WEEKLY_LIMIT = 100;
+
+export const getBuildTargetListLimits = (
+  accessType: "FREE" | (string & {}),
+) => {
+  if (accessType === "FREE") {
+    return FREE_BUILD_TARGET_LIST_WEEKLY_LIMIT;
+  }
+
+  return PREMIUM_BUILD_TARGET_LIST_WEEKLY_LIMIT;
+};

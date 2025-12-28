@@ -14,13 +14,23 @@ export const buildTargetListWorkflow = DBOS.registerWorkflow(
   async (input: {
     targetListId: string;
     targetListName: string;
-    accountId: string;
-    params: LinkedinProfileSearchInput;
+    buildTargetListJobId: string;
   }) => {
+    const job = await db.buildTargetListJob.findFirst({
+      where: { id: input.buildTargetListJobId },
+    });
+
+    if (job === null) {
+      return {
+        status: "noop",
+        reason: "job not found",
+      } as const;
+    }
+
     const account = await DBOS.runStep(
       async () => {
         const account = await db.linkedInAccount.findFirst({
-          where: { id: input.accountId },
+          where: { id: job.accountId },
         });
 
         return account;
@@ -29,6 +39,8 @@ export const buildTargetListWorkflow = DBOS.registerWorkflow(
         name: "validate accountId",
       },
     );
+
+    // TODO: update build targe tlist job status to running etc and completed
 
     if (account === null) {
       return {
@@ -179,5 +191,8 @@ export const buildTargetListWorkflow = DBOS.registerWorkflow(
 
       startPage += 1;
     }
+  },
+  {
+    name: "buildTargetListWorkflow",
   },
 );

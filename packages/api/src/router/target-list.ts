@@ -1,5 +1,4 @@
 import { DBOS } from "@dbos-inc/dbos-sdk";
-import { TRPCError } from "@trpc/server";
 import { ulid } from "ulidx";
 import { z } from "zod";
 
@@ -9,6 +8,28 @@ import { paginate } from "../utils/pagination";
 import { buildTargetListWorkflow } from "../workflows";
 
 const linkedInIndustrySearch = new LinkedInIndustrySearch();
+
+const linkedInUrlSchema = z
+  .string()
+  .url()
+  .refine((url) => {
+    // normalize to https and remove search params and hash etc
+    try {
+      const u = new URL(url);
+      return (
+        u.hostname.endsWith("linkedin.com") && u.pathname.startsWith("/in/")
+      );
+    } catch {
+      return false;
+    }
+  })
+  .transform((url) => {
+    const u = new URL(url);
+    u.protocol = "https:";
+    u.search = "";
+    u.hash = "";
+    return u.toString();
+  });
 
 export const targetListRouter = {
   industries: {
@@ -209,7 +230,7 @@ export const targetListRouter = {
     .input(
       z.object({
         listId: z.string(),
-        linkedinUrl: z.string().url(),
+        linkedinUrl: linkedInUrlSchema,
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -245,11 +266,10 @@ export const targetListRouter = {
         linked: existingProfile !== null,
       } as const;
     }),
-  removeProfileFromList: protectedProcedure
+  removeTargetProfile: protectedProcedure
     .input(
       z.object({
-        listId: z.string(),
-        linkedinUrl: z.string(),
+        id: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -263,8 +283,7 @@ export const targetListRouter = {
 
       await ctx.db.targetProfile.deleteMany({
         where: {
-          listId: input.listId,
-          linkedinUrl: input.linkedinUrl,
+          id: input.id,
           accountId: ctx.account.id,
         },
       });
@@ -281,7 +300,7 @@ export const targetListRouter = {
   findListsWithProfileStatus: protectedProcedure
     .input(
       z.object({
-        linkedinUrl: z.string(),
+        linkedinUrl: linkedInUrlSchema,
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -321,7 +340,7 @@ export const targetListRouter = {
   updateProfileLists: protectedProcedure
     .input(
       z.object({
-        linkedinUrl: z.string().url(),
+        linkedinUrl: linkedInUrlSchema,
         addToListIds: z.array(z.string()),
         removeFromListIds: z.array(z.string()),
       }),
@@ -342,6 +361,38 @@ export const targetListRouter = {
         select: { urn: true },
       });
 
+      const listIdsToValidate = [
+        ...input.addToListIds,
+        ...input.removeFromListIds,
+      ];
+
+      // early return here if no lists to add or remove
+      if (listIdsToValidate.length === 0) {
+        return {
+          status: "success",
+          added: 0,
+          removed: 0,
+        } as const;
+      }
+
+      // TODO: setup access control that's tied to user instead of relying on exists check with accountId: ctx.account.id
+      // validate add to and remove from lists exists and belong to user
+      const validLists = await ctx.db.targetList.findMany({
+        where: {
+          id: { in: listIdsToValidate },
+          accountId: ctx.account.id,
+        },
+        select: { id: true },
+      });
+
+      if (validLists.length !== new Set(listIdsToValidate).size) {
+        return {
+          status: "error",
+          code: 400,
+          message: "One or more target lists not found",
+        } as const;
+      }
+
       // Remove from lists
       if (input.removeFromListIds.length > 0) {
         await ctx.db.targetProfile.deleteMany({
@@ -355,26 +406,6 @@ export const targetListRouter = {
 
       // Add to lists - first validate all list IDs exist and belong to user
       if (input.addToListIds.length > 0) {
-        const validLists = await ctx.db.targetList.findMany({
-          where: {
-            id: { in: input.addToListIds },
-            accountId: ctx.account.id,
-          },
-          select: { id: true },
-        });
-
-        const validListIds = new Set(validLists.map((l) => l.id));
-        const invalidListIds = input.addToListIds.filter(
-          (id) => !validListIds.has(id),
-        );
-
-        if (invalidListIds.length > 0) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: `List(s) not found: ${invalidListIds.join(", ")}`,
-          });
-        }
-
         await ctx.db.targetProfile.createMany({
           data: input.addToListIds.map((listId) => ({
             id: ulid(),
@@ -430,6 +461,12 @@ export const targetListRouter = {
         },
         include: {
           profile: true,
+          list: {
+            select: {
+              name: true,
+              id: true,
+            },
+          },
         },
         orderBy: {
           id: "desc",
@@ -502,7 +539,7 @@ export const targetListRouter = {
   ensureProfileInAllList: protectedProcedure
     .input(
       z.object({
-        linkedinUrl: z.string().url(),
+        linkedinUrl: linkedInUrlSchema,
       }),
     )
     .mutation(async ({ ctx, input }) => {
