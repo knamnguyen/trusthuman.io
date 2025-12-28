@@ -392,7 +392,7 @@ export const autoCommentRouter = {
       }
 
       const permitted = await hasPermissionToAccessAccount(ctx.db, {
-        userId: ctx.user.id,
+        readerId: ctx.user.id,
         accountId: account.id,
       });
 
@@ -479,7 +479,7 @@ export const autoCommentRouter = {
         }
 
         const permitted = await hasPermissionToAccessAccount(ctx.db, {
-          userId: ctx.user.id,
+          readerId: ctx.user.id,
           accountId: account.id,
         });
 

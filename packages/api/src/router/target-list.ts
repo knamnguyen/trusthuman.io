@@ -79,7 +79,7 @@ export const targetListRouter = {
         accountId: ctx.account.id,
         targetListName: input.name,
         // idk why the f input.params is inferred as unknown, so just cast for now
-        params: input.params,
+        params: { ...input.params, maxItems: 100 },
       });
 
       return {

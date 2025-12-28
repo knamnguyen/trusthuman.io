@@ -40,6 +40,7 @@ export const buildTargetListWorkflow = DBOS.registerWorkflow(
     const explorer = new LinkedInProfileExplorer(apifyApiToken);
 
     let startPage = 1;
+    let profilesAdded = 0;
 
     while (true) {
       const exploreResults = await DBOS.runStep(async () => {
@@ -147,7 +148,7 @@ export const buildTargetListWorkflow = DBOS.registerWorkflow(
           });
         }
 
-        await db.targetProfile.createMany({
+        const result = await db.targetProfile.createMany({
           data: await Promise.all(
             exploreResults.data.items.map(async (profile) => ({
               id: await DBOS.randomUUID(),
@@ -160,6 +161,8 @@ export const buildTargetListWorkflow = DBOS.registerWorkflow(
           skipDuplicates: true,
         });
 
+        profilesAdded += result.count;
+
         await db.targetList.update({
           where: { id: input.targetListId },
           data: {
@@ -168,7 +171,7 @@ export const buildTargetListWorkflow = DBOS.registerWorkflow(
         });
       });
 
-      if (exploreResults.data.hasNextPage === false) {
+      if (exploreResults.data.hasNextPage === false || profilesAdded >= 100) {
         return {
           status: "completed",
         } as const;

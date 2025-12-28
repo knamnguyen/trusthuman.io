@@ -85,7 +85,7 @@ export const accountRouter = {
     )
     .query(async ({ ctx, input }) => {
       const permitted = await hasPermissionToAccessAccount(ctx.db, {
-        userId: ctx.user.id,
+        readerId: ctx.user.id,
         accountId: input.id,
       });
 
@@ -130,7 +130,7 @@ export const accountRouter = {
 
         if (existingAccount !== null) {
           const permitted = await hasPermissionToAccessAccount(ctx.db, {
-            userId: ctx.user.id,
+            readerId: ctx.user.id,
             accountId: existingAccount.id,
           });
 
@@ -492,15 +492,15 @@ export const accountRouter = {
 
 export async function hasPermissionToAccessAccount(
   db: PrismaClient,
-  { userId, accountId }: { userId: string; accountId: string },
+  { readerId, accountId }: { readerId: string; accountId: string },
 ) {
   const canAccess = await db.$queryRaw<{ permitted: boolean }[]>`
     select exists (
       select 1 from "LinkedInAccount" la 
-      where la.id = ${accountId} and la."ownerId" = ${userId}
+      where la.id = ${accountId} and la."ownerId" = ${readerId}
       or exists (
         select 1 from "OrganizationMember" om 
-        where om."orgId" = la."organizationId" and om."userId" = ${userId}
+        where om."orgId" = la."organizationId" and om."userId" = ${readerId}
       )
     ) as permitted
   `;
