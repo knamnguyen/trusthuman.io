@@ -15,6 +15,7 @@
     "db:push": "pnpm --filter @sassy/db db:push",
     "db:studio": "pnpm --filter @sassy/db db:studio",
     "db:generate": "pnpm --filter @sassy/db db:generate",
+    "db:schema": "pnpm --filter @sassy/db db:schema",
     "dev": "turbo watch dev --continue",
     "dev:next": "turbo watch dev -F @sassy/nextjs...",
     "format": "turbo run format --continue -- --cache --cache-location .cache/.prettiercache",

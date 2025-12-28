@@ -27,12 +27,16 @@ import {
 } from "@sassy/ui/sidebar";
 import { Skeleton } from "@sassy/ui/skeleton";
 
-import { useCurrentLinkedInAccountId } from "~/hooks/use-current-linkedin-account-id";
+import {
+  useCurrentLinkedInAccountId,
+  useLinkedInAccountStore,
+} from "~/stores/linkedin-account-store";
 import { useTRPC } from "~/trpc/react";
 
 export function AccountSwitcher() {
   const { isMobile } = useSidebar();
-  const { accountId, setAccountId } = useCurrentLinkedInAccountId();
+  const store = useLinkedInAccountStore();
+  const accountId = useCurrentLinkedInAccountId();
   const queryClient = useQueryClient();
   const trpc = useTRPC();
 
@@ -65,7 +69,7 @@ export function AccountSwitcher() {
     if (accountId === null) {
       const firstAccount = accounts?.[0];
       if (firstAccount !== undefined) {
-        setAccountId(firstAccount.id);
+        store.setAccountId(firstAccount.id);
         queryClient.setQueryData(
           trpc.account.get.queryKey({
             id: firstAccount.id,
@@ -76,7 +80,7 @@ export function AccountSwitcher() {
     }
     // eslint-disable-next-line react-compiler/react-compiler
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [accounts, accountId, setAccountId, queryClient]);
+  }, [accounts, accountId, queryClient]);
 
   if (activeAccount.data === null || activeAccount.data === undefined) {
     return null;
@@ -134,7 +138,7 @@ export function AccountSwitcher() {
                         }),
                         account,
                       );
-                      setAccountId(account.id);
+                      store.setAccountId(account.id);
                     }}
                     className="cursor-pointer gap-2 p-2"
                   >

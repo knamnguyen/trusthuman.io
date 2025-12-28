@@ -389,31 +389,23 @@ export async function runListMode(params: {
         await saveCommentedAuthorWithTimestamp(info.name);
         commentedAuthorsWithTimestamps.set(info.name, Date.now());
       }
-      const comments: {
-        postContentHtml: string | null;
-        comment: string;
-        urn: string;
-        hash: string | null;
-        isDuplicate: boolean;
-      }[] = [];
 
-      for (const [index, urn] of urns.entries()) {
-        comments.push({
-          urn,
-          comment,
-          postContentHtml,
-          hash: hashRes?.hash ?? null,
-          isDuplicate: index !== 0,
-        });
+      const postUrn = urns[0];
+
+      if (postUrn !== undefined) {
+        await contentScriptContext
+          .getTrpcClient()
+          .autocomment.saveComments.mutate({
+            comment,
+            postUrn,
+            hash: hashRes?.hash ?? null,
+            postContentHtml,
+          })
+          .catch((err) => {
+            // just catch this error here and continue
+            console.error("error saving comments:", err);
+          });
       }
-
-      await contentScriptContext
-        .getTrpcClient()
-        .autocomment.saveComments.mutate(comments)
-        .catch((err) => {
-          // just catch this error here and continue
-          console.error("error saving comments:", err);
-        });
 
       await saveCommentedPostUrn(urns);
       if (hashRes?.hash) await saveCommentedPostHash([hashRes.hash]);

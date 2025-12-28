@@ -7,7 +7,7 @@ import { LoaderCircleIcon } from "lucide-react";
 import { Button } from "@sassy/ui/button";
 import { toast } from "@sassy/ui/toast";
 
-import { useCurrentLinkedInAccountId } from "~/hooks/use-current-linkedin-account-id";
+import { useCurrentLinkedInAccountId } from "~/stores/linkedin-account-store";
 import { useTRPC } from "~/trpc/react";
 import { AutoCommentRunsList } from "./_components/autocomment-runs-list";
 
@@ -31,7 +31,7 @@ export function AutoCommentPage() {
     }),
   );
 
-  const { accountId } = useCurrentLinkedInAccountId();
+  const accountId = useCurrentLinkedInAccountId();
 
   const account = useQuery(
     trpc.account.get.queryOptions({ id: accountId ?? "" }),

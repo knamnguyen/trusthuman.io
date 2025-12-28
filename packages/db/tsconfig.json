@@ -1,6 +1,6 @@
 {
   "extends": "@sassy/tsconfig/internal-package.json",
-  "include": ["src"],
+  "include": ["src", "scripts/schema.ts"],
   "exclude": ["dist", "build", "node_modules", "generated"],
   "compilerOptions": {
     "strict": true,

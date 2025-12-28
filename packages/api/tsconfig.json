@@ -1,11 +1,12 @@
 {
   "extends": "@sassy/tsconfig/internal-package.json",
   "compilerOptions": {
-    "lib": ["ES2022", "dom", "dom.iterable"],
+    "experimentalDecorators": true,
+    "lib": ["ESNext", "ES2022", "dom", "dom.iterable"],
     //preserve jsx because this is a jit package, consuming app will build it later into javascript
     "jsx": "preserve",
     "paths": {}
   },
-  "include": ["src", "scripts"],
+  "include": ["src", "scripts", "../apify-runners/src/industry-search.ts"],
   "exclude": ["node_modules"]
 }

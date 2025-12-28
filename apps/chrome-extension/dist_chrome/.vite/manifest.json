@@ -1,17 +1,31 @@
 {
-  "../../../../../../../@crx/manifest": {
-    "file": "assets/crx-manifest.js-B3utcL77.js",
+  "../../../../../../@crx/manifest": {
+    "file": "assets/crx-manifest.js-Dw6Y1s8U.js",
     "name": "crx-manifest.js",
-    "src": "../../../../../../../@crx/manifest",
+    "src": "../../../../../../@crx/manifest",
     "isEntry": true
   },
-  "_get-sync-host-CCHy64Z3.js": {
-    "file": "assets/get-sync-host-CCHy64Z3.js",
+  "_get-sync-host-BP0LuDEj.js": {
+    "file": "assets/get-sync-host-BP0LuDEj.js",
     "name": "get-sync-host",
     "imports": [
       "_index-CP-b3-11.js",
       "_index-Dr715SCd.js"
     ]
+  },
+  "_index-3yVWAQZ8.js": {
+    "file": "assets/index-3yVWAQZ8.js",
+    "name": "index",
+    "imports": [
+      "_index-CP-b3-11.js"
+    ],
+    "css": [
+      "assets/index-4lmNZ798.css"
+    ]
+  },
+  "_index-4lmNZ798.css": {
+    "file": "assets/index-4lmNZ798.css",
+    "src": "_index-4lmNZ798.css"
   },
   "_index-CP-b3-11.js": {
     "file": "assets/index-CP-b3-11.js",
@@ -24,9 +38,9 @@
       "_index-CP-b3-11.js"
     ]
   },
-  "_index.tsx-loader-xiR51wmG.js": {
-    "file": "assets/index.tsx-loader-xiR51wmG.js",
-    "src": "_index.tsx-loader-xiR51wmG.js"
+  "_index.tsx-loader-DeH8ietA.js": {
+    "file": "assets/index.tsx-loader-DeH8ietA.js",
+    "src": "_index.tsx-loader-DeH8ietA.js"
   },
   "_profile-extract-button-E_OM6-m_.js": {
     "file": "assets/profile-extract-button-E_OM6-m_.js",
@@ -37,20 +51,6 @@
     "name": "react",
     "imports": [
       "_index-CP-b3-11.js"
-    ]
-  },
-  "_react-icons-BBqLKdrr.css": {
-    "file": "assets/react-icons-BBqLKdrr.css",
-    "src": "_react-icons-BBqLKdrr.css"
-  },
-  "_react-icons.esm-CNcOZddv.js": {
-    "file": "assets/react-icons.esm-CNcOZddv.js",
-    "name": "react-icons.esm",
-    "imports": [
-      "_index-CP-b3-11.js"
-    ],
-    "css": [
-      "assets/react-icons-BBqLKdrr.css"
     ]
   },
   "_storage-Bsaabweh.js": {
@@ -66,19 +66,19 @@
     "src": "public/icon-128.png"
   },
   "src/pages/background/index.ts": {
-    "file": "assets/index.ts-BNkTF4_U.js",
+    "file": "assets/index.ts-Cc6jTBJH.js",
     "name": "index.ts",
     "src": "src/pages/background/index.ts",
     "isEntry": true,
     "imports": [
-      "_get-sync-host-CCHy64Z3.js",
+      "_get-sync-host-BP0LuDEj.js",
       "_react-Dlr6nuqz.js",
       "_index-CP-b3-11.js",
       "_index-Dr715SCd.js"
     ]
   },
   "src/pages/content/index.tsx": {
-    "file": "assets/index.tsx-CvHNA2wC.js",
+    "file": "assets/index.tsx-BIP0ZPnN.js",
     "name": "index.tsx",
     "src": "src/pages/content/index.tsx",
     "isEntry": true,
@@ -90,27 +90,27 @@
     ]
   },
   "src/pages/options/index.html": {
-    "file": "assets/index.html-CnsKZx9P.js",
+    "file": "assets/index.html-DUzmfwpj.js",
     "name": "index.html",
     "src": "src/pages/options/index.html",
     "isEntry": true,
     "imports": [
-      "_react-icons.esm-CNcOZddv.js",
+      "_index-3yVWAQZ8.js",
       "_index-CP-b3-11.js",
       "_profile-extract-button-E_OM6-m_.js",
       "_index-Dr715SCd.js"
     ]
   },
   "src/pages/popup/index.html": {
-    "file": "assets/index.html-3ulaG4ZS.js",
+    "file": "assets/index.html-Aao4QlTQ.js",
     "name": "index.html",
     "src": "src/pages/popup/index.html",
     "isEntry": true,
     "imports": [
-      "_react-icons.esm-CNcOZddv.js",
+      "_index-3yVWAQZ8.js",
       "_index-CP-b3-11.js",
       "_react-Dlr6nuqz.js",
-      "_get-sync-host-CCHy64Z3.js",
+      "_get-sync-host-BP0LuDEj.js",
       "_storage-Bsaabweh.js",
       "_index-Dr715SCd.js"
     ],

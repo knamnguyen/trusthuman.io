@@ -1,18 +1,22 @@
-import { redirect } from "next/navigation";
+"use client";
 
-import { getQueryClient, HydrateClient, trpc } from "~/trpc/server";
+import { redirect } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+
+import { useCurrentLinkedInAccountId } from "~/stores/linkedin-account-store";
+import { useTRPC } from "~/trpc/react";
 import {
   AutoCommentConfigurationForm,
   AutoCommentConfigurationFormHeader,
   AutoCommentConfigurationFormProvider,
 } from "../_components/autocomment-configuration-form";
-import { getFirstAccountId } from "../../layout";
 
 function replaceNullWithUndefined<T extends Record<string, unknown>>(
   obj: T,
 ): {
   [K in keyof T]: Exclude<T[K], null> | undefined;
 } {
+  // @ts-expect-error typescript is wrongly unhappy about this, but it works at runtime
   return Object.fromEntries(
     Object.entries(obj).map(([key, value]) => [
       key,
@@ -23,38 +27,40 @@ function replaceNullWithUndefined<T extends Record<string, unknown>>(
   };
 }
 
-export async function AutoCommentConfigurationPage() {
-  const firstAccount = await getFirstAccountId();
+export function AutoCommentConfigurationPage() {
+  const accountId = useCurrentLinkedInAccountId();
 
-  if (firstAccount === undefined) {
+  const trpc = useTRPC();
+
+  const config = useQuery(
+    trpc.autocomment.configuration.load.queryOptions(
+      {
+        linkedInAccountId: accountId ?? "",
+      },
+      {
+        enabled: accountId !== null,
+      },
+    ),
+  );
+
+  if (accountId === null) {
     return redirect("/seats");
   }
 
-  const queryClient = getQueryClient();
-  // TODO: use trpcStandalone.query directly instead of using ensureQueryData
-  // there is some issue with trpcStandalone tho where nested object access dont work
-  const config = await queryClient.ensureQueryData(
-    trpc.autocomment.configuration.load.queryOptions({
-      linkedInAccountId: firstAccount.id,
-    }),
-  );
-
   return (
-    <HydrateClient>
-      <div>
-        <AutoCommentConfigurationFormProvider
-          defaultValues={
-            config !== null ? replaceNullWithUndefined(config) : undefined
-          }
-        >
-          <AutoCommentConfigurationFormHeader />
-          {/* <StartAutoCommentModal */}
-          {/*   trigger={<Button variant="outline">Start Auto Commenting</Button>} */}
-          {/* /> */}
-          <AutoCommentConfigurationForm />
-        </AutoCommentConfigurationFormProvider>
-      </div>
-    </HydrateClient>
+    <div>
+      <AutoCommentConfigurationFormProvider
+        defaultValues={
+          config.data ? replaceNullWithUndefined(config.data) : undefined
+        }
+      >
+        <AutoCommentConfigurationFormHeader />
+        {/* <StartAutoCommentModal */}
+        {/*   trigger={<Button variant="outline">Start Auto Commenting</Button>} */}
+        {/* /> */}
+        <AutoCommentConfigurationForm />
+      </AutoCommentConfigurationFormProvider>
+    </div>
   );
 }
 

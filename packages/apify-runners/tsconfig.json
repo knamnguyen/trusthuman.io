@@ -4,6 +4,6 @@
     "outDir": "dist",
     "rootDir": "src"
   },
-  "include": ["src"],
+  "include": ["src", "../api/src/utils/industry-search.ts", "../api/src/utils/industry-search.ts"],
   "exclude": ["node_modules", "dist"]
 }
