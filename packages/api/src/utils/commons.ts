@@ -49,14 +49,14 @@ export function transformValuesIfMatch<T extends Record<string, any>, M, V>(
   };
 }
 
-type Result<T, E = unknown> =
+type Result<T> =
   | {
       ok: true;
       output: T;
     }
   | {
       ok: false;
-      error: E;
+      error: Error;
     };
 
 type SafeResult<T> =
@@ -79,7 +79,7 @@ export function safe<T>(fn: () => T): SafeResult<T> {
         }))
         .catch((error: unknown) => ({
           ok: false as const,
-          error,
+          error: error instanceof Error ? error : new Error(String(error)),
         })) as SafeResult<T>;
     }
 

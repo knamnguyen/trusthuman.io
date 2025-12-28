@@ -306,6 +306,7 @@ async function getAccount(db: PrismaClient, userId: string, accountId: string) {
           email: true,
           name: true,
           profileUrl: true,
+          accessType: true,
         },
       },
       organizationMemberships: {

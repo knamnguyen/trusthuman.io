@@ -25,12 +25,33 @@ export const autoCommentConfigurationDefaults = {
 export const FREE_BUILD_TARGET_LIST_WEEKLY_LIMIT = 10;
 export const PREMIUM_BUILD_TARGET_LIST_WEEKLY_LIMIT = 100;
 
+function startOfWeek(now: Date): Date {
+  const day = now.getDay(); // 0 (Sun) to 6 (Sat)
+  const diff = now.getDate() - day; // Adjust to previous Sunday
+  const date = new Date(now.setDate(diff));
+  date.setHours(0, 0, 0, 0); // Set to midnight
+  return date;
+}
+
 export const getBuildTargetListLimits = (
   accessType: "FREE" | (string & {}),
+  now: Date = new Date(),
 ) => {
+  const lastRefreshedAt = startOfWeek(now);
+
   if (accessType === "FREE") {
-    return FREE_BUILD_TARGET_LIST_WEEKLY_LIMIT;
+    return {
+      limit: FREE_BUILD_TARGET_LIST_WEEKLY_LIMIT,
+      lastRefreshedAt,
+      refreshesAt: new Date(
+        lastRefreshedAt.getTime() + 7 * 24 * 60 * 60 * 1000,
+      ),
+    };
   }
 
-  return PREMIUM_BUILD_TARGET_LIST_WEEKLY_LIMIT;
+  return {
+    limit: PREMIUM_BUILD_TARGET_LIST_WEEKLY_LIMIT,
+    lastRefreshedAt,
+    refreshesAt: new Date(lastRefreshedAt.getTime() + 7 * 24 * 60 * 60 * 1000),
+  };
 };

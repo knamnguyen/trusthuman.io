@@ -99,6 +99,7 @@ model LinkedInAccount {
   autocommentEnabled Boolean               @default(false)
   runDailyAt         String?
   isRunning          Boolean               @default(false)
+  accessType         AccessType            @default(FREE)
 
   // Organization-based fields (new multi-tenant flow)
   organizationId     String?
@@ -106,7 +107,7 @@ model LinkedInAccount {
   profileSlug        String? @unique // Globally unique - one LinkedIn per system
   registrationStatus String? // "registered" | "connected" | null
 
-  org                     Organization?          @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  org                     Organization?        @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   AutoCommentConfig       AutoCommentConfig[]
   BlacklistedProfile      BlacklistedProfile[]
   AutoCommentRun          AutoCommentRun[]
@@ -116,7 +117,7 @@ model LinkedInAccount {
   targetLists             TargetList[]
   targetProfiles          TargetProfile[]
   organizationMemberships OrganizationMember[]
-  linkedInAccountStats    LinkedInAccountStats[]
+  buildTargetListJobs     BuildTargetListJob[]
 }
 
 enum LinkedInAccountStatus {
@@ -323,7 +324,8 @@ model TargetList {
   status         TargetListStatus
   targetProfiles TargetProfile[]
 
-  linkedInAccount LinkedInAccount @relation(fields: [accountId], references: [id])
+  linkedInAccount     LinkedInAccount      @relation(fields: [accountId], references: [id])
+  buildTargetListJobs BuildTargetListJob[]
 }
 
 model TargetProfile {
@@ -491,59 +493,26 @@ model CommentAnalysis {
   @@index([createdAt])
 }
 
+model BuildTargetListJob {
+  id          String                   @id
+  accountId   String
+  workflowId  String
+  listId      String                   @unique
+  status      BuildTargetListJobStatus
+  error       String?
+  createdAt   DateTime                 @default(now())
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  linkedInAccount LinkedInAccount @relation(fields: [accountId], references: [id])
+  targetList      TargetList      @relation(fields: [listId], references: [id])
+
+  @@index([status])
+}
+
 enum BuildTargetListJobStatus {
   QUEUED
   RUNNING
   COMPLETED
   FAILED
-}
-
-model BuildTargetListJob {
-  id                String                   @id
-  linkedInAccountId String
-  listId            String
-  status            BuildTargetListJobStatus
-
-  profileScraperMode ProfileScraperMode?
-  searchQuery        String
-
-  // Include filters
-  locations                 String[]
-  currentCompanies          String[]
-  pastCompanies             String[]
-  schools                   String[]
-  currentJobTitles          String[]
-  pastJobTitles             String[]
-  yearsOfExperienceIds      Int[]
-  yearsAtCurrencyCompanyIds Int[]
-  seniorityLevelIds         Int[]
-  functionIds               Int[]
-  industryIds               Int[]
-  firstName                 String[]
-  lastName                  String[]
-  profileLanguages          String[]
-  recentlyChangesJobs       Boolean?
-
-  // Exclude filters
-  excludeLocations         String[]
-  excludeCurrentCompanies  String[]
-  excludePastCompanies     String[]
-  excludeSchools           String[]
-  excludeCurrentJobTitles  String[]
-  excludePastJobTitles     String[]
-  excludeIndustryIds       Int[]
-  excludeFunctionIds       Int[]
-  excludeSeniorityLevelIds Int[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  linkedInAccount LinkedInAccount @relation(fields: [linkedInAccountId], references: [id], onDelete: Cascade)
-  list            TargetList      @relation(fields: [listId], references: [id], onDelete: Cascade)
-}
-
-enum ProfileScraperMode {
-  Full
-  Short
-  FullEmailSearch
 }

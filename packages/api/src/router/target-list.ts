@@ -2,6 +2,7 @@ import { DBOS } from "@dbos-inc/dbos-sdk";
 import { ulid } from "ulidx";
 import { z } from "zod";
 
+import { getBuildTargetListLimits } from "../../../feature-flags/src/constants";
 import { protectedProcedure } from "../trpc";
 import { LinkedInIndustrySearch } from "../utils/industry-search";
 import { paginate } from "../utils/pagination";
@@ -81,8 +82,6 @@ export const targetListRouter = {
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const targetListId = ulid();
-
       if (ctx.account === null) {
         return {
           status: "error",
@@ -91,7 +90,37 @@ export const targetListRouter = {
         } as const;
       }
 
-      // TODO: target list building rate limits for account subscriptions
+      const maxJobs = getBuildTargetListLimits(ctx.account.accessType);
+
+      const existingJobsCount = await ctx.db.buildTargetListJob.count({
+        where: {
+          accountId: ctx.account.id,
+          createdAt: {
+            gte: maxJobs.lastRefreshedAt,
+          },
+        },
+      });
+
+      if (existingJobsCount >= maxJobs.limit) {
+        return {
+          status: "error",
+          code: 429,
+          message: `You have reached the maximum of ${maxJobs.limit} build target list jobs. Your limit will reset on ${maxJobs.refreshesAt.toDateString()}.`,
+        } as const;
+      }
+
+      const targetListId = ulid();
+
+      const buildTargetListJobId = ulid();
+      await ctx.db.buildTargetListJob.create({
+        data: {
+          id: buildTargetListJobId,
+          workflowId: targetListId,
+          accountId: ctx.account.id,
+          listId: targetListId,
+          status: "QUEUED",
+        },
+      });
 
       const workflow = await DBOS.startWorkflow(buildTargetListWorkflow, {
         workflowID: targetListId,
@@ -99,14 +128,16 @@ export const targetListRouter = {
         targetListId,
         accountId: ctx.account.id,
         targetListName: input.name,
+        buildTargetListJobId,
         // idk why the f input.params is inferred as unknown, so just cast for now
         params: { ...input.params, maxItems: 100 },
       });
 
       return {
         status: "success",
+        jobId: buildTargetListJobId,
         workflowId: workflow.workflowID,
-      };
+      } as const;
     }),
   addList: protectedProcedure
     .input(

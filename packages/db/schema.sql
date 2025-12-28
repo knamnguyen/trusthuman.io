@@ -23,7 +23,7 @@ CREATE TYPE "BrowserInstanceStatus" AS ENUM ('INITIALIZING', 'RUNNING', 'STOPPED
 CREATE TYPE "BrowserJobStatus" AS ENUM ('QUEUED', 'RUNNING', 'TERMINATED', 'COMPLETED', 'FAILED');
 
 -- CreateEnum
-CREATE TYPE "ProfileScraperMode" AS ENUM ('Full', 'Short', 'FullEmailSearch');
+CREATE TYPE "BuildTargetListJobStatus" AS ENUM ('QUEUED', 'RUNNING', 'COMPLETED', 'FAILED');
 
 -- CreateTable
 CREATE TABLE "User" (
@@ -82,6 +82,7 @@ CREATE TABLE "LinkedInAccount" (
     "autocommentEnabled" BOOLEAN NOT NULL DEFAULT false,
     "runDailyAt" TEXT,
     "isRunning" BOOLEAN NOT NULL DEFAULT false,
+    "accessType" "AccessType" NOT NULL DEFAULT 'FREE',
     "organizationId" TEXT,
     "profileUrl" TEXT,
     "profileSlug" TEXT,
@@ -385,34 +386,14 @@ CREATE TABLE "CommentAnalysis" (
 -- CreateTable
 CREATE TABLE "BuildTargetListJob" (
     "id" TEXT NOT NULL,
-    "profileScraperMode" "ProfileScraperMode",
-    "searchQuery" TEXT NOT NULL,
-    "locations" TEXT[],
-    "currentCompanies" TEXT[],
-    "pastCompanies" TEXT[],
-    "schools" TEXT[],
-    "currentJobTitles" TEXT[],
-    "pastJobTitles" TEXT[],
-    "yearsOfExperienceIds" INTEGER[],
-    "yearsAtCurrencyCompanyIds" INTEGER[],
-    "seniorityLevelIds" INTEGER[],
-    "functionIds" INTEGER[],
-    "industryIds" INTEGER[],
-    "firstName" TEXT[],
-    "lastName" TEXT[],
-    "profileLanguages" TEXT[],
-    "recentlyChangesJobs" BOOLEAN,
-    "excludeLocations" TEXT[],
-    "excludeCurrentCompanies" TEXT[],
-    "excludePastCompanies" TEXT[],
-    "excludeSchools" TEXT[],
-    "excludeCurrentJobTitles" TEXT[],
-    "excludePastJobTitles" TEXT[],
-    "excludeIndustryIds" INTEGER[],
-    "excludeFunctionIds" INTEGER[],
-    "excludeSeniorityLevelIds" INTEGER[],
+    "accountId" TEXT NOT NULL,
+    "workflowId" TEXT NOT NULL,
+    "listId" TEXT NOT NULL,
+    "status" "BuildTargetListJobStatus" NOT NULL,
+    "error" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "startedAt" TIMESTAMP(3),
+    "completedAt" TIMESTAMP(3),
 
     CONSTRAINT "BuildTargetListJob_pkey" PRIMARY KEY ("id")
 );
@@ -482,6 +463,12 @@ CREATE INDEX "CommentAnalysis_userId_idx" ON "CommentAnalysis"("userId");
 
 -- CreateIndex
 CREATE INDEX "CommentAnalysis_createdAt_idx" ON "CommentAnalysis"("createdAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "BuildTargetListJob_listId_key" ON "BuildTargetListJob"("listId");
+
+-- CreateIndex
+CREATE INDEX "BuildTargetListJob_status_idx" ON "BuildTargetListJob"("status");
 
 -- AddForeignKey
 ALTER TABLE "OrganizationMember" ADD CONSTRAINT "OrganizationMember_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -560,4 +547,10 @@ ALTER TABLE "BrowserJob" ADD CONSTRAINT "BrowserJob_accountId_fkey" FOREIGN KEY 
 
 -- AddForeignKey
 ALTER TABLE "CommentAnalysis" ADD CONSTRAINT "CommentAnalysis_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "BuildTargetListJob" ADD CONSTRAINT "BuildTargetListJob_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "BuildTargetListJob" ADD CONSTRAINT "BuildTargetListJob_listId_fkey" FOREIGN KEY ("listId") REFERENCES "TargetList"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
