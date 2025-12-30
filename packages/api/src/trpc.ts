@@ -19,6 +19,7 @@ import type { Prisma, PrismaClient } from "@sassy/db";
 import { db } from "@sassy/db";
 
 import type { BrowserSessionRegistry } from "./utils/browser-session";
+import { AIService } from "./utils/ai-service/ai-service";
 import { browserJobs } from "./utils/browser-job";
 import { assumedAccountJwt, browserRegistry } from "./utils/browser-session";
 import { env } from "./utils/env";
@@ -52,11 +53,14 @@ export interface TRPCContext {
   hyperbrowser: Hyperbrowser;
   browserJobs: typeof browserJobs;
   browserRegistry: BrowserSessionRegistry;
+  ai: AIService;
 }
 
 const hb = new Hyperbrowser({
   apiKey: env.HYPERBROWSER_API_KEY,
 });
+
+const ai = new AIService(env.GOOGLE_GENAI_API_KEY);
 
 export const createTRPCContext = (opts: { headers: Headers }): TRPCContext => {
   const source = opts.headers.get("x-trpc-source");
@@ -68,6 +72,7 @@ export const createTRPCContext = (opts: { headers: Headers }): TRPCContext => {
     hyperbrowser: hb,
     browserJobs,
     browserRegistry,
+    ai,
     // Note: User will be added by the auth middleware when needed
   };
 };

@@ -43,7 +43,6 @@ model User {
   linkedInAccounts  LinkedInAccount[]
 
   UserBrowserState        UserBrowserState[]
-  Comments                UserComment[]
   AutoCommentRun          AutoCommentRun[]
   CommentStyle            CommentStyle[]
   AutoCommentConfig       AutoCommentConfig[]
@@ -112,7 +111,7 @@ model LinkedInAccount {
   BlacklistedProfile      BlacklistedProfile[]
   AutoCommentRun          AutoCommentRun[]
   BrowserInstance         BrowserInstance[]
-  userComments            UserComment[]
+  comments                Comment[]
   browserJobs             BrowserJob[]
   targetLists             TargetList[]
   targetProfiles          TargetProfile[]
@@ -259,36 +258,41 @@ model LinkedInProfile {
   @@index([linkedinUrl])
 }
 
-model UserComment {
-  id               String           @id
-  postUrn          String
-  postContentHtml  String?
-  hash             String?
+model Comment {
+  id              String    @id
+  postUrn         String
+  postContentHtml String?
+  postCreatedAt   DateTime?
+
+  adjacentComments Json?
+
+  authorUrn        String?
+  authorName       String?
+  authorProfileUrl String?
+  authorAvatarUrl  String?
+  authorHeadline   String?
+
+  comment           String
+  postAlternateUrns String[]
+  commentedAt       DateTime?
+  isAutoCommented   Boolean   @default(true)
+  schedulePostAt    DateTime?
+
+  accountId String
+
   autoCommentRunId String?
   autoCommentError String?
-  comment          String
-  urns             String[]
-  // TODO: make this field required, in the new version of the app
-  // every user is ensured to have a linked in account 
-  userId           String?
-  // TODO: make this field required
-  accountId        String?
-  commentedAt      DateTime?
-  isDuplicate      Boolean          @default(false)
-  isAutoCommented  Boolean          @default(true)
-  user             User?            @relation(fields: [userId], references: [id])
-  autoCommentRun   AutoCommentRun?  @relation(fields: [autoCommentRunId], references: [id])
-  schedulePostAt   DateTime?
-  account          LinkedInAccount? @relation(fields: [accountId], references: [id])
 
-  @@index([hash])
+  account        LinkedInAccount? @relation(fields: [accountId], references: [id])
+  autoCommentRun AutoCommentRun?  @relation(fields: [autoCommentRunId], references: [id])
+
   @@index([postUrn])
   @@index([commentedAt])
-  @@index([urns], type: Gin)
+  @@index([postAlternateUrns], type: Gin)
 }
 
 model AutoCommentRun {
-  id          String        @id
+  id          String    @id
   accountId   String
   liveUrl     String
   startedAt   DateTime?
@@ -296,8 +300,8 @@ model AutoCommentRun {
   scheduledAt DateTime
   error       String?
   status      String
-  comments    UserComment[]
-  hitlMode    Boolean       @default(false)
+  comments    Comment[]
+  hitlMode    Boolean   @default(false)
 
   account LinkedInAccount @relation(fields: [accountId], references: [id])
   user    User?           @relation(fields: [userId], references: [id])

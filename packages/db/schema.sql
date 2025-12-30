@@ -192,23 +192,28 @@ CREATE TABLE "LinkedInProfile" (
 );
 
 -- CreateTable
-CREATE TABLE "UserComment" (
+CREATE TABLE "Comment" (
     "id" TEXT NOT NULL,
     "postUrn" TEXT NOT NULL,
     "postContentHtml" TEXT,
-    "hash" TEXT,
+    "postCreatedAt" TIMESTAMP(3),
+    "adjacentComments" JSONB,
     "autoCommentRunId" TEXT,
+    "authorUrn" TEXT,
+    "authorName" TEXT,
+    "authorProfileUrl" TEXT,
+    "authorAvatarUrl" TEXT,
+    "authorHeadline" TEXT,
     "autoCommentError" TEXT,
     "comment" TEXT NOT NULL,
-    "urns" TEXT[],
-    "userId" TEXT,
-    "accountId" TEXT,
+    "postAlternateUrns" TEXT[],
+    "accountId" TEXT NOT NULL,
     "commentedAt" TIMESTAMP(3),
     "isDuplicate" BOOLEAN NOT NULL DEFAULT false,
     "isAutoCommented" BOOLEAN NOT NULL DEFAULT true,
     "schedulePostAt" TIMESTAMP(3),
 
-    CONSTRAINT "UserComment_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "Comment_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -429,16 +434,13 @@ CREATE UNIQUE INDEX "LinkedInProfile_urn_key" ON "LinkedInProfile"("urn");
 CREATE INDEX "LinkedInProfile_linkedinUrl_idx" ON "LinkedInProfile"("linkedinUrl");
 
 -- CreateIndex
-CREATE INDEX "UserComment_hash_idx" ON "UserComment"("hash");
+CREATE INDEX "Comment_postUrn_idx" ON "Comment"("postUrn");
 
 -- CreateIndex
-CREATE INDEX "UserComment_postUrn_idx" ON "UserComment"("postUrn");
+CREATE INDEX "Comment_commentedAt_idx" ON "Comment"("commentedAt");
 
 -- CreateIndex
-CREATE INDEX "UserComment_commentedAt_idx" ON "UserComment"("commentedAt");
-
--- CreateIndex
-CREATE INDEX "UserComment_urns_idx" ON "UserComment" USING GIN ("urns");
+CREATE INDEX "Comment_postAlternateUrns_idx" ON "Comment" USING GIN ("postAlternateUrns");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "TargetProfile_listId_linkedinUrl_key" ON "TargetProfile"("listId", "linkedinUrl");
@@ -489,13 +491,10 @@ ALTER TABLE "LinkedInAccount" ADD CONSTRAINT "LinkedInAccount_organizationId_fke
 ALTER TABLE "ProfileImportRun" ADD CONSTRAINT "ProfileImportRun_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "UserComment" ADD CONSTRAINT "UserComment_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Comment" ADD CONSTRAINT "Comment_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "UserComment" ADD CONSTRAINT "UserComment_autoCommentRunId_fkey" FOREIGN KEY ("autoCommentRunId") REFERENCES "AutoCommentRun"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "UserComment" ADD CONSTRAINT "UserComment_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Comment" ADD CONSTRAINT "Comment_autoCommentRunId_fkey" FOREIGN KEY ("autoCommentRunId") REFERENCES "AutoCommentRun"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "AutoCommentRun" ADD CONSTRAINT "AutoCommentRun_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
