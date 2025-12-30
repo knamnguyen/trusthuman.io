@@ -11,7 +11,13 @@ export class AIService {
   }
 
   async generateComment(input: CommentGenerationInput) {
+    console.log(
+      "AI Comments Router: Starting comment generation for content length:",
+      input.postContent.length || 0,
+    );
+
     const systemPrompt = getPostCommentSystemPrompt(input);
+    console.log("Final prompt fed into the ai:", systemPrompt);
 
     try {
       const response = await this.ai.models.generateContent({
@@ -37,6 +43,11 @@ export class AIService {
           ? cleanComment
           : "Great post! Thanks for sharing.";
 
+      console.log(
+        "AI Comments Router: Successfully generated comment:",
+        finalComment.substring(0, 100) + "...",
+      );
+
       return {
         comment: finalComment,
         success: true,
@@ -44,6 +55,7 @@ export class AIService {
         fallback: isFallback || cleanComment.length === 0,
       } as const;
     } catch (error) {
+      console.error("AI Comments Router: Error generating comment:", error);
       return {
         comment: "Great post! Thanks for sharing.",
         success: false,
