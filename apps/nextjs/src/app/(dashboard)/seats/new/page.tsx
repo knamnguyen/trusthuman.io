@@ -3,16 +3,15 @@
 import React, { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { LoaderCircleIcon, XIcon } from "lucide-react";
+import { LoaderCircleIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import z from "zod";
 
 import type { CountrySchema } from "@sassy/validators";
-import { Dialog, DialogContent } from "@sassy/ui/dialog";
 import { countries, countrySchema } from "@sassy/validators";
 
 import { BrowserLiveviewDialog } from "~/_components/liveview-dialog";
-import { trpcStandalone, useTRPC } from "~/trpc/react";
+import { useTRPC, useTRPCClient } from "~/trpc/react";
 
 const formSchema = z.object({
   email: z.string().trim().email(),
@@ -49,13 +48,15 @@ function AddSeatPage() {
 
   const [liveUrl, setLiveUrl] = useState<string | null>(null);
 
+  const trpcClient = useTRPCClient();
+
   const initAddAccountSession = useMutation({
     mutationFn: async (input: {
       email: string;
       name: string;
       location: CountrySchema;
     }) => {
-      for await (const status of await trpcStandalone.account.init.create.mutate(
+      for await (const status of await trpcClient.account.init.create.mutate(
         input,
       )) {
         if (status.status === "error") {

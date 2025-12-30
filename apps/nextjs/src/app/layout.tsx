@@ -1,22 +1,22 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
-import { ClerkProvider } from "@clerk/nextjs";
 import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
 import { SpeedInsights as VercelSpeedInsights } from "@vercel/speed-insights/next";
 
 import { Toaster } from "@sassy/ui/toast";
-import { cn } from "@sassy/ui/utils";
 
 import "~/app/globals.css";
 
 import { env } from "~/env";
+import { getQueryClient, trpc } from "~/trpc/server";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
   metadataBase: new URL(
     env.VERCEL_ENV === "production"
       ? "https://engagekit.io"
-      : (process.env.NEXTJS_URL ?? `http://localhost:${process.env.PORT ?? "3000"}`),
+      : (process.env.NEXTJS_URL ??
+        `http://localhost:${process.env.PORT ?? "3000"}`),
   ),
   title: "EngageKit",
   description: "The ultimate AI-powered LinkedIn engagement assistant",
@@ -54,7 +54,11 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout(props: { children: React.ReactNode }) {
+export default async function RootLayout(props: { children: React.ReactNode }) {
+  const account = await getQueryClient().ensureQueryData(
+    trpc.account.getDefaultAccount.queryOptions(),
+  );
+
   return (
     <html lang="en" suppressHydrationWarning>
       {/* tracking for Endoresely affiliate referral */}
@@ -65,7 +69,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
         strategy="afterInteractive"
       />
       {/* tracking for leads generation from visits rb2b */}
-      <Script>
+      <Script id="reb2b-tracking">
         {`!function(key) {if (window.reb2b) return;window.reb2b = {loaded: true};var s = document.createElement("script");s.async = true;s.src = "https://ddwl4m2hdecbv.cloudfront.net/b/" + key + "/" + key + ".js.gz";document.getElementsByTagName("script")[0].parentNode.insertBefore(s, document.getElementsByTagName("script")[0]);}("9NMMZHR79ZNW");`}
       </Script>
       {/* tracking for google analytics */}
@@ -86,7 +90,10 @@ export default function RootLayout(props: { children: React.ReactNode }) {
           `}
       </Script>
       <body className="bg-background text-foreground min-h-full font-sans antialiased">
-        <Providers>
+        <Providers
+          initialAssumedUserToken={account?.assumedUserToken}
+          initialAccountId={account?.account.id}
+        >
           {props.children}
           <Toaster />
           {env.VERCEL_ENV === "production" && <VercelAnalytics />}

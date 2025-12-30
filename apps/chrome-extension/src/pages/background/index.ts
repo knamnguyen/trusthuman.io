@@ -742,6 +742,7 @@ export type ContentScriptMessage =
         skipFriendsActivitiesEnabled?: boolean;
         blacklistEnabled?: boolean;
         blacklistAuthors?: string[];
+        hitlMode?: boolean;
       };
     }
   | {

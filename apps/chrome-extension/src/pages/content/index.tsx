@@ -44,7 +44,6 @@ import "./init-comment-history";
 import "./profile-target-list";
 
 import { appStorage } from "@src/services/storage";
-import { getStandaloneTRPCClient } from "@src/trpc/react";
 
 import { BrowserBackendChannelMessage } from "@sassy/api";
 
@@ -592,6 +591,7 @@ function handleContentScriptMessage(
               request.params.blacklistAuthors !== undefined &&
               request.params.blacklistAuthors.length > 0,
             blacklistAuthors: request.params.blacklistAuthors,
+            hitlMode: request.params.hitlMode,
           });
           sendResponse?.({ success: true });
           chrome.runtime.sendMessage({
@@ -715,6 +715,7 @@ async function startNewCommentingFlowWithDelayedTabSwitch(params: {
   skipFriendsActivitiesEnabled?: boolean;
   blacklistEnabled?: boolean;
   blacklistAuthors?: string[];
+  hitlMode?: boolean;
 }) {
   const {
     scrollDuration,
@@ -974,6 +975,7 @@ async function processAllPostsFeed(
   skipFriendsActivities: boolean,
   authenticityBoostEnabled: boolean,
   autoCommentRunId?: string,
+  hitlMode?: boolean,
 ): Promise<void> {
   console.group("🎯 PROCESSING ALL POSTS - DETAILED DEBUG");
 
@@ -1029,15 +1031,6 @@ async function processAllPostsFeed(
     allPostContainers,
     duplicateWindow,
   );
-
-  const comments: {
-    autoCommentRunId?: string;
-    postContentHtml: string | null;
-    comment: string;
-    urn: string;
-    hash: string | null;
-    isDuplicate: boolean;
-  }[] = [];
 
   for (let i = 0; i < postContainers.length; i++) {
     console.group(
@@ -1262,6 +1255,7 @@ async function processAllPostsFeed(
         effectiveStyleGuide,
         adjacentComments,
       );
+
       console.log(
         `🤖 Comment generation result for post ${i + 1}:`,
         comment ? "SUCCESS" : "FAILED",
@@ -1296,153 +1290,162 @@ async function processAllPostsFeed(
       const profileNameToUse = commentAsCompanyEnabled
         ? commentProfileName
         : "";
-      const success = await postCommentOnPost(
-        postContainer,
-        comment,
-        isCommentingActive,
-        profileNameToUse,
-      );
+
+      // by default success is true and we always want to record the comment even in hitlMode
+      let success = true;
+
+      if (!hitlMode) {
+        success = await postCommentOnPost(
+          postContainer,
+          comment,
+          isCommentingActive,
+          profileNameToUse,
+        );
+      }
+
       console.log(
         `📝 Comment posting result for post ${i + 1}: ${
           success ? "SUCCESS" : "FAILED"
         }`,
       );
 
-      if (success) {
-        for (const [index, urn] of postUrns.entries()) {
-          comments.push({
-            urn,
-            comment,
-            autoCommentRunId,
-            postContentHtml: contentHtml,
-            hash: hashRes?.hash ?? null,
-            isDuplicate: index !== 0,
-          });
-        }
-        commentCount++;
-        commentedAuthors.add(authorInfo.name);
+      // if hitl mode is off and posting failed, skip saving/comment count increment
+      if (!success) {
+        console.log(
+          `❌ Failed to post comment on post ${i + 1} by ${authorInfo.name}`,
+        );
+        continue;
+      }
 
-        const promises = [];
+      commentCount++;
+      commentedAuthors.add(authorInfo.name);
 
-        // Save author with timestamp and update counts
-        promises.push(saveCommentedAuthorWithTimestamp(authorInfo.name)); // new timestamp-based storage
-        commentedAuthorsWithTimestamps.set(authorInfo.name, Date.now()); // update in-memory data
+      const promises = [];
 
-        // Save all post URNs to prevent commenting on this post again
-        promises.push(saveCommentedPostUrn(postUrns));
+      // Save author with timestamp and update counts
+      promises.push(saveCommentedAuthorWithTimestamp(authorInfo.name)); // new timestamp-based storage
+      commentedAuthorsWithTimestamps.set(authorInfo.name, Date.now()); // update in-memory data
 
-        // Save content hash as well
-        if (hashRes?.hash) {
-          promises.push(saveCommentedPostHash([hashRes.hash]));
-        }
+      // Save all post URNs to prevent commenting on this post again
+      promises.push(saveCommentedPostUrn(postUrns));
 
-        promises.push(updateCommentCounts());
+      // Save content hash as well
+      if (hashRes?.hash) {
+        promises.push(saveCommentedPostHash([hashRes.hash]));
+      }
 
+      promises.push(updateCommentCounts());
+
+      const postUrn = postUrns[0];
+
+      if (postUrn !== undefined) {
         promises.push(
           contentScriptContext
             .getTrpcClient()
-            .autocomment.saveComments.mutate(comments)
+            .autocomment.saveComments.mutate({
+              comment,
+              postUrn,
+              urns: postUrns,
+              postContentHtml: contentHtml,
+              autoCommentRunId,
+              hash: hashRes?.hash ?? null,
+              hitlMode,
+            })
             .catch((err) => {
               // just catch this error here and continue
               console.error("error saving comments:", err);
             }),
         );
+      }
 
-        await Promise.all(promises);
+      await Promise.all(promises);
 
+      console.log(
+        `🎉 Successfully posted comment ${commentCount}/${maxPosts} on post by ${authorInfo.name}`,
+      );
+
+      console.log(
+        `Remaining posts to process: ${postContainers.length - i - 1}`,
+      );
+      console.log(
+        `Should continue? commentCount(${commentCount}) < maxPosts(${maxPosts}) = ${
+          commentCount < maxPosts
+        }`,
+      );
+      console.log(
+        `Next iteration will be: ${i + 1} < ${postContainers.length} = ${
+          i + 1 < postContainers.length
+        }`,
+      );
+      console.groupEnd();
+
+      // Update background script with progress
+      chrome.runtime.sendMessage({
+        action: "updateCommentCount",
+        count: commentCount,
+        status: `Posted comment ${commentCount}/${maxPosts} on post by ${authorInfo.name}`,
+      });
+
+      // Check if we've reached the max posts limit
+      if (commentCount >= maxPosts) {
         console.log(
-          `🎉 Successfully posted comment ${commentCount}/${maxPosts} on post by ${authorInfo.name}`,
+          `✅ REACHED MAX POSTS LIMIT: commentCount(${commentCount}) >= maxPosts(${maxPosts}). Stopping...`,
         );
 
+        console.groupEnd();
+        break;
+      }
+
+      // Wait between comments with stop checking
+      if (i < postContainers.length - 1 && commentCount < maxPosts) {
         console.log(
-          `Remaining posts to process: ${postContainers.length - i - 1}`,
+          `⏳ Waiting ${commentDelay} seconds before next comment...`,
         );
         console.log(
-          `Should continue? commentCount(${commentCount}) < maxPosts(${maxPosts}) = ${
+          `⏳ Delay conditions: i(${i}) < postContainers.length-1(${
+            postContainers.length - 1
+          }) = ${i < postContainers.length - 1}`,
+        );
+        console.log(
+          `⏳ Delay conditions: commentCount(${commentCount}) < maxPosts(${maxPosts}) = ${
             commentCount < maxPosts
           }`,
         );
-        console.log(
-          `Next iteration will be: ${i + 1} < ${postContainers.length} = ${
-            i + 1 < postContainers.length
-          }`,
-        );
-        console.groupEnd();
 
-        // Update background script with progress
-        chrome.runtime.sendMessage({
-          action: "updateCommentCount",
-          count: commentCount,
-          status: `Posted comment ${commentCount}/${maxPosts} on post by ${authorInfo.name}`,
-        });
+        // Break the delay into smaller chunks to check for stop signal
+        const delayChunks = Math.ceil(commentDelay);
+        for (
+          let chunk = 0;
+          chunk < delayChunks && isCommentingActive;
+          chunk++
+        ) {
+          await wait(1000);
+          if (!isCommentingActive) {
+            console.log("❌ STOPPING during comment delay due to stop signal");
+            console.groupEnd();
+            break;
+          }
+        }
 
-        // Check if we've reached the max posts limit
-        if (commentCount >= maxPosts) {
-          console.log(
-            `✅ REACHED MAX POSTS LIMIT: commentCount(${commentCount}) >= maxPosts(${maxPosts}). Stopping...`,
-          );
-
+        if (!isCommentingActive) {
           console.groupEnd();
           break;
         }
 
-        // Wait between comments with stop checking
-        if (i < postContainers.length - 1 && commentCount < maxPosts) {
-          console.log(
-            `⏳ Waiting ${commentDelay} seconds before next comment...`,
-          );
-          console.log(
-            `⏳ Delay conditions: i(${i}) < postContainers.length-1(${
-              postContainers.length - 1
-            }) = ${i < postContainers.length - 1}`,
-          );
-          console.log(
-            `⏳ Delay conditions: commentCount(${commentCount}) < maxPosts(${maxPosts}) = ${
-              commentCount < maxPosts
-            }`,
-          );
-
-          // Break the delay into smaller chunks to check for stop signal
-          const delayChunks = Math.ceil(commentDelay);
-          for (
-            let chunk = 0;
-            chunk < delayChunks && isCommentingActive;
-            chunk++
-          ) {
-            await wait(1000);
-            if (!isCommentingActive) {
-              console.log(
-                "❌ STOPPING during comment delay due to stop signal",
-              );
-              console.groupEnd();
-              break;
-            }
-          }
-
-          if (!isCommentingActive) {
-            console.groupEnd();
-            break;
-          }
-
-          console.log(`✅ Delay completed, continuing to next post...`);
-        } else {
-          console.log(
-            `🔚 No delay needed - this was the last post or we've reached max comments`,
-          );
-          console.log(
-            `   - i(${i}) < postContainers.length-1(${
-              postContainers.length - 1
-            }): ${i < postContainers.length - 1}`,
-          );
-          console.log(
-            `   - commentCount(${commentCount}) < maxPosts(${maxPosts}): ${
-              commentCount < maxPosts
-            }`,
-          );
-        }
+        console.log(`✅ Delay completed, continuing to next post...`);
       } else {
         console.log(
-          `❌ Failed to post comment on post ${i + 1} by ${authorInfo.name}`,
+          `🔚 No delay needed - this was the last post or we've reached max comments`,
+        );
+        console.log(
+          `   - i(${i}) < postContainers.length-1(${
+            postContainers.length - 1
+          }): ${i < postContainers.length - 1}`,
+        );
+        console.log(
+          `   - commentCount(${commentCount}) < maxPosts(${maxPosts}): ${
+            commentCount < maxPosts
+          }`,
         );
       }
 

@@ -74,6 +74,16 @@ const items = [
     title: "Target Lists",
     url: "/target-list",
     icon: UsersRoundIcon,
+    children: [
+      {
+        title: "All Lists",
+        url: "/target-list",
+      },
+      {
+        title: "List Builder",
+        url: "/target-list/build",
+      },
+    ],
   },
   {
     title: "Blacklist",

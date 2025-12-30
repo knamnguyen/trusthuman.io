@@ -10,6 +10,7 @@
 import type { User } from "@clerk/nextjs/server";
 import { createClerkClient, verifyToken } from "@clerk/backend";
 import { auth } from "@clerk/nextjs/server";
+import { Hyperbrowser } from "@hyperbrowser/sdk";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
@@ -17,7 +18,11 @@ import { ZodError } from "zod";
 import type { Prisma, PrismaClient } from "@sassy/db";
 import { db } from "@sassy/db";
 
-import { assumedAccountJwt } from "./utils/browser-session";
+import type { BrowserSessionRegistry } from "./utils/browser-session";
+import { AIService } from "./utils/ai-service/ai-service";
+import { browserJobs } from "./utils/browser-job";
+import { assumedAccountJwt, browserRegistry } from "./utils/browser-session";
+import { env } from "./utils/env";
 
 /**
  * 1. CONTEXT
@@ -42,10 +47,20 @@ export type DbUser = Prisma.UserGetPayload<{
   };
 }>;
 export interface TRPCContext {
-  db: typeof db;
+  db: PrismaClient;
   user?: DbUser;
   headers: Headers;
+  hyperbrowser: Hyperbrowser;
+  browserJobs: typeof browserJobs;
+  browserRegistry: BrowserSessionRegistry;
+  ai: AIService;
 }
+
+const hb = new Hyperbrowser({
+  apiKey: env.HYPERBROWSER_API_KEY,
+});
+
+const ai = new AIService(env.GOOGLE_GENAI_API_KEY);
 
 export const createTRPCContext = (opts: { headers: Headers }): TRPCContext => {
   const source = opts.headers.get("x-trpc-source");
@@ -54,6 +69,10 @@ export const createTRPCContext = (opts: { headers: Headers }): TRPCContext => {
   return {
     db,
     headers: opts.headers,
+    hyperbrowser: hb,
+    browserJobs,
+    browserRegistry,
+    ai,
     // Note: User will be added by the auth middleware when needed
   };
 };
@@ -99,23 +118,25 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
       });
     }
 
-    const result = await getAccount(decoded.payload.accountId);
+    const result = await getAccount(
+      ctx.db,
+      decoded.payload.userId,
+      decoded.payload.accountId,
+    );
 
     if (result === null) {
       throw new TRPCError({
         code: "UNAUTHORIZED",
-        message: "Assumed account not found",
+        message: "Invalid assumed user token - user not found",
       });
     }
-
-    const { user, ...account } = result;
 
     return next({
       ctx: {
         ...ctx,
-        user,
-        // we need to cast here bcs somehow type inference is not catching that account is nullable
-        account: account as typeof account | null,
+        user: result.user,
+        account: result.account,
+        memberships: result.memberships,
       },
     });
   }
@@ -150,6 +171,7 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
         ...ctx,
         user,
         account: null,
+        memberships: [],
       },
     });
   }
@@ -170,6 +192,7 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
       ...ctx, // Keep existing context with db and headers
       user, // Add the user to the context
       account: null,
+      memberships: [],
     },
   });
 });
@@ -217,13 +240,23 @@ const userFields = {
 export async function getOrInsertUser(
   db: PrismaClient,
   userId: string,
+  currentAccountId?: string,
   clerkUser?: User,
 ) {
   const dbUser = await db.user.findUnique({
     where: {
       id: userId,
     },
-    select: userFields,
+    include: {
+      linkedInAccounts:
+        currentAccountId !== undefined
+          ? {
+              where: {
+                id: currentAccountId,
+              },
+            }
+          : false,
+    },
   });
 
   if (dbUser !== null) {
@@ -267,15 +300,39 @@ export async function getOrInsertUser(
   return newUser;
 }
 
-function getAccount(accountId: string) {
-  return db.linkedInAccount.findFirst({
-    where: { id: accountId },
+async function getAccount(db: PrismaClient, userId: string, accountId: string) {
+  const row = await db.user.findFirst({
+    where: { id: userId },
     include: {
-      user: {
-        select: userFields,
+      linkedInAccounts: {
+        where: { id: accountId },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          profileUrl: true,
+          accessType: true,
+        },
+      },
+      organizationMemberships: {
+        select: {
+          orgId: true,
+        },
       },
     },
   });
+
+  if (row === null) {
+    return null;
+  }
+
+  const { linkedInAccounts, ...user } = row;
+
+  return {
+    user,
+    account: linkedInAccounts[0] ?? null,
+    memberships: row.organizationMemberships,
+  };
 }
 
 /**

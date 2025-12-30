@@ -3,38 +3,107 @@ import { TRPCError } from "@trpc/server";
 import { ulid } from "ulidx";
 import z from "zod";
 
+import type { PrismaClient } from "@sassy/db";
 import { countrySchema } from "@sassy/validators";
 
 import { protectedProcedure, publicProcedure } from "../trpc";
 import {
   assumedAccountJwt,
-  browserRegistry,
+  BrowserSession,
   hyperbrowser,
 } from "../utils/browser-session";
 import { paginate } from "../utils/pagination";
-import { registerOrGetBrowserSession } from "./browser";
 
 /**
  * Extract profile slug from LinkedIn URL
  * Handles: linkedin.com/in/john-doe-123, with/without www, with query params
  */
 function extractProfileSlug(url: string): string {
-  const match = url.match(/linkedin\.com\/in\/([^\/\?]+)/);
-  if (!match || !match[1]) {
+  const match = /linkedin\.com\/in\/([^/?]+)/.exec(url);
+  if (!match?.[1]) {
     throw new TRPCError({
       code: "BAD_REQUEST",
-      message: "Invalid LinkedIn profile URL. Expected format: linkedin.com/in/username",
+      message:
+        "Invalid LinkedIn profile URL. Expected format: linkedin.com/in/username",
     });
   }
   return match[1];
 }
 
 export const accountRouter = {
+  getDefaultAccount: protectedProcedure.query(async ({ ctx }) => {
+    const account = await ctx.db.linkedInAccount.findFirst({
+      where: {
+        OR: [
+          {
+            ownerId: ctx.user.id,
+          },
+          {
+            organizationMemberships: {
+              some: {
+                userId: ctx.user.id,
+              },
+            },
+          },
+        ],
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        status: true,
+        ownerId: true,
+        owner: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (account === null) {
+      return null;
+    }
+
+    return {
+      account,
+      assumedUserToken: await assumedAccountJwt.encode({
+        accountId: account.id,
+        userId: ctx.user.id,
+      }),
+    };
+  }),
+
+  token: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const permitted = await hasPermissionToAccessAccount(ctx.db, {
+        readerId: ctx.user.id,
+        accountId: input.id,
+      });
+
+      if (permitted === false) {
+        return null;
+      }
+
+      return await assumedAccountJwt.encode({
+        accountId: input.id,
+        userId: ctx.user.id,
+      });
+    }),
+
   get: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
       const account = await ctx.db.linkedInAccount.findFirst({
-        where: { id: input.id, userId: ctx.user.id },
+        where: { id: input.id, ownerId: ctx.user.id },
       });
 
       return account;
@@ -50,31 +119,51 @@ export const accountRouter = {
         }),
       )
       .mutation(async function* ({ ctx, input, signal }) {
+        // TODO: add some more access control checks or validation here
+        // the email check is sus
         const existingAccount = await ctx.db.linkedInAccount.findFirst({
-          where: { email: input.email, userId: ctx.user.id },
+          where: { email: input.email, ownerId: ctx.user.id },
         });
 
         let accountId;
+        let profileId;
 
-        if (existingAccount !== null && existingAccount.status === "ACTIVE") {
-          yield {
-            status: "signed_in",
-          } as const;
-          return;
+        if (existingAccount !== null) {
+          const permitted = await hasPermissionToAccessAccount(ctx.db, {
+            readerId: ctx.user.id,
+            accountId: existingAccount.id,
+          });
+
+          if (permitted === false) {
+            yield {
+              status: "error",
+              error: "Not permitted",
+            } as const;
+            return;
+          }
+
+          if (existingAccount.status === "ACTIVE") {
+            yield {
+              status: "signed_in",
+            } as const;
+            return;
+          }
         }
 
         if (existingAccount !== null) {
           accountId = existingAccount.id;
+          profileId = existingAccount.browserProfileId;
         } else {
           accountId = ulid();
           const profile = await hyperbrowser.profiles.create({
             name: input.email,
           });
+          profileId = profile.id;
 
           await ctx.db.linkedInAccount.create({
             data: {
               id: accountId,
-              userId: ctx.user.id,
+              ownerId: ctx.user.id,
               email: input.email,
               name: input.name,
               browserProfileId: profile.id,
@@ -84,30 +173,27 @@ export const accountRouter = {
           });
         }
 
-        const result = await registerOrGetBrowserSession(
+        const browserSession = new BrowserSession(
           ctx.db,
-          ctx.user.id,
+          ctx.browserRegistry,
           accountId,
+          ctx.user.id,
+          {
+            location: input.location,
+            browserProfileId: profileId,
+          },
         );
 
-        if (result.status === "error") {
-          yield {
-            status: "error",
-            reason: "Failed to start browser session",
-          } as const;
-          return;
-        }
-
-        const instance = result.instance;
+        await browserSession.ready;
 
         yield {
           status: "initialized",
           accountId,
-          liveUrl: instance.liveUrl,
+          liveUrl: browserSession.liveUrl,
         } as const;
 
-        const signedIn = await instance.waitForSigninSuccess(
-          signal ?? instance.signal,
+        const signedIn = await browserSession.waitForSigninSuccess(
+          signal ?? browserSession.signal,
         );
 
         if (signedIn) {
@@ -122,7 +208,7 @@ export const accountRouter = {
           yield {
             status: "signed_in",
           } as const;
-          await instance.destroy();
+          await browserSession.destroy();
         } else {
           yield {
             status: "failed_to_sign_in",
@@ -139,18 +225,26 @@ export const accountRouter = {
         const account = await ctx.db.linkedInAccount.findFirst({
           where: { id: input.accountId },
           select: {
-            userId: true,
+            ownerId: true,
           },
         });
 
-        if (account === null || account.userId !== ctx.user.id) {
+        if (
+          account === null ||
+          account.ownerId !== ctx.user.id ||
+          ctx.memberships.every((m) => m.orgId !== account.ownerId)
+        ) {
           return {
             status: "error",
             error: "Not Permitted",
           } as const;
         }
 
-        await browserRegistry.destroy(input.accountId);
+        const registry = ctx.browserRegistry.get(input.accountId);
+
+        if (registry !== undefined) {
+          await registry.destroy();
+        }
 
         return {
           status: "success",
@@ -168,7 +262,7 @@ export const accountRouter = {
     )
     .query(async ({ ctx, input }) => {
       const accounts = await ctx.db.linkedInAccount.findMany({
-        where: { userId: ctx.user.id, id: { lt: input?.cursor ?? undefined } },
+        where: { ownerId: ctx.user.id, id: { lt: input?.cursor ?? undefined } },
         take: 21,
         orderBy: { id: "desc" },
       });
@@ -241,12 +335,14 @@ export const accountRouter = {
         if (existing.organizationId === input.organizationId) {
           throw new TRPCError({
             code: "CONFLICT",
-            message: "This LinkedIn account is already registered in your organization",
+            message:
+              "This LinkedIn account is already registered in your organization",
           });
         } else if (existing.organizationId) {
           throw new TRPCError({
             code: "CONFLICT",
-            message: "This LinkedIn account is registered in another organization",
+            message:
+              "This LinkedIn account is registered in another organization",
           });
         }
         // If organizationId is null, we could claim it - but for simplicity, block
@@ -283,7 +379,7 @@ export const accountRouter = {
           profileSlug,
           registrationStatus: "registered",
           // Legacy required fields - fill with placeholders
-          userId: ctx.user.id,
+          ownerId: ctx.user.id,
           email: `${profileSlug}@placeholder.linkedin`,
           status: "CONNECTING",
           browserProfileId: "pending",
@@ -393,3 +489,21 @@ export const accountRouter = {
       return { success: true };
     }),
 } satisfies TRPCRouterRecord;
+
+export async function hasPermissionToAccessAccount(
+  db: PrismaClient,
+  { readerId, accountId }: { readerId: string; accountId: string },
+) {
+  const canAccess = await db.$queryRaw<{ permitted: boolean }[]>`
+    select exists (
+      select 1 from "LinkedInAccount" la 
+      where la.id = ${accountId} and la."ownerId" = ${readerId}
+      or exists (
+        select 1 from "OrganizationMember" om 
+        where om."orgId" = la."organizationId" and om."userId" = ${readerId}
+      )
+    ) as permitted
+  `;
+
+  return canAccess.length > 0 && canAccess[0]?.permitted === true;
+}

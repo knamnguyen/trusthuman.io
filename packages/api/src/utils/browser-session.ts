@@ -8,7 +8,7 @@ import { ulid } from "ulidx";
 import { z } from "zod";
 
 import type { PrismaClient } from "@sassy/db";
-import { db } from "@sassy/db";
+import type { StartAutoCommentingParams } from "@sassy/validators";
 
 import type { Logger } from "./commons";
 import { env } from "./env";
@@ -37,32 +37,14 @@ if (process.env.JWT_SECRET === undefined) {
 export const assumedAccountJwt = jwtFactory(
   z.object({
     accountId: z.string(),
+    userId: z.string(),
   }),
   86_400_000, // put a day
   process.env.JWT_SECRET,
 );
 
 export interface BrowserFunctions {
-  startAutoCommenting: (params: {
-    autoCommentRunId: string;
-    scrollDuration: number;
-    commentDelay: number;
-    maxPosts: number;
-    styleGuide: string;
-    duplicateWindow: number;
-    commentAsCompanyEnabled?: boolean;
-    timeFilterEnabled?: boolean;
-    minPostAge?: number;
-    manualApproveEnabled?: boolean;
-    authenticityBoostEnabled?: boolean;
-    commentProfileName?: string;
-    languageAwareEnabled?: boolean;
-    skipCompanyPagesEnabled?: boolean;
-    skipPromotedPostsEnabled?: boolean;
-    skipFriendsActivitiesEnabled?: boolean;
-    blacklistEnabled?: boolean;
-    blacklistAuthors?: string[];
-  }) => Promise<void>;
+  startAutoCommenting: (params: StartAutoCommentingParams) => Promise<void>;
   stopAutoCommenting: () => Promise<void>;
 }
 
@@ -89,10 +71,8 @@ export type BrowserBackendChannelMessage =
     };
 
 export interface BrowserSessionParams {
-  accountId: string;
   location: ProxyLocation;
   staticIpId?: string;
-  engagekitExtensionId: string;
   browserProfileId: string;
   liveviewViewOnlyMode?: boolean;
   onBrowserMessage?: (
@@ -101,11 +81,30 @@ export interface BrowserSessionParams {
   ) => unknown;
 }
 
+declare const window: Window & {
+  _sendMessageToPuppeteerBackend: (data: BrowserBackendChannelMessage) => void;
+  _retry<TOutput>(
+    fn: () => TOutput,
+    opts?: {
+      timeout?: number;
+      interval?: number;
+    },
+  ): Promise<
+    | {
+        ok: true;
+        data: TOutput;
+      }
+    | {
+        ok: false;
+        error: Error;
+      }
+  >;
+};
+
 // TODO: store instance in postgres and then shut down on restart (should technically gracefully update statuses, so if running without an instance in the registry, means it should be shut down)
 export class BrowserSession {
-  public id: string;
   // accountId should be equal to id for now
-  public accountId!: string;
+  public id: string;
   public sessionId!: string;
   public browser!: Browser;
   public liveUrl!: string;
@@ -117,8 +116,8 @@ export class BrowserSession {
   public pageInView: "linkedin" | "engagekitExtension" = "linkedin";
   private controller = new AbortController();
   public signal = this.controller.signal;
-  private readyResolver = Promise.withResolvers<void>();
-  public ready = this.readyResolver.promise;
+  private pageLoadedResolver = Promise.withResolvers<void>();
+  public ready: Promise<BrowserSession>;
   public lastHeartbeatAt = Date.now();
   private LATEST_HEARTBEAT_THRESHOLD_MS = 15_000;
   private destroying = false;
@@ -129,20 +128,26 @@ export class BrowserSession {
 
   private extensionWorker: WebWorker | null = null;
   constructor(
+    private readonly db: PrismaClient,
     private readonly registry: BrowserSessionRegistry,
+    public readonly accountId: string,
+    public readonly userId: string,
     private readonly opts: BrowserSessionParams,
     private readonly logger: Logger = console,
   ) {
-    this.id = opts.accountId;
-    this.accountId = opts.accountId;
-  }
-
-  static async getOrCreate(
-    registry: BrowserSessionRegistry,
-    opts: BrowserSessionParams,
-    logger: Logger = console,
-  ) {
-    return await registry.register(new BrowserSession(registry, opts, logger));
+    this.id = accountId;
+    this.ready = this.init();
+    this.registry.register(this);
+    this.onDestroy(async () => {
+      await this.db.browserInstance.update({
+        where: {
+          id: this.id,
+        },
+        data: {
+          status: "STOPPED",
+        },
+      });
+    });
   }
 
   private async createSession(params: CreateHyperbrowserSessionParams) {
@@ -172,7 +177,6 @@ export class BrowserSession {
       __dirname,
       "../../../../apps/chrome-extension/dist_hyperbrowser",
     );
-    console.info({ filepath });
 
     const browser = (await puppeteer.launch({
       defaultViewport: null,
@@ -192,18 +196,39 @@ export class BrowserSession {
   }
 
   async init(): Promise<BrowserSession> {
+    const instanceId = ulid();
+
     const accountJwt = await assumedAccountJwt.encode({
-      accountId: this.opts.accountId,
+      accountId: this.id,
+      userId: this.userId,
     });
 
     this.controller = new AbortController();
+
+    let engagekitExtensionId = null;
+
+    if (process.env.NODE_ENV !== "test") {
+      // technically wont throw bcs we have at least one extension deployed
+      const engagekitExtension =
+        await this.db.extensionDeploymentMeta.findFirstOrThrow({
+          orderBy: {
+            createdAt: "desc",
+          },
+          select: {
+            id: true,
+          },
+        });
+
+      engagekitExtensionId = engagekitExtension.id;
+    }
 
     const instance = await this.createSession({
       useProxy: true,
       useStealth: true,
       viewOnlyLiveView: this.opts.liveviewViewOnlyMode ?? false,
       solveCaptchas: true,
-      extensionIds: [this.opts.engagekitExtensionId],
+      // safe to just fallback to mock here because findFirstOrThrow will throw if no extension found in production
+      extensionIds: [engagekitExtensionId ?? "mock"],
       proxyCountry: this.opts.location,
       profile: {
         id: this.opts.browserProfileId,
@@ -221,6 +246,21 @@ export class BrowserSession {
     this.sessionId = instance.session.id;
 
     this.browser = instance.browser;
+
+    await this.db.browserInstance.upsert({
+      where: {
+        hyperbrowserSessionId: this.sessionId,
+      },
+      create: {
+        id: instanceId,
+        accountId: this.accountId,
+        hyperbrowserSessionId: this.sessionId,
+        status: "INITIALIZING",
+      },
+      update: {
+        status: "INITIALIZING",
+      },
+    });
 
     const engagekitExtensionPagePromise = this.browser
       .newPage()
@@ -267,7 +307,32 @@ export class BrowserSession {
 
     await this.bringToFront("linkedin");
 
+    await this.db.browserInstance.update({
+      where: {
+        id: instanceId,
+      },
+      data: {
+        status: "RUNNING",
+      },
+    });
+
+    await this.pageLoadedResolver.promise;
+
     return this;
+  }
+
+  public static async isInstanceRunning(db: PrismaClient, id: string) {
+    const session = await db.browserInstance.findFirst({
+      where: {
+        id,
+      },
+      select: {
+        id: true,
+        status: true,
+      },
+    });
+
+    return session === null || session.status === "RUNNING";
   }
 
   public onDestroy(callback: () => unknown) {
@@ -282,8 +347,17 @@ export class BrowserSession {
     if (this.destroying) {
       return;
     }
+
     this.destroying = true;
-    await this.registry.destroy(this.id);
+    this.controller.abort();
+
+    await Promise.all([
+      this.browser.close(),
+      process.env.NODE_ENV === "production"
+        ? hyperbrowser.sessions.stop(this.sessionId)
+        : null,
+    ]);
+
     const callbacks: Promise<unknown>[] = [];
     for (const cb of this.onDestroyCallbacks) {
       try {
@@ -295,12 +369,13 @@ export class BrowserSession {
         );
       }
     }
-    this.controller.abort();
     await Promise.all(callbacks);
   }
 
   public setupHeartbeat() {
-    const interval = setInterval(() => {
+    let timeoutId: ReturnType<typeof setTimeout> | undefined = undefined;
+
+    const pingCheck = () => {
       if (
         Date.now() - this.lastHeartbeatAt >
         this.LATEST_HEARTBEAT_THRESHOLD_MS
@@ -308,14 +383,23 @@ export class BrowserSession {
         this.logger.warn(
           `No ping received from browser session ${this.id} in the last ${this.LATEST_HEARTBEAT_THRESHOLD_MS} ms, destroying session`,
         );
-        clearInterval(interval);
+
+        if (timeoutId !== undefined) {
+          clearTimeout(timeoutId);
+        }
+
         void this.destroy().catch((err) => {
           this.logger.error(
             `Error destroying browser session ${this.id}: ${err}`,
           );
         });
+        return;
       }
-    }, 5_000);
+
+      timeoutId = setTimeout(pingCheck, 5000);
+    };
+
+    pingCheck();
 
     this.onBrowserMessage((message) => {
       if (message.action !== "ping") {
@@ -343,7 +427,7 @@ export class BrowserSession {
     const onBrowserMessage = (message: BrowserBackendChannelMessage) => {
       switch (message.action) {
         case "ready": {
-          this.readyResolver.resolve();
+          this.pageLoadedResolver.resolve();
           break;
         }
       }
@@ -364,8 +448,7 @@ export class BrowserSession {
     // listen to messages from contentscript and then call the exposed function
     await page.evaluateOnNewDocument(() => {
       function ping() {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-        (window as any)._sendMessageToPuppeteerBackend({
+        window._sendMessageToPuppeteerBackend({
           action: "ping",
         });
         setTimeout(() => {
@@ -390,12 +473,39 @@ export class BrowserSession {
           return;
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-        (window as any)._sendMessageToPuppeteerBackend(
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-          event.data.payload,
-        );
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
+        window._sendMessageToPuppeteerBackend(event.data.payload);
       });
+
+      window._retry = async <TOutput>(
+        fn: () => TOutput,
+        opts?: {
+          timeout?: number;
+          interval?: number;
+          retryOn?: (output: TOutput) => boolean;
+        },
+      ) => {
+        const { timeout = 10000, interval = 200 } = opts ?? {};
+        const start = Date.now();
+        while (Date.now() - start < timeout) {
+          try {
+            const result = await Promise.resolve(fn());
+
+            return {
+              ok: true,
+              data: result,
+            };
+          } catch {
+            await new Promise((resolve) => setTimeout(resolve, interval));
+            // ignore
+          }
+        }
+
+        return {
+          ok: false,
+          error: new Error("timeout"),
+        };
+      };
     });
   }
 
@@ -481,41 +591,23 @@ export class BrowserSession {
     }
   }
 
-  // TODO: add error handling in general to destroy when any errors are caught
-  async startAutoCommenting(params: {
-    autoCommentRunId: string;
-    scrollDuration: number;
-    commentDelay: number;
-    maxPosts: number;
-    styleGuide: string;
-    duplicateWindow: number;
-    commentAsCompanyEnabled?: boolean;
-    timeFilterEnabled?: boolean;
-    minPostAge?: number;
-    manualApproveEnabled?: boolean;
-    authenticityBoostEnabled?: boolean;
-    commentProfileName?: string;
-    languageAwareEnabled?: boolean;
-    skipCompanyPagesEnabled?: boolean;
-    skipPromotedPostsEnabled?: boolean;
-    skipFriendsActivitiesEnabled?: boolean;
-    blacklistEnabled?: boolean;
-    blacklistAuthors?: string[];
-  }) {
+  async startAutoCommenting(params: StartAutoCommentingParams) {
     await this.bringToFront("linkedin");
     await this.ready;
 
     const assumedUserToken = await assumedAccountJwt.encode({
-      accountId: this.opts.accountId,
+      accountId: this.accountId,
+      userId: this.userId,
     });
 
-    console.info("running start autocomementing");
-    const result = await this.pages.linkedin.evaluate(
-      (params, assumedUserToken) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (window as any)
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-          .postMessage({
+    // can return an async iterator in the future to stream updates back to caller
+    // for now just return a completed promise
+    const resolver = Promise.withResolvers<void>();
+
+    try {
+      await this.pages.linkedin.evaluate(
+        (params, assumedUserToken) => {
+          window.postMessage({
             source: "engagekit_page_to_contentscript",
             payload: {
               action: "setAssumedUserToken",
@@ -523,39 +615,66 @@ export class BrowserSession {
             },
           });
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (window as any)
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-          .postMessage({
+          window.postMessage({
             source: "engagekit_page_to_contentscript",
             payload: {
               action: "startNewCommentingFlow",
               params,
             },
           });
-      },
-      params,
-      assumedUserToken,
-    );
-    console.info("ran start autocomementing");
+        },
+        params,
+        assumedUserToken,
+      );
 
-    return {
-      status: "success",
-      output: result,
-    } as const;
+      this.onBrowserMessage(async function (data) {
+        switch (data.action) {
+          case "stopAutoCommenting": {
+            await this.destroy();
+            resolver.resolve();
+            break;
+          }
+          case "autoCommentingCompleted": {
+            await Promise.all([
+              this.destroy(),
+              this.db.autoCommentRun.update({
+                where: { id: data.payload.autoCommentRunId },
+                data: {
+                  status: data.payload.success ? "completed" : "errored",
+                  error: data.payload.error,
+                  endedAt: new Date(),
+                },
+              }),
+            ]);
+            resolver.resolve();
+          }
+        }
+      });
+
+      await resolver.promise;
+
+      return {
+        status: "completed",
+      } as const;
+    } catch (err) {
+      const error = err instanceof Error ? err.message : String(err);
+      this.logger.error(error);
+      await this.destroy();
+      return {
+        status: "errored",
+        error,
+      } as const;
+    }
   }
 
   async stopAutoCommenting() {
     const result = await this.pages.linkedin.evaluate(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (window as any)
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        .postMessage({
-          source: "engagekit_page_to_contentscript",
-          payload: {
-            action: "stopAutoCommenting",
-          },
-        });
+      window.postMessage({
+        source: "engagekit_page_to_contentscript",
+        payload: {
+          action: "stopAutoCommenting",
+        },
+      });
     });
 
     return {
@@ -563,142 +682,279 @@ export class BrowserSession {
       output: result,
     } as const;
   }
+
+  async commentOnPost(postUrn: string, comment: string, now = new Date()) {
+    await this.ready;
+
+    const startOfDay = new Date(now);
+    startOfDay.setUTCHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(startOfDay);
+    endOfDay.setUTCDate(endOfDay.getUTCDate() + 1);
+
+    const numCommentedToday = await this.db.userComment.count({
+      where: {
+        accountId: this.accountId,
+        commentedAt: {
+          not: null,
+          gte: startOfDay,
+          lte: endOfDay,
+        },
+      },
+    });
+
+    // TODO: refactor this daily comment limit to be shared as a global constant
+    if (numCommentedToday >= 100) {
+      return {
+        status: "error",
+        reason: "Daily comment limit reached",
+      } as const;
+    }
+
+    await this.pages.linkedin.evaluate((postUrn) => {
+      // use window.history.pushstate for client side spa navigation
+      window.history.pushState({}, "", `/feed/update/${postUrn}`);
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    }, postUrn);
+
+    return await this.pages.linkedin.evaluate(async (comment) => {
+      const postContainer = await window._retry(() => {
+        const element = document.querySelector("div.feed-shared-update-v2");
+        if (element === null) {
+          throw new Error("Post container not found, throwing for retry");
+        }
+
+        return element as HTMLDivElement;
+      });
+
+      if (postContainer.ok === false) {
+        return {
+          status: "error",
+          reason: "Post container not found",
+        } as const;
+      }
+
+      const commentButton = postContainer.data.querySelector(
+        'button[aria-label="Comment"]',
+      ) as HTMLButtonElement | null;
+
+      if (commentButton === null) {
+        return {
+          status: "error",
+          reason: "Comment button not found",
+        } as const;
+      }
+
+      commentButton.click();
+
+      async function getEditableField() {
+        const commentEditor = await window._retry(() => {
+          const element = document.querySelector(
+            ".comments-comment-box-comment__text-editor",
+          );
+          if (element === null) {
+            throw new Error("Comment editor not found, throwing for retry");
+          }
+
+          return element as HTMLDivElement;
+        });
+
+        if (!commentEditor.ok) {
+          return null;
+        }
+
+        const result = await window._retry(() => {
+          const editable = commentEditor.data.querySelector(
+            "[contenteditable='true']",
+          );
+          if (editable === null) {
+            throw new Error("Editable field not found, throwing for retry");
+          }
+
+          return editable as HTMLDivElement;
+        });
+
+        if (!result.ok) {
+          return null;
+        }
+
+        return result.data;
+      }
+
+      const editableField = await getEditableField();
+      if (editableField === null) {
+        return {
+          status: "error",
+          reason: "Editable field not found",
+        } as const;
+      }
+
+      editableField.focus();
+      editableField.click();
+      editableField.innerHTML = "";
+
+      // Input the comment text
+      const lines = comment.split("\n");
+      lines.forEach((lineText) => {
+        const p = document.createElement("p");
+        if (lineText === "") {
+          p.appendChild(document.createElement("br"));
+        } else {
+          p.textContent = lineText;
+        }
+        editableField.appendChild(p);
+      });
+
+      // Set cursor position and trigger input event
+      const selection = window.getSelection();
+      if (selection) {
+        const range = document.createRange();
+        if (editableField.lastChild) {
+          range.setStartAfter(editableField.lastChild);
+        } else {
+          range.selectNodeContents(editableField);
+        }
+        range.collapse(true);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+      editableField.focus();
+
+      const inputEvent = new Event("input", {
+        bubbles: true,
+        cancelable: true,
+      });
+      editableField.dispatchEvent(inputEvent);
+
+      const submitButton = await window._retry(() => {
+        const button = document.querySelector(
+          ".comments-comment-box__submit-button--cr",
+        ) as HTMLButtonElement | null;
+
+        if (button === null) {
+          throw new Error("Submit button not found, throwing for retry");
+        }
+
+        if (button.disabled) {
+          throw new Error("Submit button is disabled, throwing for retry");
+        }
+
+        return button;
+      });
+
+      if (!submitButton.ok) {
+        return {
+          status: "error",
+          reason: "Submit button not found or disabled",
+        } as const;
+      }
+
+      async function getFirstCommentUrn() {
+        const result = await window._retry(() => {
+          const commentsContainer = document.querySelector(
+            ".scaffold-finite-scroll__content",
+          ) as HTMLDivElement | null;
+
+          if (commentsContainer === null) {
+            return null;
+          }
+
+          const firstComment = commentsContainer.querySelector(
+            "article",
+          ) as HTMLElement | null;
+
+          if (firstComment === null) {
+            throw new Error("First comment not found, throwing for retry");
+          }
+
+          return firstComment.getAttribute("data-id");
+        });
+
+        return result.ok ? result.data : null;
+      }
+
+      const firstCommentUrnBeforePosting = await getFirstCommentUrn();
+
+      submitButton.data.click();
+
+      const commentPosted = await window._retry(
+        async () => {
+          // get first comment urn again, and compare with firstCommentUrnBeforePosting
+          const urn = await getFirstCommentUrn();
+          if (urn === null || urn === firstCommentUrnBeforePosting) {
+            throw new Error("Comment not posted yet, throwing for retry");
+          }
+
+          return true;
+        },
+        {
+          timeout: 50_000,
+          interval: 500,
+        },
+      );
+
+      if (!commentPosted.ok) {
+        return {
+          status: "error",
+          reason: "Comment not posted within timeout",
+        } as const;
+      }
+
+      return {
+        status: "success",
+      } as const;
+    }, comment);
+  }
+
+  static async isAnySessionRunning(db: PrismaClient, accountId: string) {
+    const instance = await db.browserInstance.findFirst({
+      where: {
+        accountId,
+        status: "RUNNING",
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    return instance !== null;
+  }
 }
 
 export class BrowserSessionRegistry {
-  constructor(private readonly db: PrismaClient) {}
-
   private readonly registry = new Map<string, BrowserSession>();
-
-  async sync() {
-    // check for remote db if any running or initializing sessions
-    // these sessions are hung sessions that were not cleaned up properly
-    // we need to destroy them locally (if they exist)
-    // and set the state to STOPPED in the remote db
-    while (true) {
-      const browserInstances = await this.db.browserInstance.findMany({
-        where: {
-          OR: [
-            {
-              status: "RUNNING",
-            },
-            {
-              status: "INITIALIZING",
-            },
-          ],
-        },
-      });
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const promises: Promise<any>[] = [];
-      for (const instance of browserInstances) {
-        if (!this.registry.has(instance.id)) {
-          // stop hyperbrowser session deliberately
-          // bcs this.destroy(instance.id) will skip stopping hyperbrowser session
-          // if if does not exist in the registry
-          promises.push(
-            this.stopHyperbrowserSession(instance.hyperbrowserSessionId),
-          );
-          promises.push(this.destroy(instance.id));
-          promises.push(
-            this.db.browserInstance.update({
-              where: {
-                id: instance.id,
-              },
-              data: {
-                status: "STOPPED",
-              },
-            }),
-          );
-        }
-      }
-
-      await Promise.all(promises);
-    }
-  }
 
   get(id: string) {
     return this.registry.get(id);
   }
 
-  private async getOrRegister(session: BrowserSession) {
-    const existing = this.get(session.id);
-    if (existing !== undefined) {
-      const status = await hyperbrowser.sessions.get(existing.sessionId);
-      if (status.status === "active") {
-        return {
-          status: "existing",
-          instance: existing,
-        } as const;
-      }
-
-      // if existing session exists but status is not active
-      // we destroy it and create it again below
-      await this.destroy(session.id);
+  register(session: BrowserSession) {
+    if (this.has(session.id)) {
+      throw new Error(
+        `Browser session with id ${session.id} is already registered`,
+      );
     }
-
-    const browserSession = await session.init();
-
-    this.registry.set(session.id, browserSession);
-
-    return {
-      status: "new",
-      instance: browserSession,
-    } as const;
-  }
-
-  async register(session: BrowserSession) {
-    const existing = await this.getOrRegister(session);
-
-    await this.db.browserInstance.upsert({
-      where: {
-        hyperbrowserSessionId: session.sessionId,
-      },
-      create: {
-        id: ulid(),
-        accountId: session.accountId,
-        hyperbrowserSessionId: existing.instance.sessionId,
-        status: "RUNNING",
-      },
-      update: {
-        status: "RUNNING",
-      },
-    });
-
-    return existing;
+    this.registry.set(session.id, session);
   }
 
   has(id: string) {
     return this.registry.has(id);
   }
 
-  private async stopHyperbrowserSession(sessionId: string) {
-    if (sessionId === "mock") {
+  async destroy(id: string) {
+    const session = this.registry.get(id);
+    if (session === undefined) {
       return;
     }
-    await hyperbrowser.sessions.stop(sessionId);
-  }
 
-  async destroy(accountId: string) {
-    const entry = this.registry.get(accountId);
-    if (entry === undefined) {
-      return;
-    }
-    await Promise.all([
-      entry.browser.close(),
-      this.stopHyperbrowserSession(entry.sessionId),
-    ]);
-    this.registry.delete(accountId);
+    await session.destroy();
+    this.registry.delete(id);
   }
 
   async destroyAll() {
     const entries = Array.from(this.registry.entries());
-    await Promise.all(
-      entries
-        .filter(([_, entry]) => entry.sessionId !== "mock")
-        .map(([id]) => this.destroy(id)),
-    );
+    await Promise.all(entries.map(([id]) => this.destroy(id)));
   }
 }
 
-export const browserRegistry = new BrowserSessionRegistry(db);
+export const browserRegistry = new BrowserSessionRegistry();

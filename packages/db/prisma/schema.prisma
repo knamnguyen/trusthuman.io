@@ -1,4 +1,4 @@
- generator client {
+generator client {
   provider        = "prisma-client-js"
   output          = "../generated/node"
   previewFeatures = ["postgresqlExtensions"]
@@ -21,7 +21,7 @@ datasource db {
   provider   = "postgresql"
   url        = env("DATABASE_URL")
   directUrl  = env("DIRECT_URL")
-  extensions = [uuid_ossp(map: "uuid-ossp", schema: "extensions"), vector]
+  extensions = [uuid_ossp(map: "uuid-ossp"), vector]
 }
 
 model User {
@@ -43,7 +43,6 @@ model User {
   linkedInAccounts  LinkedInAccount[]
 
   UserBrowserState        UserBrowserState[]
-  Comments                UserComment[]
   AutoCommentRun          AutoCommentRun[]
   CommentStyle            CommentStyle[]
   AutoCommentConfig       AutoCommentConfig[]
@@ -76,8 +75,10 @@ model OrganizationMember {
   role     String // "admin" | "member"
   joinedAt DateTime @default(now())
 
-  org  Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  user User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  org               Organization     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  linkedInAccount   LinkedInAccount? @relation(fields: [linkedInAccountId], references: [id])
+  linkedInAccountId String?
 
   @@unique([orgId, userId])
   @@index([userId])
@@ -85,8 +86,8 @@ model OrganizationMember {
 
 model LinkedInAccount {
   id                 String                @id @default(uuid())
-  user               User                  @relation(fields: [userId], references: [id])
-  userId             String
+  owner              User                  @relation(fields: [ownerId], references: [id])
+  ownerId            String
   email              String                @unique
   status             LinkedInAccountStatus
   createdAt          DateTime              @default(now())
@@ -94,20 +95,28 @@ model LinkedInAccount {
   browserProfileId   String
   location           String
   name               String?
+  autocommentEnabled Boolean               @default(false)
+  runDailyAt         String?
   isRunning          Boolean               @default(false)
+  accessType         AccessType            @default(FREE)
 
   // Organization-based fields (new multi-tenant flow)
   organizationId     String?
   profileUrl         String?
-  profileSlug        String?               @unique // Globally unique - one LinkedIn per system
-  registrationStatus String?               // "registered" | "connected" | null
+  profileSlug        String? @unique // Globally unique - one LinkedIn per system
+  registrationStatus String? // "registered" | "connected" | null
 
-  org                Organization?         @relation(fields: [organizationId], references: [id], onDelete: SetNull)
-  AutoCommentConfig  AutoCommentConfig[]
-  BlacklistedProfile BlacklistedProfile[]
-  AutoCommentRun     AutoCommentRun[]
-  BrowserInstance    BrowserInstance[]
-  userComments       UserComment[]
+  org                     Organization?        @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  AutoCommentConfig       AutoCommentConfig[]
+  BlacklistedProfile      BlacklistedProfile[]
+  AutoCommentRun          AutoCommentRun[]
+  BrowserInstance         BrowserInstance[]
+  comments                Comment[]
+  browserJobs             BrowserJob[]
+  targetLists             TargetList[]
+  targetProfiles          TargetProfile[]
+  organizationMemberships OrganizationMember[]
+  buildTargetListJobs     BuildTargetListJob[]
 }
 
 enum LinkedInAccountStatus {
@@ -249,40 +258,54 @@ model LinkedInProfile {
   @@index([linkedinUrl])
 }
 
-model UserComment {
-  id               String           @id
-  urn              String
-  postContentHtml  String?
-  hash             String?
-  autoCommentRunId String?
-  comment          String
-  userId           String?
-  accountId        String?
-  commentedAt      DateTime?
-  isDuplicate      Boolean          @default(false)
-  isAutoCommented  Boolean          @default(true)
-  user             User?            @relation(fields: [userId], references: [id])
-  autoCommentRun   AutoCommentRun?  @relation(fields: [autoCommentRunId], references: [id])
-  account          LinkedInAccount? @relation(fields: [accountId], references: [id])
+model Comment {
+  id              String    @id
+  postUrn         String
+  postContentHtml String?
+  postCreatedAt   DateTime?
 
-  @@index([hash])
-  @@index([urn])
+  adjacentComments Json?
+
+  authorUrn        String?
+  authorName       String?
+  authorProfileUrl String?
+  authorAvatarUrl  String?
+  authorHeadline   String?
+
+  comment           String
+  postAlternateUrns String[]
+  commentedAt       DateTime?
+  isAutoCommented   Boolean   @default(true)
+  schedulePostAt    DateTime?
+
+  accountId String
+
+  autoCommentRunId String?
+  autoCommentError String?
+
+  account        LinkedInAccount? @relation(fields: [accountId], references: [id])
+  autoCommentRun AutoCommentRun?  @relation(fields: [autoCommentRunId], references: [id])
+
+  @@index([postUrn])
   @@index([commentedAt])
+  @@index([postAlternateUrns], type: Gin)
 }
 
 model AutoCommentRun {
-  id        String        @id
-  userId    String
-  accountId String
-  liveUrl   String
-  startedAt DateTime      @default(now())
-  endedAt   DateTime?
-  error     String?
-  status    String
-  comments  UserComment[]
+  id          String    @id
+  accountId   String
+  liveUrl     String
+  startedAt   DateTime?
+  endedAt     DateTime?
+  scheduledAt DateTime
+  error       String?
+  status      String
+  comments    Comment[]
+  hitlMode    Boolean   @default(false)
 
-  user    User            @relation(fields: [userId], references: [id])
   account LinkedInAccount @relation(fields: [accountId], references: [id])
+  user    User?           @relation(fields: [userId], references: [id])
+  userId  String?
 }
 
 model UserBrowserState {
@@ -291,25 +314,35 @@ model UserBrowserState {
   user   User   @relation(fields: [userId], references: [id])
 }
 
+enum TargetListStatus {
+  BUILDING
+  COMPLETED
+}
+
 model TargetList {
-  id             String          @id
-  userId         String
+  id             String           @id
+  accountId      String
   name           String
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  status         TargetListStatus
   targetProfiles TargetProfile[]
+
+  linkedInAccount     LinkedInAccount      @relation(fields: [accountId], references: [id])
+  buildTargetListJobs BuildTargetListJob[]
 }
 
 model TargetProfile {
   id          String           @id
   listId      String
-  userId      String
-  linkedinUrl String           // What user provided (raw URL)
-  profileUrn  String?          // Filled after profile is scraped
+  accountId   String
+  linkedinUrl String // What user provided (raw URL)
+  profileUrn  String? // Filled after profile is scraped
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
   list        TargetList       @relation(fields: [listId], references: [id])
   profile     LinkedInProfile? @relation(fields: [profileUrn], references: [urn])
+  account     LinkedInAccount  @relation(fields: [accountId], references: [id])
 
   @@unique([listId, linkedinUrl]) // Prevent duplicate URLs per list
 }
@@ -317,12 +350,12 @@ model TargetProfile {
 model BlacklistedProfile {
   id         String   @id
   accountId  String
-  userId     String
   profileUrn String
   createdAt  DateTime @default(now())
 
-  user    User            @relation(fields: [userId], references: [id])
   account LinkedInAccount @relation(fields: [accountId], references: [id])
+  user    User?           @relation(fields: [userId], references: [id])
+  userId  String?
 
   @@unique([accountId, profileUrn])
 }
@@ -367,6 +400,7 @@ model AutoCommentConfig {
   skipPromotedPostsEnabled    Boolean
   skipFriendActivitiesEnabled Boolean
   skipCompanyPagesEnabled     Boolean
+  hitlMode                    Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -411,31 +445,78 @@ model LinkedInPostPreview {
   @@index([createdAt])
 }
 
+enum BrowserJobStatus {
+  QUEUED
+  RUNNING
+  TERMINATED
+  COMPLETED
+  FAILED
+}
+
+model BrowserJob {
+  id              String           @id
+  status          BrowserJobStatus
+  accountId       String
+  error           String?
+  output          String?
+  createdAt       DateTime         @default(now())
+  startAt         DateTime
+  completedAt     DateTime?
+  lastRunAt       DateTime?
+  linkedInAccount LinkedInAccount  @relation(fields: [accountId], references: [id])
+
+  @@index([status])
+}
+
 model CommentAnalysis {
-  id              String   @id @default(uuid())
-  userId          String
+  id     String @id @default(uuid())
+  userId String
 
   // Comment metadata
-  commentUrl      String   @db.Text
-  commentText     String   @db.Text
-  authorName      String
-  authorHeadline  String?
+  commentUrl       String  @db.Text
+  commentText      String  @db.Text
+  authorName       String
+  authorHeadline   String?
   authorProfileUrl String?
-  avatarS3Key     String?  // Stored in S3 to avoid LinkedIn URL expiration
-  avatarS3Url     String?  // Public S3 URL
+  avatarS3Key      String? // Stored in S3 to avoid LinkedIn URL expiration
+  avatarS3Url      String? // Public S3 URL
 
   // Analysis results (stored as JSON for flexibility)
-  analysisJson    Json     // Full AI detector output
-  overallScore    Float    // Original percentage (0-100)
-  aiScore         Float    // AI percentage (0-100)
+  analysisJson Json // Full AI detector output
+  overallScore Float // Original percentage (0-100)
+  aiScore      Float // AI percentage (0-100)
 
   // Metadata
-  isPublic        Boolean  @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  isPublic  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([createdAt])
+}
+
+model BuildTargetListJob {
+  id          String                   @id
+  accountId   String
+  workflowId  String
+  listId      String                   @unique
+  status      BuildTargetListJobStatus
+  error       String?
+  createdAt   DateTime                 @default(now())
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  linkedInAccount LinkedInAccount @relation(fields: [accountId], references: [id])
+  targetList      TargetList      @relation(fields: [listId], references: [id])
+
+  @@index([status])
+}
+
+enum BuildTargetListJobStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
 }

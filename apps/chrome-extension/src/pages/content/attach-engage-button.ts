@@ -347,6 +347,7 @@ function addEngageButton(form: HTMLFormElement): void {
           if (!submitBtn.hasAttribute("data-engage-save-handler")) {
             submitBtn.setAttribute("data-engage-save-handler", "1");
             const urnsToSave = [...postUrns];
+            const postUrn = postUrns[0];
             const hashToSave = hashRes?.hash;
             submitBtn.addEventListener(
               "click",
@@ -358,19 +359,21 @@ function addEngageButton(form: HTMLFormElement): void {
                   if (hashToSave)
                     promises.push(saveCommentedPostHash([hashToSave]));
 
-                  promises.push(
-                    contentScriptContext
-                      .getTrpcClient()
-                      .autocomment.saveComments.mutate(
-                        urnsToSave.map((urn, index) => ({
-                          urn,
+                  // technically should have a posturn, but just do this for sanity check and typesafety
+                  if (postUrn !== undefined) {
+                    promises.push(
+                      contentScriptContext
+                        .getTrpcClient()
+                        .autocomment.saveComments.mutate({
+                          postUrn,
                           hash: hashToSave ?? null,
                           comment: generated,
                           postContentHtml: extractedPostContent.html,
-                          isDuplicate: index !== 0,
-                        })),
-                      ),
-                  );
+                          urns: postUrns,
+                        }),
+                    );
+                  }
+
                   await Promise.all(promises);
                 } catch {}
               },

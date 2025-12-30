@@ -1,12 +1,12 @@
 "use client";
 
 import type { QueryClient } from "@tanstack/react-query";
-import { useState } from "react";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { createContext, useContext, useEffect, useState } from "react";
+import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import {
   createTRPCClient,
+  httpBatchStreamLink,
   loggerLink,
-  unstable_httpBatchStreamLink,
 } from "@trpc/client";
 import { createTRPCContext } from "@trpc/tanstack-react-query";
 import SuperJSON from "superjson";
@@ -14,6 +14,10 @@ import SuperJSON from "superjson";
 import type { AppRouter } from "@sassy/api";
 
 import { env } from "~/env";
+import {
+  useCurrentLinkedInAccountId,
+  useLinkedInAccountStore,
+} from "~/stores/linkedin-account-store";
 import { createQueryClient } from "./query-client";
 
 let clientQueryClientSingleton: QueryClient | undefined = undefined;
@@ -37,9 +41,14 @@ const getBaseUrl = () => {
   return `http://localhost:${process.env.PORT ?? 3000}`;
 };
 
+type TRPCClient = ReturnType<typeof createTRPCClient<AppRouter>>;
+
 // Create a singleton trpc client that will be used in the global provider
-let _trpcClient: ReturnType<typeof createTRPCClient<AppRouter>> | undefined;
-export const getTrpcClient = () => {
+let _trpcClient: TRPCClient | undefined;
+
+export const getTrpcClient = (
+  configGetter?: () => { assumedUserToken?: string },
+) => {
   if (typeof window === "undefined") {
     return createTRPCClient<AppRouter>({
       links: [
@@ -48,52 +57,126 @@ export const getTrpcClient = () => {
             env.NODE_ENV === "development" ||
             (op.direction === "down" && op.result instanceof Error),
         }),
-        unstable_httpBatchStreamLink({
+        httpBatchStreamLink({
           transformer: SuperJSON,
           url: getBaseUrl() + "/api/trpc",
           headers() {
             const headers = new Headers();
             headers.set("x-trpc-source", "nextjs-ssr");
+
+            const config = configGetter?.();
+
+            if (config?.assumedUserToken !== undefined) {
+              headers.set("x-assumed-user-token", config.assumedUserToken);
+            }
+
             return headers;
           },
         }),
       ],
     });
-  } else {
-    // Browser: use singleton pattern
-    return (_trpcClient ??= createTRPCClient<AppRouter>({
-      links: [
-        loggerLink({
-          enabled: (op) =>
-            env.NODE_ENV === "development" ||
-            (op.direction === "down" && op.result instanceof Error),
-        }),
-        unstable_httpBatchStreamLink({
-          transformer: SuperJSON,
-          url: getBaseUrl() + "/api/trpc",
-          headers() {
-            const headers = new Headers();
-            headers.set("x-trpc-source", "nextjs-react");
-            return headers;
-          },
-        }),
-      ],
-    }));
   }
+
+  // Browser: use singleton pattern
+  return (_trpcClient ??= createTRPCClient<AppRouter>({
+    links: [
+      loggerLink({
+        enabled: (op) =>
+          env.NODE_ENV === "development" ||
+          (op.direction === "down" && op.result instanceof Error),
+      }),
+      httpBatchStreamLink({
+        transformer: SuperJSON,
+        url: getBaseUrl() + "/api/trpc",
+        headers() {
+          const headers = new Headers();
+          headers.set("x-trpc-source", "nextjs-react");
+
+          console.info({ configGetter: configGetter?.toString() });
+          const config = configGetter?.();
+          console.info({ config });
+
+          console.info("Assumed User Token:", config?.assumedUserToken);
+
+          if (config?.assumedUserToken !== undefined) {
+            headers.set("x-assumed-user-token", config.assumedUserToken);
+          }
+
+          return headers;
+        },
+      }),
+    ],
+  }));
 };
+
+const TRPCClientContext = createContext<TRPCClient | null>(null);
+
+export function TRPCClientProvider(props: {
+  client: TRPCClient;
+  children: React.ReactNode;
+}) {
+  return (
+    <TRPCClientContext.Provider value={props.client}>
+      {props.children}
+    </TRPCClientContext.Provider>
+  );
+}
+
+export function useTRPCClient() {
+  const context = useContext(TRPCClientContext);
+  if (context === null) {
+    throw new Error("useTrpcClient must be used within a TRPCClientProvider");
+  }
+  return context;
+}
 
 export function TRPCReactProvider(props: { children: React.ReactNode }) {
   const queryClient = getQueryClient();
 
-  const [trpcClient] = useState(getTrpcClient);
+  const store = useLinkedInAccountStore();
+
+  const [trpcClient] = useState(() =>
+    getTrpcClient(() => ({
+      assumedUserToken: store.state.assumedUserToken ?? undefined,
+    })),
+  );
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
-        {props.children}
-      </TRPCProvider>
+      <TRPCClientProvider client={trpcClient}>
+        <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
+          <AssumedUserTokenRefresher />
+          {props.children}
+        </TRPCProvider>
+      </TRPCClientProvider>
     </QueryClientProvider>
   );
 }
 
-export const trpcStandalone = getTrpcClient();
+function AssumedUserTokenRefresher() {
+  const store = useLinkedInAccountStore();
+
+  const trpc = useTRPC();
+
+  const accountId = useCurrentLinkedInAccountId();
+
+  const { data: token } = useQuery(
+    trpc.account.token.queryOptions(
+      {
+        id: accountId ?? "",
+      },
+      {
+        enabled: !!accountId,
+        refetchInterval: 5 * 60_000, // every 5 minutes
+      },
+    ),
+  );
+
+  useEffect(() => {
+    if (token !== undefined) {
+      store.setAssumedUserToken(token);
+    }
+  }, [token, store]);
+
+  return null;
+}
