@@ -1,28 +1,6 @@
 import { insertCommentIntoField } from "./insert-comment";
 
 /**
- * Opens the comment box for a post by clicking the Comment button
- * Uses aria-label selector for resilience against class changes
- *
- * @param postContainer - The LinkedIn post container element
- * @returns true if comment button was found and clicked
- */
-export function clickCommentButton(postContainer: HTMLElement): boolean {
-  const commentButton = postContainer.querySelector<HTMLButtonElement>(
-    'button[aria-label="Comment"]',
-  );
-
-  if (!commentButton) {
-    console.warn("EngageKit: Comment button not found in post container");
-    return false;
-  }
-
-  commentButton.click();
-  console.log("EngageKit: Clicked comment button");
-  return true;
-}
-
-/**
  * Finds the editable comment field within a post container
  * Searches for contenteditable div (LinkedIn's comment input)
  *
@@ -69,9 +47,8 @@ export async function waitForEditableField(
 
 /**
  * Submit a comment to a LinkedIn post
- * 1. Clicks the comment button to open the comment box
- * 2. Waits for the editable field to appear
- * 3. Inserts the comment text
+ * Note: Comment button should already be clicked during the loading phase.
+ * This function waits for the editable field and inserts the comment text.
  *
  * @param postContainer - The LinkedIn post container element
  * @param commentText - The comment to insert
@@ -81,19 +58,13 @@ export async function submitCommentToPost(
   postContainer: HTMLElement,
   commentText: string,
 ): Promise<boolean> {
-  // Step 1: Click comment button
-  const clicked = clickCommentButton(postContainer);
-  if (!clicked) {
-    return false;
-  }
-
-  // Step 2: Wait for editable field to appear
+  // Wait for editable field to appear (comment button already clicked during load)
   const editableField = await waitForEditableField(postContainer);
   if (!editableField) {
     return false;
   }
 
-  // Step 3: Focus and insert comment
+  // Focus and insert comment
   editableField.focus();
   insertCommentIntoField(editableField, commentText);
 

@@ -1,9 +1,9 @@
 import { create } from "zustand";
 
 import type { PostAuthorInfo } from "../utils/extract-author-info-from-post";
+import type { PostCommentInfo } from "../utils/extract-comment-from-post";
 import type { PostTimeInfo } from "../utils/extract-post-time";
 import type { PostUrlInfo } from "../utils/extract-post-url";
-import type { PostCommentInfo } from "../utils/load-and-extract-comments";
 
 /**
  * Represents a single compose card with reference to the LinkedIn post
@@ -14,14 +14,18 @@ export interface ComposeCard {
   captionPreview: string;
   /** Full post caption text */
   fullCaption: string;
-  /** The editable comment text (mock data for now) */
+  /** The editable comment text */
   commentText: string;
+  /** The original AI-generated comment text (for calculating "Your Touch" score) */
+  originalCommentText: string;
   /** Reference to the post container element */
   postContainer: HTMLElement;
   /** Post URN for identification */
   urn: string;
   /** Status of this card */
   status: "draft" | "sent";
+  /** Whether AI is currently generating a comment for this card */
+  isGenerating: boolean;
   /** Pre-extracted author info (name, photo, headline, profileUrl) */
   authorInfo: PostAuthorInfo | null;
   /** Pre-extracted post time (displayTime, fullTime) */
@@ -47,6 +51,8 @@ interface ComposeState {
   ignoredUrns: Set<string>;
   /** ID of the card currently being previewed (null if none) */
   previewingCardId: string | null;
+  /** Whether user is currently focused on a textarea (pauses collection) */
+  isUserEditing: boolean;
 }
 
 interface ComposeActions {
@@ -56,6 +62,10 @@ interface ComposeActions {
   updateCardText: (id: string, text: string) => void;
   /** Update a card's status */
   updateCardStatus: (id: string, status: "draft" | "sent") => void;
+  /** Update a card's comment and mark generation complete */
+  updateCardComment: (id: string, comment: string) => void;
+  /** Set a card's generating state (for regeneration) */
+  setCardGenerating: (id: string, isGenerating: boolean) => void;
   /**
    * Remove a card and add its URN to ignored list.
    * The post will not reappear when composing again.
@@ -69,6 +79,8 @@ interface ComposeActions {
   isUrnIgnored: (urn: string) => boolean;
   /** Set the card being previewed (null to close preview) */
   setPreviewingCard: (cardId: string | null) => void;
+  /** Set whether user is editing (focused on textarea) */
+  setIsUserEditing: (isEditing: boolean) => void;
 }
 
 type ComposeStore = ComposeState & ComposeActions;
@@ -80,19 +92,23 @@ export const useComposeStore = create<ComposeStore>((set, get) => ({
   isSubmitting: false,
   ignoredUrns: new Set<string>(),
   previewingCardId: null,
+  isUserEditing: false,
 
   // Actions
-  addCard: (card) =>
+  addCard: (card) => {
+    console.log("[ComposeStore] addCard:", card.id.slice(0, 8));
     set((state) => ({
       cards: [...state.cards, card],
-    })),
+    }));
+  },
 
-  updateCardText: (id, text) =>
+  updateCardText: (id, text) => {
     set((state) => ({
       cards: state.cards.map((card) =>
         card.id === id ? { ...card, commentText: text } : card,
       ),
-    })),
+    }));
+  },
 
   updateCardStatus: (id, status) =>
     set((state) => ({
@@ -100,6 +116,40 @@ export const useComposeStore = create<ComposeStore>((set, get) => ({
         card.id === id ? { ...card, status } : card,
       ),
     })),
+
+  updateCardComment: (id, comment) => {
+    console.log(
+      "[ComposeStore] updateCardComment:",
+      id.slice(0, 8),
+      "comment length:",
+      comment.length,
+    );
+    set((state) => ({
+      cards: state.cards.map((card) =>
+        card.id === id
+          ? {
+              ...card,
+              commentText: comment,
+              originalCommentText: comment,
+              isGenerating: false,
+            }
+          : card,
+      ),
+    }));
+  },
+
+  setCardGenerating: (id, isGenerating) => {
+    console.log(
+      "[ComposeStore] setCardGenerating:",
+      id.slice(0, 8),
+      isGenerating,
+    );
+    set((state) => ({
+      cards: state.cards.map((card) =>
+        card.id === id ? { ...card, isGenerating } : card,
+      ),
+    }));
+  },
 
   /**
    * Remove card and mark its URN as ignored.
@@ -127,4 +177,7 @@ export const useComposeStore = create<ComposeStore>((set, get) => ({
 
   /** Set the card being previewed */
   setPreviewingCard: (cardId) => set({ previewingCardId: cardId }),
+
+  /** Set whether user is editing (focused on textarea) */
+  setIsUserEditing: (isEditing) => set({ isUserEditing: isEditing }),
 }));

@@ -22,6 +22,10 @@ export const commentGenerationInputSchema = z.object({
     .min(0)
     .or(z.string())
     .optional(),
+  /** Previous AI-generated comment (for regeneration) */
+  previousAiComment: z.string().optional(),
+  /** Human-edited version of the comment (for regeneration to learn from) */
+  humanEditedComment: z.string().optional(),
 });
 
 // Output schema for AI comment generation

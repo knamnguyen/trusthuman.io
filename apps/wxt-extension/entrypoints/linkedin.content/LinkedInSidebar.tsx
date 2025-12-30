@@ -455,7 +455,7 @@ export function LinkedInSidebar({ onClose }: LinkedInSidebarProps) {
   return (
     <SheetContent
       side="right"
-      className="w-[25vw] max-w-[400px] min-w-[320px] gap-0"
+      className="w-[40vw] min-w-[450px] gap-0"
       portalContainer={shadowRoot}
     >
       {/* Close button attached to the left edge of sidebar */}
@@ -708,14 +708,8 @@ export function LinkedInSidebar({ onClose }: LinkedInSidebarProps) {
           </>
         )}
 
-        {/* Tab 1: Mail - Placeholder */}
-        {selectedTab === 1 && (
-          <div className="flex h-full items-center justify-center px-4">
-            <p className="text-muted-foreground text-sm">
-              Mail content coming soon...
-            </p>
-          </div>
-        )}
+        {/* Tab 1: Mail - Comment Detection Stats */}
+        {selectedTab === 1 && <div>Mail content coming soon...</div>}
 
         {/* Tab 2: Explore - Feed Explorer */}
         {selectedTab === 2 && <ExploreTab />}

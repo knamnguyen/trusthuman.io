@@ -24,6 +24,7 @@
     "@trpc/client": "catalog:",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "fast-levenshtein": "^3.0.0",
     "lucide-react": "^0.511.0",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
@@ -36,6 +37,7 @@
   "devDependencies": {
     "@sassy/tsconfig": "workspace:*",
     "@types/chrome": "^0.0.323",
+    "@types/fast-levenshtein": "^0.0.4",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "@wxt-dev/module-react": "^1.1.2",

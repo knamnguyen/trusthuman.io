@@ -1,9 +1,3 @@
-/**
- * Load and extract comments from a LinkedIn post container.
- * Clicks the comment button to open comments, waits for them to load,
- * then extracts comment data from article elements.
- */
-
 export interface PostCommentInfo {
   /** Comment author name */
   authorName: string | null;
@@ -19,13 +13,6 @@ export interface PostCommentInfo {
   urn: string | null;
   /** Whether this is a reply to another comment */
   isReply: boolean;
-}
-
-/**
- * Wait helper
- */
-function wait(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -115,53 +102,29 @@ function extractCommentInfoFromArticle(article: HTMLElement): PostCommentInfo {
 }
 
 /**
- * Load and extract comments from a post container.
- * Uses attribute selectors only - no class selectors for resilience.
+ * Extract comments from a post container (assumes comments are already loaded).
+ * Does NOT click any buttons - only extracts existing comment data.
  *
  * @param postContainer - The LinkedIn post container element
  * @returns Array of comment info objects
  */
-export async function loadAndExtractComments(
+export function extractCommentsFromPost(
   postContainer: HTMLElement,
-): Promise<PostCommentInfo[]> {
+): PostCommentInfo[] {
   try {
-    // // 1. Check if comment articles already exist in the post
-    // let articles = postContainer.querySelectorAll<HTMLElement>(
-    //   'article[data-id^="urn:li:comment:"]',
-    // );
-
-    // // 2. If no comments visible, try to click the comment button to open them
-    // if (!articles.length) {
-    // Comment button selector:
-    // - aria-label contains "comments"
-    // - aria-label ends with "s post" (e.g., "Show 3 comments on Gabriel B.'s post")
-    const commentButton = postContainer.querySelector<HTMLButtonElement>(
-      'button[aria-label$="s post"][aria-label*="comment"]',
-    );
-
-    if (commentButton) {
-      commentButton.click();
-      await wait(1000); // Wait for LinkedIn to fetch and render comments
-    }
-
-    // 3. Re-query for comment articles after clicking
     const articles = postContainer.querySelectorAll<HTMLElement>(
       'article[data-id^="urn:li:comment:"]',
     );
-    // }
 
     if (!articles.length) {
       return [];
     }
 
-    // 4. Extract info from each article
-    const results: PostCommentInfo[] = Array.from(articles).map((article) =>
+    return Array.from(articles).map((article) =>
       extractCommentInfoFromArticle(article),
     );
-
-    return results;
   } catch (error) {
-    console.error("EngageKit: Failed to load and extract comments", error);
+    console.error("EngageKit: Failed to extract comments", error);
     return [];
   }
 }

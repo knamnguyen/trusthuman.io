@@ -1,12 +1,30 @@
-import { useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { useShallow } from "zustand/shallow";
 import { AnimatePresence, motion } from "framer-motion";
-import { ExternalLink, X } from "lucide-react";
+import levenshtein from "fast-levenshtein";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
+  Eye,
+  Loader2,
+  RefreshCw,
+  Send,
+  Sparkles,
+  Trash2,
+  X,
+} from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@sassy/ui/avatar";
 import { Button } from "@sassy/ui/button";
 import { ScrollArea } from "@sassy/ui/scroll-area";
+import { Textarea } from "@sassy/ui/textarea";
 
+import { useTRPC } from "../../../lib/trpc/client";
 import { useComposeStore } from "../stores/compose-store";
+import { DEFAULT_STYLE_GUIDE, extractAdjacentComments } from "../utils";
+import { submitCommentToPost } from "../utils/submit-comment";
 
 /**
  * Panel that displays post details when clicking "View" on a compose card.
@@ -14,13 +32,47 @@ import { useComposeStore } from "../stores/compose-store";
  * Positioning is handled by wrapper div in ExploreTab (absolute left-0 -translate-x-full).
  */
 export function PostPreviewSheet() {
-  const { cards, previewingCardId, setPreviewingCard } = useComposeStore();
+  // DEBUG: Track renders
+  console.log("[PostPreviewSheet] Render");
 
-  // Find the card being previewed - authorInfo and fullCaption are pre-extracted
-  const previewingCard = useMemo(() => {
-    if (!previewingCardId) return null;
-    return cards.find((c) => c.id === previewingCardId) || null;
-  }, [cards, previewingCardId]);
+  // Local submitting state for this card
+  const [isLocalSubmitting, setIsLocalSubmitting] = useState(false);
+
+  // Get the previewing card ID
+  const previewingCardId = useComposeStore((state) => state.previewingCardId);
+
+  // Subscribe to the specific card being previewed (only re-renders when THIS card changes)
+  const previewingCard = useComposeStore(
+    useCallback(
+      (state) => (previewingCardId ? state.cards.find((c) => c.id === previewingCardId) : null),
+      [previewingCardId],
+    ),
+  );
+
+  // Get card IDs for navigation - only changes when cards are added/removed
+  const cardIds = useComposeStore(useShallow((state) => state.cards.map((c) => c.id)));
+
+  // Find current index in the card IDs array
+  const currentIndex = useMemo(() => {
+    if (!previewingCardId) return -1;
+    return cardIds.indexOf(previewingCardId);
+  }, [cardIds, previewingCardId]);
+
+  // Actions (stable references)
+  const setPreviewingCard = useComposeStore((state) => state.setPreviewingCard);
+  const updateCardText = useComposeStore((state) => state.updateCardText);
+  const updateCardComment = useComposeStore((state) => state.updateCardComment);
+  const setCardGenerating = useComposeStore((state) => state.setCardGenerating);
+  const removeCard = useComposeStore((state) => state.removeCard);
+  const isSubmitting = useComposeStore((state) => state.isSubmitting);
+  const setIsUserEditing = useComposeStore((state) => state.setIsUserEditing);
+  const isCollecting = useComposeStore((state) => state.isCollecting);
+  const updateCardStatus = useComposeStore((state) => state.updateCardStatus);
+
+  const trpc = useTRPC();
+  const generateComment = useMutation(
+    trpc.aiComments.generateComment.mutationOptions(),
+  );
 
   // Get author info, caption, post time, and post URL from the card (already extracted during collection)
   const authorInfo = previewingCard?.authorInfo ?? null;
@@ -28,8 +80,169 @@ export function PostPreviewSheet() {
   const postTime = previewingCard?.postTime ?? null;
   const postUrl = previewingCard?.postUrl ?? null;
 
+  // Navigation
+  const canGoPrev = currentIndex > 0;
+  const canGoNext = currentIndex < cardIds.length - 1 && currentIndex >= 0;
+
+  const handlePrev = useCallback(() => {
+    if (canGoPrev && cardIds[currentIndex - 1]) {
+      setPreviewingCard(cardIds[currentIndex - 1]);
+    }
+  }, [canGoPrev, cardIds, currentIndex, setPreviewingCard]);
+
+  const handleNext = useCallback(() => {
+    if (canGoNext && cardIds[currentIndex + 1]) {
+      setPreviewingCard(cardIds[currentIndex + 1]);
+    }
+  }, [canGoNext, cardIds, currentIndex, setPreviewingCard]);
+
   const handleClose = () => {
     setPreviewingCard(null);
+  };
+
+  // Text change handler
+  const handleTextChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      if (previewingCard) {
+        updateCardText(previewingCard.id, e.target.value);
+      }
+    },
+    [previewingCard, updateCardText],
+  );
+
+  // Simple focus/blur handlers - pause collection while user is editing
+  const handleTextareaFocus = useCallback(() => {
+    setIsUserEditing(true);
+  }, [setIsUserEditing]);
+
+  const handleTextareaBlur = useCallback(() => {
+    setIsUserEditing(false);
+  }, [setIsUserEditing]);
+
+  // Focus on post handler - scroll to post and close preview
+  const handleFocus = useCallback(() => {
+    if (previewingCard) {
+      // Close the preview sheet first
+      setPreviewingCard(null);
+
+      // Scroll to the post
+      previewingCard.postContainer.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+
+      // Highlight effect
+      const prevOutline = previewingCard.postContainer.style.outline;
+      previewingCard.postContainer.style.outline = "3px solid #ec4899";
+      setTimeout(() => {
+        previewingCard.postContainer.style.outline = prevOutline;
+      }, 2000);
+    }
+  }, [previewingCard, setPreviewingCard]);
+
+  // Remove handler
+  const handleRemove = useCallback(() => {
+    if (previewingCard) {
+      // Move to next card if available, otherwise prev, otherwise close
+      if (canGoNext && cardIds[currentIndex + 1]) {
+        setPreviewingCard(cardIds[currentIndex + 1]);
+      } else if (canGoPrev && cardIds[currentIndex - 1]) {
+        setPreviewingCard(cardIds[currentIndex - 1]);
+      } else {
+        setPreviewingCard(null);
+      }
+      removeCard(previewingCard.id);
+    }
+  }, [
+    previewingCard,
+    canGoNext,
+    canGoPrev,
+    cardIds,
+    currentIndex,
+    setPreviewingCard,
+    removeCard,
+  ]);
+
+  // Regenerate comment handler
+  const handleRegenerate = useCallback(() => {
+    if (!previewingCard || previewingCard.isGenerating) return;
+
+    const cardId = previewingCard.id;
+    const previousAiComment = previewingCard.originalCommentText;
+    const humanEditedComment = previewingCard.commentText;
+
+    // Mark as generating
+    setCardGenerating(cardId, true);
+
+    // Extract adjacent comments for context
+    const adjacentComments = extractAdjacentComments(previewingCard.postContainer);
+
+    // Fire regeneration request
+    generateComment
+      .mutateAsync({
+        postContent: previewingCard.fullCaption,
+        styleGuide: DEFAULT_STYLE_GUIDE,
+        adjacentComments,
+        previousAiComment,
+        humanEditedComment:
+          humanEditedComment !== previousAiComment ? humanEditedComment : undefined,
+      })
+      .then((result) => {
+        updateCardComment(cardId, result.comment);
+      })
+      .catch((err) => {
+        console.error("EngageKit: error regenerating comment for card", cardId, err);
+        // On error, just mark as done (keep existing text)
+        setCardGenerating(cardId, false);
+      });
+  }, [
+    previewingCard,
+    setCardGenerating,
+    generateComment,
+    updateCardComment,
+  ]);
+
+  // Submit this card's comment to LinkedIn
+  const handleSubmit = useCallback(async () => {
+    if (!previewingCard || !previewingCard.commentText.trim() || previewingCard.isGenerating || previewingCard.status === "sent") return;
+
+    // Close the preview panel before submitting
+    setPreviewingCard(null);
+
+    setIsLocalSubmitting(true);
+    try {
+      const success = await submitCommentToPost(previewingCard.postContainer, previewingCard.commentText);
+      if (success) {
+        updateCardStatus(previewingCard.id, "sent");
+      }
+    } catch (err) {
+      console.error("EngageKit: error submitting comment", err);
+    } finally {
+      setIsLocalSubmitting(false);
+    }
+  }, [previewingCard, setPreviewingCard, updateCardStatus]);
+
+  // Calculate "Your Touch" score
+  const yourTouchScore = useMemo(() => {
+    if (!previewingCard) return 0;
+    const original = previewingCard.originalCommentText;
+    const current = previewingCard.commentText;
+
+    if (!original && !current) return 0;
+    if (original === current) return 0;
+    if (!original && current) return 100;
+    if (original && !current) return 100;
+
+    const editDistance = levenshtein.get(original, current);
+    const yourTouchRatio = editDistance / original.length;
+    return Math.min(100, Math.round(yourTouchRatio * 100));
+  }, [previewingCard]);
+
+  // Score color
+  const getScoreColor = (score: number) => {
+    if (score >= 50) return "text-green-600";
+    if (score >= 20) return "text-amber-600";
+    return "text-muted-foreground";
   };
 
   // Get initials for avatar fallback
@@ -42,7 +255,8 @@ export function PostPreviewSheet() {
     ).toUpperCase();
   };
 
-  const isOpen = !!previewingCardId;
+  // Show panel when collecting (even before first card) or when a card is selected
+  const isOpen = isCollecting || !!previewingCardId;
 
   return (
     <AnimatePresence>
@@ -70,6 +284,7 @@ export function PostPreviewSheet() {
                 </a>
               )}
             </div>
+            {/* Close button */}
             <Button
               variant="ghost"
               size="icon"
@@ -79,6 +294,14 @@ export function PostPreviewSheet() {
               <X className="h-4 w-4" />
             </Button>
           </div>
+
+          {/* Loading state - collecting but no card yet */}
+          {!previewingCard && isCollecting && (
+            <div className="flex flex-1 flex-col items-center justify-center gap-3 p-4">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <p className="text-muted-foreground text-sm">Collecting posts...</p>
+            </div>
+          )}
 
           {/* Content */}
           {previewingCard && authorInfo && (
@@ -181,30 +404,129 @@ export function PostPreviewSheet() {
                   </div>
                 )}
 
-                {/* Focus on Post Button */}
+              </div>
+            </ScrollArea>
+          )}
+
+          {/* Sticky Compose Editor at bottom */}
+          {previewingCard && (
+            <div className="border-t bg-background p-4 flex flex-col gap-3">
+              {/* Textarea or loading state */}
+              {previewingCard.isGenerating ? (
+                <div className="flex min-h-[80px] items-center justify-center rounded-md border bg-muted/30">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : (
+                <Textarea
+                  value={previewingCard.commentText}
+                  onChange={handleTextChange}
+                  onFocus={handleTextareaFocus}
+                  onBlur={handleTextareaBlur}
+                  placeholder="Write your comment..."
+                  className="min-h-[80px] text-sm resize-none"
+                  disabled={isSubmitting}
+                />
+              )}
+
+              {/* Your Touch Score + Actions Row */}
+              <div className="flex items-center justify-between gap-2">
+                {/* Your Touch indicator - hide while generating */}
+                {previewingCard.isGenerating ? (
+                  <div className="text-xs text-muted-foreground">
+                    <span>AI is writing...</span>
+                  </div>
+                ) : (
+                  <div
+                    className={`flex items-center gap-1 text-xs ${getScoreColor(yourTouchScore)}`}
+                    title="How much you've personalized the AI-generated comment"
+                  >
+                    <Sparkles className="h-3 w-3" />
+                    <span className="font-medium">Your Touch:</span>
+                    <span>{yourTouchScore}%</span>
+                  </div>
+                )}
+
+                {/* Action buttons */}
+                <div className="flex gap-2">
+                  {/* Submit - send comment to LinkedIn */}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={handleSubmit}
+                    disabled={isLocalSubmitting || isSubmitting || previewingCard.isGenerating || previewingCard.status === "sent" || !previewingCard.commentText.trim()}
+                    title={previewingCard.status === "sent" ? "Already sent" : "Submit comment"}
+                  >
+                    {isLocalSubmitting ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Send className="h-3.5 w-3.5" />
+                    )}
+                  </Button>
+                  {/* Regenerate */}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={handleRegenerate}
+                    disabled={previewingCard.isGenerating}
+                    title="Regenerate comment"
+                  >
+                    <RefreshCw className={`h-3.5 w-3.5 ${previewingCard.isGenerating ? "animate-spin" : ""}`} />
+                  </Button>
+                  {/* Focus on post */}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={handleFocus}
+                    title="Focus on post"
+                  >
+                    <Eye className="h-3.5 w-3.5" />
+                  </Button>
+                  {/* Delete */}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-destructive hover:text-destructive"
+                    onClick={handleRemove}
+                    disabled={isSubmitting || previewingCard.isGenerating}
+                    title="Remove card"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Navigation Row */}
+              <div className="flex items-center justify-center gap-2 border-t pt-3">
                 <Button
                   variant="outline"
                   size="sm"
-                  className="w-full"
-                  onClick={() => {
-                    previewingCard.postContainer.scrollIntoView({
-                      behavior: "smooth",
-                      block: "center",
-                    });
-                    // Highlight effect
-                    const prevOutline =
-                      previewingCard.postContainer.style.outline;
-                    previewingCard.postContainer.style.outline =
-                      "3px solid #ec4899";
-                    setTimeout(() => {
-                      previewingCard.postContainer.style.outline = prevOutline;
-                    }, 2000);
-                  }}
+                  className="h-8 px-3"
+                  onClick={handlePrev}
+                  disabled={!canGoPrev}
+                  title="Previous post"
                 >
-                  Focus on Post
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Prev
+                </Button>
+                <span className="text-muted-foreground text-sm min-w-[50px] text-center">
+                  {currentIndex + 1} / {cardIds.length}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-3"
+                  onClick={handleNext}
+                  disabled={!canGoNext}
+                  title="Next post"
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4 ml-1" />
                 </Button>
               </div>
-            </ScrollArea>
+            </div>
           )}
         </motion.div>
       )}

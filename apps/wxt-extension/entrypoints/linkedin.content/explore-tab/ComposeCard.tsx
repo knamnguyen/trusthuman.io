@@ -1,5 +1,7 @@
-import { memo, useCallback } from "react";
-import { Eye, ExternalLink, RefreshCw, Trash2 } from "lucide-react";
+import { memo, useCallback, useMemo, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import levenshtein from "fast-levenshtein";
+import { Eye, ExternalLink, Loader2, RefreshCw, Send, Sparkles, Trash2 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@sassy/ui/avatar";
 import { Badge } from "@sassy/ui/badge";
@@ -7,23 +9,51 @@ import { Button } from "@sassy/ui/button";
 import { Card, CardContent } from "@sassy/ui/card";
 import { Textarea } from "@sassy/ui/textarea";
 
-import type { ComposeCard as ComposeCardType } from "../stores/compose-store";
+import { useTRPC } from "../../../lib/trpc/client";
 import { useComposeStore } from "../stores/compose-store";
+import { DEFAULT_STYLE_GUIDE, extractAdjacentComments } from "../utils";
+import { submitCommentToPost } from "../utils/submit-comment";
 
 interface ComposeCardProps {
-  card: ComposeCardType;
+  /** Card ID - component subscribes to its own card data */
+  cardId: string;
 }
 
 /**
  * Memoized compose card component.
- * Uses selective store subscriptions to prevent re-renders when other cards are added.
+ * Subscribes to its own card data by ID to prevent re-renders when other cards update.
  */
-export const ComposeCard = memo(function ComposeCard({ card }: ComposeCardProps) {
-  // Use selective subscriptions to avoid re-renders when cards array changes
+export const ComposeCard = memo(function ComposeCard({ cardId }: ComposeCardProps) {
+  // DEBUG: Track renders
+  console.log(`[ComposeCard] Render: ${cardId.slice(0, 8)}...`);
+
+  // Subscribe to this specific card's data using a stable selector
+  // The store preserves card references for unchanged cards, so this only
+  // triggers re-renders when THIS specific card changes
+  const card = useComposeStore(
+    useCallback((state) => state.cards.find((c) => c.id === cardId), [cardId]),
+  );
+
+  // Local submitting state for this card
+  const [isLocalSubmitting, setIsLocalSubmitting] = useState(false);
+
+  // Use selective subscriptions for actions (these are stable references)
   const updateCardText = useComposeStore((state) => state.updateCardText);
+  const updateCardComment = useComposeStore((state) => state.updateCardComment);
+  const setCardGenerating = useComposeStore((state) => state.setCardGenerating);
   const removeCard = useComposeStore((state) => state.removeCard);
   const isSubmitting = useComposeStore((state) => state.isSubmitting);
   const setPreviewingCard = useComposeStore((state) => state.setPreviewingCard);
+  const setIsUserEditing = useComposeStore((state) => state.setIsUserEditing);
+  const updateCardStatus = useComposeStore((state) => state.updateCardStatus);
+
+  const trpc = useTRPC();
+  const generateComment = useMutation(
+    trpc.aiComments.generateComment.mutationOptions(),
+  );
+
+  // Early return if card not found (shouldn't happen, but safety check)
+  if (!card) return null;
 
   const handleTextChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -32,7 +62,19 @@ export const ComposeCard = memo(function ComposeCard({ card }: ComposeCardProps)
     [card.id, updateCardText],
   );
 
+  // Simple focus/blur handlers - pause collection while user is editing
+  const handleTextareaFocus = useCallback(() => {
+    setIsUserEditing(true);
+  }, [setIsUserEditing]);
+
+  const handleTextareaBlur = useCallback(() => {
+    setIsUserEditing(false);
+  }, [setIsUserEditing]);
+
   const handleFocus = useCallback(() => {
+    // Close the preview panel first
+    setPreviewingCard(null);
+
     // Scroll to the post and highlight it briefly
     card.postContainer.scrollIntoView({ behavior: "smooth", block: "center" });
 
@@ -42,11 +84,74 @@ export const ComposeCard = memo(function ComposeCard({ card }: ComposeCardProps)
     setTimeout(() => {
       card.postContainer.style.outline = prevOutline;
     }, 2000);
-  }, [card.postContainer]);
+  }, [card.postContainer, setPreviewingCard]);
 
   const handleRemove = useCallback(() => {
     removeCard(card.id);
   }, [card.id, removeCard]);
+
+  // Regenerate comment handler
+  const handleRegenerate = useCallback(() => {
+    if (card.isGenerating) return;
+
+    const previousAiComment = card.originalCommentText;
+    const humanEditedComment = card.commentText;
+
+    // Mark as generating
+    setCardGenerating(card.id, true);
+
+    // Extract adjacent comments for context
+    const adjacentComments = extractAdjacentComments(card.postContainer);
+
+    // Fire regeneration request
+    generateComment
+      .mutateAsync({
+        postContent: card.fullCaption,
+        styleGuide: DEFAULT_STYLE_GUIDE,
+        adjacentComments,
+        previousAiComment,
+        humanEditedComment:
+          humanEditedComment !== previousAiComment ? humanEditedComment : undefined,
+      })
+      .then((result) => {
+        updateCardComment(card.id, result.comment);
+      })
+      .catch((err) => {
+        console.error("EngageKit: error regenerating comment for card", card.id, err);
+        // On error, just mark as done (keep existing text)
+        setCardGenerating(card.id, false);
+      });
+  }, [
+    card.id,
+    card.isGenerating,
+    card.originalCommentText,
+    card.commentText,
+    card.postContainer,
+    card.fullCaption,
+    setCardGenerating,
+    generateComment,
+    updateCardComment,
+  ]);
+
+  // Submit this card's comment to LinkedIn
+  const handleSubmit = useCallback(async () => {
+    if (!card.commentText.trim() || card.isGenerating || card.status === "sent") return;
+
+    // Close the preview panel before submitting
+    setPreviewingCard(null);
+
+    setIsLocalSubmitting(true);
+    try {
+      const success = await submitCommentToPost(card.postContainer, card.commentText);
+      if (success) {
+        updateCardStatus(card.id, "sent");
+      }
+    } catch (err) {
+      console.error("EngageKit: error submitting comment", err);
+    } finally {
+      setIsLocalSubmitting(false);
+    }
+  }, [card.id, card.commentText, card.isGenerating, card.status, card.postContainer, setPreviewingCard, updateCardStatus]);
 
   // Get initials for avatar fallback
   const getInitials = (name: string | null): string => {
@@ -59,6 +164,41 @@ export const ComposeCard = memo(function ComposeCard({ card }: ComposeCardProps)
   };
 
   const authorInfo = card.authorInfo;
+
+  // Calculate "Your Touch" score - how much the user has personalized the AI comment
+  // Uses Levenshtein distance normalized by original length
+  // This gives proper credit for each character added/removed/changed
+  const yourTouchScore = useMemo(() => {
+    const original = card.originalCommentText;
+    const current = card.commentText;
+
+    // If both are empty or identical, no touch
+    if (!original && !current) return 0;
+    if (original === current) return 0;
+
+    // If original was empty but user wrote something, 100% their touch
+    if (!original && current) return 100;
+
+    // If user cleared everything, 100% their touch (they removed AI content)
+    if (original && !current) return 100;
+
+    // Calculate Levenshtein distance (number of single-character edits)
+    const editDistance = levenshtein.get(original, current);
+
+    // Normalize by original length to get percentage of changes
+    // Each edit (add/remove/change) counts proportionally to original size
+    const yourTouchRatio = editDistance / original.length;
+
+    // Cap at 100% and round
+    return Math.min(100, Math.round(yourTouchRatio * 100));
+  }, [card.originalCommentText, card.commentText]);
+
+  // Get color based on score
+  const getScoreColor = (score: number) => {
+    if (score >= 50) return "text-green-600";
+    if (score >= 20) return "text-amber-600";
+    return "text-muted-foreground";
+  };
 
   return (
     <Card className="relative">
@@ -94,14 +234,42 @@ export const ComposeCard = memo(function ComposeCard({ card }: ComposeCardProps)
         </div>
 
         {/* Textarea - main focus */}
-        <Textarea
-          value={card.commentText}
-          onChange={handleTextChange}
-          placeholder="Write your comment..."
-          className="min-h-[80px] text-sm resize-none"
-          disabled={isSubmitting}
-        />
-        <div className="flex gap-2">
+        {card.isGenerating ? (
+          <div className="flex min-h-[80px] items-center justify-center rounded-md border bg-muted/30">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <Textarea
+            value={card.commentText}
+            onChange={handleTextChange}
+            onFocus={handleTextareaFocus}
+            onBlur={handleTextareaBlur}
+            placeholder="Write your comment..."
+            className="min-h-[80px] text-sm resize-none"
+            disabled={isSubmitting}
+          />
+        )}
+
+        {/* Your Touch Score + Actions Row */}
+        <div className="flex items-center justify-between gap-2">
+          {/* Your Touch indicator - hide while generating */}
+          {card.isGenerating ? (
+            <div className="text-xs text-muted-foreground">
+              <span>AI is writing...</span>
+            </div>
+          ) : (
+            <div
+              className={`flex items-center gap-1 text-xs ${getScoreColor(yourTouchScore)}`}
+              title="How much you've personalized the AI-generated comment"
+            >
+              <Sparkles className="h-3 w-3" />
+              <span className="font-medium">Your Touch:</span>
+              <span>{yourTouchScore}%</span>
+            </div>
+          )}
+
+          {/* Action buttons */}
+          <div className="flex gap-2">
           {/* View - opens post preview sheet */}
           <Button
             variant="outline"
@@ -112,15 +280,31 @@ export const ComposeCard = memo(function ComposeCard({ card }: ComposeCardProps)
             <ExternalLink className="mr-1 h-3 w-3" />
             View
           </Button>
-          {/* Regenerate - regenerate comment (placeholder) */}
+          {/* Submit - send comment to LinkedIn */}
           <Button
             variant="ghost"
             size="icon"
             className="h-8 w-8"
-            onClick={() => console.log("Regenerate clicked - placeholder")}
+            onClick={handleSubmit}
+            disabled={isLocalSubmitting || isSubmitting || card.isGenerating || card.status === "sent" || !card.commentText.trim()}
+            title={card.status === "sent" ? "Already sent" : "Submit comment"}
+          >
+            {isLocalSubmitting ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <Send className="h-3 w-3" />
+            )}
+          </Button>
+          {/* Regenerate */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={handleRegenerate}
+            disabled={card.isGenerating}
             title="Regenerate comment"
           >
-            <RefreshCw className="h-3 w-3" />
+            <RefreshCw className={`h-3 w-3 ${card.isGenerating ? "animate-spin" : ""}`} />
           </Button>
           {/* Focus - scroll to post */}
           <Button
@@ -138,11 +322,12 @@ export const ComposeCard = memo(function ComposeCard({ card }: ComposeCardProps)
             size="icon"
             className="h-8 w-8 text-destructive hover:text-destructive"
             onClick={handleRemove}
-            disabled={isSubmitting}
+            disabled={isSubmitting || card.isGenerating}
             title="Remove card"
           >
             <Trash2 className="h-3 w-3" />
           </Button>
+          </div>
         </div>
       </CardContent>
     </Card>

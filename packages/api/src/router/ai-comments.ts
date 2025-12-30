@@ -80,7 +80,13 @@ export const aiCommentsRouter = createTRPCRouter({
     .input(commentGenerationInputSchema)
     .output(commentGenerationOutputSchema)
     .mutation(async ({ input }): Promise<CommentGenerationOutput> => {
-      const { postContent, styleGuide, adjacentComments } = input;
+      const {
+        postContent,
+        styleGuide,
+        adjacentComments,
+        previousAiComment,
+        humanEditedComment,
+      } = input;
 
       console.log(
         "AI Comments Router: Starting comment generation for content length:",
@@ -89,10 +95,39 @@ export const aiCommentsRouter = createTRPCRouter({
 
       const existingComments = JSON.stringify(adjacentComments);
 
-      const systemPrompt = `
-You are a LinkedIn influencer commenting on a post. 
+      // Build regeneration instructions if this is a regeneration request
+      const isRegeneration = !!previousAiComment;
+      const regenerationInstructions = isRegeneration
+        ? `
+---REGENERATION INSTRUCTIONS---
+This is a REGENERATION request. The user wants a NEW and DIFFERENT comment.
 
-Generate concise, engaging, thoughtful comment for a single LinkedIn post below
+Previous AI-generated comment (DO NOT repeat this, make something DIFFERENT):
+"${previousAiComment}"
+
+${
+  humanEditedComment && humanEditedComment !== previousAiComment
+    ? `The user edited the previous comment to this (learn from their style and direction):
+"${humanEditedComment}"
+
+IMPORTANT: The user's edits show what they prefer. Follow their style, tone, and direction but create a COMPLETELY NEW comment with different wording.`
+    : ""
+}
+
+CRITICAL REGENERATION RULES:
+1. Your new comment MUST be significantly different from the previous AI comment
+2. Use different words, different structure, different angle
+3. If the user made edits, match their preferred tone and style
+4. Never repeat phrases from the previous comment
+---END REGENERATION INSTRUCTIONS---
+
+`
+        : "";
+
+      const systemPrompt = `
+You are a LinkedIn influencer commenting on a post.
+
+${regenerationInstructions}Generate concise, engaging, thoughtful comment for a single LinkedIn post below
 
 ---begin post content---
 ${postContent}
