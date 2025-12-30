@@ -198,20 +198,19 @@ CREATE TABLE "Comment" (
     "postContentHtml" TEXT,
     "postCreatedAt" TIMESTAMP(3),
     "adjacentComments" JSONB,
-    "autoCommentRunId" TEXT,
     "authorUrn" TEXT,
     "authorName" TEXT,
     "authorProfileUrl" TEXT,
     "authorAvatarUrl" TEXT,
     "authorHeadline" TEXT,
-    "autoCommentError" TEXT,
     "comment" TEXT NOT NULL,
     "postAlternateUrns" TEXT[],
-    "accountId" TEXT NOT NULL,
     "commentedAt" TIMESTAMP(3),
-    "isDuplicate" BOOLEAN NOT NULL DEFAULT false,
     "isAutoCommented" BOOLEAN NOT NULL DEFAULT true,
     "schedulePostAt" TIMESTAMP(3),
+    "accountId" TEXT NOT NULL,
+    "autoCommentRunId" TEXT,
+    "autoCommentError" TEXT,
 
     CONSTRAINT "Comment_pkey" PRIMARY KEY ("id")
 );
