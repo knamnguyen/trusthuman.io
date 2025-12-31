@@ -55,9 +55,17 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout(props: { children: React.ReactNode }) {
-  const account = await getQueryClient().ensureQueryData(
-    trpc.account.getDefaultAccount.queryOptions(),
-  );
+  // Prefetch default account - may fail if user is not authenticated
+  // This is fine - unauthenticated users will get null values and can still access public pages
+  let account: { assumedUserToken: string; account: { id: string } } | null =
+    null;
+  try {
+    account = await getQueryClient().ensureQueryData(
+      trpc.account.getDefaultAccount.queryOptions(),
+    );
+  } catch {
+    // User is not authenticated or has no account - this is expected for public pages
+  }
 
   return (
     <html lang="en" suppressHydrationWarning>
