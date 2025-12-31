@@ -1,6 +1,9 @@
 /**
  * Extract adjacent comments from a LinkedIn post container
  * Used to provide context to the AI for better comment generation
+ *
+ * Uses only non-class selectors (data attributes, aria labels) for resilience
+ * against LinkedIn's dynamic class name changes
  */
 export function extractAdjacentComments(
   postContainer: Element,
@@ -11,31 +14,48 @@ export function extractAdjacentComments(
     replyCount: number;
   }[] = [];
 
-  // Try to find comment elements - LinkedIn uses various selectors
+  // Find comment articles using data-id attribute (URN format)
+  // LinkedIn comment URNs start with "urn:li:comment:"
   const commentElements = postContainer.querySelectorAll(
-    '[data-id*="comment"], .comments-comment-item, .feed-shared-update-v2__comments-container article',
+    'article[data-id^="urn:li:comment:"]',
   );
 
   commentElements.forEach((el) => {
-    const contentEl = el.querySelector(
-      ".comments-comment-item__main-content, .feed-shared-inline-show-more-text",
-    );
+    // Extract comment text from the directional span elements
+    // LinkedIn wraps comment text in div[dir="ltr"] > span[dir="ltr"]
+    const contentEl = el.querySelector('div[dir="ltr"] span[dir="ltr"]');
     const content = contentEl?.textContent?.trim();
 
     if (content && content.length > 0) {
-      // Try to extract like count
-      const likeEl = el.querySelector(
-        '[aria-label*="like"], .comments-comment-social-bar__reactions-count',
-      );
-      const likeText = likeEl?.textContent?.trim() || "0";
-      const likeCount = parseInt(likeText.replace(/\D/g, ""), 10) || 0;
+      // Extract like count from aria-label (e.g., "11 Reactions on X's comment")
+      const likeEl = el.querySelector('button[aria-label*="Reactions on"]');
+      const likeAriaLabel = likeEl?.getAttribute("aria-label") || "";
+      const likeMatch = likeAriaLabel.match(/^(\d+)\s+Reactions?/i);
+      const likeCount = likeMatch?.[1] ? parseInt(likeMatch[1], 10) : 0;
 
-      // Try to extract reply count
-      const replyEl = el.querySelector(
-        '[aria-label*="repl"], .comments-comment-social-bar__replies-count',
+      // Extract reply count from aria-label or visually-hidden span
+      // Try button aria-label first (e.g., "2 Replies on X's comment")
+      const replyCountEl = el.querySelector(
+        'span[aria-label*="Replies on"], span[aria-label*="Reply on"]',
       );
-      const replyText = replyEl?.textContent?.trim() || "0";
-      const replyCount = parseInt(replyText.replace(/\D/g, ""), 10) || 0;
+      let replyCount = 0;
+
+      if (replyCountEl) {
+        const replyAriaLabel = replyCountEl.getAttribute("aria-label") || "";
+        const replyMatch = replyAriaLabel.match(/^(\d+)\s+Repl/i);
+        replyCount = replyMatch?.[1] ? parseInt(replyMatch[1], 10) : 0;
+      } else {
+        // Fallback: look for visually-hidden span with reply count text
+        const hiddenSpans = el.querySelectorAll("span");
+        for (const span of hiddenSpans) {
+          const text = span.textContent?.trim() || "";
+          const match = text.match(/^(\d+)\s+repl/i);
+          if (match?.[1]) {
+            replyCount = parseInt(match[1], 10);
+            break;
+          }
+        }
+      }
 
       comments.push({ commentContent: content, likeCount, replyCount });
     }

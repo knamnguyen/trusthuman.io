@@ -86,13 +86,13 @@ export function PostPreviewSheet() {
 
   const handlePrev = useCallback(() => {
     if (canGoPrev && cardIds[currentIndex - 1]) {
-      setPreviewingCard(cardIds[currentIndex - 1]);
+      setPreviewingCard(cardIds[currentIndex - 1] ?? null);
     }
   }, [canGoPrev, cardIds, currentIndex, setPreviewingCard]);
 
   const handleNext = useCallback(() => {
     if (canGoNext && cardIds[currentIndex + 1]) {
-      setPreviewingCard(cardIds[currentIndex + 1]);
+      setPreviewingCard(cardIds[currentIndex + 1] ?? null);
     }
   }, [canGoNext, cardIds, currentIndex, setPreviewingCard]);
 
@@ -145,9 +145,9 @@ export function PostPreviewSheet() {
     if (previewingCard) {
       // Move to next card if available, otherwise prev, otherwise close
       if (canGoNext && cardIds[currentIndex + 1]) {
-        setPreviewingCard(cardIds[currentIndex + 1]);
+        setPreviewingCard(cardIds[currentIndex + 1] ?? null);
       } else if (canGoPrev && cardIds[currentIndex - 1]) {
-        setPreviewingCard(cardIds[currentIndex - 1]);
+        setPreviewingCard(cardIds[currentIndex - 1] ?? null);
       } else {
         setPreviewingCard(null);
       }
@@ -424,7 +424,7 @@ export function PostPreviewSheet() {
                   onBlur={handleTextareaBlur}
                   placeholder="Write your comment..."
                   className="min-h-[80px] text-sm resize-none"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isLocalSubmitting || previewingCard.status === "sent"}
                 />
               )}
 
@@ -469,7 +469,7 @@ export function PostPreviewSheet() {
                     size="icon"
                     className="h-8 w-8"
                     onClick={handleRegenerate}
-                    disabled={previewingCard.isGenerating}
+                    disabled={isSubmitting || isLocalSubmitting || previewingCard.isGenerating || previewingCard.status === "sent"}
                     title="Regenerate comment"
                   >
                     <RefreshCw className={`h-3.5 w-3.5 ${previewingCard.isGenerating ? "animate-spin" : ""}`} />
@@ -490,7 +490,7 @@ export function PostPreviewSheet() {
                     size="icon"
                     className="h-8 w-8 text-destructive hover:text-destructive"
                     onClick={handleRemove}
-                    disabled={isSubmitting || previewingCard.isGenerating}
+                    disabled={isSubmitting || isLocalSubmitting || previewingCard.isGenerating || previewingCard.status === "sent"}
                     title="Remove card"
                   >
                     <Trash2 className="h-3.5 w-3.5" />

@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import levenshtein from "fast-levenshtein";
 import { Eye, ExternalLink, Loader2, RefreshCw, Send, Sparkles, Trash2 } from "lucide-react";
@@ -36,6 +36,40 @@ export const ComposeCard = memo(function ComposeCard({ cardId }: ComposeCardProp
 
   // Local submitting state for this card
   const [isLocalSubmitting, setIsLocalSubmitting] = useState(false);
+
+  // Check if this card is currently being previewed
+  const isSelected = useComposeStore((state) => state.previewingCardId === cardId);
+
+  // Ref for scrolling into view when selected
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  // Scroll into view when this card becomes selected
+  useEffect(() => {
+    if (isSelected && cardRef.current) {
+      // Find the scrollable parent (overflow-y-auto container)
+      let scrollParent: HTMLElement | null = cardRef.current.parentElement;
+      while (scrollParent) {
+        const style = getComputedStyle(scrollParent);
+        if (style.overflowY === "auto" || style.overflowY === "scroll") {
+          break;
+        }
+        scrollParent = scrollParent.parentElement;
+      }
+
+      if (scrollParent) {
+        // Calculate scroll position to center the card in view
+        const cardRect = cardRef.current.getBoundingClientRect();
+        const parentRect = scrollParent.getBoundingClientRect();
+        const cardTop = cardRef.current.offsetTop;
+        const targetScroll = cardTop - parentRect.height / 2 + cardRect.height / 2;
+
+        scrollParent.scrollTo({
+          top: Math.max(0, targetScroll),
+          behavior: "smooth",
+        });
+      }
+    }
+  }, [isSelected]);
 
   // Use selective subscriptions for actions (these are stable references)
   const updateCardText = useComposeStore((state) => state.updateCardText);
@@ -201,7 +235,7 @@ export const ComposeCard = memo(function ComposeCard({ cardId }: ComposeCardProp
   };
 
   return (
-    <Card className="relative">
+    <Card ref={cardRef} className={`relative ${isSelected ? "bg-accent ring-2 ring-ring" : ""}`}>
       <CardContent className="flex flex-col gap-2 p-3">
         {/* Compact Author + Caption Header */}
         <div className="flex items-center gap-2">
@@ -246,7 +280,7 @@ export const ComposeCard = memo(function ComposeCard({ cardId }: ComposeCardProp
             onBlur={handleTextareaBlur}
             placeholder="Write your comment..."
             className="min-h-[80px] text-sm resize-none"
-            disabled={isSubmitting}
+            disabled={isSubmitting || isLocalSubmitting || card.status === "sent"}
           />
         )}
 
@@ -301,7 +335,7 @@ export const ComposeCard = memo(function ComposeCard({ cardId }: ComposeCardProp
             size="icon"
             className="h-8 w-8"
             onClick={handleRegenerate}
-            disabled={card.isGenerating}
+            disabled={isSubmitting || isLocalSubmitting || card.isGenerating || card.status === "sent"}
             title="Regenerate comment"
           >
             <RefreshCw className={`h-3 w-3 ${card.isGenerating ? "animate-spin" : ""}`} />
@@ -322,7 +356,7 @@ export const ComposeCard = memo(function ComposeCard({ cardId }: ComposeCardProp
             size="icon"
             className="h-8 w-8 text-destructive hover:text-destructive"
             onClick={handleRemove}
-            disabled={isSubmitting || card.isGenerating}
+            disabled={isSubmitting || isLocalSubmitting || card.isGenerating || card.status === "sent"}
             title="Remove card"
           >
             <Trash2 className="h-3 w-3" />
