@@ -2,19 +2,24 @@ import axios from "axios";
 
 import { S3BucketService } from "@sassy/s3";
 
+export interface UploadImageResult {
+  s3Key: string;
+  s3Url: string;
+}
+
 /**
  * Upload an image from a URL to S3
  *
- * @param imageUrl - Source image URL
+ * @param imageUrl - Source image URL (can be expiring CDN URL)
  * @param s3Key - Destination S3 key (caller controls the path)
  * @param s3Service - Initialized S3BucketService instance
- * @returns The public S3 URL, or null if upload fails
+ * @returns Object with s3Key and s3Url, or null if upload fails
  */
 export async function uploadImageToS3(
   imageUrl: string,
   s3Key: string,
   s3Service: S3BucketService,
-): Promise<string | null> {
+): Promise<UploadImageResult | null> {
   try {
     // Fetch image from source URL
     const response = await axios.get(imageUrl, {
@@ -48,7 +53,7 @@ export async function uploadImageToS3(
     const bucket = s3Service.getBucket();
     const s3Url = `https://${bucket}.s3.${region}.amazonaws.com/${s3Key}`;
 
-    return s3Url;
+    return { s3Key, s3Url };
   } catch (error) {
     console.error(`[upload-image-to-s3] Failed to upload ${s3Key}:`, error);
     return null;

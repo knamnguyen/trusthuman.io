@@ -55,11 +55,11 @@ function saveProfileInBackground(
     // Upload profile picture to S3 if available
     if (linkedInPhotoUrl) {
       const s3Key = generateImageKey("linkedin-profiles", urn);
-      const s3Url = await uploadImageToS3(linkedInPhotoUrl, s3Key, s3Service);
-      if (s3Url) {
-        profilePicS3Url = s3Url;
+      const result = await uploadImageToS3(linkedInPhotoUrl, s3Key, s3Service);
+      if (result) {
+        profilePicS3Url = result.s3Url;
         console.log(
-          `[linkedin-profile-scrape] Uploaded profile pic to S3: ${s3Key}`,
+          `[linkedin-profile-scrape] Uploaded profile pic to S3: ${result.s3Key}`,
         );
       }
     }
