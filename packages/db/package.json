@@ -35,6 +35,9 @@
     "zod": "catalog:",
     "zod-prisma-types": "^3.2.4"
   },
+  "prisma": {
+    "schema": "./prisma"
+  },
   "devDependencies": {
     "@electric-sql/pglite": "^0.3.14",
     "@sassy/eslint-config": "workspace:*",

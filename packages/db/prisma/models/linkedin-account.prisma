@@ -1,0 +1,39 @@
+model LinkedInAccount {
+  id                 String                @id @default(uuid())
+  owner              User                  @relation(fields: [ownerId], references: [id])
+  ownerId            String
+  email              String                @unique
+  status             LinkedInAccountStatus
+  createdAt          DateTime              @default(now())
+  staticIpId         String?
+  browserProfileId   String
+  location           String
+  name               String?
+  autocommentEnabled Boolean               @default(false)
+  runDailyAt         String?
+  isRunning          Boolean               @default(false)
+  accessType         AccessType            @default(FREE)
+
+  organizationId     String?
+  profileUrl         String?
+  profileSlug        String? @unique
+  registrationStatus String?
+
+  org                     Organization?        @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  AutoCommentConfig       AutoCommentConfig[]
+  BlacklistedProfile      BlacklistedProfile[]
+  AutoCommentRun          AutoCommentRun[]
+  BrowserInstance         BrowserInstance[]
+  comments                Comment[]
+  browserJobs             BrowserJob[]
+  targetLists             TargetList[]
+  targetProfiles          TargetProfile[]
+  organizationMemberships OrganizationMember[]
+  buildTargetListJobs     BuildTargetListJob[]
+}
+
+enum LinkedInAccountStatus {
+  ACTIVE
+  CONNECTING
+  SUSPENDED
+}

@@ -1,0 +1,27 @@
+model Organization {
+  id               String   @id
+  name             String
+  stripeCustomerId String?  @unique
+  purchasedSlots   Int      @default(1)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  members          OrganizationMember[]
+  linkedInAccounts LinkedInAccount[]
+}
+
+model OrganizationMember {
+  id       String   @id @default(uuid())
+  orgId    String
+  userId   String
+  role     String
+  joinedAt DateTime @default(now())
+
+  org               Organization     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  linkedInAccount   LinkedInAccount? @relation(fields: [linkedInAccountId], references: [id])
+  linkedInAccountId String?
+
+  @@unique([orgId, userId])
+  @@index([userId])
+}

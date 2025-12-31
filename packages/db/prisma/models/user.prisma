@@ -1,0 +1,34 @@
+model User {
+  id                   String     @id
+  firstName            String?
+  lastName             String?
+  username             String?    @unique
+  primaryEmailAddress  String     @unique
+  imageUrl             String?
+  clerkUserProperties  Json?
+  stripeCustomerId     String?    @unique
+  accessType           AccessType @default(FREE)
+  stripeUserProperties Json?
+  dailyAIcomments      Int        @default(0)
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+
+  profileImportRuns ProfileImportRun[]
+  linkedInAccounts  LinkedInAccount[]
+
+  UserBrowserState        UserBrowserState[]
+  AutoCommentRun          AutoCommentRun[]
+  CommentStyle            CommentStyle[]
+  AutoCommentConfig       AutoCommentConfig[]
+  BlacklistedProfile      BlacklistedProfile[]
+  linkedInPostPreviews    LinkedInPostPreview[]
+  commentAnalyses         CommentAnalysis[]
+  organizationMemberships OrganizationMember[]
+}
+
+enum AccessType {
+  FREE
+  WEEKLY
+  MONTHLY
+  YEARLY
+}

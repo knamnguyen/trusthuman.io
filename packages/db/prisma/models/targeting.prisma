@@ -1,0 +1,70 @@
+model TargetList {
+  id             String           @id
+  accountId      String
+  name           String
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  status         TargetListStatus
+  targetProfiles TargetProfile[]
+
+  linkedInAccount     LinkedInAccount      @relation(fields: [accountId], references: [id])
+  buildTargetListJobs BuildTargetListJob[]
+}
+
+enum TargetListStatus {
+  BUILDING
+  COMPLETED
+}
+
+model TargetProfile {
+  id          String   @id
+  listId      String
+  accountId   String
+  linkedinUrl String
+  profileUrn  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  list    TargetList       @relation(fields: [listId], references: [id])
+  profile LinkedInProfile? @relation(fields: [profileUrn], references: [urn])
+  account LinkedInAccount  @relation(fields: [accountId], references: [id])
+
+  @@unique([listId, linkedinUrl])
+}
+
+model BlacklistedProfile {
+  id         String   @id
+  accountId  String
+  profileUrn String
+  createdAt  DateTime @default(now())
+
+  account LinkedInAccount @relation(fields: [accountId], references: [id])
+  user    User?           @relation(fields: [userId], references: [id])
+  userId  String?
+
+  @@unique([accountId, profileUrn])
+}
+
+model BuildTargetListJob {
+  id          String                   @id
+  accountId   String
+  workflowId  String
+  listId      String                   @unique
+  status      BuildTargetListJobStatus
+  error       String?
+  createdAt   DateTime                 @default(now())
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  linkedInAccount LinkedInAccount @relation(fields: [accountId], references: [id])
+  targetList      TargetList      @relation(fields: [listId], references: [id])
+
+  @@index([status])
+}
+
+enum BuildTargetListJobStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+}

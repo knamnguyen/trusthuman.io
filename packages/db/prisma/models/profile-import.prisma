@@ -1,0 +1,17 @@
+model ProfileImportRun {
+  id            String       @id @default(uuid())
+  userId        String
+  user          User         @relation(fields: [userId], references: [id])
+  urls          String[]
+  status        ImportStatus @default(NOT_STARTED)
+  urlsSucceeded String[]     @default([])
+  urlsFailed    String[]     @default([])
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+enum ImportStatus {
+  NOT_STARTED
+  RUNNING
+  FINISHED
+}
