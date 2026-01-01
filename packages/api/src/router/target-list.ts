@@ -37,13 +37,13 @@ export const targetListRouter = {
     list: protectedProcedure
       .input(
         z.object({
-          offset: z.number().optional(),
+          cursor: z.number().optional(),
           limit: z.number().optional(),
         }),
       )
       .query(({ input }) => {
         return linkedInIndustrySearch.list({
-          offset: input.offset,
+          offset: input.cursor,
           limit: input.limit,
         });
       }),

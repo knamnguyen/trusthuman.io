@@ -6,8 +6,8 @@ import { getPostCommentSystemPrompt } from "./prompts";
 export class AIService {
   private ai: GoogleGenAI;
 
-  constructor(private googleGenAIApiKey: string) {
-    this.ai = new GoogleGenAI({ apiKey: this.googleGenAIApiKey });
+  constructor(googleGenAIApiKey: string) {
+    this.ai = new GoogleGenAI({ apiKey: googleGenAIApiKey });
   }
 
   async generateComment(input: CommentGenerationInput) {
