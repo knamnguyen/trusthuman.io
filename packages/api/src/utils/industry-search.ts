@@ -38,7 +38,8 @@ export class LinkedInIndustrySearch {
     });
 
     for (const industry of chunkify(linkedInIndustries, 100)) {
-      const promises = industry.map((ind) => index.add(ind));
+      // TODO: append is not a function
+      const promises = industry.map((ind) => index.append(ind));
       await Promise.all(promises);
     }
 

@@ -5,7 +5,6 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
-import { useStore } from "@tanstack/react-store";
 import { LoaderCircleIcon } from "lucide-react";
 import {
   Controller,
@@ -32,19 +31,9 @@ import {
   SelectValue,
 } from "@sassy/ui/select";
 
-import { env } from "~/env";
 import { usePremiumStatus } from "~/hooks/use-premium-status";
 import { useCurrentLinkedInAccountId } from "~/stores/linkedin-account-store";
 import { useTRPC } from "~/trpc/react";
-
-export const getSyncHostUrl = () => {
-  if (env.NODE_ENV !== "production") {
-    return (
-      process.env.NEXTJS_URL ?? `http://localhost:${process.env.PORT ?? "3000"}`
-    );
-  }
-  return "https://engagekit.io";
-};
 
 const FeaturePlaceholder = () => (
   <div className="mb-4 h-24 w-full animate-pulse rounded-lg bg-gray-200" />
