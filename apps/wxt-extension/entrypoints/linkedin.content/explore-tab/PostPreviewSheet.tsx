@@ -78,7 +78,7 @@ export function PostPreviewSheet() {
   const authorInfo = previewingCard?.authorInfo ?? null;
   const fullCaption = previewingCard?.fullCaption ?? "";
   const postTime = previewingCard?.postTime ?? null;
-  const postUrl = previewingCard?.postUrl ?? null;
+  const postUrl = previewingCard?.postUrls?.[0] ?? null;
 
   // Navigation
   const canGoPrev = currentIndex > 0;

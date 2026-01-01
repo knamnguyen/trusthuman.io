@@ -37,7 +37,7 @@ interface ReadyPost {
   postContainer: HTMLElement;
   authorInfo: PostAuthorInfo | null;
   postTime: PostTimeInfo | null;
-  postUrl: PostUrlInfo | null;
+  postUrls: PostUrlInfo[];
   comments: PostCommentInfo[];
 }
 
@@ -114,7 +114,7 @@ function extractPostData(container: HTMLElement): ReadyPost | null {
     postContainer: container,
     authorInfo: extractAuthorInfoFromPost(container),
     postTime: extractPostTime(container),
-    postUrl: extractPostUrl(container),
+    postUrls: extractPostUrl(container),
     comments: extractCommentsFromPost(container),
   };
 }
@@ -342,7 +342,7 @@ export function ExploreTab() {
           isGenerating: true,
           authorInfo: post.authorInfo,
           postTime: post.postTime,
-          postUrl: post.postUrl,
+          postUrls: post.postUrls,
           comments: post.comments,
         });
 

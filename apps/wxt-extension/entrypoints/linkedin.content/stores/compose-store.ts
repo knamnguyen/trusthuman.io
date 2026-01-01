@@ -30,8 +30,8 @@ export interface ComposeCard {
   authorInfo: PostAuthorInfo | null;
   /** Pre-extracted post time (displayTime, fullTime) */
   postTime: PostTimeInfo | null;
-  /** Pre-extracted post URL info (urn, url) */
-  postUrl: PostUrlInfo | null;
+  /** Pre-extracted post URL info (urn, url) - array to handle aggregate posts */
+  postUrls: PostUrlInfo[];
   /** Pre-loaded comments on this post */
   comments: PostCommentInfo[];
 }

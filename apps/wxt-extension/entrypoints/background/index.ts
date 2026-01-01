@@ -105,21 +105,32 @@ export default defineBackground(() => {
             userId: clerk.user?.id,
           });
 
-          // Notify content scripts of auth state change
-          console.log("Background: Broadcasting authStateChanged message:", {
+          // Notify ALL LinkedIn content scripts of auth state change
+          // Must use chrome.tabs.sendMessage to reach content scripts (not chrome.runtime.sendMessage)
+          console.log("Background: Broadcasting authStateChanged to LinkedIn tabs:", {
             isSignedIn,
           });
-          chrome.runtime
-            .sendMessage({
-              action: "authStateChanged",
-              isSignedIn,
-            })
-            .catch((error) => {
-              console.log(
-                "Background: Failed to broadcast message (content script may not be loaded):",
-                error,
-              );
-            });
+
+          // Query all LinkedIn tabs and send message to each
+          chrome.tabs.query({ url: "https://*.linkedin.com/*" }, (tabs) => {
+            console.log(`Background: Found ${tabs.length} LinkedIn tabs to notify`);
+            for (const tab of tabs) {
+              if (tab.id) {
+                chrome.tabs
+                  .sendMessage(tab.id, {
+                    action: "authStateChanged",
+                    isSignedIn,
+                  })
+                  .catch((error) => {
+                    // Content script may not be loaded on this tab
+                    console.log(
+                      `Background: Failed to send to tab ${tab.id}:`,
+                      error
+                    );
+                  });
+              }
+            }
+          });
         }, 2000);
       }
     }

@@ -2,7 +2,7 @@ import { create } from "zustand";
 
 // Tab indices for the sidebar
 export const SIDEBAR_TABS = {
-  MESSAGES: 0,
+  ACCOUNT: 0,
   MAIL: 1,
   EXPLORE: 2,
   SHARE: 3,
@@ -24,7 +24,7 @@ type SidebarStore = SidebarState & SidebarActions;
 
 export const useSidebarStore = create<SidebarStore>((set) => ({
   isOpen: false,
-  selectedTab: SIDEBAR_TABS.MESSAGES,
+  selectedTab: SIDEBAR_TABS.ACCOUNT,
 
   setIsOpen: (isOpen) => set({ isOpen }),
   setSelectedTab: (selectedTab) => set({ selectedTab }),

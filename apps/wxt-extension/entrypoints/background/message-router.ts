@@ -135,7 +135,7 @@ export class MessageRouter {
 
   /**
    * Handle signOut request
-   * Signs out the user via Clerk
+   * Signs out the user via Clerk and broadcasts auth state change
    */
   private handleSignOut = (
     _request: MessageRequest,
@@ -153,6 +153,30 @@ export class MessageRouter {
         // Sign out asynchronously
         await clerk.signOut();
         console.log("MessageRouter: Sign out successful");
+
+        // Broadcast auth state change to ALL LinkedIn content scripts
+        // Must use chrome.tabs.sendMessage to reach content scripts (not chrome.runtime.sendMessage)
+        console.log("MessageRouter: Broadcasting authStateChanged after signOut");
+        chrome.tabs.query({ url: "https://*.linkedin.com/*" }, (tabs) => {
+          console.log(`MessageRouter: Found ${tabs.length} LinkedIn tabs to notify`);
+          for (const tab of tabs) {
+            if (tab.id) {
+              chrome.tabs
+                .sendMessage(tab.id, {
+                  action: "authStateChanged",
+                  isSignedIn: false,
+                })
+                .catch((error) => {
+                  // Content script may not be loaded on this tab
+                  console.log(
+                    `MessageRouter: Failed to send to tab ${tab.id}:`,
+                    error
+                  );
+                });
+            }
+          }
+        });
+
         sendResponse({ success: true, data: { success: true } });
       })
       .catch((error: Error) => {
