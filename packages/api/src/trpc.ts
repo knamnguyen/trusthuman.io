@@ -49,6 +49,7 @@ export type DbUser = Prisma.UserGetPayload<{
 export interface TRPCContext {
   db: PrismaClient;
   user?: DbUser;
+  orgId?: string | null; // Active organization ID from Clerk org switcher
   headers: Headers;
   hyperbrowser: Hyperbrowser;
   browserJobs: typeof browserJobs;
@@ -176,7 +177,7 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
     });
   }
 
-  const { isAuthenticated, userId } = await auth();
+  const { isAuthenticated, userId, orgId } = await auth();
 
   if (!isAuthenticated) {
     throw new TRPCError({
@@ -191,6 +192,7 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
     ctx: {
       ...ctx, // Keep existing context with db and headers
       user, // Add the user to the context
+      orgId, // Active organization from Clerk org switcher
       account: null,
       memberships: [],
     },

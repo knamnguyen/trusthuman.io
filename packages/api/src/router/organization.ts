@@ -4,13 +4,18 @@ import { protectedProcedure } from "../trpc";
 
 export const organizationRouter = {
   /**
-   * Get the user's current organization
-   * For now, returns the first org the user is a member of (their personal org)
-   * Later: could support org switching via stored preference
+   * Get the user's current organization based on Clerk's active org
+   * Uses orgId from Clerk's org switcher context
    */
   getCurrent: protectedProcedure.query(async ({ ctx }) => {
+    // If no active org selected in Clerk, fall back to first membership
+    const orgId = ctx.orgId;
+
     const membership = await ctx.db.organizationMember.findFirst({
-      where: { userId: ctx.user.id },
+      where: {
+        userId: ctx.user.id,
+        ...(orgId ? { orgId } : {}),
+      },
       include: {
         org: {
           select: {
@@ -22,7 +27,7 @@ export const organizationRouter = {
           },
         },
       },
-      orderBy: { joinedAt: "asc" }, // Oldest = their personal org
+      orderBy: { joinedAt: "asc" }, // Fallback: oldest org if no orgId specified
     });
 
     if (!membership) {
