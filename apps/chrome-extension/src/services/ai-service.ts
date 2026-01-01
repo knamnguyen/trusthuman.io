@@ -14,12 +14,8 @@ export interface AICommentConfig {
 
 export class AIService {
   private trpcClient;
-  constructor(config?: { assumedUserToken?: string }) {
-    this.trpcClient = getStandaloneTRPCClient(config);
-  }
-
-  resetTrpcClient(config?: { assumedUserToken?: string }) {
-    this.trpcClient = getStandaloneTRPCClient(config);
+  constructor() {
+    this.trpcClient = getStandaloneTRPCClient();
   }
 
   /**

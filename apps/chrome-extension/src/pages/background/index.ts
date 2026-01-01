@@ -44,14 +44,18 @@ class BackgroundScriptContext {
   private trpcClient: ReturnType<typeof getTRPCClient>;
 
   constructor() {
-    this.trpcClient = getTRPCClient();
+    this.trpcClient = getTRPCClient(() => ({
+      assumedUserToken: authService.assumedUserToken ?? undefined,
+      accountId: authService.accountId ?? undefined,
+    }));
   }
 
   setAssumedUserToken(token: string) {
     authService.assumedUserToken = token;
-    this.trpcClient = getTRPCClient({
-      assumedUserToken: token,
-    });
+  }
+
+  setAccountId(accountId: string) {
+    authService.accountId = accountId;
   }
 
   getTRPCClient() {
@@ -66,6 +70,7 @@ const ctx = new BackgroundScriptContext();
  */
 const authService = {
   assumedUserToken: null as string | null,
+  accountId: null as string | null,
   /**
    * Get fresh token from Clerk session
    */
@@ -463,9 +468,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   switch (request.action) {
     case "engagekit_setAssumedUserToken": {
       ctx.setAssumedUserToken(request.payload.token);
-      aiService.resetTrpcClient({
-        assumedUserToken: request.payload.token,
-      });
       sendResponse({ status: "ok" });
       return false;
     }
