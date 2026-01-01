@@ -1,9 +1,16 @@
+import type { User } from "@clerk/backend";
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { ulid } from "ulidx";
 import z from "zod";
 
-import type { PrismaClient } from "@sassy/db";
+import {
+  AccessType,
+  User as DbUser,
+  Prisma,
+  PrismaClient,
+  PrismaTransactionalClient,
+} from "@sassy/db";
 import { countrySchema } from "@sassy/validators";
 
 import { protectedProcedure, publicProcedure } from "../trpc";
@@ -33,20 +40,7 @@ function extractProfileSlug(url: string): string {
 export const accountRouter = {
   getDefaultAccount: protectedProcedure.query(async ({ ctx }) => {
     const account = await ctx.db.linkedInAccount.findFirst({
-      where: {
-        OR: [
-          {
-            ownerId: ctx.user.id,
-          },
-          {
-            organizationMemberships: {
-              some: {
-                userId: ctx.user.id,
-              },
-            },
-          },
-        ],
-      },
+      where: hasPermissionToAccessAccountClause(ctx.user.id),
       select: {
         id: true,
         name: true,
@@ -85,7 +79,7 @@ export const accountRouter = {
     )
     .query(async ({ ctx, input }) => {
       const permitted = await hasPermissionToAccessAccount(ctx.db, {
-        readerId: ctx.user.id,
+        readerUserId: ctx.user.id,
         accountId: input.id,
       });
 
@@ -113,14 +107,12 @@ export const accountRouter = {
     create: protectedProcedure
       .input(
         z.object({
-          email: z.string(),
+          email: z.string().email(),
           name: z.string().optional(),
           location: countrySchema,
         }),
       )
       .mutation(async function* ({ ctx, input, signal }) {
-        // TODO: add some more access control checks or validation here
-        // the email check is sus
         const existingAccount = await ctx.db.linkedInAccount.findFirst({
           where: { email: input.email, ownerId: ctx.user.id },
         });
@@ -130,7 +122,7 @@ export const accountRouter = {
 
         if (existingAccount !== null) {
           const permitted = await hasPermissionToAccessAccount(ctx.db, {
-            readerId: ctx.user.id,
+            readerUserId: ctx.user.id,
             accountId: existingAccount.id,
           });
 
@@ -222,18 +214,12 @@ export const accountRouter = {
         }),
       )
       .mutation(async ({ ctx, input }) => {
-        const account = await ctx.db.linkedInAccount.findFirst({
-          where: { id: input.accountId },
-          select: {
-            ownerId: true,
-          },
+        const hasAccess = await hasPermissionToAccessAccount(ctx.db, {
+          accountId: input.accountId,
+          readerUserId: ctx.user.id,
         });
 
-        if (
-          account === null ||
-          account.ownerId !== ctx.user.id ||
-          ctx.memberships.every((m) => m.orgId !== account.ownerId)
-        ) {
+        if (hasAccess === false) {
           return {
             status: "error",
             error: "Not Permitted",
@@ -492,18 +478,151 @@ export const accountRouter = {
 
 export async function hasPermissionToAccessAccount(
   db: PrismaClient,
-  { readerId, accountId }: { readerId: string; accountId: string },
+  { readerUserId, accountId }: { readerUserId: string; accountId: string },
 ) {
-  const canAccess = await db.$queryRaw<{ permitted: boolean }[]>`
-    select exists (
-      select 1 from "LinkedInAccount" la 
-      where la.id = ${accountId} and la."ownerId" = ${readerId}
-      or exists (
-        select 1 from "OrganizationMember" om 
-        where om."orgId" = la."organizationId" and om."userId" = ${readerId}
-      )
-    ) as permitted
+  const exists = await db.linkedInAccount.count({
+    where: {
+      AND: [
+        {
+          id: accountId,
+        },
+        hasPermissionToAccessAccountClause(readerUserId),
+      ],
+    },
+  });
+
+  return exists > 0;
+}
+
+export function hasPermissionToAccessAccountClause(readerUserId: string) {
+  return {
+    OR: [
+      {
+        ownerId: readerUserId,
+      },
+      {
+        organizationMemberships: {
+          some: {
+            userId: readerUserId,
+          },
+        },
+      },
+    ],
+  };
+}
+
+export async function getUserAccount(
+  db: PrismaClient | PrismaTransactionalClient,
+  userId: string,
+  accountId: string | null,
+) {
+  const row = await db.$queryRaw<
+    {
+      user: DbUser;
+      account: {
+        id: string;
+        email: string;
+        profileUrl: string;
+        accessType: AccessType;
+        permitted: boolean;
+      } | null;
+      memberships: string[];
+    }[]
+  >`
+    select
+      to_jsonb(u) as "user",
+      coalesce(
+        (
+          select jsonb_build_object(
+            'id', lia.id,
+            'email', lia.email,
+            'name', lia.name,
+            'profileUrl', lia."profileUrl",
+            'accessType', lia."accessType",
+            'permitted', (
+              lia."ownerId" = u.id
+              or exists (
+                select 1
+                from "OrganizationMember" om
+                where om."userId" = u.id
+                  and om."orgId" = lia."organizationId"
+              )
+            )
+          )
+          from "LinkedInAccount" lia
+          where ${accountId}::text is not null
+            and lia.id = ${accountId}
+        ), null) as "account",
+      coalesce(
+        (
+          select jsonb_agg(om."orgId")
+          from "OrganizationMember" om
+          where om."userId" = u.id
+        ),
+        '[]'::jsonb
+      ) as "memberships"
+    from "User" u
+    where u.id = ${userId}
+    limit 1
   `;
 
-  return canAccess.length > 0 && canAccess[0]?.permitted === true;
+  return row[0] ?? null;
+}
+
+export async function getOrInsertUser(
+  db: PrismaClient,
+  {
+    userId,
+    currentAccountId,
+    clerkUser,
+  }: { userId: string; currentAccountId: string | null; clerkUser: User },
+) {
+  const user = await getUserAccount(db, userId, currentAccountId);
+
+  if (user !== null) {
+    return user;
+  }
+
+  const primaryEmailAddress = clerkUser.primaryEmailAddress?.emailAddress;
+
+  if (primaryEmailAddress === undefined) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "User must have a primary email address",
+    });
+  }
+
+  const newAccount = await db.$transaction(async (tx) => {
+    await db.user.upsert({
+      where: { id: clerkUser.id },
+      update: {
+        firstName: clerkUser.firstName,
+        lastName: clerkUser.lastName,
+        username: clerkUser.username,
+        primaryEmailAddress,
+        imageUrl: clerkUser.imageUrl,
+        clerkUserProperties: clerkUser as unknown as Prisma.InputJsonValue,
+        updatedAt: new Date(),
+      },
+      create: {
+        id: clerkUser.id,
+        firstName: clerkUser.firstName,
+        lastName: clerkUser.lastName,
+        username: clerkUser.username,
+        primaryEmailAddress,
+        imageUrl: clerkUser.imageUrl,
+      },
+    });
+
+    return getUserAccount(tx, clerkUser.id, currentAccountId);
+  });
+
+  if (newAccount === null) {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Failed to create or retrieve user account",
+    });
+  }
+
+  return newAccount;
 }
