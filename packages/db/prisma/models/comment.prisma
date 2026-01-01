@@ -13,9 +13,11 @@ model Comment {
   authorHeadline   String?
 
   comment           String
+  originalAiComment String?
   postAlternateUrns String[]
   commentedAt       DateTime?
-  isAutoCommented   Boolean   @default(true)
+  isAutoCommented   Boolean       @default(true)
+  status            CommentStatus @default(DRAFT)
   schedulePostAt    DateTime?
 
   accountId String
@@ -28,7 +30,18 @@ model Comment {
 
   @@index([postUrn])
   @@index([commentedAt])
+  @@index([status])
   @@index([postAlternateUrns], type: Gin)
+}
+
+enum CommentStatus {
+  DRAFT
+  SCHEDULED
+  QUEUED
+  POSTING
+  POSTED
+  FAILED
+  CANCELLED
 }
 
 model AutoCommentRun {
