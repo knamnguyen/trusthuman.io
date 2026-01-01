@@ -1,5 +1,3 @@
-import { createTRPCRouter, protectedProcedure } from "../trpc";
-
 import { protectedProcedure } from "../trpc";
 
 export const organizationRouter = {
