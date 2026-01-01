@@ -1,9 +1,7 @@
-import type { TRPCRouterRecord } from "@trpc/server";
-
-import { protectedProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 export const organizationRouter = () =>
-  ({
+  createTRPCRouter({
     /**
      * Get the user's current organization
      * For now, returns the first org the user is a member of (their personal org)
@@ -60,4 +58,4 @@ export const organizationRouter = () =>
         role: m.role,
       }));
     }),
-  }) satisfies TRPCRouterRecord;
+  });

@@ -1,4 +1,3 @@
-import type { TRPCRouterRecord } from "@trpc/server";
 import z from "zod";
 
 import {
@@ -11,11 +10,11 @@ import {
 //   userUpdateSchema,
 // } from "@sassy/db/schema-validators";
 
-import { protectedProcedure, publicProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { checkPremiumAccess } from "../utils/check-premium-access";
 
 export const userRouter = () =>
-  ({
+  createTRPCRouter({
     checkAccess: protectedProcedure.query(async ({ ctx }) => {
       const access = await checkPremiumAccess(ctx);
       return access;
@@ -108,4 +107,4 @@ export const userRouter = () =>
     //       });
     //     }
     //   }),
-  }) satisfies TRPCRouterRecord;
+  });

@@ -1,4 +1,3 @@
-import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
@@ -6,7 +5,7 @@ import type { Prisma, PrismaClient } from "@sassy/db";
 import { LinkedInProfileScrapeService } from "@sassy/apify-runners/linkedin-profile-scrape-service";
 import { S3BucketService } from "@sassy/s3";
 
-import { protectedProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure } from "../trpc";
 import {
   checkExistLinkedInProfile,
   findExistingLinkedInProfile,
@@ -192,7 +191,7 @@ function saveProfileInBackground(
 }
 
 export const linkedinProfileScrapeRouter = () =>
-  ({
+  createTRPCRouter({
     /**
      * Scrape a single LinkedIn profile.
      * Returns cached data if exists, otherwise scrapes from Apify.
@@ -320,4 +319,4 @@ export const linkedinProfileScrapeRouter = () =>
         // Await to return data (if connection still alive)
         return operationPromise;
       }),
-  }) satisfies TRPCRouterRecord;
+  });

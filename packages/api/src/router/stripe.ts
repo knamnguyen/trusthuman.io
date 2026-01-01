@@ -1,5 +1,4 @@
 // packages/api/src/router/stripe.ts
-import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 
 import { StripeService } from "@sassy/stripe";
@@ -10,7 +9,7 @@ import {
 } from "@sassy/stripe/schema-validators";
 
 import type { TRPCContext } from "../trpc";
-import { protectedProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 /**
  * Create a Stripe service instance
@@ -33,7 +32,7 @@ const checkAccessType = async (ctx: TRPCContext) => {
 };
 
 export const stripeRouter = () =>
-  ({
+  createTRPCRouter({
     /**
      * Create a checkout session for subscription or one-time payment
      *
@@ -157,6 +156,6 @@ export const stripeRouter = () =>
           input.billingCycle,
         );
       }),
-  }) satisfies TRPCRouterRecord;
+  });
 
 //prevent type leakage issues across your entire Turborepo while maintaining proper type checking during development

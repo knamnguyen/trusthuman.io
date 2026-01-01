@@ -1,17 +1,16 @@
-import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 // import { LinkedInScrapeApifyService } from "@sassy/linkedin-scrape-apify";
 import { ImportStatus } from "@sassy/db";
 
-import { protectedProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { checkPremiumAccess } from "../utils/check-premium-access";
 import { executeRetrieve } from "../utils/execute-retrieve";
 import { executeRun } from "../utils/execute-run";
 
 export const profileImportRouter = () =>
-  ({
+  createTRPCRouter({
     createRun: protectedProcedure
       .input(z.object({ urls: z.array(z.string().url()).min(1).max(100) }))
       .mutation(async ({ ctx, input }) => {
@@ -246,4 +245,4 @@ export const profileImportRouter = () =>
           profileUrn: p.urn,
         }));
       }),
-  }) satisfies TRPCRouterRecord;
+  });

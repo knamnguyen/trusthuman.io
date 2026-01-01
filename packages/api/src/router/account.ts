@@ -1,5 +1,4 @@
 import type { User } from "@clerk/backend";
-import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { ulid } from "ulidx";
 import z from "zod";
@@ -13,7 +12,7 @@ import type {
 } from "@sassy/db";
 import { countrySchema } from "@sassy/validators";
 
-import { protectedProcedure, publicProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import {
   assumedAccountJwt,
   BrowserSession,
@@ -38,7 +37,7 @@ function extractProfileSlug(url: string): string {
 }
 
 export const accountRouter = () =>
-  ({
+  createTRPCRouter({
     getDefaultAccount: protectedProcedure.query(async ({ ctx }) => {
       const account = await ctx.db.linkedInAccount.findFirst({
         where: hasPermissionToAccessAccountClause(ctx.user.id),
@@ -478,7 +477,7 @@ export const accountRouter = () =>
 
         return { success: true };
       }),
-  }) satisfies TRPCRouterRecord;
+  });
 
 export async function hasPermissionToAccessAccount(
   db: PrismaClient,

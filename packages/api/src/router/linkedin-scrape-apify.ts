@@ -1,10 +1,9 @@
-import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { LinkedInScrapeApifyService } from "@sassy/linkedin-scrape-apify";
 
-import { protectedProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { findExistingLinkedInProfile } from "../utils/check-exist-linkedin-profile";
 import { checkPremiumAccess } from "../utils/check-premium-access";
 
@@ -24,7 +23,7 @@ const mapDbToProfileData = (record: any) => {
 };
 
 export const linkedinScrapeApifyRouter = () =>
-  ({
+  createTRPCRouter({
     scrapeByUrl: protectedProcedure
       .input(z.object({ url: z.string().url() }))
       .mutation(async ({ ctx, input }) => {
@@ -118,4 +117,4 @@ export const linkedinScrapeApifyRouter = () =>
 
         return mapDbToProfileData(created);
       }),
-  }) satisfies TRPCRouterRecord;
+  });
