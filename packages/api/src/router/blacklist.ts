@@ -4,7 +4,7 @@ import { z } from "zod";
 import { protectedProcedure } from "../trpc";
 import { paginate } from "../utils/pagination";
 
-export const blacklistRouter = {
+export const blacklistRouter = () => ({
   addToBlacklist: protectedProcedure
     .input(
       z.object({
@@ -12,13 +12,19 @@ export const blacklistRouter = {
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      if (ctx.account === null) {
+        return {
+          status: "error",
+          message: "Account not found",
+        } as const;
+      }
+
       const result = await ctx.db.blacklistedProfile.createMany({
         data: {
           id: ulid(),
           userId: ctx.user.id,
           profileUrn: input.profileUrn,
-          // TODO: by default create an account id for the user
-          accountId: ctx.account?.id,
+          accountId: ctx.account.id,
         },
         skipDuplicates: true,
       });
@@ -72,4 +78,4 @@ export const blacklistRouter = {
         size: 20,
       });
     }),
-};
+});

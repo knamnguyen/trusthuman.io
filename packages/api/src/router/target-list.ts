@@ -32,7 +32,7 @@ const linkedInUrlSchema = z
     return u.toString();
   });
 
-export const targetListRouter = {
+export const targetListRouter = () => ({
   industries: {
     list: protectedProcedure
       .input(
@@ -632,4 +632,4 @@ export const targetListRouter = {
         profileAdded: result.count > 0,
       } as const;
     }),
-};
+});

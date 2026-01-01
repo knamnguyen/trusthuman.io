@@ -23,7 +23,7 @@ import { chunkify, transformValuesIfMatch } from "../utils/commons";
 import { paginate } from "../utils/pagination";
 import { hasPermissionToAccessAccount } from "./account";
 
-export const autoCommentRouter = {
+export const autoCommentRouter = () => ({
   runs: protectedProcedure
     .input(
       z
@@ -771,7 +771,7 @@ export const autoCommentRouter = {
         status: "success",
       } as const;
     }),
-};
+});
 
 export async function getAutocommentParamsWithFallback(
   db: PrismaClient,

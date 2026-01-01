@@ -5,8 +5,9 @@ import { storageStateSchema } from "@sassy/validators";
 
 import { protectedProcedure } from "../trpc";
 import { hyperbrowser } from "../utils/browser-session";
+import { hasPermissionToAccessAccountClause } from "./account";
 
-export const browserRouter = {
+export const browserRouter = () => ({
   browserSessionStatus: protectedProcedure
     .input(
       z.object({
@@ -14,8 +15,13 @@ export const browserRouter = {
       }),
     )
     .query(async ({ ctx, input }) => {
-      const account = await ctx.db.linkedInAccount.findUnique({
-        where: { id: input.linkedInAccountId, userId: ctx.user.id },
+      const account = await ctx.db.linkedInAccount.findFirst({
+        where: {
+          AND: [
+            { id: input.linkedInAccountId },
+            hasPermissionToAccessAccountClause(input.linkedInAccountId),
+          ],
+        },
         select: {
           id: true,
         },
@@ -84,4 +90,4 @@ export const browserRouter = {
 
     return state ? storageStateSchema.parse(JSON.parse(state.state)) : null;
   }),
-};
+});

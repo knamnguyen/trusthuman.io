@@ -15,20 +15,20 @@ import { linkedInPreviewRouter } from "./tools/linkedin-preview";
 import { userRouter } from "./user";
 
 export const appRouter = createTRPCRouter({
-  stripe: stripeRouter,
-  aiComments: aiCommentsRouter,
-  user: userRouter,
-  organization: organizationRouter,
-  profileImport: profileImportRouter,
-  linkedinScrapeApify: linkedinScrapeApifyRouter,
-  linkedinProfileScrape: linkedinProfileScrapeRouter,
-  browser: browserRouter,
-  autocomment: autoCommentRouter,
-  targetList: targetListRouter,
-  blacklist: blacklistRouter,
-  account: accountRouter,
-  linkedInPreview: linkedInPreviewRouter,
-  commentAiDetector: commentAiDetectorRouter,
+  stripe: stripeRouter(),
+  aiComments: aiCommentsRouter(),
+  user: userRouter(),
+  organization: organizationRouter(),
+  profileImport: profileImportRouter(),
+  linkedinScrapeApify: linkedinScrapeApifyRouter(),
+  linkedinProfileScrape: linkedinProfileScrapeRouter(),
+  browser: browserRouter(),
+  autocomment: autoCommentRouter(),
+  targetList: targetListRouter(),
+  blacklist: blacklistRouter(),
+  account: accountRouter(),
+  linkedInPreview: linkedInPreviewRouter(),
+  commentAiDetector: commentAiDetectorRouter(),
 });
 
 // export type definition of API
