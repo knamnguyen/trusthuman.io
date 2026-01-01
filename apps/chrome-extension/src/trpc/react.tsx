@@ -7,6 +7,10 @@ import SuperJSON from "superjson";
 
 import type { AppRouter } from "@sassy/api";
 
+import {
+  LinkedInAccountProvider,
+  LinkedInAccountStore,
+} from "../stores/linkedin-account-store";
 import { createQueryClient } from "./query-client";
 
 let clientQueryClientSingleton: QueryClient | undefined = undefined;
@@ -62,76 +66,85 @@ const getClerkToken = async (): Promise<string | null> => {
   }
 };
 
-const _trpcClientCache = new Map<
-  string,
-  ReturnType<typeof createTRPCClient<AppRouter>>
->();
+// Create a factory function consisting a cached trpc client
+function getTrpcClientFactory(
+  configGetter?: () => {
+    assumedUserToken?: string;
+    accountId?: string;
+  },
+) {
+  let _cachedTrpcClient: ReturnType<typeof createTRPCClient<AppRouter>> | null =
+    null;
 
-// just cache based on config json stringification so we can have multiple clients if needed
-const getTrpcClient = (opts?: { assumedUserToken?: string }) => {
-  const cacheKey = JSON.stringify(opts ?? {});
+  return () => {
+    _cachedTrpcClient ??= createTRPCClient<AppRouter>({
+      links: [
+        loggerLink({
+          enabled: (op) =>
+            import.meta.env.DEV ||
+            (op.direction === "down" && op.result instanceof Error),
+        }),
+        httpBatchLink({
+          url: getServerUrl(),
+          transformer: SuperJSON,
+          async headers() {
+            const clerkToken = await getClerkToken();
+            const headers: Record<string, string> = {
+              "x-trpc-source": "chrome-extension",
+              "ngrok-skip-browser-warning": "true",
+              "Content-Type": "application/json",
+            };
 
-  if (_trpcClientCache.has(cacheKey)) {
-    return _trpcClientCache.get(cacheKey)!;
-  }
+            const config = configGetter?.();
 
-  const client = createTRPCClient<AppRouter>({
-    links: [
-      loggerLink({
-        enabled: (op) =>
-          import.meta.env.DEV ||
-          (op.direction === "down" && op.result instanceof Error),
-      }),
-      httpBatchLink({
-        url: getServerUrl(),
-        transformer: SuperJSON,
-        async headers() {
-          const clerkToken = await getClerkToken();
-          const headers: Record<string, string> = {
-            "x-trpc-source": "chrome-extension",
-            "ngrok-skip-browser-warning": "true",
-            "Content-Type": "application/json",
-          };
+            if (config?.assumedUserToken !== undefined) {
+              headers["x-assumed-user-token"] = config.assumedUserToken;
+            }
 
-          if (opts?.assumedUserToken !== undefined) {
-            headers["x-assumed-user-token"] = opts.assumedUserToken;
-          }
+            if (config?.accountId !== undefined) {
+              headers["x-account-id"] = config.accountId;
+            }
 
-          if (clerkToken) {
-            headers.Authorization = `Bearer ${clerkToken}`;
-          }
+            if (clerkToken) {
+              headers.Authorization = `Bearer ${clerkToken}`;
+            }
 
-          return headers;
-        },
-      }),
-    ],
-  });
+            return headers;
+          },
+        }),
+      ],
+    });
 
-  _trpcClientCache.set(cacheKey, client);
+    return _cachedTrpcClient;
+  };
+}
 
-  return client;
-};
+const getTrpcClient = getTrpcClientFactory(() => ({
+  accountId: linkedInAccountStore.state.accountId ?? undefined,
+  assumedUserToken: linkedInAccountStore.state.assumedUserToken ?? undefined,
+}));
 
+export const linkedInAccountStore = new LinkedInAccountStore();
 /**
  * Get standalone tRPC client for use outside React context
  * This is useful for services that need to make tRPC calls without React Query
  */
-export const getStandaloneTRPCClient = (config?: {
-  assumedUserToken?: string;
-  accountId?: string;
-}) => {
-  return getTrpcClient(config);
-};
+export const getStandaloneTRPCClient = getTrpcClientFactory(() => ({
+  accountId: linkedInAccountStore.state.accountId ?? undefined,
+  assumedUserToken: linkedInAccountStore.state.assumedUserToken ?? undefined,
+}));
 
 export function TRPCReactProvider(props: { children: React.ReactNode }) {
   const queryClient = getQueryClient();
   const [trpcClient] = useState(getTrpcClient);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
-        {props.children}
-      </TRPCProvider>
-    </QueryClientProvider>
+    <LinkedInAccountProvider store={linkedInAccountStore}>
+      <QueryClientProvider client={queryClient}>
+        <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
+          {props.children}
+        </TRPCProvider>
+      </QueryClientProvider>
+    </LinkedInAccountProvider>
   );
 }
