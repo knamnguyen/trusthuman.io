@@ -30,7 +30,7 @@ export class BrowserJobWorker<TWorkerContext = unknown> {
   private readonly hyperbrowser: Hyperbrowser;
   private readonly processJobFn: (
     ctx: NoInfer<TWorkerContext>,
-    jobCtx: { jobId: string; accountId: string },
+    jobCtx: { jobId: string; accountId: string; accountOwnerId: string },
   ) => JsonValue | Promise<JsonValue> | void | Promise<void>;
   private readonly onJobCompleted?: (
     ctx: NoInfer<TWorkerContext>,
@@ -49,7 +49,7 @@ export class BrowserJobWorker<TWorkerContext = unknown> {
     readonly browserRegistry: BrowserSessionRegistry;
     readonly processJobFn: (
       ctx: NoInfer<TWorkerContext>,
-      jobCtx: { jobId: string; accountId: string },
+      jobCtx: { jobId: string; accountId: string; accountOwnerId: string },
     ) => JsonValue | Promise<JsonValue> | void | Promise<void>;
     readonly onJobCompleted?: (
       ctx: NoInfer<TWorkerContext>,
@@ -80,10 +80,19 @@ export class BrowserJobWorker<TWorkerContext = unknown> {
         },
         select: {
           accountId: true,
+          linkedInAccount: {
+            select: {
+              ownerId: true,
+            },
+          },
         },
       });
 
-      const jobContext = { jobId, accountId: job.accountId };
+      const jobContext = {
+        jobId,
+        accountId: job.accountId,
+        accountOwnerId: job.linkedInAccount.ownerId,
+      };
 
       const result = await safe(() => this.processJobFn(ctx, jobContext));
 
@@ -399,6 +408,7 @@ export const browserJobs = new BrowserJobWorker<WorkerContext>({
         ctx.db,
         ctx.browserRegistry,
         jobCtx.accountId,
+        jobCtx.accountOwnerId,
         {
           location: account!.location as ProxyLocation,
           browserProfileId: account!.browserProfileId,
@@ -591,7 +601,7 @@ async function submitScheduledComments({
   const now = new Date();
 
   while (true) {
-    const comment = await db.userComment.findFirst({
+    const comment = await db.comment.findFirst({
       where: {
         accountId,
         commentedAt: null,
@@ -622,7 +632,7 @@ async function submitScheduledComments({
 
     if (result.status === "error") {
       console.error(`Failed to post comment on ${comment.postUrn}`);
-      await db.userComment.updateMany({
+      await db.comment.updateMany({
         where: {
           id: comment.id,
         },
@@ -631,7 +641,7 @@ async function submitScheduledComments({
         },
       });
     } else {
-      await db.userComment.updateMany({
+      await db.comment.updateMany({
         where: {
           id: comment.id,
         },

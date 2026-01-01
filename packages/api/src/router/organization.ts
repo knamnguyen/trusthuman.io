@@ -1,4 +1,4 @@
-import type { TRPCRouterRecord } from "@trpc/server";
+import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 import { protectedProcedure } from "../trpc";
 
@@ -30,38 +30,38 @@ export const organizationRouter = {
       orderBy: { joinedAt: "asc" }, // Fallback: oldest org if no orgId specified
     });
 
-    if (!membership) {
-      return null;
-    }
+      if (!membership) {
+        return null;
+      }
 
-    return {
-      ...membership.org,
-      role: membership.role,
-    };
-  }),
+      return {
+        ...membership.org,
+        role: membership.role,
+      };
+    }),
 
-  /**
-   * List all organizations the user is a member of
-   */
-  list: protectedProcedure.query(async ({ ctx }) => {
-    const memberships = await ctx.db.organizationMember.findMany({
-      where: { userId: ctx.user.id },
-      include: {
-        org: {
-          select: {
-            id: true,
-            name: true,
-            purchasedSlots: true,
-            createdAt: true,
+    /**
+     * List all organizations the user is a member of
+     */
+    list: protectedProcedure.query(async ({ ctx }) => {
+      const memberships = await ctx.db.organizationMember.findMany({
+        where: { userId: ctx.user.id },
+        include: {
+          org: {
+            select: {
+              id: true,
+              name: true,
+              purchasedSlots: true,
+              createdAt: true,
+            },
           },
         },
-      },
-      orderBy: { joinedAt: "asc" },
-    });
+        orderBy: { joinedAt: "asc" },
+      });
 
-    return memberships.map((m) => ({
-      ...m.org,
-      role: m.role,
-    }));
-  }),
-} satisfies TRPCRouterRecord;
+      return memberships.map((m) => ({
+        ...m.org,
+        role: m.role,
+      }));
+    }),
+  });

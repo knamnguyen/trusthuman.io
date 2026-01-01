@@ -19,7 +19,7 @@
     "db:push": "pnpm with-env prisma db push --skip-generate",
     "db:migrate": "pnpm with-env prisma migrate dev",
     "db:studio": "pnpm with-env prisma studio",
-    "db:schema": "prisma migrate diff --from-empty --to-schema-datamodel ./prisma//schema.prisma --script > schema.sql",
+    "db:schema": "prisma migrate diff --from-empty --to-schema-datamodel ./prisma --script > schema.sql",
     "db:zod": "pnpm with-env  prisma generate zod",
     "dev": "tsc --watch",
     "format": "prettier --check . --ignore-path ../../.gitignore",

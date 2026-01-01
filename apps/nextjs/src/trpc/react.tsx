@@ -46,9 +46,7 @@ type TRPCClient = ReturnType<typeof createTRPCClient<AppRouter>>;
 // Create a singleton trpc client that will be used in the global provider
 let _trpcClient: TRPCClient | undefined;
 
-export const getTrpcClient = (
-  configGetter?: () => { assumedUserToken?: string },
-) => {
+export const getTrpcClient = (configGetter?: () => { accountId?: string }) => {
   if (typeof window === "undefined") {
     return createTRPCClient<AppRouter>({
       links: [
@@ -66,8 +64,8 @@ export const getTrpcClient = (
 
             const config = configGetter?.();
 
-            if (config?.assumedUserToken !== undefined) {
-              headers.set("x-assumed-user-token", config.assumedUserToken);
+            if (config?.accountId !== undefined) {
+              headers.set("x-account-id", config.accountId);
             }
 
             return headers;
@@ -92,14 +90,10 @@ export const getTrpcClient = (
           const headers = new Headers();
           headers.set("x-trpc-source", "nextjs-react");
 
-          console.info({ configGetter: configGetter?.toString() });
           const config = configGetter?.();
-          console.info({ config });
 
-          console.info("Assumed User Token:", config?.assumedUserToken);
-
-          if (config?.assumedUserToken !== undefined) {
-            headers.set("x-assumed-user-token", config.assumedUserToken);
+          if (config?.accountId !== undefined) {
+            headers.set("x-account-id", config.accountId);
           }
 
           return headers;
@@ -137,7 +131,7 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
 
   const [trpcClient] = useState(() =>
     getTrpcClient(() => ({
-      assumedUserToken: store.state.assumedUserToken ?? undefined,
+      accountId: store.state.accountId ?? undefined,
     })),
   );
 

@@ -7,7 +7,6 @@
  * The pieces you will need to use are documented accordingly near the end
  */
 
-import type { User } from "@clerk/nextjs/server";
 import { createClerkClient, verifyToken } from "@clerk/backend";
 import { auth } from "@clerk/nextjs/server";
 import { Hyperbrowser } from "@hyperbrowser/sdk";
@@ -19,6 +18,7 @@ import type { Prisma, PrismaClient } from "@sassy/db";
 import { db } from "@sassy/db";
 
 import type { BrowserSessionRegistry } from "./utils/browser-session";
+import { getOrInsertUser, getUserAccount } from "./router/account";
 import { AIService } from "./utils/ai-service/ai-service";
 import { browserJobs } from "./utils/browser-job";
 import { assumedAccountJwt, browserRegistry } from "./utils/browser-session";
@@ -107,6 +107,7 @@ const clerkClient = createClerkClient({
  * - Chrome extension requests: Uses Backend SDK to verify Authorization header
  */
 const isAuthed = t.middleware(async ({ ctx, next }) => {
+  // assumedUserToken is for assumed accounts from browserbase
   const assumedUserToken = ctx.headers.get("x-assumed-user-token");
 
   // check for assumedUserToken
@@ -119,7 +120,7 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
       });
     }
 
-    const result = await getAccount(
+    const result = await getUserAccount(
       ctx.db,
       decoded.payload.userId,
       decoded.payload.accountId,
@@ -132,6 +133,13 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
       });
     }
 
+    if (result.account !== null && result.account.permitted === false) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Access to this account is forbidden",
+      });
+    }
+
     return next({
       ctx: {
         ...ctx,
@@ -141,6 +149,8 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
       },
     });
   }
+
+  const accountId = ctx.headers.get("x-linkedin-account-id") ?? null;
 
   const source = ctx.headers.get("x-trpc-source");
 
@@ -165,14 +175,27 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
 
     const userId = await getUserIdFromClerkToken(token);
 
-    const user = await getOrInsertUser(ctx.db, userId);
+    const clerkUser = await clerkClient.users.getUser(userId);
+
+    const result = await getOrInsertUser(ctx.db, {
+      userId,
+      currentAccountId: accountId,
+      clerkUser,
+    });
+
+    if (result.account !== null && result.account.permitted === false) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Access to this account is forbidden",
+      });
+    }
 
     return next({
       ctx: {
         ...ctx,
-        user,
-        account: null,
-        memberships: [],
+        user: result.user,
+        account: result.account,
+        memberships: result.memberships,
       },
     });
   }
@@ -186,15 +209,28 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
     });
   }
 
-  const user = await getOrInsertUser(ctx.db, userId);
+  const clerkUser = await clerkClient.users.getUser(userId);
+
+  const result = await getOrInsertUser(ctx.db, {
+    userId,
+    currentAccountId: accountId,
+    clerkUser,
+  });
+
+  if (result.account !== null && result.account.permitted === false) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Access to this account is forbidden",
+    });
+  }
 
   return next({
     ctx: {
       ...ctx, // Keep existing context with db and headers
-      user, // Add the user to the context
-      orgId, // Active organization from Clerk org switcher
-      account: null,
-      memberships: [],
+      user: result.user, // Add the user to the context
+      orgId,
+      account: result.account,
+      memberships: result.memberships,
     },
   });
 });
@@ -229,112 +265,6 @@ async function getUserIdFromClerkToken(token: string) {
 
     return verifiedToken.sub;
   }
-}
-
-const userFields = {
-  id: true,
-  accessType: true,
-  dailyAIcomments: true,
-  firstName: true,
-  primaryEmailAddress: true,
-} as const;
-
-export async function getOrInsertUser(
-  db: PrismaClient,
-  userId: string,
-  currentAccountId?: string,
-  clerkUser?: User,
-) {
-  const dbUser = await db.user.findUnique({
-    where: {
-      id: userId,
-    },
-    include: {
-      linkedInAccounts:
-        currentAccountId !== undefined
-          ? {
-              where: {
-                id: currentAccountId,
-              },
-            }
-          : false,
-    },
-  });
-
-  if (dbUser !== null) {
-    return dbUser;
-  }
-
-  // query for clerk user if not provided in function argument
-  clerkUser ??= await clerkClient.users.getUser(userId);
-
-  const primaryEmailAddress = clerkUser.primaryEmailAddress?.emailAddress;
-
-  if (primaryEmailAddress === undefined) {
-    throw new TRPCError({
-      code: "BAD_REQUEST",
-      message: "User must have a primary email address",
-    });
-  }
-
-  const newUser = await db.user.upsert({
-    where: { id: clerkUser.id },
-    update: {
-      firstName: clerkUser.firstName,
-      lastName: clerkUser.lastName,
-      username: clerkUser.username,
-      primaryEmailAddress,
-      imageUrl: clerkUser.imageUrl,
-      clerkUserProperties: clerkUser as unknown as Prisma.InputJsonValue,
-      updatedAt: new Date(),
-    },
-    create: {
-      id: clerkUser.id,
-      firstName: clerkUser.firstName,
-      lastName: clerkUser.lastName,
-      username: clerkUser.username,
-      primaryEmailAddress,
-      imageUrl: clerkUser.imageUrl,
-    },
-    select: userFields,
-  });
-
-  return newUser;
-}
-
-async function getAccount(db: PrismaClient, userId: string, accountId: string) {
-  const row = await db.user.findFirst({
-    where: { id: userId },
-    include: {
-      linkedInAccounts: {
-        where: { id: accountId },
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          profileUrl: true,
-          accessType: true,
-        },
-      },
-      organizationMemberships: {
-        select: {
-          orgId: true,
-        },
-      },
-    },
-  });
-
-  if (row === null) {
-    return null;
-  }
-
-  const { linkedInAccounts, ...user } = row;
-
-  return {
-    user,
-    account: linkedInAccounts[0] ?? null,
-    memberships: row.organizationMemberships,
-  };
 }
 
 /**

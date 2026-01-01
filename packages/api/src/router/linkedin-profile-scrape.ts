@@ -1,4 +1,3 @@
-import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
@@ -6,7 +5,7 @@ import type { Prisma, PrismaClient } from "@sassy/db";
 import { LinkedInProfileScrapeService } from "@sassy/apify-runners/linkedin-profile-scrape-service";
 import { S3BucketService } from "@sassy/s3";
 
-import { protectedProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure } from "../trpc";
 import {
   checkExistLinkedInProfile,
   findExistingLinkedInProfile,
@@ -191,131 +190,133 @@ function saveProfileInBackground(
   });
 }
 
-export const linkedinProfileScrapeRouter = {
-  /**
-   * Scrape a single LinkedIn profile.
-   * Returns cached data if exists, otherwise scrapes from Apify.
-   * Entire operation runs to completion even if user closes connection.
-   */
-  scrapeSingleProfile: protectedProcedure
-    .input(z.object({ url: z.string().url() }))
-    .mutation(async ({ ctx, input }) => {
-      // Start entire operation immediately as fire-and-forget
-      // This ensures completion even if user disconnects at any point
-      const operationPromise = (async () => {
-        // 1) Check cache first
-        const existing = await findExistingLinkedInProfile(ctx, input.url);
-        if (existing) {
+export const linkedinProfileScrapeRouter = () =>
+  createTRPCRouter({
+    /**
+     * Scrape a single LinkedIn profile.
+     * Returns cached data if exists, otherwise scrapes from Apify.
+     * Entire operation runs to completion even if user closes connection.
+     */
+    scrapeSingleProfile: protectedProcedure
+      .input(z.object({ url: z.string().url() }))
+      .mutation(async ({ ctx, input }) => {
+        // Start entire operation immediately as fire-and-forget
+        // This ensures completion even if user disconnects at any point
+        const operationPromise = (async () => {
+          // 1) Check cache first
+          const existing = await findExistingLinkedInProfile(ctx, input.url);
+          if (existing) {
+            console.log(
+              "[linkedin-profile-scrape] Cache hit for:",
+              normalizeLinkedInUrl(input.url),
+            );
+            return { type: "cached" as const, data: existing };
+          }
+
           console.log(
-            "[linkedin-profile-scrape] Cache hit for:",
-            normalizeLinkedInUrl(input.url),
-          );
-          return { type: "cached" as const, data: existing };
-        }
-
-        console.log("[linkedin-profile-scrape] Cache miss, scraping:", input.url);
-
-        // 2) Scrape from Apify
-        const scraped = await scrapeService.scrapeSingleProfile({
-          profileUrl: input.url,
-        });
-
-        // 3) Save to DB in background
-        if (scraped) {
-          saveProfileInBackground(
-            ctx.db,
+            "[linkedin-profile-scrape] Cache miss, scraping:",
             input.url,
-            scraped as Record<string, unknown>,
           );
-        }
 
-        return { type: "scraped" as const, data: scraped };
-      })();
-
-      // Attach error handler for fire-and-forget (prevents unhandled rejection)
-      operationPromise.catch((err) => {
-        console.error("[linkedin-profile-scrape] Operation failed:", err);
-      });
-
-      // Await to return data (if connection still alive)
-      const result = await operationPromise;
-
-      if (result.type === "cached") {
-        return result.data;
-      }
-
-      if (!result.data) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "No data returned from Apify",
-        });
-      }
-
-      return result.data;
-    }),
-
-  /**
-   * Scrape multiple LinkedIn profiles.
-   * Returns cached data for existing profiles, scrapes missing ones from Apify.
-   * Entire operation runs to completion even if user closes connection.
-   */
-  scrapeManyProfiles: protectedProcedure
-    .input(z.object({ urls: z.array(z.string().url()) }))
-    .mutation(async ({ ctx, input }) => {
-      if (input.urls.length === 0) {
-        return { cached: [], scraped: [] };
-      }
-
-      // Start entire operation immediately as fire-and-forget
-      // This ensures completion even if user disconnects at any point
-      const operationPromise = (async () => {
-        // 1) Check which URLs already exist
-        const { existingUrls, toScrapeUrls } = await checkExistLinkedInProfile(
-          ctx,
-          input.urls,
-        );
-
-        // 2) Fetch cached profiles
-        const cachedProfiles =
-          existingUrls.length > 0
-            ? await ctx.db.linkedInProfile.findMany({
-                where: { linkedinUrl: { in: existingUrls } },
-              })
-            : [];
-
-        console.log(
-          `[linkedin-profile-scrape] Cache: ${cachedProfiles.length} hits, ${toScrapeUrls.length} to scrape`,
-        );
-
-        // 3) Scrape missing profiles
-        let scrapedProfiles: unknown[] = [];
-        if (toScrapeUrls.length > 0) {
-          scrapedProfiles = await scrapeService.scrapeManyProfiles({
-            profileUrls: toScrapeUrls,
+          // 2) Scrape from Apify
+          const scraped = await scrapeService.scrapeSingleProfile({
+            profileUrl: input.url,
           });
 
-          // 4) Save all scraped profiles in background
-          for (const profile of scrapedProfiles) {
-            const data = profile as Record<string, unknown>;
-            const url =
-              (data.linkedinUrl as string) ??
-              (data.originalQuery as { query?: string })?.query ??
-              "";
-            if (url) {
-              saveProfileInBackground(ctx.db, url, data);
-            }
+          // 3) Save to DB in background
+          if (scraped) {
+            saveProfileInBackground(
+              ctx.db,
+              input.url,
+              scraped as Record<string, unknown>,
+            );
           }
+
+          return { type: "scraped" as const, data: scraped };
+        })();
+
+        // Attach error handler for fire-and-forget (prevents unhandled rejection)
+        operationPromise.catch((err) => {
+          console.error("[linkedin-profile-scrape] Operation failed:", err);
+        });
+
+        // Await to return data (if connection still alive)
+        const result = await operationPromise;
+
+        if (result.type === "cached") {
+          return result.data;
         }
 
-        return { cached: cachedProfiles, scraped: scrapedProfiles };
-      })();
+        if (!result.data) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "No data returned from Apify",
+          });
+        }
 
-      // Attach error handler for fire-and-forget (prevents unhandled rejection)
-      operationPromise.catch((err) => {
-        console.error("[linkedin-profile-scrape] Operation failed:", err);
-      });
+        return result.data;
+      }),
 
-      // Await to return data (if connection still alive)
-      return operationPromise;
-    }),
-} satisfies TRPCRouterRecord;
+    /**
+     * Scrape multiple LinkedIn profiles.
+     * Returns cached data for existing profiles, scrapes missing ones from Apify.
+     * Entire operation runs to completion even if user closes connection.
+     */
+    scrapeManyProfiles: protectedProcedure
+      .input(z.object({ urls: z.array(z.string().url()) }))
+      .mutation(async ({ ctx, input }) => {
+        if (input.urls.length === 0) {
+          return { cached: [], scraped: [] };
+        }
+
+        // Start entire operation immediately as fire-and-forget
+        // This ensures completion even if user disconnects at any point
+        const operationPromise = (async () => {
+          // 1) Check which URLs already exist
+          const { existingUrls, toScrapeUrls } =
+            await checkExistLinkedInProfile(ctx, input.urls);
+
+          // 2) Fetch cached profiles
+          const cachedProfiles =
+            existingUrls.length > 0
+              ? await ctx.db.linkedInProfile.findMany({
+                  where: { linkedinUrl: { in: existingUrls } },
+                })
+              : [];
+
+          console.log(
+            `[linkedin-profile-scrape] Cache: ${cachedProfiles.length} hits, ${toScrapeUrls.length} to scrape`,
+          );
+
+          // 3) Scrape missing profiles
+          let scrapedProfiles: unknown[] = [];
+          if (toScrapeUrls.length > 0) {
+            scrapedProfiles = await scrapeService.scrapeManyProfiles({
+              profileUrls: toScrapeUrls,
+            });
+
+            // 4) Save all scraped profiles in background
+            for (const profile of scrapedProfiles) {
+              const data = profile as Record<string, unknown>;
+              const url =
+                (data.linkedinUrl as string) ??
+                (data.originalQuery as { query?: string })?.query ??
+                "";
+              if (url) {
+                saveProfileInBackground(ctx.db, url, data);
+              }
+            }
+          }
+
+          return { cached: cachedProfiles, scraped: scrapedProfiles };
+        })();
+
+        // Attach error handler for fire-and-forget (prevents unhandled rejection)
+        operationPromise.catch((err) => {
+          console.error("[linkedin-profile-scrape] Operation failed:", err);
+        });
+
+        // Await to return data (if connection still alive)
+        return operationPromise;
+      }),
+  });

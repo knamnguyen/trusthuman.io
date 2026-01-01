@@ -39,7 +39,7 @@ describe("BrowserJobWorker", () => {
     await db.linkedInAccount.create({
       data: {
         id: accountId,
-        userId,
+        ownerId: userId,
         email: "test@email.com",
         status: "ACTIVE",
         browserProfileId: "123",
