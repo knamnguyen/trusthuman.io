@@ -1,6 +1,6 @@
 import { storage } from "wxt/storage";
 
-import type { CommentData } from "../stores/saved-profile-store";
+import type { CommentData } from "../../stores/saved-profile-store";
 
 interface LinkedInAuth {
   cookie: string;
@@ -59,8 +59,12 @@ const extractProfilePicUrl = (imageObj: unknown): string | null => {
 
     const firstAttr = attributes[0] as Record<string, unknown>;
     const detailData = firstAttr?.detailData as Record<string, unknown>;
-    const nonEntityProfilePicture = detailData?.nonEntityProfilePicture as Record<string, unknown>;
-    const vectorImage = nonEntityProfilePicture?.vectorImage as Record<string, unknown>;
+    const nonEntityProfilePicture =
+      detailData?.nonEntityProfilePicture as Record<string, unknown>;
+    const vectorImage = nonEntityProfilePicture?.vectorImage as Record<
+      string,
+      unknown
+    >;
 
     if (!vectorImage) return null;
 
@@ -178,7 +182,11 @@ export const parseCommentsFromVoyagerResponse = (
       const actorImage = safeGet<unknown>(entity, ["actor", "image"]);
       const postAuthorPhotoUrl = extractProfilePicUrl(actorImage);
       const postAuthorProfileUrl = cleanProfileUrl(
-        safeGet<string>(entity, ["actor", "navigationContext", "actionTarget"]) ?? null,
+        safeGet<string>(entity, [
+          "actor",
+          "navigationContext",
+          "actionTarget",
+        ]) ?? null,
       );
 
       const updateData: UpdateData = {

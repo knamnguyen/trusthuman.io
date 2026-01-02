@@ -43,11 +43,7 @@ interface ToolDropdownProps {
 }
 
 // Tool dropdown component - accepts optional items prop for real data
-export function ToolDropdown({
-  trigger,
-  items,
-  isLoading,
-}: ToolDropdownProps) {
+export function ToolDropdown({ trigger, items, isLoading }: ToolDropdownProps) {
   // Show loading state if data is being fetched
   if (isLoading) {
     return <div className="relative">{trigger}</div>;

@@ -5,7 +5,8 @@
 [*] check urn(s) data collection while scraping posts
 => contained inside data-urn => just save this to postAlternateUrn (single item list)
 
-[] needs organization switcher manually in sidebar chrome extne
+[] needs organization switcher manually in sidebar chrome extension (get from clerk for single source of truth)
+
 [] needs check in with Lam on webapp logic for getting user current linkedin account
 [] webapp needs linkedin account switcher
 

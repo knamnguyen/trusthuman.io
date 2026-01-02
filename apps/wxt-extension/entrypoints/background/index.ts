@@ -103,6 +103,7 @@ export default defineBackground(() => {
             hasSession: !!clerk.session,
             sessionId: clerk.session?.id,
             userId: clerk.user?.id,
+            organizationId: clerk.organization?.id,
           });
 
           // Notify ALL LinkedIn content scripts of auth state change

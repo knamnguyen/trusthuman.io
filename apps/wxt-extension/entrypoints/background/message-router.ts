@@ -76,7 +76,21 @@ export class MessageRouter {
           session: clerk.session
             ? {
                 id: clerk.session.id,
-                lastActiveToken: clerk.session.lastActiveToken,
+                lastActiveToken: clerk.session.lastActiveToken
+                  ? {
+                      jwt: clerk.session.lastActiveToken.getRawString(),
+                    }
+                  : null,
+              }
+            : null,
+          organization: clerk.organization
+            ? {
+                id: clerk.organization.id,
+                name: clerk.organization.name,
+                slug: clerk.organization.slug,
+                imageUrl: clerk.organization.imageUrl,
+                membersCount: clerk.organization.membersCount,
+                maxAllowedMemberships: clerk.organization.maxAllowedMemberships,
               }
             : null,
         };
@@ -84,7 +98,9 @@ export class MessageRouter {
         console.log("MessageRouter: Sending auth status response:", {
           isSignedIn: authStatus.isSignedIn,
           userId: authStatus.user?.id,
-          sessionId: authStatus.session?.id
+          sessionId: authStatus.session?.id,
+          organizationId: authStatus.organization?.id,
+          organizationName: authStatus.organization?.name,
         });
 
         sendResponse({ success: true, data: authStatus });

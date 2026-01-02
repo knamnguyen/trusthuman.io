@@ -168,12 +168,23 @@ export const useSavedProfileStore = create<SavedProfileStore>((set) => ({
       return;
     }
 
+    console.log("🔍 Processing comments:", {
+      totalComments: allComments.length,
+      profileName,
+      sampleAuthors: allComments.slice(0, 5).map(c => c.author),
+    });
+
     // Filter to only comments by this author
     const authorComments = allComments.filter(
       (c) =>
         c.author &&
         c.author.toLowerCase().includes(profileName.toLowerCase()),
     );
+
+    console.log("✅ Filtered comments:", {
+      matchedCount: authorComments.length,
+      profileNameLower: profileName.toLowerCase(),
+    });
 
     const { stats, rankings } = computeStatsAndRankings(
       authorComments,

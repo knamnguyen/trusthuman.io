@@ -17,6 +17,7 @@
 
 import { create } from "zustand";
 
+import { useAuthStore } from "../../../stores/auth-store";
 import { getTrpcClient } from "../../../lib/trpc/client";
 import {
   extractLinkedInProfileFromPage,
@@ -161,10 +162,10 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
       // Extract current LinkedIn profile from page
       const currentLinkedIn = extractLinkedInProfileFromPage();
 
-      // Fetch organization first
-      const org = await trpc.organization.getCurrent.query();
+      // Get organization from auth store (no API call needed!)
+      const authOrg = useAuthStore.getState().organization;
 
-      if (!org) {
+      if (!authOrg) {
         set({
           organization: null,
           accounts: [],
@@ -177,6 +178,16 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
         });
         return;
       }
+
+      // Map auth org to account store org format
+      const org: Organization = {
+        id: authOrg.id,
+        name: authOrg.name,
+        purchasedSlots: authOrg.maxAllowedMemberships,
+        stripeCustomerId: null, // Not available from Clerk
+        createdAt: new Date(), // Not available from Clerk
+        role: "admin", // Would need to get from organizationMemberships if needed
+      };
 
       // Fetch accounts for the organization
       const accounts = await trpc.account.listByOrg.query({

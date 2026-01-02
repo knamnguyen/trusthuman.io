@@ -1,7 +1,7 @@
 import {
+  BarChart3,
   Feather,
   Hash,
-  Mail,
   Upload,
   User,
 } from "lucide-react";
@@ -27,6 +27,7 @@ import { AccountMismatchOverlay } from "./_components/AccountMismatchOverlay";
 import { SignInOverlay } from "./_components/SignInOverlay";
 import { ToggleButton } from "./_components/ToggleButton";
 import { AccountTab } from "./account-tab/AccountTab";
+import { AnalyticsTab } from "./analytics-tab/AnalyticsTab";
 import { ExploreTab } from "./explore-tab/ExploreTab";
 import {
   SIDEBAR_TABS,
@@ -41,7 +42,7 @@ import { insertIntoCurrentField } from "./utils";
 // Tab items for the expandable tabs menu
 const tabs = [
   { title: "Account", icon: User },
-  { title: "Mail", icon: Mail },
+  { title: "Analytics", icon: BarChart3 },
   { title: "Explore", icon: Hash },
   { title: "Share", icon: Upload },
   { title: "Write", icon: Feather },
@@ -312,8 +313,8 @@ export function LinkedInSidebar({ onClose }: LinkedInSidebarProps) {
         {/* Tab 0: Account - Auth & Organization Info */}
         {selectedTab === 0 && <AccountTab />}
 
-        {/* Tab 1: Mail - Comment Detection Stats */}
-        {selectedTab === 1 && <div>Mail content coming soon...</div>}
+        {/* Tab 1: Analytics - Profile Views */}
+        {selectedTab === 1 && <AnalyticsTab />}
 
         {/* Tab 2: Explore - Feed Explorer */}
         {selectedTab === 2 && <ExploreTab />}

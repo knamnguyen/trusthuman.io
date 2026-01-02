@@ -21,6 +21,7 @@ interface AuthState {
   isSigningOut: boolean;
   user: AuthStatus["user"];
   session: AuthStatus["session"];
+  organization: AuthStatus["organization"];
 }
 
 interface AuthActions {
@@ -48,6 +49,7 @@ const initialState: AuthState = {
   isSigningOut: false,
   user: null,
   session: null,
+  organization: null,
 };
 
 export const useAuthStore = create<AuthStore>((set) => ({
@@ -59,11 +61,13 @@ export const useAuthStore = create<AuthStore>((set) => ({
       console.log("AuthStore: Fetched auth status:", {
         isSignedIn: status.isSignedIn,
         userId: status.user?.id,
+        organizationId: status.organization?.id,
       });
       set({
         isSignedIn: status.isSignedIn,
         user: status.user,
         session: status.session,
+        organization: status.organization,
         isLoaded: true,
       });
     } catch (error) {
@@ -82,6 +86,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
           isSignedIn: false,
           user: null,
           session: null,
+          organization: null,
         });
       }
       return success;
@@ -98,6 +103,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
       isSignedIn: false,
       user: null,
       session: null,
+      organization: null,
     });
   },
 }));

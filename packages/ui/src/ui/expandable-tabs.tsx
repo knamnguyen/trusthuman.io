@@ -51,7 +51,12 @@ const spanVariants = {
   exit: { width: 0, opacity: 0 },
 };
 
-const transition = { delay: 0.1, type: "spring" as const, bounce: 0, duration: 0.6 };
+const transition = {
+  delay: 0.1,
+  type: "spring" as const,
+  bounce: 0,
+  duration: 0.6,
+};
 
 export function ExpandableTabs({
   tabs,
@@ -73,14 +78,14 @@ export function ExpandableTabs({
   };
 
   const Separator = () => (
-    <div className="mx-1 h-[24px] w-[1.2px] bg-border" aria-hidden="true" />
+    <div className="bg-border mx-1 h-[24px] w-[1.2px]" aria-hidden="true" />
   );
 
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center gap-2 rounded-2xl border bg-background p-1 shadow-sm",
-        className
+        "bg-background flex flex-wrap items-center gap-2 rounded-2xl border p-1 shadow-sm",
+        className,
       )}
     >
       {tabs.map((tab, index) => {
@@ -102,7 +107,7 @@ export function ExpandableTabs({
               "relative flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-colors duration-300",
               selected === index
                 ? cn("bg-muted", activeColor)
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground",
             )}
           >
             <Icon size={20} />

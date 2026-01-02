@@ -45,6 +45,18 @@ export interface AuthStatus {
       jwt: string;
     } | null;
   } | null;
+  /**
+   * Active organization from Clerk
+   * Updated automatically when user switches orgs via clerk.setActive()
+   */
+  organization: {
+    id: string;
+    name: string;
+    slug: string | null;
+    imageUrl: string;
+    membersCount: number | undefined;
+    maxAllowedMemberships: number;
+  } | null;
 }
 
 /**

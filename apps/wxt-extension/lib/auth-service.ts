@@ -26,6 +26,12 @@ export interface AuthStatus {
       jwt: string;
     } | null;
   } | null;
+  organization: {
+    id: string;
+    name: string;
+    slug: string;
+    role: string;
+  } | null;
 }
 
 export interface BackgroundMessageRequest {

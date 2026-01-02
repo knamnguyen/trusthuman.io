@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { IoPersonAdd } from "react-icons/io5";
 
+import type { ProfileInfo } from "./extract-profile-info";
 import { useSavedProfileStore } from "../stores/saved-profile-store";
 import { SIDEBAR_TABS, useSidebarStore } from "../stores/sidebar-store";
-import { fetchMemberComments } from "../utils/linkedin-comments-fetcher";
-import type { ProfileInfo } from "./extract-profile-info";
+import { fetchMemberComments } from "../utils/data-fetch-mimic/linkedin-comments-fetcher";
 import { extractProfileInfo } from "./extract-profile-info";
 
 interface SaveProfileButtonProps {
@@ -17,7 +17,10 @@ interface SaveProfileButtonProps {
  * Used to save profile of commenter or post author.
  * Uses inline styles since it renders via portal outside shadow DOM.
  */
-export function SaveProfileButton({ anchorElement, extractProfile }: SaveProfileButtonProps) {
+export function SaveProfileButton({
+  anchorElement,
+  extractProfile,
+}: SaveProfileButtonProps) {
   const [isHovered, setIsHovered] = useState(false);
   const { setSelectedProfile, processComments, setIsLoadingComments } =
     useSavedProfileStore();

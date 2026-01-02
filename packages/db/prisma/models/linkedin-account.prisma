@@ -30,6 +30,9 @@ model LinkedInAccount {
   targetProfiles          TargetProfile[]
   organizationMemberships OrganizationMember[]
   buildTargetListJobs     BuildTargetListJob[]
+
+  @@index([organizationId])
+  @@index([ownerId])
 }
 
 enum LinkedInAccountStatus {

@@ -43,11 +43,7 @@ interface BlogDropdownProps {
 }
 
 // Blog dropdown component - accepts optional items prop for real data
-export function BlogDropdown({
-  trigger,
-  items,
-  isLoading,
-}: BlogDropdownProps) {
+export function BlogDropdown({ trigger, items, isLoading }: BlogDropdownProps) {
   // Show loading state if data is being fetched
   if (isLoading) {
     return <div className="relative">{trigger}</div>;

@@ -11,6 +11,9 @@ CREATE TYPE "BrowserInstanceStatus" AS ENUM ('INITIALIZING', 'RUNNING', 'STOPPED
 CREATE TYPE "BrowserJobStatus" AS ENUM ('QUEUED', 'RUNNING', 'TERMINATED', 'COMPLETED', 'FAILED');
 
 -- CreateEnum
+CREATE TYPE "CommentStatus" AS ENUM ('DRAFT', 'SCHEDULED', 'QUEUED', 'POSTING', 'POSTED', 'FAILED', 'CANCELLED');
+
+-- CreateEnum
 CREATE TYPE "LinkedInAccountStatus" AS ENUM ('ACTIVE', 'CONNECTING', 'SUSPENDED');
 
 -- CreateEnum
@@ -72,9 +75,11 @@ CREATE TABLE "Comment" (
     "authorAvatarUrl" TEXT,
     "authorHeadline" TEXT,
     "comment" TEXT NOT NULL,
+    "originalAiComment" TEXT,
     "postAlternateUrns" TEXT[],
     "commentedAt" TIMESTAMP(3),
     "isAutoCommented" BOOLEAN NOT NULL DEFAULT true,
+    "status" "CommentStatus" NOT NULL DEFAULT 'DRAFT',
     "schedulePostAt" TIMESTAMP(3),
     "accountId" TEXT NOT NULL,
     "autoCommentRunId" TEXT,
@@ -415,6 +420,9 @@ CREATE INDEX "Comment_postUrn_idx" ON "Comment"("postUrn");
 CREATE INDEX "Comment_commentedAt_idx" ON "Comment"("commentedAt");
 
 -- CreateIndex
+CREATE INDEX "Comment_status_idx" ON "Comment"("status");
+
+-- CreateIndex
 CREATE INDEX "Comment_postAlternateUrns_idx" ON "Comment" USING GIN ("postAlternateUrns");
 
 -- CreateIndex
@@ -422,6 +430,12 @@ CREATE UNIQUE INDEX "LinkedInAccount_email_key" ON "LinkedInAccount"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "LinkedInAccount_profileSlug_key" ON "LinkedInAccount"("profileSlug");
+
+-- CreateIndex
+CREATE INDEX "LinkedInAccount_organizationId_idx" ON "LinkedInAccount"("organizationId");
+
+-- CreateIndex
+CREATE INDEX "LinkedInAccount_ownerId_idx" ON "LinkedInAccount"("ownerId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "LinkedInProfile_urn_key" ON "LinkedInProfile"("urn");

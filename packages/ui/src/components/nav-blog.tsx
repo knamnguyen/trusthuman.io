@@ -8,7 +8,6 @@ import { cn } from "@sassy/ui/utils";
 
 import type { DropdownItem } from "./nav-blog/blog-dropdown";
 import { BLOG_LABEL, BlogDropdown } from "./nav-blog/blog-dropdown";
-import { TOOLS_LABEL, ToolDropdown } from "./nav-tools/tool-dropdown";
 // Import dropdown data and components
 import {
   alternativesData,
@@ -18,6 +17,7 @@ import {
   growthDirectoriesData,
 } from "./nav-blog/dropdown-data";
 import { NavDropdownContainer } from "./nav-blog/nav-dropdown-container";
+import { ToolDropdown, TOOLS_LABEL } from "./nav-tools/tool-dropdown";
 
 // Re-export DropdownItem for consumers
 export type { DropdownItem };
@@ -180,7 +180,12 @@ interface NavBlogProps {
   toolItemsLoading?: boolean;
 }
 
-export function NavBlog({ blogItems, blogItemsLoading, toolItems, toolItemsLoading }: NavBlogProps = {}) {
+export function NavBlog({
+  blogItems,
+  blogItemsLoading,
+  toolItems,
+  toolItemsLoading,
+}: NavBlogProps = {}) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (

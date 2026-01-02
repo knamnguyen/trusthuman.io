@@ -3,7 +3,7 @@ import { create } from "zustand";
 // Tab indices for the sidebar
 export const SIDEBAR_TABS = {
   ACCOUNT: 0,
-  MAIL: 1,
+  ANALYTICS: 1,
   EXPLORE: 2,
   SHARE: 3,
   WRITE: 4,

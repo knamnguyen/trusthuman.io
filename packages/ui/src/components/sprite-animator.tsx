@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 interface SpriteAnimatorProps {
   /** URL to the sprite image */
@@ -101,7 +101,15 @@ function SpriteAnimator({
     }, 1000 / fps);
 
     return () => clearInterval(interval);
-  }, [shouldAnimate, frameCount, fps, stopLastFrame, delayBetweenCycles, onEnd, isPaused]);
+  }, [
+    shouldAnimate,
+    frameCount,
+    fps,
+    stopLastFrame,
+    delayBetweenCycles,
+    onEnd,
+    isPaused,
+  ]);
 
   const backgroundPosition = useMemo(() => {
     if (direction === "horizontal") {

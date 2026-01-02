@@ -1,10 +1,18 @@
 import ReactDOM from "react-dom/client";
 
-import App from "./App";
 import { loadFonts } from "../../assets/fonts-loader";
-import { initAuthStoreListener, useAuthStore } from "../../stores/auth-store";
 import { TRPCReactProvider } from "../../lib/trpc/client";
+import { initAuthStoreListener, useAuthStore } from "../../stores/auth-store";
+import App from "./App";
 import { useAccountStore } from "./stores";
+import { contentImpressionsCollector } from "./utils/data-fetch-mimic/content-impressions-collector";
+import {
+  commentsCollector,
+  postsCollector,
+} from "./utils/data-fetch-mimic/dashboard-activity-collectors";
+import { followersCollector } from "./utils/data-fetch-mimic/followers-collector";
+import { profileImpressionsCollector } from "./utils/data-fetch-mimic/profile-impressions-collector";
+import { profileViewsCollector } from "./utils/data-fetch-mimic/profile-views-collector";
 
 import "../../assets/globals.css";
 
@@ -35,12 +43,55 @@ export default defineContentScript({
     useAccountStore.getState().refreshCurrentLinkedIn();
 
     // Fetch initial auth status and account data if already signed in
-    useAuthStore.getState().fetchAuthStatus().then(() => {
-      const { isSignedIn } = useAuthStore.getState();
-      if (isSignedIn) {
-        console.log("EngageKit WXT: User already signed in, fetching account data");
-        useAccountStore.getState().fetchAccountData();
-      }
+    useAuthStore
+      .getState()
+      .fetchAuthStatus()
+      .then(() => {
+        const { isSignedIn } = useAuthStore.getState();
+        if (isSignedIn) {
+          console.log(
+            "EngageKit WXT: User already signed in, fetching account data",
+          );
+          useAccountStore.getState().fetchAccountData();
+        }
+      });
+
+    // Auto-collect profile views (non-blocking, rate-limited to once per 24h)
+    profileViewsCollector.autoCollect().catch((err) => {
+      console.error(
+        "EngageKit WXT: Failed to auto-collect profile views:",
+        err,
+      );
+    });
+
+    // Auto-collect dashboard activity (posts and comments)
+    postsCollector.autoCollect().catch((err) => {
+      console.error("EngageKit WXT: Failed to auto-collect posts:", err);
+    });
+
+    commentsCollector.autoCollect().catch((err) => {
+      console.error("EngageKit WXT: Failed to auto-collect comments:", err);
+    });
+
+    // Auto-collect followers
+    followersCollector.autoCollect().catch((err) => {
+      console.error("EngageKit WXT: Failed to auto-collect followers:", err);
+    });
+
+    // Auto-collect profile impressions
+    profileImpressionsCollector.autoCollect().catch((err) => {
+      console.error(
+        "EngageKit WXT: Failed to auto-collect profile impressions:",
+        err,
+      );
+    });
+
+    // Auto-collect content impressions
+    contentImpressionsCollector.autoCollect().catch((err) => {
+      console.error(
+        "EngageKit WXT: Failed to auto-collect content impressions:",
+        err,
+      );
     });
 
     const ui = await createShadowRootUi(ctx, {
@@ -61,7 +112,7 @@ export default defineContentScript({
         root.render(
           <TRPCReactProvider>
             <App shadowRoot={container} />
-          </TRPCReactProvider>
+          </TRPCReactProvider>,
         );
 
         console.log("EngageKit WXT: Sidebar mounted");
