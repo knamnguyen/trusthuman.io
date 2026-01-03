@@ -6,20 +6,21 @@ catalog:
   eslint: ^9.19.0
   prettier: ^3.4.2
   tailwindcss: ^4.1.8
-  "@tailwindcss/postcss": ^4.1.8
+  '@tailwindcss/postcss': ^4.1.8
   typescript: ^5.7.3
   zod: ^3.24.1
   esbuild: ^0.25.5
   date-fns: ^4.1.0
-  "@tanstack/react-query": ^5.67.1
-  "@trpc/client": ^11.0.0-rc.824
-  "@trpc/tanstack-react-query": ^11.0.0-rc.824
-  "@trpc/server": ^11.0.0-rc.824
-  "@types/node": ^22.10.10
+  '@tanstack/react-query': ^5.67.1
+  '@trpc/client': ^11.0.0-rc.824
+  '@trpc/tanstack-react-query': ^11.0.0-rc.824
+  '@trpc/server': ^11.0.0-rc.824
+  '@types/node': ^22.10.10
 catalogs:
   react19:
     react: 19.0.0
     react-dom: 19.0.0
-    "@types/react": ^19.0.0
-    "@types/react-dom": ^19.0.0
-ignoredBuiltDependencies: []
+    '@types/react': ^19.0.0
+    '@types/react-dom': ^19.0.0
+onlyBuiltDependencies:
+  - bun

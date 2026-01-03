@@ -38,10 +38,19 @@ const getServerUrl = (): string => {
   // - Worktree: http://localhost:3010/api/trpc
   // - Production: https://engagekit.io/api/trpc
   // const baseUrl = getSyncHostUrl();
-  const baseUrl = "https://cow-pretty-titmouse.ngrok-free.app";
-  const url = `${baseUrl}/api/trpc`;
-  console.log("tRPC Client: Server URL:", url);
-  return url;
+  let baseUrl: string;
+
+  if (import.meta.env.VITE_NGROK_URL) {
+    baseUrl = import.meta.env.VITE_NGROK_URL;
+  } else if (import.meta.env.VITE_APP_URL) {
+    baseUrl = import.meta.env.VITE_APP_URL;
+  } else {
+    // TODO: to be changed to api.engagekit.io when we move to a vps
+    baseUrl = "https://engagekit.io";
+  }
+
+  console.log("tRPC Client: Server base URL:", baseUrl);
+  return `${baseUrl}/api/trpc`;
 };
 
 /**

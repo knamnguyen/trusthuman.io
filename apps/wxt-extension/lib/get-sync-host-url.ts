@@ -7,19 +7,19 @@
  * - Worktrees: http://localhost:3010, 3020, etc. (from .env.local override)
  *
  * In production:
- * - Uses VITE_APP_URL or falls back to production domain
+ * - Uses VITE_NEXTJS_URL or falls back to production domain
  */
 export function getSyncHostUrl(): string {
-  // VITE_APP_URL is set in .env (or .env.local for worktrees)
+  // VITE_NEXTJS_URL is set in .env (or .env.local for worktrees)
   // Examples:
   // - Main repo: http://localhost:3000
   // - Worktree: http://localhost:3010
   // - Production: https://engagekit.io
-  const syncHost = import.meta.env.VITE_APP_URL;
+  const syncHost = import.meta.env.VITE_NEXTJS_URL;
 
   if (!syncHost) {
     throw new Error(
-      "VITE_APP_URL is not defined. Please check your .env file."
+      "VITE_NEXTJS_URL is not defined. Please check your .env file.",
     );
   }
 

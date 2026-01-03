@@ -6,12 +6,26 @@ import { createTRPCContext } from "./trpc";
 import { browserJobs } from "./utils/browser-job";
 
 // schedule browser jobs to run daily at 13:00 UTC
-const startAt = new Date();
-startAt.setUTCHours(13, 0, 0, 0);
-void browserJobs.scheduleJobsEvery(startAt, 24 * 60 * 60_000);
+// const startAt = new Date();
+// startAt.setUTCHours(13, 0, 0, 0);
+// void browserJobs.scheduleJobsEvery(startAt, 24 * 60 * 60_000);
+
+const VITE_APP_URL = process.env.VITE_APP_URL;
+if (!VITE_APP_URL) {
+  throw new Error("VITE_APP_URL is not defined in environment variables");
+}
+
+const url = new URL(VITE_APP_URL);
+
+// This entire function call will be removed in production!
+import.meta.hot.dispose(() => {
+  console.log("dispose");
+});
+
+console.log(`Starting tRPC server at port ${url.port}...`);
 
 Bun.serve({
-  port: Number(process.env.PORT ?? 3000),
+  port: url.port,
   routes: {
     "/api/trpc/*": async (req) => {
       const res = await fetchRequestHandler({
@@ -37,3 +51,5 @@ Bun.serve({
     },
   },
 });
+
+console.log(`tRPC server running at ${VITE_APP_URL}/api/trpc`);

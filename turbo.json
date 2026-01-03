@@ -81,7 +81,8 @@
     "JWT_SECRET",
     "DBOS_SYSTEM_DATABASE_URL",
     "NEXTJS_URL",
-    "PORT"
+    "PORT",
+    "VITE_APP_URL"
   ],
   "globalPassThroughEnv": [
     "NODE_ENV",
