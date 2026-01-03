@@ -17,17 +17,23 @@ if (!VITE_APP_URL) {
 
 const url = new URL(VITE_APP_URL);
 
-// This entire function call will be removed in production!
-import.meta.hot.dispose(() => {
-  console.log("dispose");
-});
-
 console.log(`Starting tRPC server at port ${url.port}...`);
 
 Bun.serve({
   port: url.port,
   routes: {
     "/api/trpc/*": async (req) => {
+      if (req.method === "OPTIONS") {
+        return new Response(null, {
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Request-Method": "*",
+            "Access-Control-Allow-Methods": "OPTIONS, GET, POST",
+            "Access-Control-Allow-Headers": "*",
+          },
+        });
+      }
+
       const res = await fetchRequestHandler({
         endpoint: "/api/trpc",
         router: appRouter,
@@ -35,6 +41,7 @@ Bun.serve({
         createContext: () => {
           return createTRPCContext({
             headers: req.headers,
+            req,
           });
         },
         onError({ error, path }) {

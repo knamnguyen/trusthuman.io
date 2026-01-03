@@ -25,6 +25,7 @@ export const env = createEnv({
     LINKEDIN_PASSWORD_SECRET_KEY: z.string(),
     LINKEDIN_TWO_FA_SECRET_KEY: z.string(),
     HYPERBROWSER_API_KEY: z.string(),
+    VITE_APP_URL: z.string().url(),
   },
 
   /**
@@ -34,12 +35,14 @@ export const env = createEnv({
   client: {
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string(),
     NEXT_PUBLIC_CLERK_FRONTEND_API: z.string(),
+    NEXT_PUBLIC_API_URL: z.string().url(),
   },
   /**
    * Destructure all variables from `process.env` to make sure they aren't tree-shaken away.
    */
   experimental__runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
       process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
     NEXT_PUBLIC_CLERK_FRONTEND_API: process.env.NEXT_PUBLIC_CLERK_FRONTEND_API,

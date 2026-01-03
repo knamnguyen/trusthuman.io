@@ -1,8 +1,8 @@
 "use client";
 
 import type { QueryClient } from "@tanstack/react-query";
-import { createContext, useContext, useEffect, useState } from "react";
-import { QueryClientProvider, useQuery } from "@tanstack/react-query";
+import { createContext, useContext, useState } from "react";
+import { QueryClientProvider } from "@tanstack/react-query";
 import {
   createTRPCClient,
   httpBatchStreamLink,
@@ -14,10 +14,7 @@ import SuperJSON from "superjson";
 import type { AppRouter } from "@sassy/api";
 
 import { env } from "~/env";
-import {
-  useCurrentLinkedInAccountId,
-  useLinkedInAccountStore,
-} from "~/stores/linkedin-account-store";
+import { useLinkedInAccountStore } from "~/stores/linkedin-account-store";
 import { createQueryClient } from "./query-client";
 
 let clientQueryClientSingleton: QueryClient | undefined = undefined;
@@ -33,13 +30,6 @@ const getQueryClient = () => {
 
 // Export the context for backward compatibility
 export const { useTRPC, TRPCProvider } = createTRPCContext<AppRouter>();
-
-const getBaseUrl = () => {
-  if (typeof window !== "undefined") return window.location.origin;
-  if (env.VERCEL_URL) return `https://${env.VERCEL_URL}`;
-  // eslint-disable-next-line no-restricted-properties
-  return `http://localhost:${process.env.PORT ?? 3000}`;
-};
 
 type TRPCClient = ReturnType<typeof createTRPCClient<AppRouter>>;
 
@@ -57,8 +47,9 @@ export const getTrpcClient = (configGetter?: () => { accountId?: string }) => {
         }),
         httpBatchStreamLink({
           transformer: SuperJSON,
-          url: getBaseUrl() + "/api/trpc",
+          url: env.NEXT_PUBLIC_API_URL + "/api/trpc",
           headers() {
+            // find out how to pass clerk token in requests from csr
             const headers = new Headers();
             headers.set("x-trpc-source", "nextjs-ssr");
 
@@ -85,7 +76,7 @@ export const getTrpcClient = (configGetter?: () => { accountId?: string }) => {
       }),
       httpBatchStreamLink({
         transformer: SuperJSON,
-        url: getBaseUrl() + "/api/trpc",
+        url: env.NEXT_PUBLIC_API_URL + "/api/trpc",
         headers() {
           const headers = new Headers();
           headers.set("x-trpc-source", "nextjs-react");

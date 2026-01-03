@@ -49,8 +49,8 @@ export type DbUser = Prisma.UserGetPayload<{
 export interface TRPCContext {
   db: PrismaClient;
   user?: DbUser;
-  orgId?: string | null; // Active organization ID from Clerk org switcher
   headers: Headers;
+  req: Request;
   hyperbrowser: Hyperbrowser;
   browserJobs: typeof browserJobs;
   browserRegistry: BrowserSessionRegistry;
@@ -63,12 +63,16 @@ const hb = new Hyperbrowser({
 
 const ai = new AIService(env.GOOGLE_GENAI_API_KEY);
 
-export const createTRPCContext = (opts: { headers: Headers }): TRPCContext => {
+export const createTRPCContext = (opts: {
+  headers: Headers;
+  req: Request;
+}): TRPCContext => {
   const source = opts.headers.get("x-trpc-source");
   console.log(">>> tRPC Request from", source ?? "nextjs");
 
   return {
     db,
+    req: opts.req,
     headers: opts.headers,
     hyperbrowser: hb,
     browserJobs,
@@ -98,6 +102,7 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
 // Create Clerk client
 const clerkClient = createClerkClient({
   secretKey: process.env.CLERK_SECRET_KEY,
+  publishableKey: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
 });
 
 /**
@@ -200,19 +205,20 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
     });
   }
 
-  const { isAuthenticated, userId, orgId } = await auth();
+  const auth = await clerkClient.authenticateRequest(ctx.req);
+  const state = auth.toAuth();
 
-  if (!isAuthenticated) {
+  if (state === null || state.isAuthenticated === false) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
       message: "Not authenticated",
     });
   }
 
-  const clerkUser = await clerkClient.users.getUser(userId);
+  const clerkUser = await clerkClient.users.getUser(state.userId);
 
   const result = await getOrInsertUser(ctx.db, {
-    userId,
+    userId: state.userId,
     currentAccountId: accountId,
     clerkUser,
   });
@@ -228,7 +234,6 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
     ctx: {
       ...ctx, // Keep existing context with db and headers
       user: result.user, // Add the user to the context
-      orgId,
       account: result.account,
       memberships: result.memberships,
     },
