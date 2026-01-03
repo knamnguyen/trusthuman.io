@@ -1,10 +1,4 @@
-import {
-  BarChart3,
-  Feather,
-  Hash,
-  Upload,
-  User,
-} from "lucide-react";
+import { BarChart3, Feather, Hash, Upload, User } from "lucide-react";
 
 import { Button } from "@sassy/ui/button";
 import {
@@ -16,10 +10,7 @@ import {
 } from "@sassy/ui/card";
 import { ExpandableTabs } from "@sassy/ui/expandable-tabs";
 import { Label } from "@sassy/ui/label";
-import {
-  SheetContent,
-  SheetHeader,
-} from "@sassy/ui/sheet";
+import { SheetContent, SheetHeader } from "@sassy/ui/sheet";
 import { Switch } from "@sassy/ui/switch";
 
 import { useAuthStore } from "../../stores/auth-store";
@@ -309,7 +300,7 @@ export function LinkedInSidebar({ onClose }: LinkedInSidebarProps) {
           />
         </div>
       </SheetHeader>
-      <div className="relative flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto">
         {/* Tab 0: Account - Auth & Organization Info */}
         {selectedTab === 0 && <AccountTab />}
 

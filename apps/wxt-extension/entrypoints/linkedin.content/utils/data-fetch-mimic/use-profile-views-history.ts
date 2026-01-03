@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { storage } from "wxt/storage";
 
+import { useAccountStore } from "../../stores/account-store";
 import type { DataHistory, DataSnapshot } from "./data-collector";
 import type { ProfileViewData } from "./linkedin-personal-profile-view-fetcher";
 import { profileViewsCollector } from "./profile-views-collector";
@@ -26,10 +27,12 @@ export interface UseProfileViewsHistoryReturn {
  * Features:
  * - Loads history from storage on mount
  * - Watches for storage changes and updates automatically
+ * - Account-specific data (tied to current LinkedIn account)
  * - Provides manual refetch function
  * - Returns latest snapshot for easy access
  */
 export function useProfileViewsHistory(): UseProfileViewsHistoryReturn {
+  const accountId = useAccountStore((state) => state.currentLinkedIn.miniProfileId);
   const [history, setHistory] = useState<DataHistory<ProfileViewData>>({
     snapshots: [],
     lastFetchTime: null,
@@ -37,11 +40,12 @@ export function useProfileViewsHistory(): UseProfileViewsHistoryReturn {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load initial history
+  // Load initial history and reload when account changes
   useEffect(() => {
     const loadHistory = async () => {
       try {
-        const data = await profileViewsCollector.getHistory();
+        setIsLoading(true);
+        const data = await profileViewsCollector.getHistory(accountId);
         setHistory(data);
         setError(null);
       } catch (err) {
@@ -53,12 +57,15 @@ export function useProfileViewsHistory(): UseProfileViewsHistoryReturn {
     };
 
     loadHistory();
-  }, []);
+  }, [accountId]);
 
-  // Watch for storage changes
+  // Watch for storage changes (account-specific key)
   useEffect(() => {
+    if (!accountId) return;
+
+    const storageKey = `local:profile-views-${accountId}` as `local:${string}`;
     const unwatch = storage.watch<DataHistory<ProfileViewData>>(
-      "local:profile-views",
+      storageKey,
       (newValue) => {
         if (newValue) {
           setHistory(newValue);
@@ -67,14 +74,14 @@ export function useProfileViewsHistory(): UseProfileViewsHistoryReturn {
     );
 
     return () => unwatch();
-  }, []);
+  }, [accountId]);
 
   // Manual refetch function
   const refetch = async () => {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await profileViewsCollector.manualFetch();
+      const data = await profileViewsCollector.manualFetch(accountId);
       if (!data) {
         setError("Failed to fetch profile views");
       }

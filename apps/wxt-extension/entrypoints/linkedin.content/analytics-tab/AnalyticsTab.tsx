@@ -1,24 +1,39 @@
-import { BarChart3, Eye, MessageSquare, PenSquare, TrendingUp, Users } from "lucide-react";
+import { useState } from "react";
+import {
+  BarChart3,
+  Eye,
+  Mail,
+  MessageSquare,
+  PenSquare,
+  TrendingUp,
+  Users,
+} from "lucide-react";
 
 import { Button } from "@sassy/ui/button";
 
+import { useAccountStore } from "../stores/account-store";
+import { useContentImpressionsHistory } from "../utils/data-fetch-mimic/use-content-impressions-history";
 import {
   useCommentsHistory,
-  usePostsHistory,
+  // usePostsHistory, // COMMENTED OUT - Replaced with invite count
 } from "../utils/data-fetch-mimic/use-dashboard-activity-history";
-import { useContentImpressionsHistory } from "../utils/data-fetch-mimic/use-content-impressions-history";
 import { useFollowersHistory } from "../utils/data-fetch-mimic/use-followers-history";
+import { useInviteCountHistory } from "../utils/data-fetch-mimic/use-invite-count-history";
 import { useProfileImpressionsHistory } from "../utils/data-fetch-mimic/use-profile-impressions-history";
 import { useProfileViewsHistory } from "../utils/data-fetch-mimic/use-profile-views-history";
-import { CommentsChart } from "./CommentsChart";
-import { ContentImpressionsChart } from "./ContentImpressionsChart";
-import { FollowersChart } from "./FollowersChart";
 import { MetricCard } from "./MetricCard";
-import { PostsChart } from "./PostsChart";
-import { ProfileImpressionsChart } from "./ProfileImpressionsChart";
-import { ProfileViewsChart } from "./ProfileViewsChart";
+import { UnifiedChart } from "./UnifiedChart";
 
 export function AnalyticsTab() {
+  const accountId = useAccountStore(
+    (state) => state.currentLinkedIn.miniProfileId,
+  );
+
+  // Selection state for metrics to display on unified chart
+  const [selectedMetrics, setSelectedMetrics] = useState<Set<string>>(
+    new Set(["profileViews", "inviteCount", "comments"]), // Default: first 3 selected
+  );
+
   const {
     latest: profileViewsLatest,
     snapshots: profileViewsSnapshots,
@@ -28,14 +43,24 @@ export function AnalyticsTab() {
     refetch: profileViewsRefetch,
   } = useProfileViewsHistory();
 
+  // COMMENTED OUT - Replaced with invite count
+  // const {
+  //   latest: postsLatest,
+  //   snapshots: postsSnapshots,
+  //   lastFetchTime: postsLastFetch,
+  //   isLoading: postsLoading,
+  //   error: postsError,
+  //   refetch: postsRefetch,
+  // } = usePostsHistory();
+
   const {
-    latest: postsLatest,
-    snapshots: postsSnapshots,
-    lastFetchTime: postsLastFetch,
-    isLoading: postsLoading,
-    error: postsError,
-    refetch: postsRefetch,
-  } = usePostsHistory();
+    latest: inviteCountLatest,
+    snapshots: inviteCountSnapshots,
+    lastFetchTime: inviteCountLastFetch,
+    isLoading: inviteCountLoading,
+    error: inviteCountError,
+    refetch: inviteCountRefetch,
+  } = useInviteCountHistory();
 
   const {
     latest: commentsLatest,
@@ -73,43 +98,76 @@ export function AnalyticsTab() {
     refetch: contentImpressionsRefetch,
   } = useContentImpressionsHistory();
 
-  // Debug: Check what hooks are returning
-  console.log("📊 Analytics Tab State:", {
-    postsSnapshots: postsSnapshots.length,
-    commentsSnapshots: commentsSnapshots.length,
-    profileViewsSnapshots: profileViewsSnapshots.length,
-    followersSnapshots: followersSnapshots.length,
-    profileImpressionsSnapshots: profileImpressionsSnapshots.length,
-    contentImpressionsSnapshots: contentImpressionsSnapshots.length,
-  });
+  // Toggle metric selection
+  const toggleMetric = (metricId: string) => {
+    setSelectedMetrics((prev) => {
+      const next = new Set(prev);
+      if (next.has(metricId)) {
+        next.delete(metricId);
+      } else {
+        next.add(metricId);
+      }
+      return next;
+    });
+  };
 
   // Unified refresh - fetches all metrics at once for synchronized timestamps
   const refetchAll = async () => {
-    await Promise.all([
-      profileViewsRefetch(),
-      postsRefetch(),
-      commentsRefetch(),
-      followersRefetch(),
-      profileImpressionsRefetch(),
-      contentImpressionsRefetch(),
-    ]);
+    console.log("🔄 Refreshing all metrics...");
+    try {
+      await Promise.all([
+        profileViewsRefetch(),
+        // postsRefetch(), // COMMENTED OUT - Replaced with invite count
+        inviteCountRefetch(),
+        commentsRefetch(),
+        followersRefetch(),
+        profileImpressionsRefetch(),
+        contentImpressionsRefetch(),
+      ]);
+
+      console.log("✅ All metrics refresh initiated successfully");
+    } catch (error) {
+      console.error("❌ Refresh failed:", error);
+      throw error; // Re-throw to let UI handle the error
+    }
   };
 
-  // Clear all stored data
+  // Clear all stored data for the current account
   const clearAllData = async () => {
     if (
       window.confirm(
-        "Are you sure you want to clear all analytics data? This cannot be undone.",
+        "Are you sure you want to clear all analytics data for this LinkedIn account? This cannot be undone.",
       )
     ) {
+      if (!accountId) {
+        console.warn("No account ID available to clear data");
+        return;
+      }
+
       const { storage } = await import("wxt/storage");
-      await storage.removeItem("local:profile-views");
-      await storage.removeItem("local:dashboard-posts");
-      await storage.removeItem("local:dashboard-comments");
-      await storage.removeItem("local:followers-count");
-      await storage.removeItem("local:profile-impressions");
-      await storage.removeItem("local:content-impressions");
-      console.log("🗑️ All analytics data cleared");
+      await storage.removeItem(
+        `local:profile-views-${accountId}` as `local:${string}`,
+      );
+      // COMMENTED OUT - Replaced with invite count
+      // await storage.removeItem(
+      //   `local:dashboard-posts-${accountId}` as `local:${string}`,
+      // );
+      await storage.removeItem(
+        `local:invite-count-${accountId}` as `local:${string}`,
+      );
+      await storage.removeItem(
+        `local:dashboard-comments-${accountId}` as `local:${string}`,
+      );
+      await storage.removeItem(
+        `local:followers-count-${accountId}` as `local:${string}`,
+      );
+      await storage.removeItem(
+        `local:profile-impressions-${accountId}` as `local:${string}`,
+      );
+      await storage.removeItem(
+        `local:content-impressions-${accountId}` as `local:${string}`,
+      );
+      console.log(`🗑️ All analytics data cleared for account: ${accountId}`);
       // Refresh page to reset UI
       window.location.reload();
     }
@@ -117,115 +175,157 @@ export function AnalyticsTab() {
 
   return (
     <div className="flex flex-col gap-4 px-4">
-      <MetricCard
-        title="Profile Views"
-        icon={BarChart3}
-        description={profileViewsLatest?.data.period}
-        value={profileViewsLatest?.data.totalViews}
-        valueLabel="views"
-        lastUpdate={profileViewsLastFetch}
-        isLoading={profileViewsLoading}
-        error={profileViewsError}
-        chartComponent={
-          profileViewsSnapshots.length >= 2 ? (
-            <ProfileViewsChart snapshots={profileViewsSnapshots} compact />
-          ) : undefined
-        }
+      {/* Grid of metric cards - 2 rows x 3 columns */}
+      <div className="grid grid-cols-3 gap-3">
+        <div
+          className="cursor-pointer transition-all"
+          onClick={() => toggleMetric("profileViews")}
+        >
+          <MetricCard
+            title="Profile Views"
+            icon={BarChart3}
+            description={profileViewsLatest?.data.period}
+            value={profileViewsLatest?.data.totalViews}
+            valueLabel="views"
+            lastUpdate={profileViewsLastFetch}
+            isLoading={profileViewsLoading}
+            error={profileViewsError}
+            selected={selectedMetrics.has("profileViews")}
+            compact
+          />
+        </div>
+
+        {/* COMMENTED OUT - Replaced with invite count */}
+        {/* <div
+          className="cursor-pointer transition-all"
+          onClick={() => toggleMetric("posts")}
+        >
+          <MetricCard
+            title="Posts"
+            icon={PenSquare}
+            description={postsLatest?.data.period}
+            value={postsLatest?.data.totalPosts}
+            valueLabel="posts"
+            lastUpdate={postsLastFetch}
+            isLoading={postsLoading}
+            error={postsError}
+            selected={selectedMetrics.has("posts")}
+            compact
+          />
+        </div> */}
+
+        <div
+          className="cursor-pointer transition-all"
+          onClick={() => toggleMetric("inviteCount")}
+        >
+          <MetricCard
+            title="Invites"
+            icon={Mail}
+            value={inviteCountLatest?.data.totalInvites}
+            valueLabel="invites"
+            lastUpdate={inviteCountLastFetch}
+            isLoading={inviteCountLoading}
+            error={inviteCountError}
+            selected={selectedMetrics.has("inviteCount")}
+            compact
+          />
+        </div>
+
+        <div
+          className="cursor-pointer transition-all"
+          onClick={() => toggleMetric("comments")}
+        >
+          <MetricCard
+            title="Comments"
+            icon={MessageSquare}
+            description={commentsLatest?.data.period}
+            value={commentsLatest?.data.totalComments}
+            valueLabel="comments"
+            lastUpdate={commentsLastFetch}
+            isLoading={commentsLoading}
+            error={commentsError}
+            selected={selectedMetrics.has("comments")}
+            compact
+          />
+        </div>
+
+        <div
+          className="cursor-pointer transition-all"
+          onClick={() => toggleMetric("followers")}
+        >
+          <MetricCard
+            title="Followers"
+            icon={Users}
+            value={followersLatest?.data.totalFollowers}
+            valueLabel="followers"
+            lastUpdate={followersLastFetch}
+            isLoading={followersLoading}
+            error={followersError}
+            selected={selectedMetrics.has("followers")}
+            compact
+          />
+        </div>
+
+        <div
+          className="cursor-pointer transition-all"
+          onClick={() => toggleMetric("profileImpressions")}
+        >
+          <MetricCard
+            title="Engage Reach"
+            icon={Eye}
+            description={profileImpressionsLatest?.data.period}
+            value={profileImpressionsLatest?.data.totalImpressions}
+            valueLabel="impressions"
+            lastUpdate={profileImpressionsLastFetch}
+            isLoading={profileImpressionsLoading}
+            error={profileImpressionsError}
+            selected={selectedMetrics.has("profileImpressions")}
+            compact
+          />
+        </div>
+
+        <div
+          className="cursor-pointer transition-all"
+          onClick={() => toggleMetric("contentImpressions")}
+        >
+          <MetricCard
+            title="Content Reach"
+            icon={TrendingUp}
+            description={contentImpressionsLatest?.data.period}
+            value={contentImpressionsLatest?.data.totalImpressions}
+            valueLabel="impressions"
+            lastUpdate={contentImpressionsLastFetch}
+            isLoading={contentImpressionsLoading}
+            error={contentImpressionsError}
+            selected={selectedMetrics.has("contentImpressions")}
+            compact
+          />
+        </div>
+      </div>
+
+      {/* Unified Chart */}
+      <UnifiedChart
+        snapshots={{
+          profileViews: profileViewsSnapshots,
+          // posts: postsSnapshots, // COMMENTED OUT - Replaced with invite count
+          inviteCount: inviteCountSnapshots,
+          comments: commentsSnapshots,
+          followers: followersSnapshots,
+          profileImpressions: profileImpressionsSnapshots,
+          contentImpressions: contentImpressionsSnapshots,
+        }}
+        selectedMetrics={selectedMetrics}
       />
 
-      <MetricCard
-        title="Posts"
-        icon={PenSquare}
-        description={postsLatest?.data.period}
-        value={postsLatest?.data.totalPosts}
-        valueLabel="posts"
-        lastUpdate={postsLastFetch}
-        isLoading={postsLoading}
-        error={postsError}
-        chartComponent={
-          postsSnapshots.length >= 2 ? (
-            <PostsChart snapshots={postsSnapshots} compact />
-          ) : undefined
-        }
-      />
-
-      <MetricCard
-        title="Comments"
-        icon={MessageSquare}
-        description={commentsLatest?.data.period}
-        value={commentsLatest?.data.totalComments}
-        valueLabel="comments"
-        lastUpdate={commentsLastFetch}
-        isLoading={commentsLoading}
-        error={commentsError}
-        chartComponent={
-          commentsSnapshots.length >= 2 ? (
-            <CommentsChart snapshots={commentsSnapshots} compact />
-          ) : undefined
-        }
-      />
-
-      <MetricCard
-        title="Followers"
-        icon={Users}
-        value={followersLatest?.data.totalFollowers}
-        valueLabel="followers"
-        lastUpdate={followersLastFetch}
-        isLoading={followersLoading}
-        error={followersError}
-        chartComponent={
-          followersSnapshots.length >= 2 ? (
-            <FollowersChart snapshots={followersSnapshots} compact />
-          ) : undefined
-        }
-      />
-
-      <MetricCard
-        title="Profile Impressions"
-        icon={Eye}
-        description={profileImpressionsLatest?.data.period}
-        value={profileImpressionsLatest?.data.totalImpressions}
-        valueLabel="impressions"
-        lastUpdate={profileImpressionsLastFetch}
-        isLoading={profileImpressionsLoading}
-        error={profileImpressionsError}
-        chartComponent={
-          profileImpressionsSnapshots.length >= 2 ? (
-            <ProfileImpressionsChart
-              snapshots={profileImpressionsSnapshots}
-              compact
-            />
-          ) : undefined
-        }
-      />
-
-      <MetricCard
-        title="Content Impressions"
-        icon={TrendingUp}
-        description={contentImpressionsLatest?.data.period}
-        value={contentImpressionsLatest?.data.totalImpressions}
-        valueLabel="impressions"
-        lastUpdate={contentImpressionsLastFetch}
-        isLoading={contentImpressionsLoading}
-        error={contentImpressionsError}
-        chartComponent={
-          contentImpressionsSnapshots.length >= 2 ? (
-            <ContentImpressionsChart
-              snapshots={contentImpressionsSnapshots}
-              compact
-            />
-          ) : undefined
-        }
-      />
-
+      {/* Action Buttons */}
       <div className="flex gap-2">
         <Button
           onClick={refetchAll}
-          variant="default"
+          variant="primary"
           className="flex-1"
           disabled={
             profileViewsLoading ||
-            postsLoading ||
+            inviteCountLoading ||
             commentsLoading ||
             followersLoading ||
             profileImpressionsLoading ||
@@ -233,15 +333,13 @@ export function AnalyticsTab() {
           }
         >
           {profileViewsLoading ||
-          postsLoading ||
+          inviteCountLoading ||
           commentsLoading ||
           followersLoading ||
           profileImpressionsLoading ||
-          contentImpressionsLoading ? (
-            "Refreshing..."
-          ) : (
-            "Refresh All"
-          )}
+          contentImpressionsLoading
+            ? "Refreshing..."
+            : "Refresh All"}
         </Button>
         <Button onClick={clearAllData} variant="destructive" className="flex-1">
           Clear All Data

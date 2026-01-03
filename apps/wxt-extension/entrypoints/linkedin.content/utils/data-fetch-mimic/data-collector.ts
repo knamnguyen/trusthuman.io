@@ -39,12 +39,30 @@ export class DataCollector<T> {
   }
 
   /**
+   * Build storage key with optional account ID
+   * Format: local:{baseKey} or local:{baseKey}-{accountId}
+   */
+  private buildStorageKey(accountId?: string | null): string {
+    if (accountId) {
+      return `local:${this.config.storageKey}-${accountId}`;
+    }
+    return `local:${this.config.storageKey}`;
+  }
+
+  /**
    * Auto-collect data if enough time has passed since last fetch
    * Returns true if data was collected, false if rate-limited or failed
+   *
+   * @param accountId - Optional account identifier for account-specific storage
    */
-  async autoCollect(): Promise<boolean> {
+  async autoCollect(accountId?: string | null): Promise<boolean> {
     try {
-      const history = await this.getHistory();
+      if (!accountId) {
+        console.warn(`⚠️ No account ID provided for ${this.config.storageKey}, skipping auto-collect`);
+        return false;
+      }
+
+      const history = await this.getHistory(accountId);
       const now = Date.now();
 
       // Check rate limit
@@ -66,7 +84,7 @@ export class DataCollector<T> {
       }
 
       // Save snapshot
-      await this.saveSnapshot(data);
+      await this.saveSnapshot(data, accountId);
       return true;
     } catch (error) {
       console.error("❌ Error during auto-collect:", error);
@@ -76,11 +94,12 @@ export class DataCollector<T> {
 
   /**
    * Get complete history from storage
+   *
+   * @param accountId - Optional account identifier for account-specific storage
    */
-  async getHistory(): Promise<DataHistory<T>> {
-    const stored = await storage.getItem<DataHistory<T>>(
-      `local:${this.config.storageKey}`
-    );
+  async getHistory(accountId?: string | null): Promise<DataHistory<T>> {
+    const storageKey = this.buildStorageKey(accountId);
+    const stored = await storage.getItem<DataHistory<T>>(storageKey);
 
     return (
       stored || {
@@ -93,12 +112,17 @@ export class DataCollector<T> {
   /**
    * Save a new snapshot to history
    * Automatically manages max snapshots limit (keeps most recent)
+   *
+   * @param data - The data to save
+   * @param accountId - Optional account identifier for account-specific storage
+   * @param metadata - Optional metadata to attach to the snapshot
    */
   async saveSnapshot(
     data: T,
+    accountId?: string | null,
     metadata?: Record<string, unknown>
   ): Promise<void> {
-    const history = await this.getHistory();
+    const history = await this.getHistory(accountId);
     const now = Date.now();
 
     const newSnapshot: DataSnapshot<T> = {
@@ -118,26 +142,32 @@ export class DataCollector<T> {
       lastFetchTime: now,
     };
 
-    await storage.setItem(`local:${this.config.storageKey}`, updatedHistory);
-    console.log(`✅ Snapshot saved to ${this.config.storageKey}`);
+    const storageKey = this.buildStorageKey(accountId);
+    await storage.setItem(storageKey, updatedHistory);
+    console.log(`✅ Snapshot saved to ${storageKey}`);
   }
 
   /**
    * Manually trigger a fetch (ignores rate limiting)
+   *
+   * @param accountId - Optional account identifier for account-specific storage
    */
-  async manualFetch(): Promise<T | null> {
+  async manualFetch(accountId?: string | null): Promise<T | null> {
     const data = await this.fetchFn();
     if (data) {
-      await this.saveSnapshot(data, { manual: true });
+      await this.saveSnapshot(data, accountId, { manual: true });
     }
     return data;
   }
 
   /**
-   * Clear all history
+   * Clear all history for a specific account
+   *
+   * @param accountId - Optional account identifier for account-specific storage
    */
-  async clearHistory(): Promise<void> {
-    await storage.removeItem(`local:${this.config.storageKey}`);
-    console.log(`🗑️ Cleared history for ${this.config.storageKey}`);
+  async clearHistory(accountId?: string | null): Promise<void> {
+    const storageKey = this.buildStorageKey(accountId);
+    await storage.removeItem(storageKey);
+    console.log(`🗑️ Cleared history for ${storageKey}`);
   }
 }

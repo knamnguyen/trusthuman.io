@@ -1,11 +1,4 @@
-import { useState, ReactNode } from "react";
-import {
-  ChevronDown,
-  ChevronUp,
-  Loader2,
-  LucideIcon,
-  RefreshCw,
-} from "lucide-react";
+import { Loader2, LucideIcon, RefreshCw } from "lucide-react";
 
 import { Button } from "@sassy/ui/button";
 import {
@@ -15,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@sassy/ui/card";
+import { cn } from "@sassy/ui/utils";
 
 export interface MetricCardProps {
   /** Card title */
@@ -35,10 +29,10 @@ export interface MetricCardProps {
   error?: string | null;
   /** Refresh callback */
   onRefresh?: () => void;
-  /** Optional chart component to show when toggled */
-  chartComponent?: ReactNode;
-  /** Whether chart can be toggled (auto-detects if chartComponent provided) */
-  showChartToggle?: boolean;
+  /** Whether this metric is selected for the chart */
+  selected?: boolean;
+  /** Compact mode for grid layout */
+  compact?: boolean;
 }
 
 function formatTimeAgo(timestamp: number): string {
@@ -54,30 +48,27 @@ function formatTimeAgo(timestamp: number): string {
   return `${days}d ago`;
 }
 
+function formatCompactNumber(value: number): string {
+  if (value >= 1_000_000) {
+    const millions = value / 1_000_000;
+    return millions % 1 === 0 ? `${millions}M` : `${millions.toFixed(1)}M`;
+  }
+  if (value >= 1_000) {
+    const thousands = value / 1_000;
+    return thousands % 1 === 0 ? `${thousands}k` : `${thousands.toFixed(1)}k`;
+  }
+  return value.toString();
+}
+
 /**
- * Reusable metric card component for displaying data with charts
+ * Reusable metric card component for displaying analytics data
  *
  * Handles common patterns:
  * - Loading states
  * - Error states
  * - No data state with optional fetch button
- * - Compact layout
- * - Refresh button
- * - Optional togglable chart
- *
- * @example
- * ```tsx
- * <MetricCard
- *   title="Profile Views"
- *   icon={BarChart3}
- *   description="in the past 90 days"
- *   value={1234}
- *   valueLabel="Total"
- *   lastUpdate={Date.now()}
- *   onRefresh={() => refetch()}
- *   chartComponent={<MyChart data={data} compact />}
- * />
- * ```
+ * - Compact layout for grid display
+ * - Selection state for chart filtering
  */
 export function MetricCard({
   title,
@@ -89,21 +80,22 @@ export function MetricCard({
   isLoading = false,
   error = null,
   onRefresh,
-  chartComponent,
-  showChartToggle = !!chartComponent,
+  selected = false,
+  compact = false,
 }: MetricCardProps) {
-  const [showChart, setShowChart] = useState(false);
-
   // Loading state (no data yet)
   if (isLoading && (value === null || value === undefined)) {
     return (
-      <Card>
-        <CardHeader className="pb-2">
-          <div className="flex items-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <CardTitle className="text-sm">Loading...</CardTitle>
-          </div>
-        </CardHeader>
+      <Card
+        className={cn(
+          compact && "aspect-square",
+          selected && "bg-accent ring-2 ring-ring",
+        )}
+      >
+        <div className={cn("flex items-center gap-2", compact ? "h-full p-3" : "p-4")}>
+          <Loader2 className={cn(compact ? "h-3.5 w-3.5" : "h-4 w-4", "animate-spin")} />
+          <CardTitle className={cn(compact ? "text-xs" : "text-sm")}>Loading...</CardTitle>
+        </div>
       </Card>
     );
   }
@@ -111,14 +103,19 @@ export function MetricCard({
   // Error state (no data yet)
   if (error && (value === null || value === undefined)) {
     return (
-      <Card>
-        <CardHeader className="pb-2">
-          <div className="flex items-center gap-2">
-            <Icon className="h-4 w-4" />
-            <CardTitle className="text-sm">{title}</CardTitle>
+      <Card
+        className={cn(
+          compact && "aspect-square",
+          selected && "bg-accent ring-2 ring-ring",
+        )}
+      >
+        <div className={cn("flex flex-col", compact ? "h-full p-3" : "p-4")}>
+          <div className="flex items-center gap-1.5 mb-1">
+            <Icon className={cn(compact ? "h-3.5 w-3.5" : "h-4 w-4")} />
+            <CardTitle className={cn(compact ? "text-xs" : "text-sm")}>{title}</CardTitle>
           </div>
-          <CardDescription className="text-xs">{error}</CardDescription>
-        </CardHeader>
+          <CardDescription className={cn(compact ? "text-[10px]" : "text-xs")}>{error}</CardDescription>
+        </div>
       </Card>
     );
   }
@@ -126,40 +123,79 @@ export function MetricCard({
   // No data state
   if (value === null || value === undefined) {
     return (
-      <Card>
-        <CardHeader className="pb-2">
-          <div className="flex items-center gap-2">
-            <Icon className="h-4 w-4" />
-            <CardTitle className="text-sm">{title}</CardTitle>
-          </div>
-          <CardDescription className="text-xs">
-            No data yet. Auto-fetches daily.
-          </CardDescription>
-        </CardHeader>
-        {onRefresh && (
-          <CardContent className="pb-3">
-            <Button onClick={onRefresh} size="sm" disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                  Fetching...
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="mr-2 h-3 w-3" />
-                  Fetch Now
-                </>
-              )}
-            </Button>
-          </CardContent>
+      <Card
+        className={cn(
+          compact && "aspect-square",
+          selected && "bg-accent ring-2 ring-ring",
         )}
+      >
+        <div className={cn("flex flex-col", compact ? "h-full p-3" : "p-4")}>
+          <div className="flex items-center gap-1.5 mb-1">
+            <Icon className={cn(compact ? "h-3.5 w-3.5" : "h-4 w-4")} />
+            <CardTitle className={cn(compact ? "text-xs" : "text-sm")}>{title}</CardTitle>
+          </div>
+          <CardDescription className={cn(compact ? "text-[10px]" : "text-xs")}>
+            No data yet.
+          </CardDescription>
+          {onRefresh && !compact && (
+            <div className="mt-3">
+              <Button onClick={onRefresh} size="sm" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                    Fetching...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="mr-2 h-3 w-3" />
+                    Fetch Now
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
+        </div>
       </Card>
     );
   }
 
-  // Data state
+  // Data state - compact mode (grid)
+  if (compact) {
+    return (
+      <Card
+        className={cn(
+          "aspect-square transition-all",
+          selected ? "bg-accent ring-2 ring-ring" : "",
+        )}
+      >
+        <div className="flex h-full flex-col p-3">
+          <div className="mb-1 flex items-center gap-1.5">
+            <Icon className="h-3.5 w-3.5 shrink-0" />
+            <CardTitle className="text-xs truncate">{title}</CardTitle>
+          </div>
+          {lastUpdate && (
+            <p className="text-muted-foreground mb-auto text-[9px]">
+              {formatTimeAgo(lastUpdate)}
+            </p>
+          )}
+          <div className="flex flex-1 flex-col items-center justify-center">
+            <div className="text-3xl font-bold leading-none">
+              {typeof value === "number" ? formatCompactNumber(value) : value}
+            </div>
+            {description && (
+              <div className="text-muted-foreground mt-1.5 text-[10px] text-center leading-tight">
+                {description.replace(/in the (past|last) /i, "")}
+              </div>
+            )}
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
+  // Data state - full mode
   return (
-    <Card>
+    <Card className={cn(selected && "ring-primary bg-primary/5 ring-2")}>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -167,43 +203,27 @@ export function MetricCard({
             <div>
               <CardTitle className="text-sm">{title}</CardTitle>
               {lastUpdate && (
-                <CardDescription className="text-[10px] mt-0.5">
+                <CardDescription className="mt-0.5 text-[10px]">
                   Updated {formatTimeAgo(lastUpdate)}
                 </CardDescription>
               )}
             </div>
           </div>
-          <div className="flex items-center gap-1">
-            {onRefresh && (
-              <Button
-                onClick={onRefresh}
-                size="sm"
-                variant="ghost"
-                disabled={isLoading}
-                className="h-7 w-7 p-0"
-              >
-                {isLoading ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                ) : (
-                  <RefreshCw className="h-3 w-3" />
-                )}
-              </Button>
-            )}
-            {showChartToggle && chartComponent && (
-              <Button
-                onClick={() => setShowChart(!showChart)}
-                size="sm"
-                variant="ghost"
-                className="h-7 w-7 p-0"
-              >
-                {showChart ? (
-                  <ChevronUp className="h-3 w-3" />
-                ) : (
-                  <ChevronDown className="h-3 w-3" />
-                )}
-              </Button>
-            )}
-          </div>
+          {onRefresh && (
+            <Button
+              onClick={onRefresh}
+              size="sm"
+              variant="ghost"
+              disabled={isLoading}
+              className="h-7 w-7 p-0"
+            >
+              {isLoading ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <RefreshCw className="h-3 w-3" />
+              )}
+            </Button>
+          )}
         </div>
       </CardHeader>
       <CardContent className="pb-3">
@@ -212,15 +232,13 @@ export function MetricCard({
             {typeof value === "number" ? value.toLocaleString() : value}
           </span>
           {description && (
-            <span className="text-xs text-muted-foreground font-normal">
-              {valueLabel ? `${valueLabel.toLowerCase()} ${description}` : description}
+            <span className="text-muted-foreground text-xs font-normal">
+              {valueLabel
+                ? `${valueLabel.toLowerCase()} ${description}`
+                : description}
             </span>
           )}
         </div>
-
-        {showChart && chartComponent && (
-          <div className="mt-3 pt-3 border-t">{chartComponent}</div>
-        )}
       </CardContent>
     </Card>
   );

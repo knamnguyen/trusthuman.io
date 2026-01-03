@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { storage } from "wxt/storage";
 
+import { useAccountStore } from "../../stores/account-store";
 import type { DataHistory, DataSnapshot } from "./data-collector";
 import {
   commentsCollector,
@@ -31,9 +32,11 @@ interface UseCommentsHistoryReturn {
  * React hook to access posts history from storage
  * - Loads history on mount
  * - Watches for storage changes
+ * - Account-specific data (tied to current LinkedIn account)
  * - Provides manual refetch function
  */
 export function usePostsHistory(): UsePostsHistoryReturn {
+  const accountId = useAccountStore((state) => state.currentLinkedIn.miniProfileId);
   const [history, setHistory] = useState<DataHistory<PostsData>>({
     snapshots: [],
     lastFetchTime: null,
@@ -41,28 +44,31 @@ export function usePostsHistory(): UsePostsHistoryReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Load initial history from storage
+  // Load initial history from storage and reload when account changes
   useEffect(() => {
-    postsCollector.getHistory().then((h) => setHistory(h));
-  }, []);
+    postsCollector.getHistory(accountId).then((h) => setHistory(h));
+  }, [accountId]);
 
-  // Watch for storage changes
+  // Watch for storage changes (account-specific key)
   useEffect(() => {
+    if (!accountId) return;
+
+    const storageKey = `local:dashboard-posts-${accountId}` as `local:${string}`;
     const unwatch = storage.watch<DataHistory<PostsData>>(
-      "local:dashboard-posts",
+      storageKey,
       (newValue) => {
         if (newValue) setHistory(newValue);
       },
     );
     return () => unwatch();
-  }, []);
+  }, [accountId]);
 
   const refetch = async () => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const data = await postsCollector.manualFetch();
+      const data = await postsCollector.manualFetch(accountId);
       if (!data) {
         setError("Failed to fetch posts data");
       }
@@ -87,9 +93,11 @@ export function usePostsHistory(): UsePostsHistoryReturn {
  * React hook to access comments history from storage
  * - Loads history on mount
  * - Watches for storage changes
+ * - Account-specific data (tied to current LinkedIn account)
  * - Provides manual refetch function
  */
 export function useCommentsHistory(): UseCommentsHistoryReturn {
+  const accountId = useAccountStore((state) => state.currentLinkedIn.miniProfileId);
   const [history, setHistory] = useState<DataHistory<CommentsData>>({
     snapshots: [],
     lastFetchTime: null,
@@ -97,28 +105,31 @@ export function useCommentsHistory(): UseCommentsHistoryReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Load initial history from storage
+  // Load initial history from storage and reload when account changes
   useEffect(() => {
-    commentsCollector.getHistory().then((h) => setHistory(h));
-  }, []);
+    commentsCollector.getHistory(accountId).then((h) => setHistory(h));
+  }, [accountId]);
 
-  // Watch for storage changes
+  // Watch for storage changes (account-specific key)
   useEffect(() => {
+    if (!accountId) return;
+
+    const storageKey = `local:dashboard-comments-${accountId}` as `local:${string}`;
     const unwatch = storage.watch<DataHistory<CommentsData>>(
-      "local:dashboard-comments",
+      storageKey,
       (newValue) => {
         if (newValue) setHistory(newValue);
       },
     );
     return () => unwatch();
-  }, []);
+  }, [accountId]);
 
   const refetch = async () => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const data = await commentsCollector.manualFetch();
+      const data = await commentsCollector.manualFetch(accountId);
       if (!data) {
         setError("Failed to fetch comments data");
       }

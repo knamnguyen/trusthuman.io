@@ -3,12 +3,12 @@ import { storage } from "wxt/storage";
 
 import { useAccountStore } from "../../stores/account-store";
 import type { DataHistory, DataSnapshot } from "./data-collector";
-import type { ProfileImpressionsData } from "./linkedin-profile-impressions-fetcher";
-import { profileImpressionsCollector } from "./profile-impressions-collector";
+import { inviteCountCollector } from "./invite-count-collector";
+import type { InviteCountData } from "./linkedin-invite-count-fetcher";
 
-interface UseProfileImpressionsHistoryReturn {
-  snapshots: DataSnapshot<ProfileImpressionsData>[];
-  latest: DataSnapshot<ProfileImpressionsData> | null;
+interface UseInviteCountHistoryReturn {
+  snapshots: DataSnapshot<InviteCountData>[];
+  latest: DataSnapshot<InviteCountData> | null;
   lastFetchTime: number | null;
   isLoading: boolean;
   error: string | null;
@@ -16,15 +16,15 @@ interface UseProfileImpressionsHistoryReturn {
 }
 
 /**
- * React hook to access profile impressions history from storage
+ * React hook to access invite count history from storage
  * - Loads history on mount
  * - Watches for storage changes
  * - Account-specific data (tied to current LinkedIn account)
  * - Provides manual refetch function
  */
-export function useProfileImpressionsHistory(): UseProfileImpressionsHistoryReturn {
+export function useInviteCountHistory(): UseInviteCountHistoryReturn {
   const accountId = useAccountStore((state) => state.currentLinkedIn.miniProfileId);
-  const [history, setHistory] = useState<DataHistory<ProfileImpressionsData>>({
+  const [history, setHistory] = useState<DataHistory<InviteCountData>>({
     snapshots: [],
     lastFetchTime: null,
   });
@@ -33,15 +33,15 @@ export function useProfileImpressionsHistory(): UseProfileImpressionsHistoryRetu
 
   // Load initial history from storage and reload when account changes
   useEffect(() => {
-    profileImpressionsCollector.getHistory(accountId).then((h) => setHistory(h));
+    inviteCountCollector.getHistory(accountId).then((h) => setHistory(h));
   }, [accountId]);
 
   // Watch for storage changes (account-specific key)
   useEffect(() => {
     if (!accountId) return;
 
-    const storageKey = `local:profile-impressions-${accountId}` as `local:${string}`;
-    const unwatch = storage.watch<DataHistory<ProfileImpressionsData>>(
+    const storageKey = `local:invite-count-${accountId}` as `local:${string}`;
+    const unwatch = storage.watch<DataHistory<InviteCountData>>(
       storageKey,
       (newValue) => {
         if (newValue) setHistory(newValue);
@@ -55,9 +55,9 @@ export function useProfileImpressionsHistory(): UseProfileImpressionsHistoryRetu
     setError(null);
 
     try {
-      const data = await profileImpressionsCollector.manualFetch(accountId);
+      const data = await inviteCountCollector.manualFetch(accountId);
       if (!data) {
-        setError("Failed to fetch profile impressions data");
+        setError("Failed to fetch invite count data");
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");

@@ -8,9 +8,10 @@ import { useAccountStore } from "./stores";
 import { contentImpressionsCollector } from "./utils/data-fetch-mimic/content-impressions-collector";
 import {
   commentsCollector,
-  postsCollector,
+  // postsCollector, // COMMENTED OUT - Replaced with invite count
 } from "./utils/data-fetch-mimic/dashboard-activity-collectors";
 import { followersCollector } from "./utils/data-fetch-mimic/followers-collector";
+import { inviteCountCollector } from "./utils/data-fetch-mimic/invite-count-collector";
 import { profileImpressionsCollector } from "./utils/data-fetch-mimic/profile-impressions-collector";
 import { profileViewsCollector } from "./utils/data-fetch-mimic/profile-views-collector";
 
@@ -56,42 +57,75 @@ export default defineContentScript({
         }
       });
 
-    // Auto-collect profile views (non-blocking, rate-limited to once per 24h)
-    profileViewsCollector.autoCollect().catch((err) => {
-      console.error(
-        "EngageKit WXT: Failed to auto-collect profile views:",
-        err,
-      );
-    });
+    // Auto-collect analytics data (account-specific)
+    // Wait for account data to be loaded, then trigger auto-collect with account ID
+    const startAutoCollect = () => {
+      const accountId = useAccountStore.getState().currentLinkedIn.miniProfileId;
 
-    // Auto-collect dashboard activity (posts and comments)
-    postsCollector.autoCollect().catch((err) => {
-      console.error("EngageKit WXT: Failed to auto-collect posts:", err);
-    });
+      if (!accountId) {
+        console.warn("EngageKit WXT: No LinkedIn account ID detected, skipping auto-collect");
+        return;
+      }
 
-    commentsCollector.autoCollect().catch((err) => {
-      console.error("EngageKit WXT: Failed to auto-collect comments:", err);
-    });
+      console.log(`EngageKit WXT: Starting auto-collect for account: ${accountId}`);
 
-    // Auto-collect followers
-    followersCollector.autoCollect().catch((err) => {
-      console.error("EngageKit WXT: Failed to auto-collect followers:", err);
-    });
+      // Auto-collect profile views (non-blocking, rate-limited to once per 24h)
+      profileViewsCollector.autoCollect(accountId).catch((err) => {
+        console.error(
+          "EngageKit WXT: Failed to auto-collect profile views:",
+          err,
+        );
+      });
 
-    // Auto-collect profile impressions
-    profileImpressionsCollector.autoCollect().catch((err) => {
-      console.error(
-        "EngageKit WXT: Failed to auto-collect profile impressions:",
-        err,
-      );
-    });
+      // Auto-collect dashboard activity (posts and comments)
+      // COMMENTED OUT - Replaced with invite count
+      // postsCollector.autoCollect(accountId).catch((err) => {
+      //   console.error("EngageKit WXT: Failed to auto-collect posts:", err);
+      // });
 
-    // Auto-collect content impressions
-    contentImpressionsCollector.autoCollect().catch((err) => {
-      console.error(
-        "EngageKit WXT: Failed to auto-collect content impressions:",
-        err,
-      );
+      commentsCollector.autoCollect(accountId).catch((err) => {
+        console.error("EngageKit WXT: Failed to auto-collect comments:", err);
+      });
+
+      // Auto-collect invite count
+      inviteCountCollector.autoCollect(accountId).catch((err) => {
+        console.error("EngageKit WXT: Failed to auto-collect invite count:", err);
+      });
+
+      // Auto-collect followers
+      followersCollector.autoCollect(accountId).catch((err) => {
+        console.error("EngageKit WXT: Failed to auto-collect followers:", err);
+      });
+
+      // Auto-collect profile impressions
+      profileImpressionsCollector.autoCollect(accountId).catch((err) => {
+        console.error(
+          "EngageKit WXT: Failed to auto-collect profile impressions:",
+          err,
+        );
+      });
+
+      // Auto-collect content impressions
+      contentImpressionsCollector.autoCollect(accountId).catch((err) => {
+        console.error(
+          "EngageKit WXT: Failed to auto-collect content impressions:",
+          err,
+        );
+      });
+    };
+
+    // Start auto-collect immediately (profile should be extracted by now)
+    startAutoCollect();
+
+    // Re-trigger auto-collect when account changes (e.g., user switches LinkedIn accounts)
+    let lastAccountId = useAccountStore.getState().currentLinkedIn.miniProfileId;
+    const unsubscribe = useAccountStore.subscribe((state) => {
+      const currentAccountId = state.currentLinkedIn.miniProfileId;
+      if (currentAccountId && currentAccountId !== lastAccountId) {
+        console.log(`EngageKit WXT: Account changed to ${currentAccountId}, triggering auto-collect`);
+        lastAccountId = currentAccountId;
+        startAutoCollect();
+      }
     });
 
     const ui = await createShadowRootUi(ctx, {
@@ -120,6 +154,7 @@ export default defineContentScript({
       },
       onRemove: (root) => {
         cleanupAuthStore();
+        unsubscribe();
         root?.unmount();
         console.log("EngageKit WXT: Sidebar unmounted");
       },

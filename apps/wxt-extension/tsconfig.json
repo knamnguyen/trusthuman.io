@@ -21,5 +21,11 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["entrypoints", "assets", "*.ts", ".wxt/wxt.d.ts", "../analytics"]
+  "include": [
+    "entrypoints",
+    "assets",
+    "*.ts",
+    ".wxt/wxt.d.ts",
+    "../../process/analytics"
+  ]
 }
