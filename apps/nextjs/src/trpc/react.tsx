@@ -139,38 +139,9 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <TRPCClientProvider client={trpcClient}>
         <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
-          <AssumedUserTokenRefresher />
           {props.children}
         </TRPCProvider>
       </TRPCClientProvider>
     </QueryClientProvider>
   );
-}
-
-function AssumedUserTokenRefresher() {
-  const store = useLinkedInAccountStore();
-
-  const trpc = useTRPC();
-
-  const accountId = useCurrentLinkedInAccountId();
-
-  const { data: token } = useQuery(
-    trpc.account.token.queryOptions(
-      {
-        id: accountId ?? "",
-      },
-      {
-        enabled: !!accountId,
-        refetchInterval: 5 * 60_000, // every 5 minutes
-      },
-    ),
-  );
-
-  useEffect(() => {
-    if (token !== undefined) {
-      store.setAssumedUserToken(token);
-    }
-  }, [token, store]);
-
-  return null;
 }
