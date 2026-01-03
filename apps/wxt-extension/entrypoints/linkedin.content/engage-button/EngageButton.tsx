@@ -139,7 +139,7 @@ export function EngageButton({ anchorElement }: EngageButtonProps) {
           return;
         }
 
-        insertCommentIntoField(editableField, result.comment);
+        await insertCommentIntoField(editableField, result.comment);
       }
     } catch (err) {
       console.error("EngageKit: error generating comment", err);

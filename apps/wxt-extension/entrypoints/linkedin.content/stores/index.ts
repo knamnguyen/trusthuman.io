@@ -1,6 +1,10 @@
 // Barrel exports for Zustand stores
 export { useAccountStore } from "./account-store";
 export { useCommentStore } from "./comment-store";
+export {
+  useCommentImageStore,
+  type CommentImage,
+} from "./comment-image-store";
 export { useComposeStore } from "./compose-store";
 export type { ComposeCard } from "./compose-store";
 export { useShadowRootStore } from "./shadow-root-store";

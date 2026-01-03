@@ -133,7 +133,7 @@ export async function submitCommentToPost(
 
   // Focus and insert comment
   editableField.focus();
-  insertCommentIntoField(editableField, commentText);
+  await insertCommentIntoField(editableField, commentText);
 
   // Small delay to let LinkedIn react to the input
   await new Promise((r) => setTimeout(r, 500));

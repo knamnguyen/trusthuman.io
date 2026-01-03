@@ -1,7 +1,10 @@
 import { useEffect, useRef, useSyncExternalStore } from "react";
 
-// Target the "Add a photo" button - more stable than class names
-const SELECTOR = '[aria-label="Add a photo"]';
+// Target comment boxes by their editor placeholder (semantic, stable)
+// This avoids class selectors and correctly skips the post creation form
+const COMMENT_EDITOR_SELECTOR =
+  '[data-placeholder="Add a comment…"], [aria-placeholder="Add a comment…"]';
+const ADD_PHOTO_SELECTOR = '[aria-label="Add a photo"]';
 const MARKER = "data-engagekit-injected";
 
 interface Target {
@@ -25,16 +28,16 @@ function createTargetStore() {
   };
 
   const scan = () => {
-    const elements = document.querySelectorAll(SELECTOR);
+    const commentEditors = document.querySelectorAll(COMMENT_EDITOR_SELECTOR);
     let changed = false;
 
-    // Skip the first "Add a photo" button - it belongs to post creation, not comments
-    // Convert to array and skip index 0
-    const elementsArray = Array.from(elements).slice(1);
+    // Find "Add a photo" buttons inside forms that contain comment editors
+    commentEditors.forEach((editor) => {
+      const form = editor.closest("form");
+      if (!form) return;
 
-    // Add new elements
-    elementsArray.forEach((el) => {
-      if (targets.has(el) || el.hasAttribute(MARKER)) return;
+      const el = form.querySelector(ADD_PHOTO_SELECTOR);
+      if (!el || targets.has(el) || el.hasAttribute(MARKER)) return;
 
       // Get parent to insert as sibling
       const parent = el.parentElement;

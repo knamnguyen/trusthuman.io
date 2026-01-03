@@ -1,3 +1,4 @@
+export { attachImageToComment } from "./attach-image-to-comment";
 export { extractAdjacentComments } from "./extract-adjacent-comments";
 export { extractPostContent } from "./extract-post-content";
 export { findPostContainer } from "./find-post-container";

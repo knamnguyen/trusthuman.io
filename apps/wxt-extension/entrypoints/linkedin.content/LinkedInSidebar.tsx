@@ -56,8 +56,8 @@ function WriteTab({ postContent }: WriteTabProps) {
     clear,
   } = useCommentStore();
 
-  const handleSelectVariation = (comment: string) => {
-    const success = insertIntoCurrentField(comment);
+  const handleSelectVariation = async (comment: string) => {
+    const success = await insertIntoCurrentField(comment);
     if (success) {
       console.log("EngageKit: Inserted selected variation into comment field");
     }

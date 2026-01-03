@@ -19,11 +19,9 @@ import {
   CardTitle,
 } from "@sassy/ui/card";
 
+import type { PostAuthorRanking } from "../stores/saved-profile-store";
 import { ManageListButton } from "../manage-list";
-import {
-  type PostAuthorRanking,
-  useSavedProfileStore,
-} from "../stores/saved-profile-store";
+import { useSavedProfileStore } from "../stores/saved-profile-store";
 
 /**
  * Expandable post author ranking item
@@ -183,16 +181,34 @@ function ProfileCard() {
           )}
 
           {/* Profile URN */}
-          {selectedProfile.urn && (
-            <div className="flex items-center gap-2">
-              <Tag className="text-muted-foreground h-4 w-4 flex-shrink-0" />
-              <span className="text-muted-foreground truncate text-sm">
-                {selectedProfile.urn}
-              </span>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            <Tag className="text-muted-foreground h-4 w-4 flex-shrink-0" />
+            <span className="text-muted-foreground truncate text-sm">
+              {selectedProfile.urn || "URN not available for this profile"}
+            </span>
+          </div>
 
           <ManageListButton />
+
+          {/* No URN Available - Cannot fetch comments */}
+          {!selectedProfile.urn && (
+            <div className="bg-muted/50 mt-3 rounded-lg border border-dashed p-4">
+              <p className="text-muted-foreground text-center text-sm">
+                Recent comments are not available for profiles saved from the
+                comment section.
+              </p>
+              {selectedProfile.linkedinUrl && (
+                <a
+                  href={selectedProfile.linkedinUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary mt-2 block text-center text-sm hover:underline"
+                >
+                  Visit their profile to load recent comments →
+                </a>
+              )}
+            </div>
+          )}
 
           {/* Loading State */}
           {isLoadingComments && (
@@ -218,9 +234,7 @@ function ProfileCard() {
               <div className="grid grid-cols-3 gap-2">
                 <div className="rounded border p-2 text-center">
                   <div className="text-lg font-bold">{commentStats.total}</div>
-                  <div className="text-muted-foreground text-[10px]">
-                    Total
-                  </div>
+                  <div className="text-muted-foreground text-[10px]">Total</div>
                 </div>
                 <div className="rounded border p-2 text-center">
                   <div className="text-lg font-bold">
@@ -297,19 +311,6 @@ export function ShareTab() {
     <div className="flex flex-col gap-4 px-4">
       {/* Profile from DOM */}
       <ProfileCard />
-
-      {/* Actions Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm">Actions</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-2">
-          <Button variant="outline" className="w-full justify-start" disabled>
-            <Upload className="mr-2 h-4 w-4" />
-            Save to List (Coming Soon)
-          </Button>
-        </CardContent>
-      </Card>
     </div>
   );
 }

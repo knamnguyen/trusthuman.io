@@ -8,6 +8,7 @@ import { linkedinProfileScrapeRouter } from "./linkedin-profile-scrape";
 import { linkedinScrapeApifyRouter } from "./linkedin-scrape-apify";
 import { organizationRouter } from "./organization";
 import { profileImportRouter } from "./profile-import";
+import { s3UploadRouter } from "./s3-upload";
 import { stripeRouter } from "./stripe";
 import { targetListRouter } from "./target-list";
 import { commentAiDetectorRouter } from "./tools/comment-ai-detector";
@@ -29,6 +30,7 @@ export const appRouter = createTRPCRouter({
   account: accountRouter(),
   linkedInPreview: linkedInPreviewRouter(),
   commentAiDetector: commentAiDetectorRouter(),
+  s3Upload: s3UploadRouter(),
 });
 
 // export type definition of API
