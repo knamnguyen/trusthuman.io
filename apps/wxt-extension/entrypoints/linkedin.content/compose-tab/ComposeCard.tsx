@@ -1,7 +1,15 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import levenshtein from "fast-levenshtein";
-import { Eye, ExternalLink, Loader2, RefreshCw, Send, Sparkles, Trash2 } from "lucide-react";
+import {
+  ExternalLink,
+  Eye,
+  Loader2,
+  RefreshCw,
+  Send,
+  Sparkles,
+  Trash2,
+} from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@sassy/ui/avatar";
 import { Badge } from "@sassy/ui/badge";
@@ -17,13 +25,21 @@ import { submitCommentToPost } from "../utils/submit-comment";
 interface ComposeCardProps {
   /** Card ID - component subscribes to its own card data */
   cardId: string;
+  /** Whether this card is from single-post generation (EngageButton/comment click) */
+  isSinglePostCard?: boolean;
+  /** Auto-focus the textarea on mount (for quick typing) */
+  autoFocus?: boolean;
 }
 
 /**
  * Memoized compose card component.
  * Subscribes to its own card data by ID to prevent re-renders when other cards update.
  */
-export const ComposeCard = memo(function ComposeCard({ cardId }: ComposeCardProps) {
+export const ComposeCard = memo(function ComposeCard({
+  cardId,
+  isSinglePostCard = false,
+  autoFocus = false,
+}: ComposeCardProps) {
   // DEBUG: Track renders
   console.log(`[ComposeCard] Render: ${cardId.slice(0, 8)}...`);
 
@@ -38,10 +54,14 @@ export const ComposeCard = memo(function ComposeCard({ cardId }: ComposeCardProp
   const [isLocalSubmitting, setIsLocalSubmitting] = useState(false);
 
   // Check if this card is currently being previewed
-  const isSelected = useComposeStore((state) => state.previewingCardId === cardId);
+  const isSelected = useComposeStore(
+    (state) => state.previewingCardId === cardId,
+  );
 
   // Ref for scrolling into view when selected
   const cardRef = useRef<HTMLDivElement>(null);
+  // Ref for auto-focusing the textarea
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Scroll into view when this card becomes selected
   useEffect(() => {
@@ -61,7 +81,8 @@ export const ComposeCard = memo(function ComposeCard({ cardId }: ComposeCardProp
         const cardRect = cardRef.current.getBoundingClientRect();
         const parentRect = scrollParent.getBoundingClientRect();
         const cardTop = cardRef.current.offsetTop;
-        const targetScroll = cardTop - parentRect.height / 2 + cardRect.height / 2;
+        const targetScroll =
+          cardTop - parentRect.height / 2 + cardRect.height / 2;
 
         scrollParent.scrollTo({
           top: Math.max(0, targetScroll),
@@ -71,11 +92,24 @@ export const ComposeCard = memo(function ComposeCard({ cardId }: ComposeCardProp
     }
   }, [isSelected]);
 
+  // Auto-focus textarea on mount when autoFocus is true
+  useEffect(() => {
+    if (autoFocus && textareaRef.current) {
+      // Small delay to ensure the element is fully rendered
+      setTimeout(() => {
+        textareaRef.current?.focus();
+      }, 100);
+    }
+  }, [autoFocus]);
+
   // Use selective subscriptions for actions (these are stable references)
   const updateCardText = useComposeStore((state) => state.updateCardText);
   const updateCardComment = useComposeStore((state) => state.updateCardComment);
   const setCardGenerating = useComposeStore((state) => state.setCardGenerating);
   const removeCard = useComposeStore((state) => state.removeCard);
+  const removeSinglePostCard = useComposeStore(
+    (state) => state.removeSinglePostCard,
+  );
   const isSubmitting = useComposeStore((state) => state.isSubmitting);
   const setPreviewingCard = useComposeStore((state) => state.setPreviewingCard);
   const setIsUserEditing = useComposeStore((state) => state.setIsUserEditing);
@@ -121,8 +155,13 @@ export const ComposeCard = memo(function ComposeCard({ cardId }: ComposeCardProp
   }, [card.postContainer, setPreviewingCard]);
 
   const handleRemove = useCallback(() => {
-    removeCard(card.id);
-  }, [card.id, removeCard]);
+    // Single-post cards use different remove behavior (doesn't add to ignoredUrns)
+    if (isSinglePostCard) {
+      removeSinglePostCard(card.id);
+    } else {
+      removeCard(card.id);
+    }
+  }, [card.id, isSinglePostCard, removeCard, removeSinglePostCard]);
 
   // Regenerate comment handler
   const handleRegenerate = useCallback(() => {
@@ -145,13 +184,19 @@ export const ComposeCard = memo(function ComposeCard({ cardId }: ComposeCardProp
         adjacentComments,
         previousAiComment,
         humanEditedComment:
-          humanEditedComment !== previousAiComment ? humanEditedComment : undefined,
+          humanEditedComment !== previousAiComment
+            ? humanEditedComment
+            : undefined,
       })
       .then((result) => {
         updateCardComment(card.id, result.comment);
       })
       .catch((err) => {
-        console.error("EngageKit: error regenerating comment for card", card.id, err);
+        console.error(
+          "EngageKit: error regenerating comment for card",
+          card.id,
+          err,
+        );
         // On error, just mark as done (keep existing text)
         setCardGenerating(card.id, false);
       });
@@ -169,14 +214,18 @@ export const ComposeCard = memo(function ComposeCard({ cardId }: ComposeCardProp
 
   // Submit this card's comment to LinkedIn
   const handleSubmit = useCallback(async () => {
-    if (!card.commentText.trim() || card.isGenerating || card.status === "sent") return;
+    if (!card.commentText.trim() || card.isGenerating || card.status === "sent")
+      return;
 
     // Close the preview panel before submitting
     setPreviewingCard(null);
 
     setIsLocalSubmitting(true);
     try {
-      const success = await submitCommentToPost(card.postContainer, card.commentText);
+      const success = await submitCommentToPost(
+        card.postContainer,
+        card.commentText,
+      );
       if (success) {
         updateCardStatus(card.id, "sent");
       }
@@ -185,7 +234,15 @@ export const ComposeCard = memo(function ComposeCard({ cardId }: ComposeCardProp
     } finally {
       setIsLocalSubmitting(false);
     }
-  }, [card.id, card.commentText, card.isGenerating, card.status, card.postContainer, setPreviewingCard, updateCardStatus]);
+  }, [
+    card.id,
+    card.commentText,
+    card.isGenerating,
+    card.status,
+    card.postContainer,
+    setPreviewingCard,
+    updateCardStatus,
+  ]);
 
   // Get initials for avatar fallback
   const getInitials = (name: string | null): string => {
@@ -235,7 +292,10 @@ export const ComposeCard = memo(function ComposeCard({ cardId }: ComposeCardProp
   };
 
   return (
-    <Card ref={cardRef} className={`relative ${isSelected ? "bg-accent ring-2 ring-ring" : ""}`}>
+    <Card
+      ref={cardRef}
+      className={`relative ${isSelected ? "bg-accent ring-ring ring-2" : ""}`}
+    >
       <CardContent className="flex flex-col gap-2 p-3">
         {/* Compact Author + Caption Header */}
         <div className="flex items-center gap-2">
@@ -250,18 +310,18 @@ export const ComposeCard = memo(function ComposeCard({ cardId }: ComposeCardProp
           </Avatar>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
-              <span className="text-xs font-medium truncate">
+              <span className="truncate text-xs font-medium">
                 {authorInfo?.name || "Unknown"}
               </span>
               <span className="text-muted-foreground text-[10px]">•</span>
-              <span className="text-muted-foreground text-[10px] truncate flex-1">
+              <span className="text-muted-foreground flex-1 truncate text-[10px]">
                 {card.captionPreview}
               </span>
             </div>
           </div>
           <Badge
             variant={card.status === "sent" ? "default" : "secondary"}
-            className="shrink-0 text-[10px] px-1.5 py-0"
+            className="shrink-0 px-1.5 py-0 text-[10px]"
           >
             {card.status === "sent" ? "Sent" : "Draft"}
           </Badge>
@@ -269,18 +329,21 @@ export const ComposeCard = memo(function ComposeCard({ cardId }: ComposeCardProp
 
         {/* Textarea - main focus */}
         {card.isGenerating ? (
-          <div className="flex min-h-[80px] items-center justify-center rounded-md border bg-muted/30">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <div className="bg-muted/30 flex min-h-[80px] items-center justify-center rounded-md border">
+            <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
           </div>
         ) : (
           <Textarea
+            ref={textareaRef}
             value={card.commentText}
             onChange={handleTextChange}
             onFocus={handleTextareaFocus}
             onBlur={handleTextareaBlur}
-            placeholder="Write your comment..."
-            className="min-h-[80px] text-sm resize-none"
-            disabled={isSubmitting || isLocalSubmitting || card.status === "sent"}
+            placeholder="Write your comment manually for 100% authenticity..."
+            className="min-h-[80px] resize-none text-sm"
+            disabled={
+              isSubmitting || isLocalSubmitting || card.status === "sent"
+            }
           />
         )}
 
@@ -288,7 +351,7 @@ export const ComposeCard = memo(function ComposeCard({ cardId }: ComposeCardProp
         <div className="flex items-center justify-between gap-2">
           {/* Your Touch indicator - hide while generating */}
           {card.isGenerating ? (
-            <div className="text-xs text-muted-foreground">
+            <div className="text-muted-foreground text-xs">
               <span>AI is writing...</span>
             </div>
           ) : (
@@ -304,63 +367,81 @@ export const ComposeCard = memo(function ComposeCard({ cardId }: ComposeCardProp
 
           {/* Action buttons */}
           <div className="flex gap-2">
-          {/* View - opens post preview sheet */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPreviewingCard(card.id)}
-            className="flex-1"
-          >
-            <ExternalLink className="mr-1 h-3 w-3" />
-            View
-          </Button>
-          {/* Submit - send comment to LinkedIn */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={handleSubmit}
-            disabled={isLocalSubmitting || isSubmitting || card.isGenerating || card.status === "sent" || !card.commentText.trim()}
-            title={card.status === "sent" ? "Already sent" : "Submit comment"}
-          >
-            {isLocalSubmitting ? (
-              <Loader2 className="h-3 w-3 animate-spin" />
-            ) : (
-              <Send className="h-3 w-3" />
-            )}
-          </Button>
-          {/* Regenerate */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={handleRegenerate}
-            disabled={isSubmitting || isLocalSubmitting || card.isGenerating || card.status === "sent"}
-            title="Regenerate comment"
-          >
-            <RefreshCw className={`h-3 w-3 ${card.isGenerating ? "animate-spin" : ""}`} />
-          </Button>
-          {/* Focus - scroll to post */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={handleFocus}
-            title="Focus on post"
-          >
-            <Eye className="h-3 w-3" />
-          </Button>
-          {/* Delete */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-destructive hover:text-destructive"
-            onClick={handleRemove}
-            disabled={isSubmitting || isLocalSubmitting || card.isGenerating || card.status === "sent"}
-            title="Remove card"
-          >
-            <Trash2 className="h-3 w-3" />
-          </Button>
+            {/* View - opens post preview sheet */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPreviewingCard(card.id)}
+              className="flex-1"
+            >
+              <ExternalLink className="mr-1 h-3 w-3" />
+              View
+            </Button>
+            {/* Submit - send comment to LinkedIn */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={handleSubmit}
+              disabled={
+                isLocalSubmitting ||
+                isSubmitting ||
+                card.isGenerating ||
+                card.status === "sent" ||
+                !card.commentText.trim()
+              }
+              title={card.status === "sent" ? "Already sent" : "Submit comment"}
+            >
+              {isLocalSubmitting ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <Send className="h-3 w-3" />
+              )}
+            </Button>
+            {/* Regenerate */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={handleRegenerate}
+              disabled={
+                isSubmitting ||
+                isLocalSubmitting ||
+                card.isGenerating ||
+                card.status === "sent"
+              }
+              title="Regenerate comment"
+            >
+              <RefreshCw
+                className={`h-3 w-3 ${card.isGenerating ? "animate-spin" : ""}`}
+              />
+            </Button>
+            {/* Focus - scroll to post */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={handleFocus}
+              title="Focus on post"
+            >
+              <Eye className="h-3 w-3" />
+            </Button>
+            {/* Delete */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-destructive hover:text-destructive h-8 w-8"
+              onClick={handleRemove}
+              disabled={
+                isSubmitting ||
+                isLocalSubmitting ||
+                card.isGenerating ||
+                card.status === "sent"
+              }
+              title="Remove card"
+            >
+              <Trash2 className="h-3 w-3" />
+            </Button>
           </div>
         </div>
       </CardContent>

@@ -2,27 +2,10 @@
 // import { useCommentImageStore } from "../stores/comment-image-store";
 // import { attachImageToComment } from "./attach-image-to-comment";
 
-// Store reference to the last used editable field for variation selection
-let currentEditableField: HTMLElement | null = null;
-
-/**
- * Set the current editable field for later insertion
- */
-export function setCurrentEditableField(field: HTMLElement | null): void {
-  currentEditableField = field;
-}
-
-/**
- * Get the current editable field
- */
-export function getCurrentEditableField(): HTMLElement | null {
-  return currentEditableField;
-}
-
 /**
  * Insert text into a LinkedIn comment field
  * Handles multi-line content and triggers input events
- * Optionally attaches a random image if enabled in settings
+ * Used by submitCommentToPost for ComposeCard submissions
  */
 export async function insertCommentIntoField(
   editableField: HTMLElement,
@@ -56,17 +39,4 @@ export async function insertCommentIntoField(
   //     await attachImageToComment(form, imageUrl);
   //   }
   // }
-}
-
-/**
- * Insert comment into the current editable field (if set)
- * Returns true if successful, false otherwise
- */
-export async function insertIntoCurrentField(comment: string): Promise<boolean> {
-  if (!currentEditableField) {
-    console.warn("EngageKit: No current editable field set");
-    return false;
-  }
-  await insertCommentIntoField(currentEditableField, comment);
-  return true;
 }

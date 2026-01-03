@@ -282,9 +282,9 @@ function ProfileCard() {
 }
 
 /**
- * Share Tab - Displays saved profile and sharing options
+ * Connect Tab - Displays saved profile and connection options
  */
-export function ShareTab() {
+export function ConnectTab() {
   const { selectedProfile } = useSavedProfileStore();
 
   // Empty state

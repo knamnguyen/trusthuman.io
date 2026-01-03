@@ -1,12 +1,12 @@
 import { create } from "zustand";
 
 // Tab indices for the sidebar
+// Order: Compose, Connect, Analytics, Account (4 tabs)
 export const SIDEBAR_TABS = {
-  ACCOUNT: 0,
-  ANALYTICS: 1,
-  EXPLORE: 2,
-  SHARE: 3,
-  WRITE: 4,
+  COMPOSE: 0,
+  CONNECT: 1,
+  ANALYTICS: 2,
+  ACCOUNT: 3,
 } as const;
 
 interface SidebarState {
@@ -24,7 +24,7 @@ type SidebarStore = SidebarState & SidebarActions;
 
 export const useSidebarStore = create<SidebarStore>((set) => ({
   isOpen: false,
-  selectedTab: SIDEBAR_TABS.ACCOUNT,
+  selectedTab: SIDEBAR_TABS.COMPOSE,
 
   setIsOpen: (isOpen) => set({ isOpen }),
   setSelectedTab: (selectedTab) => set({ selectedTab }),

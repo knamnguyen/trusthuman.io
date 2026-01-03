@@ -5,15 +5,7 @@ import { TRPCReactProvider } from "../../lib/trpc/client";
 import { initAuthStoreListener, useAuthStore } from "../../stores/auth-store";
 import App from "./App";
 import { useAccountStore } from "./stores";
-import { contentImpressionsCollector } from "./utils/data-fetch-mimic/content-impressions-collector";
-import {
-  commentsCollector,
-  // postsCollector, // COMMENTED OUT - Replaced with invite count
-} from "./utils/data-fetch-mimic/dashboard-activity-collectors";
-import { followersCollector } from "./utils/data-fetch-mimic/followers-collector";
-import { inviteCountCollector } from "./utils/data-fetch-mimic/invite-count-collector";
-import { profileImpressionsCollector } from "./utils/data-fetch-mimic/profile-impressions-collector";
-import { profileViewsCollector } from "./utils/data-fetch-mimic/profile-views-collector";
+import { autoFetchAllMetrics } from "./utils/data-fetch-mimic/unified-auto-fetch";
 
 import "../../assets/globals.css";
 
@@ -57,9 +49,11 @@ export default defineContentScript({
         }
       });
 
-    // Auto-collect analytics data (account-specific)
-    // Wait for account data to be loaded, then trigger auto-collect with account ID
-    const startAutoCollect = () => {
+    // Unified auto-collect for all analytics metrics
+    // - Fetches ALL 6 metrics together (all-or-nothing)
+    // - Rate limited by configurable interval (default 2h)
+    // - Retries up to 3x with exponential backoff on failure
+    const startAutoCollect = async () => {
       const accountId = useAccountStore.getState().currentLinkedIn.miniProfileId;
 
       if (!accountId) {
@@ -67,51 +61,18 @@ export default defineContentScript({
         return;
       }
 
-      console.log(`EngageKit WXT: Starting auto-collect for account: ${accountId}`);
+      console.log(`EngageKit WXT: Starting unified auto-collect for account: ${accountId}`);
 
-      // Auto-collect profile views (non-blocking, rate-limited to once per 24h)
-      profileViewsCollector.autoCollect(accountId).catch((err) => {
-        console.error(
-          "EngageKit WXT: Failed to auto-collect profile views:",
-          err,
-        );
-      });
-
-      // Auto-collect dashboard activity (posts and comments)
-      // COMMENTED OUT - Replaced with invite count
-      // postsCollector.autoCollect(accountId).catch((err) => {
-      //   console.error("EngageKit WXT: Failed to auto-collect posts:", err);
-      // });
-
-      commentsCollector.autoCollect(accountId).catch((err) => {
-        console.error("EngageKit WXT: Failed to auto-collect comments:", err);
-      });
-
-      // Auto-collect invite count
-      inviteCountCollector.autoCollect(accountId).catch((err) => {
-        console.error("EngageKit WXT: Failed to auto-collect invite count:", err);
-      });
-
-      // Auto-collect followers
-      followersCollector.autoCollect(accountId).catch((err) => {
-        console.error("EngageKit WXT: Failed to auto-collect followers:", err);
-      });
-
-      // Auto-collect profile impressions
-      profileImpressionsCollector.autoCollect(accountId).catch((err) => {
-        console.error(
-          "EngageKit WXT: Failed to auto-collect profile impressions:",
-          err,
-        );
-      });
-
-      // Auto-collect content impressions
-      contentImpressionsCollector.autoCollect(accountId).catch((err) => {
-        console.error(
-          "EngageKit WXT: Failed to auto-collect content impressions:",
-          err,
-        );
-      });
+      try {
+        const success = await autoFetchAllMetrics(accountId);
+        if (success) {
+          console.log("EngageKit WXT: Unified auto-collect completed successfully");
+        } else {
+          console.log("EngageKit WXT: Unified auto-collect skipped (rate limited or failed)");
+        }
+      } catch (err) {
+        console.error("EngageKit WXT: Unified auto-collect error:", err);
+      }
     };
 
     // Start auto-collect immediately (profile should be extracted by now)

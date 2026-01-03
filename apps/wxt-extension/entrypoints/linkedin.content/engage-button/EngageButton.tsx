@@ -4,17 +4,21 @@ import { useMutation } from "@tanstack/react-query";
 import { EngageKitSprite } from "@sassy/ui/components/engagekit-sprite";
 
 import { useTRPC } from "../../../lib/trpc/client";
-import { useCommentStore } from "../stores/comment-store";
+import { useComposeStore } from "../stores/compose-store";
 import { SIDEBAR_TABS, useSidebarStore } from "../stores/sidebar-store";
 import {
   DEFAULT_STYLE_GUIDE,
   extractAdjacentComments,
-  extractPostContent,
-  findEditableField,
+  extractAuthorInfoFromPost,
+  extractCommentsFromPost,
+  extractPostCaption,
+  extractPostTime,
+  extractPostUrl,
   findPostContainer,
-  insertCommentIntoField,
-  setCurrentEditableField,
+  getCaptionPreview,
+  waitForCommentsReady,
 } from "../utils";
+import { clickCommentButton } from "../utils/click-comment-button";
 
 /**
  * Preload an image to ensure it's cached by the browser
@@ -36,9 +40,22 @@ export function EngageButton({ anchorElement }: EngageButtonProps) {
   const [isHovered, setIsHovered] = useState(false);
 
   const trpc = useTRPC();
-  // Comment store for AI generation state
-  const { setComments, setIsGenerating, setPostContent, generateVariations } =
-    useCommentStore();
+  // Compose store for creating ComposeCards
+  const {
+    addCard,
+    updateCardComment,
+    setSinglePostCards,
+    setIsEngageButtonGenerating,
+    clearSinglePostCards,
+    updateCardsComments,
+    isCollecting,
+    isEngageButtonGenerating,
+    cards,
+    singlePostCardIds,
+  } = useComposeStore();
+
+  // Check if Load Posts cards exist (mutual exclusivity with EngageButton)
+  const hasLoadPostsCards = cards.some((c) => !singlePostCardIds.includes(c.id));
   // Sidebar store for UI state
   const { openToTab } = useSidebarStore();
 
@@ -62,95 +79,150 @@ export function EngageButton({ anchorElement }: EngageButtonProps) {
     e.preventDefault();
     e.stopPropagation();
 
-    if (generateComment.isPending) return;
+    // Only block if Load Posts is running or Load Posts cards exist
+    // (Single-post cards will be auto-cleared for fresh generation)
+    if (isCollecting || hasLoadPostsCards) {
+      console.log("EngageKit: ignoring click - Load Posts running or Load Posts cards exist");
+      return;
+    }
 
     // Find the surrounding post container using the anchor element
-    const postContainer = findPostContainer(anchorElement);
+    // Cast to HTMLElement since LinkedIn elements are always HTMLElements
+    const postContainer = findPostContainer(anchorElement) as HTMLElement | null;
 
     if (!postContainer) {
       console.warn("EngageKit: unable to locate surrounding post container");
       return;
     }
 
-    // Extract post content
-    const postContent = extractPostContent(postContainer);
-
-    if (!postContent) {
-      console.warn("EngageKit: unable to extract post content");
+    // Extract full post data for ComposeCards
+    const fullCaption = extractPostCaption(postContainer);
+    if (!fullCaption) {
+      console.warn("EngageKit: unable to extract post caption");
       return;
     }
 
-    // Extract adjacent comments for context
-    const adjacentComments = extractAdjacentComments(postContainer);
+    // Clear any existing single-post cards (fresh start for new post)
+    clearSinglePostCards();
+
+    // Mark as generating
+    setIsEngageButtonGenerating(true);
+
+    // Extract basic post info immediately (no waiting required)
+    const captionPreview = getCaptionPreview(fullCaption, 10);
+    const authorInfo = extractAuthorInfoFromPost(postContainer);
+    const postTime = extractPostTime(postContainer);
+    const postUrls = extractPostUrl(postContainer);
+    const urn =
+      postContainer.getAttribute("data-urn") ||
+      postContainer.getAttribute("data-id") ||
+      `unknown-${Date.now()}`;
 
     console.log(
-      "EngageKit: generating comment for post:",
-      postContent.slice(0, 100),
+      "EngageKit: generating 3 variations + 1 manual card for post:",
+      fullCaption.slice(0, 100),
     );
 
-    // Update store: start generating and open sidebar to Write tab
-    setIsGenerating(true);
-    setPostContent(postContent);
-    setComments([]);
-    openToTab(SIDEBAR_TABS.WRITE);
+    // Create card IDs upfront
+    const manualCardId = crypto.randomUUID();
+    const aiCardIds = [
+      crypto.randomUUID(),
+      crypto.randomUUID(),
+      crypto.randomUUID(),
+    ];
+    const allCardIds = [manualCardId, ...aiCardIds];
 
+    // INSTANT: Add empty manual card immediately (user can start typing right away)
+    // comments: [] now, will be populated via updateCardsComments after async load
+    addCard({
+      id: manualCardId,
+      urn,
+      captionPreview,
+      fullCaption,
+      commentText: "",
+      originalCommentText: "",
+      postContainer,
+      status: "draft",
+      isGenerating: false,
+      authorInfo,
+      postTime,
+      postUrls,
+      comments: [],
+    });
+
+    // INSTANT: Add 3 AI cards in generating state
+    // comments: [] now, will be populated via updateCardsComments after async load
+    aiCardIds.forEach((id) => {
+      addCard({
+        id,
+        urn,
+        captionPreview,
+        fullCaption,
+        commentText: "",
+        originalCommentText: "",
+        postContainer,
+        status: "draft",
+        isGenerating: true,
+        authorInfo,
+        postTime,
+        postUrls,
+        comments: [],
+      });
+    });
+
+    // INSTANT: Track as single-post cards and open sidebar immediately
+    setSinglePostCards(allCardIds);
+    openToTab(SIDEBAR_TABS.COMPOSE);
+
+    // NOW wait for comments to load for AI context
+    const beforeCount = extractCommentsFromPost(postContainer).length;
+    clickCommentButton(postContainer);
+    await waitForCommentsReady(postContainer, beforeCount);
+
+    // Extract comments for display in preview
+    // Cards were created with comments: [] for instant UX, now update with loaded comments
+    const loadedComments = extractCommentsFromPost(postContainer);
+    if (loadedComments.length > 0) {
+      updateCardsComments(urn, loadedComments);
+    }
+
+    // Extract adjacent comments for AI generation
+    const adjacentComments = extractAdjacentComments(postContainer);
+
+    // Request params for AI generation
     const requestParams = {
-      postContent,
+      postContent: fullCaption,
       styleGuide: DEFAULT_STYLE_GUIDE,
       adjacentComments,
     };
 
-    // Find editable field for potential insertion
-    const form = anchorElement.closest("form");
-    const editableField = findEditableField(form);
-
+    // Fire 3 parallel AI requests, update each card as it completes
     try {
-      if (generateVariations) {
-        // Store the editable field for later insertion when user picks a variation
-        setCurrentEditableField(editableField);
-
-        // Send 3 parallel requests for variations
-        console.log("EngageKit: generating 3 variations in parallel");
-        const results = await Promise.all([
-          generateComment.mutateAsync(requestParams),
-          generateComment.mutateAsync(requestParams),
-          generateComment.mutateAsync(requestParams),
-        ]);
-
-        // Extract comments from results
-        const comments = results.map((r) => r.comment);
-        setComments(comments);
-
-        // Don't auto-insert - user picks from variations in sidebar
-      } else {
-        // Single request mode
-        const result = await generateComment.mutateAsync(requestParams);
-
-        if (!result.success) {
-          console.warn("EngageKit: AI generation failed, using fallback");
-        }
-
-        // Update store with generated comment
-        setComments([result.comment]);
-
-        // Insert generated comment into editable field
-        if (!editableField) {
-          console.warn("EngageKit: editable field not found");
-          return;
-        }
-
-        await insertCommentIntoField(editableField, result.comment);
-      }
+      await Promise.all(
+        aiCardIds.map(async (cardId) => {
+          try {
+            const result = await generateComment.mutateAsync(requestParams);
+            updateCardComment(cardId, result.comment);
+          } catch (err) {
+            console.error(`EngageKit: failed to generate for card ${cardId}`, err);
+            // Set empty comment on failure so isGenerating becomes false
+            updateCardComment(cardId, "");
+          }
+        }),
+      );
     } catch (err) {
-      console.error("EngageKit: error generating comment", err);
-      setComments([]);
+      console.error("EngageKit: error generating comments", err);
     } finally {
-      setIsGenerating(false);
+      // Mark as done generating
+      setIsEngageButtonGenerating(false);
     }
   };
 
   const iconSize = 32;
-  const isLoading = generateComment.isPending;
+  // Show loading state when generating
+  const isLoading = generateComment.isPending || isEngageButtonGenerating;
+  // Only disable when Load Posts is active (allow clicking during single-post generation for fresh start)
+  const isDisabled = isCollecting || hasLoadPostsCards;
 
   return (
     <button
@@ -158,16 +230,18 @@ export function EngageButton({ anchorElement }: EngageButtonProps) {
       onClick={handleClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      disabled={isLoading}
+      disabled={isDisabled}
       style={{
         display: "inline-flex",
         alignItems: "center",
         justifyContent: "center",
         padding: "4px",
-        backgroundColor: isHovered && !isLoading ? "#f3f6f8" : "transparent",
+        backgroundColor: isHovered && !isDisabled ? "#f3f6f8" : "transparent",
         border: "none",
         borderRadius: "50%",
         transition: "background-color 0.15s",
+        opacity: isDisabled ? 0.5 : 1,
+        cursor: isDisabled ? "not-allowed" : "pointer",
       }}
     >
       {/* Keep both sprites mounted to avoid load delay on state change */}

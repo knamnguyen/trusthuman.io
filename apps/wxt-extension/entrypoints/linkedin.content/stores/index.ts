@@ -1,6 +1,5 @@
 // Barrel exports for Zustand stores
 export { useAccountStore } from "./account-store";
-export { useCommentStore } from "./comment-store";
 export {
   useCommentImageStore,
   type CommentImage,

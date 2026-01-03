@@ -3,7 +3,9 @@ import { useEffect, useState } from "react";
 import { Sheet } from "@sassy/ui/sheet";
 
 import { ToggleButton } from "./_components/ToggleButton";
+import { AutoEngageObserver } from "./engage-button/AutoEngageObserver";
 import { ButtonPortalManager } from "./engage-button/ButtonPortalManager";
+import { SpacebarEngageObserver } from "./engage-button/SpacebarEngageObserver";
 import { LinkedInSidebar } from "./LinkedInSidebar";
 import { SaveProfilePortalManager } from "./save-profile";
 import { useShadowRootStore, useSidebarStore } from "./stores";
@@ -69,6 +71,12 @@ export default function App({ shadowRoot }: AppProps) {
 
       {/* Single React tree manages all injected save profile buttons */}
       <SaveProfilePortalManager />
+
+      {/* Observer for auto-engage on native LinkedIn comment button clicks */}
+      <AutoEngageObserver />
+
+      {/* Observer for spacebar auto-engage - highlights most visible post */}
+      <SpacebarEngageObserver />
     </>
   );
 }

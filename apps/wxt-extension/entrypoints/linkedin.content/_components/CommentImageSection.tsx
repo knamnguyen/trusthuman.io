@@ -24,7 +24,7 @@ interface UploadingFile {
 }
 
 /**
- * Image upload and management section for WriteTab
+ * Image upload and management section for ComposeTab
  * Allows users to upload images that can be randomly attached to comments
  */
 export function CommentImageSection() {

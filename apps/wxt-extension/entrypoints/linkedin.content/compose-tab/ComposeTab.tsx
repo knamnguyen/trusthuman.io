@@ -1,9 +1,19 @@
 import { useCallback, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Edit3, Hash, Loader2, Send, Sparkles, Square } from "lucide-react";
+import {
+  Edit3,
+  Feather,
+  Loader2,
+  Send,
+  Sparkles,
+  Square,
+  Trash2,
+} from "lucide-react";
 import { useShallow } from "zustand/shallow";
 
 import { Button } from "@sassy/ui/button";
+import { Label } from "@sassy/ui/label";
+import { Switch } from "@sassy/ui/switch";
 
 import type { PostAuthorInfo } from "../utils/extract-author-info-from-post";
 import type { PostCommentInfo } from "../utils/extract-comment-from-post";
@@ -239,9 +249,9 @@ async function collectPostsBatch(
   return emittedCount;
 }
 
-export function ExploreTab() {
+export function ComposeTab() {
   // DEBUG: Track renders
-  console.log("[ExploreTab] Render");
+  console.log("[ComposeTab] Render");
 
   const [isLoading, setIsLoading] = useState(false);
   /** Target number of drafts to collect (user configurable, max 100) */
@@ -253,6 +263,14 @@ export function ExploreTab() {
 
   // Subscribe to isUserEditing for paused indicator
   const isUserEditing = useComposeStore((state) => state.isUserEditing);
+  // Subscribe to isEngageButtonGenerating for conflict handling
+  const isEngageButtonGenerating = useComposeStore(
+    (state) => state.isEngageButtonGenerating,
+  );
+  // Subscribe to settings for toggles
+  const settings = useComposeStore((state) => state.settings);
+  const updateSetting = useComposeStore((state) => state.updateSetting);
+  const clearAllCards = useComposeStore((state) => state.clearAllCards);
 
   const trpc = useTRPC();
   const generateComment = useMutation(
@@ -264,11 +282,19 @@ export function ExploreTab() {
   const cardIds = useComposeStore(
     useShallow((state) => {
       console.log(
-        "[ExploreTab] cardIds selector called, count:",
+        "[ComposeTab] cardIds selector called, count:",
         state.cards.length,
       );
       return state.cards.map((c) => c.id);
     }),
+  );
+  // Single-post card IDs (from EngageButton) for different styling
+  const singlePostCardIds = useComposeStore((state) => state.singlePostCardIds);
+
+  // Check if we have cards from each source (for mutual exclusivity)
+  const hasEngageButtonCards = singlePostCardIds.length > 0;
+  const hasLoadPostsCards = cardIds.some(
+    (id) => !singlePostCardIds.includes(id),
   );
 
   // Stats for display - uses shallow comparison
@@ -295,6 +321,8 @@ export function ExploreTab() {
   const getCards = useComposeStore((state) => state.cards);
   const setPreviewingCard = useComposeStore((state) => state.setPreviewingCard);
 
+  // Conflict flags - disable certain actions when others are running
+  const isAnyGenerating = isLoading || isEngageButtonGenerating;
 
   /**
    * Start batch collection:
@@ -317,7 +345,8 @@ export function ExploreTab() {
       console.log(`[EngageKit] Batch received: ${posts.length} posts`);
 
       // Check if no card is being previewed yet - we'll set first card as preview
-      const needsFirstPreview = useComposeStore.getState().previewingCardId === null;
+      const needsFirstPreview =
+        useComposeStore.getState().previewingCardId === null;
       let firstCardId: string | null = null;
 
       // Process all posts in the batch
@@ -453,12 +482,78 @@ export function ExploreTab() {
     <div className="bg-background flex flex-col gap-3 px-4">
       {/* Sticky Compact Header */}
       <div className="bg-background sticky top-0 z-10 -mx-4 border-b px-4 py-2">
-        {/* Row 1: Title + Target Input */}
+        {/* Row 1: Title + Settings Toggles */}
         <div className="mb-2 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Hash className="h-3.5 w-3.5" />
-            <span className="text-sm font-medium">Feed Explorer</span>
+            <Feather className="h-3.5 w-3.5" />
+            <span className="text-sm font-medium">Compose</span>
           </div>
+          <div className="flex items-center gap-3">
+            {/* Auto-open-engage toggle */}
+            <div className="flex items-center gap-1.5">
+              <Switch
+                id="auto-open-engage"
+                checked={settings.autoEngageOnCommentClick}
+                onCheckedChange={(checked) =>
+                  updateSetting("autoEngageOnCommentClick", checked)
+                }
+              />
+              <Label
+                htmlFor="auto-open-engage"
+                className="text-muted-foreground cursor-pointer text-[10px]"
+              >
+                Auto-open-engage
+              </Label>
+            </div>
+            {/* Spacebar auto-engage toggle - highlights most visible post, press space to engage */}
+            <div className="flex items-center gap-1.5">
+              <Switch
+                id="space-engage"
+                checked={settings.spacebarAutoEngage}
+                onCheckedChange={(checked) =>
+                  updateSetting("spacebarAutoEngage", checked)
+                }
+              />
+              <Label
+                htmlFor="space-engage"
+                className="text-muted-foreground cursor-pointer text-[10px]"
+              >
+                Space engage
+              </Label>
+            </div>
+          </div>
+        </div>
+
+        {/* Row 2: Load Posts + Target Input */}
+        <div className="mb-2 flex items-center gap-2">
+          {isLoading ? (
+            <Button
+              onClick={handleStop}
+              variant="destructive"
+              size="sm"
+              className="h-7 flex-1 text-xs"
+            >
+              <Square className="mr-1 h-3 w-3" />
+              Stop ({loadingProgress}/{targetDraftCount})
+            </Button>
+          ) : (
+            <Button
+              onClick={handleStart}
+              disabled={
+                isSubmitting || isEngageButtonGenerating || hasEngageButtonCards
+              }
+              size="sm"
+              className="h-7 flex-1 text-xs"
+              title={
+                hasEngageButtonCards
+                  ? "Clear EngageButton cards first"
+                  : undefined
+              }
+            >
+              <Sparkles className="mr-1 h-3 w-3" />
+              Load Posts
+            </Button>
+          )}
           <div className="flex items-center gap-1.5">
             <span className="text-muted-foreground text-xs">Target:</span>
             <input
@@ -477,37 +572,15 @@ export function ExploreTab() {
           </div>
         </div>
 
-        {/* Row 2: Start/Stop Button */}
-        <div className="flex gap-2">
-          {isLoading ? (
-            <Button
-              onClick={handleStop}
-              variant="destructive"
-              size="sm"
-              className="h-7 flex-1 text-xs"
-            >
-              <Square className="mr-1 h-3 w-3" />
-              Stop ({loadingProgress}/{targetDraftCount})
-            </Button>
-          ) : (
-            <Button
-              onClick={handleStart}
-              disabled={isSubmitting}
-              size="sm"
-              className="h-7 flex-1 text-xs"
-            >
-              <Sparkles className="mr-1 h-3 w-3" />
-              Start
-            </Button>
-          )}
-        </div>
-
-        {/* Row 3: Drafts/Sent count + Submit (only when cards exist) */}
+        {/* Row 3: Stats + Actions (only when cards exist) */}
         {cardIds.length > 0 && (
-          <div className="mt-2 flex items-center justify-between border-t pt-2">
+          <div className="flex items-center justify-between border-t pt-2">
             <div className="flex items-center gap-2 text-xs font-medium">
               {isLoading && isUserEditing && (
-                <span className="flex items-center gap-1 text-amber-600" title="Click outside edit box to continue">
+                <span
+                  className="flex items-center gap-1 text-amber-600"
+                  title="Click outside edit box to continue"
+                >
                   <Edit3 className="h-3 w-3" />
                   editing
                 </span>
@@ -523,28 +596,54 @@ export function ExploreTab() {
                 <span className="text-green-600">{sentCount} sent</span>
               )}
             </div>
-            <Button
-              size="sm"
-              className="h-6 px-2 text-xs"
-              onClick={handleSubmitAll}
-              disabled={isSubmitting || draftCount === 0}
-            >
-              {isSubmitting ? (
-                <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-              ) : (
-                <Send className="mr-1 h-3 w-3" />
-              )}
-              {isSubmitting ? "Submitting..." : "Submit All"}
-            </Button>
+            <div className="flex items-center gap-1">
+              {/* Clear All */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-destructive hover:text-destructive h-6 px-2 text-xs"
+                onClick={clearAllCards}
+                title="Clear all cards and reset"
+              >
+                <Trash2 className="mr-1 h-3 w-3" />
+                Clear All
+              </Button>
+              {/* Submit All - disabled when EngageButton cards exist (use individual submit) */}
+              <Button
+                size="sm"
+                className="h-6 px-2 text-xs"
+                onClick={handleSubmitAll}
+                disabled={
+                  isSubmitting ||
+                  isAnyGenerating ||
+                  draftCount === 0 ||
+                  hasEngageButtonCards
+                }
+                title={
+                  hasEngageButtonCards
+                    ? "Use individual submit for EngageButton cards"
+                    : undefined
+                }
+              >
+                {isSubmitting ? (
+                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                ) : (
+                  <Send className="mr-1 h-3 w-3" />
+                )}
+                {isSubmitting ? "Submitting..." : "Submit All"}
+              </Button>
+            </div>
           </div>
         )}
       </div>
 
       {/* Empty State */}
       {cardIds.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-12">
-          <p className="text-muted-foreground text-sm">
-            Click Start to collect posts
+        <div className="flex flex-col items-center justify-center gap-2 py-12">
+          <Feather className="text-muted-foreground h-10 w-10" />
+          <p className="text-muted-foreground text-sm">No comments yet</p>
+          <p className="text-muted-foreground text-xs">
+            Click "Load Posts" or use the EngageKit button on any post
           </p>
         </div>
       )}
@@ -552,9 +651,19 @@ export function ExploreTab() {
       {/* Compose Cards List */}
       {cardIds.length > 0 && (
         <div className="flex flex-col gap-3">
-          {cardIds.map((cardId) => (
-            <ComposeCard key={cardId} cardId={cardId} />
-          ))}
+          {cardIds.map((cardId) => {
+            const isSinglePost = singlePostCardIds.includes(cardId);
+            // Auto-focus the first single-post card (manual card) for quick typing
+            const isFirstManualCard = isSinglePost && singlePostCardIds[0] === cardId;
+            return (
+              <ComposeCard
+                key={cardId}
+                cardId={cardId}
+                isSinglePostCard={isSinglePost}
+                autoFocus={isFirstManualCard}
+              />
+            );
+          })}
         </div>
       )}
       {/* Post Preview Sheet - positioned at sidebar's left edge, clips content as it slides */}

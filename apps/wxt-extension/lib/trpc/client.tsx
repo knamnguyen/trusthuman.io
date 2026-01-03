@@ -60,7 +60,8 @@ export const getTrpcClient = () => {
           const token = await authService.getToken();
 
           const headers: Record<string, string> = {
-            "x-trpc-source": "wxt-extension",
+            // Must be "chrome-extension" to match server middleware Bearer token auth path
+            "x-trpc-source": "chrome-extension",
             // Bypass ngrok browser warning (for development)
             "ngrok-skip-browser-warning": "true",
             "Content-Type": "application/json",

@@ -1,8 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { useShallow } from "zustand/shallow";
-import { AnimatePresence, motion } from "framer-motion";
 import levenshtein from "fast-levenshtein";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   ChevronLeft,
   ChevronRight,
@@ -15,6 +14,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
+import { useShallow } from "zustand/shallow";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@sassy/ui/avatar";
 import { Button } from "@sassy/ui/button";
@@ -29,7 +29,7 @@ import { submitCommentToPost } from "../utils/submit-comment";
 /**
  * Panel that displays post details when clicking "View" on a compose card.
  * Reads pre-extracted author info and caption from the store (extracted during collection).
- * Positioning is handled by wrapper div in ExploreTab (absolute left-0 -translate-x-full).
+ * Positioning is handled by wrapper div in EngageTab (absolute left-0 -translate-x-full).
  */
 export function PostPreviewSheet() {
   // DEBUG: Track renders
@@ -44,13 +44,18 @@ export function PostPreviewSheet() {
   // Subscribe to the specific card being previewed (only re-renders when THIS card changes)
   const previewingCard = useComposeStore(
     useCallback(
-      (state) => (previewingCardId ? state.cards.find((c) => c.id === previewingCardId) : null),
+      (state) =>
+        previewingCardId
+          ? state.cards.find((c) => c.id === previewingCardId)
+          : null,
       [previewingCardId],
     ),
   );
 
   // Get card IDs for navigation - only changes when cards are added/removed
-  const cardIds = useComposeStore(useShallow((state) => state.cards.map((c) => c.id)));
+  const cardIds = useComposeStore(
+    useShallow((state) => state.cards.map((c) => c.id)),
+  );
 
   // Find current index in the card IDs array
   const currentIndex = useMemo(() => {
@@ -175,7 +180,9 @@ export function PostPreviewSheet() {
     setCardGenerating(cardId, true);
 
     // Extract adjacent comments for context
-    const adjacentComments = extractAdjacentComments(previewingCard.postContainer);
+    const adjacentComments = extractAdjacentComments(
+      previewingCard.postContainer,
+    );
 
     // Fire regeneration request
     generateComment
@@ -185,33 +192,43 @@ export function PostPreviewSheet() {
         adjacentComments,
         previousAiComment,
         humanEditedComment:
-          humanEditedComment !== previousAiComment ? humanEditedComment : undefined,
+          humanEditedComment !== previousAiComment
+            ? humanEditedComment
+            : undefined,
       })
       .then((result) => {
         updateCardComment(cardId, result.comment);
       })
       .catch((err) => {
-        console.error("EngageKit: error regenerating comment for card", cardId, err);
+        console.error(
+          "EngageKit: error regenerating comment for card",
+          cardId,
+          err,
+        );
         // On error, just mark as done (keep existing text)
         setCardGenerating(cardId, false);
       });
-  }, [
-    previewingCard,
-    setCardGenerating,
-    generateComment,
-    updateCardComment,
-  ]);
+  }, [previewingCard, setCardGenerating, generateComment, updateCardComment]);
 
   // Submit this card's comment to LinkedIn
   const handleSubmit = useCallback(async () => {
-    if (!previewingCard || !previewingCard.commentText.trim() || previewingCard.isGenerating || previewingCard.status === "sent") return;
+    if (
+      !previewingCard ||
+      !previewingCard.commentText.trim() ||
+      previewingCard.isGenerating ||
+      previewingCard.status === "sent"
+    )
+      return;
 
     // Close the preview panel before submitting
     setPreviewingCard(null);
 
     setIsLocalSubmitting(true);
     try {
-      const success = await submitCommentToPost(previewingCard.postContainer, previewingCard.commentText);
+      const success = await submitCommentToPost(
+        previewingCard.postContainer,
+        previewingCard.commentText,
+      );
       if (success) {
         updateCardStatus(previewingCard.id, "sent");
       }
@@ -298,8 +315,10 @@ export function PostPreviewSheet() {
           {/* Loading state - collecting but no card yet */}
           {!previewingCard && isCollecting && (
             <div className="flex flex-1 flex-col items-center justify-center gap-3 p-4">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              <p className="text-muted-foreground text-sm">Collecting posts...</p>
+              <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
+              <p className="text-muted-foreground text-sm">
+                Collecting posts...
+              </p>
             </div>
           )}
 
@@ -370,7 +389,7 @@ export function PostPreviewSheet() {
                       {previewingCard.comments.map((comment, index) => (
                         <div
                           key={comment.urn || index}
-                          className={`rounded-md border p-3 ${comment.isReply ? "ml-4 bg-muted/50" : "bg-muted/30"}`}
+                          className={`rounded-md border p-3 ${comment.isReply ? "bg-muted/50 ml-4" : "bg-muted/30"}`}
                         >
                           <div className="mb-1 flex items-center gap-2">
                             {comment.authorPhotoUrl && (
@@ -403,18 +422,17 @@ export function PostPreviewSheet() {
                     </div>
                   </div>
                 )}
-
               </div>
             </ScrollArea>
           )}
 
           {/* Sticky Compose Editor at bottom */}
           {previewingCard && (
-            <div className="border-t bg-background p-4 flex flex-col gap-3">
+            <div className="bg-background flex flex-col gap-3 border-t p-4">
               {/* Textarea or loading state */}
               {previewingCard.isGenerating ? (
-                <div className="flex min-h-[80px] items-center justify-center rounded-md border bg-muted/30">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <div className="bg-muted/30 flex min-h-[80px] items-center justify-center rounded-md border">
+                  <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
                 </div>
               ) : (
                 <Textarea
@@ -422,9 +440,13 @@ export function PostPreviewSheet() {
                   onChange={handleTextChange}
                   onFocus={handleTextareaFocus}
                   onBlur={handleTextareaBlur}
-                  placeholder="Write your comment..."
-                  className="min-h-[80px] text-sm resize-none"
-                  disabled={isSubmitting || isLocalSubmitting || previewingCard.status === "sent"}
+                  placeholder="Write your comment manually for 100% authenticity..."
+                  className="min-h-[80px] resize-none text-sm"
+                  disabled={
+                    isSubmitting ||
+                    isLocalSubmitting ||
+                    previewingCard.status === "sent"
+                  }
                 />
               )}
 
@@ -432,7 +454,7 @@ export function PostPreviewSheet() {
               <div className="flex items-center justify-between gap-2">
                 {/* Your Touch indicator - hide while generating */}
                 {previewingCard.isGenerating ? (
-                  <div className="text-xs text-muted-foreground">
+                  <div className="text-muted-foreground text-xs">
                     <span>AI is writing...</span>
                   </div>
                 ) : (
@@ -454,8 +476,18 @@ export function PostPreviewSheet() {
                     size="icon"
                     className="h-8 w-8"
                     onClick={handleSubmit}
-                    disabled={isLocalSubmitting || isSubmitting || previewingCard.isGenerating || previewingCard.status === "sent" || !previewingCard.commentText.trim()}
-                    title={previewingCard.status === "sent" ? "Already sent" : "Submit comment"}
+                    disabled={
+                      isLocalSubmitting ||
+                      isSubmitting ||
+                      previewingCard.isGenerating ||
+                      previewingCard.status === "sent" ||
+                      !previewingCard.commentText.trim()
+                    }
+                    title={
+                      previewingCard.status === "sent"
+                        ? "Already sent"
+                        : "Submit comment"
+                    }
                   >
                     {isLocalSubmitting ? (
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -469,10 +501,17 @@ export function PostPreviewSheet() {
                     size="icon"
                     className="h-8 w-8"
                     onClick={handleRegenerate}
-                    disabled={isSubmitting || isLocalSubmitting || previewingCard.isGenerating || previewingCard.status === "sent"}
+                    disabled={
+                      isSubmitting ||
+                      isLocalSubmitting ||
+                      previewingCard.isGenerating ||
+                      previewingCard.status === "sent"
+                    }
                     title="Regenerate comment"
                   >
-                    <RefreshCw className={`h-3.5 w-3.5 ${previewingCard.isGenerating ? "animate-spin" : ""}`} />
+                    <RefreshCw
+                      className={`h-3.5 w-3.5 ${previewingCard.isGenerating ? "animate-spin" : ""}`}
+                    />
                   </Button>
                   {/* Focus on post */}
                   <Button
@@ -488,9 +527,14 @@ export function PostPreviewSheet() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-destructive hover:text-destructive"
+                    className="text-destructive hover:text-destructive h-8 w-8"
                     onClick={handleRemove}
-                    disabled={isSubmitting || isLocalSubmitting || previewingCard.isGenerating || previewingCard.status === "sent"}
+                    disabled={
+                      isSubmitting ||
+                      isLocalSubmitting ||
+                      previewingCard.isGenerating ||
+                      previewingCard.status === "sent"
+                    }
                     title="Remove card"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -508,10 +552,10 @@ export function PostPreviewSheet() {
                   disabled={!canGoPrev}
                   title="Previous post"
                 >
-                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  <ChevronLeft className="mr-1 h-4 w-4" />
                   Prev
                 </Button>
-                <span className="text-muted-foreground text-sm min-w-[50px] text-center">
+                <span className="text-muted-foreground min-w-[50px] text-center text-sm">
                   {currentIndex + 1} / {cardIds.length}
                 </span>
                 <Button
@@ -523,7 +567,7 @@ export function PostPreviewSheet() {
                   title="Next post"
                 >
                   Next
-                  <ChevronRight className="h-4 w-4 ml-1" />
+                  <ChevronRight className="ml-1 h-4 w-4" />
                 </Button>
               </div>
             </div>

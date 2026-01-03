@@ -56,9 +56,9 @@ export function SaveProfileButton({
       profileUrn: profileInfo.urn || "no urn available",
     });
 
-    // Store profile and open sidebar to Share tab
+    // Store profile and open sidebar to Connect tab
     setSelectedProfile(profileInfo);
-    openToTab(SIDEBAR_TABS.SHARE);
+    openToTab(SIDEBAR_TABS.CONNECT);
 
     // Fetch recent comments if URN is available
     if (profileInfo.urn) {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   BarChart3,
   Eye,
@@ -12,6 +12,12 @@ import {
 import { Button } from "@sassy/ui/button";
 
 import { useAccountStore } from "../stores/account-store";
+import {
+  DEFAULT_AUTO_FETCH_INTERVAL_HOURS,
+  getAutoFetchIntervalHours,
+  INTERVAL_OPTIONS,
+  setAutoFetchIntervalHours,
+} from "../utils/data-fetch-mimic/auto-fetch-config";
 import { useContentImpressionsHistory } from "../utils/data-fetch-mimic/use-content-impressions-history";
 import {
   useCommentsHistory,
@@ -33,6 +39,22 @@ export function AnalyticsTab() {
   const [selectedMetrics, setSelectedMetrics] = useState<Set<string>>(
     new Set(["profileViews", "inviteCount", "comments"]), // Default: first 3 selected
   );
+
+  // Auto-fetch interval setting (1-24 hours)
+  const [autoFetchIntervalHours, setAutoFetchInterval] = useState(
+    DEFAULT_AUTO_FETCH_INTERVAL_HOURS
+  );
+
+  // Load saved interval on mount
+  useEffect(() => {
+    getAutoFetchIntervalHours().then(setAutoFetchInterval);
+  }, []);
+
+  // Handle interval change
+  const handleIntervalChange = async (hours: number) => {
+    setAutoFetchInterval(hours);
+    await setAutoFetchIntervalHours(hours);
+  };
 
   const {
     latest: profileViewsLatest,
@@ -111,67 +133,47 @@ export function AnalyticsTab() {
     });
   };
 
-  // Unified refresh - fetches all metrics at once for synchronized timestamps
-  const refetchAll = async () => {
-    console.log("🔄 Refreshing all metrics...");
-    try {
-      await Promise.all([
-        profileViewsRefetch(),
-        // postsRefetch(), // COMMENTED OUT - Replaced with invite count
-        inviteCountRefetch(),
-        commentsRefetch(),
-        followersRefetch(),
-        profileImpressionsRefetch(),
-        contentImpressionsRefetch(),
-      ]);
+  // DEV ONLY - Unified refresh - fetches all metrics at once for synchronized timestamps
+  // const refetchAll = async () => {
+  //   console.log("🔄 Refreshing all metrics...");
+  //   try {
+  //     await Promise.all([
+  //       profileViewsRefetch(),
+  //       inviteCountRefetch(),
+  //       commentsRefetch(),
+  //       followersRefetch(),
+  //       profileImpressionsRefetch(),
+  //       contentImpressionsRefetch(),
+  //     ]);
+  //     console.log("✅ All metrics refresh initiated successfully");
+  //   } catch (error) {
+  //     console.error("❌ Refresh failed:", error);
+  //     throw error;
+  //   }
+  // };
 
-      console.log("✅ All metrics refresh initiated successfully");
-    } catch (error) {
-      console.error("❌ Refresh failed:", error);
-      throw error; // Re-throw to let UI handle the error
-    }
-  };
-
-  // Clear all stored data for the current account
-  const clearAllData = async () => {
-    if (
-      window.confirm(
-        "Are you sure you want to clear all analytics data for this LinkedIn account? This cannot be undone.",
-      )
-    ) {
-      if (!accountId) {
-        console.warn("No account ID available to clear data");
-        return;
-      }
-
-      const { storage } = await import("wxt/storage");
-      await storage.removeItem(
-        `local:profile-views-${accountId}` as `local:${string}`,
-      );
-      // COMMENTED OUT - Replaced with invite count
-      // await storage.removeItem(
-      //   `local:dashboard-posts-${accountId}` as `local:${string}`,
-      // );
-      await storage.removeItem(
-        `local:invite-count-${accountId}` as `local:${string}`,
-      );
-      await storage.removeItem(
-        `local:dashboard-comments-${accountId}` as `local:${string}`,
-      );
-      await storage.removeItem(
-        `local:followers-count-${accountId}` as `local:${string}`,
-      );
-      await storage.removeItem(
-        `local:profile-impressions-${accountId}` as `local:${string}`,
-      );
-      await storage.removeItem(
-        `local:content-impressions-${accountId}` as `local:${string}`,
-      );
-      console.log(`🗑️ All analytics data cleared for account: ${accountId}`);
-      // Refresh page to reset UI
-      window.location.reload();
-    }
-  };
+  // DEV ONLY - Clear all stored data for the current account
+  // const clearAllData = async () => {
+  //   if (
+  //     window.confirm(
+  //       "Are you sure you want to clear all analytics data for this LinkedIn account? This cannot be undone.",
+  //     )
+  //   ) {
+  //     if (!accountId) {
+  //       console.warn("No account ID available to clear data");
+  //       return;
+  //     }
+  //     const { storage } = await import("wxt/storage");
+  //     await storage.removeItem(`local:profile-views-${accountId}` as `local:${string}`);
+  //     await storage.removeItem(`local:invite-count-${accountId}` as `local:${string}`);
+  //     await storage.removeItem(`local:dashboard-comments-${accountId}` as `local:${string}`);
+  //     await storage.removeItem(`local:followers-count-${accountId}` as `local:${string}`);
+  //     await storage.removeItem(`local:profile-impressions-${accountId}` as `local:${string}`);
+  //     await storage.removeItem(`local:content-impressions-${accountId}` as `local:${string}`);
+  //     console.log(`🗑️ All analytics data cleared for account: ${accountId}`);
+  //     window.location.reload();
+  //   }
+  // };
 
   return (
     <div className="flex flex-col gap-4 px-4">
@@ -317,8 +319,24 @@ export function AnalyticsTab() {
         selectedMetrics={selectedMetrics}
       />
 
-      {/* Action Buttons */}
-      <div className="flex gap-2">
+      {/* Auto-fetch Settings */}
+      <div className="flex items-center justify-between rounded-lg border bg-muted/30 px-3 py-2">
+        <span className="text-xs text-muted-foreground">Auto-fetch every:</span>
+        <select
+          value={autoFetchIntervalHours}
+          onChange={(e) => handleIntervalChange(Number(e.target.value))}
+          className="rounded border bg-background px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+        >
+          {INTERVAL_OPTIONS.map((hours) => (
+            <option key={hours} value={hours}>
+              {hours} {hours === 1 ? "hour" : "hours"}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* DEV ONLY - Action Buttons (commented out for production) */}
+      {/* <div className="flex gap-2">
         <Button
           onClick={refetchAll}
           variant="primary"
@@ -344,7 +362,7 @@ export function AnalyticsTab() {
         <Button onClick={clearAllData} variant="destructive" className="flex-1">
           Clear All Data
         </Button>
-      </div>
+      </div> */}
     </div>
   );
 }
