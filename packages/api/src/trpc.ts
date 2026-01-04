@@ -8,7 +8,6 @@
  */
 
 import { createClerkClient, verifyToken } from "@clerk/backend";
-import { auth } from "@clerk/nextjs/server";
 import { Hyperbrowser } from "@hyperbrowser/sdk";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
@@ -180,12 +179,9 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
 
     const userId = await getUserIdFromClerkToken(token);
 
-    const clerkUser = await clerkClient.users.getUser(userId);
-
-    const result = await getOrInsertUser(ctx.db, {
+    const result = await getOrInsertUser(ctx.db, clerkClient, {
       userId,
       currentAccountId: accountId,
-      clerkUser,
     });
 
     if (result.account !== null && result.account.permitted === false) {
@@ -216,12 +212,9 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
     });
   }
 
-  const clerkUser = await clerkClient.users.getUser(state.userId);
-
-  const result = await getOrInsertUser(ctx.db, {
+  const result = await getOrInsertUser(ctx.db, clerkClient, {
     userId: state.userId,
     currentAccountId: accountId,
-    clerkUser,
   });
 
   if (result.account !== null && result.account.permitted === false) {

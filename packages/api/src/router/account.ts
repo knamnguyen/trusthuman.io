@@ -1,4 +1,4 @@
-import type { User } from "@clerk/backend";
+import type { ClerkClient, User } from "@clerk/backend";
 import { TRPCError } from "@trpc/server";
 import { ulid } from "ulidx";
 import z from "zod";
@@ -574,17 +574,19 @@ export async function getUserAccount(
 
 export async function getOrInsertUser(
   db: PrismaClient,
+  clerkClient: ClerkClient,
   {
     userId,
     currentAccountId,
-    clerkUser,
-  }: { userId: string; currentAccountId: string | null; clerkUser: User },
+  }: { userId: string; currentAccountId: string | null },
 ) {
   const user = await getUserAccount(db, userId, currentAccountId);
 
   if (user !== null) {
     return user;
   }
+
+  const clerkUser = await clerkClient.users.getUser(userId);
 
   const primaryEmailAddress = clerkUser.primaryEmailAddress?.emailAddress;
 
