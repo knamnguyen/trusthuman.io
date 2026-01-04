@@ -1,4 +1,4 @@
-import type { ClerkClient, User } from "@clerk/backend";
+import type { ClerkClient } from "@clerk/backend";
 import { TRPCError } from "@trpc/server";
 import { ulid } from "ulidx";
 import z from "zod";
