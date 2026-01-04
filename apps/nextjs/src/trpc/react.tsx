@@ -19,53 +19,64 @@ import { retry } from "~/lib/retry";
 import { useLinkedInAccountStore } from "~/stores/linkedin-account-store";
 import { createQueryClient } from "./query-client";
 
-function getClerkToken() {
-  return retry(
-    () => {
-      const clerk = window.Clerk;
-      // checking if clerk loaded in window, else throw for retry
-      if (clerk === undefined) {
-        throw new Error("throwing for retry");
-      }
+function getClerkTokenFactory() {
+  let ready = false;
 
-      // this promise checks if session is loaded, and resolves the token or null
-      return new Promise<string | null>((resolve, reject) => {
-        // timeout if session loading takes too long
-        const timeoutId = setTimeout(() => {
-          cleanup();
-          reject(new Error("Clerk session loading timed out"));
-        }, 20_000);
-
-        function cleanup() {
-          clerk?.off("status", cb);
-          clearTimeout(timeoutId);
+  return () =>
+    retry(
+      async () => {
+        const clerk = window.Clerk;
+        // checking if clerk loaded in window, else throw for retry
+        if (clerk === undefined) {
+          throw new Error("throwing for retry");
         }
 
-        // check if status is ready or degraded, then find the session token;
-        // if we meet an error just cleanup and reject;
-        // this messy ass type extraction is basically to extract the type of status callback param;
-        function cb(
-          status: Parameters<Parameters<NonNullable<Clerk["on"]>>[1]>[0],
-        ) {
-          if (status === "error") {
-            reject(new Error("Clerk session error"));
-            cleanup();
-          }
-
-          if (status === "ready" || status === "degraded") {
-            resolve(clerk?.session?.getToken() ?? null);
-            cleanup();
-          }
+        // if already ready, as previously checked, return the token or null
+        if (ready === true) {
+          return clerk.session?.getToken() ?? null;
         }
 
-        clerk.on("status", cb);
-      });
-    },
-    {
-      timeout: Infinity,
-    },
-  );
+        // this promise checks if session is loaded, and resolves the token or null
+        return await new Promise<string | null>((resolve, reject) => {
+          // timeout if session loading takes too long
+          const timeoutId = setTimeout(() => {
+            cleanup();
+            reject(new Error("Clerk session loading timed out"));
+          }, 20_000);
+
+          function cleanup() {
+            clerk?.off("status", cb);
+            clearTimeout(timeoutId);
+          }
+
+          // check if status is ready or degraded, then find the session token;
+          // if we meet an error just cleanup and reject;
+          // this messy ass type extraction is basically to extract the type of status callback param;
+          function cb(
+            status: Parameters<Parameters<NonNullable<Clerk["on"]>>[1]>[0],
+          ) {
+            if (status === "error") {
+              reject(new Error("Clerk session error"));
+              cleanup();
+            }
+
+            if (status === "ready" || status === "degraded") {
+              ready = true;
+              resolve(clerk?.session?.getToken() ?? null);
+              cleanup();
+            }
+          }
+
+          clerk.on("status", cb);
+        });
+      },
+      {
+        timeout: Infinity,
+      },
+    );
 }
+
+const getClerkToken = getClerkTokenFactory();
 
 let clientQueryClientSingleton: QueryClient | undefined = undefined;
 const getQueryClient = () => {

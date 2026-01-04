@@ -3,7 +3,11 @@
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { Check, X } from "lucide-react";
 import {
   Controller,
@@ -184,28 +188,38 @@ function ArrayStringInput({
   );
 }
 
+// Flatten industries from infinite query
+interface Industry {
+  id: string;
+  label: string;
+  hierarchy: string;
+  description: string;
+}
+
 export function BuildTargetListForm() {
   const { control } = useBuildTargetListForm();
   const trpc = useTRPC();
-  const queryClient = useQueryClient();
 
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebouncedValue(query, 300);
   const [open, setOpen] = useState(false);
 
   // Use infinite query for list when query is empty
-  const industries = useInfiniteQuery({
-    ...trpc.targetList.industries.list.infiniteQueryOptions({}, {
-      getNextPageParam: (_, pages) => {
-        let offset = 0;
-        for (const page of pages) {
-          offset += page.length;
-        }
-        return offset === 0 ? undefined : offset;
+  const industries = useInfiniteQuery(
+    trpc.targetList.industries.list.infiniteQueryOptions(
+      {},
+      {
+        getNextPageParam: (_, pages) => {
+          let offset = 0;
+          for (const page of pages) {
+            offset += page.length;
+          }
+          return offset === 0 ? undefined : offset;
+        },
+        enabled: debouncedQuery === "",
       },
-    }),
-    enabled: debouncedQuery === "",
-  });
+    ),
+  );
 
   // Use regular query for search when query is not empty
   const searchIndustries = useQuery(
@@ -219,12 +233,10 @@ export function BuildTargetListForm() {
     ),
   );
 
-  // Flatten industries from infinite query
-  type Industry = { id: string; label: string; hierarchy: string; description: string };
   const allIndustries: Industry[] =
     debouncedQuery === ""
-      ? (industries.data?.pages.flat() as Industry[]) ?? []
-      : (searchIndustries.data as Industry[]) ?? [];
+      ? (industries.data?.pages.flat() ?? [])
+      : (searchIndustries.data ?? []);
 
   return (
     <form
@@ -442,7 +454,9 @@ export function BuildTargetListForm() {
                       className="w-full justify-between rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
                     >
                       <span className="truncate">
-                        {query ? `Searching "${query}"...` : "Select an industry"}
+                        {query
+                          ? `Searching "${query}"...`
+                          : "Select an industry"}
                       </span>
                     </Button>
                   </PopoverTrigger>
@@ -463,7 +477,9 @@ export function BuildTargetListForm() {
                           {allIndustries
                             .filter(
                               (industry) =>
-                                !selectedIds.includes(parseInt(industry.id, 10)),
+                                !selectedIds.includes(
+                                  parseInt(industry.id, 10),
+                                ),
                             )
                             .map((industry) => (
                               <CommandItem
@@ -490,7 +506,9 @@ export function BuildTargetListForm() {
                                       : "opacity-0",
                                   )}
                                 />
-                                <span className="truncate">{industry.label}</span>
+                                <span className="truncate">
+                                  {industry.label}
+                                </span>
                               </CommandItem>
                             ))}
                           {debouncedQuery === "" &&
