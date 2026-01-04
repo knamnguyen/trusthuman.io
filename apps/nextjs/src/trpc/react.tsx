@@ -21,11 +21,18 @@ import { createQueryClient } from "./query-client";
 
 function getClerkTokenFactory() {
   let ready = false;
+  let clerk: Clerk | undefined = undefined;
 
-  return () =>
-    retry(
+  return async () => {
+    if (clerk !== undefined && ready === true) {
+      // if we already have clerk and it's ready, return the token or null
+      return (await clerk.session?.getToken()) ?? null;
+    }
+
+    return retry(
       async () => {
-        const clerk = window.Clerk;
+        clerk = window.Clerk;
+
         // checking if clerk loaded in window, else throw for retry
         if (clerk === undefined) {
           throw new Error("throwing for retry");
@@ -33,7 +40,7 @@ function getClerkTokenFactory() {
 
         // if already ready, as previously checked, return the token or null
         if (ready === true) {
-          return clerk.session?.getToken() ?? null;
+          return (await clerk.session?.getToken()) ?? null;
         }
 
         // this promise checks if session is loaded, and resolves the token or null
@@ -67,13 +74,14 @@ function getClerkTokenFactory() {
             }
           }
 
-          clerk.on("status", cb);
+          clerk?.on("status", cb);
         });
       },
       {
         timeout: Infinity,
       },
     );
+  };
 }
 
 const getClerkToken = getClerkTokenFactory();
