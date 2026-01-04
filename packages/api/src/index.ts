@@ -31,6 +31,7 @@ type AppRouterCaller = ReturnType<typeof createCaller>;
 export const createServerClient = (): AppRouterCaller => {
   const ctx = createTRPCContext({
     headers: new Headers(),
+    req: new Request("http://localhost"),
   });
   return appRouter.createCaller(ctx);
 };

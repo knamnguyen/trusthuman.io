@@ -2,24 +2,21 @@
 
 import type { ReactNode } from "react";
 import { createContext, useContext, useState } from "react";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { useStore } from "@tanstack/react-store";
 import { Store } from "@tanstack/store";
 
+import { useTRPC } from "~/trpc/react";
+
 interface LinkedInAccountState {
   accountId: string | null;
-  assumedUserToken: string | null;
 }
 
 class LinkedInAccountStore extends Store<LinkedInAccountState> {
   constructor(initialState?: Partial<LinkedInAccountState>) {
     super({
       accountId: initialState?.accountId ?? null,
-      assumedUserToken: initialState?.assumedUserToken ?? null,
     });
-  }
-
-  setAssumedUserToken(token: string | null) {
-    this.setState((prev) => ({ ...prev, assumedUserToken: token }));
   }
 
   setAccountId(accountId: string | null) {
@@ -32,21 +29,11 @@ const LinkedInAccountStoreContext = createContext<LinkedInAccountStore | null>(
 );
 
 export const LinkedInAccountProvider = ({
-  initialAccountId,
-  initialAssumedUserToken,
   children,
 }: {
   children: ReactNode;
-  initialAccountId?: string | null;
-  initialAssumedUserToken?: string | null;
 }) => {
-  const [store] = useState(
-    () =>
-      new LinkedInAccountStore({
-        accountId: initialAccountId,
-        assumedUserToken: initialAssumedUserToken,
-      }),
-  );
+  const [store] = useState(() => new LinkedInAccountStore());
 
   return (
     <LinkedInAccountStoreContext.Provider value={store}>

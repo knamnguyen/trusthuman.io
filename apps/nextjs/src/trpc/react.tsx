@@ -1,5 +1,6 @@
 "use client";
 
+import type { Clerk } from "@clerk/clerk-js";
 import type { QueryClient } from "@tanstack/react-query";
 import { createContext, useContext, useEffect, useState } from "react";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
@@ -14,11 +15,76 @@ import SuperJSON from "superjson";
 import type { AppRouter } from "@sassy/api";
 
 import { env } from "~/env";
-import {
-  useCurrentLinkedInAccountId,
-  useLinkedInAccountStore,
-} from "~/stores/linkedin-account-store";
+import { retry } from "~/lib/retry";
+import { useLinkedInAccountStore } from "~/stores/linkedin-account-store";
 import { createQueryClient } from "./query-client";
+
+function getClerkTokenFactory() {
+  let ready = false;
+  let clerk: Clerk | undefined = undefined;
+
+  return async () => {
+    if (clerk !== undefined && ready === true) {
+      // if we already have clerk and it's ready, return the token or null
+      return (await clerk.session?.getToken()) ?? null;
+    }
+
+    return retry(
+      async () => {
+        clerk = window.Clerk;
+
+        // checking if clerk loaded in window, else throw for retry
+        if (clerk === undefined) {
+          throw new Error("throwing for retry");
+        }
+
+        // if already ready, as previously checked, return the token or null
+        if (ready === true) {
+          return (await clerk.session?.getToken()) ?? null;
+        }
+
+        // this promise checks if session is loaded, and resolves the token or null
+        return await new Promise<string | null>((resolve, reject) => {
+          // timeout if session loading takes too long
+          const timeoutId = setTimeout(() => {
+            cleanup();
+            reject(new Error("Clerk session loading timed out"));
+          }, 20_000);
+
+          function cleanup() {
+            clerk?.off("status", cb);
+            clearTimeout(timeoutId);
+          }
+
+          // check if status is ready or degraded, then find the session token;
+          // if we meet an error just cleanup and reject;
+          // this messy ass type extraction is basically to extract the type of status callback param;
+          function cb(
+            status: Parameters<Parameters<NonNullable<Clerk["on"]>>[1]>[0],
+          ) {
+            if (status === "error") {
+              reject(new Error("Clerk session error"));
+              cleanup();
+            }
+
+            if (status === "ready" || status === "degraded") {
+              ready = true;
+              resolve(clerk?.session?.getToken() ?? null);
+              cleanup();
+            }
+          }
+
+          clerk?.on("status", cb);
+        });
+      },
+      {
+        timeout: Infinity,
+      },
+    );
+  };
+}
+
+const getClerkToken = getClerkTokenFactory();
 
 let clientQueryClientSingleton: QueryClient | undefined = undefined;
 const getQueryClient = () => {
@@ -34,47 +100,12 @@ const getQueryClient = () => {
 // Export the context for backward compatibility
 export const { useTRPC, TRPCProvider } = createTRPCContext<AppRouter>();
 
-const getBaseUrl = () => {
-  if (typeof window !== "undefined") return window.location.origin;
-  if (env.VERCEL_URL) return `https://${env.VERCEL_URL}`;
-  // eslint-disable-next-line no-restricted-properties
-  return `http://localhost:${process.env.PORT ?? 3000}`;
-};
-
 type TRPCClient = ReturnType<typeof createTRPCClient<AppRouter>>;
 
 // Create a singleton trpc client that will be used in the global provider
 let _trpcClient: TRPCClient | undefined;
 
 export const getTrpcClient = (configGetter?: () => { accountId?: string }) => {
-  if (typeof window === "undefined") {
-    return createTRPCClient<AppRouter>({
-      links: [
-        loggerLink({
-          enabled: (op) =>
-            env.NODE_ENV === "development" ||
-            (op.direction === "down" && op.result instanceof Error),
-        }),
-        httpBatchStreamLink({
-          transformer: SuperJSON,
-          url: getBaseUrl() + "/api/trpc",
-          headers() {
-            const headers = new Headers();
-            headers.set("x-trpc-source", "nextjs-ssr");
-
-            const config = configGetter?.();
-
-            if (config?.accountId !== undefined) {
-              headers.set("x-account-id", config.accountId);
-            }
-
-            return headers;
-          },
-        }),
-      ],
-    });
-  }
-
   // Browser: use singleton pattern
   return (_trpcClient ??= createTRPCClient<AppRouter>({
     links: [
@@ -85,12 +116,17 @@ export const getTrpcClient = (configGetter?: () => { accountId?: string }) => {
       }),
       httpBatchStreamLink({
         transformer: SuperJSON,
-        url: getBaseUrl() + "/api/trpc",
-        headers() {
+        url: env.NEXT_PUBLIC_API_URL + "/api/trpc",
+        async headers() {
           const headers = new Headers();
           headers.set("x-trpc-source", "nextjs-react");
 
           const config = configGetter?.();
+
+          const clerkToken = await getClerkToken();
+          if (clerkToken !== null) {
+            headers.set("Authorization", `Bearer ${clerkToken}`);
+          }
 
           if (config?.accountId !== undefined) {
             headers.set("x-account-id", config.accountId);
@@ -139,9 +175,32 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <TRPCClientProvider client={trpcClient}>
         <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
+          <DefaultAccountFetcher />
           {props.children}
         </TRPCProvider>
       </TRPCClientProvider>
     </QueryClientProvider>
   );
+}
+
+function DefaultAccountFetcher() {
+  const trpc = useTRPC();
+  const store = useLinkedInAccountStore();
+
+  const defaultAccount = useQuery(
+    trpc.account.getDefaultAccount.queryOptions(undefined, {
+      staleTime: Infinity,
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+    }),
+  );
+
+  useEffect(() => {
+    // we only set default account id if none is set yet
+    if (store.state.accountId === null && defaultAccount.data?.account.id) {
+      store.setAccountId(defaultAccount.data.account.id);
+    }
+  }, [defaultAccount.data?.account.id, store]);
+
+  return null;
 }

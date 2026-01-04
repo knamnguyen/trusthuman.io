@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { OrganizationSwitcher, UserButton } from "@clerk/nextjs";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import {
   BanIcon,
   BotIcon,
@@ -94,7 +94,7 @@ const items = [
 
 export function DashboardSidebar() {
   const trpc = useTRPC();
-  const me = useSuspenseQuery(trpc.user.me.queryOptions());
+  const me = useQuery(trpc.user.me.queryOptions());
 
   return (
     <Sidebar collapsible="icon">
@@ -172,7 +172,7 @@ export function DashboardSidebar() {
             <UserButton />
             <div className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate font-medium">
-                {me.data.firstName ?? me.data.primaryEmailAddress}
+                {me.data?.firstName ?? me.data?.primaryEmailAddress}
               </span>
             </div>
           </SidebarMenuItem>
