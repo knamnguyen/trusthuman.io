@@ -41,9 +41,9 @@ function getClerkToken() {
           clearTimeout(timeoutId);
         }
 
-        // check if status is ready or degraded, then find the session token
-        // if error just cleanup and reject;
-        // this messy ass type extraction is basically to extract the type of status callback param
+        // check if status is ready or degraded, then find the session token;
+        // if we meet an error just cleanup and reject;
+        // this messy ass type extraction is basically to extract the type of status callback param;
         function cb(
           status: Parameters<Parameters<NonNullable<Clerk["on"]>>[1]>[0],
         ) {
