@@ -6,5 +6,7 @@ export const env = z
     LINKEDIN_TWO_FA_SECRET_KEY: z.string(),
     HYPERBROWSER_API_KEY: z.string(),
     GOOGLE_GENAI_API_KEY: z.string(),
+    STRIPE_SECRET_KEY: z.string(),
+    STRIPE_WEBHOOK_SECRET: z.string(),
   })
   .parse(process.env);

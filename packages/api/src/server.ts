@@ -1,6 +1,7 @@
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import Bun from "bun";
 
+import { webhookRoutes } from "./api/webhooks/webhooks";
 import { appRouter } from "./router/root";
 import { createTRPCContext } from "./trpc";
 import { browserJobs } from "./utils/browser-job";
@@ -17,7 +18,7 @@ if (!VITE_APP_URL) {
 
 const url = new URL(VITE_APP_URL);
 
-console.log(`Starting tRPC server at port ${url.port}...`);
+console.log(`Starting server at port ${url.port}...`);
 
 Bun.serve({
   port: url.port,
@@ -56,7 +57,8 @@ Bun.serve({
 
       return res;
     },
+    "/api/webhook/*": (req) => webhookRoutes.fetch(req),
   },
 });
 
-console.log(`tRPC server running at ${VITE_APP_URL}/api/trpc`);
+console.log(`server running at ${VITE_APP_URL}/api/trpc`);

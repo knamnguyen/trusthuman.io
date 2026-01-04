@@ -206,6 +206,7 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
   }
 
   const auth = await clerkClient.authenticateRequest(ctx.req);
+  console.info(ctx.req.headers);
   const state = auth.toAuth();
 
   if (state === null || state.isAuthenticated === false) {

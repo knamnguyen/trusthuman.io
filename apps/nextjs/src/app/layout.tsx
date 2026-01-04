@@ -54,19 +54,7 @@ export const viewport: Viewport = {
   ],
 };
 
-export default async function RootLayout(props: { children: React.ReactNode }) {
-  // Prefetch default account - may fail if user is not authenticated
-  // This is fine - unauthenticated users will get null values and can still access public pages
-  let account: { assumedUserToken: string; account: { id: string } } | null =
-    null;
-  try {
-    account = await getQueryClient().ensureQueryData(
-      trpc.account.getDefaultAccount.queryOptions(),
-    );
-  } catch {
-    // User is not authenticated or has no account - this is expected for public pages
-  }
-
+export default function RootLayout(props: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       {/* tracking for Endoresely affiliate referral */}
@@ -98,10 +86,7 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
           `}
       </Script>
       <body className="bg-background text-foreground min-h-full font-sans antialiased">
-        <Providers
-          initialAssumedUserToken={account?.assumedUserToken}
-          initialAccountId={account?.account.id}
-        >
+        <Providers>
           {props.children}
           <Toaster />
           {env.VERCEL_ENV === "production" && <VercelAnalytics />}

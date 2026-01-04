@@ -82,7 +82,8 @@
     "DBOS_SYSTEM_DATABASE_URL",
     "NEXTJS_URL",
     "PORT",
-    "VITE_APP_URL"
+    "VITE_APP_URL",
+    "CLERK_WEBHOOK_SIGNING_SECRET"
   ],
   "globalPassThroughEnv": [
     "NODE_ENV",
