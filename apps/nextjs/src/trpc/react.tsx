@@ -43,7 +43,10 @@ function getClerkToken() {
 
         // check if status is ready or degraded, then find the session token
         // if error just cleanup and reject;
-        function cb(status: "ready" | "degraded" | "error" | (string | {})) {
+        // this messy ass type extraction is basically to extract the type of status callback param
+        function cb(
+          status: Parameters<Parameters<NonNullable<Clerk["on"]>>[1]>[0],
+        ) {
           if (status === "error") {
             reject(new Error("Clerk session error"));
             cleanup();
