@@ -23,12 +23,12 @@ export function AccountMismatchOverlay() {
   const handleRegister = () => {
     const syncHost = getSyncHostUrl();
     // TODO: Update to actual registration page when available
-    const registerUrl = `${syncHost}/dashboard/accounts`;
+    const registerUrl = `${syncHost}/org-accounts`;
     window.open(registerUrl, "_blank");
   };
 
   return (
-    <div className="absolute inset-0 z-40 flex items-center justify-center bg-background/90 backdrop-blur-sm">
+    <div className="bg-background/90 absolute inset-0 z-40 flex items-center justify-center backdrop-blur-sm">
       <Card className="mx-4 w-full max-w-md shadow-lg">
         <CardHeader className="text-center">
           <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100">
@@ -36,7 +36,8 @@ export function AccountMismatchOverlay() {
           </div>
           <CardTitle>LinkedIn Account Not Registered</CardTitle>
           <CardDescription>
-            The LinkedIn account you're using isn't registered with your organization
+            The LinkedIn account you're using isn't registered with your
+            organization
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
@@ -54,15 +55,15 @@ export function AccountMismatchOverlay() {
           </div>
 
           {/* Registered Accounts */}
-          <div className="rounded-lg border bg-muted/50 p-3">
-            <p className="mb-2 text-xs font-medium text-muted-foreground uppercase">
+          <div className="bg-muted/50 rounded-lg border p-3">
+            <p className="text-muted-foreground mb-2 text-xs font-medium uppercase">
               {organization?.name}'s Registered Accounts
             </p>
             {accounts.length > 0 ? (
               <ul className="flex flex-col gap-1.5">
                 {accounts.map((account) => (
                   <li key={account.id} className="flex items-center gap-2">
-                    <Link className="h-3 w-3 text-muted-foreground" />
+                    <Link className="text-muted-foreground h-3 w-3" />
                     <span className="font-mono text-sm">
                       {account.profileSlug}
                     </span>
@@ -70,7 +71,7 @@ export function AccountMismatchOverlay() {
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 No accounts registered yet
               </p>
             )}
@@ -82,7 +83,7 @@ export function AccountMismatchOverlay() {
               <ExternalLink className="mr-2 h-4 w-4" />
               Register This Account
             </Button>
-            <p className="text-center text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-center text-xs">
               Or log in to one of the registered LinkedIn accounts above
             </p>
           </div>
