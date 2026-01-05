@@ -57,7 +57,8 @@ Bun.serve({
 
       return res;
     },
-    "/api/webhook/*": (req) => webhookRoutes.fetch(req),
+    // "/api/webhook/*": (req) => webhookRoutes.fetch(req),
+    "/api/webhooks/*": (req) => webhookRoutes.fetch(req),
   },
 });
 

@@ -1,31 +1,21 @@
 {
-  "../../../../../../@crx/manifest": {
-    "file": "assets/crx-manifest.js-Dw6Y1s8U.js",
+  "../../../../../../../@crx/manifest": {
+    "file": "assets/crx-manifest.js-1bBx0P8o.js",
     "name": "crx-manifest.js",
-    "src": "../../../../../../@crx/manifest",
+    "src": "../../../../../../../@crx/manifest",
     "isEntry": true
   },
-  "_get-sync-host-BP0LuDEj.js": {
-    "file": "assets/get-sync-host-BP0LuDEj.js",
+  "_get-sync-host-Nk4G6_3V.js": {
+    "file": "assets/get-sync-host-Nk4G6_3V.js",
     "name": "get-sync-host",
     "imports": [
       "_index-CP-b3-11.js",
       "_index-Dr715SCd.js"
     ]
   },
-  "_index-3yVWAQZ8.js": {
-    "file": "assets/index-3yVWAQZ8.js",
-    "name": "index",
-    "imports": [
-      "_index-CP-b3-11.js"
-    ],
-    "css": [
-      "assets/index-4lmNZ798.css"
-    ]
-  },
-  "_index-4lmNZ798.css": {
-    "file": "assets/index-4lmNZ798.css",
-    "src": "_index-4lmNZ798.css"
+  "_index-BRp4fIsl.css": {
+    "file": "assets/index-BRp4fIsl.css",
+    "src": "_index-BRp4fIsl.css"
   },
   "_index-CP-b3-11.js": {
     "file": "assets/index-CP-b3-11.js",
@@ -38,27 +28,37 @@
       "_index-CP-b3-11.js"
     ]
   },
-  "_index.tsx-loader-DeH8ietA.js": {
-    "file": "assets/index.tsx-loader-DeH8ietA.js",
-    "src": "_index.tsx-loader-DeH8ietA.js"
+  "_index-hZh5dHRk.js": {
+    "file": "assets/index-hZh5dHRk.js",
+    "name": "index",
+    "imports": [
+      "_index-CP-b3-11.js"
+    ],
+    "css": [
+      "assets/index-BRp4fIsl.css"
+    ]
+  },
+  "_index.tsx-loader-BdbgwiEN.js": {
+    "file": "assets/index.tsx-loader-BdbgwiEN.js",
+    "src": "_index.tsx-loader-BdbgwiEN.js"
   },
   "_profile-extract-button-E_OM6-m_.js": {
     "file": "assets/profile-extract-button-E_OM6-m_.js",
     "name": "profile-extract-button"
   },
-  "_react-Dlr6nuqz.js": {
-    "file": "assets/react-Dlr6nuqz.js",
+  "_react-lUd5U9aD.js": {
+    "file": "assets/react-lUd5U9aD.js",
     "name": "react",
     "imports": [
       "_index-CP-b3-11.js"
     ]
   },
-  "_storage-Bsaabweh.js": {
-    "file": "assets/storage-Bsaabweh.js",
+  "_storage-BpH-f0K8.js": {
+    "file": "assets/storage-BpH-f0K8.js",
     "name": "storage",
     "imports": [
       "_index-CP-b3-11.js",
-      "_react-Dlr6nuqz.js"
+      "_react-lUd5U9aD.js"
     ]
   },
   "public/icon-128.png": {
@@ -66,52 +66,52 @@
     "src": "public/icon-128.png"
   },
   "src/pages/background/index.ts": {
-    "file": "assets/index.ts-Cc6jTBJH.js",
+    "file": "assets/index.ts-CearrHfV.js",
     "name": "index.ts",
     "src": "src/pages/background/index.ts",
     "isEntry": true,
     "imports": [
-      "_get-sync-host-BP0LuDEj.js",
-      "_react-Dlr6nuqz.js",
+      "_get-sync-host-Nk4G6_3V.js",
+      "_react-lUd5U9aD.js",
       "_index-CP-b3-11.js",
       "_index-Dr715SCd.js"
     ]
   },
   "src/pages/content/index.tsx": {
-    "file": "assets/index.tsx-BIP0ZPnN.js",
+    "file": "assets/index.tsx-Bl-hQuEB.js",
     "name": "index.tsx",
     "src": "src/pages/content/index.tsx",
     "isEntry": true,
     "imports": [
-      "_react-Dlr6nuqz.js",
+      "_react-lUd5U9aD.js",
       "_profile-extract-button-E_OM6-m_.js",
-      "_storage-Bsaabweh.js",
+      "_storage-BpH-f0K8.js",
       "_index-CP-b3-11.js"
     ]
   },
   "src/pages/options/index.html": {
-    "file": "assets/index.html-DUzmfwpj.js",
+    "file": "assets/index.html-Bi5A7fYD.js",
     "name": "index.html",
     "src": "src/pages/options/index.html",
     "isEntry": true,
     "imports": [
-      "_index-3yVWAQZ8.js",
+      "_index-hZh5dHRk.js",
       "_index-CP-b3-11.js",
       "_profile-extract-button-E_OM6-m_.js",
       "_index-Dr715SCd.js"
     ]
   },
   "src/pages/popup/index.html": {
-    "file": "assets/index.html-Aao4QlTQ.js",
+    "file": "assets/index.html-BXWsVNn8.js",
     "name": "index.html",
     "src": "src/pages/popup/index.html",
     "isEntry": true,
     "imports": [
-      "_index-3yVWAQZ8.js",
+      "_index-hZh5dHRk.js",
       "_index-CP-b3-11.js",
-      "_react-Dlr6nuqz.js",
-      "_get-sync-host-BP0LuDEj.js",
-      "_storage-Bsaabweh.js",
+      "_react-lUd5U9aD.js",
+      "_get-sync-host-Nk4G6_3V.js",
+      "_storage-BpH-f0K8.js",
       "_index-Dr715SCd.js"
     ],
     "css": [

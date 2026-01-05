@@ -114,7 +114,7 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
   // assumedUserToken is for assumed accounts from browserbase
   const assumedUserToken = ctx.headers.get("x-assumed-user-token");
 
-  // check for assumedUserToken
+  // check for assumedUserToken (for hyper browser mode)
   if (assumedUserToken !== null) {
     const decoded = await assumedAccountJwt.decode(assumedUserToken);
     if (!decoded.success) {
@@ -158,6 +158,7 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
 
   const source = ctx.headers.get("x-trpc-source");
 
+  //handle authentication for chrome extension
   if (source === "chrome-extension") {
     // Handle Chrome extension authentication using Backend SDK
     const authHeader = ctx.headers.get("authorization");
@@ -201,6 +202,7 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
     });
   }
 
+  //handle auth for nextjs
   const auth = await clerkClient.authenticateRequest(ctx.req);
   const state = auth.toAuth();
 
