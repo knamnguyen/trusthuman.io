@@ -20,27 +20,6 @@ async function Page() {
         <p className="mb-6 text-gray-600">
           Test page for multi-tenant LinkedIn account management
         </p>
-        <Switch />
-        <EngageKitSprite
-          size={300}
-          fps={6}
-          frameCount={3}
-          delayBetweenCycles={2000}
-          spriteUrl="/engagekit-sprite-blink.svg"
-        />
-        <EngageKitSprite
-          size={300}
-          fps={10}
-          frameCount={10}
-          spriteUrl="/engagekit-sprite-breathe.svg"
-        />
-        <EngageKitSprite
-          size={300}
-          fps={6}
-          frameCount={6}
-          spriteUrl="/engagekit-sprite-loading.svg"
-          delayBetweenCycles={2000}
-        />
         <OrgAccountsTest />
       </div>
     </div>
