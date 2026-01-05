@@ -69,7 +69,7 @@ export function SignInOverlay() {
           <p className="text-center text-xs text-muted-foreground">
             Already signed in?{" "}
             <button
-              onClick={fetchAuthStatus}
+              onClick={() => fetchAuthStatus(true)}
               className="text-primary hover:underline"
             >
               Refresh

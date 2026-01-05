@@ -34,8 +34,6 @@ export class MessageRouter {
         return this.handleGetAuthStatus(request, sender, sendResponse);
       case "getToken":
         return this.handleGetToken(request, sender, sendResponse);
-      case "signOut":
-        return this.handleSignOut(request, sender, sendResponse);
       default:
         console.warn("MessageRouter: Unknown action:", request.action);
         sendResponse({ success: false, error: "Unknown action" });
@@ -48,11 +46,18 @@ export class MessageRouter {
    * Returns current authentication status from Clerk
    */
   private handleGetAuthStatus = (
-    _request: MessageRequest,
+    request: MessageRequest,
     _sender: chrome.runtime.MessageSender,
     sendResponse: (response: MessageResponse<AuthStatus>) => void
   ): boolean => {
-    console.log("MessageRouter: handleGetAuthStatus called");
+    console.log("MessageRouter: handleGetAuthStatus called", { forceRefresh: request.forceRefresh });
+
+    // Invalidate cache if forceRefresh requested (e.g., user switched orgs externally)
+    if (request.forceRefresh) {
+      console.log("MessageRouter: Invalidating Clerk cache due to forceRefresh");
+      this.dependencies.invalidateClerkCache();
+    }
+
     this.dependencies.getClerkClient()
       .then((clerk) => {
         console.log("MessageRouter: Clerk client obtained:", {
@@ -140,63 +145,6 @@ export class MessageRouter {
       })
       .catch((error: Error) => {
         console.error("MessageRouter: Error getting token:", error);
-        sendResponse({
-          success: false,
-          error: error instanceof Error ? error.message : "Unknown error",
-        });
-      });
-
-    return true; // Asynchronous response
-  };
-
-  /**
-   * Handle signOut request
-   * Signs out the user via Clerk and broadcasts auth state change
-   */
-  private handleSignOut = (
-    _request: MessageRequest,
-    _sender: chrome.runtime.MessageSender,
-    sendResponse: (response: MessageResponse<{ success: boolean }>) => void
-  ): boolean => {
-    this.dependencies.getClerkClient()
-      .then(async (clerk) => {
-        if (!clerk.session) {
-          console.log("MessageRouter: No session to sign out");
-          sendResponse({ success: true, data: { success: true } });
-          return;
-        }
-
-        // Sign out asynchronously
-        await clerk.signOut();
-        console.log("MessageRouter: Sign out successful");
-
-        // Broadcast auth state change to ALL LinkedIn content scripts
-        // Must use chrome.tabs.sendMessage to reach content scripts (not chrome.runtime.sendMessage)
-        console.log("MessageRouter: Broadcasting authStateChanged after signOut");
-        chrome.tabs.query({ url: "https://*.linkedin.com/*" }, (tabs) => {
-          console.log(`MessageRouter: Found ${tabs.length} LinkedIn tabs to notify`);
-          for (const tab of tabs) {
-            if (tab.id) {
-              chrome.tabs
-                .sendMessage(tab.id, {
-                  action: "authStateChanged",
-                  isSignedIn: false,
-                })
-                .catch((error) => {
-                  // Content script may not be loaded on this tab
-                  console.log(
-                    `MessageRouter: Failed to send to tab ${tab.id}:`,
-                    error
-                  );
-                });
-            }
-          }
-        });
-
-        sendResponse({ success: true, data: { success: true } });
-      })
-      .catch((error: Error) => {
-        console.error("MessageRouter: Error signing out:", error);
         sendResponse({
           success: false,
           error: error instanceof Error ? error.message : "Unknown error",

@@ -35,7 +35,12 @@ export interface AuthStatus {
 }
 
 export interface BackgroundMessageRequest {
-  action: "getAuthStatus" | "getToken" | "signOut";
+  action: "getAuthStatus" | "getToken";
+  /**
+   * Force refresh by invalidating cached Clerk client
+   * Use when user may have switched orgs externally
+   */
+  forceRefresh?: boolean;
 }
 
 export interface BackgroundMessageResponse<T = unknown> {
@@ -47,14 +52,16 @@ export interface BackgroundMessageResponse<T = unknown> {
 class AuthService {
   /**
    * Get current authentication status from background worker
+   * @param forceRefresh - If true, invalidates cached Clerk client before fetching
    */
-  async getAuthStatus(): Promise<AuthStatus> {
+  async getAuthStatus(forceRefresh?: boolean): Promise<AuthStatus> {
     try {
       const response = await chrome.runtime.sendMessage<
         BackgroundMessageRequest,
         BackgroundMessageResponse<AuthStatus>
       >({
         action: "getAuthStatus",
+        forceRefresh,
       });
 
       if (!response.success || !response.data) {
@@ -99,24 +106,6 @@ class AuthService {
     }
   }
 
-  /**
-   * Sign out via background worker
-   */
-  async signOut(): Promise<boolean> {
-    try {
-      const response = await chrome.runtime.sendMessage<
-        BackgroundMessageRequest,
-        BackgroundMessageResponse<{ success: boolean }>
-      >({
-        action: "signOut",
-      });
-
-      return response.success && response.data?.success === true;
-    } catch (error) {
-      console.error("authService: Error signing out:", error);
-      return false;
-    }
-  }
 }
 
 export const authService = new AuthService();

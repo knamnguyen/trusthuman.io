@@ -1,9 +1,10 @@
 import {
   Building2,
   CheckCircle,
+  ExternalLink,
   Link,
   Loader2,
-  LogOut,
+  RefreshCw,
   XCircle,
 } from "lucide-react";
 
@@ -17,6 +18,7 @@ import {
   CardTitle,
 } from "@sassy/ui/card";
 
+import { getSyncHostUrl } from "../../../lib/get-sync-host-url";
 import { useAuthStore } from "../../../stores/auth-store";
 import { useAccountStore } from "../stores";
 
@@ -209,16 +211,40 @@ function CurrentLinkedInCard() {
 }
 
 export function AccountTab() {
-  // Auth store for user info and sign out
+  // Auth store for user info (read-only, all actions via webapp)
   // Note: isSignedIn check is done at LinkedInSidebar level via SignInOverlay
-  const { user, signOut, isSigningOut } = useAuthStore();
+  const { user, fetchAuthStatus } = useAuthStore();
+  const { isLoading, fetchAccountData } = useAccountStore();
+
+  const handleRefresh = async () => {
+    // Force refresh auth (invalidates Clerk cache) then re-fetch account data
+    await fetchAuthStatus(true);
+    await fetchAccountData();
+  };
+
+  const handleManageAccount = () => {
+    const syncHost = getSyncHostUrl();
+    window.open(`${syncHost}/org-accounts`, "_blank");
+  };
 
   // Signed in - show features UI (SignInOverlay handles unauthenticated state)
   return (
     <div className="flex flex-col gap-4 px-4">
       <Card>
         <CardHeader>
-          <CardTitle>Welcome back, {user?.firstName || "User"}!</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Welcome back, {user?.firstName || "User"}!</CardTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={isLoading}
+              className="h-8 w-8 p-0"
+              title="Refresh account data"
+            >
+              <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+            </Button>
+          </div>
           <CardDescription>
             You're signed in and ready to engage on LinkedIn
           </CardDescription>
@@ -245,15 +271,11 @@ export function AccountTab() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={signOut}
-              disabled={isSigningOut}
-              className="text-muted-foreground hover:text-destructive"
+              onClick={handleManageAccount}
+              className="text-muted-foreground"
+              title="Manage account in webapp"
             >
-              {isSigningOut ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <LogOut className="h-4 w-4" />
-              )}
+              <ExternalLink className="h-4 w-4" />
             </Button>
           </div>
         </CardContent>

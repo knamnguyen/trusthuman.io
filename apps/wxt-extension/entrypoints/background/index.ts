@@ -39,10 +39,21 @@ export default defineBackground(() => {
   };
 
   /**
+   * Invalidate cached Clerk client
+   * Call this before getClerkClient to force a fresh client
+   */
+  const invalidateClerkCache = () => {
+    const hadCache = clerkClientPromise !== null;
+    clerkClientPromise = null;
+    console.log("Background: Invalidated Clerk client cache:", { hadCache });
+  };
+
+  /**
    * Initialize MessageRouter with dependencies
    */
   const dependencies: MessageRouterDependencies = {
     getClerkClient,
+    invalidateClerkCache,
   };
 
   const messageRouter = new MessageRouter(dependencies);
@@ -64,6 +75,7 @@ export default defineBackground(() => {
         `${syncHost}/extension-auth`,
         `${syncHost}/sign-in`,
         `${syncHost}/sign-up`,
+        `${syncHost}/org-accounts`,
       ];
 
       const signOutUrls = [`${syncHost}/sign-out`];

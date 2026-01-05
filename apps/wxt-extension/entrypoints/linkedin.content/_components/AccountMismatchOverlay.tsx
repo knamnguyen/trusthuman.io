@@ -3,7 +3,13 @@
  * Displayed on all tabs except Account tab
  */
 
-import { AlertTriangle, ExternalLink, Link, User } from "lucide-react";
+import {
+  AlertTriangle,
+  ExternalLink,
+  Link,
+  RefreshCw,
+  User,
+} from "lucide-react";
 
 import { Button } from "@sassy/ui/button";
 import {
@@ -15,10 +21,24 @@ import {
 } from "@sassy/ui/card";
 
 import { getSyncHostUrl } from "../../../lib/get-sync-host-url";
+import { useAuthStore } from "../../../stores/auth-store";
 import { useAccountStore } from "../stores";
 
 export function AccountMismatchOverlay() {
-  const { accounts, currentLinkedIn, organization } = useAccountStore();
+  const {
+    accounts,
+    currentLinkedIn,
+    organization,
+    isLoading,
+    fetchAccountData,
+  } = useAccountStore();
+  const { fetchAuthStatus } = useAuthStore();
+
+  const handleRefresh = async () => {
+    // Force refresh auth (invalidates Clerk cache) then re-fetch account data
+    await fetchAuthStatus(true);
+    await fetchAccountData();
+  };
 
   const handleRegister = () => {
     const syncHost = getSyncHostUrl();
@@ -81,12 +101,27 @@ export function AccountMismatchOverlay() {
           <div className="flex flex-col gap-2">
             <Button onClick={handleRegister} className="w-full">
               <ExternalLink className="mr-2 h-4 w-4" />
-              Register This Account
+              Register This Account / Change Org
             </Button>
             <p className="text-muted-foreground text-center text-xs">
               Or log in to one of the registered LinkedIn accounts above
             </p>
           </div>
+
+          {/* Refresh option for org switch */}
+          <p className="text-muted-foreground border-t pt-3 text-center text-xs">
+            Done?{" "}
+            <button
+              onClick={handleRefresh}
+              disabled={isLoading}
+              className="text-primary inline-flex items-center gap-1 hover:underline"
+            >
+              <RefreshCw
+                className={`h-3 w-3 ${isLoading ? "animate-spin" : ""}`}
+              />
+              Refresh
+            </button>
+          </p>
         </CardContent>
       </Card>
     </div>

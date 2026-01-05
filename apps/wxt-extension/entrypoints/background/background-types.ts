@@ -9,13 +9,18 @@ import type { createClerkClient } from "@clerk/chrome-extension/background";
 /**
  * Auth-related message actions
  */
-export type MessageAction = "getAuthStatus" | "getToken" | "signOut";
+export type MessageAction = "getAuthStatus" | "getToken";
 
 /**
  * Message request from content script
  */
 export interface MessageRequest {
   action: MessageAction;
+  /**
+   * Force refresh by invalidating cached Clerk client
+   * Use when user may have switched orgs externally
+   */
+  forceRefresh?: boolean;
 }
 
 /**
@@ -73,4 +78,9 @@ export type MessageHandler = (
  */
 export interface MessageRouterDependencies {
   getClerkClient: () => Promise<Awaited<ReturnType<typeof createClerkClient>>>;
+  /**
+   * Invalidate cached Clerk client to force fresh fetch
+   * Call before getClerkClient when forceRefresh is true
+   */
+  invalidateClerkCache: () => void;
 }

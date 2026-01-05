@@ -18,7 +18,6 @@ import { authService } from "../lib/auth-service";
 interface AuthState {
   isSignedIn: boolean;
   isLoaded: boolean;
-  isSigningOut: boolean;
   user: AuthStatus["user"];
   session: AuthStatus["session"];
   organization: AuthStatus["organization"];
@@ -27,16 +26,12 @@ interface AuthState {
 interface AuthActions {
   /**
    * Fetch auth status from background worker
+   * @param forceRefresh - If true, invalidates cached Clerk client before fetching
    */
-  fetchAuthStatus: () => Promise<void>;
+  fetchAuthStatus: (forceRefresh?: boolean) => Promise<void>;
 
   /**
-   * Sign out via background worker
-   */
-  signOut: () => Promise<boolean>;
-
-  /**
-   * Clear auth state (called on sign out)
+   * Clear auth state (called when signed out externally)
    */
   clear: () => void;
 }
@@ -46,7 +41,6 @@ type AuthStore = AuthState & AuthActions;
 const initialState: AuthState = {
   isSignedIn: false,
   isLoaded: false,
-  isSigningOut: false,
   user: null,
   session: null,
   organization: null,
@@ -55,13 +49,14 @@ const initialState: AuthState = {
 export const useAuthStore = create<AuthStore>((set) => ({
   ...initialState,
 
-  fetchAuthStatus: async () => {
+  fetchAuthStatus: async (forceRefresh?: boolean) => {
     try {
-      const status = await authService.getAuthStatus();
+      const status = await authService.getAuthStatus(forceRefresh);
       console.log("AuthStore: Fetched auth status:", {
         isSignedIn: status.isSignedIn,
         userId: status.user?.id,
         organizationId: status.organization?.id,
+        forceRefresh,
       });
       set({
         isSignedIn: status.isSignedIn,
@@ -73,28 +68,6 @@ export const useAuthStore = create<AuthStore>((set) => ({
     } catch (error) {
       console.error("AuthStore: Error fetching auth status:", error);
       set({ isLoaded: true });
-    }
-  },
-
-  signOut: async () => {
-    set({ isSigningOut: true });
-    try {
-      const success = await authService.signOut();
-      if (success) {
-        console.log("AuthStore: Sign out successful");
-        set({
-          isSignedIn: false,
-          user: null,
-          session: null,
-          organization: null,
-        });
-      }
-      return success;
-    } catch (error) {
-      console.error("AuthStore: Error signing out:", error);
-      return false;
-    } finally {
-      set({ isSigningOut: false });
     }
   },
 
