@@ -20,7 +20,7 @@ import { Textarea } from "@sassy/ui/textarea";
 import { useTRPC } from "../../../lib/trpc/client";
 import { useComposeStore } from "../stores/compose-store";
 import { DEFAULT_STYLE_GUIDE, extractAdjacentComments } from "../utils";
-import { submitCommentToPost } from "../utils/submit-comment";
+import { submitCommentToPost } from "../utils/comment/submit-comment";
 
 interface ComposeCardProps {
   /** Card ID - component subscribes to its own card data */
@@ -98,7 +98,7 @@ export const ComposeCard = memo(function ComposeCard({
       // Small delay to ensure the element is fully rendered
       setTimeout(() => {
         textareaRef.current?.focus();
-      }, 100);
+      }, 1000);
     }
   }, [autoFocus]);
 
@@ -138,6 +138,49 @@ export const ComposeCard = memo(function ComposeCard({
   const handleTextareaBlur = useCallback(() => {
     setIsUserEditing(false);
   }, [setIsUserEditing]);
+
+  // Submit this card's comment to LinkedIn
+  const handleSubmit = useCallback(async () => {
+    if (!card.commentText.trim() || card.isGenerating || card.status === "sent")
+      return;
+
+    // Close the preview panel before submitting
+    setPreviewingCard(null);
+
+    setIsLocalSubmitting(true);
+    try {
+      const success = await submitCommentToPost(
+        card.postContainer,
+        card.commentText,
+      );
+      if (success) {
+        updateCardStatus(card.id, "sent");
+      }
+    } catch (err) {
+      console.error("EngageKit: error submitting comment", err);
+    } finally {
+      setIsLocalSubmitting(false);
+    }
+  }, [
+    card.id,
+    card.commentText,
+    card.isGenerating,
+    card.status,
+    card.postContainer,
+    setPreviewingCard,
+    updateCardStatus,
+  ]);
+
+  // Keyboard shortcut: Ctrl/Cmd+Enter to submit
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+        e.preventDefault();
+        handleSubmit();
+      }
+    },
+    [handleSubmit],
+  );
 
   const handleFocus = useCallback(() => {
     // Close the preview panel first
@@ -210,38 +253,6 @@ export const ComposeCard = memo(function ComposeCard({
     setCardGenerating,
     generateComment,
     updateCardComment,
-  ]);
-
-  // Submit this card's comment to LinkedIn
-  const handleSubmit = useCallback(async () => {
-    if (!card.commentText.trim() || card.isGenerating || card.status === "sent")
-      return;
-
-    // Close the preview panel before submitting
-    setPreviewingCard(null);
-
-    setIsLocalSubmitting(true);
-    try {
-      const success = await submitCommentToPost(
-        card.postContainer,
-        card.commentText,
-      );
-      if (success) {
-        updateCardStatus(card.id, "sent");
-      }
-    } catch (err) {
-      console.error("EngageKit: error submitting comment", err);
-    } finally {
-      setIsLocalSubmitting(false);
-    }
-  }, [
-    card.id,
-    card.commentText,
-    card.isGenerating,
-    card.status,
-    card.postContainer,
-    setPreviewingCard,
-    updateCardStatus,
   ]);
 
   // Get initials for avatar fallback
@@ -337,6 +348,7 @@ export const ComposeCard = memo(function ComposeCard({
             ref={textareaRef}
             value={card.commentText}
             onChange={handleTextChange}
+            onKeyDown={handleKeyDown}
             onFocus={handleTextareaFocus}
             onBlur={handleTextareaBlur}
             placeholder="Write your comment manually for 100% authenticity..."

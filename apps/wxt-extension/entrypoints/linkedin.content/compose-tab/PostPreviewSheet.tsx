@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import levenshtein from "fast-levenshtein";
 import { AnimatePresence, motion } from "framer-motion";
@@ -24,7 +24,7 @@ import { Textarea } from "@sassy/ui/textarea";
 import { useTRPC } from "../../../lib/trpc/client";
 import { useComposeStore } from "../stores/compose-store";
 import { DEFAULT_STYLE_GUIDE, extractAdjacentComments } from "../utils";
-import { submitCommentToPost } from "../utils/submit-comment";
+import { submitCommentToPost } from "../utils/comment/submit-comment";
 
 /**
  * Panel that displays post details when clicking "View" on a compose card.
@@ -84,6 +84,25 @@ export function PostPreviewSheet() {
   const fullCaption = previewingCard?.fullCaption ?? "";
   const postTime = previewingCard?.postTime ?? null;
   const postUrl = previewingCard?.postUrls?.[0] ?? null;
+
+  // Ref for textarea auto-focus
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-focus textarea when preview opens or navigates to new card
+  useEffect(() => {
+    if (previewingCardId && textareaRef.current) {
+      // Small delay to ensure the element is rendered
+      const timer = setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+          // Move caret to end of text
+          const len = textareaRef.current.value.length;
+          textareaRef.current.setSelectionRange(len, len);
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [previewingCardId]);
 
   // Navigation
   const canGoPrev = currentIndex > 0;
@@ -238,6 +257,17 @@ export function PostPreviewSheet() {
       setIsLocalSubmitting(false);
     }
   }, [previewingCard, setPreviewingCard, updateCardStatus]);
+
+  // Keyboard shortcut: Ctrl/Cmd+Enter to submit
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+        e.preventDefault();
+        handleSubmit();
+      }
+    },
+    [handleSubmit],
+  );
 
   // Calculate "Your Touch" score
   const yourTouchScore = useMemo(() => {
@@ -436,8 +466,10 @@ export function PostPreviewSheet() {
                 </div>
               ) : (
                 <Textarea
+                  ref={textareaRef}
                   value={previewingCard.commentText}
                   onChange={handleTextChange}
+                  onKeyDown={handleKeyDown}
                   onFocus={handleTextareaFocus}
                   onBlur={handleTextareaBlur}
                   placeholder="Write your comment manually for 100% authenticity..."

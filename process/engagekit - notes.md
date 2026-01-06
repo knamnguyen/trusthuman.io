@@ -17,6 +17,18 @@
 
 => makes things faster
 
+hyperbrowser + webapp
+
+- feed
+- schedule commenting
+
+each profile
+
+- target list + manage
+- manage flow of comment generation flow
+- all settings
+- organization manage flow
+
 [] needs check in with Lam on webapp logic for getting user current linkedin account
 [] webapp needs linkedin account switcher => does it or is org url enough
 

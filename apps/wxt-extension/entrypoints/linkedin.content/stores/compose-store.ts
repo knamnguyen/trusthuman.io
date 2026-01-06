@@ -1,16 +1,20 @@
 import { create } from "zustand";
 
-import type { PostAuthorInfo } from "../utils/extract-author-info-from-post";
-import type { PostCommentInfo } from "../utils/extract-comment-from-post";
-import type { PostTimeInfo } from "../utils/extract-post-time";
-import type { PostUrlInfo } from "../utils/extract-post-url";
+import type { PostAuthorInfo } from "../utils/post/extract-author-info-from-post";
+import type { PostCommentInfo } from "../utils/post/extract-comment-from-post";
+import type { PostTimeInfo } from "../utils/post/extract-post-time";
+import type { PostUrlInfo } from "../utils/post/extract-post-url";
 
 // Separate settings type for localStorage persistence
 export interface ComposeSettings {
+  /** 100% human mode - only create empty card, no AI generation */
+  humanOnlyMode: boolean;
   /** Auto-trigger generation when user clicks LinkedIn's comment button */
   autoEngageOnCommentClick: boolean;
   /** Highlight most visible post and trigger engage on spacebar press */
   spacebarAutoEngage: boolean;
+  /** Show floating post navigator UI for quick scrolling between posts */
+  postNavigator: boolean;
 }
 
 // localStorage key for persisting settings
@@ -18,8 +22,10 @@ const SETTINGS_STORAGE_KEY = "engagekit-compose-settings";
 
 // Default settings
 const DEFAULT_SETTINGS: ComposeSettings = {
+  humanOnlyMode: false,
   autoEngageOnCommentClick: false,
   spacebarAutoEngage: false,
+  postNavigator: false,
 };
 
 /**
@@ -34,7 +40,10 @@ function loadSettings(): ComposeSettings {
       return { ...DEFAULT_SETTINGS, ...parsed };
     }
   } catch (error) {
-    console.warn("[ComposeStore] Failed to load settings from localStorage:", error);
+    console.warn(
+      "[ComposeStore] Failed to load settings from localStorage:",
+      error,
+    );
   }
   return DEFAULT_SETTINGS;
 }
@@ -46,7 +55,10 @@ function saveSettings(settings: ComposeSettings): void {
   try {
     localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
   } catch (error) {
-    console.warn("[ComposeStore] Failed to save settings to localStorage:", error);
+    console.warn(
+      "[ComposeStore] Failed to save settings to localStorage:",
+      error,
+    );
   }
 }
 

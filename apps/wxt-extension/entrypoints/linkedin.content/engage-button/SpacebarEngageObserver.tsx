@@ -15,7 +15,7 @@ import {
   getCaptionPreview,
   waitForCommentsReady,
 } from "../utils";
-import { clickCommentNumberButton } from "../utils/click-comment-button";
+import { clickCommentButton } from "../utils/comment/click-comment-button";
 
 /** Selectors for LinkedIn post containers */
 const POST_SELECTORS = "div[data-urn], div[data-id], article[role='article']";
@@ -100,7 +100,7 @@ export function SpacebarEngageObserver() {
       }
       // Apply new highlight
       if (mostVisiblePost) {
-        mostVisiblePost.style.outline = HIGHLIGHT_STYLE;
+        (mostVisiblePost as HTMLElement).style.outline = HIGHLIGHT_STYLE;
       }
       highlightedPostRef.current = mostVisiblePost;
     }
@@ -114,7 +114,9 @@ export function SpacebarEngageObserver() {
       // Extract full post data for ComposeCards
       const fullCaption = extractPostCaption(postContainer);
       if (!fullCaption) {
-        console.warn("EngageKit SpacebarEngage: unable to extract post caption");
+        console.warn(
+          "EngageKit SpacebarEngage: unable to extract post caption",
+        );
         return;
       }
 
@@ -134,43 +136,25 @@ export function SpacebarEngageObserver() {
         postContainer.getAttribute("data-id") ||
         `unknown-${Date.now()}`;
 
+      // Get humanOnlyMode setting
+      const { humanOnlyMode } = useComposeStore.getState().settings;
+
+      // Create card IDs based on mode
+      const manualCardId = humanOnlyMode ? crypto.randomUUID() : null;
+      const aiCardIds = humanOnlyMode
+        ? []
+        : [crypto.randomUUID(), crypto.randomUUID(), crypto.randomUUID()];
+      const allCardIds = manualCardId ? [manualCardId] : aiCardIds;
+
       console.log(
-        "EngageKit SpacebarEngage: generating 3 variations + 1 manual card for post:",
+        `EngageKit SpacebarEngage: ${humanOnlyMode ? "creating 1 manual card (100% human mode)" : "generating 3 AI variations"} for post:`,
         fullCaption.slice(0, 100),
       );
 
-      // Create card IDs upfront
-      const manualCardId = crypto.randomUUID();
-      const aiCardIds = [
-        crypto.randomUUID(),
-        crypto.randomUUID(),
-        crypto.randomUUID(),
-      ];
-      const allCardIds = [manualCardId, ...aiCardIds];
-
-      // INSTANT: Add empty manual card immediately (user can start typing right away)
-      // comments: [] now, will be populated via updateCardsComments after async load
-      addCard({
-        id: manualCardId,
-        urn,
-        captionPreview,
-        fullCaption,
-        commentText: "",
-        originalCommentText: "",
-        postContainer,
-        status: "draft",
-        isGenerating: false,
-        authorInfo,
-        postTime,
-        postUrls,
-        comments: [],
-      });
-
-      // INSTANT: Add 3 AI cards in generating state
-      // comments: [] now, will be populated via updateCardsComments after async load
-      aiCardIds.forEach((id) => {
+      if (humanOnlyMode && manualCardId) {
+        // HUMAN MODE: Add only empty manual card
         addCard({
-          id,
+          id: manualCardId,
           urn,
           captionPreview,
           fullCaption,
@@ -178,28 +162,61 @@ export function SpacebarEngageObserver() {
           originalCommentText: "",
           postContainer,
           status: "draft",
-          isGenerating: true,
+          isGenerating: false,
           authorInfo,
           postTime,
           postUrls,
           comments: [],
         });
-      });
+      } else {
+        // AI MODE: Add 3 AI cards in generating state
+        aiCardIds.forEach((id) => {
+          addCard({
+            id,
+            urn,
+            captionPreview,
+            fullCaption,
+            commentText: "",
+            originalCommentText: "",
+            postContainer,
+            status: "draft",
+            isGenerating: true,
+            authorInfo,
+            postTime,
+            postUrls,
+            comments: [],
+          });
+        });
+      }
 
       // INSTANT: Track as single-post cards and open sidebar immediately
       setSinglePostCards(allCardIds);
       openToTab(SIDEBAR_TABS.COMPOSE);
 
-      // NOW load and wait for comments for AI context
+      // Load comments for preview (useful in both modes)
       const beforeCount = extractCommentsFromPost(postContainer).length;
-      clickCommentNumberButton(postContainer);
+      clickCommentButton(postContainer);
       await waitForCommentsReady(postContainer, beforeCount);
 
+      // Blur focus from LinkedIn's comment box (contenteditable) so spacebar can trigger new generation
+      // Only blur contenteditable elements (LinkedIn's comment box), not our sidebar's textarea
+      if (
+        document.activeElement instanceof HTMLElement &&
+        document.activeElement.isContentEditable
+      ) {
+        document.activeElement.blur();
+      }
+
       // Extract comments for display in preview
-      // Cards were created with comments: [] for instant UX, now update with loaded comments
       const loadedComments = extractCommentsFromPost(postContainer);
       if (loadedComments.length > 0) {
         updateCardsComments(urn, loadedComments);
+      }
+
+      // Skip AI generation in human mode
+      if (humanOnlyMode) {
+        setIsEngageButtonGenerating(false);
+        return;
       }
 
       // Extract adjacent comments for AI generation
@@ -220,14 +237,20 @@ export function SpacebarEngageObserver() {
               const result = await generateComment.mutateAsync(requestParams);
               updateCardComment(cardId, result.comment);
             } catch (err) {
-              console.error(`EngageKit SpacebarEngage: failed to generate for card ${cardId}`, err);
+              console.error(
+                `EngageKit SpacebarEngage: failed to generate for card ${cardId}`,
+                err,
+              );
               // Set empty comment on failure so isGenerating becomes false
               updateCardComment(cardId, "");
             }
           }),
         );
       } catch (err) {
-        console.error("EngageKit SpacebarEngage: error generating comments", err);
+        console.error(
+          "EngageKit SpacebarEngage: error generating comments",
+          err,
+        );
       } finally {
         // Mark as done generating
         setIsEngageButtonGenerating(false);
@@ -257,42 +280,42 @@ export function SpacebarEngageObserver() {
   };
 
   /**
-   * Check if an element is interactive (would normally use spacebar for something)
+   * Check if an element is a text input where spacebar would insert a character
+   * (textarea, text input, contenteditable)
+   * We only block spacebar for these - buttons, links, etc. won't block generation
    */
-  const isInteractiveElement = (element: Element | null): boolean => {
+  const isTextInputElement = (element: Element | null): boolean => {
     if (!element) return false;
 
     const tagName = element.tagName;
 
-    // Form elements and interactive elements
-    if (
-      tagName === "INPUT" ||
-      tagName === "TEXTAREA" ||
-      tagName === "SELECT" ||
-      tagName === "BUTTON" ||
-      tagName === "A" ||
-      (element as HTMLElement).isContentEditable
-    ) {
+    // Textarea - always text input
+    if (tagName === "TEXTAREA") {
       return true;
     }
 
-    // Elements with explicit tabindex are interactive
-    if (element.hasAttribute("tabindex")) {
-      const tabindex = element.getAttribute("tabindex");
-      if (tabindex !== "-1") return true;
+    // Input - only text-like types
+    if (tagName === "INPUT") {
+      const inputType = (element as HTMLInputElement).type.toLowerCase();
+      const textInputTypes = [
+        "text",
+        "email",
+        "password",
+        "search",
+        "url",
+        "tel",
+        "number",
+      ];
+      return textInputTypes.includes(inputType);
     }
 
-    // Elements with role that typically use spacebar
-    const role = element.getAttribute("role");
-    if (
-      role === "button" ||
-      role === "link" ||
-      role === "checkbox" ||
-      role === "radio" ||
-      role === "menuitem" ||
-      role === "option" ||
-      role === "tab"
-    ) {
+    // Contenteditable elements (LinkedIn's comment box)
+    if ((element as HTMLElement).isContentEditable) {
+      return true;
+    }
+
+    // Elements with textbox role
+    if (element.getAttribute("role") === "textbox") {
       return true;
     }
 
@@ -307,11 +330,11 @@ export function SpacebarEngageObserver() {
       // Only handle spacebar
       if (e.code !== "Space") return;
 
-      // Skip if focused on any interactive element (including inside shadow DOM)
-      // This prevents hijacking spacebar from buttons, links, inputs, etc.
+      // Skip if user is typing in a text input (textarea, input, contenteditable)
+      // This prevents hijacking spacebar while typing - but buttons/links won't block
       // Use getDeepActiveElement to traverse shadow roots (e.g., compose card textarea)
       const active = getDeepActiveElement();
-      if (active && active !== document.body && isInteractiveElement(active)) {
+      if (active && isTextInputElement(active)) {
         return;
       }
 
@@ -325,10 +348,12 @@ export function SpacebarEngageObserver() {
 
       // Only block if Load Posts is running or Load Posts cards exist
       const hasLoadPostsCardsNow = state.cards.some(
-        (c) => !state.singlePostCardIds.includes(c.id)
+        (c) => !state.singlePostCardIds.includes(c.id),
       );
       if (state.isCollecting || hasLoadPostsCardsNow) {
-        console.log("EngageKit SpacebarEngage: ignoring - Load Posts running or Load Posts cards exist");
+        console.log(
+          "EngageKit SpacebarEngage: ignoring - Load Posts running or Load Posts cards exist",
+        );
         return;
       }
 
@@ -341,7 +366,9 @@ export function SpacebarEngageObserver() {
       // Prevent page scroll
       e.preventDefault();
 
-      console.log("EngageKit SpacebarEngage: spacebar pressed, triggering generation");
+      console.log(
+        "EngageKit SpacebarEngage: spacebar pressed, triggering generation",
+      );
 
       // Trigger generation flow
       await triggerGeneration(highlightedPostRef.current);
@@ -368,7 +395,7 @@ export function SpacebarEngageObserver() {
       {
         // Use multiple thresholds for smoother tracking
         threshold: [0, 0.25, 0.5, 0.75, 1.0],
-      }
+      },
     );
 
     observerRef.current = observer;

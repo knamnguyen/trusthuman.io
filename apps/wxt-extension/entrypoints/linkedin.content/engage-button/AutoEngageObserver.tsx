@@ -16,7 +16,7 @@ import {
   getCaptionPreview,
   waitForCommentsReady,
 } from "../utils";
-import { clickCommentNumberButton } from "../utils/click-comment-button";
+import { clickCommentButton } from "../utils/comment/click-comment-button";
 
 /**
  * Selectors for LinkedIn's comment buttons:
@@ -38,7 +38,9 @@ function isCommentButton(element: Element): boolean {
 /**
  * Find comment button from click target (element or ancestor)
  */
-function findCommentButtonFromTarget(target: EventTarget | null): HTMLElement | null {
+function findCommentButtonFromTarget(
+  target: EventTarget | null,
+): HTMLElement | null {
   if (!(target instanceof Element)) return null;
 
   // Check if clicked element itself is a comment button
@@ -112,43 +114,25 @@ export function AutoEngageObserver() {
         postContainer.getAttribute("data-id") ||
         `unknown-${Date.now()}`;
 
+      // Get humanOnlyMode setting
+      const { humanOnlyMode } = useComposeStore.getState().settings;
+
+      // Create card IDs based on mode
+      const manualCardId = humanOnlyMode ? crypto.randomUUID() : null;
+      const aiCardIds = humanOnlyMode
+        ? []
+        : [crypto.randomUUID(), crypto.randomUUID(), crypto.randomUUID()];
+      const allCardIds = manualCardId ? [manualCardId] : aiCardIds;
+
       console.log(
-        "EngageKit AutoEngage: generating 3 variations + 1 manual card for post:",
+        `EngageKit AutoEngage: ${humanOnlyMode ? "creating 1 manual card (100% human mode)" : "generating 3 AI variations"} for post:`,
         fullCaption.slice(0, 100),
       );
 
-      // Create card IDs upfront
-      const manualCardId = crypto.randomUUID();
-      const aiCardIds = [
-        crypto.randomUUID(),
-        crypto.randomUUID(),
-        crypto.randomUUID(),
-      ];
-      const allCardIds = [manualCardId, ...aiCardIds];
-
-      // INSTANT: Add empty manual card immediately (user can start typing right away)
-      // comments: [] now, will be populated via updateCardsComments after async load
-      addCard({
-        id: manualCardId,
-        urn,
-        captionPreview,
-        fullCaption,
-        commentText: "",
-        originalCommentText: "",
-        postContainer,
-        status: "draft",
-        isGenerating: false,
-        authorInfo,
-        postTime,
-        postUrls,
-        comments: [],
-      });
-
-      // INSTANT: Add 3 AI cards in generating state
-      // comments: [] now, will be populated via updateCardsComments after async load
-      aiCardIds.forEach((id) => {
+      if (humanOnlyMode && manualCardId) {
+        // HUMAN MODE: Add only empty manual card
         addCard({
-          id,
+          id: manualCardId,
           urn,
           captionPreview,
           fullCaption,
@@ -156,30 +140,61 @@ export function AutoEngageObserver() {
           originalCommentText: "",
           postContainer,
           status: "draft",
-          isGenerating: true,
+          isGenerating: false,
           authorInfo,
           postTime,
           postUrls,
           comments: [],
         });
-      });
+      } else {
+        // AI MODE: Add 3 AI cards in generating state
+        aiCardIds.forEach((id) => {
+          addCard({
+            id,
+            urn,
+            captionPreview,
+            fullCaption,
+            commentText: "",
+            originalCommentText: "",
+            postContainer,
+            status: "draft",
+            isGenerating: true,
+            authorInfo,
+            postTime,
+            postUrls,
+            comments: [],
+          });
+        });
+      }
 
       // INSTANT: Track as single-post cards and open sidebar immediately
       setSinglePostCards(allCardIds);
       openToTab(SIDEBAR_TABS.COMPOSE);
 
-      // NOW load and wait for comments for AI context
-      // User clicked a comment button, but it might be "Comment" (opens input) not "Show X comments" (loads existing)
-      // So we click the comment number button to ensure existing comments are loaded
+      // Load comments for preview (useful in both modes)
       const beforeCount = extractCommentsFromPost(postContainer).length;
-      clickCommentNumberButton(postContainer);
+      clickCommentButton(postContainer);
       await waitForCommentsReady(postContainer, beforeCount);
 
+      // Blur focus from LinkedIn's comment box (contenteditable) so spacebar can trigger new generation
+      // Only blur contenteditable elements (LinkedIn's comment box), not our sidebar's textarea
+      if (
+        document.activeElement instanceof HTMLElement &&
+        document.activeElement.isContentEditable
+      ) {
+        document.activeElement.blur();
+      }
+
       // Extract comments for display in preview
-      // Cards were created with comments: [] for instant UX, now update with loaded comments
       const loadedComments = extractCommentsFromPost(postContainer);
       if (loadedComments.length > 0) {
         updateCardsComments(urn, loadedComments);
+      }
+
+      // Skip AI generation in human mode
+      if (humanOnlyMode) {
+        setIsEngageButtonGenerating(false);
+        return;
       }
 
       // Extract adjacent comments for AI generation
@@ -200,7 +215,10 @@ export function AutoEngageObserver() {
               const result = await generateComment.mutateAsync(requestParams);
               updateCardComment(cardId, result.comment);
             } catch (err) {
-              console.error(`EngageKit AutoEngage: failed to generate for card ${cardId}`, err);
+              console.error(
+                `EngageKit AutoEngage: failed to generate for card ${cardId}`,
+                err,
+              );
               // Set empty comment on failure so isGenerating becomes false
               updateCardComment(cardId, "");
             }
@@ -241,10 +259,12 @@ export function AutoEngageObserver() {
       // Only block if Load Posts is running or Load Posts cards exist
       // (Single-post cards will be auto-cleared for fresh generation)
       const hasLoadPostsCardsNow = state.cards.some(
-        (c) => !state.singlePostCardIds.includes(c.id)
+        (c) => !state.singlePostCardIds.includes(c.id),
       );
       if (state.isCollecting || hasLoadPostsCardsNow) {
-        console.log("EngageKit AutoEngage: ignoring - Load Posts running or Load Posts cards exist");
+        console.log(
+          "EngageKit AutoEngage: ignoring - Load Posts running or Load Posts cards exist",
+        );
         return;
       }
 
@@ -255,13 +275,17 @@ export function AutoEngageObserver() {
       }
 
       // Find the post container for this comment button
-      const postContainer = findPostContainer(commentButton) as HTMLElement | null;
+      const postContainer = findPostContainer(
+        commentButton,
+      ) as HTMLElement | null;
       if (!postContainer) {
         console.warn("EngageKit AutoEngage: unable to locate post container");
         return;
       }
 
-      console.log("EngageKit AutoEngage: comment button clicked, triggering generation");
+      console.log(
+        "EngageKit AutoEngage: comment button clicked, triggering generation",
+      );
 
       // Trigger generation flow
       await triggerGeneration(postContainer);
@@ -275,7 +299,9 @@ export function AutoEngageObserver() {
     document.addEventListener("click", handleDocumentClick, { capture: true });
 
     return () => {
-      document.removeEventListener("click", handleDocumentClick, { capture: true });
+      document.removeEventListener("click", handleDocumentClick, {
+        capture: true,
+      });
     };
   }, [handleDocumentClick]);
 

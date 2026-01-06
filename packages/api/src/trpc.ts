@@ -154,7 +154,8 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
     });
   }
 
-  const accountId = ctx.headers.get("x-linkedin-account-id") ?? null;
+  //if no assumed user token - check for account id
+  const accountId = ctx.headers.get("x-account-id") ?? null;
 
   const source = ctx.headers.get("x-trpc-source");
 

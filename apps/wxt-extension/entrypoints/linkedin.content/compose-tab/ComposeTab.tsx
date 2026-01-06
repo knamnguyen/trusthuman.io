@@ -15,239 +15,13 @@ import { Button } from "@sassy/ui/button";
 import { Label } from "@sassy/ui/label";
 import { Switch } from "@sassy/ui/switch";
 
-import type { PostAuthorInfo } from "../utils/extract-author-info-from-post";
-import type { PostCommentInfo } from "../utils/extract-comment-from-post";
-import type { PostTimeInfo } from "../utils/extract-post-time";
-import type { PostUrlInfo } from "../utils/extract-post-url";
 import { useTRPC } from "../../../lib/trpc/client";
 import { useComposeStore } from "../stores/compose-store";
-import {
-  DEFAULT_STYLE_GUIDE,
-  extractAdjacentComments,
-  waitForCommentsReady,
-} from "../utils";
-import { clickCommentButton } from "../utils/click-comment-button";
-import { extractAuthorInfoFromPost } from "../utils/extract-author-info-from-post";
-import { extractCommentsFromPost } from "../utils/extract-comment-from-post";
-import {
-  extractPostCaption,
-  getCaptionPreview,
-} from "../utils/extract-post-caption";
-import { extractPostTime } from "../utils/extract-post-time";
-import { extractPostUrl } from "../utils/extract-post-url";
-import { loadMore } from "../utils/load-more";
-import { submitCommentToPost } from "../utils/submit-comment";
+import { DEFAULT_STYLE_GUIDE, extractAdjacentComments } from "../utils";
+import { submitCommentToPost } from "../utils/comment/submit-comment";
 import { ComposeCard } from "./ComposeCard";
+import { type ReadyPost, collectPostsBatch } from "./load-posts";
 import { PostPreviewSheet } from "./PostPreviewSheet";
-
-interface ReadyPost {
-  urn: string;
-  captionPreview: string;
-  fullCaption: string;
-  postContainer: HTMLElement;
-  authorInfo: PostAuthorInfo | null;
-  postTime: PostTimeInfo | null;
-  postUrls: PostUrlInfo[];
-  comments: PostCommentInfo[];
-}
-
-/** Max consecutive iterations with no progress before giving up */
-const MAX_IDLE_ITERATIONS = 10;
-
-/**
- * Wait while user is editing (focused on textarea).
- * Pauses collection until user clicks outside the edit box.
- */
-async function waitWhileEditing(): Promise<void> {
-  while (useComposeStore.getState().isUserEditing) {
-    await new Promise((r) => setTimeout(r, 100));
-  }
-}
-
-/**
- * Get all activity URNs currently in the DOM
- */
-function getAllActivityUrns(): Set<string> {
-  const urns = new Set<string>();
-  const posts = document.querySelectorAll<HTMLElement>("div[data-urn]");
-  for (const post of posts) {
-    const urn = post.getAttribute("data-urn");
-    if (urn?.includes("activity")) {
-      urns.add(urn);
-    }
-  }
-  return urns;
-}
-
-/**
- * Find new posts in the DOM that haven't been processed yet.
- * Returns array of { urn, container } for posts that need processing.
- */
-function findNewPosts(
-  existingUrns: Set<string>,
-  processedUrns: Set<string>,
-  isUrnIgnored: (urn: string) => boolean,
-): Array<{ urn: string; container: HTMLElement }> {
-  const newPosts: Array<{ urn: string; container: HTMLElement }> = [];
-  const posts = document.querySelectorAll<HTMLElement>("div[data-urn]");
-
-  for (const container of posts) {
-    const urn = container.getAttribute("data-urn");
-    if (!urn || !urn.includes("activity")) continue;
-    if (existingUrns.has(urn) || processedUrns.has(urn) || isUrnIgnored(urn))
-      continue;
-
-    // Check if post has a caption (valid post)
-    const fullCaption = extractPostCaption(container);
-    if (!fullCaption) continue;
-
-    newPosts.push({ urn, container });
-  }
-
-  return newPosts;
-}
-
-/**
- * Extract full post data from a container
- */
-function extractPostData(container: HTMLElement): ReadyPost | null {
-  const urn = container.getAttribute("data-urn");
-  if (!urn) return null;
-
-  const fullCaption = extractPostCaption(container);
-  if (!fullCaption) return null;
-
-  return {
-    urn,
-    captionPreview: getCaptionPreview(fullCaption, 10),
-    fullCaption,
-    postContainer: container,
-    authorInfo: extractAuthorInfoFromPost(container),
-    postTime: extractPostTime(container),
-    postUrls: extractPostUrl(container),
-    comments: extractCommentsFromPost(container),
-  };
-}
-
-/**
- * Batch post collection pipeline:
- * - Finds ALL new posts in the DOM
- * - Waits for user to stop typing (once per batch)
- * - Clicks ALL comment buttons at once
- * - Waits for ALL comments to load in parallel
- * - Collects ALL data and emits as a batch
- * - Scrolls for more posts until target reached or stopped
- */
-async function collectPostsBatch(
-  targetCount: number,
-  existingUrns: Set<string>,
-  isUrnIgnored: (urn: string) => boolean,
-  onBatchReady: (posts: ReadyPost[]) => void,
-  shouldStop: () => boolean,
-): Promise<number> {
-  const processedUrns = new Set<string>();
-  let emittedCount = 0;
-  let idleIterations = 0;
-  let lastUrnCount = getAllActivityUrns().size;
-
-  console.log(`[EngageKit] Starting batch collection - target: ${targetCount}`);
-
-  while (emittedCount < targetCount && idleIterations < MAX_IDLE_ITERATIONS) {
-    // Check if user requested stop
-    if (shouldStop()) {
-      console.log(`[EngageKit] Stop requested, exiting`);
-      break;
-    }
-
-    // Find ALL new posts that haven't been processed
-    const newPosts = findNewPosts(existingUrns, processedUrns, isUrnIgnored);
-
-    // Limit to remaining needed
-    const postsToProcess = newPosts.slice(0, targetCount - emittedCount);
-
-    if (postsToProcess.length > 0) {
-      console.log(
-        `[EngageKit] Processing batch of ${postsToProcess.length} posts`,
-      );
-
-      // Wait if user is editing - only once per batch before clicking
-      await waitWhileEditing();
-
-      // Step 1: Get before counts and mark as processed
-      const postContexts = postsToProcess.map(({ urn, container }) => {
-        processedUrns.add(urn);
-        return {
-          urn,
-          container,
-          beforeCount: extractCommentsFromPost(container).length,
-        };
-      });
-
-      // Step 2: Click ALL comment buttons at once (no delays)
-      for (const { container } of postContexts) {
-        clickCommentButton(container);
-      }
-
-      // Step 3: Wait for ALL comments to load in parallel
-      await Promise.all(
-        postContexts.map(({ container, beforeCount }) =>
-          waitForCommentsReady(container, beforeCount),
-        ),
-      );
-
-      // Step 4: Collect ALL post data
-      const readyPosts: ReadyPost[] = [];
-      for (const { container } of postContexts) {
-        if (shouldStop()) break;
-        const postData = extractPostData(container);
-        if (postData) {
-          readyPosts.push(postData);
-        }
-      }
-
-      // Step 5: Emit entire batch at once
-      if (readyPosts.length > 0) {
-        onBatchReady(readyPosts);
-        emittedCount += readyPosts.length;
-        console.log(
-          `[EngageKit] Batch complete: ${emittedCount}/${targetCount} posts ready`,
-        );
-      }
-    }
-
-    // Track progress
-    const currentUrnCount = getAllActivityUrns().size;
-    const hasNewPosts =
-      currentUrnCount > lastUrnCount || postsToProcess.length > 0;
-
-    if (hasNewPosts) {
-      lastUrnCount = currentUrnCount;
-      idleIterations = 0;
-    } else {
-      idleIterations++;
-    }
-
-    // Check if we have enough
-    if (emittedCount >= targetCount) {
-      console.log(`[EngageKit] Target reached!`);
-      break;
-    }
-
-    // Wait for user to finish editing before scrolling
-    await waitWhileEditing();
-
-    // Scroll to load more posts
-    await loadMore();
-  }
-
-  if (idleIterations >= MAX_IDLE_ITERATIONS) {
-    console.log(
-      `[EngageKit] Exited due to max idle iterations. Final count: ${emittedCount}`,
-    );
-  }
-
-  return emittedCount;
-}
 
 export function ComposeTab() {
   // DEBUG: Track renders
@@ -340,9 +114,14 @@ export function ComposeTab() {
     // Get current cards to find existing URNs (snapshot at start time)
     const existingUrns = new Set(getCards.map((card) => card.urn));
 
+    // Check humanOnlyMode at start time (snapshot for this collection session)
+    const isHumanMode = useComposeStore.getState().settings.humanOnlyMode;
+
     // Batch callback - called when each batch of posts is ready
     const onBatchReady = (posts: ReadyPost[]) => {
-      console.log(`[EngageKit] Batch received: ${posts.length} posts`);
+      console.log(
+        `[EngageKit] Batch received: ${posts.length} posts (humanMode: ${isHumanMode})`,
+      );
 
       // Check if no card is being previewed yet - we'll set first card as preview
       const needsFirstPreview =
@@ -358,44 +137,47 @@ export function ComposeTab() {
           firstCardId = cardId;
         }
 
-        // Add card immediately with loading state
+        // Add card - generating state depends on mode
         addCard({
           id: cardId,
           urn: post.urn,
           captionPreview: post.captionPreview,
           fullCaption: post.fullCaption,
-          commentText: "", // Empty while generating
+          commentText: "", // Empty - user writes in human mode, AI fills in AI mode
           originalCommentText: "",
           postContainer: post.postContainer,
           status: "draft",
-          isGenerating: true,
+          isGenerating: !isHumanMode, // Not generating in human mode
           authorInfo: post.authorInfo,
           postTime: post.postTime,
           postUrls: post.postUrls,
           comments: post.comments,
         });
 
-        // Extract adjacent comments for AI context
-        const adjacentComments = extractAdjacentComments(post.postContainer);
+        // Only fire AI generation in AI mode
+        if (!isHumanMode) {
+          // Extract adjacent comments for AI context
+          const adjacentComments = extractAdjacentComments(post.postContainer);
 
-        // Fire AI request (don't await - run in parallel)
-        generateComment
-          .mutateAsync({
-            postContent: post.fullCaption,
-            styleGuide: DEFAULT_STYLE_GUIDE,
-            adjacentComments,
-          })
-          .then((result) => {
-            updateCardComment(cardId, result.comment);
-          })
-          .catch((err) => {
-            console.error(
-              "EngageKit: error generating comment for card",
-              cardId,
-              err,
-            );
-            updateCardComment(cardId, "");
-          });
+          // Fire AI request (don't await - run in parallel)
+          generateComment
+            .mutateAsync({
+              postContent: post.fullCaption,
+              styleGuide: DEFAULT_STYLE_GUIDE,
+              adjacentComments,
+            })
+            .then((result) => {
+              updateCardComment(cardId, result.comment);
+            })
+            .catch((err) => {
+              console.error(
+                "EngageKit: error generating comment for card",
+                cardId,
+                err,
+              );
+              updateCardComment(cardId, "");
+            });
+        }
       }
 
       // Update progress for the whole batch
@@ -414,6 +196,7 @@ export function ComposeTab() {
       isUrnIgnored,
       onBatchReady,
       () => stopRequestedRef.current,
+      () => useComposeStore.getState().isUserEditing,
     );
 
     setIsLoading(false);
@@ -482,45 +265,80 @@ export function ComposeTab() {
     <div className="bg-background flex flex-col gap-3 px-4">
       {/* Sticky Compact Header */}
       <div className="bg-background sticky top-0 z-10 -mx-4 border-b px-4 py-2">
-        {/* Row 1: Title + Settings Toggles */}
-        <div className="mb-2 flex items-center justify-between">
+        {/* Row 0: 100% Human Mode Toggle */}
+        <div className="mb-2 flex items-center justify-start gap-4 border-b pb-2">
+          {/* Row 1: Title */}
           <div className="flex items-center gap-2">
             <Feather className="h-3.5 w-3.5" />
             <span className="text-sm font-medium">Compose</span>
           </div>
-          <div className="flex items-center gap-3">
-            {/* Auto-open-engage toggle */}
-            <div className="flex items-center gap-1.5">
-              <Switch
-                id="auto-open-engage"
-                checked={settings.autoEngageOnCommentClick}
-                onCheckedChange={(checked) =>
-                  updateSetting("autoEngageOnCommentClick", checked)
-                }
-              />
-              <Label
-                htmlFor="auto-open-engage"
-                className="text-muted-foreground cursor-pointer text-[10px]"
-              >
-                Auto-open-engage
-              </Label>
-            </div>
-            {/* Spacebar auto-engage toggle - highlights most visible post, press space to engage */}
-            <div className="flex items-center gap-1.5">
-              <Switch
-                id="space-engage"
-                checked={settings.spacebarAutoEngage}
-                onCheckedChange={(checked) =>
-                  updateSetting("spacebarAutoEngage", checked)
-                }
-              />
-              <Label
-                htmlFor="space-engage"
-                className="text-muted-foreground cursor-pointer text-[10px]"
-              >
-                Space engage
-              </Label>
-            </div>
+
+          <div className="flex items-center gap-1.5">
+            <Switch
+              id="human-only-mode"
+              checked={settings.humanOnlyMode}
+              onCheckedChange={(checked) =>
+                updateSetting("humanOnlyMode", checked)
+              }
+            />
+            <Label
+              htmlFor="human-only-mode"
+              className="text-muted-foreground cursor-pointer text-[10px]"
+            >
+              100% human mode
+            </Label>
+          </div>
+        </div>
+
+        {/* Row 2: Settings Toggles */}
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
+          {/* Auto-open-engage toggle */}
+          <div className="flex items-center gap-1.5">
+            <Switch
+              id="auto-open-engage"
+              checked={settings.autoEngageOnCommentClick}
+              onCheckedChange={(checked) =>
+                updateSetting("autoEngageOnCommentClick", checked)
+              }
+            />
+            <Label
+              htmlFor="auto-open-engage"
+              className="text-muted-foreground cursor-pointer text-[10px]"
+            >
+              Auto-open-engage
+            </Label>
+          </div>
+          {/* Spacebar auto-engage toggle - highlights most visible post, press space to engage */}
+          <div className="flex items-center gap-1.5">
+            <Switch
+              id="space-engage"
+              checked={settings.spacebarAutoEngage}
+              onCheckedChange={(checked) =>
+                updateSetting("spacebarAutoEngage", checked)
+              }
+            />
+            <Label
+              htmlFor="space-engage"
+              className="text-muted-foreground cursor-pointer text-[10px]"
+            >
+              Space engage
+            </Label>
+          </div>
+          {/* Post navigator toggle - floating UI for quick scrolling between posts */}
+          <div className="flex items-center gap-1.5">
+            <Switch
+              id="post-navigator"
+              checked={settings.postNavigator}
+              onCheckedChange={(checked) =>
+                updateSetting("postNavigator", checked)
+              }
+            />
+            <Label
+              htmlFor="post-navigator"
+              className="text-muted-foreground cursor-pointer text-[10px]"
+            >
+              Post navigator
+            </Label>
           </div>
         </div>
 
@@ -654,7 +472,8 @@ export function ComposeTab() {
           {cardIds.map((cardId) => {
             const isSinglePost = singlePostCardIds.includes(cardId);
             // Auto-focus the first single-post card (manual card) for quick typing
-            const isFirstManualCard = isSinglePost && singlePostCardIds[0] === cardId;
+            const isFirstManualCard =
+              isSinglePost && singlePostCardIds[0] === cardId;
             return (
               <ComposeCard
                 key={cardId}
