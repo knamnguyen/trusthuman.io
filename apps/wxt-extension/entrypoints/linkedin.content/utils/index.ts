@@ -23,3 +23,10 @@ export {
   createNavigateHandler,
   linkedInLinkProps,
 } from "./linkedin-navigate";
+export {
+  useMostVisiblePost,
+  POST_SELECTORS,
+  DEFAULT_HIGHLIGHT_STYLE,
+  type UseMostVisiblePostOptions,
+  type UseMostVisiblePostResult,
+} from "./feed/use-most-visible-post";

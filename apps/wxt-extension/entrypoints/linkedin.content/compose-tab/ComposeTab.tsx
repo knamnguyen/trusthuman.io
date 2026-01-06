@@ -12,20 +12,26 @@ import {
 import { useShallow } from "zustand/shallow";
 
 import { Button } from "@sassy/ui/button";
+import { TooltipWithDialog } from "@sassy/ui/components/tooltip-with-dialog";
 import { Label } from "@sassy/ui/label";
 import { Switch } from "@sassy/ui/switch";
 
+import type { ReadyPost } from "./load-posts";
 import { useTRPC } from "../../../lib/trpc/client";
 import { useComposeStore } from "../stores/compose-store";
+import { useShadowRootStore } from "../stores/shadow-root-store";
 import { DEFAULT_STYLE_GUIDE, extractAdjacentComments } from "../utils";
 import { submitCommentToPost } from "../utils/comment/submit-comment";
 import { ComposeCard } from "./ComposeCard";
-import { type ReadyPost, collectPostsBatch } from "./load-posts";
+import { collectPostsBatch } from "./load-posts";
 import { PostPreviewSheet } from "./PostPreviewSheet";
 
 export function ComposeTab() {
   // DEBUG: Track renders
   console.log("[ComposeTab] Render");
+
+  // Get shadow root for portal containers (required for tooltips/dialogs in shadow DOM)
+  const shadowRoot = useShadowRootStore((s) => s.shadowRoot);
 
   const [isLoading, setIsLoading] = useState(false);
   /** Target number of drafts to collect (user configurable, max 100) */
@@ -273,21 +279,39 @@ export function ComposeTab() {
             <span className="text-sm font-medium">Compose</span>
           </div>
 
-          <div className="flex items-center gap-1.5">
-            <Switch
-              id="human-only-mode"
-              checked={settings.humanOnlyMode}
-              onCheckedChange={(checked) =>
-                updateSetting("humanOnlyMode", checked)
-              }
-            />
-            <Label
-              htmlFor="human-only-mode"
-              className="text-muted-foreground cursor-pointer text-[10px]"
-            >
-              100% human mode
-            </Label>
-          </div>
+          <TooltipWithDialog
+            tooltipContent="Watch our tutorial video"
+            buttonText="Watch Video"
+            dialogTitle="Tutorial"
+            dialogClassName="max-w-3xl"
+            portalContainer={shadowRoot}
+            dialogContent={
+              <div className="aspect-video">
+                <iframe
+                  src="https://www.youtube.com/embed/your-video-id"
+                  className="h-full w-full rounded-lg"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            }
+          >
+            <div className="flex items-center gap-1.5">
+              <Switch
+                id="human-only-mode"
+                checked={settings.humanOnlyMode}
+                onCheckedChange={(checked) =>
+                  updateSetting("humanOnlyMode", checked)
+                }
+              />
+              <Label
+                htmlFor="human-only-mode"
+                className="text-muted-foreground cursor-pointer text-[10px]"
+              >
+                100% human mode
+              </Label>
+            </div>
+          </TooltipWithDialog>
         </div>
 
         {/* Row 2: Settings Toggles */}
