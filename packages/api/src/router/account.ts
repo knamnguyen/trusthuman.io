@@ -582,6 +582,13 @@ export async function getOrInsertUser(
 ) {
   const user = await getUserAccount(db, userId, currentAccountId);
 
+  if (user?.account?.permitted === false) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Access to this account is forbidden",
+    });
+  }
+
   if (user !== null) {
     return user;
   }
