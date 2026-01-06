@@ -3,12 +3,14 @@ import { useEffect, useState } from "react";
 import { Sheet } from "@sassy/ui/sheet";
 
 import { ToggleButton } from "./_components/ToggleButton";
+import { PostNavigator } from "./compose-tab/PostNavigator";
 import { AutoEngageObserver } from "./engage-button/AutoEngageObserver";
 import { ButtonPortalManager } from "./engage-button/ButtonPortalManager";
 import { SpacebarEngageObserver } from "./engage-button/SpacebarEngageObserver";
 import { LinkedInSidebar } from "./LinkedInSidebar";
 import { SaveProfilePortalManager } from "./save-profile";
 import { useShadowRootStore, useSidebarStore } from "./stores";
+import { NewPostsPillRemover } from "./utils/feed/NewPostsPillRemover";
 
 interface AppProps {
   shadowRoot: HTMLElement;
@@ -77,6 +79,12 @@ export default function App({ shadowRoot }: AppProps) {
 
       {/* Observer for spacebar auto-engage - highlights most visible post */}
       <SpacebarEngageObserver />
+
+      {/* Floating post navigator UI for quick scrolling between posts */}
+      <PostNavigator />
+
+      {/* Observer to remove "New posts" pill from feed */}
+      <NewPostsPillRemover />
     </>
   );
 }
