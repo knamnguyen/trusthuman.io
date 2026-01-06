@@ -17,7 +17,7 @@ import type { Prisma, PrismaClient } from "@sassy/db";
 import { db } from "@sassy/db";
 
 import type { BrowserSessionRegistry } from "./utils/browser-session";
-import { getOrInsertAccount, getUserAccount } from "./router/account";
+import { getOrInsertUser, getUserAccount } from "./router/account";
 import { AIService } from "./utils/ai-service/ai-service";
 import { browserJobs } from "./utils/browser-job";
 import { assumedAccountJwt, browserRegistry } from "./utils/browser-session";
@@ -187,7 +187,7 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
       });
     }
 
-    const result = await getOrInsertAccount(ctx.db, clerkClient, {
+    const result = await getOrInsertUser(ctx.db, clerkClient, {
       userId: verifiedToken.output.sub,
       currentAccountId: accountId,
     });
@@ -220,7 +220,7 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
     });
   }
 
-  const result = await getOrInsertAccount(ctx.db, clerkClient, {
+  const result = await getOrInsertUser(ctx.db, clerkClient, {
     userId: state.userId,
     currentAccountId: accountId,
   });

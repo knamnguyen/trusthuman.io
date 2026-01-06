@@ -572,7 +572,7 @@ export async function getUserAccount(
   return row[0] ?? null;
 }
 
-export async function getOrInsertAccount(
+export async function getOrInsertUser(
   db: PrismaClient,
   clerkClient: ClerkClient,
   {
