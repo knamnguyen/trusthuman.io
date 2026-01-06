@@ -35,6 +35,7 @@ Bun.serve({
         });
       }
 
+      const start = performance.now();
       const res = await fetchRequestHandler({
         endpoint: "/api/trpc",
         router: appRouter,
@@ -55,9 +56,13 @@ Bun.serve({
       res.headers.set("Access-Control-Allow-Methods", "OPTIONS, GET, POST");
       res.headers.set("Access-Control-Allow-Headers", "*");
 
+      const url = new URL(req.url);
+      console.info(
+        `${res.status} GET ${url.pathname} ${(performance.now() - start).toFixed(2)}ms`,
+      );
+
       return res;
     },
-    // "/api/webhook/*": (req) => webhookRoutes.fetch(req),
     "/api/webhooks/*": (req) => webhookRoutes.fetch(req),
   },
 });
