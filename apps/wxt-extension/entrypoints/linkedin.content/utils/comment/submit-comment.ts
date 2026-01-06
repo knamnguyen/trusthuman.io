@@ -77,7 +77,9 @@ export async function waitForEditableField(
  * Comments are identified by article elements with data-id containing "urn:li:comment"
  */
 function getCommentCount(postContainer: HTMLElement): number {
-  const comments = postContainer.querySelectorAll('article[data-id^="urn:li:comment"]');
+  const comments = postContainer.querySelectorAll(
+    'article[data-id^="urn:li:comment"]',
+  );
   return comments.length;
 }
 
@@ -129,7 +131,9 @@ export async function submitCommentToPost(
 
   // Get comment count before submission for verification
   const commentCountBefore = getCommentCount(postContainer);
-  console.log(`EngageKit: Comment count before submission: ${commentCountBefore}`);
+  console.log(
+    `EngageKit: Comment count before submission: ${commentCountBefore}`,
+  );
 
   // Focus and insert comment
   editableField.focus();
@@ -154,11 +158,23 @@ export async function submitCommentToPost(
 
   if (verified) {
     const newCount = getCommentCount(postContainer);
-    console.log(`EngageKit: Comment verified! Count: ${commentCountBefore} → ${newCount}`);
+    console.log(
+      `EngageKit: Comment verified! Count: ${commentCountBefore} → ${newCount}`,
+    );
+
+    //wait a bit
+
+    // Blur focus so spacebar can trigger new generation
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+
     return true;
   } else {
     const currentCount = getCommentCount(postContainer);
-    console.warn(`EngageKit: Verification failed. Count still at ${currentCount} (expected > ${commentCountBefore})`);
+    console.warn(
+      `EngageKit: Verification failed. Count still at ${currentCount} (expected > ${commentCountBefore})`,
+    );
     return false;
   }
 }

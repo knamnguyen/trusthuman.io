@@ -1,4 +1,4 @@
-import { extractCommentsFromPost } from "./extract-comment-from-post";
+import { extractCommentsFromPost } from "../post/extract-comment-from-post";
 
 /** Maximum time to wait for comments to load per post */
 const MAX_WAIT_MS = 3000;
