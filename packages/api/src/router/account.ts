@@ -572,7 +572,7 @@ export async function getUserAccount(
   return row[0] ?? null;
 }
 
-export async function getOrInsertUser(
+export async function getOrInsertAccount(
   db: PrismaClient,
   clerkClient: ClerkClient,
   {
@@ -581,6 +581,13 @@ export async function getOrInsertUser(
   }: { userId: string; currentAccountId: string | null },
 ) {
   const user = await getUserAccount(db, userId, currentAccountId);
+
+  if (user?.account?.permitted === false) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Access to this account is forbidden",
+    });
+  }
 
   if (user !== null) {
     return user;
