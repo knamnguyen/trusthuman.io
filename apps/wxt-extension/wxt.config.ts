@@ -48,6 +48,7 @@ export default defineConfig({
           "engagekit-sprite-breathe.svg",
         ],
         matches: ["https://*.linkedin.com/*"],
+        use_dynamic_url: true, // Prevents extension fingerprinting by regenerating ID per session
       },
     ],
   },
