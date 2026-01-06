@@ -17,12 +17,10 @@
 
 import { create } from "zustand";
 
-import { useAuthStore } from "../../../stores/auth-store";
+import type { LinkedInProfile } from "../utils/use-linkedin-profile";
 import { getTrpcClient } from "../../../lib/trpc/client";
-import {
-  extractLinkedInProfileFromPage,
-  type LinkedInProfile,
-} from "../utils/use-linkedin-profile";
+import { useAuthStore } from "../../../stores/auth-store";
+import { extractLinkedInProfileFromPage } from "../utils/use-linkedin-profile";
 
 // Types inferred from API responses
 interface Organization {
@@ -147,12 +145,12 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
     // Skip if already loading
     if (get().isLoading) return;
 
-    // Skip if recently fetched (within 30 seconds)
-    const lastFetched = get().lastFetchedAt;
-    if (lastFetched && Date.now() - lastFetched < 30000) {
-      console.log("AccountStore: Skipping fetch, recently fetched");
-      return;
-    }
+    // // Skip if recently fetched (within 30 seconds)
+    // const lastFetched = get().lastFetchedAt;
+    // if (lastFetched && Date.now() - lastFetched < 30000) {
+    //   console.log("AccountStore: Skipping fetch, recently fetched");
+    //   return;
+    // }
 
     set({ isLoading: true, error: null, currentLinkedInStatus: "loading" });
 
@@ -170,7 +168,13 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
           organization: null,
           accounts: [],
           currentLinkedIn,
-          currentLinkedInStatus: computeStatus(false, true, null, currentLinkedIn, null),
+          currentLinkedInStatus: computeStatus(
+            false,
+            true,
+            null,
+            currentLinkedIn,
+            null,
+          ),
           matchingAccount: null,
           isLoading: false,
           isLoaded: true,
@@ -196,10 +200,18 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
 
       // Find matching account
       const matchingAccount = currentLinkedIn.publicIdentifier
-        ? accounts.find((acc) => acc.profileSlug === currentLinkedIn.publicIdentifier) ?? null
+        ? (accounts.find(
+            (acc) => acc.profileSlug === currentLinkedIn.publicIdentifier,
+          ) ?? null)
         : null;
 
-      const status = computeStatus(false, true, org, currentLinkedIn, matchingAccount);
+      const status = computeStatus(
+        false,
+        true,
+        org,
+        currentLinkedIn,
+        matchingAccount,
+      );
 
       set({
         organization: org,
@@ -230,7 +242,10 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
         currentLinkedInStatus: "not_signed_in",
         isLoading: false,
         isLoaded: true,
-        error: error instanceof Error ? error.message : "Failed to fetch account data",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to fetch account data",
       });
     }
   },
@@ -240,12 +255,20 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
     const { accounts, organization, isLoading } = get();
 
     const matchingAccount = currentLinkedIn.publicIdentifier
-      ? accounts.find((acc) => acc.profileSlug === currentLinkedIn.publicIdentifier) ?? null
+      ? (accounts.find(
+          (acc) => acc.profileSlug === currentLinkedIn.publicIdentifier,
+        ) ?? null)
       : null;
 
     // Determine if signed in based on whether we have org data
     const isSignedIn = organization !== null;
-    const status = computeStatus(isLoading, isSignedIn, organization, currentLinkedIn, matchingAccount);
+    const status = computeStatus(
+      isLoading,
+      isSignedIn,
+      organization,
+      currentLinkedIn,
+      matchingAccount,
+    );
 
     set({
       currentLinkedIn,
@@ -273,7 +296,9 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
 
   getMatchingAccount: (profileSlug) => {
     if (!profileSlug) return null;
-    return get().accounts.find((acc) => acc.profileSlug === profileSlug) ?? null;
+    return (
+      get().accounts.find((acc) => acc.profileSlug === profileSlug) ?? null
+    );
   },
 }));
 
