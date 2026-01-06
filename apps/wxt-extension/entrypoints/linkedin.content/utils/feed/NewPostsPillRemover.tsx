@@ -5,36 +5,13 @@ import { useEffect } from "react";
  * Identifies by: button containing a span with exact text "New posts"
  */
 function findNewPostsPill(container: Element): HTMLElement | null {
-  // Find all buttons within the container
   const buttons = container.querySelectorAll("button");
 
   for (const button of buttons) {
-    // Look for a span with text "New posts" inside the button
     const spans = button.querySelectorAll("span");
     for (const span of spans) {
       if (span.textContent?.trim() === "New posts") {
-        // Return the outermost container div (parent of the sticky div)
-        // Walk up to find the container that wraps the entire pill
-        let current: HTMLElement | null = button;
-        while (current && current.parentElement) {
-          const parent = current.parentElement;
-          // Stop at main feed or if we've gone too far up
-          if (
-            parent.tagName === "MAIN" ||
-            parent.getAttribute("aria-label") === "Main Feed"
-          ) {
-            break;
-          }
-          // The pill container is typically a direct child structure
-          // Check if this looks like the pill wrapper (has sticky child)
-          const stickyChild = parent.querySelector('[style*="sticky"]');
-          if (stickyChild || parent.querySelector("button") === button) {
-            current = parent;
-          } else {
-            break;
-          }
-        }
-        return current;
+        return button;
       }
     }
   }
