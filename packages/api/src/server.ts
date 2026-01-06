@@ -56,9 +56,10 @@ Bun.serve({
       res.headers.set("Access-Control-Allow-Methods", "OPTIONS, GET, POST");
       res.headers.set("Access-Control-Allow-Headers", "*");
 
-      const durationMs = performance.now() - start;
-
-      console.info(`[${new Date().toISOString()}] ${req.url} ${durationMs}ms`);
+      const url = new URL(req.url);
+      console.info(
+        `${res.status} GET ${url.pathname} ${(performance.now() - start).toFixed(2)}ms`,
+      );
 
       return res;
     },
