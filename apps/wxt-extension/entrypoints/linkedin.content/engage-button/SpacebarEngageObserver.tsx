@@ -13,32 +13,27 @@ import {
   extractPostTime,
   extractPostUrl,
   getCaptionPreview,
+  useMostVisiblePost,
   waitForCommentsReady,
 } from "../utils";
 import { clickCommentButton } from "../utils/comment/click-comment-button";
-
-/** Selectors for LinkedIn post containers */
-const POST_SELECTORS = "div[data-urn], div[data-id], article[role='article']";
-
-/** Pink highlight color for focused post */
-const HIGHLIGHT_STYLE = "3px solid #ec4899";
 
 /**
  * Observer component that highlights the most visible post and triggers
  * engage flow when spacebar is pressed.
  *
  * When spacebarAutoEngage setting is enabled:
- * - Tracks which post is most visible in the viewport using IntersectionObserver
- * - Highlights that post with a pink ring outline
+ * - Tracks which post is most visible in the viewport using shared hook
+ * - Highlights that post with a pink ring outline (if PostNavigator isn't already highlighting)
  * - Listens for spacebar keypress (skips when in input/textarea)
- * - Triggers single-post engage flow (1 manual + 3 AI cards)
+ * - Triggers single-post engage flow (1 manual or 3 AI cards based on humanOnlyMode)
  *
  * This component renders nothing - it only sets up observers and listeners.
  */
 export function SpacebarEngageObserver() {
   const trpc = useTRPC();
 
-  // Compose store for creating cards
+  // Compose store for creating cards and checking settings
   const {
     addCard,
     updateCardComment,
@@ -55,56 +50,31 @@ export function SpacebarEngageObserver() {
     trpc.aiComments.generateComment.mutationOptions(),
   );
 
-  // Track the currently highlighted post
-  const highlightedPostRef = useRef<HTMLElement | null>(null);
-  // Track visibility ratios for all observed posts
-  const visibilityMapRef = useRef<Map<Element, number>>(new Map());
-  // Track the IntersectionObserver instance
-  const observerRef = useRef<IntersectionObserver | null>(null);
+  // Get settings - need to subscribe to both
+  const spacebarEnabled = useComposeStore(
+    (state) => state.settings.spacebarAutoEngage,
+  );
+  const postNavigatorEnabled = useComposeStore(
+    (state) => state.settings.postNavigator,
+  );
 
-  /**
-   * Update which post is highlighted based on visibility
-   */
-  const updateHighlight = useCallback(() => {
-    const state = useComposeStore.getState();
-    if (!state.settings.spacebarAutoEngage) {
-      // Remove highlight if feature is disabled
-      if (highlightedPostRef.current) {
-        highlightedPostRef.current.style.outline = "";
-        highlightedPostRef.current = null;
-      }
-      return;
-    }
+  // Track the most visible post ref for spacebar handler (updated via callback)
+  const mostVisiblePostRef = useRef<HTMLElement | null>(null);
 
-    // Find the post with highest visibility ratio
-    let maxRatio = 0;
-    let mostVisiblePost: HTMLElement | null = null;
+  // Use shared hook for tracking most visible post
+  // Only highlight if PostNavigator is NOT enabled (to avoid duplicate highlights)
+  const { mostVisiblePost } = useMostVisiblePost({
+    enabled: spacebarEnabled,
+    highlight: spacebarEnabled && !postNavigatorEnabled,
+    onPostChange: (post) => {
+      mostVisiblePostRef.current = post;
+    },
+  });
 
-    visibilityMapRef.current.forEach((ratio, element) => {
-      if (ratio > maxRatio) {
-        maxRatio = ratio;
-        mostVisiblePost = element as HTMLElement;
-      }
-    });
-
-    // Only highlight if post is at least 25% visible
-    if (maxRatio < 0.25) {
-      mostVisiblePost = null;
-    }
-
-    // Update highlight if changed
-    if (mostVisiblePost !== highlightedPostRef.current) {
-      // Remove old highlight
-      if (highlightedPostRef.current) {
-        highlightedPostRef.current.style.outline = "";
-      }
-      // Apply new highlight
-      if (mostVisiblePost) {
-        (mostVisiblePost as HTMLElement).style.outline = HIGHLIGHT_STYLE;
-      }
-      highlightedPostRef.current = mostVisiblePost;
-    }
-  }, []);
+  // Keep ref in sync with hook result
+  useEffect(() => {
+    mostVisiblePostRef.current = mostVisiblePost;
+  }, [mostVisiblePost]);
 
   /**
    * Handle generation flow for a post (same as AutoEngageObserver)
@@ -357,8 +327,8 @@ export function SpacebarEngageObserver() {
         return;
       }
 
-      // Check if we have a highlighted post
-      if (!highlightedPostRef.current) {
+      // Check if we have a highlighted post (use ref for latest value)
+      if (!mostVisiblePostRef.current) {
         console.log("EngageKit SpacebarEngage: no post highlighted");
         return;
       }
@@ -371,72 +341,10 @@ export function SpacebarEngageObserver() {
       );
 
       // Trigger generation flow
-      await triggerGeneration(highlightedPostRef.current);
+      await triggerGeneration(mostVisiblePostRef.current);
     },
     [triggerGeneration],
   );
-
-  // Set up IntersectionObserver to track post visibility
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        // Update visibility map for each entry
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            visibilityMapRef.current.set(entry.target, entry.intersectionRatio);
-          } else {
-            visibilityMapRef.current.delete(entry.target);
-          }
-        });
-
-        // Update which post is highlighted
-        updateHighlight();
-      },
-      {
-        // Use multiple thresholds for smoother tracking
-        threshold: [0, 0.25, 0.5, 0.75, 1.0],
-      },
-    );
-
-    observerRef.current = observer;
-
-    // Observe all existing posts
-    const posts = document.querySelectorAll(POST_SELECTORS);
-    posts.forEach((post) => observer.observe(post));
-
-    // Set up MutationObserver to watch for new posts added to the feed
-    const mutationObserver = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        mutation.addedNodes.forEach((node) => {
-          if (node instanceof Element) {
-            // Check if the added node is a post
-            if (node.matches(POST_SELECTORS)) {
-              observer.observe(node);
-            }
-            // Check for posts within the added node
-            node.querySelectorAll(POST_SELECTORS).forEach((post) => {
-              observer.observe(post);
-            });
-          }
-        });
-      });
-    });
-
-    mutationObserver.observe(document.body, {
-      childList: true,
-      subtree: true,
-    });
-
-    return () => {
-      observer.disconnect();
-      mutationObserver.disconnect();
-      // Clean up highlight
-      if (highlightedPostRef.current) {
-        highlightedPostRef.current.style.outline = "";
-        highlightedPostRef.current = null;
-      }
-    };
-  }, [updateHighlight]);
 
   // Set up keydown listener
   useEffect(() => {
@@ -446,21 +354,6 @@ export function SpacebarEngageObserver() {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [handleKeyDown]);
-
-  // Re-check highlight when settings change
-  useEffect(() => {
-    let prevEnabled = useComposeStore.getState().settings.spacebarAutoEngage;
-
-    const unsubscribe = useComposeStore.subscribe((state) => {
-      const enabled = state.settings.spacebarAutoEngage;
-      if (enabled !== prevEnabled) {
-        prevEnabled = enabled;
-        updateHighlight();
-      }
-    });
-
-    return unsubscribe;
-  }, [updateHighlight]);
 
   // This component renders nothing
   return null;
