@@ -514,6 +514,7 @@ export function hasPermissionToAccessAccountClause(readerUserId: string) {
   };
 }
 
+//looks like only used in middleware now not in individual endpoints
 export async function getUserAccount(
   db: PrismaClient | PrismaTransactionalClient,
   userId: string,
@@ -572,6 +573,7 @@ export async function getUserAccount(
   return row[0] ?? null;
 }
 
+//looks like only used in middleware right now
 export async function getOrInsertUser(
   db: PrismaClient,
   clerkClient: ClerkClient,
