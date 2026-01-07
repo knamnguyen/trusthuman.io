@@ -15,6 +15,14 @@ import { checkPremiumAccess } from "../utils/check-premium-access";
 
 export const userRouter = () =>
   createTRPCRouter({
+    /**
+     * Warmup endpoint - called on page load to pre-warm DB connection and auth cache
+     * This prevents cold start latency on the first real API call
+     */
+    warmup: protectedProcedure.query(() => {
+      return { status: "warm" as const };
+    }),
+
     checkAccess: protectedProcedure.query(async ({ ctx }) => {
       const access = await checkPremiumAccess(ctx);
       return access;

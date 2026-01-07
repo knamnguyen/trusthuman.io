@@ -25,6 +25,48 @@ import { safe } from "./utils/commons";
 import { env } from "./utils/env";
 
 /**
+ * Auth Cache - prevents redundant auth checks for parallel requests
+ *
+ * When 6 parallel requests arrive with the same token:
+ * - Request 1: cache miss → creates Promise, stores it, does auth work
+ * - Requests 2-6: cache hit → await the same Promise
+ * - Result: 1 auth check instead of 6
+ *
+ * TTL: 60 seconds - short enough to be safe, long enough for parallel requests
+ */
+type AuthResult = Awaited<ReturnType<typeof getOrInsertUser>>;
+const authCache = new Map<string, Promise<AuthResult>>();
+const AUTH_CACHE_TTL_MS = 60_000;
+
+function getCachedAuth(
+  cacheKey: string,
+  authFn: () => Promise<AuthResult>,
+): Promise<AuthResult> {
+  // Check if we already have a pending or resolved promise
+  const existing = authCache.get(cacheKey);
+  if (existing) {
+    return existing;
+  }
+
+  // Create the promise and cache it IMMEDIATELY (before awaiting)
+  // This ensures parallel requests find the promise and wait for it
+  const promise = authFn();
+  authCache.set(cacheKey, promise);
+
+  // Clean up after TTL (whether success or failure)
+  promise.finally(() => {
+    setTimeout(() => {
+      // Only delete if it's still the same promise (not replaced)
+      if (authCache.get(cacheKey) === promise) {
+        authCache.delete(cacheKey);
+      }
+    }, AUTH_CACHE_TTL_MS);
+  });
+
+  return promise;
+}
+
+/**
  * 1. CONTEXT
  *
  * This section defines the "contexts" that are available in the backend API.
@@ -187,10 +229,15 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
       });
     }
 
-    const result = await getOrInsertUser(ctx.db, clerkClient, {
-      userId: verifiedToken.output.sub,
-      currentAccountId: accountId,
-    });
+    // Use cached auth to avoid redundant DB queries for parallel requests
+    // Cache key: last 16 chars of token + accountId (safe, non-sensitive)
+    const cacheKey = `${token.slice(-16)}:${accountId ?? "none"}`;
+    const result = await getCachedAuth(cacheKey, () =>
+      getOrInsertUser(ctx.db, clerkClient, {
+        userId: verifiedToken.output.sub,
+        currentAccountId: accountId,
+      }),
+    );
 
     if (result.account !== null && result.account.permitted === false) {
       throw new TRPCError({
