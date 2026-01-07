@@ -7,7 +7,7 @@
  * The pieces you will need to use are documented accordingly near the end
  */
 
-import { createClerkClient, verifyToken } from "@clerk/backend";
+import { createClerkClient } from "@clerk/backend";
 import { Hyperbrowser } from "@hyperbrowser/sdk";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
@@ -21,7 +21,6 @@ import { getOrInsertUser, getUserAccount } from "./router/account";
 import { AIService } from "./utils/ai-service/ai-service";
 import { browserJobs } from "./utils/browser-job";
 import { assumedAccountJwt, browserRegistry } from "./utils/browser-session";
-import { safe } from "./utils/commons";
 import { env } from "./utils/env";
 
 /**
@@ -149,9 +148,9 @@ const clerkClient = createClerkClient({
 
 /**
  * Clerk authentication middleware
- * This middleware handles authentication for both Next.js and Chrome extension requests
- * - Next.js requests: Uses currentUser() from @clerk/nextjs/server
- * - Chrome extension requests: Uses Backend SDK to verify Authorization header
+ * Unified auth for both Next.js and Chrome extension requests using authenticateRequest()
+ * Returns full Auth object with orgId from active organization
+ * Uses auth cache (60s TTL) to deduplicate parallel DB queries
  */
 const isAuthed = t.middleware(async ({ ctx, next }) => {
   // assumedUserToken is for assumed accounts from browserbase
@@ -197,79 +196,61 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
     });
   }
 
-  //if no assumed user token - check for account id
+  // Get account id and source for logging
   const accountId = ctx.headers.get("x-account-id") ?? null;
+  const source = ctx.headers.get("x-trpc-source") ?? "nextjs";
 
-  const source = ctx.headers.get("x-trpc-source");
-
-  //handle authentication for chrome extension
-  if (source === "chrome-extension") {
-    // Handle Chrome extension authentication using Backend SDK
-    const authHeader = ctx.headers.get("authorization");
-
-    if (!authHeader?.startsWith("Bearer ")) {
-      throw new TRPCError({
-        code: "UNAUTHORIZED",
-        message: "Missing or invalid authorization header",
-      });
-    }
-
-    const token = authHeader.substring(7); // Remove "Bearer " prefix
-
-    const verifiedToken = await safe(() =>
-      verifyToken(token, {
-        secretKey: process.env.CLERK_SECRET_KEY,
-      }),
-    );
-
-    if (verifiedToken.ok === false) {
-      throw new TRPCError({
-        code: "UNAUTHORIZED",
-        message: "Invalid token",
-      });
-    }
-
-    // Use cached auth to avoid redundant DB queries for parallel requests
-    // Cache key: last 16 chars of token + accountId (safe, non-sensitive)
-    const cacheKey = `${token.slice(-16)}:${accountId ?? "none"}`;
-    const result = await getCachedAuth(cacheKey, () =>
-      getOrInsertUser(ctx.db, clerkClient, {
-        userId: verifiedToken.output.sub,
-        currentAccountId: accountId,
-      }),
-    );
-
-    if (result.account !== null && result.account.permitted === false) {
-      throw new TRPCError({
-        code: "FORBIDDEN",
-        message: "Access to this account is forbidden",
-      });
-    }
-
-    return next({
-      ctx: {
-        ...ctx,
-        user: result.user,
-        account: result.account,
-        memberships: result.memberships,
-      },
-    });
-  }
-
-  //handle auth for nextjs
+  // Unified auth: authenticateRequest works for both NextJS and Chrome extension
+  // Returns full Auth object with orgId from active organization
   const auth = await clerkClient.authenticateRequest(ctx.req);
   const state = auth.toAuth();
 
-  if (state === null || state.isAuthenticated === false) {
+  if (!state?.isAuthenticated) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
       message: "Not authenticated",
     });
   }
 
-  const result = await getOrInsertUser(ctx.db, clerkClient, {
+  // Use cached auth to avoid redundant DB queries for parallel requests
+  // Cache key: sessionId + orgId + accountId (covers all variations)
+  const cacheKey = `${state.sessionId}:${state.orgId ?? "none"}:${accountId ?? "none"}`;
+  const dbCacheHit = authCache.has(cacheKey);
+  const result = await getCachedAuth(cacheKey, () =>
+    getOrInsertUser(ctx.db, clerkClient, {
+      userId: state.userId,
+      currentAccountId: accountId,
+    }),
+  );
+
+  // Log auth state for checking
+  console.log(`>>> Auth Middleware [${source}]`);
+  console.log("  [Auth State]:", {
     userId: state.userId,
-    currentAccountId: accountId,
+    sessionId: state.sessionId,
+    orgId: state.orgId ?? null,
+    orgRole: state.orgRole ?? null,
+    orgSlug: state.orgSlug ?? null,
+  });
+  console.log(`  [${dbCacheHit ? "CACHED" : "FRESH DB QUERY"}] DB Data:`, {
+    requestedAccountId: accountId,
+    user: {
+      id: result.user.id,
+      firstName: result.user.firstName,
+      email: result.user.primaryEmailAddress,
+      accessType: result.user.accessType,
+      dailyAIcomments: result.user.dailyAIcomments,
+    },
+    account: result.account
+      ? {
+          id: result.account.id,
+          email: result.account.email,
+          name: result.account.name,
+          accessType: result.account.accessType,
+          permitted: result.account.permitted,
+        }
+      : null,
+    memberships: result.memberships,
   });
 
   if (result.account !== null && result.account.permitted === false) {
@@ -281,8 +262,8 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
 
   return next({
     ctx: {
-      ...ctx, // Keep existing context with db and headers
-      user: result.user, // Add the user to the context
+      ...ctx,
+      user: result.user,
       account: result.account,
       memberships: result.memberships,
     },
