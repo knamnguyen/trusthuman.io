@@ -3,6 +3,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 
 import { ThemeProvider } from "@sassy/ui/theme";
 
+import { WarmupProvider } from "~/app/_components/warmup-provider";
 import { LinkedInAccountProvider } from "~/stores/linkedin-account-store";
 import { TRPCReactProvider } from "~/trpc/react";
 
@@ -13,8 +14,10 @@ export function Providers({ children }: { children: ReactNode }) {
       <LinkedInAccountProvider>
         <TRPCReactProvider>
           <ClerkProvider afterSignOutUrl="/" redirectUrl="/extension-auth">
-            {/* <ProgressBar height="4px" color="#155dfc" shallowRouting /> */}
-            {children}
+            <WarmupProvider>
+              {/* <ProgressBar height="4px" color="#155dfc" shallowRouting /> */}
+              {children}
+            </WarmupProvider>
           </ClerkProvider>
         </TRPCReactProvider>
       </LinkedInAccountProvider>
