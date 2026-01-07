@@ -23,7 +23,7 @@ interface UseFollowersHistoryReturn {
  * - Provides manual refetch function
  */
 export function useFollowersHistory(): UseFollowersHistoryReturn {
-  const accountId = useAccountStore((state) => state.currentLinkedIn.miniProfileId);
+  const accountId = useAccountStore((state) => state.currentLinkedIn.profileUrn);
   const [history, setHistory] = useState<DataHistory<FollowersData>>({
     snapshots: [],
     lastFetchTime: null,

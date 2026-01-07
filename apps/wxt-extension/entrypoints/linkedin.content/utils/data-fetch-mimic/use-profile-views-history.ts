@@ -32,7 +32,7 @@ export interface UseProfileViewsHistoryReturn {
  * - Returns latest snapshot for easy access
  */
 export function useProfileViewsHistory(): UseProfileViewsHistoryReturn {
-  const accountId = useAccountStore((state) => state.currentLinkedIn.miniProfileId);
+  const accountId = useAccountStore((state) => state.currentLinkedIn.profileUrn);
   const [history, setHistory] = useState<DataHistory<ProfileViewData>>({
     snapshots: [],
     lastFetchTime: null,

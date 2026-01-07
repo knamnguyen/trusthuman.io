@@ -22,7 +22,7 @@ export async function fetchProfileImpressions(): Promise<ProfileImpressionsData 
   const currentProfile = extractLinkedInProfileFromPage();
   console.log("🔍 Fetching profile impressions for logged-in user:", {
     profileUrl: currentProfile.profileUrl,
-    publicIdentifier: currentProfile.publicIdentifier,
+    profileSlug: currentProfile.profileSlug,
   });
 
   const auth = await storage.getItem<LinkedInAuth>("local:auth");
@@ -69,7 +69,7 @@ export async function fetchProfileImpressions(): Promise<ProfileImpressionsData 
       console.log("✅ Profile impressions fetched successfully:", {
         totalImpressions,
         period,
-        for: currentProfile.publicIdentifier || "unknown",
+        for: currentProfile.profileSlug || "unknown",
       });
       return { totalImpressions, period };
     }

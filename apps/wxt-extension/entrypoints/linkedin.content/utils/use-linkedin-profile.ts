@@ -6,16 +6,16 @@
  *
  * Returns:
  * - profileUrl: Public LinkedIn profile URL (e.g., https://www.linkedin.com/in/username)
- * - miniProfileId: LinkedIn internal profile ID (e.g., ACoAADnB9GgBHY72WrXA0hUz4IY8FAfYcrrSd0o)
- * - publicIdentifier: Username from the profile URL (e.g., "username")
+ * - profileUrn: LinkedIn internal profile URN ID (e.g., ACoAADnB9GgBHY72WrXA0hUz4IY8FAfYcrrSd0o)
+ * - profileSlug: Username/slug from the profile URL (e.g., "username")
  */
 
 import { useEffect, useState } from "react";
 
 export interface LinkedInProfile {
   profileUrl: string | null;
-  miniProfileId: string | null;
-  publicIdentifier: string | null;
+  profileUrn: string | null;
+  profileSlug: string | null;
 }
 
 /**
@@ -23,7 +23,9 @@ export interface LinkedInProfile {
  * Standalone function that can be used outside of React hooks
  */
 export function extractLinkedInProfileFromPage(): LinkedInProfile {
-  console.log("extractLinkedInProfileFromPage: Extracting LinkedIn profile from page...");
+  console.log(
+    "extractLinkedInProfileFromPage: Extracting LinkedIn profile from page...",
+  );
 
   const codeEls = document.querySelectorAll("code");
 
@@ -49,35 +51,35 @@ export function extractLinkedInProfileFromPage(): LinkedInProfile {
     );
     if (!miniProfile) continue;
 
-    const publicIdentifier = miniProfile.publicIdentifier;
-    const profileUrl = publicIdentifier
-      ? `https://www.linkedin.com/in/${publicIdentifier}`
+    const profileSlug = miniProfile.publicIdentifier;
+    const profileUrl = profileSlug
+      ? `https://www.linkedin.com/in/${profileSlug}`
       : null;
 
     // Full URN, e.g. "urn:li:fs_miniProfile:ACoAADnB9GgBHY72WrXA0hUz4IY8FAfYcrrSd0o"
     const fullMiniProfileUrn = miniProfile.entityUrn;
 
     // Extract just the ID part after the last colon: "ACoAADnB9GgBHY72WrXA0hUz4IY8FAfYcrrSd0o"
-    const miniProfileId = fullMiniProfileUrn.split(":").pop() ?? null;
+    const profileUrn = fullMiniProfileUrn.split(":").pop() ?? null;
 
     console.log("extractLinkedInProfileFromPage: Profile found:", {
       profileUrl,
-      miniProfileId,
-      publicIdentifier,
+      profileUrn,
+      profileSlug,
     });
 
     return {
       profileUrl,
-      miniProfileId,
-      publicIdentifier,
+      profileUrn,
+      profileSlug,
     };
   }
 
   console.log("extractLinkedInProfileFromPage: No profile data found on page");
   return {
     profileUrl: null,
-    miniProfileId: null,
-    publicIdentifier: null,
+    profileUrn: null,
+    profileSlug: null,
   };
 }
 
@@ -88,8 +90,8 @@ export function extractLinkedInProfileFromPage(): LinkedInProfile {
 export const useLinkedInProfile = () => {
   const [profile, setProfile] = useState<LinkedInProfile>({
     profileUrl: null,
-    miniProfileId: null,
-    publicIdentifier: null,
+    profileUrn: null,
+    profileSlug: null,
   });
   const [isLoaded, setIsLoaded] = useState(false);
 

@@ -104,8 +104,8 @@ type AccountStore = AccountState & AccountActions;
 
 const initialLinkedIn: LinkedInProfile = {
   profileUrl: null,
-  miniProfileId: null,
-  publicIdentifier: null,
+  profileUrn: null,
+  profileSlug: null,
 };
 
 const initialState: AccountState = {
@@ -133,7 +133,7 @@ function computeStatus(
   if (isLoading) return "loading";
   if (!isSignedIn) return "not_signed_in";
   if (!organization) return "no_org";
-  if (!currentLinkedIn.publicIdentifier) return "not_detected";
+  if (!currentLinkedIn.profileSlug) return "not_detected";
   if (matchingAccount) return "registered";
   return "not_registered";
 }
@@ -199,9 +199,9 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
       });
 
       // Find matching account
-      const matchingAccount = currentLinkedIn.publicIdentifier
+      const matchingAccount = currentLinkedIn.profileSlug
         ? (accounts.find(
-            (acc) => acc.profileSlug === currentLinkedIn.publicIdentifier,
+            (acc) => acc.profileSlug === currentLinkedIn.profileSlug,
           ) ?? null)
         : null;
 
@@ -228,7 +228,7 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
       console.log("AccountStore: Fetched account data", {
         org: org.name,
         accountCount: accounts.length,
-        currentLinkedIn: currentLinkedIn.publicIdentifier,
+        currentLinkedIn: currentLinkedIn.profileSlug,
         status,
       });
     } catch (error) {
@@ -254,9 +254,9 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
     const currentLinkedIn = extractLinkedInProfileFromPage();
     const { accounts, organization, isLoading } = get();
 
-    const matchingAccount = currentLinkedIn.publicIdentifier
+    const matchingAccount = currentLinkedIn.profileSlug
       ? (accounts.find(
-          (acc) => acc.profileSlug === currentLinkedIn.publicIdentifier,
+          (acc) => acc.profileSlug === currentLinkedIn.profileSlug,
         ) ?? null)
       : null;
 
@@ -277,7 +277,7 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
     });
 
     console.log("AccountStore: Refreshed current LinkedIn", {
-      publicIdentifier: currentLinkedIn.publicIdentifier,
+      profileSlug: currentLinkedIn.profileSlug,
       status,
     });
   },

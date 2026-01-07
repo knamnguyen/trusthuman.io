@@ -47,7 +47,7 @@ export function SignInOverlay() {
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           {/* Current LinkedIn Account */}
-          {currentLinkedIn.publicIdentifier && (
+          {currentLinkedIn.profileSlug && (
             <div className="rounded-lg border bg-muted/50 p-3">
               <p className="mb-1 text-xs font-medium text-muted-foreground uppercase">
                 Current LinkedIn Account
@@ -55,7 +55,7 @@ export function SignInOverlay() {
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4 text-muted-foreground" />
                 <span className="font-mono text-sm">
-                  {currentLinkedIn.publicIdentifier}
+                  {currentLinkedIn.profileSlug}
                 </span>
               </div>
             </div>

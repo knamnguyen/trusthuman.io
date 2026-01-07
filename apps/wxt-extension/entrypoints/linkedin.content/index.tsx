@@ -98,7 +98,7 @@ export default defineContentScript({
     // - Rate limited by configurable interval (default 2h)
     // - Retries up to 3x with exponential backoff on failure
     const startAutoCollect = async () => {
-      const accountId = useAccountStore.getState().currentLinkedIn.miniProfileId;
+      const accountId = useAccountStore.getState().currentLinkedIn.profileUrn;
 
       if (!accountId) {
         console.warn("EngageKit WXT: No LinkedIn account ID detected, skipping auto-collect");
@@ -123,9 +123,9 @@ export default defineContentScript({
     startAutoCollect();
 
     // Re-trigger auto-collect when account changes (e.g., user switches LinkedIn accounts)
-    let lastAccountId = useAccountStore.getState().currentLinkedIn.miniProfileId;
+    let lastAccountId = useAccountStore.getState().currentLinkedIn.profileUrn;
     const unsubscribe = useAccountStore.subscribe((state) => {
-      const currentAccountId = state.currentLinkedIn.miniProfileId;
+      const currentAccountId = state.currentLinkedIn.profileUrn;
       if (currentAccountId && currentAccountId !== lastAccountId) {
         console.log(`EngageKit WXT: Account changed to ${currentAccountId}, triggering auto-collect`);
         lastAccountId = currentAccountId;

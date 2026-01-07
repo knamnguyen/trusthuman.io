@@ -6,10 +6,10 @@
  */
 
 import type {
+  AuthStatus,
   MessageRequest,
   MessageResponse,
   MessageRouterDependencies,
-  AuthStatus,
 } from "./background-types";
 
 export class MessageRouter {
@@ -25,7 +25,7 @@ export class MessageRouter {
   handleMessage = (
     request: MessageRequest,
     sender: chrome.runtime.MessageSender,
-    sendResponse: (response: MessageResponse<any>) => void
+    sendResponse: (response: MessageResponse<any>) => void,
   ): boolean | void => {
     console.log("MessageRouter: Received message:", request.action);
 
@@ -48,23 +48,28 @@ export class MessageRouter {
   private handleGetAuthStatus = (
     request: MessageRequest,
     _sender: chrome.runtime.MessageSender,
-    sendResponse: (response: MessageResponse<AuthStatus>) => void
+    sendResponse: (response: MessageResponse<AuthStatus>) => void,
   ): boolean => {
-    console.log("MessageRouter: handleGetAuthStatus called", { forceRefresh: request.forceRefresh });
+    console.log("MessageRouter: handleGetAuthStatus called", {
+      forceRefresh: request.forceRefresh,
+    });
 
     // Invalidate cache if forceRefresh requested (e.g., user switched orgs externally)
     if (request.forceRefresh) {
-      console.log("MessageRouter: Invalidating Clerk cache due to forceRefresh");
+      console.log(
+        "MessageRouter: Invalidating Clerk cache due to forceRefresh",
+      );
       this.dependencies.invalidateClerkCache();
     }
 
-    this.dependencies.getClerkClient()
+    this.dependencies
+      .getClerkClient()
       .then((clerk) => {
         console.log("MessageRouter: Clerk client obtained:", {
           hasSession: !!clerk.session,
           hasUser: !!clerk.user,
           sessionId: clerk.session?.id,
-          userId: clerk.user?.id
+          userId: clerk.user?.id,
         });
 
         const authStatus: AuthStatus = {
@@ -128,9 +133,10 @@ export class MessageRouter {
   private handleGetToken = (
     _request: MessageRequest,
     _sender: chrome.runtime.MessageSender,
-    sendResponse: (response: MessageResponse<{ token: string | null }>) => void
+    sendResponse: (response: MessageResponse<{ token: string | null }>) => void,
   ): boolean => {
-    this.dependencies.getClerkClient()
+    this.dependencies
+      .getClerkClient()
       .then(async (clerk) => {
         if (!clerk.session) {
           console.warn("MessageRouter: No session available for token");
@@ -138,9 +144,17 @@ export class MessageRouter {
           return;
         }
 
-        // Get token asynchronously
-        const token = await clerk.session.getToken();
-        console.log("MessageRouter: Token retrieved, length:", token?.length || 0);
+        // Get token with organizationId to include org claims in JWT
+        // setActive doesn't seem to propagate to session in chrome extension context
+        // so we explicitly pass the org when generating the token
+        const token = await clerk.session.getToken({
+          skipCache: true,
+          organizationId: clerk.organization?.id,
+        });
+        console.log("MessageRouter: Token retrieved:", {
+          length: token?.length || 0,
+          organizationId: clerk.organization?.id || null,
+        });
         sendResponse({ success: true, data: { token } });
       })
       .catch((error: Error) => {

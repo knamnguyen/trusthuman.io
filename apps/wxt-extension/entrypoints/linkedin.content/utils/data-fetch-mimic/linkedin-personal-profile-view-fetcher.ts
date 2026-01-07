@@ -24,8 +24,8 @@ export async function fetchProfileViews(): Promise<ProfileViewData | null> {
   const currentProfile = extractLinkedInProfileFromPage();
   console.log("🔍 Fetching analytics for logged-in user:", {
     profileUrl: currentProfile.profileUrl,
-    publicIdentifier: currentProfile.publicIdentifier,
-    miniProfileId: currentProfile.miniProfileId,
+    profileSlug: currentProfile.profileSlug,
+    profileUrn: currentProfile.profileUrn,
   });
 
   const auth = await storage.getItem<LinkedInAuth>("local:auth");
@@ -100,7 +100,7 @@ export async function fetchProfileViews(): Promise<ProfileViewData | null> {
       console.log("✅ Profile views fetched successfully:", {
         totalViews,
         period,
-        for: currentProfile.publicIdentifier || "unknown",
+        for: currentProfile.profileSlug || "unknown",
         matchedPattern: "JSON title+description",
       });
       return { totalViews, period };

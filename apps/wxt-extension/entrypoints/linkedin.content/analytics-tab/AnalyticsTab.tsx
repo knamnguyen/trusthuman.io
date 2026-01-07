@@ -32,7 +32,7 @@ import { UnifiedChart } from "./UnifiedChart";
 
 export function AnalyticsTab() {
   const accountId = useAccountStore(
-    (state) => state.currentLinkedIn.miniProfileId,
+    (state) => state.currentLinkedIn.profileUrn,
   );
 
   // Selection state for metrics to display on unified chart

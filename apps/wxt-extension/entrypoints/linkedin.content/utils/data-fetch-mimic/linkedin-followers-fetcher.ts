@@ -21,7 +21,7 @@ export async function fetchFollowers(): Promise<FollowersData | null> {
   const currentProfile = extractLinkedInProfileFromPage();
   console.log("🔍 Fetching followers for logged-in user:", {
     profileUrl: currentProfile.profileUrl,
-    publicIdentifier: currentProfile.publicIdentifier,
+    profileSlug: currentProfile.profileSlug,
   });
 
   const auth = await storage.getItem<LinkedInAuth>("local:auth");
@@ -65,7 +65,7 @@ export async function fetchFollowers(): Promise<FollowersData | null> {
 
       console.log("✅ Followers fetched successfully:", {
         totalFollowers,
-        for: currentProfile.publicIdentifier || "unknown",
+        for: currentProfile.profileSlug || "unknown",
       });
       return { totalFollowers };
     }

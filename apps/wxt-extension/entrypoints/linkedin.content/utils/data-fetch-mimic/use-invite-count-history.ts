@@ -23,7 +23,7 @@ interface UseInviteCountHistoryReturn {
  * - Provides manual refetch function
  */
 export function useInviteCountHistory(): UseInviteCountHistoryReturn {
-  const accountId = useAccountStore((state) => state.currentLinkedIn.miniProfileId);
+  const accountId = useAccountStore((state) => state.currentLinkedIn.profileUrn);
   const [history, setHistory] = useState<DataHistory<InviteCountData>>({
     snapshots: [],
     lastFetchTime: null,

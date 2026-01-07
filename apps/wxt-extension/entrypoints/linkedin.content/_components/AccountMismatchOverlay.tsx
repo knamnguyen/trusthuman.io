@@ -69,7 +69,7 @@ export function AccountMismatchOverlay() {
             <div className="flex items-center gap-2">
               <User className="h-4 w-4 text-amber-600" />
               <span className="font-mono text-sm font-medium text-amber-900">
-                {currentLinkedIn.publicIdentifier || "Unknown"}
+                {currentLinkedIn.profileSlug || "Unknown"}
               </span>
             </div>
           </div>

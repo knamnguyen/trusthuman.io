@@ -100,7 +100,7 @@ function OrgAccountsCard() {
               <ul className="flex flex-col gap-2">
                 {accounts.map((account) => {
                   const isCurrentAccount =
-                    account.profileSlug === currentLinkedIn.publicIdentifier;
+                    account.profileSlug === currentLinkedIn.profileSlug;
                   return (
                     <li
                       key={account.id}
@@ -135,7 +135,7 @@ function OrgAccountsCard() {
           </div>
 
           {/* Current LinkedIn Match Status */}
-          {currentLinkedIn.publicIdentifier && (
+          {currentLinkedIn.profileSlug && (
             <div className="border-t pt-3">
               <p className="text-muted-foreground mb-2 text-xs font-medium uppercase">
                 Current LinkedIn
@@ -150,7 +150,7 @@ function OrgAccountsCard() {
                   <XCircle className="h-4 w-4" />
                   <span>
                     <span className="font-mono">
-                      {currentLinkedIn.publicIdentifier}
+                      {currentLinkedIn.profileSlug}
                     </span>{" "}
                     not registered
                   </span>
@@ -195,13 +195,13 @@ function CurrentLinkedInCard() {
           <div>
             <p className="text-muted-foreground text-xs">Username</p>
             <p className="font-mono text-sm">
-              {currentLinkedIn.publicIdentifier}
+              {currentLinkedIn.profileSlug}
             </p>
           </div>
           <div>
-            <p className="text-muted-foreground text-xs">Profile ID</p>
+            <p className="text-muted-foreground text-xs">Profile URN</p>
             <p className="font-mono text-xs break-all">
-              {currentLinkedIn.miniProfileId}
+              {currentLinkedIn.profileUrn}
             </p>
           </div>
         </div>
@@ -215,6 +215,7 @@ export function AccountTab() {
   // Note: isSignedIn check is done at LinkedInSidebar level via SignInOverlay
   const { user, fetchAuthStatus } = useAuthStore();
   const { isLoading, fetchAccountData } = useAccountStore();
+  const organization = useAuthStore.getState().organization;
 
   const handleRefresh = async () => {
     // Force refresh auth (invalidates Clerk cache) then re-fetch account data
@@ -242,12 +243,15 @@ export function AccountTab() {
               className="h-8 w-8 p-0"
               title="Refresh account data"
             >
-              <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+              <RefreshCw
+                className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+              />
             </Button>
           </div>
           <CardDescription>
             You're signed in and ready to engage on LinkedIn
           </CardDescription>
+          <CardDescription>Organization: {organization?.name}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between">
@@ -272,10 +276,9 @@ export function AccountTab() {
               variant="ghost"
               size="sm"
               onClick={handleManageAccount}
-              className="text-muted-foreground"
-              title="Manage account in webapp"
+              className="text-muted-foreground hover:text-destructive"
             >
-              <ExternalLink className="h-4 w-4" />
+              Manage Account
             </Button>
           </div>
         </CardContent>

@@ -21,7 +21,7 @@ export async function fetchInviteCount(): Promise<InviteCountData | null> {
   const currentProfile = extractLinkedInProfileFromPage();
   console.log("🔍 Fetching invite count for logged-in user:", {
     profileUrl: currentProfile.profileUrl,
-    publicIdentifier: currentProfile.publicIdentifier,
+    profileSlug: currentProfile.profileSlug,
   });
 
   const auth = await storage.getItem<LinkedInAuth>("local:auth");
@@ -64,7 +64,7 @@ export async function fetchInviteCount(): Promise<InviteCountData | null> {
 
       console.log("✅ Invite count fetched successfully:", {
         totalInvites,
-        for: currentProfile.publicIdentifier || "unknown",
+        for: currentProfile.profileSlug || "unknown",
       });
       return { totalInvites };
     }

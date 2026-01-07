@@ -36,7 +36,7 @@ interface UseCommentsHistoryReturn {
  * - Provides manual refetch function
  */
 export function usePostsHistory(): UsePostsHistoryReturn {
-  const accountId = useAccountStore((state) => state.currentLinkedIn.miniProfileId);
+  const accountId = useAccountStore((state) => state.currentLinkedIn.profileUrn);
   const [history, setHistory] = useState<DataHistory<PostsData>>({
     snapshots: [],
     lastFetchTime: null,
@@ -97,7 +97,7 @@ export function usePostsHistory(): UsePostsHistoryReturn {
  * - Provides manual refetch function
  */
 export function useCommentsHistory(): UseCommentsHistoryReturn {
-  const accountId = useAccountStore((state) => state.currentLinkedIn.miniProfileId);
+  const accountId = useAccountStore((state) => state.currentLinkedIn.profileUrn);
   const [history, setHistory] = useState<DataHistory<CommentsData>>({
     snapshots: [],
     lastFetchTime: null,

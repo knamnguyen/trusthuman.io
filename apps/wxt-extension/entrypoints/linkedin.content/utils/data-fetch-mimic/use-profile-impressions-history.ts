@@ -23,7 +23,7 @@ interface UseProfileImpressionsHistoryReturn {
  * - Provides manual refetch function
  */
 export function useProfileImpressionsHistory(): UseProfileImpressionsHistoryReturn {
-  const accountId = useAccountStore((state) => state.currentLinkedIn.miniProfileId);
+  const accountId = useAccountStore((state) => state.currentLinkedIn.profileUrn);
   const [history, setHistory] = useState<DataHistory<ProfileImpressionsData>>({
     snapshots: [],
     lastFetchTime: null,

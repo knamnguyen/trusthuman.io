@@ -25,8 +25,8 @@ export async function fetchDashboardActivity(): Promise<DashboardActivityData | 
   const currentProfile = extractLinkedInProfileFromPage();
   console.log("🔍 Fetching dashboard activity for logged-in user:", {
     profileUrl: currentProfile.profileUrl,
-    publicIdentifier: currentProfile.publicIdentifier,
-    miniProfileId: currentProfile.miniProfileId,
+    profileSlug: currentProfile.profileSlug,
+    profileUrn: currentProfile.profileUrn,
   });
 
   const auth = await storage.getItem<LinkedInAuth>("local:auth");
@@ -87,7 +87,7 @@ export async function fetchDashboardActivity(): Promise<DashboardActivityData | 
         posts,
         comments,
         period,
-        for: currentProfile.publicIdentifier || "unknown",
+        for: currentProfile.profileSlug || "unknown",
       });
 
       return { posts, comments, period };
