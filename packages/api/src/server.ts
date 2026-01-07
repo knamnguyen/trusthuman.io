@@ -1,10 +1,26 @@
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import Bun from "bun";
 
+import { db } from "@sassy/db";
+
 import { webhookRoutes } from "./api/webhooks/webhooks";
 import { appRouter } from "./router/root";
 import { createTRPCContext } from "./trpc";
 import { browserJobs } from "./utils/browser-job";
+
+// DB Keepalive - ping every 30 seconds to prevent Supabase Supavisor from dropping idle connections
+// Uses a lightweight Prisma query (not $connect which can cause pool issues)
+// runs even when there are no users to avoid db cold start
+const DB_KEEPALIVE_INTERVAL_MS = 30_000;
+setInterval(async () => {
+  try {
+    // Simple count query - lightweight way to keep connection alive
+    await db.user.count({ take: 1 });
+    console.debug("DB keepalive ping successful");
+  } catch (error) {
+    console.warn("DB keepalive ping failed:", error);
+  }
+}, DB_KEEPALIVE_INTERVAL_MS);
 
 // schedule browser jobs to run daily at 13:00 UTC
 // const startAt = new Date();
