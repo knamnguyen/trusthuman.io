@@ -17,7 +17,7 @@ export class AIService {
     );
 
     const systemPrompt = getPostCommentSystemPrompt(input);
-    console.log("Final prompt fed into the ai:", systemPrompt);
+    // console.log("Final prompt fed into the ai:", systemPrompt);
 
     try {
       const response = await this.ai.models.generateContent({

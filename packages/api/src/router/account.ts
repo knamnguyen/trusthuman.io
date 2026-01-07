@@ -520,135 +520,57 @@ export async function getUserAccount(
   userId: string,
   accountId: string | null,
 ) {
-  // const row = await db.$queryRaw<
-  //   {
-  //     user: DbUser;
-  //     account: {
-  //       id: string;
-  //       email: string;
-  //       profileUrl: string;
-  //       accessType: AccessType;
-  //       permitted: boolean;
-  //     } | null;
-  //     memberships: string[];
-  //   }[]
-  // >`
-  //   select
-  //     to_jsonb(u) as "user",
-  //     coalesce(
-  //       (
-  //         select jsonb_build_object(
-  //           'id', lia.id,
-  //           'email', lia.email,
-  //           'name', lia.name,
-  //           'profileUrl', lia."profileUrl",
-  //           'accessType', lia."accessType",
-  //           'permitted', (
-  //             lia."ownerId" = u.id
-  //             or exists (
-  //               select 1
-  //               from "OrganizationMember" om
-  //               where om."userId" = u.id
-  //                 and om."orgId" = lia."organizationId"
-  //             )
-  //           )
-  //         )
-  //         from "LinkedInAccount" lia
-  //         where ${accountId}::text is not null
-  //           and lia.id = ${accountId}
-  //       ), null) as "account",
-  //     coalesce(
-  //       (
-  //         select jsonb_agg(om."orgId")
-  //         from "OrganizationMember" om
-  //         where om."userId" = u.id
-  //       ),
-  //       '[]'::jsonb
-  //     ) as "memberships"
-  //   from "User" u
-  //   where u.id = ${userId}
-  //   limit 1
-  // `;
+  const row = await db.$queryRaw<
+    {
+      user: DbUser;
+      account: {
+        id: string;
+        email: string;
+        profileUrl: string;
+        accessType: AccessType;
+        permitted: boolean;
+      } | null;
+      memberships: string[];
+    }[]
+  >`
+    select
+      to_jsonb(u) as "user",
+      coalesce(
+        (
+          select jsonb_build_object(
+            'id', lia.id,
+            'email', lia.email,
+            'name', lia.name,
+            'profileUrl', lia."profileUrl",
+            'accessType', lia."accessType",
+            'permitted', (
+              lia."ownerId" = u.id
+              or exists (
+                select 1
+                from "OrganizationMember" om
+                where om."userId" = u.id
+                  and om."orgId" = lia."organizationId"
+              )
+            )
+          )
+          from "LinkedInAccount" lia
+          where ${accountId}::text is not null
+            and lia.id = ${accountId}
+        ), null) as "account",
+      coalesce(
+        (
+          select jsonb_agg(om."orgId")
+          from "OrganizationMember" om
+          where om."userId" = u.id
+        ),
+        '[]'::jsonb
+      ) as "memberships"
+    from "User" u
+    where u.id = ${userId}
+    limit 1
+  `;
 
-  // Prisma version - better connection pool handling
-  const user = await db.user.findUnique({
-    where: { id: userId },
-    select: {
-      id: true,
-      accessType: true,
-      dailyAIcomments: true,
-      firstName: true,
-      primaryEmailAddress: true,
-    },
-  });
-
-  if (!user) {
-    return null;
-  }
-
-  // Get account if accountId is provided
-  let account: {
-    id: string;
-    email: string;
-    name: string | null;
-    profileUrl: string | null;
-    accessType: AccessType;
-    permitted: boolean;
-  } | null = null;
-
-  if (accountId) {
-    const linkedInAccount = await db.linkedInAccount.findUnique({
-      where: { id: accountId },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        profileUrl: true,
-        accessType: true,
-        ownerId: true,
-        organizationId: true,
-      },
-    });
-
-    if (linkedInAccount) {
-      // Check permission: user is owner OR user is member of the account's organization
-      let permitted = linkedInAccount.ownerId === userId;
-
-      if (!permitted && linkedInAccount.organizationId) {
-        const membership = await db.organizationMember.findUnique({
-          where: {
-            orgId_userId: {
-              orgId: linkedInAccount.organizationId,
-              userId: userId,
-            },
-          },
-        });
-        permitted = membership !== null;
-      }
-
-      account = {
-        id: linkedInAccount.id,
-        email: linkedInAccount.email,
-        name: linkedInAccount.name,
-        profileUrl: linkedInAccount.profileUrl,
-        accessType: linkedInAccount.accessType,
-        permitted,
-      };
-    }
-  }
-
-  // Get all organization memberships
-  const membershipsData = await db.organizationMember.findMany({
-    where: { userId },
-    select: { orgId: true },
-  });
-  const memberships = membershipsData.map((m) => m.orgId);
-
-  return {
-    user,
-    account,
-    memberships,
-  };
+  return row[0] ?? null;
 }
 
 //looks like only used in middleware right now
