@@ -83,7 +83,7 @@ export const targetListRouter = () =>
         }),
       )
       .mutation(async ({ ctx, input }) => {
-        if (ctx.account === null) {
+        if (ctx.activeAccount === null) {
           return {
             status: "error",
             code: 400,
@@ -91,11 +91,11 @@ export const targetListRouter = () =>
           } as const;
         }
 
-        const maxJobs = getBuildTargetListLimits(ctx.account.accessType);
+        const maxJobs = getBuildTargetListLimits(ctx.activeAccount.accessType);
 
         const existingJobsCount = await ctx.db.buildTargetListJob.count({
           where: {
-            accountId: ctx.account.id,
+            accountId: ctx.activeAccount.id,
             createdAt: {
               gte: maxJobs.lastRefreshedAt,
             },
@@ -117,7 +117,7 @@ export const targetListRouter = () =>
           data: {
             id: buildTargetListJobId,
             workflowId: targetListId,
-            accountId: ctx.account.id,
+            accountId: ctx.activeAccount.id,
             listId: targetListId,
             status: "QUEUED",
           },
@@ -127,7 +127,7 @@ export const targetListRouter = () =>
           workflowID: targetListId,
         })({
           targetListId,
-          accountId: ctx.account.id,
+          accountId: ctx.activeAccount.id,
           targetListName: input.name,
           buildTargetListJobId,
           // idk why the f input.params is inferred as unknown, so just cast for now
@@ -147,7 +147,7 @@ export const targetListRouter = () =>
         }),
       )
       .mutation(async ({ ctx, input }) => {
-        if (ctx.account === null) {
+        if (ctx.activeAccount === null) {
           return {
             status: "error",
             code: 400,
@@ -159,7 +159,7 @@ export const targetListRouter = () =>
         await ctx.db.targetList.create({
           data: {
             status: "COMPLETED",
-            accountId: ctx.account.id,
+            accountId: ctx.activeAccount.id,
             id,
             name: input.name,
           },
@@ -177,7 +177,7 @@ export const targetListRouter = () =>
         }),
       )
       .query(async ({ ctx, input }) => {
-        if (ctx.account === null) {
+        if (ctx.activeAccount === null) {
           return {
             data: [],
             next: null,
@@ -186,7 +186,7 @@ export const targetListRouter = () =>
         const lists = await ctx.db.targetList.findMany({
           where: {
             AND: [
-              { accountId: ctx.account.id },
+              { accountId: ctx.activeAccount.id },
               {
                 id: input.cursor ? { lt: input.cursor } : undefined,
               },
@@ -210,14 +210,14 @@ export const targetListRouter = () =>
         }),
       )
       .query(async ({ ctx, input }) => {
-        if (ctx.account === null) {
+        if (ctx.activeAccount === null) {
           return null;
         }
 
         const list = await ctx.db.targetList.findFirst({
           where: {
             id: input.id,
-            accountId: ctx.account.id,
+            accountId: ctx.activeAccount.id,
           },
         });
 
@@ -266,7 +266,7 @@ export const targetListRouter = () =>
         }),
       )
       .mutation(async ({ ctx, input }) => {
-        if (ctx.account === null) {
+        if (ctx.activeAccount === null) {
           return {
             status: "error",
             code: 400,
@@ -287,7 +287,7 @@ export const targetListRouter = () =>
             listId: input.listId,
             linkedinUrl: input.linkedinUrl,
             profileUrn: existingProfile?.urn,
-            accountId: ctx.account.id,
+            accountId: ctx.activeAccount.id,
           },
           skipDuplicates: true,
         });
@@ -305,7 +305,7 @@ export const targetListRouter = () =>
         }),
       )
       .mutation(async ({ ctx, input }) => {
-        if (ctx.account === null) {
+        if (ctx.activeAccount === null) {
           return {
             status: "error",
             code: 404,
@@ -316,7 +316,7 @@ export const targetListRouter = () =>
         await ctx.db.targetProfile.deleteMany({
           where: {
             id: input.id,
-            accountId: ctx.account.id,
+            accountId: ctx.activeAccount.id,
           },
         });
 
@@ -336,7 +336,7 @@ export const targetListRouter = () =>
         }),
       )
       .query(async ({ ctx, input }) => {
-        if (ctx.account === null) {
+        if (ctx.activeAccount === null) {
           return {
             data: [],
             next: null,
@@ -344,14 +344,14 @@ export const targetListRouter = () =>
         }
         // Get all user's lists
         const lists = await ctx.db.targetList.findMany({
-          where: { accountId: ctx.account.id },
+          where: { accountId: ctx.activeAccount.id },
           orderBy: { createdAt: "desc" },
         });
 
         // Get list IDs that contain this profile
         const profileInLists = await ctx.db.targetProfile.findMany({
           where: {
-            accountId: ctx.account.id,
+            accountId: ctx.activeAccount.id,
             linkedinUrl: input.linkedinUrl,
           },
           select: { listId: true },
@@ -378,7 +378,7 @@ export const targetListRouter = () =>
         }),
       )
       .mutation(async ({ ctx, input }) => {
-        if (ctx.account === null) {
+        if (ctx.activeAccount === null) {
           return {
             status: "error",
             code: 400,
@@ -407,12 +407,12 @@ export const targetListRouter = () =>
           } as const;
         }
 
-        // TODO: setup access control that's tied to user instead of relying on exists check with accountId: ctx.account.id
+        // TODO: setup access control that's tied to user instead of relying on exists check with accountId: ctx.activeAccount.id
         // validate add to and remove from lists exists and belong to user
         const validLists = await ctx.db.targetList.findMany({
           where: {
             id: { in: listIdsToValidate },
-            accountId: ctx.account.id,
+            accountId: ctx.activeAccount.id,
           },
           select: { id: true },
         });
@@ -429,7 +429,7 @@ export const targetListRouter = () =>
         if (input.removeFromListIds.length > 0) {
           await ctx.db.targetProfile.deleteMany({
             where: {
-              accountId: ctx.account.id,
+              accountId: ctx.activeAccount.id,
               linkedinUrl: input.linkedinUrl,
               listId: { in: input.removeFromListIds },
             },
@@ -442,7 +442,7 @@ export const targetListRouter = () =>
             data: input.addToListIds.map((listId) => ({
               id: ulid(),
               listId,
-              accountId: ctx.account!.id,
+              accountId: ctx.activeAccount!.id,
               linkedinUrl: input.linkedinUrl,
               profileUrn: existingProfile?.urn,
               userId: ctx.user.id,
@@ -470,7 +470,7 @@ export const targetListRouter = () =>
         }),
       )
       .query(async ({ ctx, input }) => {
-        if (ctx.account === null) {
+        if (ctx.activeAccount === null) {
           return {
             data: [],
             next: null,
@@ -516,7 +516,7 @@ export const targetListRouter = () =>
         // 3. Batch query all list memberships for these profiles
         const allMemberships = await ctx.db.targetProfile.findMany({
           where: {
-            accountId: ctx.account.id,
+            accountId: ctx.activeAccount.id,
             linkedinUrl: { in: linkedinUrls },
           },
           select: {
@@ -577,7 +577,7 @@ export const targetListRouter = () =>
       .mutation(async ({ ctx, input }) => {
         const ALL_LIST_NAME = "All";
 
-        if (ctx.account === null) {
+        if (ctx.activeAccount === null) {
           return {
             status: "error",
             code: 400,
@@ -589,7 +589,7 @@ export const targetListRouter = () =>
         // Find or create "All" list
         let allList = await ctx.db.targetList.findFirst({
           where: {
-            accountId: ctx.account.id,
+            accountId: ctx.activeAccount.id,
             name: ALL_LIST_NAME,
           },
         });
@@ -600,7 +600,7 @@ export const targetListRouter = () =>
           allList = await ctx.db.targetList.create({
             data: {
               id,
-              accountId: ctx.account.id,
+              accountId: ctx.activeAccount.id,
               status: "COMPLETED",
               name: ALL_LIST_NAME,
             },
@@ -621,7 +621,7 @@ export const targetListRouter = () =>
             listId: allList.id,
             linkedinUrl: input.linkedinUrl,
             profileUrn: existingProfile?.urn,
-            accountId: ctx.account.id,
+            accountId: ctx.activeAccount.id,
           },
           skipDuplicates: true,
         });

@@ -166,10 +166,12 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
       });
     }
 
+    // Note: activeOrgId is null for assumed token (browser automation) mode
     const result = await getUserAccount(
       ctx.db,
       decoded.payload.userId,
       decoded.payload.accountId,
+      null,
     );
 
     if (result === null) {
@@ -179,7 +181,7 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
       });
     }
 
-    if (result.account !== null && result.account.permitted === false) {
+    if (result.activeAccount !== null && result.activeAccount.permitted === false) {
       throw new TRPCError({
         code: "FORBIDDEN",
         message: "Access to this account is forbidden",
@@ -190,14 +192,15 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
       ctx: {
         ...ctx,
         user: result.user,
-        account: result.account,
+        activeAccount: result.activeAccount,
         memberships: result.memberships,
+        activeOrg: null, // Not available in assumed token mode
       },
     });
   }
 
   // Get account id and source for logging
-  const accountId = ctx.headers.get("x-account-id") ?? null;
+  const activeAccountId = ctx.headers.get("x-account-id") ?? null;
   const source = ctx.headers.get("x-trpc-source") ?? "nextjs";
 
   // Unified auth: authenticateRequest works for both NextJS and Chrome extension
@@ -212,14 +215,24 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
     });
   }
 
+  // Construct activeOrg from Clerk state (no DB query needed)
+  const activeOrg = state.orgId
+    ? {
+        id: state.orgId,
+        slug: state.orgSlug ?? null,
+        role: state.orgRole ?? null,
+      }
+    : null;
+
   // Use cached auth to avoid redundant DB queries for parallel requests
   // Cache key: sessionId + orgId + accountId (covers all variations)
-  const cacheKey = `${state.sessionId}:${state.orgId ?? "none"}:${accountId ?? "none"}`;
+  const cacheKey = `${state.sessionId}:${activeOrg?.id ?? "none"}:${activeAccountId ?? "none"}`;
   const dbCacheHit = authCache.has(cacheKey);
   const result = await getCachedAuth(cacheKey, () =>
     getOrInsertUser(ctx.db, clerkClient, {
       userId: state.userId,
-      currentAccountId: accountId,
+      activeAccountId,
+      activeOrgId: activeOrg?.id ?? null,
     }),
   );
 
@@ -228,12 +241,10 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
   console.log("  [Auth State]:", {
     userId: state.userId,
     sessionId: state.sessionId,
-    orgId: state.orgId ?? null,
-    orgRole: state.orgRole ?? null,
-    orgSlug: state.orgSlug ?? null,
+    activeOrg,
   });
   console.log(`  [${dbCacheHit ? "CACHED" : "FRESH DB QUERY"}] DB Data:`, {
-    requestedAccountId: accountId,
+    activeAccountId,
     user: {
       id: result.user.id,
       firstName: result.user.firstName,
@@ -241,19 +252,19 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
       accessType: result.user.accessType,
       dailyAIcomments: result.user.dailyAIcomments,
     },
-    account: result.account
+    activeAccount: result.activeAccount
       ? {
-          id: result.account.id,
-          email: result.account.email,
-          name: result.account.name,
-          accessType: result.account.accessType,
-          permitted: result.account.permitted,
+          id: result.activeAccount.id,
+          email: result.activeAccount.email,
+          name: result.activeAccount.name,
+          accessType: result.activeAccount.accessType,
+          permitted: result.activeAccount.permitted,
         }
       : null,
     memberships: result.memberships,
   });
 
-  if (result.account !== null && result.account.permitted === false) {
+  if (result.activeAccount !== null && result.activeAccount.permitted === false) {
     throw new TRPCError({
       code: "FORBIDDEN",
       message: "Access to this account is forbidden",
@@ -264,8 +275,9 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
     ctx: {
       ...ctx,
       user: result.user,
-      account: result.account,
+      activeAccount: result.activeAccount,
       memberships: result.memberships,
+      activeOrg,
     },
   });
 });

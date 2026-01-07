@@ -8,7 +8,7 @@ export const organizationRouter = () =>
      */
     getCurrent: protectedProcedure.query(async ({ ctx }) => {
       // If no active org selected in Clerk, fall back to first membership
-      const orgId = ctx.orgId;
+      const orgId = ctx.activeOrg?.id;
 
       const membership = await ctx.db.organizationMember.findFirst({
         where: {

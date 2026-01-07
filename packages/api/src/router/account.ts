@@ -518,15 +518,17 @@ export function hasPermissionToAccessAccountClause(readerUserId: string) {
 export async function getUserAccount(
   db: PrismaClient | PrismaTransactionalClient,
   userId: string,
-  accountId: string | null,
+  activeAccountId: string | null,
+  activeOrgId: string | null,
 ) {
   const row = await db.$queryRaw<
     {
       user: DbUser;
-      account: {
+      activeAccount: {
         id: string;
         email: string;
-        profileUrl: string;
+        name: string | null;
+        profileUrl: string | null;
         accessType: AccessType;
         permitted: boolean;
       } | null;
@@ -544,19 +546,14 @@ export async function getUserAccount(
             'profileUrl', lia."profileUrl",
             'accessType', lia."accessType",
             'permitted', (
-              lia."ownerId" = u.id
-              or exists (
-                select 1
-                from "OrganizationMember" om
-                where om."userId" = u.id
-                  and om."orgId" = lia."organizationId"
-              )
+              -- Account must belong to user's active organization
+              lia."organizationId" = ${activeOrgId}
             )
           )
           from "LinkedInAccount" lia
-          where ${accountId}::text is not null
-            and lia.id = ${accountId}
-        ), null) as "account",
+          where ${activeAccountId}::text is not null
+            and lia.id = ${activeAccountId}
+        ), null) as "activeAccount",
       coalesce(
         (
           select jsonb_agg(om."orgId")
@@ -579,12 +576,17 @@ export async function getOrInsertUser(
   clerkClient: ClerkClient,
   {
     userId,
-    currentAccountId,
-  }: { userId: string; currentAccountId: string | null },
+    activeAccountId,
+    activeOrgId,
+  }: {
+    userId: string;
+    activeAccountId: string | null;
+    activeOrgId: string | null;
+  },
 ) {
-  const user = await getUserAccount(db, userId, currentAccountId);
+  const user = await getUserAccount(db, userId, activeAccountId, activeOrgId);
 
-  if (user?.account?.permitted === false) {
+  if (user?.activeAccount?.permitted === false) {
     throw new TRPCError({
       code: "FORBIDDEN",
       message: "Access to this account is forbidden",
@@ -594,6 +596,8 @@ export async function getOrInsertUser(
   if (user !== null) {
     return user;
   }
+
+  //if users do not exist in db check
 
   const clerkUser = await clerkClient.users.getUser(userId);
 
@@ -628,7 +632,7 @@ export async function getOrInsertUser(
       },
     });
 
-    return getUserAccount(tx, clerkUser.id, currentAccountId);
+    return getUserAccount(tx, clerkUser.id, activeAccountId, activeOrgId);
   });
 
   if (newAccount === null) {

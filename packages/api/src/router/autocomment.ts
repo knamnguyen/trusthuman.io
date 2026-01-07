@@ -154,7 +154,7 @@ export const autoCommentRouter = () =>
         }),
       )
       .mutation(async ({ ctx, input }) => {
-        if (ctx.account === null) {
+        if (ctx.activeAccount === null) {
           return {
             status: "error",
             code: 400,
@@ -183,7 +183,7 @@ export const autoCommentRouter = () =>
             isAutoCommented: input.isAutoCommented,
             schedulePostAt: input.schedulePostAt,
 
-            accountId: ctx.account.id,
+            accountId: ctx.activeAccount.id,
 
             autoCommentRunId: input.autoCommentRunId,
             // if hitlmode is true we leave commentedAt as null to indicate that the comment is still pending human review
@@ -230,7 +230,7 @@ export const autoCommentRouter = () =>
         }),
       )
       .mutation(async ({ ctx, input }) => {
-        if (ctx.account === null) {
+        if (ctx.activeAccount === null) {
           return {
             status: "error",
             code: 400,
@@ -241,7 +241,7 @@ export const autoCommentRouter = () =>
 
         const uncommentedUrnsResult = await filterCommentedUrns(ctx.db, {
           postUrns: [input.postUrn],
-          accountId: ctx.account.id,
+          accountId: ctx.activeAccount.id,
         });
 
         if (uncommentedUrnsResult.uncommentedUrns.length === 0) {
@@ -284,7 +284,7 @@ export const autoCommentRouter = () =>
             isAutoCommented: input.isAutoCommented,
             schedulePostAt: input.schedulePostAt,
 
-            accountId: ctx.account.id,
+            accountId: ctx.activeAccount.id,
             autoCommentRunId: input.autoCommentRunId,
           },
           skipDuplicates: true,
@@ -306,7 +306,7 @@ export const autoCommentRouter = () =>
         }),
       )
       .query(async ({ ctx, input }) => {
-        if (ctx.account === null) {
+        if (ctx.activeAccount === null) {
           return paginate([], {
             key: "id",
             size: 20,
@@ -315,7 +315,7 @@ export const autoCommentRouter = () =>
 
         const comments = await ctx.db.comment.findMany({
           where: {
-            accountId: ctx.account.id,
+            accountId: ctx.activeAccount.id,
             commentedAt: null,
             id: {
               gt: input.cursor,
@@ -342,7 +342,7 @@ export const autoCommentRouter = () =>
         }),
       )
       .mutation(async ({ ctx, input }) => {
-        if (ctx.account === null) {
+        if (ctx.activeAccount === null) {
           return {
             status: "error",
             code: 400,
@@ -369,7 +369,7 @@ export const autoCommentRouter = () =>
           } as const;
         }
 
-        const canEdit = canEditComment(comment, ctx.account.id);
+        const canEdit = canEditComment(comment, ctx.activeAccount.id);
         if (canEdit.status === "denied") {
           return {
             status: "error",
@@ -402,7 +402,7 @@ export const autoCommentRouter = () =>
         }),
       )
       .mutation(async ({ ctx, input }) => {
-        if (ctx.account === null) {
+        if (ctx.activeAccount === null) {
           return {
             status: "error",
             code: 400,
@@ -429,7 +429,7 @@ export const autoCommentRouter = () =>
           } as const;
         }
 
-        const canEdit = canEditComment(comment, ctx.account.id);
+        const canEdit = canEditComment(comment, ctx.activeAccount.id);
         if (canEdit.status === "denied") {
           return {
             status: "error",
@@ -463,7 +463,7 @@ export const autoCommentRouter = () =>
         }),
       )
       .query(async ({ ctx, input }) => {
-        if (ctx.account === null) {
+        if (ctx.activeAccount === null) {
           return {
             status: "error",
             code: 400,
@@ -475,7 +475,7 @@ export const autoCommentRouter = () =>
         const results = await filterCommentedUrns(ctx.db, {
           postUrns: input.postUrns,
           duplicateWindowSeconds: input.duplicateWindow,
-          accountId: ctx.account.id,
+          accountId: ctx.activeAccount.id,
         });
 
         return {

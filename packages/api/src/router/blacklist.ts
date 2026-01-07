@@ -13,7 +13,7 @@ export const blacklistRouter = () =>
         }),
       )
       .mutation(async ({ ctx, input }) => {
-        if (ctx.account === null) {
+        if (ctx.activeAccount === null) {
           return {
             status: "error",
             message: "Account not found",
@@ -25,7 +25,7 @@ export const blacklistRouter = () =>
             id: ulid(),
             userId: ctx.user.id,
             profileUrn: input.profileUrn,
-            accountId: ctx.account.id,
+            accountId: ctx.activeAccount.id,
           },
           skipDuplicates: true,
         });
