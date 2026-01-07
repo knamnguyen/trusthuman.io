@@ -8,5 +8,6 @@ export const env = z
     GOOGLE_GENAI_API_KEY: z.string(),
     STRIPE_SECRET_KEY: z.string(),
     STRIPE_WEBHOOK_SECRET: z.string(),
+    CLERK_WEBHOOK_SECRET: z.string(),
   })
   .parse(process.env);

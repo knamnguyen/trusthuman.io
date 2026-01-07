@@ -4,6 +4,8 @@ import { Hono } from "hono";
 import type { Prisma } from "@sassy/db";
 import { db } from "@sassy/db";
 
+import { env } from "../../utils/env";
+
 /**
  * Clerk webhook handler
  * This receives events from Clerk when:
@@ -18,50 +20,11 @@ export const clerkWebhookRoutes = new Hono().post("/", async (c) => {
     const req = c.req;
     console.log("🔄 Clerk webhook received");
 
-    // Debug environment variables
-    console.log("🔍 Environment variables check:");
-    console.log(
-      "- CLERK_WEBHOOK_SECRET:",
-      process.env.CLERK_WEBHOOK_SECRET ? "✅ Present" : "❌ Missing",
-    );
-    console.log(
-      "- CLERK_WEBHOOK_SIGNING_SECRET:",
-      process.env.CLERK_WEBHOOK_SIGNING_SECRET ? "✅ Present" : "❌ Missing",
-    );
-
-    // Set the environment variable that Clerk expects for webhook verification
-    if (
-      !process.env.CLERK_WEBHOOK_SIGNING_SECRET &&
-      process.env.CLERK_WEBHOOK_SECRET
-    ) {
-      console.log(
-        "🔧 Setting CLERK_WEBHOOK_SIGNING_SECRET from CLERK_WEBHOOK_SECRET",
-      );
-      process.env.CLERK_WEBHOOK_SIGNING_SECRET =
-        process.env.CLERK_WEBHOOK_SECRET;
-    }
-
-    // Check for Svix headers specifically (these are what Clerk actually uses)
-    const svixId = req.header("svix-id");
-    const svixTimestamp = req.header("svix-timestamp");
-    const svixSignature = req.header("svix-signature");
-
-    console.log("🔍 Svix headers check:");
-    console.log("- svix-id:", svixId ? "✅ Present" : "❌ Missing");
-    console.log(
-      "- svix-timestamp:",
-      svixTimestamp ? "✅ Present" : "❌ Missing",
-    );
-    console.log(
-      "- svix-signature:",
-      svixSignature ? "✅ Present" : "❌ Missing",
-    );
-
-    console.log("🔧 Attempting webhook verification...");
-
     // Verify the webhook using Clerk's verifyWebhook function
     // This function expects Svix headers and will consume the request body
-    const evt = await verifyWebhook(req.raw);
+    const evt = await verifyWebhook(req.raw, {
+      signingSecret: env.CLERK_WEBHOOK_SECRET,
+    });
 
     console.log("✅ Webhook verification successful!");
 

@@ -21,6 +21,7 @@ import { getOrInsertUser, getUserAccount } from "./router/account";
 import { AIService } from "./utils/ai-service/ai-service";
 import { browserJobs } from "./utils/browser-job";
 import { assumedAccountJwt, browserRegistry } from "./utils/browser-session";
+import { safe } from "./utils/commons";
 import { env } from "./utils/env";
 
 /**
@@ -172,17 +173,22 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
     }
 
     const token = authHeader.substring(7); // Remove "Bearer " prefix
-    console.log(
-      "Chrome extension token received - length:",
-      token.length,
-      "dots:",
-      token.split(".").length,
+
+    const verifiedToken = await safe(() =>
+      verifyToken(token, {
+        secretKey: process.env.CLERK_SECRET_KEY,
+      }),
     );
 
-    const userId = await getUserIdFromClerkToken(token);
+    if (verifiedToken.ok === false) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "Invalid token",
+      });
+    }
 
     const result = await getOrInsertUser(ctx.db, clerkClient, {
-      userId,
+      userId: verifiedToken.output.sub,
       currentAccountId: accountId,
     });
 
@@ -235,38 +241,6 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
     },
   });
 });
-
-async function getUserIdFromClerkToken(token: string) {
-  if (token.split(".").length === 3) {
-    // This is a JWT - use verifyToken
-    console.log("Attempting JWT verification...");
-    const verifiedToken = await verifyToken(token, {
-      secretKey: process.env.CLERK_SECRET_KEY,
-    });
-
-    return verifiedToken.sub;
-  }
-
-  // This is likely a session ID - use Clerk client directly
-  console.log("Attempting session ID verification...");
-
-  try {
-    // Try to get session information using the token as a session ID
-    const session = await clerkClient.sessions.getSession(token);
-
-    return session.userId;
-  } catch (sessionError) {
-    console.error("Session verification failed:", sessionError);
-
-    // If session lookup fails, try to verify as a JWT anyway (fallback)
-    console.log("Falling back to JWT verification...");
-    const verifiedToken = await verifyToken(token, {
-      secretKey: process.env.CLERK_SECRET_KEY,
-    });
-
-    return verifiedToken.sub;
-  }
-}
 
 /**
  * Create a server-side caller

@@ -90,7 +90,7 @@ export function safe<T>(fn: () => T): SafeResult<T> {
   } catch (error) {
     return {
       ok: false,
-      error,
+      error: error instanceof Error ? error : new Error(String(error)),
     } as SafeResult<T>;
   }
 }
