@@ -28,10 +28,9 @@ import {
 } from "./tooltip";
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state";
+const SIDEBAR_HOVER_OPEN_COOKIE = "sidebar_hover_open";
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
-const SIDEBAR_WIDTH = "16rem";
 const SIDEBAR_WIDTH_MOBILE = "18rem";
-const SIDEBAR_WIDTH_ICON = "3rem";
 const SIDEBAR_KEYBOARD_SHORTCUT = "b";
 
 interface SidebarContextProps {
@@ -42,6 +41,11 @@ interface SidebarContextProps {
   setOpenMobile: (open: boolean) => void;
   isMobile: boolean;
   toggleSidebar: () => void;
+  // Hover-to-open properties
+  isHover: boolean;
+  setIsHover: (hover: boolean) => void;
+  hoverOpen: boolean;
+  setHoverOpen: (hoverOpen: boolean) => void;
 }
 
 const SidebarContext = React.createContext<SidebarContextProps | null>(null);
@@ -57,16 +61,22 @@ function useSidebar() {
 
 function SidebarProvider({
   defaultOpen = true,
+  defaultHoverOpen = false,
   open: openProp,
   onOpenChange: setOpenProp,
+  hoverOpen: hoverOpenProp,
+  onHoverOpenChange: setHoverOpenProp,
   className,
   style,
   children,
   ...props
 }: React.ComponentProps<"div"> & {
   defaultOpen?: boolean;
+  defaultHoverOpen?: boolean;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  hoverOpen?: boolean;
+  onHoverOpenChange?: (hoverOpen: boolean) => void;
 }) {
   const { isMobile } = useIsMobile();
   const [openMobile, setOpenMobile] = React.useState(false);
@@ -91,10 +101,64 @@ function SidebarProvider({
     [setOpenProp, open],
   );
 
+  // Hover-to-open state
+  const [isHoverState, setIsHoverState] = React.useState(false);
+  const [_hoverOpen, _setHoverOpen] = React.useState(defaultHoverOpen);
+  const hoverOpen = hoverOpenProp ?? _hoverOpen;
+
+  // Debounced hover setter to prevent flickering on rapid mouse movement
+  const hoverTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const setIsHover = React.useCallback((value: boolean) => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+    if (value) {
+      setIsHoverState(true);
+    } else {
+      hoverTimeoutRef.current = setTimeout(() => setIsHoverState(false), 100);
+    }
+  }, []);
+
+  // Cleanup timeout on unmount
+  React.useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const setHoverOpen = React.useCallback(
+    (value: boolean | ((value: boolean) => boolean)) => {
+      const hoverOpenState = typeof value === "function" ? value(hoverOpen) : value;
+      if (setHoverOpenProp) {
+        setHoverOpenProp(hoverOpenState);
+      } else {
+        _setHoverOpen(hoverOpenState);
+      }
+      // Persist hover-open preference to cookie
+      // eslint-disable-next-line react-compiler/react-compiler
+      document.cookie = `${SIDEBAR_HOVER_OPEN_COOKIE}=${hoverOpenState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`;
+    },
+    [setHoverOpenProp, hoverOpen],
+  );
+
   // Helper to toggle the sidebar.
   const toggleSidebar = React.useCallback(() => {
-    return isMobile ? setOpenMobile((open) => !open) : setOpen((open) => !open);
-  }, [isMobile, setOpen, setOpenMobile]);
+    if (isMobile) {
+      setOpenMobile((open) => !open);
+    } else {
+      // If currently expanded (visually), collapse fully by clearing both open and hover state
+      const isCurrentlyExpanded = open || (hoverOpen && isHoverState);
+      if (isCurrentlyExpanded) {
+        setOpen(false);
+        setIsHoverState(false); // Clear hover so it actually collapses
+      } else {
+        setOpen(true);
+      }
+    }
+  }, [isMobile, setOpenMobile, setOpen, open, hoverOpen, isHoverState]);
 
   // Adds a keyboard shortcut to toggle the sidebar.
   React.useEffect(() => {
@@ -114,7 +178,9 @@ function SidebarProvider({
 
   // We add a state so that we can do data-state="expanded" or "collapsed".
   // This makes it easier to style the sidebar with Tailwind classes.
-  const state = open ? "expanded" : "collapsed";
+  // Effective open state includes hover-to-open logic (disabled on mobile)
+  const effectivelyOpen = open || (hoverOpen && isHoverState && !isMobile);
+  const state = effectivelyOpen ? "expanded" : "collapsed";
 
   const contextValue = React.useMemo<SidebarContextProps>(
     () => ({
@@ -125,8 +191,13 @@ function SidebarProvider({
       openMobile,
       setOpenMobile,
       toggleSidebar,
+      // Hover-to-open properties
+      isHover: isHoverState,
+      setIsHover,
+      hoverOpen,
+      setHoverOpen,
     }),
-    [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar],
+    [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar, isHoverState, setIsHover, hoverOpen, setHoverOpen],
   );
 
   return (
@@ -134,13 +205,7 @@ function SidebarProvider({
       <TooltipProvider delayDuration={0}>
         <div
           data-slot="sidebar-wrapper"
-          style={
-            {
-              "--sidebar-width": SIDEBAR_WIDTH,
-              "--sidebar-width-icon": SIDEBAR_WIDTH_ICON,
-              ...style,
-            } as React.CSSProperties
-          }
+          style={style}
           className={cn(
             "group/sidebar-wrapper has-data-[variant=inset]:bg-sidebar flex min-h-svh w-full",
             className,
@@ -166,7 +231,7 @@ function Sidebar({
   variant?: "sidebar" | "floating" | "inset";
   collapsible?: "offcanvas" | "icon" | "none";
 }) {
-  const { isMobile, state, openMobile, setOpenMobile } = useSidebar();
+  const { isMobile, state, openMobile, setOpenMobile, setIsHover, hoverOpen } = useSidebar();
 
   if (collapsible === "none") {
     return (
@@ -231,6 +296,18 @@ function Sidebar({
       />
       <div
         data-slot="sidebar-container"
+        onMouseEnter={() => hoverOpen && setIsHover(true)}
+        onMouseLeave={() => {
+          // Don't close if any popover/dropdown is currently open
+          // This covers Radix portals and Clerk popovers
+          if (
+            document.querySelector("[data-radix-popper-content-wrapper]") ||
+            document.querySelector(".cl-popoverBox")
+          ) {
+            return;
+          }
+          setIsHover(false);
+        }}
         className={cn(
           "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear md:flex",
           side === "left"
@@ -340,7 +417,7 @@ function SidebarHeader({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="sidebar-header"
       data-sidebar="header"
-      className={cn("flex flex-col gap-2 p-2", className)}
+      className={cn("flex flex-col gap-2 p-2 group-data-[collapsible=icon]:items-center", className)}
       {...props}
     />
   );
@@ -351,7 +428,7 @@ function SidebarFooter({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="sidebar-footer"
       data-sidebar="footer"
-      className={cn("flex flex-col gap-2 p-2", className)}
+      className={cn("flex flex-col gap-2 p-2 group-data-[collapsible=icon]:items-center", className)}
       {...props}
     />
   );
@@ -390,7 +467,7 @@ function SidebarGroup({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="sidebar-group"
       data-sidebar="group"
-      className={cn("relative flex w-full min-w-0 flex-col p-2", className)}
+      className={cn("relative flex w-full min-w-0 flex-col p-2 group-data-[collapsible=icon]:items-center", className)}
       {...props}
     />
   );
@@ -459,7 +536,7 @@ function SidebarMenu({ className, ...props }: React.ComponentProps<"ul">) {
     <ul
       data-slot="sidebar-menu"
       data-sidebar="menu"
-      className={cn("flex w-full min-w-0 flex-col gap-1", className)}
+      className={cn("flex w-full min-w-0 flex-col gap-1 group-data-[collapsible=icon]:items-center", className)}
       {...props}
     />
   );
@@ -477,7 +554,7 @@ function SidebarMenuItem({ className, ...props }: React.ComponentProps<"li">) {
 }
 
 const sidebarMenuButtonVariants = cva(
-  "peer/menu-button ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-hidden transition-[width,height,padding] group-has-data-[sidebar=menu-action]/menu-item:pr-8 group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:font-medium [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
+  "peer/menu-button ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-hidden transition-[width,height,padding] group-has-data-[sidebar=menu-action]/menu-item:pr-8 group-data-[collapsible=icon]:size-8! focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:font-medium [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -486,8 +563,8 @@ const sidebarMenuButtonVariants = cva(
           "bg-background hover:bg-sidebar-accent hover:text-sidebar-accent-foreground shadow-[0_0_0_1px_hsl(var(--sidebar-border))] hover:shadow-[0_0_0_1px_hsl(var(--sidebar-accent))]",
       },
       size: {
-        default: "h-8 text-sm",
-        sm: "h-7 text-xs",
+        default: "h-8 text-sm group-data-[collapsible=icon]:p-2!",
+        sm: "h-7 text-xs group-data-[collapsible=icon]:p-2!",
         lg: "h-12 text-sm group-data-[collapsible=icon]:p-0!",
       },
     },
