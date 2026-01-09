@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
   ExternalLink,
   Loader2,
@@ -20,6 +21,7 @@ import {
 } from "@sassy/ui/card";
 
 import type { PostAuthorRanking } from "../stores/saved-profile-store";
+import { LinkedInLink } from "../_components/LinkedInLink";
 import { ManageListButton } from "../manage-list";
 import { useSavedProfileStore } from "../stores/saved-profile-store";
 
@@ -188,24 +190,23 @@ function ProfileCard() {
             </span>
           </div>
 
-          <ManageListButton />
+          {/* Only show Manage Lists when URN is available */}
+          {selectedProfile.urn && <ManageListButton />}
 
-          {/* No URN Available - Cannot fetch comments */}
+          {/* No URN Available - Cannot fetch comments or manage target lists */}
           {!selectedProfile.urn && (
             <div className="bg-muted/50 mt-3 rounded-lg border border-dashed p-4">
               <p className="text-muted-foreground text-center text-sm">
-                Recent comments are not available for profiles saved from the
-                comment section.
+                Recent comments and target list management are not available for
+                profiles saved from the comment section.
               </p>
               {selectedProfile.linkedinUrl && (
-                <a
-                  href={selectedProfile.linkedinUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <LinkedInLink
+                  to={selectedProfile.linkedinUrl}
                   className="text-primary mt-2 block text-center text-sm hover:underline"
                 >
-                  Visit their profile to load recent comments →
-                </a>
+                  Visit their profile to enable these features →
+                </LinkedInLink>
               )}
             </div>
           )}
@@ -311,6 +312,28 @@ export function ConnectTab() {
     <div className="flex flex-col gap-4 px-4">
       {/* Profile from DOM */}
       <ProfileCard />
+
+      {/* Navigation buttons */}
+      <div className="flex gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex-1"
+          onClick={() => history.back()}
+        >
+          <ChevronLeft className="mr-1 h-4 w-4" />
+          Back
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex-1"
+          onClick={() => history.forward()}
+        >
+          Next
+          <ChevronRight className="ml-1 h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
 }
