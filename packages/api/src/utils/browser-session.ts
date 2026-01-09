@@ -11,6 +11,7 @@ import type { PrismaClient } from "@sassy/db";
 import type { StartAutoCommentingParams } from "@sassy/validators";
 
 import type { Logger } from "./commons";
+import { abortableAsyncIterator, safe } from "./commons";
 import { env } from "./env";
 import { jwtFactory } from "./jwt";
 
@@ -107,6 +108,7 @@ declare const window: Window & {
     extractPostTime(container: HTMLElement): Date;
     extractPostAuthorInfo(container: HTMLElement): AuthorInfo;
     getPostCaptionPreview(fullCaption: string, maxLines: number): string;
+    loadMore(): Promise<boolean>;
     findPosts(opts: { skipPostUrns: Set<string>; limit: number }): Post[];
   };
 };
@@ -149,14 +151,16 @@ export class BrowserSession {
     this.ready = this.init();
     this.registry.register(this);
     this.onDestroy(async () => {
-      await this.db.browserInstance.update({
-        where: {
-          id: this.id,
-        },
-        data: {
-          status: "STOPPED",
-        },
-      });
+      await safe(() =>
+        this.db.browserInstance.update({
+          where: {
+            id: this.id,
+          },
+          data: {
+            status: "STOPPED",
+          },
+        }),
+      );
     });
   }
 
@@ -488,7 +492,7 @@ export class BrowserSession {
       });
     });
 
-    await injectEngagekitInternals(this.pages.linkedin);
+    await injectEngagekitInternals(page);
   }
 
   async bringToFront(page: "linkedin" | "engagekitExtension") {
@@ -888,51 +892,66 @@ export class BrowserSession {
     }, comment);
   }
 
-  private async *getFeedPostsBatch({
-    batchSize,
-    targetLimit,
-  }: {
-    batchSize: number;
-    targetLimit: number;
-  }) {
+  private async *getFeedPostsBatch({ batchSize }: { batchSize: number }) {
     await this.ready;
 
-    let fetched = 0;
     const addedUrns = new Set<string>();
 
     while (true) {
       const posts = await this.pages.linkedin.evaluate(
         (skipPostUrns, limit) =>
           window.engagekitInternals.findPosts({
-            skipPostUrns,
+            skipPostUrns: new Set(skipPostUrns),
             limit,
           }),
-        addedUrns,
+        [...addedUrns],
         batchSize,
       );
 
-      yield posts;
+      console.info(`Fetched ${posts.length} posts from feed`);
 
-      fetched += posts.length;
+      yield posts;
 
       for (const post of posts) {
         addedUrns.add(post.urn);
       }
 
-      if (fetched >= targetLimit || posts.length === 0) {
+      if (posts.length === 0) {
         break;
       }
+
+      await this.pages.linkedin.evaluate(() =>
+        window.engagekitInternals.loadMore(),
+      );
     }
   }
 
   public async loadFeedAndSavePosts(totalPosts: number) {
     let totalCreated = 0;
-    for await (const postBatch of this.getFeedPostsBatch({
-      batchSize: 20,
-      targetLimit: totalPosts,
-    })) {
-      const result = await this.db.comment.createMany({
-        data: postBatch.map((post) => ({
+    // we do a max iteration of 20 in case the feed is not loading more posts
+    // or in case some shit happens in the fe that hangs stuff
+    // so we can shut down the session and not just leave it there hanging
+
+    let maxIterations = 10;
+
+    for await (const postBatch of abortableAsyncIterator(
+      this.controller.signal,
+      this.getFeedPostsBatch({
+        batchSize: 20,
+      }),
+    )) {
+      let truncated = postBatch.slice(
+        0,
+        Math.max(totalPosts - totalCreated, 0),
+      );
+
+      if (truncated.length === 0) {
+        break;
+      }
+
+      const numInserted = await insertCommentOnNonPreviouslyCommentedPosts(
+        this.db,
+        truncated.map((post) => ({
           id: ulid(),
           comment: "",
           accountId: this.accountId,
@@ -947,9 +966,19 @@ export class BrowserSession {
           authorAvatarUrl: post.author?.avatarUrl ?? null,
           authorHeadline: post.author?.headline ?? null,
         })),
-      });
+      );
 
-      totalCreated += result.count;
+      totalCreated += numInserted;
+
+      if (totalCreated >= totalPosts) {
+        break;
+      }
+
+      maxIterations--;
+
+      if (maxIterations <= 0) {
+        break;
+      }
     }
 
     return totalCreated;
@@ -1441,6 +1470,7 @@ async function injectEngagekitInternals(page: Page) {
         const validPosts: Post[] = [];
 
         for (const container of posts) {
+          console.info("MA BOI IS HERE", { skipPostUrns });
           const urn = container.getAttribute("data-urn");
           if (!urn?.includes("activity")) continue;
           if (skipPostUrns.has(urn)) continue;
@@ -1462,7 +1492,85 @@ async function injectEngagekitInternals(page: Page) {
 
         return validPosts;
       },
+      async loadMore() {
+        /**
+         * Load more posts into the feed.
+         * Strategy: Try clicking the "Show more" button first (faster loading),
+         * if not available, fall back to scrolling (infinite scroll).
+         *
+         * @returns true if new posts were loaded, false if no new posts appeared
+         */
+        const initialCount = countPosts();
+
+        // Priority 1: Try clicking the "Show more feed updates" button (faster)
+        if (tryClickLoadMoreButton()) {
+          await new Promise((r) => setTimeout(r, BUTTON_WAIT_MS));
+          if (countPosts() > initialCount) {
+            return true;
+          }
+        }
+
+        // Priority 2: Fall back to scrolling (infinite scroll)
+        fastScroll();
+        await new Promise((r) => setTimeout(r, SCROLL_WAIT_MS));
+
+        return countPosts() > initialCount;
+      },
     };
+
+    /**
+     * Utility for loading more posts in the LinkedIn feed.
+     * Prioritizes clicking the "Show more" button (faster), falls back to scrolling.
+     */
+
+    /** Delay after clicking button before checking for new posts */
+    const BUTTON_WAIT_MS = 1500;
+
+    /** Delay after scrolling before checking for new posts */
+    const SCROLL_WAIT_MS = 1500;
+
+    /**
+     * Count current post containers in the feed
+     */
+    function countPosts(): number {
+      return document.querySelectorAll('div[data-urn*="activity"]').length;
+    }
+
+    /**
+     * Try to click the "Show more feed updates" button.
+     * Uses XPath for resilience against class name changes.
+     *
+     * @returns true if button was found and clicked
+     */
+    function tryClickLoadMoreButton(): boolean {
+      try {
+        const result = document.evaluate(
+          '//button[.//span[normalize-space(.) = "Show more feed updates"]]',
+          document,
+          null,
+          XPathResult.FIRST_ORDERED_NODE_TYPE,
+          null,
+        );
+        const btn = result.singleNodeValue as HTMLButtonElement | null;
+        if (btn && !btn.disabled) {
+          btn.click();
+          return true;
+        }
+      } catch (error) {
+        console.error("EngageKit: failed to click load more button", error);
+      }
+      return false;
+    }
+
+    /**
+     * Fast scroll to bottom of page
+     */
+    function fastScroll(): void {
+      window.scrollTo({
+        top: document.body.scrollHeight,
+        behavior: "instant",
+      });
+    }
 
     function extractHeadlineFromAuthorSection(
       photoAnchor: Element,
@@ -1525,4 +1633,75 @@ async function injectEngagekitInternals(page: Page) {
       return null;
     }
   });
+}
+
+// this query inserts comments only on posts that have not been commented on before
+// caveat: if there are multiple comments for the same postUrn in the input array
+// all of them will be inserted, we can accept this limitation for now bcs it's unlikely
+// that the same input array contains duped postUrns
+export async function insertCommentOnNonPreviouslyCommentedPosts(
+  db: PrismaClient,
+  comments: {
+    id: string;
+    postUrn: string;
+    postContentHtml: string;
+    postCaptionPreview: string;
+    postFullCaption: string;
+    comment: string;
+    postCreatedAt: Date;
+    authorUrn: string | null;
+    authorName: string | null;
+    authorProfileUrl: string | null;
+    authorAvatarUrl: string | null;
+    authorHeadline: string | null;
+    accountId: string;
+  }[],
+) {
+  const stringifiedValues = JSON.stringify(
+    comments.map((comment) => ({
+      ...comment,
+      // postgres raw queries accepts timestamp in "YYYY-MM-DD HH:MM:SS" format
+      // so we gotta do this ugly parsing
+      postCreatedAt: comment.postCreatedAt
+        .toISOString()
+        .slice(0, 19)
+        .replace("T", " "),
+    })),
+  );
+
+  const inserted = await db.$executeRaw`
+    insert into "Comment" (
+      "id", 
+      "postUrn", 
+      "postContentHtml", 
+      "postCaptionPreview", 
+      "postFullCaption", 
+      "postCreatedAt", 
+      "authorUrn", 
+      "authorName", 
+      "authorProfileUrl", 
+      "authorAvatarUrl", 
+      "authorHeadline", 
+      "accountId",
+      "comment"
+    ) select 
+      values->>'id',
+      values->>'postUrn',
+      values->>'postContentHtml',
+      values->>'postCaptionPreview',
+      values->>'postFullCaption',
+      (values->>'createdAt')::timestamp,
+      values->>'authorUrn',
+      values->>'authorName',
+      values->>'authorProfileUrl',
+      values->>'authorAvatarUrl',
+      values->>'authorHeadline',
+      values->>'accountId',
+      values->>'comment'
+    from jsonb_array_elements(${stringifiedValues}) as values where not exists (
+      select 1 from "Comment" where "Comment"."postUrn" = values->>'postUrn' and "Comment"."accountId" = values->>'accountId' limit 1
+    )
+  `;
+
+  return inserted;
 }

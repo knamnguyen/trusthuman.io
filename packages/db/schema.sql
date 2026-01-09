@@ -14,7 +14,7 @@ CREATE TYPE "BrowserJobStatus" AS ENUM ('QUEUED', 'RUNNING', 'TERMINATED', 'COMP
 CREATE TYPE "CommentStatus" AS ENUM ('DRAFT', 'SCHEDULED', 'QUEUED', 'POSTING', 'POSTED', 'FAILED', 'CANCELLED');
 
 -- CreateEnum
-CREATE TYPE "LinkedInAccountStatus" AS ENUM ('REGISERED', 'CONNECTING', 'CONNECTED');
+CREATE TYPE "LinkedInAccountStatus" AS ENUM ('REGISTERED', 'CONNECTING', 'CONNECTED');
 
 -- CreateEnum
 CREATE TYPE "ImportStatus" AS ENUM ('NOT_STARTED', 'RUNNING', 'FINISHED');
@@ -155,6 +155,8 @@ CREATE TABLE "Comment" (
     "postUrn" TEXT NOT NULL,
     "postContentHtml" TEXT,
     "postCreatedAt" TIMESTAMP(3),
+    "postFullCaption" TEXT NOT NULL,
+    "postCaptionPreview" TEXT NOT NULL,
     "adjacentComments" JSONB,
     "authorUrn" TEXT,
     "authorName" TEXT,
