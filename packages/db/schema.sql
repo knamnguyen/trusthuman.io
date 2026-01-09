@@ -185,7 +185,7 @@ CREATE TABLE "LinkedInAccount" (
     "status" "LinkedInAccountStatus",
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "staticIpId" TEXT,
-    "browserProfileId" TEXT,
+    "browserProfileId" TEXT NOT NULL,
     "browserLocation" TEXT,
     "profileUrl" TEXT,
     "profileSlug" TEXT,

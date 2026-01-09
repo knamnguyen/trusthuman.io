@@ -940,7 +940,7 @@ export class BrowserSession {
         batchSize: 20,
       }),
     )) {
-      let truncated = postBatch.slice(
+      const truncated = postBatch.slice(
         0,
         Math.max(totalPosts - totalCreated, 0),
       );
