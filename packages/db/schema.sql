@@ -14,7 +14,7 @@ CREATE TYPE "BrowserJobStatus" AS ENUM ('QUEUED', 'RUNNING', 'TERMINATED', 'COMP
 CREATE TYPE "CommentStatus" AS ENUM ('DRAFT', 'SCHEDULED', 'QUEUED', 'POSTING', 'POSTED', 'FAILED', 'CANCELLED');
 
 -- CreateEnum
-CREATE TYPE "LinkedInAccountStatus" AS ENUM ('REGISERED', 'CONNECTING', 'CONNECTED');
+CREATE TYPE "LinkedInAccountStatus" AS ENUM ('REGISTERED', 'CONNECTING', 'CONNECTED');
 
 -- CreateEnum
 CREATE TYPE "ImportStatus" AS ENUM ('NOT_STARTED', 'RUNNING', 'FINISHED');
@@ -192,6 +192,7 @@ CREATE TABLE "LinkedInAccount" (
     "runDailyAt" TEXT,
     "isRunning" BOOLEAN NOT NULL DEFAULT false,
     "accessType" "AccessType" NOT NULL DEFAULT 'FREE',
+    "dailyAIcomments" INTEGER NOT NULL DEFAULT 0,
     "registrationStatus" TEXT,
     "name" TEXT,
     "email" TEXT,
