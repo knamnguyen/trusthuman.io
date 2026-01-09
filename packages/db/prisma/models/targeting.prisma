@@ -8,6 +8,7 @@ model TargetList {
   targetProfiles TargetProfile[]
 
   linkedInAccount     LinkedInAccount      @relation(fields: [accountId], references: [id])
+  PostLoadSetting     PostLoadSetting? //optional 1:1 - this list may be selected in PostLoadSetting
   buildTargetListJobs BuildTargetListJob[]
 }
 
@@ -17,30 +18,34 @@ enum TargetListStatus {
 }
 
 model TargetProfile {
-  id          String   @id
-  listId      String
-  accountId   String
+  id        String @id
+  listId    String
+  accountId String
+
+  //get url first to store - scrape profile in linkedinprofile first (or look up) and backfill to urn
   linkedinUrl String
   profileUrn  String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
 
-  list    TargetList       @relation(fields: [listId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  list TargetList @relation(fields: [listId], references: [id])
+
   profile LinkedInProfile? @relation(fields: [profileUrn], references: [urn])
   account LinkedInAccount  @relation(fields: [accountId], references: [id])
 
   @@unique([listId, linkedinUrl])
 }
 
+//ignore for chrome extension for now
 model BlacklistedProfile {
   id         String   @id
   accountId  String
   profileUrn String
   createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   account LinkedInAccount @relation(fields: [accountId], references: [id])
-  user    User?           @relation(fields: [userId], references: [id])
-  userId  String?
 
   @@unique([accountId, profileUrn])
 }

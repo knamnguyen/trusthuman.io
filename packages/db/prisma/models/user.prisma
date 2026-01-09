@@ -1,29 +1,35 @@
 model User {
-  id                   String     @id
-  firstName            String?
-  lastName             String?
-  username             String?    @unique
-  primaryEmailAddress  String     @unique
-  imageUrl             String?
-  clerkUserProperties  Json?
-  stripeCustomerId     String?    @unique
-  accessType           AccessType @default(FREE)
-  stripeUserProperties Json?
-  dailyAIcomments      Int        @default(0)
-  createdAt            DateTime   @default(now())
-  updatedAt            DateTime   @updatedAt
+  id                  String   @id
+  firstName           String?
+  lastName            String?
+  username            String?  @unique
+  primaryEmailAddress String   @unique
+  imageUrl            String?
+  clerkUserProperties Json?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
-  profileImportRuns ProfileImportRun[]
-  linkedInAccounts  LinkedInAccount[]
-
-  UserBrowserState        UserBrowserState[]
-  AutoCommentRun          AutoCommentRun[]
-  CommentStyle            CommentStyle[]
-  AutoCommentConfig       AutoCommentConfig[]
-  BlacklistedProfile      BlacklistedProfile[]
-  linkedInPostPreviews    LinkedInPostPreview[]
-  commentAnalyses         CommentAnalysis[]
+  linkedInAccounts        LinkedInAccount[]
   organizationMemberships OrganizationMember[]
+
+  //to be deprecated move to linkedin account - leave for now since in prod
+  // except stripe customer id will be moved to org table
+
+  stripeCustomerId     String?            @unique
+  accessType           AccessType         @default(FREE)
+  stripeUserProperties Json?
+  dailyAIcomments      Int                @default(0)
+  profileImportRuns    ProfileImportRun[]
+
+  //not sure about these - should these be linkedin to linkedin-account table?
+  UserBrowserState UserBrowserState[]
+  AutoCommentRun   AutoCommentRun[]
+
+  //tools - keep attached to each user for now
+  linkedInPostPreviews LinkedInPostPreview[]
+  commentAnalyses      CommentAnalysis[]
+  AutoCommentConfig    AutoCommentConfig[]
+  CommentStyle         CommentStyle[]
 }
 
 enum AccessType {

@@ -1,0 +1,11 @@
+model CommentGenerateSetting {
+  accountId                 String   @id
+  commentStyleId            String?  @unique //optional 1:1 - each style can only be default for 1 setting
+  dynamicChooseStyleEnabled Boolean  @default(false)
+  adjacentCommentsEnabled   Boolean  @default(false)
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  defaultCommentStyle CommentStyle?   @relation(fields: [commentStyleId], references: [id], onDelete: SetNull)
+  linkedInAccount     LinkedInAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+}

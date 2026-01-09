@@ -36,7 +36,7 @@ interface LinkedInAccount {
   id: string;
   profileUrl: string | null;
   profileSlug: string | null;
-  registrationStatus: string | null;
+  status: string | null;
   name: string | null;
   createdAt: Date;
 }

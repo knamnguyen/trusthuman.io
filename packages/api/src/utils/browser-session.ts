@@ -692,7 +692,7 @@ export class BrowserSession {
     const endOfDay = new Date(startOfDay);
     endOfDay.setUTCDate(endOfDay.getUTCDate() + 1);
 
-    const numCommentedToday = await this.db.userComment.count({
+    const numCommentedToday = await this.db.comment.count({
       where: {
         accountId: this.accountId,
         commentedAt: {

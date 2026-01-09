@@ -1,0 +1,33 @@
+model AutoCommentConfig {
+  accountId                   String  @id
+  userId                      String
+  scrollDuration              Int
+  commentDelay                Int
+  maxPosts                    Int
+  duplicateWindow             Int
+  finishListModeEnabled       Boolean
+  commentAsCompanyEnabled     Boolean
+  timeFilterEnabled           Boolean
+  minPostAge                  Int?
+  manualApproveEnabled        Boolean
+  authenticityBoostEnabled    Boolean
+  targetListId                String?
+  defaultCommentStyle         String?
+  commentStyleId              String?
+  commentProfileName          String?
+  languageAwareEnabled        Boolean
+  blacklistEnabled            Boolean
+  skipPromotedPostsEnabled    Boolean
+  skipFriendActivitiesEnabled Boolean
+  skipCompanyPagesEnabled     Boolean
+  hitlMode                    Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  //to delete
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  linkedInAccount LinkedInAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  commentStyle    CommentStyle?   @relation(fields: [commentStyleId], references: [id], onDelete: SetNull)
+}

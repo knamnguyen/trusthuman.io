@@ -29,10 +29,9 @@ export function OrgAccountsTest() {
   } = useQuery(trpc.organization.getCurrent.queryOptions());
 
   // Get accounts for current org (uses ctx.activeOrg on server)
-  const {
-    data: accounts,
-    isLoading: isAccountsLoading,
-  } = useQuery(trpc.account.listByOrg.queryOptions());
+  const { data: accounts, isLoading: isAccountsLoading } = useQuery(
+    trpc.account.listByOrg.queryOptions(),
+  );
 
   // Register new account mutation
   const registerMutation = useMutation({
@@ -209,7 +208,7 @@ export function OrgAccountsTest() {
                       {account.profileSlug}
                     </p>
                     <p className="text-xs text-gray-500">
-                      Status: {account.registrationStatus ?? "unknown"}
+                      Status: {account.status ?? "unknown"}
                     </p>
                     {account.profileUrl && (
                       <a
