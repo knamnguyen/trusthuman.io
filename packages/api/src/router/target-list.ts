@@ -231,10 +231,16 @@ export const targetListRouter = () =>
         }),
       )
       .query(async ({ ctx, input }) => {
+        if (ctx.activeAccount === null) {
+          return {
+            data: [],
+            next: null,
+          };
+        }
         const clauses = [];
         clauses.push({
           listId: input.listId,
-          userId: ctx.user.id,
+          accountId: ctx.activeAccount.id,
         });
 
         if (input.cursor !== undefined) {
@@ -445,7 +451,6 @@ export const targetListRouter = () =>
               accountId: ctx.activeAccount!.id,
               linkedinUrl: input.linkedinUrl,
               profileUrn: existingProfile?.urn,
-              userId: ctx.user.id,
             })),
             skipDuplicates: true,
           });
@@ -479,7 +484,7 @@ export const targetListRouter = () =>
         const clauses = [];
         clauses.push({
           listId: input.listId,
-          userId: ctx.user.id,
+          accountId: ctx.activeAccount.id,
         });
 
         if (input.cursor !== undefined) {
