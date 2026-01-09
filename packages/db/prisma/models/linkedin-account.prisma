@@ -52,7 +52,7 @@ model LinkedInAccount {
 }
 
 enum LinkedInAccountStatus {
-  REGISERED
+  REGISTERED
   CONNECTING
   CONNECTED
 }
