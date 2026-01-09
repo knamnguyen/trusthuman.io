@@ -35,7 +35,7 @@ if (!VITE_APP_URL) {
 
 const url = new URL(VITE_APP_URL);
 
-console.log(`Starting server at port ${url.port}...`);
+console.log(`Starting server at port ${process.env.PORT ?? url.port}...`);
 
 Bun.serve({
   port: url.port,
