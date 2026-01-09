@@ -152,3 +152,44 @@ export type JsonValue =
   | null
   | { [key: string]: JsonValue }
   | JsonValue[];
+
+export async function* abortableAsyncIterator<TReturn>(
+  signal: AbortSignal,
+  asyncIterable: AsyncIterable<TReturn, void, void>,
+) {
+  const Aborted = Symbol("aborted");
+
+  let abortHandler: (() => void) | null = null;
+
+  const abortPromise = new Promise<typeof Aborted>((resolve) => {
+    abortHandler = () => resolve(Aborted);
+    signal.addEventListener("abort", abortHandler, { once: true });
+  });
+
+  const iterator = asyncIterable[Symbol.asyncIterator]();
+
+  try {
+    while (true) {
+      if (signal.aborted) {
+        return;
+      }
+
+      const winner = await Promise.race([iterator.next(), abortPromise]);
+
+      if (winner === Aborted || winner.done) {
+        return;
+      }
+
+      yield winner.value;
+    }
+  } finally {
+    if (abortHandler !== null) {
+      signal.removeEventListener("abort", abortHandler);
+    }
+
+    // Ensure generator cleanup
+    if (typeof iterator.return === "function") {
+      await iterator.return();
+    }
+  }
+}

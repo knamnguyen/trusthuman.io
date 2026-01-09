@@ -5,13 +5,13 @@ model LinkedInAccount {
   status           LinkedInAccountStatus?
   createdAt        DateTime               @default(now())
   staticIpId       String?
-  browserProfileId String?
+  browserProfileId String
   browserLocation  String?
 
-  profileUrl String? @unique
+  profileUrl  String? @unique
   //for checking dupliate - easier than using just profileUrl
   profileSlug String? @unique
-  profileUrn String? @unique
+  profileUrn  String? @unique
 
 
   autocommentEnabled Boolean    @default(false)
@@ -24,10 +24,10 @@ model LinkedInAccount {
 
   //delete
   registrationStatus String?
-  name String?
-  email String?
+  name               String?
+  email              String?
 
-  owner User @relation(fields: [ownerId], references: [id])
+  owner User          @relation(fields: [ownerId], references: [id])
   org   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
 
   //new settings (1:1)
