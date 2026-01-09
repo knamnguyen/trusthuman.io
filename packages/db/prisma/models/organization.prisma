@@ -1,6 +1,7 @@
 model Organization {
   id               String   @id
   name             String
+  orgSlug          String?
   stripeCustomerId String?  @unique
   purchasedSlots   Int      @default(1)
   createdAt        DateTime @default(now())
@@ -11,14 +12,17 @@ model Organization {
 }
 
 model OrganizationMember {
-  id       String   @id @default(uuid())
-  orgId    String
-  userId   String
-  role     String
-  joinedAt DateTime @default(now())
+  id          String   @id @default(uuid())
+  orgId       String
+  userId      String
+  role        String
+  isOrgActive String?
+  joinedAt    DateTime @default(now())
 
-  org               Organization     @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  org  Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  //to delete - why we need this here?
   linkedInAccount   LinkedInAccount? @relation(fields: [linkedInAccountId], references: [id])
   linkedInAccountId String?
 

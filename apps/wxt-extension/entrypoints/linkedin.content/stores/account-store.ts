@@ -36,7 +36,7 @@ interface LinkedInAccount {
   id: string;
   profileUrl: string | null;
   profileSlug: string | null;
-  registrationStatus: string | null;
+  status: string | null;
   name: string | null;
   createdAt: Date;
 }
@@ -193,10 +193,8 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
         role: "admin", // Would need to get from organizationMemberships if needed
       };
 
-      // Fetch accounts for the organization
-      const accounts = await trpc.account.listByOrg.query({
-        organizationId: org.id,
-      });
+      // Fetch accounts for the active organization (uses ctx.activeOrg on server)
+      const accounts = await trpc.account.listByOrg.query();
 
       // Find matching account
       const matchingAccount = currentLinkedIn.profileSlug

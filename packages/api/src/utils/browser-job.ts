@@ -277,14 +277,14 @@ export class BrowserJobWorker<TWorkerContext = unknown> {
     while (true) {
       // this is not thread safe and might get deadlocked if multiple workers run this function at the same time
       const result = await this.db.$transaction(async (tx) => {
-        // selecting accounts that have autocomment enabled and are active
+        // selecting accounts that have autocomment enabled and are CONNECTED
         // and do not have a queued browser job already
         const accounts = await tx.$queryRaw<
           { id: string; runDailyAt: string }[]
         >`
           select id, "runDailyAt" from "LinkedInAccount"
           where "autocommentEnabled" = true
-            and "LinkedInAccount".status = 'ACTIVE'
+            and "LinkedInAccount".status = 'CONNECTED'
             and "runDailyAt" is not null
             and not exists (
               select 1 from "BrowserJob"
@@ -379,7 +379,7 @@ export const browserJobs = new BrowserJobWorker<WorkerContext>({
       where: { id: jobCtx.accountId },
       select: {
         id: true,
-        location: true,
+        browserLocation: true,
         browserProfileId: true,
         status: true,
       },
@@ -389,8 +389,8 @@ export const browserJobs = new BrowserJobWorker<WorkerContext>({
       throw new Error("LinkedIn account not found");
     }
 
-    if (account.status !== "ACTIVE") {
-      throw new Error("LinkedIn account is not active");
+    if (account.status !== "CONNECTED") {
+      throw new Error("LinkedIn account is not CONNECTED");
     }
 
     const internalCtx: {
@@ -410,7 +410,7 @@ export const browserJobs = new BrowserJobWorker<WorkerContext>({
         jobCtx.accountId,
         jobCtx.accountOwnerId,
         {
-          location: account!.location as ProxyLocation,
+          location: account!.browserLocation as ProxyLocation,
           browserProfileId: account!.browserProfileId,
           liveviewViewOnlyMode: process.env.NODE_ENV === "production",
         },
@@ -557,7 +557,7 @@ async function getAutocommentParamsWithFallback(
 
   // if a custom comment style is selected, use that
   if (userConfig?.commentStyle) {
-    styleGuide = userConfig.commentStyle.prompt;
+    styleGuide = userConfig.commentStyle.content;
   }
 
   // if not fallback to defaultCommentStyle if provided by user

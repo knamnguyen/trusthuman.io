@@ -1,33 +1,49 @@
 model LinkedInAccount {
-  id                 String                @id @default(uuid())
-  owner              User                  @relation(fields: [ownerId], references: [id])
-  ownerId            String
-  email              String                @unique
-  status             LinkedInAccountStatus
-  createdAt          DateTime              @default(now())
-  staticIpId         String?
-  browserProfileId   String
-  location           String
-  name               String?
-  autocommentEnabled Boolean               @default(false)
+  id               String                 @id @default(uuid())
+  ownerId          String
+  organizationId   String?
+  status           LinkedInAccountStatus?
+  createdAt        DateTime               @default(now())
+  staticIpId       String?
+  browserProfileId String?
+  browserLocation  String?
+
+  profileUrl String? @unique
+  //for checking dupliate - easier than using just profileUrl
+  profileSlug String? @unique
+  profileUrn String? @unique
+
+  autocommentEnabled Boolean    @default(false)
   runDailyAt         String?
-  isRunning          Boolean               @default(false)
-  accessType         AccessType            @default(FREE)
+  isRunning          Boolean    @default(false)
+  accessType         AccessType @default(FREE)
 
-  organizationId     String?
-  profileUrl         String?
-  profileSlug        String? @unique
+  //delete
   registrationStatus String?
+  name String?
+  email String?
 
-  org                     Organization?        @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  owner User @relation(fields: [ownerId], references: [id])
+  org   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  //new settings (1:1)
+  CommentGenerateSetting CommentGenerateSetting?
+  PostLoadSetting        PostLoadSetting?
+  CommentStyle           CommentStyle[]
+
+  //existing
+  targetLists TargetList[]
+
+  // delete later since redundant - each account already one to many relations with targetlists
+  targetProfiles TargetProfile[]
+
+  //existing relations
   AutoCommentConfig       AutoCommentConfig[]
   BlacklistedProfile      BlacklistedProfile[]
   AutoCommentRun          AutoCommentRun[]
   BrowserInstance         BrowserInstance[]
   comments                Comment[]
   browserJobs             BrowserJob[]
-  targetLists             TargetList[]
-  targetProfiles          TargetProfile[]
   organizationMemberships OrganizationMember[]
   buildTargetListJobs     BuildTargetListJob[]
 
@@ -36,7 +52,7 @@ model LinkedInAccount {
 }
 
 enum LinkedInAccountStatus {
-  ACTIVE
+  REGISTERED
   CONNECTING
-  SUSPENDED
+  CONNECTED
 }

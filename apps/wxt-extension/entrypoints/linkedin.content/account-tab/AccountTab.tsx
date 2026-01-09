@@ -120,7 +120,7 @@ function OrgAccountsCard() {
                         <CheckCircle className="h-4 w-4 text-green-600" />
                       ) : (
                         <span className="text-muted-foreground text-xs">
-                          {account.registrationStatus}
+                          {account.status}
                         </span>
                       )}
                     </li>
@@ -194,9 +194,7 @@ function CurrentLinkedInCard() {
           </div>
           <div>
             <p className="text-muted-foreground text-xs">Username</p>
-            <p className="font-mono text-sm">
-              {currentLinkedIn.profileSlug}
-            </p>
+            <p className="font-mono text-sm">{currentLinkedIn.profileSlug}</p>
           </div>
           <div>
             <p className="text-muted-foreground text-xs">Profile URN</p>

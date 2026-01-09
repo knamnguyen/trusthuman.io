@@ -14,7 +14,7 @@ CREATE TYPE "BrowserJobStatus" AS ENUM ('QUEUED', 'RUNNING', 'TERMINATED', 'COMP
 CREATE TYPE "CommentStatus" AS ENUM ('DRAFT', 'SCHEDULED', 'QUEUED', 'POSTING', 'POSTED', 'FAILED', 'CANCELLED');
 
 -- CreateEnum
-CREATE TYPE "LinkedInAccountStatus" AS ENUM ('ACTIVE', 'CONNECTING', 'SUSPENDED');
+CREATE TYPE "LinkedInAccountStatus" AS ENUM ('REGISERED', 'CONNECTING', 'CONNECTED');
 
 -- CreateEnum
 CREATE TYPE "ImportStatus" AS ENUM ('NOT_STARTED', 'RUNNING', 'FINISHED');
@@ -63,34 +63,6 @@ CREATE TABLE "BrowserJob" (
 );
 
 -- CreateTable
-CREATE TABLE "Comment" (
-    "id" TEXT NOT NULL,
-    "postUrn" TEXT NOT NULL,
-    "postContentHtml" TEXT,
-    "postCreatedAt" TIMESTAMP(3),
-    "postFullCaption" TEXT NOT NULL,
-    "postCaptionPreview" TEXT NOT NULL,
-    "adjacentComments" JSONB,
-    "authorUrn" TEXT,
-    "authorName" TEXT,
-    "authorProfileUrl" TEXT,
-    "authorAvatarUrl" TEXT,
-    "authorHeadline" TEXT,
-    "comment" TEXT NOT NULL,
-    "originalAiComment" TEXT,
-    "postAlternateUrns" TEXT[],
-    "commentedAt" TIMESTAMP(3),
-    "isAutoCommented" BOOLEAN NOT NULL DEFAULT true,
-    "status" "CommentStatus" NOT NULL DEFAULT 'DRAFT',
-    "schedulePostAt" TIMESTAMP(3),
-    "accountId" TEXT NOT NULL,
-    "autoCommentRunId" TEXT,
-    "autoCommentError" TEXT,
-
-    CONSTRAINT "Comment_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "AutoCommentRun" (
     "id" TEXT NOT NULL,
     "accountId" TEXT NOT NULL,
@@ -104,17 +76,6 @@ CREATE TABLE "AutoCommentRun" (
     "userId" TEXT,
 
     CONSTRAINT "AutoCommentRun_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "CommentStyle" (
-    "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "prompt" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "CommentStyle_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -148,24 +109,92 @@ CREATE TABLE "AutoCommentConfig" (
 );
 
 -- CreateTable
+CREATE TABLE "CommentGenerateSetting" (
+    "accountId" TEXT NOT NULL,
+    "commentStyleId" TEXT,
+    "dynamicChooseStyleEnabled" BOOLEAN NOT NULL DEFAULT false,
+    "adjacentCommentsEnabled" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "CommentGenerateSetting_pkey" PRIMARY KEY ("accountId")
+);
+
+-- CreateTable
+CREATE TABLE "CommentStyle" (
+    "id" TEXT NOT NULL,
+    "accountId" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT NOT NULL,
+    "content" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "userId" TEXT,
+
+    CONSTRAINT "CommentStyle_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "PostLoadSetting" (
+    "accountId" TEXT NOT NULL,
+    "targetListId" TEXT,
+    "submitDelayRange" TEXT NOT NULL DEFAULT '5-20',
+    "timeFilterEnabled" BOOLEAN NOT NULL DEFAULT false,
+    "minPostAge" INTEGER,
+    "skipFriendActivitiesEnabled" BOOLEAN NOT NULL DEFAULT false,
+    "skipCompanyPagesEnabled" BOOLEAN NOT NULL DEFAULT true,
+    "skipPromotedPostsEnabled" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "PostLoadSetting_pkey" PRIMARY KEY ("accountId")
+);
+
+-- CreateTable
+CREATE TABLE "Comment" (
+    "id" TEXT NOT NULL,
+    "postUrn" TEXT NOT NULL,
+    "postContentHtml" TEXT,
+    "postCreatedAt" TIMESTAMP(3),
+    "adjacentComments" JSONB,
+    "authorUrn" TEXT,
+    "authorName" TEXT,
+    "authorProfileUrl" TEXT,
+    "authorAvatarUrl" TEXT,
+    "authorHeadline" TEXT,
+    "comment" TEXT NOT NULL,
+    "originalAiComment" TEXT,
+    "postAlternateUrns" TEXT[],
+    "commentedAt" TIMESTAMP(3),
+    "isAutoCommented" BOOLEAN NOT NULL DEFAULT true,
+    "status" "CommentStatus" NOT NULL DEFAULT 'DRAFT',
+    "schedulePostAt" TIMESTAMP(3),
+    "accountId" TEXT NOT NULL,
+    "autoCommentRunId" TEXT,
+    "autoCommentError" TEXT,
+
+    CONSTRAINT "Comment_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "LinkedInAccount" (
     "id" TEXT NOT NULL,
     "ownerId" TEXT NOT NULL,
-    "email" TEXT NOT NULL,
-    "status" "LinkedInAccountStatus" NOT NULL,
+    "organizationId" TEXT,
+    "status" "LinkedInAccountStatus",
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "staticIpId" TEXT,
-    "browserProfileId" TEXT NOT NULL,
-    "location" TEXT NOT NULL,
-    "name" TEXT,
+    "browserProfileId" TEXT,
+    "browserLocation" TEXT,
+    "profileUrl" TEXT,
+    "profileSlug" TEXT,
+    "profileUrn" TEXT,
     "autocommentEnabled" BOOLEAN NOT NULL DEFAULT false,
     "runDailyAt" TEXT,
     "isRunning" BOOLEAN NOT NULL DEFAULT false,
     "accessType" "AccessType" NOT NULL DEFAULT 'FREE',
-    "organizationId" TEXT,
-    "profileUrl" TEXT,
-    "profileSlug" TEXT,
     "registrationStatus" TEXT,
+    "name" TEXT,
+    "email" TEXT,
 
     CONSTRAINT "LinkedInAccount_pkey" PRIMARY KEY ("id")
 );
@@ -268,6 +297,7 @@ CREATE TABLE "ExtensionDeploymentMeta" (
 CREATE TABLE "Organization" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
+    "orgSlug" TEXT,
     "stripeCustomerId" TEXT,
     "purchasedSlots" INTEGER NOT NULL DEFAULT 1,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -282,6 +312,7 @@ CREATE TABLE "OrganizationMember" (
     "orgId" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "role" TEXT NOT NULL,
+    "isOrgActive" TEXT,
     "joinedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "linkedInAccountId" TEXT,
 
@@ -333,7 +364,7 @@ CREATE TABLE "BlacklistedProfile" (
     "accountId" TEXT NOT NULL,
     "profileUrn" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "userId" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "BlacklistedProfile_pkey" PRIMARY KEY ("id")
 );
@@ -399,12 +430,12 @@ CREATE TABLE "User" (
     "primaryEmailAddress" TEXT NOT NULL,
     "imageUrl" TEXT,
     "clerkUserProperties" JSONB,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
     "stripeCustomerId" TEXT,
     "accessType" "AccessType" NOT NULL DEFAULT 'FREE',
     "stripeUserProperties" JSONB,
     "dailyAIcomments" INTEGER NOT NULL DEFAULT 0,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
@@ -414,6 +445,12 @@ CREATE UNIQUE INDEX "BrowserInstance_hyperbrowserSessionId_key" ON "BrowserInsta
 
 -- CreateIndex
 CREATE INDEX "BrowserJob_status_idx" ON "BrowserJob"("status");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "CommentGenerateSetting_commentStyleId_key" ON "CommentGenerateSetting"("commentStyleId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "PostLoadSetting_targetListId_key" ON "PostLoadSetting"("targetListId");
 
 -- CreateIndex
 CREATE INDEX "Comment_postUrn_idx" ON "Comment"("postUrn");
@@ -428,10 +465,13 @@ CREATE INDEX "Comment_status_idx" ON "Comment"("status");
 CREATE INDEX "Comment_postAlternateUrns_idx" ON "Comment" USING GIN ("postAlternateUrns");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "LinkedInAccount_email_key" ON "LinkedInAccount"("email");
+CREATE UNIQUE INDEX "LinkedInAccount_profileUrl_key" ON "LinkedInAccount"("profileUrl");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "LinkedInAccount_profileSlug_key" ON "LinkedInAccount"("profileSlug");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "LinkedInAccount_profileUrn_key" ON "LinkedInAccount"("profileUrn");
 
 -- CreateIndex
 CREATE INDEX "LinkedInAccount_organizationId_idx" ON "LinkedInAccount"("organizationId");
@@ -497,19 +537,10 @@ ALTER TABLE "BrowserInstance" ADD CONSTRAINT "BrowserInstance_accountId_fkey" FO
 ALTER TABLE "BrowserJob" ADD CONSTRAINT "BrowserJob_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Comment" ADD CONSTRAINT "Comment_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Comment" ADD CONSTRAINT "Comment_autoCommentRunId_fkey" FOREIGN KEY ("autoCommentRunId") REFERENCES "AutoCommentRun"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "AutoCommentRun" ADD CONSTRAINT "AutoCommentRun_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "AutoCommentRun" ADD CONSTRAINT "AutoCommentRun_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "CommentStyle" ADD CONSTRAINT "CommentStyle_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "AutoCommentConfig" ADD CONSTRAINT "AutoCommentConfig_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -519,6 +550,30 @@ ALTER TABLE "AutoCommentConfig" ADD CONSTRAINT "AutoCommentConfig_accountId_fkey
 
 -- AddForeignKey
 ALTER TABLE "AutoCommentConfig" ADD CONSTRAINT "AutoCommentConfig_commentStyleId_fkey" FOREIGN KEY ("commentStyleId") REFERENCES "CommentStyle"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "CommentGenerateSetting" ADD CONSTRAINT "CommentGenerateSetting_commentStyleId_fkey" FOREIGN KEY ("commentStyleId") REFERENCES "CommentStyle"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "CommentGenerateSetting" ADD CONSTRAINT "CommentGenerateSetting_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "CommentStyle" ADD CONSTRAINT "CommentStyle_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "CommentStyle" ADD CONSTRAINT "CommentStyle_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PostLoadSetting" ADD CONSTRAINT "PostLoadSetting_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PostLoadSetting" ADD CONSTRAINT "PostLoadSetting_targetListId_fkey" FOREIGN KEY ("targetListId") REFERENCES "TargetList"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Comment" ADD CONSTRAINT "Comment_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Comment" ADD CONSTRAINT "Comment_autoCommentRunId_fkey" FOREIGN KEY ("autoCommentRunId") REFERENCES "AutoCommentRun"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "LinkedInAccount" ADD CONSTRAINT "LinkedInAccount_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -552,9 +607,6 @@ ALTER TABLE "TargetProfile" ADD CONSTRAINT "TargetProfile_accountId_fkey" FOREIG
 
 -- AddForeignKey
 ALTER TABLE "BlacklistedProfile" ADD CONSTRAINT "BlacklistedProfile_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "BlacklistedProfile" ADD CONSTRAINT "BlacklistedProfile_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "BuildTargetListJob" ADD CONSTRAINT "BuildTargetListJob_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

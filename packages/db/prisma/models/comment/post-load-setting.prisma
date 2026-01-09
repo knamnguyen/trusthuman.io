@@ -1,0 +1,25 @@
+//for chrome extension
+//load this to show as "tags" in the compose tab - apply for "load posts" - don't care about individual mode
+
+model PostLoadSetting {
+  accountId    String  @id
+  targetListId String? @unique //optional 1:1 - each list can only be selected by 1 setting
+
+  //provide a range from 5-300 seconds - 2 input box not slider
+  //always forced randomization when submit delay
+  submitDelayRange String @default("5-20")
+
+  //input box of hours from minimum 1h to max 8760 - not slider
+  //only get posts posted within (younger than) X hours
+  timeFilterEnabled Boolean @default(false)
+  minPostAge        Int?
+
+  skipFriendActivitiesEnabled Boolean @default(false)
+  skipCompanyPagesEnabled     Boolean @default(true)
+  skipPromotedPostsEnabled    Boolean @default(true)
+
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  linkedInAccount LinkedInAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  targetList      TargetList?     @relation(fields: [targetListId], references: [id], onDelete: SetNull)
+}

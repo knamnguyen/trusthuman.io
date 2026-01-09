@@ -495,7 +495,7 @@ export const autoCommentRouter = () =>
           where: { id: input.accountId },
           select: {
             id: true,
-            location: true,
+            browserLocation: true,
             browserProfileId: true,
           },
         });
@@ -686,7 +686,8 @@ export const autoCommentRouter = () =>
       .input(
         z.object({
           name: z.string(),
-          prompt: z.string(),
+          description: z.string(),
+          content: z.string(),
         }),
       )
       .mutation(async ({ ctx, input }) => {
@@ -694,9 +695,10 @@ export const autoCommentRouter = () =>
         await ctx.db.commentStyle.create({
           data: {
             id,
-            userId: ctx.user.id,
+            accountId: ctx.activeAccount!.id,
             name: input.name,
-            prompt: input.prompt,
+            content: input.content,
+            description: input.description,
           },
         });
 
@@ -753,7 +755,7 @@ export const autoCommentRouter = () =>
         z.object({
           id: z.string(),
           name: z.string().optional(),
-          prompt: z.string().optional(),
+          content: z.string().optional(),
         }),
       )
       .mutation(async ({ ctx, input }) => {
@@ -764,7 +766,7 @@ export const autoCommentRouter = () =>
           },
           data: {
             name: input.name,
-            prompt: input.prompt,
+            content: input.content,
           },
         });
 
@@ -801,7 +803,7 @@ export async function getAutocommentParamsWithFallback(
 
   // if a custom comment style is selected, use that
   if (userConfig?.commentStyle) {
-    styleGuide = userConfig.commentStyle.prompt;
+    styleGuide = userConfig.commentStyle.content;
   }
 
   // if not fallback to defaultCommentStyle if provided by user
@@ -845,7 +847,7 @@ async function startAutoComment(
     where: { id: accountId },
     select: {
       id: true,
-      location: true,
+      browserLocation: true,
       browserProfileId: true,
       ownerId: true,
     },
@@ -876,7 +878,7 @@ async function startAutoComment(
     accountId,
     userId,
     {
-      location: account.location as ProxyLocation,
+      location: account.browserLocation as ProxyLocation,
       browserProfileId: account.browserProfileId,
       liveviewViewOnlyMode: process.env.NODE_ENV === "production",
     },

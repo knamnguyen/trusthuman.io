@@ -28,15 +28,9 @@ export function OrgAccountsTest() {
     error: orgError,
   } = useQuery(trpc.organization.getCurrent.queryOptions());
 
-  // Get accounts for current org
-  const {
-    data: accounts,
-    isLoading: isAccountsLoading,
-  } = useQuery(
-    trpc.account.listByOrg.queryOptions(
-      { organizationId: currentOrg?.id ?? "" },
-      { enabled: !!currentOrg?.id },
-    ),
+  // Get accounts for current org (uses ctx.activeOrg on server)
+  const { data: accounts, isLoading: isAccountsLoading } = useQuery(
+    trpc.account.listByOrg.queryOptions(),
   );
 
   // Register new account mutation
@@ -45,7 +39,7 @@ export function OrgAccountsTest() {
     onSuccess: () => {
       setProfileUrl("");
       void queryClient.invalidateQueries({
-        queryKey: trpc.account.listByOrg.queryKey({ organizationId: currentOrg?.id ?? "" }),
+        queryKey: trpc.account.listByOrg.queryKey(),
       });
     },
   });
@@ -55,7 +49,7 @@ export function OrgAccountsTest() {
     ...trpc.account.removeFromOrg.mutationOptions(),
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: trpc.account.listByOrg.queryKey({ organizationId: currentOrg?.id ?? "" }),
+        queryKey: trpc.account.listByOrg.queryKey(),
       });
     },
   });
@@ -214,7 +208,7 @@ export function OrgAccountsTest() {
                       {account.profileSlug}
                     </p>
                     <p className="text-xs text-gray-500">
-                      Status: {account.registrationStatus ?? "unknown"}
+                      Status: {account.status ?? "unknown"}
                     </p>
                     {account.profileUrl && (
                       <a

@@ -7,13 +7,34 @@
 [*] fix engage button in individual post page
 [*] convert engage button to generating same cards - maybe remove 1 variations by default just uses 3 variations (but then which variations do you save?)
 [*] fetch analytics data once every new linkedin page load visits (max once every hour limit) instead of manual refetch
+[*] space engage kinda works but not too well (because of focus state - mouse needs to move in ) - maybe just remove this feat for now
+[*] needs organization switcher manually in sidebar chrome extension (get from clerk for single source of truth) => maybe no need
+[*] organization current id might not be able to deduce from clerk in the backend => check thi
+[*] => match current account id
 
-[] space engage kinda works but not too well (because of focus state - mouse needs to move in ) - maybe just remove this feat for now
+//requires for db
 
-[] needs organization switcher manually in sidebar chrome extension (get from clerk for single source of truth) => maybe no need
+- target list can only have maximum 25 members - enforce default
+  => when rendering target list for selection => remove "all" list from option since that is just default and users cannot change (even when user removes a profile from all lists that profile is still in the 'all list' => rename "history list")
+
+=> registerByUrl => have not setup post scraping flow yet
+=> also adding people to target list from comments
+
+=> simpler: just disable manage target list add button for now for those added from comments
+=> ignore profile scraping altogether for now for both registerByUrl and adding to targetlist
+
+=> simple: ignore s3 bucket thing => just save direct data from linkedin feed including media urls to db
+
+[] before running the load posts - check for current url (check whether running in targetlist mode or not)
+=> if not correct url (feed or search page => needs to navigate there)
+
 => also your touch + editing means that saving cannot be instant
 => should have manual queue then? only save when submitting?
-=> what about saving logic on webapp - pregenerate comments save where? or only generate comments on demand?
+
+1. saving in extensions first - worry about saving for pre-generate comment webapp later
+   => what about saving logic on webapp - pregenerate comments save where? or only generate comments on demand?
+
+=> saving in extension - only when confirmed saving successful
 
 => makes things faster
 

@@ -13,7 +13,7 @@ import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
 
-import type { Prisma, PrismaClient } from "@sassy/db";
+import type { AccessType, Prisma, PrismaClient } from "@sassy/db";
 import { db } from "@sassy/db";
 
 import type { BrowserSessionRegistry } from "./utils/browser-session";
@@ -181,7 +181,10 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
       });
     }
 
-    if (result.activeAccount !== null && result.activeAccount.permitted === false) {
+    if (
+      result.activeAccount !== null &&
+      result.activeAccount.permitted === false
+    ) {
       throw new TRPCError({
         code: "FORBIDDEN",
         message: "Access to this account is forbidden",
@@ -264,7 +267,17 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
     memberships: result.memberships,
   });
 
-  if (result.activeAccount !== null && result.activeAccount.permitted === false) {
+  if (result.activeAccount === null) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "No active account selected",
+    });
+  }
+
+  // Store in const to help TypeScript narrow the type
+  const activeAccount = result.activeAccount;
+
+  if (activeAccount.permitted === false) {
     throw new TRPCError({
       code: "FORBIDDEN",
       message: "Access to this account is forbidden",
@@ -275,7 +288,7 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
     ctx: {
       ...ctx,
       user: result.user,
-      activeAccount: result.activeAccount,
+      activeAccount: activeAccount,
       memberships: result.memberships,
       activeOrg,
     },

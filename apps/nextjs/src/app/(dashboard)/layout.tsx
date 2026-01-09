@@ -1,16 +1,24 @@
+import { cookies } from "next/headers";
+
 import { SidebarInset, SidebarProvider } from "@sassy/ui/sidebar";
 
 import { DashboardSidebar } from "./_components/dashboard-sidebar";
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+export default async function Layout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  // Read sidebar preferences from cookies for SSR
+  const cookieStore = await cookies();
+  const defaultOpen = cookieStore.get("sidebar_state")?.value === "true";
+  const defaultHoverOpen =
+    cookieStore.get("sidebar_hover_open")?.value === "true";
+
   return (
     <SidebarProvider
-      style={
-        {
-          "--sidebar-width": "calc(var(--spacing) * 72)",
-          "--header-height": "calc(var(--spacing) * 12)",
-        } as React.CSSProperties
-      }
+      defaultOpen={defaultOpen}
+      defaultHoverOpen={defaultHoverOpen}
     >
       <DashboardSidebar />
       <SidebarInset>

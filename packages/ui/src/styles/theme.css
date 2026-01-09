@@ -37,6 +37,9 @@
     --sidebar-accent-foreground: #000000;
     --sidebar-border: #000000;
     --sidebar-ring: #ffffff;
+    --sidebar-width: 18rem;
+    --sidebar-width-icon: 3.5rem;
+    --header-height: 3rem;
     --font-weight-bold: 600;
     --font-sans: Fira Sans, ui-sans-serif, sans-serif, system-ui;
     --font-serif: Artifika, ui-serif, serif;
@@ -98,6 +101,9 @@
     --sidebar-accent-foreground: #1f2937;
     --sidebar-border: #374151;
     --sidebar-ring: #ec4899;
+    --sidebar-width: 18rem;
+    --sidebar-width-icon: 3.5rem;
+    --header-height: 3rem;
     --font-sans: Fira Sans, ui-sans-serif, sans-serif, system-ui;
     --font-serif: Artifika, ui-serif, serif;
     --font-mono: JetBrains Mono, ui-monospace, monospace;

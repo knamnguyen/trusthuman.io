@@ -87,8 +87,9 @@ model LinkedInProfile {
   followerCount    Int?
   registeredAt     DateTime?
 
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   targetProfiles TargetProfile[]
 
   @@index([linkedinUrl])

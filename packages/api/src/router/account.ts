@@ -43,8 +43,6 @@ export const accountRouter = () =>
         where: hasPermissionToAccessAccountClause(ctx.user.id),
         select: {
           id: true,
-          name: true,
-          email: true,
           status: true,
           ownerId: true,
           owner: {
@@ -103,6 +101,11 @@ export const accountRouter = () =>
         return account;
       }),
 
+    //we need to modify this to only allow init browser when user has registered linkedin account
+    //bro please name it better - these short namings really make it confusing
+    //please name it sth like connectAccToHyperBrowser
+    //please make it blatantly obvious - it might look messy but much better for reading code
+
     init: {
       create: protectedProcedure
         .input(
@@ -134,7 +137,7 @@ export const accountRouter = () =>
               return;
             }
 
-            if (existingAccount.status === "ACTIVE") {
+            if (existingAccount.status === "CONNECTED") {
               yield {
                 status: "signed_in",
               } as const;
@@ -159,7 +162,7 @@ export const accountRouter = () =>
                 email: input.email,
                 name: input.name,
                 browserProfileId: profile.id,
-                location: input.location,
+                browserLocation: input.location,
                 status: "CONNECTING",
               },
             });
@@ -194,7 +197,7 @@ export const accountRouter = () =>
                 id: accountId,
               },
               data: {
-                status: "ACTIVE",
+                status: "CONNECTED",
               },
             });
             yield {
@@ -310,8 +313,6 @@ export const accountRouter = () =>
             message: "You are not a member of this organization",
           });
         }
-
-        // 2. Extract profileSlug from URL
         const profileSlug = extractProfileSlug(input.profileUrl);
 
         // 3. Check if already registered (globally unique)
@@ -372,7 +373,7 @@ export const accountRouter = () =>
             email: `${profileSlug}@placeholder.linkedin`,
             status: "CONNECTING",
             browserProfileId: "pending",
-            location: "unknown",
+            browserLocation: "unknown",
           },
         });
 
@@ -385,43 +386,31 @@ export const accountRouter = () =>
       }),
 
     /**
-     * List LinkedIn accounts for an organization
+     * List LinkedIn accounts for the user's active organization
+     * Uses ctx.activeOrg from middleware (no input needed)
      */
-    listByOrg: protectedProcedure
-      .input(z.object({ organizationId: z.string() }))
-      .query(async ({ ctx, input }) => {
-        // Validate membership
-        const membership = await ctx.db.organizationMember.findUnique({
-          where: {
-            orgId_userId: {
-              orgId: input.organizationId,
-              userId: ctx.user.id,
-            },
-          },
+    listByOrg: protectedProcedure.query(async ({ ctx }) => {
+      if (!ctx.activeOrg) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "No active organization selected",
         });
+      }
 
-        if (!membership) {
-          throw new TRPCError({
-            code: "FORBIDDEN",
-            message: "You are not a member of this organization",
-          });
-        }
+      const accounts = await ctx.db.linkedInAccount.findMany({
+        where: { organizationId: ctx.activeOrg.id },
+        select: {
+          id: true,
+          profileUrl: true,
+          profileSlug: true,
+          status: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: "desc" },
+      });
 
-        const accounts = await ctx.db.linkedInAccount.findMany({
-          where: { organizationId: input.organizationId },
-          select: {
-            id: true,
-            profileUrl: true,
-            profileSlug: true,
-            registrationStatus: true,
-            name: true,
-            createdAt: true,
-          },
-          orderBy: { createdAt: "desc" },
-        });
-
-        return accounts;
-      }),
+      return accounts;
+    }),
 
     /**
      * Remove a LinkedIn account from an organization
@@ -471,7 +460,7 @@ export const accountRouter = () =>
           where: { id: input.accountId },
           data: {
             organizationId: null,
-            registrationStatus: null,
+            status: null,
           },
         });
 

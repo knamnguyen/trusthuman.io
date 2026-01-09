@@ -94,26 +94,22 @@ export function AccountSwitcher() {
             <DropdownMenuTrigger asChild>
               <SidebarMenuButton
                 size="lg"
-                className="data-[state=open]:bg-sidebar-accent group data-[state=open]:text-sidebar-accent-foreground cursor-pointer transition-all duration-200 hover:bg-gray-200"
+                className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground cursor-pointer transition-colors duration-200 hover:bg-gray-200"
               >
-                <div className="bg-sidebar-primary text-sidebar-primary-foreground -ml-2 flex aspect-square size-8 items-center justify-center rounded-lg group-data-[state=expanded]:ml-0">
-                  <div className="grid aspect-square w-full place-items-center rounded-md bg-blue-600 font-medium text-white">
-                    <span>
-                      {(
-                        activeAccount.data.name ??
-                        activeAccount.data.email.split("@")[0]
-                      )?.slice(0, 2)}
-                    </span>
-                  </div>
+                <div className="grid aspect-square size-8 shrink-0 place-items-center rounded-lg bg-blue-600 font-medium text-white">
+                  {(
+                    activeAccount.data.name ??
+                    activeAccount.data.email.split("@")[0]
+                  )?.slice(0, 2)}
                 </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
+                <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
                   <span className="truncate font-medium">
                     {activeAccount.data.name ??
                       activeAccount.data.email.split("@")[0]}
                   </span>
                   <span className="truncate text-xs">Premium</span>
                 </div>
-                <ChevronsUpDown className="ml-auto" />
+                <ChevronsUpDown className="ml-auto group-data-[collapsible=icon]:hidden" />
               </SidebarMenuButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent

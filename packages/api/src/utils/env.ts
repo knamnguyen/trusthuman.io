@@ -9,5 +9,7 @@ export const env = z
     STRIPE_SECRET_KEY: z.string(),
     STRIPE_WEBHOOK_SECRET: z.string(),
     CLERK_WEBHOOK_SECRET: z.string(),
+    CLERK_SECRET_KEY: z.string(),
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string(),
   })
   .parse(process.env);
