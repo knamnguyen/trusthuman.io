@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { IoPersonAdd } from "react-icons/io5";
 
 import type { ProfileInfo } from "./extract-profile-info";
+import { useTRPC } from "../../../lib/trpc/client";
 import { useSavedProfileStore } from "../stores/saved-profile-store";
 import { SIDEBAR_TABS, useSidebarStore } from "../stores/sidebar-store";
 import { fetchMemberComments } from "../utils/data-fetch-mimic/linkedin-comments-fetcher";
@@ -25,6 +27,8 @@ export function SaveProfileButton({
   const { setSelectedProfile, processComments, setIsLoadingComments } =
     useSavedProfileStore();
   const { openToTab } = useSidebarStore();
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -59,6 +63,17 @@ export function SaveProfileButton({
     // Store profile and open sidebar to Connect tab
     setSelectedProfile(profileInfo);
     openToTab(SIDEBAR_TABS.CONNECT);
+
+    // Prefetch lists data for instant popover open
+    if (profileInfo.linkedinUrl) {
+      console.log("🚀 PREFETCH: Starting for", profileInfo.linkedinUrl);
+
+      void queryClient.prefetchQuery(
+        trpc.targetList.findListsWithProfileStatus.queryOptions({
+          linkedinUrl: profileInfo.linkedinUrl,
+        }),
+      );
+    }
 
     // Fetch recent comments if URN is available
     if (profileInfo.urn) {
