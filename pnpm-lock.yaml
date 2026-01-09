@@ -434,6 +434,9 @@ importers:
       zod:
         specifier: 'catalog:'
         version: 3.25.76
+      zustand:
+        specifier: ^5.0.9
+        version: 5.0.9(@types/react@19.1.8)(react@19.0.0)(use-sync-external-store@1.6.0(react@19.0.0))
     devDependencies:
       '@prisma/nextjs-monorepo-workaround-plugin':
         specifier: ^6.5.0
