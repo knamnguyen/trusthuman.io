@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { Sheet } from "@sassy/ui/sheet";
+import { ToasterSimple } from "@sassy/ui/toast";
 
 import { ToggleButton } from "./_components/ToggleButton";
 import { PostNavigator } from "./compose-tab/PostNavigator";
@@ -85,6 +86,9 @@ export default function App({ shadowRoot }: AppProps) {
 
       {/* Observer to remove "New posts" pill from feed */}
       <NewPostsPillRemover />
+
+      {/* Toast notifications */}
+      <ToasterSimple container={shadowRoot} />
     </>
   );
 }

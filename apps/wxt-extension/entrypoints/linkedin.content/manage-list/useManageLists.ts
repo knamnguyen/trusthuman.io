@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "@sassy/ui/toast";
 
 import { useTRPC } from "../../../lib/trpc/client";
 import { useSavedProfileStore } from "../stores/saved-profile-store";
@@ -39,11 +40,15 @@ export function useManageLists() {
     linkedinUrl: linkedinUrl ?? "",
   });
 
-  // Prefetch lists as soon as profile is selected (instant popover open)
+  // Query lists data (prefetched in SaveProfileButton for instant popover open)
   const { data: listsData, isLoading: isLoadingLists } = useQuery(
     trpc.targetList.findListsWithProfileStatus.queryOptions(
       { linkedinUrl: linkedinUrl ?? "" },
-      { enabled: !!linkedinUrl },
+      {
+        enabled: !!linkedinUrl,
+        // Keep data fresh for 30s so re-opening popover is instant
+        staleTime: 30 * 1000,
+      },
     ),
   );
 
@@ -79,6 +84,11 @@ export function useManageLists() {
             };
           },
         );
+      },
+      onError: () => {
+        toast.error("Failed to save list changes", {
+          description: "Please try again.",
+        });
       },
     }),
   );
