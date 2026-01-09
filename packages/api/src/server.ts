@@ -12,10 +12,11 @@ import { browserJobs } from "./utils/browser-job";
 // Uses a lightweight Prisma query (not $connect which can cause pool issues)
 // runs even when there are no users to avoid db cold start
 const DB_KEEPALIVE_INTERVAL_MS = 30_000;
+// eslint-disable-next-line @typescript-eslint/no-misused-promises
 setInterval(async () => {
   try {
     // Simple count query - lightweight way to keep connection alive
-    await db.user.count({ take: 1 });
+    await db.$executeRaw`SELECT 1`;
     console.debug("DB keepalive ping successful");
   } catch (error) {
     console.warn("DB keepalive ping failed:", error);
@@ -34,7 +35,7 @@ if (!VITE_APP_URL) {
 
 const url = new URL(VITE_APP_URL);
 
-console.log(`Starting server at port ${url.port}...`);
+console.log(`Starting server at port ${process.env.PORT ?? url.port}...`);
 
 Bun.serve({
   port: url.port,

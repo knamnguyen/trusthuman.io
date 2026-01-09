@@ -327,15 +327,16 @@ export const accountRouter = () =>
           });
         }
 
-        // 2. Check slot limit
-        const org = await ctx.db.organization.findUnique({
-          where: { id: orgId },
-          select: { purchasedSlots: true },
-        });
-
-        const currentAccountCount = await ctx.db.linkedInAccount.count({
-          where: { organizationId: orgId },
-        });
+        // 4. Check slot limit
+        const [org, currentAccountCount] = await Promise.all([
+          ctx.db.organization.findUnique({
+            where: { id: orgId },
+            select: { purchasedSlots: true },
+          }),
+          ctx.db.linkedInAccount.count({
+            where: { organizationId: orgId },
+          }),
+        ]);
 
         if (org && currentAccountCount >= org.purchasedSlots) {
           throw new TRPCError({
@@ -344,8 +345,13 @@ export const accountRouter = () =>
           });
         }
 
-        // 3. Create the account
+        // 5. Create the account and hyperbrowser profile
         const accountId = ulid();
+
+        const profile = await hyperbrowser.profiles.create({
+          name: profileSlug,
+        });
+
         const account = await ctx.db.linkedInAccount.create({
           data: {
             id: accountId,
@@ -357,7 +363,7 @@ export const accountRouter = () =>
             ownerId: ctx.user.id,
             email: `${profileSlug}@placeholder.linkedin`,
             status: "CONNECTING",
-            browserProfileId: "pending",
+            browserProfileId: profile.id,
             browserLocation: "unknown",
           },
         });
