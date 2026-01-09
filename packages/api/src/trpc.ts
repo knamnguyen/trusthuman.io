@@ -239,45 +239,9 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
     }),
   );
 
-  // Log auth state for checking
-  console.log(`>>> Auth Middleware [${source}]`);
-  console.log("  [Auth State]:", {
-    userId: state.userId,
-    sessionId: state.sessionId,
-    activeOrg,
-  });
-  console.log(`  [${dbCacheHit ? "CACHED" : "FRESH DB QUERY"}] DB Data:`, {
-    activeAccountId,
-    user: {
-      id: result.user.id,
-      firstName: result.user.firstName,
-      email: result.user.primaryEmailAddress,
-      accessType: result.user.accessType,
-      dailyAIcomments: result.user.dailyAIcomments,
-    },
-    activeAccount: result.activeAccount
-      ? {
-          id: result.activeAccount.id,
-          email: result.activeAccount.email,
-          name: result.activeAccount.name,
-          accessType: result.activeAccount.accessType,
-          permitted: result.activeAccount.permitted,
-        }
-      : null,
-    memberships: result.memberships,
-  });
 
-  if (result.activeAccount === null) {
-    throw new TRPCError({
-      code: "BAD_REQUEST",
-      message: "No active account selected",
-    });
-  }
-
-  // Store in const to help TypeScript narrow the type
-  const activeAccount = result.activeAccount;
-
-  if (activeAccount.permitted === false) {
+  // Only check permission if an account is selected
+  if (result.activeAccount?.permitted === false) {
     throw new TRPCError({
       code: "FORBIDDEN",
       message: "Access to this account is forbidden",
@@ -288,7 +252,7 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
     ctx: {
       ...ctx,
       user: result.user,
-      activeAccount: activeAccount,
+      activeAccount: result.activeAccount,
       memberships: result.memberships,
       activeOrg,
     },
@@ -332,3 +296,62 @@ export const publicProcedure = t.procedure;
  * @see https://trpc.io/docs/procedures
  */
 export const protectedProcedure = t.procedure.use(isAuthed);
+
+/**
+ * Organization procedure (Layer 2)
+ *
+ * Requires user to have an active organization selected in Clerk.
+ * Use for org-level pages like /[orgSlug]/accounts where no account is required.
+ *
+ * @example organizationRouter: getCurrent: orgProcedure.query(...)
+ */
+export const orgProcedure = protectedProcedure.use(({ ctx, next }) => {
+  if (!ctx.activeOrg) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "No active organization selected",
+    });
+  }
+  // Use type assertion to narrow the type after runtime check
+  const activeOrg = ctx.activeOrg as {
+    id: string;
+    slug: string | null;
+    role: string | null;
+  };
+  return next({
+    ctx: {
+      ...ctx,
+      activeOrg,
+    },
+  });
+});
+
+/**
+ * Account procedure (Layer 3)
+ *
+ * Requires both active organization AND active account.
+ * Use for account-level pages like /[orgSlug]/[accountSlug]/... where account context is required.
+ *
+ * The x-account-id header is only sent when user is on account-level pages
+ * (via Zustand store populated by AccountLayout's useEffect).
+ *
+ * @example accountRouter: update: accountProcedure.mutation(...)
+ */
+export const accountProcedure = orgProcedure.use(({ ctx, next }) => {
+  if (!ctx.activeAccount) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "No active account selected",
+    });
+  }
+  // Use type assertion to narrow the type after runtime check
+  const activeAccount = ctx.activeAccount as NonNullable<
+    typeof ctx.activeAccount
+  >;
+  return next({
+    ctx: {
+      ...ctx,
+      activeAccount,
+    },
+  });
+});

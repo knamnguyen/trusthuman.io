@@ -13,10 +13,14 @@ model LinkedInAccount {
   profileSlug String? @unique
   profileUrn  String? @unique
 
+
   autocommentEnabled Boolean    @default(false)
   runDailyAt         String?
   isRunning          Boolean    @default(false)
   accessType         AccessType @default(FREE)
+
+  //resets count daily - but still can get from history of comments
+  dailyAIcomments    Int @default(0)
 
   //delete
   registrationStatus String?

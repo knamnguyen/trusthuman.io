@@ -42,7 +42,8 @@
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
     "superjson": "2.2.2",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "zustand": "^5.0.9"
   },
   "devDependencies": {
     "@prisma/nextjs-monorepo-workaround-plugin": "^6.5.0",

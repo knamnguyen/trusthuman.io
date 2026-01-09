@@ -194,6 +194,7 @@ CREATE TABLE "LinkedInAccount" (
     "runDailyAt" TEXT,
     "isRunning" BOOLEAN NOT NULL DEFAULT false,
     "accessType" "AccessType" NOT NULL DEFAULT 'FREE',
+    "dailyAIcomments" INTEGER NOT NULL DEFAULT 0,
     "registrationStatus" TEXT,
     "name" TEXT,
     "email" TEXT,

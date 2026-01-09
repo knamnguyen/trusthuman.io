@@ -12,7 +12,12 @@ import type {
 } from "@sassy/db";
 import { countrySchema } from "@sassy/validators";
 
-import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
+import {
+  createTRPCRouter,
+  orgProcedure,
+  protectedProcedure,
+  publicProcedure,
+} from "../trpc";
 import {
   assumedAccountJwt,
   BrowserSession,
@@ -287,42 +292,22 @@ export const accountRouter = () =>
 
     /**
      * Register a LinkedIn account by URL
-     * Links the account to the user's current organization
+     * Links the account to the user's active organization (from ctx.activeOrg)
      */
-    registerByUrl: protectedProcedure
-      .input(
-        z.object({
-          profileUrl: z.string().url(),
-          organizationId: z.string(),
-        }),
-      )
+    registerByUrl: orgProcedure
+      .input(z.object({ profileUrl: z.string().url() }))
       .mutation(async ({ ctx, input }) => {
-        // 1. Validate user is member of the organization
-        const membership = await ctx.db.organizationMember.findUnique({
-          where: {
-            orgId_userId: {
-              orgId: input.organizationId,
-              userId: ctx.user.id,
-            },
-          },
-        });
-
-        if (!membership) {
-          throw new TRPCError({
-            code: "FORBIDDEN",
-            message: "You are not a member of this organization",
-          });
-        }
+        const orgId = ctx.activeOrg.id;
         const profileSlug = extractProfileSlug(input.profileUrl);
 
-        // 3. Check if already registered (globally unique)
+        // 1. Check if already registered (globally unique)
         const existing = await ctx.db.linkedInAccount.findUnique({
           where: { profileSlug },
         });
 
         if (existing) {
           // Already registered - check if it's in this org or another
-          if (existing.organizationId === input.organizationId) {
+          if (existing.organizationId === orgId) {
             throw new TRPCError({
               code: "CONFLICT",
               message:
@@ -349,7 +334,7 @@ export const accountRouter = () =>
             select: { purchasedSlots: true },
           }),
           ctx.db.linkedInAccount.count({
-            where: { organizationId: input.organizationId },
+            where: { organizationId: orgId },
           }),
         ]);
 
@@ -370,7 +355,7 @@ export const accountRouter = () =>
         const account = await ctx.db.linkedInAccount.create({
           data: {
             id: accountId,
-            organizationId: input.organizationId,
+            organizationId: orgId,
             profileUrl: input.profileUrl,
             profileSlug,
             registrationStatus: "registered",
@@ -395,14 +380,7 @@ export const accountRouter = () =>
      * List LinkedIn accounts for the user's active organization
      * Uses ctx.activeOrg from middleware (no input needed)
      */
-    listByOrg: protectedProcedure.query(async ({ ctx }) => {
-      if (!ctx.activeOrg) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "No active organization selected",
-        });
-      }
-
+    listByOrg: orgProcedure.query(async ({ ctx }) => {
       const accounts = await ctx.db.linkedInAccount.findMany({
         where: { organizationId: ctx.activeOrg.id },
         select: {
@@ -419,38 +397,45 @@ export const accountRouter = () =>
     }),
 
     /**
-     * Remove a LinkedIn account from an organization
+     * Get a LinkedIn account by its profile slug
+     * Used by AccountLayout to validate account and sync Zustand store
+     * Returns null if account doesn't exist or doesn't belong to the active org
      */
-    removeFromOrg: protectedProcedure
-      .input(
-        z.object({
-          accountId: z.string(),
-          organizationId: z.string(),
-        }),
-      )
-      .mutation(async ({ ctx, input }) => {
-        // Validate membership
-        const membership = await ctx.db.organizationMember.findUnique({
+    getBySlug: orgProcedure
+      .input(z.object({ slug: z.string() }))
+      .query(async ({ ctx, input }) => {
+        const account = await ctx.db.linkedInAccount.findFirst({
           where: {
-            orgId_userId: {
-              orgId: input.organizationId,
-              userId: ctx.user.id,
-            },
+            profileSlug: input.slug,
+            organizationId: ctx.activeOrg.id,
+          },
+          select: {
+            id: true,
+            profileSlug: true,
+            profileUrl: true,
+            name: true,
+            email: true,
+            status: true,
           },
         });
 
-        if (!membership) {
-          throw new TRPCError({
-            code: "FORBIDDEN",
-            message: "You are not a member of this organization",
-          });
-        }
+        return account;
+      }),
+
+    /**
+     * Remove a LinkedIn account from an organization
+     * Uses ctx.activeOrg from middleware
+     */
+    removeFromOrg: orgProcedure
+      .input(z.object({ accountId: z.string() }))
+      .mutation(async ({ ctx, input }) => {
+        const orgId = ctx.activeOrg.id;
 
         // Verify account belongs to org
         const account = await ctx.db.linkedInAccount.findFirst({
           where: {
             id: input.accountId,
-            organizationId: input.organizationId,
+            organizationId: orgId,
           },
         });
 

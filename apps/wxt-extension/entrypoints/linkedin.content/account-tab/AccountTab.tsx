@@ -212,7 +212,11 @@ export function AccountTab() {
   // Auth store for user info (read-only, all actions via webapp)
   // Note: isSignedIn check is done at LinkedInSidebar level via SignInOverlay
   const { user, fetchAuthStatus } = useAuthStore();
-  const { isLoading, fetchAccountData } = useAccountStore();
+  const {
+    isLoading: isAccountsLoading,
+    fetchAccountData,
+    matchingAccount,
+  } = useAccountStore();
   const organization = useAuthStore.getState().organization;
 
   const handleRefresh = async () => {
@@ -223,7 +227,7 @@ export function AccountTab() {
 
   const handleManageAccount = () => {
     const syncHost = getSyncHostUrl();
-    window.open(`${syncHost}/org-accounts`, "_blank");
+    window.open(`${syncHost}/${organization?.name}/accounts`, "_blank");
   };
 
   // Signed in - show features UI (SignInOverlay handles unauthenticated state)
@@ -237,12 +241,12 @@ export function AccountTab() {
               variant="ghost"
               size="sm"
               onClick={handleRefresh}
-              disabled={isLoading}
+              disabled={isAccountsLoading}
               className="h-8 w-8 p-0"
               title="Refresh account data"
             >
               <RefreshCw
-                className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+                className={`h-4 w-4 ${isAccountsLoading ? "animate-spin" : ""}`}
               />
             </Button>
           </div>
@@ -270,10 +274,14 @@ export function AccountTab() {
                 </p>
               </div>
             </div>
+
+            {/* only show when account data ready */}
+
             <Button
               variant="ghost"
               size="sm"
               onClick={handleManageAccount}
+              disabled={isAccountsLoading || !matchingAccount}
               className="text-muted-foreground hover:text-destructive"
             >
               Manage Account
