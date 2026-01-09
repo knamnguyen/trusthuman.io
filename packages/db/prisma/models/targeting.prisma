@@ -10,6 +10,8 @@ model TargetList {
   linkedInAccount     LinkedInAccount      @relation(fields: [accountId], references: [id])
   PostLoadSetting     PostLoadSetting? //optional 1:1 - this list may be selected in PostLoadSetting
   buildTargetListJobs BuildTargetListJob[]
+
+  @@index([accountId]) // For findListsWithProfileStatus query
 }
 
 enum TargetListStatus {
@@ -35,6 +37,7 @@ model TargetProfile {
   account LinkedInAccount  @relation(fields: [accountId], references: [id])
 
   @@unique([listId, linkedinUrl])
+  @@index([accountId, linkedinUrl]) // For findListsWithProfileStatus query
 }
 
 //ignore for chrome extension for now
