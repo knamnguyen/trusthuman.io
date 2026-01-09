@@ -2,8 +2,8 @@
 
 import type { Clerk } from "@clerk/clerk-js";
 import type { QueryClient } from "@tanstack/react-query";
-import { createContext, useContext, useEffect, useState } from "react";
-import { QueryClientProvider, useQuery } from "@tanstack/react-query";
+import { createContext, useContext, useState } from "react";
+import { QueryClientProvider } from "@tanstack/react-query";
 import {
   createTRPCClient,
   httpBatchStreamLink,
@@ -17,6 +17,7 @@ import type { AppRouter } from "@sassy/api";
 import { env } from "~/env";
 import { retry } from "~/lib/retry";
 import { useLinkedInAccountStore } from "~/stores/linkedin-account-store";
+import { useAccountStore } from "~/stores/zustand-store";
 import { createQueryClient } from "./query-client";
 
 function getClerkTokenFactory() {
@@ -40,6 +41,14 @@ function getClerkTokenFactory() {
 
         // if already ready, as previously checked, return the token or null
         if (ready === true) {
+          return (await clerk.session?.getToken()) ?? null;
+        }
+
+        // Check if Clerk is ALREADY ready before waiting for status event
+        // This fixes the bug where status event already fired before we added listener
+        const currentStatus = clerk.status;
+        if (currentStatus === "ready" || currentStatus === "degraded") {
+          ready = true;
           return (await clerk.session?.getToken()) ?? null;
         }
 
@@ -118,18 +127,31 @@ export const getTrpcClient = (configGetter?: () => { accountId?: string }) => {
         transformer: SuperJSON,
         url: env.NEXT_PUBLIC_API_URL + "/api/trpc",
         async headers() {
+          console.log("[tRPC headers] Starting...");
           const headers = new Headers();
           headers.set("x-trpc-source", "nextjs-react");
 
-          const config = configGetter?.();
-
+          console.log("[tRPC headers] Getting Clerk token...");
           const clerkToken = await getClerkToken();
+          console.log("[tRPC headers] Got token:", clerkToken ? "yes" : "no");
           if (clerkToken !== null) {
             headers.set("Authorization", `Bearer ${clerkToken}`);
           }
 
-          if (config?.accountId !== undefined) {
-            headers.set("x-account-id", config.accountId);
+          // IMPORTANT: x-account-id is only set when Zustand store has an accountId.
+          // The store is ONLY populated when user navigates to /[orgSlug]/[accountSlug]/... routes
+          // (via AccountLayout's useEffect that calls setAccount).
+          // When user is on org-level pages like /[orgSlug]/accounts, the store has accountId: null.
+          // This ensures accountProcedure endpoints only receive the header when appropriate,
+          // and orgProcedure endpoints work without requiring an account.
+          //
+          // Check Zustand store first (new dashboard), fallback to config getter (old dashboard)
+          const zustandAccountId = useAccountStore.getState().accountId;
+          const legacyAccountId = configGetter?.()?.accountId;
+          const accountId = zustandAccountId ?? legacyAccountId;
+
+          if (accountId !== undefined && accountId !== null) {
+            headers.set("x-account-id", accountId);
           }
 
           return headers;
@@ -175,32 +197,9 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <TRPCClientProvider client={trpcClient}>
         <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
-          <DefaultAccountFetcher />
           {props.children}
         </TRPCProvider>
       </TRPCClientProvider>
     </QueryClientProvider>
   );
-}
-
-function DefaultAccountFetcher() {
-  const trpc = useTRPC();
-  const store = useLinkedInAccountStore();
-
-  const defaultAccount = useQuery(
-    trpc.account.getDefaultAccount.queryOptions(undefined, {
-      staleTime: Infinity,
-      refetchOnWindowFocus: false,
-      refetchOnMount: false,
-    }),
-  );
-
-  useEffect(() => {
-    // we only set default account id if none is set yet
-    if (store.state.accountId === null && defaultAccount.data?.account.id) {
-      store.setAccountId(defaultAccount.data.account.id);
-    }
-  }, [defaultAccount.data?.account.id, store]);
-
-  return null;
 }
