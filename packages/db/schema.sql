@@ -68,6 +68,8 @@ CREATE TABLE "Comment" (
     "postUrn" TEXT NOT NULL,
     "postContentHtml" TEXT,
     "postCreatedAt" TIMESTAMP(3),
+    "postFullCaption" TEXT NOT NULL,
+    "postCaptionPreview" TEXT NOT NULL,
     "adjacentComments" JSONB,
     "authorUrn" TEXT,
     "authorName" TEXT,
