@@ -330,7 +330,7 @@ export const accountRouter = () =>
         // 4. Check slot limit
         const [org, currentAccountCount] = await Promise.all([
           ctx.db.organization.findUnique({
-            where: { id: input.organizationId },
+            where: { id: orgId },
             select: { purchasedSlots: true },
           }),
           ctx.db.linkedInAccount.count({
