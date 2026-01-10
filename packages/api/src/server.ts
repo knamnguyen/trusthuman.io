@@ -41,6 +41,9 @@ let tls;
 
 // eslint-disable-next-line turbo/no-undeclared-env-vars
 if (process.env.TLS_KEY !== undefined && process.env.TLS_CERT !== undefined) {
+  console.info(
+    "detecting env TLS_KEY and TLS_CERT, enabling TLS for Bun server",
+  );
   tls = {
     // eslint-disable-next-line turbo/no-undeclared-env-vars
     key: Bun.file(process.env.TLS_KEY),
