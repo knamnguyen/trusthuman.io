@@ -104,15 +104,26 @@ declare const window: Window & {
     >;
     extractPostCaption: (postContainer: Element) => string | null;
     extractTextWithLineBreaks: (element: HTMLElement) => string;
-    extractPostData(container: HTMLElement): Post | null;
+    extractPostData(container: HTMLElement): Promise<Post | null>;
     extractPostTime(container: HTMLElement): Date;
     extractPostAuthorInfo(container: HTMLElement): AuthorInfo;
     getPostCaptionPreview(fullCaption: string, maxLines: number): string;
     doesAnyPostContainerExist(): boolean;
+    createSemaphore(maxConcurrency: number): Semaphore;
+    extractPostComments(container: HTMLElement): PostComment[];
+    expandPostComments(container: HTMLElement): Promise<void>;
     loadMore(): Promise<boolean>;
-    findPosts(opts: { skipPostUrns: Set<string>; limit: number }): Post[];
+    findPosts(opts: {
+      skipPostUrns: Set<string>;
+      limit: number;
+    }): Promise<Post[]>;
   };
 };
+
+interface Semaphore {
+  acquire(): Promise<void>;
+  release(): void;
+}
 
 // TODO: store instance in postgres and then shut down on restart (should technically gracefully update statuses, so if running without an instance in the registry, means it should be shut down)
 export class BrowserSession {
@@ -931,8 +942,8 @@ export class BrowserSession {
 
     while (true) {
       const posts = await this.pages.linkedin.evaluate(
-        (skipPostUrns, limit) =>
-          window.engagekitInternals.findPosts({
+        async (skipPostUrns, limit) =>
+          await window.engagekitInternals.findPosts({
             skipPostUrns: new Set(skipPostUrns),
             limit,
           }),
@@ -1088,6 +1099,24 @@ interface Post {
   fullCaption: string;
   createdAt: string;
   author: AuthorInfo | null;
+  comments: PostComment[];
+}
+
+interface PostComment {
+  /** Comment author name */
+  authorName: string | null;
+  /** Comment author headline */
+  authorHeadline: string | null;
+  /** Comment author profile URL */
+  authorProfileUrl: string | null;
+  /** Comment author photo URL */
+  authorPhotoUrl: string | null;
+  /** Comment text content */
+  content: string | null;
+  /** Comment URN from data-id */
+  urn: string | null;
+  /** Whether this is a reply to another comment */
+  isReply: boolean;
 }
 
 async function injectEngagekitInternals(page: Page) {
@@ -1478,12 +1507,80 @@ async function injectEngagekitInternals(page: Page) {
 
         return result;
       },
-      extractPostData(container) {
+      extractPostComments(postContainer) {
+        const articles = postContainer.querySelectorAll<HTMLElement>(
+          'article[data-id^="urn:li:comment:"]',
+        );
+
+        if (!articles.length) {
+          return [];
+        }
+
+        return Array.from(articles).map((article) =>
+          extractPostComment(article),
+        );
+      },
+      async expandPostComments(postContainer) {
+        const beforeCommentsLength =
+          this.extractPostComments(postContainer).length;
+
+        const clickShowCommentButton = () => {
+          let commentButton = postContainer.querySelector<HTMLButtonElement>(
+            'button[aria-label*="comment"]',
+          );
+
+          if (commentButton !== null) {
+            commentButton.click();
+            return true;
+          }
+
+          commentButton = postContainer.querySelector<HTMLButtonElement>(
+            'button[aria-label="Comment"]',
+          );
+
+          if (commentButton !== null) {
+            commentButton.click();
+            return true;
+          }
+
+          return false;
+        };
+
+        const waitForCommentsReady = () => {
+          return this.retry(
+            () => {
+              const commentsLength =
+                this.extractPostComments(postContainer).length;
+
+              if (commentsLength > beforeCommentsLength) {
+                return true;
+              }
+
+              throw new Error("Comments not expanded yet, throwing for retry");
+            },
+            {
+              // POLL_INTERVAL_MS
+              interval: 500,
+              // MAX_WAIT_MS
+              timeout: 6_000,
+            },
+          );
+        };
+
+        clickShowCommentButton();
+
+        await waitForCommentsReady();
+      },
+      async extractPostData(container) {
         const urn = container.getAttribute("data-urn");
         if (!urn) return null;
 
         const fullCaption = this.extractPostCaption(container);
         if (!fullCaption) return null;
+
+        await this.expandPostComments(container);
+
+        const comments = this.extractPostComments(container);
 
         return {
           urn,
@@ -1492,9 +1589,37 @@ async function injectEngagekitInternals(page: Page) {
           captionPreview: this.getPostCaptionPreview(fullCaption, 10),
           createdAt: this.extractPostTime(container).toISOString(),
           author: this.extractPostAuthorInfo(container),
+          comments,
         };
       },
-      findPosts({
+      createSemaphore(maxConcurrency) {
+        let currentCount = 0;
+        const waitingResolvers: (() => void)[] = [];
+
+        return {
+          async acquire() {
+            if (currentCount < maxConcurrency) {
+              currentCount++;
+              return;
+            }
+
+            await new Promise<void>((resolve) => {
+              waitingResolvers.push(resolve);
+            });
+            currentCount++;
+          },
+          release() {
+            currentCount--;
+            if (waitingResolvers.length > 0) {
+              const resolve = waitingResolvers.shift();
+              if (resolve) {
+                resolve();
+              }
+            }
+          },
+        };
+      },
+      async findPosts({
         skipPostUrns,
         limit,
       }: {
@@ -1505,25 +1630,31 @@ async function injectEngagekitInternals(page: Page) {
 
         const validPosts: Post[] = [];
 
+        const semaphore = this.createSemaphore(20);
+        // limit to 20 concurrent extractions at once so we dont overload the browser
+
         for (const container of posts) {
-          console.info("MA BOI IS HERE", { skipPostUrns });
-          const urn = container.getAttribute("data-urn");
-          if (!urn?.includes("activity")) continue;
-          if (skipPostUrns.has(urn)) continue;
+          await semaphore.acquire();
+          void (async () => {
+            const urn = container.getAttribute("data-urn");
+            if (!urn?.includes("activity")) return;
+            if (skipPostUrns.has(urn)) return;
 
-          const fullCaption = this.extractPostCaption(container);
-          if (fullCaption === null) {
-            continue;
-          }
+            const fullCaption = this.extractPostCaption(container);
+            if (fullCaption === null) {
+              return;
+            }
 
-          const postData = this.extractPostData(container);
-          if (postData === null) continue;
+            const postData = await this.extractPostData(container);
+            if (postData === null) return;
 
-          if (validPosts.length >= limit) {
-            return validPosts;
-          }
+            if (validPosts.length >= limit) {
+              return validPosts;
+            }
 
-          validPosts.push(postData);
+            validPosts.push(postData);
+            semaphore.release();
+          })();
         }
 
         return validPosts;
@@ -1564,7 +1695,7 @@ async function injectEngagekitInternals(page: Page) {
      * Prioritizes clicking the "Show more" button (faster), falls back to scrolling.
      */
 
-    /** Delay after clicking button before checking for new posts */
+    /* Delay after clicking button before checking for new posts */
     const BUTTON_WAIT_MS = 1500;
 
     /** Delay after scrolling before checking for new posts */
@@ -1674,6 +1805,89 @@ async function injectEngagekitInternals(page: Page) {
       return null;
     }
   });
+
+  function extractPostComment(commentContainer: HTMLElement): PostComment {
+    const result: PostComment = {
+      authorName: null,
+      authorHeadline: null,
+      authorProfileUrl: null,
+      authorPhotoUrl: null,
+      content: null,
+      urn: null,
+      isReply: false,
+    };
+
+    try {
+      // Get URN from data-id attribute
+      result.urn = commentContainer.getAttribute("data-id");
+
+      // Check if this is a reply (nested comment)
+      // Replies are typically in a nested structure or have specific classes
+      const parentArticle = commentContainer.parentElement?.closest(
+        'article[data-id^="urn:li:comment:"]',
+      );
+      result.isReply = !!parentArticle;
+
+      // Find author image using alt text pattern (same as post author extraction)
+      const authorImg =
+        commentContainer.querySelector<HTMLImageElement>('img[alt^="View "]');
+
+      if (authorImg) {
+        result.authorPhotoUrl = authorImg.getAttribute("src");
+
+        // Extract name from alt text
+        const alt = authorImg.getAttribute("alt");
+        if (alt) {
+          const match = /^View\s+(.+?)[''\u2019\u0027]s?\s+/i.exec(alt);
+          if (match?.[1]) {
+            result.authorName = match[1].trim();
+          }
+        }
+
+        // Get profile URL from parent anchor
+        const parentAnchor = authorImg.closest("a");
+        if (parentAnchor) {
+          const href = parentAnchor.getAttribute("href");
+          if (href) {
+            result.authorProfileUrl = href.split("?")[0] ?? null;
+          }
+        }
+      }
+
+      // Extract comment text content
+      // Comments typically have their text in a span with dir="ltr"
+      const commentTextSpan =
+        commentContainer.querySelector<HTMLElement>('span[dir="ltr"]');
+      if (commentTextSpan) {
+        result.content = commentTextSpan.textContent?.trim() ?? null;
+      }
+
+      // Try to find headline - usually near the author name
+      // Look for spans that aren't the name and aren't the comment text
+      if (authorImg) {
+        const authorSection = authorImg.closest("a")?.parentElement;
+        if (authorSection) {
+          const spans = authorSection.querySelectorAll("span");
+          for (const span of spans) {
+            const text = span.textContent?.trim();
+            if (
+              text &&
+              text.length > 5 &&
+              text !== result.authorName &&
+              !text.startsWith("View ")
+            ) {
+              result.authorHeadline = text;
+              break;
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error("EngageKit: Failed to extract comment info", error);
+    }
+
+    return result;
+  }
 }
 
 // this query inserts comments only on posts that have not been commented on before
