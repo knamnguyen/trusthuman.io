@@ -37,8 +37,21 @@ const url = new URL(VITE_APP_URL);
 
 console.log(`Starting server at port ${process.env.PORT ?? url.port}...`);
 
+let tls;
+
+// eslint-disable-next-line turbo/no-undeclared-env-vars
+if (process.env.TLS_KEY !== undefined && process.env.TLS_CERT !== undefined) {
+  tls = {
+    // eslint-disable-next-line turbo/no-undeclared-env-vars
+    key: Bun.file(process.env.TLS_KEY),
+    // eslint-disable-next-line turbo/no-undeclared-env-vars
+    cert: Bun.file(process.env.TLS_CERT),
+  };
+}
+
 Bun.serve({
   port: url.port,
+  tls,
   routes: {
     "/api/trpc/*": async (req) => {
       if (req.method === "OPTIONS") {
@@ -84,4 +97,4 @@ Bun.serve({
   },
 });
 
-console.log(`server running at ${VITE_APP_URL}/api/trpc`);
+console.log(`trpc server running at ${VITE_APP_URL}/api/trpc`);
