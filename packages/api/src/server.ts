@@ -55,6 +55,7 @@ if (process.env.TLS_KEY !== undefined && process.env.TLS_CERT !== undefined) {
 Bun.serve({
   port: url.port,
   tls,
+  development: process.env.NODE_ENV !== "production",
   routes: {
     "/api/trpc/*": async (req) => {
       if (req.method === "OPTIONS") {
