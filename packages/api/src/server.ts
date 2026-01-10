@@ -94,7 +94,7 @@ Bun.serve({
       return res;
     },
     "/api/webhooks/*": (req) => webhookRoutes.fetch(req),
-    "*": new Response("NOT FOUND", { status: 404 }),
+    "/*": new Response("NOT FOUND", { status: 404 }),
   },
 });
 
