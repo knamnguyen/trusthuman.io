@@ -108,6 +108,7 @@ declare const window: Window & {
     extractPostTime(container: HTMLElement): Date;
     extractPostAuthorInfo(container: HTMLElement): AuthorInfo;
     getPostCaptionPreview(fullCaption: string, maxLines: number): string;
+    doesAnyPostContainerExist(): boolean;
     loadMore(): Promise<boolean>;
     findPosts(opts: { skipPostUrns: Set<string>; limit: number }): Post[];
   };
@@ -892,8 +893,39 @@ export class BrowserSession {
     }, comment);
   }
 
+  private async waitForFeedPageToLoad() {
+    const feedPageTimeout = Date.now() + 2 * 60 * 1000;
+
+    // wait for url to change to feed page
+    while (Date.now() < feedPageTimeout) {
+      const url = this.pages.linkedin.url();
+      if (url.includes("linkedin.com/feed")) {
+        break;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+
+    const anyPostsLoadedTimeout = Date.now() + 2 * 60 * 1000;
+
+    // wait for any posts to be loaded
+    while (Date.now() < anyPostsLoadedTimeout) {
+      const anyPostExists = await this.pages.linkedin.evaluate(() =>
+        window.engagekitInternals.doesAnyPostContainerExist(),
+      );
+
+      if (anyPostExists) {
+        break;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+  }
+
   private async *getFeedPostsBatch({ batchSize }: { batchSize: number }) {
     await this.ready;
+
+    await this.waitForFeedPageToLoad();
 
     const addedUrns = new Set<string>();
 
@@ -907,8 +939,6 @@ export class BrowserSession {
         [...addedUrns],
         batchSize,
       );
-
-      console.info(`Fetched ${posts.length} posts from feed`);
 
       yield posts;
 
@@ -926,7 +956,7 @@ export class BrowserSession {
     }
   }
 
-  public async loadFeedAndSavePosts(totalPosts: number) {
+  public async loadFeedAndSavePosts(totalPosts: number, signal?: AbortSignal) {
     let totalCreated = 0;
     // we do a max iteration of 20 in case the feed is not loading more posts
     // or in case some shit happens in the fe that hangs stuff
@@ -934,8 +964,14 @@ export class BrowserSession {
 
     let maxIterations = 10;
 
+    const combinedSignals = [this.controller.signal];
+
+    if (signal !== undefined) {
+      combinedSignals.push(signal);
+    }
+
     for await (const postBatch of abortableAsyncIterator(
-      this.controller.signal,
+      AbortSignal.any(combinedSignals),
       this.getFeedPostsBatch({
         batchSize: 20,
       }),
@@ -1515,6 +1551,11 @@ async function injectEngagekitInternals(page: Page) {
         await new Promise((r) => setTimeout(r, SCROLL_WAIT_MS));
 
         return countPosts() > initialCount;
+      },
+      doesAnyPostContainerExist() {
+        return (
+          document.querySelectorAll('div[data-urn*="activity"]').length > 0
+        );
       },
     };
 

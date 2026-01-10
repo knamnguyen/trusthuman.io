@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { ulid } from "ulidx";
 
+import { PrismaClient } from "@sassy/db";
 import { createTestPrismaClient } from "@sassy/db/client/test";
 
 import {
@@ -14,8 +15,10 @@ describe.skipIf(process.env.TEST_BROWSER_SESSION === undefined)(
   "LinkedInBrowserSession",
   () => {
     let session!: BrowserSession;
+    let prisma!: PrismaClient;
+    let accountId!: string;
     beforeAll(async () => {
-      const prisma = await createTestPrismaClient();
+      prisma = await createTestPrismaClient();
       const userId = ulid();
       await prisma.user.create({
         data: {
@@ -23,7 +26,7 @@ describe.skipIf(process.env.TEST_BROWSER_SESSION === undefined)(
           primaryEmailAddress: "test@email.com",
         },
       });
-      const accountId = ulid();
+      accountId = ulid();
       await prisma.linkedInAccount.create({
         data: {
           id: accountId,
@@ -39,9 +42,7 @@ describe.skipIf(process.env.TEST_BROWSER_SESSION === undefined)(
         location: "US",
         browserProfileId: "mock-profile-id",
       });
-      console.info("this shit here");
       await session.ready;
-      console.info("this shit here ready");
     });
 
     afterAll(async () => {
@@ -115,7 +116,16 @@ describe.skipIf(process.env.TEST_BROWSER_SESSION === undefined)(
       async () => {
         const added = await session.loadFeedAndSavePosts(5);
 
-        console.info(`Added ${added} posts`);
+        expect(added).toBe(5);
+
+        const results = await prisma.comment.findMany({
+          where: {
+            accountId,
+          },
+        });
+
+        expect(results.length).toBe(5);
+        console.info(results);
       },
       Infinity,
     );
