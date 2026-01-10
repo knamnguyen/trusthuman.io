@@ -437,6 +437,11 @@ export const browserJobs = new BrowserJobWorker<WorkerContext>({
       }),
     );
 
+    await safe(async function runLoadFeedPostsAndSave() {
+      const session = await getSession();
+      await session.loadFeedAndSavePosts(100);
+    });
+
     if (internalCtx.session !== null) {
       await internalCtx.session.destroy();
     }
