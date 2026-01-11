@@ -863,16 +863,21 @@ export async function insertCommentOnNonPreviouslyCommentedPosts(
   return inserted;
 }
 
-let bundledEngagekitUtilities: string | null = null;
+let bundledEngagekitUtilitiesPromise: Promise<string> | null = null;
 
 export async function injectEngagekitUtilities(page: Page) {
-  // somehow cache this bundling process
-  if (bundledEngagekitUtilities === null) {
+  bundledEngagekitUtilitiesPromise ??= (async () => {
     const result = await Bun.build({
       entrypoints: [path.join(__dirname, "utilities.ts")],
       minify: true,
       target: "browser",
     });
+
+    if (result.success === false) {
+      throw new Error(
+        `Failed to bundle engagekit utilities: \n${result.logs.map((log) => log.message).join("\n")}`,
+      );
+    }
 
     const file = result.outputs[0];
 
@@ -881,8 +886,10 @@ export async function injectEngagekitUtilities(page: Page) {
       "Expected exactly one output file",
     );
 
-    bundledEngagekitUtilities = await file.text();
-  }
+    return await file.text();
+  })();
+
+  const bundledUtilities = await bundledEngagekitUtilitiesPromise;
 
   await page.evaluateOnNewDocument((utilities) => {
     // eval inside a curly bracket to avoid polluting global scope
@@ -890,5 +897,5 @@ export async function injectEngagekitUtilities(page: Page) {
     {
       eval(utilities);
     }
-  }, bundledEngagekitUtilities);
+  }, bundledUtilities);
 }
