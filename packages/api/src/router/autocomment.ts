@@ -11,14 +11,14 @@ import {
 import type {
   BrowserSessionRegistry,
   ProxyLocation,
-} from "../utils/browser-session";
+} from "../utils/browser-session/browser-session";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 // import {
 //   userCreateSchema,
 //   userUpdateSchema,
 // } from "@sassy/db/schema-validators";
 
-import { BrowserSession } from "../utils/browser-session";
+import { BrowserSession } from "../utils/browser-session/browser-session";
 import { chunkify, transformValuesIfMatch } from "../utils/commons";
 import { paginate } from "../utils/pagination";
 import { hasPermissionToAccessAccount } from "./account";

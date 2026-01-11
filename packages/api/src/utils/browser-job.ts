@@ -8,13 +8,16 @@ import {
   DEFAULT_STYLE_GUIDES,
 } from "@sassy/feature-flags";
 
-import type { BrowserSessionRegistry, ProxyLocation } from "./browser-session";
+import type {
+  BrowserSessionRegistry,
+  ProxyLocation,
+} from "./browser-session/browser-session";
 import type { JsonValue } from "./commons";
 import {
   browserRegistry,
   BrowserSession,
   hyperbrowser,
-} from "./browser-session";
+} from "./browser-session/browser-session";
 import { safe, sleep, transformValuesIfMatch } from "./commons";
 import { Semaphore } from "./mutex";
 

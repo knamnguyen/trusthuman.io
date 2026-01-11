@@ -22,7 +22,7 @@ import {
   assumedAccountJwt,
   BrowserSession,
   hyperbrowser,
-} from "../utils/browser-session";
+} from "../utils/browser-session/browser-session";
 import { paginate } from "../utils/pagination";
 
 /**

@@ -1,12 +1,13 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { ulid } from "ulidx";
 
-import { PrismaClient } from "@sassy/db";
+import type { PrismaClient } from "@sassy/db";
 import { createTestPrismaClient } from "@sassy/db/client/test";
 
 import {
   browserRegistry,
   BrowserSession,
+  injectEngagekitUtilities,
   insertCommentOnNonPreviouslyCommentedPosts,
 } from "./browser-session";
 
@@ -49,6 +50,18 @@ describe.skipIf(process.env.TEST_BROWSER_SESSION === undefined)(
       await session.destroy();
     });
 
+    test(
+      "injectEngagekitUtilities",
+      async () => {
+        await injectEngagekitUtilities(session.pages.linkedin);
+        const defined = await session.pages.linkedin.evaluate(
+          () => typeof window.engagekitInternals !== "undefined",
+        );
+        expect(defined).toBe(true);
+      },
+      Infinity,
+    );
+
     // flow
     // 1. login with linkedin page
     // 2. wait for home page to load
@@ -66,7 +79,6 @@ describe.skipIf(process.env.TEST_BROWSER_SESSION === undefined)(
     test.skipIf(process.env.TEST_AUTOCOMMENT === undefined)(
       "startAutoCommenting",
       async () => {
-        await session.bringToFront("linkedin");
         const signedin = await session.waitForSigninSuccess(
           new AbortController().signal,
         );
