@@ -33,8 +33,10 @@ interface PostComment {
   isReply: boolean;
 }
 
+// technically shouldnt happen but this is just an assertion so we dont run these things in non-browser envs
 if (typeof window === "undefined") {
   console.error("EngageKit: window is undefined, cannot inject internals");
+  throw new Error("window is undefined");
 }
 
 async function retry<TOutput>(
