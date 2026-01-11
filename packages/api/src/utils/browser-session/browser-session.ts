@@ -882,6 +882,7 @@ export async function injectEngagekitUtilities(page: Page) {
 
   await page.evaluateOnNewDocument((utilities) => {
     // eval inside a curly bracket to avoid polluting global scope
+    // and referencing variables from outer scope
     {
       eval(utilities);
     }

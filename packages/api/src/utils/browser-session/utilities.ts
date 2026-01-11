@@ -33,613 +33,515 @@ interface PostComment {
   isReply: boolean;
 }
 
-interface Semaphore {
-  acquire(): Promise<void>;
-  release(): void;
-}
-
-interface EngagekitInternals {
-  retry<TOutput>(
-    fn: () => TOutput,
-    opts?: {
-      timeout?: number;
-      interval?: number;
-    },
-  ): Promise<
-    | {
-        ok: true;
-        data: TOutput;
-      }
-    | {
-        ok: false;
-        error: Error;
-      }
-  >;
-  extractPostCaption: (postContainer: Element) => string | null;
-  extractTextWithLineBreaks: (element: HTMLElement) => string;
-  extractPostData(container: HTMLElement): Promise<Post | null>;
-  extractPostTime(container: HTMLElement): Date;
-  extractPostAuthorInfo(container: HTMLElement): AuthorInfo;
-  getPostCaptionPreview(fullCaption: string, maxLines: number): string;
-  doesAnyPostContainerExist(): boolean;
-  createSemaphore(maxConcurrency: number): Semaphore;
-  extractPostComments(container: HTMLElement): PostComment[];
-  expandPostComments(container: HTMLElement): Promise<void>;
-  loadMore(): Promise<boolean>;
-  findPosts(opts: {
-    skipPostUrns: Set<string>;
-    limit: number;
-  }): Promise<Post[]>;
-}
-
-declare global {
-  interface Window {
-    engagekitInternals: EngagekitInternals;
-  }
-}
-
 if (typeof window === "undefined") {
   console.error("EngageKit: window is undefined, cannot inject internals");
 }
 
-window.engagekitInternals = {
-  retry: async <TOutput>(
-    fn: () => TOutput,
-    opts?: {
-      timeout?: number;
-      interval?: number;
-      retryOn?: (output: TOutput) => boolean;
-    },
-  ) => {
-    const { timeout = 10000, interval = 200 } = opts ?? {};
-    const start = Date.now();
-    while (Date.now() - start < timeout) {
-      try {
-        const result = await Promise.resolve(fn());
-
-        return {
-          ok: true,
-          data: result,
-        };
-      } catch {
-        await new Promise((resolve) => setTimeout(resolve, interval));
-        // ignore
-      }
-    }
-
-    return {
-      ok: false,
-      error: new Error("timeout"),
-    };
+async function retry<TOutput>(
+  fn: () => TOutput,
+  opts?: {
+    timeout?: number;
+    interval?: number;
+    retryOn?: (output: TOutput) => boolean;
   },
-  extractTextWithLineBreaks(element) {
-    const lines: string[] = [];
-    let currentLine = "";
-
-    function processNode(node: Node) {
-      if (node.nodeType === Node.TEXT_NODE) {
-        // Add text content, normalizing internal whitespace but not trimming
-        const text = node.textContent?.replace(/[ \t]+/g, " ") ?? "";
-        currentLine += text;
-      } else if (node.nodeType === Node.ELEMENT_NODE) {
-        const el = node as HTMLElement;
-        const tagName = el.tagName.toLowerCase();
-
-        // Handle line break elements
-        if (tagName === "br") {
-          lines.push(currentLine.trim());
-          currentLine = "";
-          return;
-        }
-
-        // Block elements create natural breaks
-        const isBlock = [
-          "div",
-          "p",
-          "li",
-          "h1",
-          "h2",
-          "h3",
-          "h4",
-          "h5",
-          "h6",
-        ].includes(tagName);
-
-        if (isBlock && currentLine.trim()) {
-          lines.push(currentLine.trim());
-          currentLine = "";
-        }
-
-        // Process children
-        for (const child of el.childNodes) {
-          processNode(child);
-        }
-
-        if (isBlock && currentLine.trim()) {
-          lines.push(currentLine.trim());
-          currentLine = "";
-        }
-      }
-    }
-
-    processNode(element);
-
-    // Don't forget the last line
-    if (currentLine.trim()) {
-      lines.push(currentLine.trim());
-    }
-
-    // Join with newlines and collapse multiple empty lines
-    return lines
-      .join("\n")
-      .replace(/\n{3,}/g, "\n\n")
-      .trim();
-  },
-  extractPostCaption(postContainer) {
+) {
+  const { timeout = 10000, interval = 200 } = opts ?? {};
+  const start = Date.now();
+  while (Date.now() - start < timeout) {
     try {
-      // XPath: div with dir="ltr" that contains span > span[@dir="ltr"]
-      const result = document.evaluate(
-        './/div[@dir="ltr" and .//span//span[@dir="ltr"]]',
-        postContainer,
-        null,
-        XPathResult.FIRST_ORDERED_NODE_TYPE,
-        null,
-      );
+      const result = await Promise.resolve(fn());
 
-      const captionDiv = result.singleNodeValue as HTMLElement | null;
-      if (!captionDiv) {
-        return "";
+      return {
+        ok: true as const,
+        data: result,
+      };
+    } catch {
+      await new Promise((resolve) => setTimeout(resolve, interval));
+      // ignore
+    }
+  }
+
+  return {
+    ok: false as const,
+    error: new Error("timeout"),
+  };
+}
+
+function extractTextWithLineBreaks(element: HTMLElement) {
+  const lines: string[] = [];
+  let currentLine = "";
+
+  function processNode(node: Node) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      // Add text content, normalizing internal whitespace but not trimming
+      const text = node.textContent?.replace(/[ \t]+/g, " ") ?? "";
+      currentLine += text;
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      const el = node as HTMLElement;
+      const tagName = el.tagName.toLowerCase();
+
+      // Handle line break elements
+      if (tagName === "br") {
+        lines.push(currentLine.trim());
+        currentLine = "";
+        return;
       }
 
-      // Extract text preserving line breaks from <br> tags and block elements
-      return this.extractTextWithLineBreaks(captionDiv);
-    } catch (error) {
-      console.error("EngageKit: failed to extract post caption", error);
-      return "";
-    }
-  },
-  getPostCaptionPreview(caption, wordCount) {
-    const words = caption.trim().split(/\s+/);
-    if (words.length <= wordCount) {
-      return caption;
-    }
-    return words.slice(0, wordCount).join(" ") + "...";
-  },
-  extractPostTime(postContainer) {
-    function extractLabeledTime() {
-      try {
-        // Find the author image
-        const authorImg =
-          postContainer.querySelector<HTMLImageElement>('img[alt^="View "]');
+      // Block elements create natural breaks
+      const isBlock = [
+        "div",
+        "p",
+        "li",
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+      ].includes(tagName);
 
-        if (!authorImg) {
-          return null;
-        }
-
-        // Navigate to the author anchor
-        const authorAnchor = authorImg.closest("a");
-        if (!authorAnchor) {
-          return null;
-        }
-
-        // The time span is typically a sibling of the author anchor's parent container
-        // Navigate up to find the container that has both the anchor and the time span
-        const authorMetaContainer = authorAnchor.parentElement;
-        if (!authorMetaContainer) {
-          return null;
-        }
-
-        // Look for spans that are siblings of the author anchor
-        // The time span typically contains text like "1h •", "2d •", "1w •"
-        const siblingSpans =
-          authorMetaContainer.querySelectorAll<HTMLElement>(":scope > span");
-
-        for (const span of siblingSpans) {
-          // Skip if this span is inside the anchor (it's not a sibling then)
-          if (authorAnchor.contains(span)) continue;
-
-          // Check for time patterns in aria-hidden content
-          const ariaHiddenSpan = span.querySelector<HTMLElement>(
-            'span[aria-hidden="true"]',
-          );
-          const visuallyHiddenSpan = span.querySelector<HTMLElement>(
-            "span.visually-hidden",
-          );
-
-          // Try to get display time from aria-hidden span
-          if (ariaHiddenSpan) {
-            const text = ariaHiddenSpan.textContent?.trim() ?? "";
-            // Time patterns: "1h •", "2d •", "1w •", "3mo •"
-            const timeMatch = /^(\d+[hdwmoy]+)\s*[•·]/i.exec(text);
-            if (timeMatch?.[1]) {
-              return {
-                type: "display",
-                value: timeMatch[1],
-              } as const;
-            }
-          }
-
-          // Try to get full time from visually-hidden span
-          // Pattern: "1 hour ago", "2 days ago", etc.
-          if (visuallyHiddenSpan) {
-            const text = visuallyHiddenSpan.textContent?.trim() ?? "";
-            const fullTimeMatch =
-              /^(\d+\s+(?:second|minute|hour|day|week|month|year)s?\s+ago)/i.exec(
-                text,
-              );
-            if (fullTimeMatch?.[1]) {
-              return {
-                type: "full",
-                value: fullTimeMatch[1],
-              } as const;
-            }
-          }
-        }
-
-        // Fallback: Search more broadly if sibling approach didn't work
-        // Look for any span in the post that has time-like content
-        // This is a broader search but still uses the visually-hidden pattern
-        const allVisuallyHiddenSpans =
-          postContainer.querySelectorAll<HTMLElement>(
-            'span[class*="visually-hidden"]',
-          );
-
-        for (const span of allVisuallyHiddenSpans) {
-          const text = span.textContent?.trim() ?? "";
-          // Match patterns like "1 hour ago", "2 days ago" at the start
-          const match =
-            /^(\d+\s+(?:second|minute|hour|day|week|month|year)s?\s+ago)/i.exec(
-              text,
-            );
-          if (match?.[1]) {
-            return {
-              type: "full",
-              value: match[1],
-            } as const;
-          }
-        }
-      } catch (error) {
-        console.error("EngageKit: Failed to extract post time", error);
+      if (isBlock && currentLine.trim()) {
+        lines.push(currentLine.trim());
+        currentLine = "";
       }
 
+      // Process children
+      for (const child of el.childNodes) {
+        processNode(child);
+      }
+
+      if (isBlock && currentLine.trim()) {
+        lines.push(currentLine.trim());
+        currentLine = "";
+      }
+    }
+  }
+
+  processNode(element);
+
+  // Don't forget the last line
+  if (currentLine.trim()) {
+    lines.push(currentLine.trim());
+  }
+
+  // Join with newlines and collapse multiple empty lines
+  return lines
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+function extractPostCaption(postContainer: HTMLElement) {
+  try {
+    // XPath: div with dir="ltr" that contains span > span[@dir="ltr"]
+    const result = document.evaluate(
+      './/div[@dir="ltr" and .//span//span[@dir="ltr"]]',
+      postContainer,
+      null,
+      XPathResult.FIRST_ORDERED_NODE_TYPE,
+      null,
+    );
+
+    const captionDiv = result.singleNodeValue as HTMLElement | null;
+    if (!captionDiv) {
       return null;
     }
 
-    function parsePostTime(input: {
-      type: "full" | "display";
-      value: string;
-    }): Date {
-      const now = new Date();
+    // Extract text preserving line breaks from <br> tags and block elements
+    return extractTextWithLineBreaks(captionDiv);
+  } catch (error) {
+    console.error("EngageKit: failed to extract post caption", error);
+    return null;
+  }
+}
 
-      // Helper to subtract time from the current date
-      function subtractTime(
-        amount: number,
-        unit: "second" | "minute" | "hour" | "day" | "week",
-      ) {
-        const d = new Date(now);
-        switch (unit) {
-          case "second":
-            d.setSeconds(d.getSeconds() - amount);
-            break;
-          case "minute":
-            d.setMinutes(d.getMinutes() - amount);
-            break;
-          case "hour":
-            d.setHours(d.getHours() - amount);
-            break;
-          case "day":
-            d.setDate(d.getDate() - amount);
-            break;
-          case "week":
-            d.setDate(d.getDate() - amount * 7);
-            break;
-        }
-        return d;
-      }
-      switch (input.type) {
-        case "display": {
-          const match = /^(\d+)([smhdw])$/i.exec(input.value);
-          if (!match) return now; // fallback if no match
+function getPostCaptionPreview(caption: string, wordCount: number) {
+  const words = caption.trim().split(/\s+/);
+  if (words.length <= wordCount) {
+    return caption;
+  }
+  return words.slice(0, wordCount).join(" ") + "...";
+}
 
-          const [, amountStr, unitChar] = match;
-          if (amountStr === undefined || unitChar === undefined) {
-            return now;
-          }
-
-          const amount = parseInt(amountStr, 10);
-          switch (unitChar.toLowerCase()) {
-            case "s":
-              return subtractTime(amount, "second");
-            case "m":
-              return subtractTime(amount, "minute");
-            case "h":
-              return subtractTime(amount, "hour");
-            case "d":
-              return subtractTime(amount, "day");
-            case "w":
-              return subtractTime(amount, "week");
-            default:
-              return now;
-          }
-        }
-        case "full": {
-          const match =
-            /(\d+)\s*(second|minute|hour|day|week|month|year)s?\s+ago/i.exec(
-              input.value,
-            );
-          if (!match) return now;
-
-          const [, amountStr, unit] = match;
-          if (amountStr === undefined || unit === undefined) {
-            return now;
-          }
-          const amount = parseInt(amountStr, 10);
-          switch (unit.toLowerCase()) {
-            case "second":
-              return subtractTime(amount, "second");
-            case "minute":
-              return subtractTime(amount, "minute");
-            case "hour":
-              return subtractTime(amount, "hour");
-            case "day":
-              return subtractTime(amount, "day");
-            case "week":
-              return subtractTime(amount, "week");
-            case "month": {
-              const d = new Date(now);
-              d.setMonth(d.getMonth() - amount);
-              return d;
-            }
-            case "year": {
-              const d = new Date(now);
-              d.setFullYear(d.getFullYear() - amount);
-              return d;
-            }
-            default:
-              return now;
-          }
-        }
-        default:
-          return now;
-      }
-    }
-
-    const labeledTime = extractLabeledTime();
-
-    if (labeledTime === null) {
-      return new Date();
-    }
-
-    return parsePostTime(labeledTime);
-  },
-  extractPostAuthorInfo(postContainer) {
-    const result: AuthorInfo = {
-      urn: null,
-      name: null,
-      avatarUrl: null,
-      headline: null,
-      profileUrl: null,
-    };
-
+function extractPostTime(postContainer: HTMLElement) {
+  function extractLabeledTime() {
     try {
-      // Step 1: Find author image by alt text pattern
-      // LinkedIn author images have alt="View {Name}'s profile"
+      // Find the author image
       const authorImg =
         postContainer.querySelector<HTMLImageElement>('img[alt^="View "]');
 
       if (!authorImg) {
-        return result;
+        return null;
       }
 
-      // Step 2: Extract photo URL
-      result.avatarUrl = authorImg.getAttribute("src");
+      // Navigate to the author anchor
+      const authorAnchor = authorImg.closest("a");
+      if (!authorAnchor) {
+        return null;
+      }
 
-      // Step 3: Extract name from alt text
-      const alt = authorImg.getAttribute("alt");
+      // The time span is typically a sibling of the author anchor's parent container
+      // Navigate up to find the container that has both the anchor and the time span
+      const authorMetaContainer = authorAnchor.parentElement;
+      if (!authorMetaContainer) {
+        return null;
+      }
 
-      if (alt !== null) {
-        const possessiveMatch = /^View\s+(.+?)['‘’]s?\s+/i.exec(alt);
-        if (possessiveMatch?.[1]) {
-          result.name = possessiveMatch[1].trim();
+      // Look for spans that are siblings of the author anchor
+      // The time span typically contains text like "1h •", "2d •", "1w •"
+      const siblingSpans =
+        authorMetaContainer.querySelectorAll<HTMLElement>(":scope > span");
+
+      for (const span of siblingSpans) {
+        // Skip if this span is inside the anchor (it's not a sibling then)
+        if (authorAnchor.contains(span)) continue;
+
+        // Check for time patterns in aria-hidden content
+        const ariaHiddenSpan = span.querySelector<HTMLElement>(
+          'span[aria-hidden="true"]',
+        );
+        const visuallyHiddenSpan = span.querySelector<HTMLElement>(
+          "span.visually-hidden",
+        );
+
+        // Try to get display time from aria-hidden span
+        if (ariaHiddenSpan) {
+          const text = ariaHiddenSpan.textContent?.trim() ?? "";
+          // Time patterns: "1h •", "2d •", "1w •", "3mo •"
+          const timeMatch = /^(\d+[hdwmoy]+)\s*[•·]/i.exec(text);
+          if (timeMatch?.[1]) {
+            return {
+              type: "display",
+              value: timeMatch[1],
+            } as const;
+          }
+        }
+
+        // Try to get full time from visually-hidden span
+        // Pattern: "1 hour ago", "2 days ago", etc.
+        if (visuallyHiddenSpan) {
+          const text = visuallyHiddenSpan.textContent?.trim() ?? "";
+          const fullTimeMatch =
+            /^(\d+\s+(?:second|minute|hour|day|week|month|year)s?\s+ago)/i.exec(
+              text,
+            );
+          if (fullTimeMatch?.[1]) {
+            return {
+              type: "full",
+              value: fullTimeMatch[1],
+            } as const;
+          }
         }
       }
 
-      // Step 4: Navigate up to find the anchor element for profile URL
-      const photoAnchor = authorImg.closest("a");
-      if (photoAnchor) {
-        const href = photoAnchor.getAttribute("href");
-        if (href !== null) {
-          result.profileUrl = href.split("?")[0] ?? null;
-        }
+      // Fallback: Search more broadly if sibling approach didn't work
+      // Look for any span in the post that has time-like content
+      // This is a broader search but still uses the visually-hidden pattern
+      const allVisuallyHiddenSpans =
+        postContainer.querySelectorAll<HTMLElement>(
+          'span[class*="visually-hidden"]',
+        );
 
-        // Step 5: Extract headline using sibling navigation (like extract-profile-info.ts)
-        result.headline = extractHeadlineFromAuthorSection(photoAnchor);
+      for (const span of allVisuallyHiddenSpans) {
+        const text = span.textContent?.trim() ?? "";
+        // Match patterns like "1 hour ago", "2 days ago" at the start
+        const match =
+          /^(\d+\s+(?:second|minute|hour|day|week|month|year)s?\s+ago)/i.exec(
+            text,
+          );
+        if (match?.[1]) {
+          return {
+            type: "full",
+            value: match[1],
+          } as const;
+        }
       }
     } catch (error) {
-      console.error(
-        "EngageKit: Failed to extract author info from post",
-        error,
-      );
+      console.error("EngageKit: Failed to extract post time", error);
     }
 
-    return result;
-  },
-  extractPostComments(postContainer) {
-    const articles = postContainer.querySelectorAll<HTMLElement>(
-      'article[data-id^="urn:li:comment:"]',
+    return null;
+  }
+
+  function parsePostTime(input: {
+    type: "full" | "display";
+    value: string;
+  }): Date {
+    const now = new Date();
+
+    // Helper to subtract time from the current date
+    function subtractTime(
+      amount: number,
+      unit: "second" | "minute" | "hour" | "day" | "week",
+    ) {
+      const d = new Date(now);
+      switch (unit) {
+        case "second":
+          d.setSeconds(d.getSeconds() - amount);
+          break;
+        case "minute":
+          d.setMinutes(d.getMinutes() - amount);
+          break;
+        case "hour":
+          d.setHours(d.getHours() - amount);
+          break;
+        case "day":
+          d.setDate(d.getDate() - amount);
+          break;
+        case "week":
+          d.setDate(d.getDate() - amount * 7);
+          break;
+      }
+      return d;
+    }
+    switch (input.type) {
+      case "display": {
+        const match = /^(\d+)([smhdw])$/i.exec(input.value);
+        if (!match) return now; // fallback if no match
+
+        const [, amountStr, unitChar] = match;
+        if (amountStr === undefined || unitChar === undefined) {
+          return now;
+        }
+
+        const amount = parseInt(amountStr, 10);
+        switch (unitChar.toLowerCase()) {
+          case "s":
+            return subtractTime(amount, "second");
+          case "m":
+            return subtractTime(amount, "minute");
+          case "h":
+            return subtractTime(amount, "hour");
+          case "d":
+            return subtractTime(amount, "day");
+          case "w":
+            return subtractTime(amount, "week");
+          default:
+            return now;
+        }
+      }
+      case "full": {
+        const match =
+          /(\d+)\s*(second|minute|hour|day|week|month|year)s?\s+ago/i.exec(
+            input.value,
+          );
+        if (!match) return now;
+
+        const [, amountStr, unit] = match;
+        if (amountStr === undefined || unit === undefined) {
+          return now;
+        }
+        const amount = parseInt(amountStr, 10);
+        switch (unit.toLowerCase()) {
+          case "second":
+            return subtractTime(amount, "second");
+          case "minute":
+            return subtractTime(amount, "minute");
+          case "hour":
+            return subtractTime(amount, "hour");
+          case "day":
+            return subtractTime(amount, "day");
+          case "week":
+            return subtractTime(amount, "week");
+          case "month": {
+            const d = new Date(now);
+            d.setMonth(d.getMonth() - amount);
+            return d;
+          }
+          case "year": {
+            const d = new Date(now);
+            d.setFullYear(d.getFullYear() - amount);
+            return d;
+          }
+          default:
+            return now;
+        }
+      }
+      default:
+        return now;
+    }
+  }
+
+  const labeledTime = extractLabeledTime();
+
+  if (labeledTime === null) {
+    return new Date();
+  }
+
+  return parsePostTime(labeledTime);
+}
+
+function extractPostAuthorInfo(postContainer: HTMLElement) {
+  const result: AuthorInfo = {
+    urn: null,
+    name: null,
+    avatarUrl: null,
+    headline: null,
+    profileUrl: null,
+  };
+
+  try {
+    // Step 1: Find author image by alt text pattern
+    // LinkedIn author images have alt="View {Name}'s profile"
+    const authorImg =
+      postContainer.querySelector<HTMLImageElement>('img[alt^="View "]');
+
+    if (!authorImg) {
+      return result;
+    }
+
+    // Step 2: Extract photo URL
+    result.avatarUrl = authorImg.getAttribute("src");
+
+    // Step 3: Extract name from alt text
+    const alt = authorImg.getAttribute("alt");
+
+    if (alt !== null) {
+      const possessiveMatch = /^View\s+(.+?)['‘’]s?\s+/i.exec(alt);
+      if (possessiveMatch?.[1]) {
+        result.name = possessiveMatch[1].trim();
+      }
+    }
+
+    // Step 4: Navigate up to find the anchor element for profile URL
+    const photoAnchor = authorImg.closest("a");
+    if (photoAnchor) {
+      const href = photoAnchor.getAttribute("href");
+      if (href !== null) {
+        result.profileUrl = href.split("?")[0] ?? null;
+      }
+
+      // Step 5: Extract headline using sibling navigation (like extract-profile-info.ts)
+      result.headline = extractHeadlineFromAuthorSection(photoAnchor);
+    }
+  } catch (error) {
+    console.error("EngageKit: Failed to extract author info from post", error);
+  }
+
+  return result;
+}
+
+function extractPostComments(postContainer: HTMLElement) {
+  const articles = postContainer.querySelectorAll<HTMLElement>(
+    'article[data-id^="urn:li:comment:"]',
+  );
+
+  if (!articles.length) {
+    return [];
+  }
+
+  return Array.from(articles).map((article) => extractPostComment(article));
+}
+
+async function expandPostComments(postContainer: HTMLElement) {
+  const beforeCommentsLength = extractPostComments(postContainer).length;
+
+  const clickShowCommentButton = () => {
+    let commentButton = postContainer.querySelector<HTMLButtonElement>(
+      'button[aria-label*="comment"]',
     );
 
-    if (!articles.length) {
-      return [];
+    if (commentButton !== null) {
+      commentButton.click();
+      return true;
     }
 
-    return Array.from(articles).map((article) => extractPostComment(article));
-  },
-  async expandPostComments(postContainer) {
-    const beforeCommentsLength = this.extractPostComments(postContainer).length;
+    commentButton = postContainer.querySelector<HTMLButtonElement>(
+      'button[aria-label="Comment"]',
+    );
 
-    const clickShowCommentButton = () => {
-      let commentButton = postContainer.querySelector<HTMLButtonElement>(
-        'button[aria-label*="comment"]',
-      );
+    if (commentButton !== null) {
+      commentButton.click();
+      return true;
+    }
 
-      if (commentButton !== null) {
-        commentButton.click();
-        return true;
-      }
+    return false;
+  };
 
-      commentButton = postContainer.querySelector<HTMLButtonElement>(
-        'button[aria-label="Comment"]',
-      );
+  const waitForCommentsReady = () => {
+    return retry(
+      () => {
+        const commentsLength = extractPostComments(postContainer).length;
 
-      if (commentButton !== null) {
-        commentButton.click();
-        return true;
-      }
-
-      return false;
-    };
-
-    const waitForCommentsReady = () => {
-      return this.retry(
-        () => {
-          const commentsLength = this.extractPostComments(postContainer).length;
-
-          if (commentsLength > beforeCommentsLength) {
-            return true;
-          }
-
-          throw new Error("Comments not expanded yet, throwing for retry");
-        },
-        {
-          // POLL_INTERVAL_MS
-          interval: 500,
-          // MAX_WAIT_MS
-          timeout: 6_000,
-        },
-      );
-    };
-
-    clickShowCommentButton();
-
-    await waitForCommentsReady();
-  },
-  async extractPostData(container) {
-    const urn = container.getAttribute("data-urn");
-    if (!urn) return null;
-
-    const fullCaption = this.extractPostCaption(container);
-    if (!fullCaption) return null;
-
-    await this.expandPostComments(container);
-
-    const comments = this.extractPostComments(container);
-
-    return {
-      urn,
-      fullCaption,
-      contentHtml: container.innerHTML,
-      captionPreview: this.getPostCaptionPreview(fullCaption, 10),
-      createdAt: this.extractPostTime(container).toISOString(),
-      author: this.extractPostAuthorInfo(container),
-      comments,
-    };
-  },
-  createSemaphore(maxConcurrency) {
-    let currentCount = 0;
-    const waitingResolvers: (() => void)[] = [];
-
-    return {
-      async acquire() {
-        if (currentCount < maxConcurrency) {
-          currentCount++;
-          return;
+        if (commentsLength > beforeCommentsLength) {
+          return true;
         }
 
-        await new Promise<void>((resolve) => {
-          waitingResolvers.push(resolve);
-        });
-        currentCount++;
+        throw new Error("Comments not expanded yet, throwing for retry");
       },
-      release() {
-        currentCount--;
-        if (waitingResolvers.length > 0) {
-          const resolve = waitingResolvers.shift();
-          if (resolve) {
-            resolve();
-          }
-        }
+      {
+        // POLL_INTERVAL_MS
+        interval: 500,
+        // MAX_WAIT_MS
+        timeout: 6_000,
+      },
+    );
+  };
+
+  clickShowCommentButton();
+
+  await waitForCommentsReady();
+}
+
+async function extractPostData(container: HTMLElement) {
+  const urn = container.getAttribute("data-urn");
+  if (!urn) return null;
+
+  const fullCaption = extractPostCaption(container);
+  if (!fullCaption) return null;
+
+  await expandPostComments(container);
+
+  const comments = extractPostComments(container);
+
+  return {
+    urn,
+    fullCaption,
+    contentHtml: container.innerHTML,
+    captionPreview: getPostCaptionPreview(fullCaption, 10),
+    createdAt: extractPostTime(container).toISOString(),
+    author: extractPostAuthorInfo(container),
+    comments,
+  };
+}
+
+class Semaphore {
+  private queue: (() => void)[] = [];
+  private size = 0;
+  constructor(private readonly concurrency = 1) {}
+
+  async acquire() {
+    // if unlocked, then just lock it immediately
+    if (++this.size <= this.concurrency) {
+      return {
+        [Symbol.dispose]: () => {
+          this.release();
+        },
+      };
+    }
+
+    await new Promise<void>((resolve) => {
+      this.queue.push(resolve);
+    });
+    return {
+      [Symbol.dispose]: () => {
+        this.release();
       },
     };
-  },
-  async findPosts({
-    skipPostUrns,
-    limit,
-  }: {
-    skipPostUrns: Set<string>;
-    limit: number;
-  }) {
-    const posts = document.querySelectorAll<HTMLElement>("div[data-urn]");
+  }
 
-    const validPosts: Post[] = [];
+  get locked() {
+    return this.size >= this.concurrency;
+  }
 
-    const semaphore = this.createSemaphore(20);
-    // limit to 20 concurrent extractions at once so we dont overload the browser
+  release(): void {
+    this.size--;
 
-    for (const container of posts) {
-      await semaphore.acquire();
-      void (async () => {
-        const urn = container.getAttribute("data-urn");
-        if (!urn?.includes("activity")) return;
-        if (skipPostUrns.has(urn)) return;
-
-        const fullCaption = this.extractPostCaption(container);
-        if (fullCaption === null) {
-          return;
-        }
-
-        const postData = await this.extractPostData(container);
-        if (postData === null) return;
-
-        if (validPosts.length >= limit) {
-          return validPosts;
-        }
-
-        validPosts.push(postData);
-        semaphore.release();
-      })();
+    if (this.queue.length > 0) {
+      this.queue.shift()?.();
     }
-
-    return validPosts;
-  },
-  async loadMore() {
-    /**
-     * Load more posts into the feed.
-     * Strategy: Try clicking the "Show more" button first (faster loading),
-     * if not available, fall back to scrolling (infinite scroll).
-     *
-     * @returns true if new posts were loaded, false if no new posts appeared
-     */
-    const initialCount = countPosts();
-
-    // Priority 1: Try clicking the "Show more feed updates" button (faster)
-    if (tryClickLoadMoreButton()) {
-      await new Promise((r) => setTimeout(r, BUTTON_WAIT_MS));
-      if (countPosts() > initialCount) {
-        return true;
-      }
-    }
-
-    // Priority 2: Fall back to scrolling (infinite scroll)
-    fastScroll();
-    await new Promise((r) => setTimeout(r, SCROLL_WAIT_MS));
-
-    return countPosts() > initialCount;
-  },
-  doesAnyPostContainerExist() {
-    return document.querySelectorAll('div[data-urn*="activity"]').length > 0;
-  },
-};
+  }
+}
 
 /**
  * Utility for loading more posts in the LinkedIn feed.
@@ -835,4 +737,85 @@ function extractPostComment(commentContainer: HTMLElement): PostComment {
   }
 
   return result;
+}
+
+const engagekitInternals = {
+  retry,
+  async findPosts({
+    skipPostUrns,
+    limit,
+  }: {
+    skipPostUrns: Set<string>;
+    limit: number;
+  }) {
+    const posts = document.querySelectorAll<HTMLElement>("div[data-urn]");
+
+    const validPosts: Post[] = [];
+
+    const semaphore = new Semaphore(20);
+    // limit to 20 concurrent extractions at once so we dont overload the browser
+
+    for (const container of posts) {
+      await semaphore.acquire();
+      void (async () => {
+        const urn = container.getAttribute("data-urn");
+        if (!urn?.includes("activity")) return;
+        if (skipPostUrns.has(urn)) return;
+
+        const fullCaption = extractPostCaption(container);
+        if (fullCaption === null) {
+          return;
+        }
+
+        const postData = await extractPostData(container);
+        if (postData === null) return;
+
+        if (validPosts.length >= limit) {
+          return validPosts;
+        }
+
+        validPosts.push(postData);
+        semaphore.release();
+      })();
+    }
+
+    return validPosts;
+  },
+  async loadMore() {
+    /**
+     * Load more posts into the feed.
+     * Strategy: Try clicking the "Show more" button first (faster loading),
+     * if not available, fall back to scrolling (infinite scroll).
+     *
+     * @returns true if new posts were loaded, false if no new posts appeared
+     */
+    const initialCount = countPosts();
+
+    // Priority 1: Try clicking the "Show more feed updates" button (faster)
+    if (tryClickLoadMoreButton()) {
+      await new Promise((r) => setTimeout(r, BUTTON_WAIT_MS));
+      if (countPosts() > initialCount) {
+        return true;
+      }
+    }
+
+    // Priority 2: Fall back to scrolling (infinite scroll)
+    fastScroll();
+    await new Promise((r) => setTimeout(r, SCROLL_WAIT_MS));
+
+    return countPosts() > initialCount;
+  },
+  doesAnyPostContainerExist() {
+    return document.querySelectorAll('div[data-urn*="activity"]').length > 0;
+  },
+};
+
+window.engagekitInternals = engagekitInternals;
+
+type EngagekitInternals = typeof engagekitInternals;
+
+declare global {
+  interface Window {
+    engagekitInternals: EngagekitInternals;
+  }
 }
