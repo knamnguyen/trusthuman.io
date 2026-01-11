@@ -12,9 +12,14 @@ import type { PrismaClient } from "@sassy/db";
 import type { StartAutoCommentingParams } from "@sassy/validators";
 
 import type { Logger } from "../commons";
+import type { EngagekitInternals } from "./utilities";
 import { abortableAsyncIterator, safe } from "../commons";
 import { env } from "../env";
 import { jwtFactory } from "../jwt";
+
+declare const window: Window & {
+  engagekitInternals: EngagekitInternals;
+};
 
 export const hyperbrowser = new Hyperbrowser({
   apiKey: env.HYPERBROWSER_API_KEY,

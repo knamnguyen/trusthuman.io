@@ -33,12 +33,6 @@ interface PostComment {
   isReply: boolean;
 }
 
-// technically shouldnt happen but this is just an assertion so we dont run these things in non-browser envs
-if (typeof window === "undefined") {
-  console.error("EngageKit: window is undefined, cannot inject internals");
-  throw new Error("window is undefined");
-}
-
 async function retry<TOutput>(
   fn: () => TOutput,
   opts?: {
@@ -741,83 +735,97 @@ function extractPostComment(commentContainer: HTMLElement): PostComment {
   return result;
 }
 
+async function findPosts({
+  skipPostUrns,
+  limit,
+}: {
+  skipPostUrns: Set<string>;
+  limit: number;
+}) {
+  const posts = document.querySelectorAll<HTMLElement>("div[data-urn]");
+
+  const validPosts: Post[] = [];
+
+  const semaphore = new Semaphore(20);
+  // limit to 20 concurrent extractions at once so we dont overload the browser
+
+  for (const container of posts) {
+    await semaphore.acquire();
+    void (async () => {
+      const urn = container.getAttribute("data-urn");
+      if (!urn?.includes("activity")) return;
+      if (skipPostUrns.has(urn)) return;
+
+      const fullCaption = extractPostCaption(container);
+      if (fullCaption === null) {
+        return;
+      }
+
+      const postData = await extractPostData(container);
+      if (postData === null) return;
+
+      if (validPosts.length >= limit) {
+        return validPosts;
+      }
+
+      validPosts.push(postData);
+      semaphore.release();
+    })();
+  }
+
+  return validPosts;
+}
+
+async function loadMore() {
+  /**
+   * Load more posts into the feed.
+   * Strategy: Try clicking the "Show more" button first (faster loading),
+   * if not available, fall back to scrolling (infinite scroll).
+   *
+   * @returns true if new posts were loaded, false if no new posts appeared
+   */
+  const initialCount = countPosts();
+
+  // Priority 1: Try clicking the "Show more feed updates" button (faster)
+  if (tryClickLoadMoreButton()) {
+    await new Promise((r) => setTimeout(r, BUTTON_WAIT_MS));
+    if (countPosts() > initialCount) {
+      return true;
+    }
+  }
+
+  // Priority 2: Fall back to scrolling (infinite scroll)
+  fastScroll();
+  await new Promise((r) => setTimeout(r, SCROLL_WAIT_MS));
+
+  return countPosts() > initialCount;
+}
+
+function doesAnyPostContainerExist() {
+  return document.querySelectorAll('div[data-urn*="activity"]').length > 0;
+}
+
 const engagekitInternals = {
   retry,
-  async findPosts({
-    skipPostUrns,
-    limit,
-  }: {
-    skipPostUrns: Set<string>;
-    limit: number;
-  }) {
-    const posts = document.querySelectorAll<HTMLElement>("div[data-urn]");
-
-    const validPosts: Post[] = [];
-
-    const semaphore = new Semaphore(20);
-    // limit to 20 concurrent extractions at once so we dont overload the browser
-
-    for (const container of posts) {
-      await semaphore.acquire();
-      void (async () => {
-        const urn = container.getAttribute("data-urn");
-        if (!urn?.includes("activity")) return;
-        if (skipPostUrns.has(urn)) return;
-
-        const fullCaption = extractPostCaption(container);
-        if (fullCaption === null) {
-          return;
-        }
-
-        const postData = await extractPostData(container);
-        if (postData === null) return;
-
-        if (validPosts.length >= limit) {
-          return validPosts;
-        }
-
-        validPosts.push(postData);
-        semaphore.release();
-      })();
-    }
-
-    return validPosts;
-  },
-  async loadMore() {
-    /**
-     * Load more posts into the feed.
-     * Strategy: Try clicking the "Show more" button first (faster loading),
-     * if not available, fall back to scrolling (infinite scroll).
-     *
-     * @returns true if new posts were loaded, false if no new posts appeared
-     */
-    const initialCount = countPosts();
-
-    // Priority 1: Try clicking the "Show more feed updates" button (faster)
-    if (tryClickLoadMoreButton()) {
-      await new Promise((r) => setTimeout(r, BUTTON_WAIT_MS));
-      if (countPosts() > initialCount) {
-        return true;
-      }
-    }
-
-    // Priority 2: Fall back to scrolling (infinite scroll)
-    fastScroll();
-    await new Promise((r) => setTimeout(r, SCROLL_WAIT_MS));
-
-    return countPosts() > initialCount;
-  },
-  doesAnyPostContainerExist() {
-    return document.querySelectorAll('div[data-urn*="activity"]').length > 0;
-  },
+  findPosts,
+  loadMore,
+  doesAnyPostContainerExist,
 };
 
-window.engagekitInternals = engagekitInternals;
-
-type EngagekitInternals = typeof engagekitInternals;
-
-declare global {
-  interface Window {
-    engagekitInternals: EngagekitInternals;
+function inject() {
+  if (typeof window === "undefined") {
+    // just return if this file was somehow imported in a non-browser context
+    console.error("EngageKit: window is undefined, cannot inject internals");
+    return;
   }
+
+  window.engagekitInternals = engagekitInternals;
 }
+
+inject();
+
+export type EngagekitInternals = typeof engagekitInternals;
+
+declare const window: Window & {
+  engagekitInternals: EngagekitInternals;
+};
