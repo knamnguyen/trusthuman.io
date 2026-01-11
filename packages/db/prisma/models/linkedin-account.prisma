@@ -1,6 +1,6 @@
 model LinkedInAccount {
   id               String                 @id @default(uuid())
-  ownerId          String
+  ownerId          String?
   organizationId   String?
   status           LinkedInAccountStatus?
   createdAt        DateTime               @default(now())
@@ -27,7 +27,7 @@ model LinkedInAccount {
   name               String?
   email              String?
 
-  owner User          @relation(fields: [ownerId], references: [id])
+  owner User?        @relation(fields: [ownerId], references: [id], onDelete: SetNull)
   org   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
 
   //new settings (1:1)
