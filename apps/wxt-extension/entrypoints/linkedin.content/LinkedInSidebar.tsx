@@ -50,7 +50,7 @@ export function LinkedInSidebar({ onClose }: LinkedInSidebarProps) {
   return (
     <SheetContent
       side="right"
-      className="w-[40vw] min-w-[450px] gap-0"
+      className="z-[9999] w-[40vw] min-w-[450px] gap-0"
       portalContainer={shadowRoot}
     >
       {/* Close button attached to the left edge of sidebar */}
