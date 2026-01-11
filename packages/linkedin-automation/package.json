@@ -1,0 +1,23 @@
+{
+  "name": "@sassy/linkedin-automation",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./dom/*": "./src/dom/*.ts",
+    "./feed/*": "./src/feed/*.ts"
+  },
+  "license": "MIT",
+  "scripts": {
+    "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit --emitDeclarationOnly false"
+  },
+  "devDependencies": {
+    "@sassy/eslint-config": "workspace:*",
+    "@sassy/prettier-config": "workspace:*",
+    "@sassy/tsconfig": "workspace:*",
+    "typescript": "catalog:"
+  },
+  "prettier": "@sassy/prettier-config"
+}

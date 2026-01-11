@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { createFeedUtilities } from "@sassy/linkedin-automation/feed/create-feed-utilities";
 import { Sheet } from "@sassy/ui/sheet";
 import { ToasterSimple } from "@sassy/ui/toast";
 
@@ -11,7 +12,6 @@ import { SpacebarEngageObserver } from "./engage-button/SpacebarEngageObserver";
 import { LinkedInSidebar } from "./LinkedInSidebar";
 import { SaveProfilePortalManager } from "./save-profile";
 import { useShadowRootStore, useSidebarStore } from "./stores";
-import { NewPostsPillRemover } from "./utils/feed/NewPostsPillRemover";
 
 interface AppProps {
   shadowRoot: HTMLElement;
@@ -56,6 +56,12 @@ export default function App({ shadowRoot }: AppProps) {
     }
   }, [isOpen]);
 
+  // Watch and remove "New posts" pill from feed
+  useEffect(() => {
+    const feedUtilities = createFeedUtilities();
+    return feedUtilities.watchAndRemoveNewPostsPill();
+  }, []);
+
   return (
     <>
       {/* Open button - only visible when sidebar is closed and animation finished */}
@@ -83,9 +89,6 @@ export default function App({ shadowRoot }: AppProps) {
 
       {/* Floating post navigator UI for quick scrolling between posts */}
       <PostNavigator />
-
-      {/* Observer to remove "New posts" pill from feed */}
-      <NewPostsPillRemover />
 
       {/* Toast notifications */}
       <ToasterSimple container={shadowRoot} />
