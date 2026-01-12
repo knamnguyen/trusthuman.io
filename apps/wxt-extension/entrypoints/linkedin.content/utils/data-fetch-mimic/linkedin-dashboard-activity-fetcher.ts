@@ -1,6 +1,6 @@
 import { storage } from "wxt/storage";
 
-import { extractLinkedInProfileFromPage } from "../use-linkedin-profile";
+import { createAccountUtilities } from "@sassy/linkedin-automation/account/create-account-utilities";
 
 interface LinkedInAuth {
   cookie: string;
@@ -22,7 +22,7 @@ export interface DashboardActivityData {
  */
 export async function fetchDashboardActivity(): Promise<DashboardActivityData | null> {
   // Extract current user's profile info for logging
-  const currentProfile = extractLinkedInProfileFromPage();
+  const currentProfile = createAccountUtilities().extractCurrentProfile();
   console.log("🔍 Fetching dashboard activity for logged-in user:", {
     profileUrl: currentProfile.profileUrl,
     profileSlug: currentProfile.profileSlug,

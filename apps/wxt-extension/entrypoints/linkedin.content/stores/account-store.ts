@@ -17,10 +17,11 @@
 
 import { create } from "zustand";
 
-import type { LinkedInProfile } from "../utils/use-linkedin-profile";
+import { createAccountUtilities } from "@sassy/linkedin-automation/account/create-account-utilities";
+import type { LinkedInProfile } from "@sassy/linkedin-automation/account/types";
+
 import { getTrpcClient } from "../../../lib/trpc/client";
 import { useAuthStore } from "../../../stores/auth-store";
-import { extractLinkedInProfileFromPage } from "../utils/use-linkedin-profile";
 
 // Types inferred from API responses
 interface Organization {
@@ -82,7 +83,7 @@ interface AccountActions {
    * Refresh just the current LinkedIn profile from the page
    * Useful when navigating to different LinkedIn pages
    */
-  refreshCurrentLinkedIn: () => void;
+  refreshCurrentLinkedIn: () => Promise<void>;
 
   /**
    * Clear all account data (on sign out)
@@ -157,8 +158,8 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
     try {
       const trpc = getTrpcClient();
 
-      // Extract current LinkedIn profile from page
-      const currentLinkedIn = extractLinkedInProfileFromPage();
+      // Extract current LinkedIn profile from page (async - waits for iframe in new DOM)
+      const currentLinkedIn = await createAccountUtilities().extractCurrentProfileAsync();
 
       // Get organization from auth store (no API call needed!)
       const authOrg = useAuthStore.getState().organization;
@@ -232,8 +233,8 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
     } catch (error) {
       console.error("AccountStore: Error fetching account data", error);
 
-      // Still try to get current LinkedIn even on error
-      const currentLinkedIn = extractLinkedInProfileFromPage();
+      // Still try to get current LinkedIn even on error (async for v2 DOM)
+      const currentLinkedIn = await createAccountUtilities().extractCurrentProfileAsync();
 
       set({
         currentLinkedIn,
@@ -248,8 +249,8 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
     }
   },
 
-  refreshCurrentLinkedIn: () => {
-    const currentLinkedIn = extractLinkedInProfileFromPage();
+  refreshCurrentLinkedIn: async () => {
+    const currentLinkedIn = await createAccountUtilities().extractCurrentProfileAsync();
     const { accounts, organization, isLoading } = get();
 
     const matchingAccount = currentLinkedIn.profileSlug

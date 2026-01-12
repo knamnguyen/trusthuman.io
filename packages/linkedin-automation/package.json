@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     "./dom/*": "./src/dom/*.ts",
-    "./feed/*": "./src/feed/*.ts"
+    "./feed/*": "./src/feed/*.ts",
+    "./account/*": "./src/account/*.ts"
   },
   "license": "MIT",
   "scripts": {
