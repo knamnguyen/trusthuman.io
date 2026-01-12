@@ -1,9 +1,10 @@
 import * as React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
 import { toast } from "@sassy/ui/toast";
 
 import { useTRPC } from "../../../lib/trpc/client";
-import { useSavedProfileStore } from "../stores/saved-profile-store";
+import { useSavedProfileStore } from "../save-profile/saved-profile-store";
 
 const ALL_LIST_NAME = "All";
 
@@ -14,7 +15,7 @@ const ALL_LIST_NAME = "All";
  */
 export function useManageLists() {
   const { selectedProfile } = useSavedProfileStore();
-  const linkedinUrl = selectedProfile?.linkedinUrl;
+  const linkedinUrl = selectedProfile?.profileUrl;
 
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -40,7 +41,7 @@ export function useManageLists() {
     linkedinUrl: linkedinUrl ?? "",
   });
 
-  // Query lists data (prefetched in SaveProfileButton for instant popover open)
+  // Query lists data (prefetched in useSaveProfileButtons for instant popover open)
   const { data: listsData, isLoading: isLoadingLists } = useQuery(
     trpc.targetList.findListsWithProfileStatus.queryOptions(
       { linkedinUrl: linkedinUrl ?? "" },
@@ -166,7 +167,10 @@ export function useManageLists() {
         if (!context) return;
 
         // Restore previous cache data (using captured key)
-        queryClient.setQueryData(context.capturedQueryKey, context.previousData);
+        queryClient.setQueryData(
+          context.capturedQueryKey,
+          context.previousData,
+        );
 
         // Remove temp ID from selection
         setSelectedListIds((prev) => {
@@ -337,7 +341,10 @@ export function useManageLists() {
         if (!context?.previousData) return;
 
         // Rollback to previous state
-        queryClient.setQueryData(context.capturedQueryKey, context.previousData);
+        queryClient.setQueryData(
+          context.capturedQueryKey,
+          context.previousData,
+        );
       },
     }),
   );

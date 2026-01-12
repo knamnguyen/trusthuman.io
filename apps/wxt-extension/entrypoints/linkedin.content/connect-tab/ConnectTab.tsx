@@ -1,7 +1,6 @@
 import { useState } from "react";
 import {
   ChevronDown,
-  ChevronLeft,
   ChevronRight,
   ExternalLink,
   Loader2,
@@ -20,10 +19,10 @@ import {
   CardTitle,
 } from "@sassy/ui/card";
 
-import type { PostAuthorRanking } from "../stores/saved-profile-store";
+import type { PostAuthorRanking } from "../save-profile/saved-profile-store";
 import { LinkedInLink } from "../_components/LinkedInLink";
 import { ManageListButton } from "../manage-list";
-import { useSavedProfileStore } from "../stores/saved-profile-store";
+import { useSavedProfileStore } from "../save-profile/saved-profile-store";
 
 /**
  * Expandable post author ranking item
@@ -121,10 +120,14 @@ function ProfileCard() {
     clearAll,
     commentStats,
     postAuthorRankings,
+    isLoadingProfileUrn,
     isLoadingComments,
   } = useSavedProfileStore();
 
   if (!selectedProfile) return null;
+
+  // URN fetch completed (not loading) and no URN found
+  const urnFetchFailed = !isLoadingProfileUrn && !selectedProfile.profileUrn;
 
   return (
     <Card>
@@ -168,16 +171,16 @@ function ProfileCard() {
           </div>
 
           {/* LinkedIn URL */}
-          {selectedProfile.linkedinUrl && (
+          {selectedProfile.profileUrl && (
             <div className="flex items-center gap-2">
               <ExternalLink className="text-muted-foreground h-4 w-4 flex-shrink-0" />
               <a
-                href={selectedProfile.linkedinUrl}
+                href={selectedProfile.profileUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary truncate text-sm hover:underline"
               >
-                {selectedProfile.linkedinUrl}
+                {selectedProfile.profileUrl}
               </a>
             </div>
           )}
@@ -185,24 +188,31 @@ function ProfileCard() {
           {/* Profile URN */}
           <div className="flex items-center gap-2">
             <Tag className="text-muted-foreground h-4 w-4 flex-shrink-0" />
-            <span className="text-muted-foreground truncate text-sm">
-              {selectedProfile.urn || "URN not available for this profile"}
-            </span>
+            {isLoadingProfileUrn ? (
+              <span className="text-muted-foreground flex items-center gap-2 text-sm">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Loading...
+              </span>
+            ) : (
+              <span className="text-muted-foreground truncate text-sm">
+                {selectedProfile.profileUrn || "URN not available"}
+              </span>
+            )}
           </div>
 
           {/* Only show Manage Lists when URN is available */}
-          {selectedProfile.urn && <ManageListButton />}
+          {selectedProfile.profileUrn && <ManageListButton />}
 
-          {/* No URN Available - Cannot fetch comments or manage target lists */}
-          {!selectedProfile.urn && (
+          {/* URN fetch failed - show warning */}
+          {urnFetchFailed && (
             <div className="bg-muted/50 mt-3 rounded-lg border border-dashed p-4">
               <p className="text-muted-foreground text-center text-sm">
-                Recent comments and target list management are not available for
-                profiles saved from the comment section.
+                Could not fetch profile URN. Recent comments and target list
+                management are not available.
               </p>
-              {selectedProfile.linkedinUrl && (
+              {selectedProfile.profileUrl && (
                 <LinkedInLink
-                  to={selectedProfile.linkedinUrl}
+                  to={selectedProfile.profileUrl}
                   className="text-primary mt-2 block text-center text-sm hover:underline"
                 >
                   Visit their profile to enable these features →
@@ -211,7 +221,7 @@ function ProfileCard() {
             </div>
           )}
 
-          {/* Loading State */}
+          {/* Loading Comments State */}
           {isLoadingComments && (
             <div className="flex items-center gap-2 py-2">
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -310,30 +320,7 @@ export function ConnectTab() {
 
   return (
     <div className="flex flex-col gap-4 px-4">
-      {/* Profile from DOM */}
       <ProfileCard />
-
-      {/* Navigation buttons */}
-      <div className="flex gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex-1"
-          onClick={() => history.back()}
-        >
-          <ChevronLeft className="mr-1 h-4 w-4" />
-          Back
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex-1"
-          onClick={() => history.forward()}
-        >
-          Next
-          <ChevronRight className="ml-1 h-4 w-4" />
-        </Button>
-      </div>
     </div>
   );
 }
