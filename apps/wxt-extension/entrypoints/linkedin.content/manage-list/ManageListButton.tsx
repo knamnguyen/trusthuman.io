@@ -54,7 +54,7 @@ export function ManageListButton({ className }: ManageListButtonProps) {
           Manage Lists
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-60 p-0" align="start" container={shadowRoot}>
+      <PopoverContent className="z-[10000] w-60 p-0" align="start" container={shadowRoot}>
         <Command shouldFilter={false}>
           {/* Selected lists display */}
           {selectedListIds.size > 0 && (

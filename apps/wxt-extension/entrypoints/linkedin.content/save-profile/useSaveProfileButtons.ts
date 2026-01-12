@@ -151,15 +151,17 @@ export function useSaveProfileButtons() {
       openToTab(SIDEBAR_TABS.CONNECT);
 
       // 3. Prefetch tRPC list data (async, fire and forget)
+      // Include staleTime to match useManageLists query options
       if (profileInfo.profileUrl) {
         console.log(
           "SaveProfile: Prefetching lists for",
           profileInfo.profileUrl,
         );
         void queryClient.prefetchQuery(
-          trpc.targetList.findListsWithProfileStatus.queryOptions({
-            linkedinUrl: profileInfo.profileUrl,
-          }),
+          trpc.targetList.findListsWithProfileStatus.queryOptions(
+            { linkedinUrl: profileInfo.profileUrl },
+            { staleTime: 30 * 1000 },
+          ),
         );
       }
 
