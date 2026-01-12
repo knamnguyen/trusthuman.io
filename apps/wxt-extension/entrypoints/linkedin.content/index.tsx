@@ -3,8 +3,8 @@ import ReactDOM from "react-dom/client";
 import { onDomVersionChange } from "@sassy/linkedin-automation/dom/detect";
 
 import { loadFonts } from "../../assets/fonts-loader";
+import { initAuthStoreListener, useAuthStore } from "../../lib/auth-store";
 import { getTrpcClient, TRPCReactProvider } from "../../lib/trpc/client";
-import { initAuthStoreListener, useAuthStore } from "../../stores/auth-store";
 import App from "./App";
 import { useAccountStore } from "./stores";
 import { autoFetchAllMetrics } from "./utils/data-fetch-mimic/unified-auto-fetch";
