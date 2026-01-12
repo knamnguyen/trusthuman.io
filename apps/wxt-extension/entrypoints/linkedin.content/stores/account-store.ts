@@ -26,7 +26,7 @@ import { getTrpcClient } from "../../../lib/trpc/client";
 interface Organization {
   id: string;
   name: string;
-  slug: string;
+  slug: string | null;
   purchasedSlots: number;
   stripeCustomerId: string | null;
   createdAt: Date;

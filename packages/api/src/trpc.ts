@@ -239,7 +239,6 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
     }),
   );
 
-
   // Only check permission if an account is selected
   if (result.activeAccount?.permitted === false) {
     throw new TRPCError({
@@ -312,12 +311,19 @@ export const orgProcedure = protectedProcedure.use(({ ctx, next }) => {
       message: "No active organization selected",
     });
   }
+
   // Use type assertion to narrow the type after runtime check
   const activeOrg = ctx.activeOrg as {
     id: string;
     slug: string | null;
     role: string | null;
   };
+
+  console.log("Active org: ", activeOrg.slug);
+  console.log("Users membership: ", ctx.memberships);
+  const isMemberOrg = ctx.memberships.includes(activeOrg.id);
+  console.log("User is member of org: ", isMemberOrg);
+
   return next({
     ctx: {
       ...ctx,

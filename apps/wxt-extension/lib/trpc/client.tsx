@@ -47,7 +47,7 @@ const getServerUrl = (): string => {
     baseUrl = import.meta.env.VITE_APP_URL;
   } else {
     // TODO: to be changed to api.engagekit.io when we move to a vps
-    baseUrl = "https://engagekit.io";
+    baseUrl = "https://api.engagekit.io";
   }
 
   console.log("tRPC Client: Server base URL:", baseUrl);
