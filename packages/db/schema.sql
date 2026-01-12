@@ -180,7 +180,7 @@ CREATE TABLE "Comment" (
 -- CreateTable
 CREATE TABLE "LinkedInAccount" (
     "id" TEXT NOT NULL,
-    "ownerId" TEXT NOT NULL,
+    "ownerId" TEXT,
     "organizationId" TEXT,
     "status" "LinkedInAccountStatus",
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -349,9 +349,18 @@ CREATE TABLE "TargetList" (
 );
 
 -- CreateTable
-CREATE TABLE "TargetProfile" (
+CREATE TABLE "TargetListProfile" (
     "id" TEXT NOT NULL,
     "listId" TEXT NOT NULL,
+    "profileId" TEXT NOT NULL,
+    "accountId" TEXT NOT NULL,
+
+    CONSTRAINT "TargetListProfile_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "TargetProfile" (
+    "id" TEXT NOT NULL,
     "accountId" TEXT NOT NULL,
     "linkedinUrl" TEXT NOT NULL,
     "profileUrn" TEXT,
@@ -498,7 +507,16 @@ CREATE INDEX "OrganizationMember_userId_idx" ON "OrganizationMember"("userId");
 CREATE UNIQUE INDEX "OrganizationMember_orgId_userId_key" ON "OrganizationMember"("orgId", "userId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "TargetProfile_listId_linkedinUrl_key" ON "TargetProfile"("listId", "linkedinUrl");
+CREATE INDEX "TargetList_accountId_idx" ON "TargetList"("accountId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "TargetListProfile_listId_profileId_accountId_key" ON "TargetListProfile"("listId", "profileId", "accountId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "TargetProfile_linkedinUrl_key" ON "TargetProfile"("linkedinUrl");
+
+-- CreateIndex
+CREATE INDEX "TargetProfile_accountId_linkedinUrl_idx" ON "TargetProfile"("accountId", "linkedinUrl");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "BlacklistedProfile_accountId_profileUrn_key" ON "BlacklistedProfile"("accountId", "profileUrn");
@@ -579,7 +597,7 @@ ALTER TABLE "Comment" ADD CONSTRAINT "Comment_accountId_fkey" FOREIGN KEY ("acco
 ALTER TABLE "Comment" ADD CONSTRAINT "Comment_autoCommentRunId_fkey" FOREIGN KEY ("autoCommentRunId") REFERENCES "AutoCommentRun"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "LinkedInAccount" ADD CONSTRAINT "LinkedInAccount_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "LinkedInAccount" ADD CONSTRAINT "LinkedInAccount_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "LinkedInAccount" ADD CONSTRAINT "LinkedInAccount_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -600,7 +618,13 @@ ALTER TABLE "ProfileImportRun" ADD CONSTRAINT "ProfileImportRun_userId_fkey" FOR
 ALTER TABLE "TargetList" ADD CONSTRAINT "TargetList_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "TargetProfile" ADD CONSTRAINT "TargetProfile_listId_fkey" FOREIGN KEY ("listId") REFERENCES "TargetList"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "TargetListProfile" ADD CONSTRAINT "TargetListProfile_listId_fkey" FOREIGN KEY ("listId") REFERENCES "TargetList"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "TargetListProfile" ADD CONSTRAINT "TargetListProfile_profileId_fkey" FOREIGN KEY ("profileId") REFERENCES "TargetProfile"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "TargetListProfile" ADD CONSTRAINT "TargetListProfile_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "TargetProfile" ADD CONSTRAINT "TargetProfile_profileUrn_fkey" FOREIGN KEY ("profileUrn") REFERENCES "LinkedInProfile"("urn") ON DELETE SET NULL ON UPDATE CASCADE;

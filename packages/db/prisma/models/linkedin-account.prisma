@@ -13,21 +13,20 @@ model LinkedInAccount {
   profileSlug String? @unique
   profileUrn  String? @unique
 
-
   autocommentEnabled Boolean    @default(false)
   runDailyAt         String?
   isRunning          Boolean    @default(false)
   accessType         AccessType @default(FREE)
 
   //resets count daily - but still can get from history of comments
-  dailyAIcomments    Int @default(0)
+  dailyAIcomments Int @default(0)
 
   //delete
   registrationStatus String?
   name               String?
   email              String?
 
-  owner User?        @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  owner User?         @relation(fields: [ownerId], references: [id], onDelete: SetNull)
   org   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
 
   //new settings (1:1)
@@ -39,7 +38,8 @@ model LinkedInAccount {
   targetLists TargetList[]
 
   // delete later since redundant - each account already one to many relations with targetlists
-  targetProfiles TargetProfile[]
+  targetProfiles     TargetProfile[]
+  targetListProfiles TargetListProfile[]
 
   //existing relations
   AutoCommentConfig       AutoCommentConfig[]
