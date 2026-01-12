@@ -20,6 +20,7 @@ export const organizationRouter = () =>
             select: {
               id: true,
               name: true,
+              orgSlug: true,
               purchasedSlots: true,
               stripeCustomerId: true,
               createdAt: true,
