@@ -1,9 +1,10 @@
 import { BarChart3, Feather, User, Users } from "lucide-react";
 
+import { detectDomVersion } from "@sassy/linkedin-automation/dom/detect";
 import { ExpandableTabs } from "@sassy/ui/expandable-tabs";
 import { SheetContent, SheetHeader } from "@sassy/ui/sheet";
 
-import { useAuthStore } from "../../stores/auth-store";
+import { useAuthStore } from "../../lib/auth-store";
 import { AccountMismatchOverlay } from "./_components/AccountMismatchOverlay";
 import { SignInOverlay } from "./_components/SignInOverlay";
 import { ToggleButton } from "./_components/ToggleButton";
@@ -47,10 +48,13 @@ export function LinkedInSidebar({ onClose }: LinkedInSidebarProps) {
     selectedTab !== SIDEBAR_TABS.ACCOUNT &&
     currentLinkedInStatus === "not_registered";
 
+  const minWidth =
+    detectDomVersion() === "dom-v2" ? "min-w-[490px]" : "min-w-[470px]";
+
   return (
     <SheetContent
       side="right"
-      className="z-[9999] w-[40vw] min-w-[450px] gap-0"
+      className={`z-[9999] w-[40vw] ${minWidth} gap-0`}
       portalContainer={shadowRoot}
     >
       {/* Close button attached to the left edge of sidebar */}
