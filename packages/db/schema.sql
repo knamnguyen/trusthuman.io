@@ -180,7 +180,7 @@ CREATE TABLE "Comment" (
 -- CreateTable
 CREATE TABLE "LinkedInAccount" (
     "id" TEXT NOT NULL,
-    "ownerId" TEXT NOT NULL,
+    "ownerId" TEXT,
     "organizationId" TEXT,
     "status" "LinkedInAccountStatus",
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -498,6 +498,12 @@ CREATE INDEX "OrganizationMember_userId_idx" ON "OrganizationMember"("userId");
 CREATE UNIQUE INDEX "OrganizationMember_orgId_userId_key" ON "OrganizationMember"("orgId", "userId");
 
 -- CreateIndex
+CREATE INDEX "TargetList_accountId_idx" ON "TargetList"("accountId");
+
+-- CreateIndex
+CREATE INDEX "TargetProfile_accountId_linkedinUrl_idx" ON "TargetProfile"("accountId", "linkedinUrl");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "TargetProfile_listId_linkedinUrl_key" ON "TargetProfile"("listId", "linkedinUrl");
 
 -- CreateIndex
@@ -579,7 +585,7 @@ ALTER TABLE "Comment" ADD CONSTRAINT "Comment_accountId_fkey" FOREIGN KEY ("acco
 ALTER TABLE "Comment" ADD CONSTRAINT "Comment_autoCommentRunId_fkey" FOREIGN KEY ("autoCommentRunId") REFERENCES "AutoCommentRun"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "LinkedInAccount" ADD CONSTRAINT "LinkedInAccount_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "LinkedInAccount" ADD CONSTRAINT "LinkedInAccount_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "LinkedInAccount" ADD CONSTRAINT "LinkedInAccount_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE SET NULL ON UPDATE CASCADE;
