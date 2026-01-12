@@ -68,24 +68,40 @@ function extractHeadline(buttonContainer: Element): string | null {
 }
 
 /**
- * Walk up DOM tree to find element with data-id attribute containing activity URN.
- * Returns the URN string (urn:li:activity:... or urn:li:comment:...) or null.
+ * Walk up DOM tree to find element with activity URN.
+ *
+ * Checks multiple attributes:
+ * - data-id: Used in feed pages (urn:li:activity:... or urn:li:comment:...)
+ * - data-urn: Used in individual post pages (urn:li:activity:...)
+ *
+ * Returns the URN string or null.
  */
 function extractActivityUrn(container: Element): string | null {
   let current: Element | null = container;
 
   while (current) {
+    // Check data-id (feed pages)
     const dataId = current.getAttribute("data-id");
     if (dataId) {
-      // Check for activity URN: urn:li:activity:7413960032142196736
-      if (dataId.startsWith("urn:li:activity:")) {
-        return dataId;
-      }
-      // Check for comment URN: urn:li:comment:(activity:7413928473452470272,7413960021136474112)
-      if (dataId.startsWith("urn:li:comment:")) {
+      if (
+        dataId.startsWith("urn:li:activity:") ||
+        dataId.startsWith("urn:li:comment:")
+      ) {
         return dataId;
       }
     }
+
+    // Check data-urn (individual post pages)
+    const dataUrn = current.getAttribute("data-urn");
+    if (dataUrn) {
+      if (
+        dataUrn.startsWith("urn:li:activity:") ||
+        dataUrn.startsWith("urn:li:comment:")
+      ) {
+        return dataUrn;
+      }
+    }
+
     current = current.parentElement;
   }
 
