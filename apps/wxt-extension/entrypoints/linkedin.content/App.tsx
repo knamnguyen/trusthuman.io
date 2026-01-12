@@ -10,7 +10,8 @@ import { AutoEngageObserver } from "./engage-button/AutoEngageObserver";
 import { ButtonPortalManager } from "./engage-button/ButtonPortalManager";
 import { SpacebarEngageObserver } from "./engage-button/SpacebarEngageObserver";
 import { LinkedInSidebar } from "./LinkedInSidebar";
-import { SaveProfilePortalManager } from "./save-profile";
+import { useProfilePageButton } from "./save-profile/useProfilePageButton";
+import { useSaveProfileButtons } from "./save-profile/useSaveProfileButtons";
 import { useShadowRootStore, useSidebarStore } from "./stores";
 
 interface AppProps {
@@ -62,6 +63,12 @@ export default function App({ shadowRoot }: AppProps) {
     return feedUtilities.watchAndRemoveNewPostsPill();
   }, []);
 
+  // Watch for author profiles and inject save buttons (vanilla JS)
+  useSaveProfileButtons();
+
+  // Watch for profile page and inject save button (vanilla JS)
+  useProfilePageButton();
+
   return (
     <>
       {/* Open button - only visible when sidebar is closed and animation finished */}
@@ -77,9 +84,6 @@ export default function App({ shadowRoot }: AppProps) {
 
       {/* Single React tree manages all injected engage buttons */}
       <ButtonPortalManager />
-
-      {/* Single React tree manages all injected save profile buttons */}
-      <SaveProfilePortalManager />
 
       {/* Observer for auto-engage on native LinkedIn comment button clicks */}
       <AutoEngageObserver />

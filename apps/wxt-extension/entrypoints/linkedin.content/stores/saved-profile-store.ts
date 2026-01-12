@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-import type { ProfileInfo } from "../save-profile/extract-profile-info";
+import type { SaveButtonProfileInfo } from "@sassy/linkedin-automation/profile/types";
 
 export interface CommentData {
   author: string | null;
@@ -49,7 +49,7 @@ export interface PostAuthorRanking {
 
 interface SavedProfileState {
   /** Profile info extracted from DOM */
-  selectedProfile: ProfileInfo | null;
+  selectedProfile: SaveButtonProfileInfo | null;
   /** All comments by the selected profile author */
   authorComments: CommentData[];
   /** Computed statistics */
@@ -61,7 +61,7 @@ interface SavedProfileState {
 }
 
 interface SavedProfileActions {
-  setSelectedProfile: (profile: ProfileInfo | null) => void;
+  setSelectedProfile: (profile: SaveButtonProfileInfo | null) => void;
   /** Process raw comments and compute stats/rankings for the profile author */
   processComments: (
     allComments: CommentData[],

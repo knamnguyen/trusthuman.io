@@ -1,8 +1,11 @@
 /**
- * Extracts profile information from LinkedIn individual profile page DOM
+ * Extract Profile Page Info
+ *
+ * Extracts profile information from LinkedIn profile page DOM.
+ * Works the same for both v1 and v2 DOM.
  */
 
-import type { ProfileInfo } from "./extract-profile-info";
+import type { ProfilePageInfo } from "../types";
 
 /**
  * Extracts profile URN from the "Show all people you may know" link
@@ -10,7 +13,7 @@ import type { ProfileInfo } from "./extract-profile-info";
  */
 function extractProfileUrn(): string | null {
   const pymkLink = document.querySelector(
-    'a[aria-label="Show all people you may know"]'
+    'a[aria-label="Show all people you may know"]',
   );
   if (!pymkLink) return null;
 
@@ -18,7 +21,9 @@ function extractProfileUrn(): string | null {
   if (!href) return null;
 
   // Match profileUrn=urn%3Ali%3Afsd_profile%3A{ID} or decoded version
-  const encodedMatch = href.match(/profileUrn=urn%3Ali%3Afsd_profile%3A([^&]+)/);
+  const encodedMatch = href.match(
+    /profileUrn=urn%3Ali%3Afsd_profile%3A([^&]+)/,
+  );
   if (encodedMatch?.[1]) {
     return decodeURIComponent(encodedMatch[1]);
   }
@@ -35,9 +40,12 @@ function extractProfileUrn(): string | null {
 /**
  * Extracts name and photo URL from the profile picture button
  */
-function extractNameAndPhoto(): { name: string | null; photoUrl: string | null } {
+function extractNameAndPhoto(): {
+  name: string | null;
+  photoUrl: string | null;
+} {
   const profilePicButton = document.querySelector(
-    'button[aria-label="open profile picture"]'
+    'button[aria-label="open profile picture"]',
   );
   if (!profilePicButton) {
     return { name: null, photoUrl: null };
@@ -59,7 +67,7 @@ function extractNameAndPhoto(): { name: string | null; photoUrl: string | null }
  */
 function extractHeadline(): string | null {
   const headlineElement = document.querySelector(
-    "[data-generated-suggestion-target]"
+    "[data-generated-suggestion-target]",
   );
   if (!headlineElement) return null;
 
@@ -67,34 +75,45 @@ function extractHeadline(): string | null {
 }
 
 /**
- * Gets the current LinkedIn profile URL from the page
+ * Gets the current LinkedIn profile URL and slug from the page
  */
-function extractLinkedInUrl(): string | null {
+function extractProfileUrlAndSlug(): {
+  profileUrl: string | null;
+  profileSlug: string | null;
+} {
   const pathname = window.location.pathname;
-  // Ensure we're on a profile page and extract clean URL
-  if (pathname.startsWith("/in/")) {
-    // Remove trailing slash and any overlay paths
-    const parts = pathname.split("/overlay");
-    const profilePath = (parts[0] !== undefined ? parts[0] : pathname).replace(/\/$/, "");
-    return `https://www.linkedin.com${profilePath}`;
+
+  if (!pathname.startsWith("/in/")) {
+    return { profileUrl: null, profileSlug: null };
   }
-  return null;
+
+  // Remove trailing slash and any overlay paths
+  const parts = pathname.split("/overlay");
+  const profilePath = (parts[0] ?? pathname).replace(/\/$/, "");
+  const profileUrl = `https://www.linkedin.com${profilePath}`;
+
+  // Extract slug from path like "/in/john-doe"
+  const slugMatch = profilePath.match(/\/in\/([^/?]+)/);
+  const profileSlug = slugMatch?.[1] ?? null;
+
+  return { profileUrl, profileSlug };
 }
 
 /**
  * Extracts full profile info from a LinkedIn profile page
  */
-export function extractProfilePageInfo(): ProfileInfo {
+export function extractProfilePageInfo(): ProfilePageInfo {
   const { name, photoUrl } = extractNameAndPhoto();
-  const urn = extractProfileUrn();
   const headline = extractHeadline();
-  const linkedinUrl = extractLinkedInUrl();
+  const { profileUrl, profileSlug } = extractProfileUrlAndSlug();
+  const urn = extractProfileUrn();
 
   return {
     name,
-    linkedinUrl,
+    profileSlug,
+    profileUrl,
     photoUrl,
     headline,
-    urn,
+    profileUrn: urn,
   };
 }

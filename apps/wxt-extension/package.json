@@ -19,6 +19,7 @@
   "dependencies": {
     "@clerk/chrome-extension": "^2.5.2",
     "@sassy/api": "workspace:^",
+    "@sassy/linkedin-automation": "workspace:*",
     "@sassy/ui": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "@trpc/client": "catalog:",

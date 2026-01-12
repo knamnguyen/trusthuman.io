@@ -6,7 +6,8 @@
   "exports": {
     "./dom/*": "./src/dom/*.ts",
     "./feed/*": "./src/feed/*.ts",
-    "./account/*": "./src/account/*.ts"
+    "./account/*": "./src/account/*.ts",
+    "./profile/*": "./src/profile/*.ts"
   },
   "license": "MIT",
   "scripts": {
