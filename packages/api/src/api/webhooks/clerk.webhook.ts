@@ -157,10 +157,15 @@ export const clerkWebhookRoutes = new Hono().post("/", async (c) => {
 
         console.log("💾 Creating organization in database...");
 
-        await db.organization.create({
-          data: {
+        await db.organization.upsert({
+          create: {
             id: orgId,
             name: orgName,
+          },
+          where: { id: orgId },
+          update: {
+            name: orgName,
+            updatedAt: new Date(),
           },
         });
 
@@ -179,9 +184,13 @@ export const clerkWebhookRoutes = new Hono().post("/", async (c) => {
 
         console.log("💾 Updating organization in database...");
 
-        await db.organization.update({
+        await db.organization.upsert({
           where: { id: orgId },
-          data: {
+          create: {
+            id: orgId,
+            name: orgName,
+          },
+          update: {
             name: orgName,
             updatedAt: new Date(),
           },
@@ -235,6 +244,17 @@ export const clerkWebhookRoutes = new Hono().post("/", async (c) => {
 
         console.log("💾 Creating organization membership in database...");
 
+        await db.organization.upsert({
+          where: { id: orgId },
+          update: {
+            updatedAt: new Date(),
+          },
+          create: {
+            id: orgId,
+            name: data.organization.name,
+          },
+        });
+
         await db.organizationMember.upsert({
           where: {
             orgId_userId: { orgId, userId },
@@ -271,11 +291,27 @@ export const clerkWebhookRoutes = new Hono().post("/", async (c) => {
 
         console.log("💾 Updating organization membership in database...");
 
-        await db.organizationMember.update({
+        await db.organization.upsert({
+          where: { id: orgId },
+          update: {
+            updatedAt: new Date(),
+          },
+          create: {
+            id: orgId,
+            name: data.organization.name,
+          },
+        });
+
+        await db.organizationMember.upsert({
           where: {
             orgId_userId: { orgId, userId },
           },
-          data: {
+          update: {
+            role: normalizedRole,
+          },
+          create: {
+            orgId,
+            userId,
             role: normalizedRole,
           },
         });
