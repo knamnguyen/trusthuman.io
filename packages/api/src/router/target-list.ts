@@ -297,7 +297,7 @@ export const targetListRouter = () =>
 
           const targetListProfileId = ulid();
 
-          const result = await ctx.db.targetListProfile.createMany({
+          const result = await tx.targetListProfile.createMany({
             data: {
               id: targetListProfileId,
               profileId: targetProfileId,
@@ -449,90 +449,94 @@ export const targetListRouter = () =>
           } as const;
         }
 
-        // Try to find existing LinkedInProfile by URL to link immediately
-        const existingProfile = await ctx.db.targetProfile.findFirst({
-          where: { linkedinUrl: input.linkedinUrl },
-          select: {
-            id: true,
-            profileUrn: true,
-          },
-        });
+        const activeAccountId = ctx.activeAccount.id;
 
-        let targetProfileId = existingProfile?.id;
-        if (targetProfileId === undefined) {
-          targetProfileId = ulid();
-          await ctx.db.targetProfile.create({
-            data: {
-              id: targetProfileId,
-              linkedinUrl: input.linkedinUrl,
-              accountId: ctx.activeAccount.id,
+        return await ctx.db.$transaction(async (tx) => {
+          // Try to find existing LinkedInProfile by URL to link immediately
+          const existingProfile = await tx.targetProfile.findFirst({
+            where: { linkedinUrl: input.linkedinUrl },
+            select: {
+              id: true,
+              profileUrn: true,
             },
           });
-        }
 
-        const listIdsToValidate = [
-          ...input.addToListIds,
-          ...input.removeFromListIds,
-        ];
+          let targetProfileId = existingProfile?.id;
+          if (targetProfileId === undefined) {
+            targetProfileId = ulid();
+            await tx.targetProfile.create({
+              data: {
+                id: targetProfileId,
+                linkedinUrl: input.linkedinUrl,
+                accountId: activeAccountId,
+              },
+            });
+          }
 
-        // early return here if no lists to add or remove
-        if (listIdsToValidate.length === 0) {
+          const listIdsToValidate = [
+            ...input.addToListIds,
+            ...input.removeFromListIds,
+          ];
+
+          // early return here if no lists to add or remove
+          if (listIdsToValidate.length === 0) {
+            return {
+              status: "success",
+              added: 0,
+              removed: 0,
+            } as const;
+          }
+
+          // TODO: setup access control that's tied to user instead of relying on exists check with accountId: ctx.activeAccount.id
+          // validate add to and remove from lists exists and belong to user
+          const validLists = await tx.targetList.findMany({
+            where: {
+              id: { in: listIdsToValidate },
+              accountId: activeAccountId,
+            },
+            select: { id: true },
+          });
+
+          if (validLists.length !== new Set(listIdsToValidate).size) {
+            return {
+              status: "error",
+              code: 400,
+              message: "One or more target lists not found",
+            } as const;
+          }
+
+          // Remove from lists
+          if (input.removeFromListIds.length > 0) {
+            await tx.targetListProfile.deleteMany({
+              where: {
+                accountId: activeAccountId,
+                profile: {
+                  linkedinUrl: input.linkedinUrl,
+                },
+                listId: { in: input.removeFromListIds },
+              },
+            });
+          }
+
+          // Add to lists - first validate all list IDs exist and belong to user
+          if (input.addToListIds.length > 0) {
+            await tx.targetListProfile.createMany({
+              data: input.addToListIds.map((listId) => ({
+                id: ulid(),
+                accountId: ctx.activeAccount!.id,
+                listId,
+                profileId: targetProfileId,
+              })),
+              skipDuplicates: true,
+            });
+          }
+
           return {
             status: "success",
-            added: 0,
-            removed: 0,
+            added: input.addToListIds.length,
+            removed: input.removeFromListIds.length,
           } as const;
-        }
-
-        // TODO: setup access control that's tied to user instead of relying on exists check with accountId: ctx.activeAccount.id
-        // validate add to and remove from lists exists and belong to user
-        const validLists = await ctx.db.targetList.findMany({
-          where: {
-            id: { in: listIdsToValidate },
-            accountId: ctx.activeAccount.id,
-          },
-          select: { id: true },
         });
-
-        if (validLists.length !== new Set(listIdsToValidate).size) {
-          return {
-            status: "error",
-            code: 400,
-            message: "One or more target lists not found",
-          } as const;
-        }
-
-        // Remove from lists
-        if (input.removeFromListIds.length > 0) {
-          await ctx.db.targetListProfile.deleteMany({
-            where: {
-              accountId: ctx.activeAccount.id,
-              profile: {
-                linkedinUrl: input.linkedinUrl,
-              },
-              listId: { in: input.removeFromListIds },
-            },
-          });
-        }
-
-        // Add to lists - first validate all list IDs exist and belong to user
-        if (input.addToListIds.length > 0) {
-          await ctx.db.targetListProfile.createMany({
-            data: input.addToListIds.map((listId) => ({
-              id: ulid(),
-              accountId: ctx.activeAccount!.id,
-              listId,
-              profileId: targetProfileId,
-            })),
-            skipDuplicates: true,
-          });
-        }
-
-        return {
-          status: "success",
-          added: input.addToListIds.length,
-          removed: input.removeFromListIds.length,
-        } as const;
       }),
 
     /**
