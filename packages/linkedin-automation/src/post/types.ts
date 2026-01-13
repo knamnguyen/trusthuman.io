@@ -40,6 +40,26 @@ export interface PostTimeInfo {
 }
 
 /**
+ * Comment information extracted from a LinkedIn post.
+ */
+export interface PostCommentInfo {
+  /** Comment author name */
+  authorName: string | null;
+  /** Comment author headline */
+  authorHeadline: string | null;
+  /** Comment author profile URL */
+  authorProfileUrl: string | null;
+  /** Comment author photo URL */
+  authorPhotoUrl: string | null;
+  /** Comment text content */
+  content: string | null;
+  /** Comment URN from data-id */
+  urn: string | null;
+  /** Whether this is a reply to another comment */
+  isReply: boolean;
+}
+
+/**
  * Post Utilities Interface
  *
  * Defines operations for extracting data from LinkedIn posts.
@@ -70,7 +90,7 @@ export interface PostUtilities {
    * @param postContainer - The LinkedIn post container element
    * @returns PostAuthorInfo object with available information
    */
-  extractAuthorInfo(postContainer: HTMLElement): PostAuthorInfo;
+  extractPostAuthorInfo(postContainer: HTMLElement): PostAuthorInfo;
 
   /**
    * Extract post caption text from a LinkedIn post container.
@@ -105,4 +125,13 @@ export interface PostUtilities {
    * @returns True if the post is promoted/sponsored
    */
   detectPromotedPost(postContainer: HTMLElement): boolean;
+
+  /**
+   * Extract comments from a post container (assumes comments are already loaded).
+   * Does NOT click any buttons - only extracts existing comment data.
+   *
+   * @param postContainer - The LinkedIn post container element
+   * @returns Array of comment info objects
+   */
+  extractPostComments(postContainer: HTMLElement): PostCommentInfo[];
 }

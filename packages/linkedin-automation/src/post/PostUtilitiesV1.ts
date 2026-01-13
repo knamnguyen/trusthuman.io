@@ -1,16 +1,18 @@
 import type {
   PostAuthorInfo,
+  PostCommentInfo,
   PostTimeInfo,
   PostUrlInfo,
   PostUtilities,
 } from "./types";
 import { findPostContainer } from "./utils-v1/find-post-container";
 import { extractPostUrl } from "./utils-v1/extract-post-url";
-import { extractAuthorInfo } from "./utils-v1/extract-author-info";
+import { extractPostAuthorInfo } from "./utils-v1/extract-post-author-info";
 import { extractPostCaption } from "./utils-v1/extract-post-caption";
 import { extractPostTime } from "./utils-v1/extract-post-time";
 import { detectCompanyPost } from "./utils-v1/detect-company-post";
 import { detectPromotedPost } from "./utils-v1/detect-promoted-post";
+import { extractPostComments } from "./utils-v1/extract-post-comments";
 
 export class PostUtilitiesV1 implements PostUtilities {
   findPostContainer(anchorElement: Element): Element | null {
@@ -22,7 +24,7 @@ export class PostUtilitiesV1 implements PostUtilities {
   }
 
   extractAuthorInfo(postContainer: HTMLElement): PostAuthorInfo {
-    return extractAuthorInfo(postContainer);
+    return extractPostAuthorInfo(postContainer);
   }
 
   extractPostCaption(postContainer: Element): string {
@@ -39,5 +41,9 @@ export class PostUtilitiesV1 implements PostUtilities {
 
   detectPromotedPost(postContainer: HTMLElement): boolean {
     return detectPromotedPost(postContainer);
+  }
+
+  extractComments(postContainer: HTMLElement): PostCommentInfo[] {
+    return extractPostComments(postContainer);
   }
 }
