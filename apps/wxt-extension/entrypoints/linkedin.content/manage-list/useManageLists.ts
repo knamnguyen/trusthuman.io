@@ -211,6 +211,16 @@ export function useManageLists() {
           linkedinUrl,
           addToListIds,
           removeFromListIds,
+          // Pass profile data for quick display in target list UI
+          profileData: selectedProfile
+            ? {
+                name: selectedProfile.name,
+                profileSlug: selectedProfile.profileSlug,
+                profileUrn: selectedProfile.profileUrn,
+                headline: selectedProfile.headline,
+                photoUrl: selectedProfile.photoUrl,
+              }
+            : undefined,
         });
       }
     }

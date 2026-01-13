@@ -441,6 +441,16 @@ export const targetListRouter = () =>
           linkedinUrl: linkedInUrlSchema,
           addToListIds: z.array(z.string()),
           removeFromListIds: z.array(z.string()),
+          // Profile data from LinkedIn page for quick display
+          profileData: z
+            .object({
+              name: z.string().nullish(),
+              profileSlug: z.string().nullish(),
+              profileUrn: z.string().nullish(),
+              headline: z.string().nullish(),
+              photoUrl: z.string().nullish(),
+            })
+            .optional(),
         }),
       )
       .mutation(async ({ ctx, input }) => {
@@ -453,7 +463,7 @@ export const targetListRouter = () =>
           } as const;
         }
 
-        // Try to find existing LinkedInProfile by URL to link immediately
+        // Try to find existing TargetProfile by URL
         const existingProfile = await ctx.db.targetProfile.findFirst({
           where: { linkedinUrl: input.linkedinUrl },
           select: {
@@ -464,12 +474,30 @@ export const targetListRouter = () =>
 
         let targetProfileId = existingProfile?.id;
         if (targetProfileId === undefined) {
+          // Create new profile with scraped data
           targetProfileId = ulid();
           await ctx.db.targetProfile.create({
             data: {
               id: targetProfileId,
               linkedinUrl: input.linkedinUrl,
               accountId: ctx.activeAccount.id,
+              name: input.profileData?.name ?? null,
+              profileSlug: input.profileData?.profileSlug ?? null,
+              profileUrn: input.profileData?.profileUrn ?? null,
+              headline: input.profileData?.headline ?? null,
+              photoUrl: input.profileData?.photoUrl ?? null,
+            },
+          });
+        } else if (input.profileData) {
+          // Update existing profile with new scraped data (if provided)
+          await ctx.db.targetProfile.update({
+            where: { id: targetProfileId },
+            data: {
+              name: input.profileData.name ?? undefined,
+              profileSlug: input.profileData.profileSlug ?? undefined,
+              profileUrn: input.profileData.profileUrn ?? undefined,
+              headline: input.profileData.headline ?? undefined,
+              photoUrl: input.profileData.photoUrl ?? undefined,
             },
           });
         }

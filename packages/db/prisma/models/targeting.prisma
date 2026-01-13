@@ -40,10 +40,16 @@ model TargetProfile {
   linkedinUrl String  @unique
   profileUrn  String?
 
+  // Profile data scraped from LinkedIn page for quick display
+  name        String?
+  profileSlug String?
+  headline    String?
+  photoUrl    String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  profile            LinkedInProfile?    @relation(fields: [profileUrn], references: [urn])
+  // profileUrn stored as plain string - query LinkedInProfile by urn when needed
   account            LinkedInAccount     @relation(fields: [accountId], references: [id])
   targetListProfiles TargetListProfile[]
 

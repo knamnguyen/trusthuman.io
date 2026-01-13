@@ -364,6 +364,10 @@ CREATE TABLE "TargetProfile" (
     "accountId" TEXT NOT NULL,
     "linkedinUrl" TEXT NOT NULL,
     "profileUrn" TEXT,
+    "name" TEXT,
+    "profileSlug" TEXT,
+    "headline" TEXT,
+    "photoUrl" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -625,9 +629,6 @@ ALTER TABLE "TargetListProfile" ADD CONSTRAINT "TargetListProfile_profileId_fkey
 
 -- AddForeignKey
 ALTER TABLE "TargetListProfile" ADD CONSTRAINT "TargetListProfile_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "TargetProfile" ADD CONSTRAINT "TargetProfile_profileUrn_fkey" FOREIGN KEY ("profileUrn") REFERENCES "LinkedInProfile"("urn") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "TargetProfile" ADD CONSTRAINT "TargetProfile_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

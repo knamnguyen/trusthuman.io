@@ -90,7 +90,5 @@ model LinkedInProfile {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  targetProfiles TargetProfile[]
-
   @@index([linkedinUrl])
 }
