@@ -1,5 +1,3 @@
-import { findPostContainer } from "./post/find-post-container";
-
 export { attachImageToComment } from "./comment/attach-image-to-comment";
 export { extractAdjacentComments } from "./post/extract-adjacent-comments";
 export { findPostContainer } from "./post/find-post-container";
