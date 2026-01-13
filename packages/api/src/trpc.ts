@@ -153,60 +153,6 @@ const clerkClient = createClerkClient({
  * Uses auth cache (60s TTL) to deduplicate parallel DB queries
  */
 const isAuthed = t.middleware(async ({ ctx, next }) => {
-  // assumedUserToken is for assumed accounts from browserbase
-  const assumedUserToken = ctx.headers.get("x-assumed-user-token");
-
-  // check for assumedUserToken (for hyper browser mode)
-  if (assumedUserToken !== null) {
-    const decoded = await assumedAccountJwt.decode(assumedUserToken);
-    if (!decoded.success) {
-      throw new TRPCError({
-        code: "UNAUTHORIZED",
-        message: "Invalid assumed user token",
-      });
-    }
-
-    // Note: activeOrgId is null for assumed token (browser automation) mode
-    const result = await getUserAccount(
-      ctx.db,
-      decoded.payload.userId,
-      decoded.payload.accountId,
-      null,
-    );
-
-    if (result === null) {
-      throw new TRPCError({
-        code: "UNAUTHORIZED",
-        message: "Invalid assumed user token - user not found",
-      });
-    }
-
-    if (
-      result.activeAccount !== null &&
-      result.activeAccount.permitted === false
-    ) {
-      throw new TRPCError({
-        code: "FORBIDDEN",
-        message: "Access to this account is forbidden",
-      });
-    }
-
-    return next({
-      ctx: {
-        ...ctx,
-        user: result.user,
-        activeAccount: result.activeAccount,
-        memberships: result.memberships,
-        // have to do casting here else typescript narrows down to null
-        activeOrg: null as null | {
-          id: string;
-          slug: string | null;
-          role: string | null;
-        }, // Not available in assumed token mode
-      },
-    });
-  }
-
   // Get account id and source for logging
   const activeAccountId = ctx.headers.get("x-account-id") ?? null;
 
