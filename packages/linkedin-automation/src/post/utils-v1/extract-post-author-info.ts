@@ -105,7 +105,7 @@ function extractHeadlineFromAuthorSection(photoAnchor: Element): string | null {
  * @param postContainer - The LinkedIn post container element (div with data-urn)
  * @returns PostAuthorInfo object with available information
  */
-export function extractAuthorInfo(postContainer: HTMLElement): PostAuthorInfo {
+export function extractPostAuthorInfo(postContainer: HTMLElement): PostAuthorInfo {
   const result: PostAuthorInfo = {
     name: null,
     photoUrl: null,

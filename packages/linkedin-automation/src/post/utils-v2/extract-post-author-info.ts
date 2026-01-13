@@ -89,7 +89,7 @@ function extractHeadline(container: Element): string | null {
  * @param postContainer - The LinkedIn post container element
  * @returns PostAuthorInfo object with available information
  */
-export function extractAuthorInfo(postContainer: HTMLElement): PostAuthorInfo {
+export function extractPostAuthorInfo(postContainer: HTMLElement): PostAuthorInfo {
   const result: PostAuthorInfo = {
     name: null,
     photoUrl: null,
