@@ -60,6 +60,19 @@ export interface PostCommentInfo {
 }
 
 /**
+ * Simplified comment info for AI context generation.
+ * Used to provide adjacent comments as context for better AI comment generation.
+ */
+export interface AdjacentCommentInfo {
+  /** Comment text content */
+  commentContent: string;
+  /** Number of reactions/likes on the comment */
+  likeCount: number;
+  /** Number of replies to the comment */
+  replyCount: number;
+}
+
+/**
  * Post Utilities Interface
  *
  * Defines operations for extracting data from LinkedIn posts.
@@ -134,4 +147,14 @@ export interface PostUtilities {
    * @returns Array of comment info objects
    */
   extractPostComments(postContainer: HTMLElement): PostCommentInfo[];
+
+  /**
+   * Extract adjacent comments for AI context generation.
+   * Returns simplified comment data (content + engagement metrics) for AI prompts.
+   * Limited to top 5 comments to keep payload reasonable.
+   *
+   * @param postContainer - The LinkedIn post container element
+   * @returns Array of simplified comment info objects
+   */
+  extractAdjacentComments(postContainer: HTMLElement): AdjacentCommentInfo[];
 }

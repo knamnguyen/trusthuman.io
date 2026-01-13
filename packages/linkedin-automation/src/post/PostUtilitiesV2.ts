@@ -1,4 +1,5 @@
 import type {
+  AdjacentCommentInfo,
   PostAuthorInfo,
   PostCommentInfo,
   PostTimeInfo,
@@ -7,6 +8,7 @@ import type {
 } from "./types";
 import { detectCompanyPost } from "./utils-v2/detect-company-post";
 import { detectPromotedPost } from "./utils-v2/detect-promoted-post";
+import { extractAdjacentComments } from "./utils-v2/extract-adjacent-comments";
 import { extractPostAuthorInfo } from "./utils-v2/extract-post-author-info";
 import { extractPostCaption } from "./utils-v2/extract-post-caption";
 import { extractPostComments } from "./utils-v2/extract-post-comments";
@@ -45,5 +47,9 @@ export class PostUtilitiesV2 implements PostUtilities {
 
   extractPostComments(postContainer: HTMLElement): PostCommentInfo[] {
     return extractPostComments(postContainer);
+  }
+
+  extractAdjacentComments(postContainer: HTMLElement): AdjacentCommentInfo[] {
+    return extractAdjacentComments(postContainer);
   }
 }

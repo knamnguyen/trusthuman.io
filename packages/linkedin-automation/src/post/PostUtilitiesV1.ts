@@ -1,4 +1,5 @@
 import type {
+  AdjacentCommentInfo,
   PostAuthorInfo,
   PostCommentInfo,
   PostTimeInfo,
@@ -13,6 +14,7 @@ import { extractPostTime } from "./utils-v1/extract-post-time";
 import { detectCompanyPost } from "./utils-v1/detect-company-post";
 import { detectPromotedPost } from "./utils-v1/detect-promoted-post";
 import { extractPostComments } from "./utils-v1/extract-post-comments";
+import { extractAdjacentComments } from "./utils-v1/extract-adjacent-comments";
 
 export class PostUtilitiesV1 implements PostUtilities {
   findPostContainer(anchorElement: Element): Element | null {
@@ -23,7 +25,7 @@ export class PostUtilitiesV1 implements PostUtilities {
     return extractPostUrl(postContainer);
   }
 
-  extractAuthorInfo(postContainer: HTMLElement): PostAuthorInfo {
+  extractPostAuthorInfo(postContainer: HTMLElement): PostAuthorInfo {
     return extractPostAuthorInfo(postContainer);
   }
 
@@ -43,7 +45,11 @@ export class PostUtilitiesV1 implements PostUtilities {
     return detectPromotedPost(postContainer);
   }
 
-  extractComments(postContainer: HTMLElement): PostCommentInfo[] {
+  extractPostComments(postContainer: HTMLElement): PostCommentInfo[] {
     return extractPostComments(postContainer);
+  }
+
+  extractAdjacentComments(postContainer: HTMLElement): AdjacentCommentInfo[] {
+    return extractAdjacentComments(postContainer);
   }
 }
