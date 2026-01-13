@@ -3,7 +3,11 @@ import { ulid } from "ulidx";
 import { z } from "zod";
 
 import { getBuildTargetListLimits } from "../../../feature-flags/src/constants";
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import {
+  accountProcedure,
+  createTRPCRouter,
+  protectedProcedure,
+} from "../trpc";
 import { LinkedInIndustrySearch } from "../utils/industry-search";
 import { paginate } from "../utils/pagination";
 import { buildTargetListWorkflow } from "../workflows";
@@ -384,7 +388,7 @@ export const targetListRouter = () =>
      * Get all user's lists + which ones contain the given profile
      * Used by ManageListButton popover
      */
-    findListsWithProfileStatus: protectedProcedure
+    findListsWithProfileStatus: accountProcedure
       .input(
         z.object({
           linkedinUrl: linkedInUrlSchema,
@@ -431,7 +435,7 @@ export const targetListRouter = () =>
      * Batch update profile's list membership
      * Used when ManageListButton popover closes
      */
-    updateProfileLists: protectedProcedure
+    updateProfileLists: accountProcedure
       .input(
         z.object({
           linkedinUrl: linkedInUrlSchema,
@@ -586,102 +590,6 @@ export const targetListRouter = () =>
         return paginate(profiles, {
           key: "id",
           size: 20,
-        });
-      }),
-
-    /**
-     * Ensure profile is added to the "All" list (creates list if needed)
-     * Called automatically when a profile is saved/selected
-     */
-    ensureProfileInAllList: protectedProcedure
-      .input(
-        z.object({
-          linkedinUrl: linkedInUrlSchema,
-        }),
-      )
-      .mutation(async ({ ctx, input }) => {
-        const ALL_LIST_NAME = "All";
-
-        if (ctx.activeAccount === null) {
-          return {
-            status: "error",
-            code: 400,
-            message:
-              "You must link a LinkedIn account to add profiles to a target list",
-          } as const;
-        }
-
-        const activeAccountId = ctx.activeAccount.id;
-
-        return await ctx.db.$transaction(async (tx) => {
-          // Find or create "All" list
-          let allList = await tx.targetList.findFirst({
-            where: {
-              accountId: activeAccountId,
-              name: ALL_LIST_NAME,
-            },
-          });
-
-          let listCreated = false;
-          if (!allList) {
-            const id = ulid();
-            allList = await tx.targetList.create({
-              data: {
-                id,
-                accountId: activeAccountId,
-                status: "COMPLETED",
-                name: ALL_LIST_NAME,
-              },
-            });
-            listCreated = true;
-          }
-
-          // Try to find existing LinkedInProfile by URL to link immediately
-          const existingProfile = await tx.targetProfile.findFirst({
-            where: { linkedinUrl: input.linkedinUrl },
-            select: {
-              id: true,
-              profile: {
-                select: {
-                  urn: true,
-                },
-              },
-            },
-          });
-
-          let targetProfileId = existingProfile?.id;
-
-          if (targetProfileId === undefined) {
-            targetProfileId = ulid();
-
-            // Add profile to "All" list (skipDuplicates handles idempotency)
-            await tx.targetProfile.createMany({
-              data: {
-                id: targetProfileId,
-                linkedinUrl: input.linkedinUrl,
-                profileUrn: existingProfile?.profile?.urn,
-                accountId: activeAccountId,
-              },
-              skipDuplicates: true,
-            });
-          }
-
-          const result = await tx.targetListProfile.createMany({
-            data: {
-              id: ulid(),
-              profileId: targetProfileId,
-              listId: allList.id,
-              accountId: activeAccountId,
-            },
-            skipDuplicates: true,
-          });
-
-          return {
-            status: "success",
-            list: allList,
-            listCreated,
-            profileAdded: result.count > 0,
-          } as const;
         });
       }),
   });

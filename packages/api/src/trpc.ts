@@ -350,6 +350,8 @@ export const accountProcedure = orgProcedure.use(({ ctx, next }) => {
       message: "No active account selected",
     });
   }
+
+  console.log("Active account is: ", ctx.activeAccount.profileUrl);
   // Use type assertion to narrow the type after runtime check
   const activeAccount = ctx.activeAccount as NonNullable<
     typeof ctx.activeAccount
