@@ -30,6 +30,16 @@ export interface PostAuthorInfo {
 }
 
 /**
+ * Time information extracted from a LinkedIn post.
+ */
+export interface PostTimeInfo {
+  /** Display time (e.g., "1h", "2d", "1w") */
+  displayTime: string | null;
+  /** Full time description (e.g., "1 hour ago") */
+  fullTime: string | null;
+}
+
+/**
  * Post Utilities Interface
  *
  * Defines operations for extracting data from LinkedIn posts.
@@ -70,4 +80,29 @@ export interface PostUtilities {
    * @returns The caption text, or empty string if not found
    */
   extractPostCaption(postContainer: Element): string;
+
+  /**
+   * Extract post time from a LinkedIn post container.
+   *
+   * @param postContainer - The LinkedIn post container element
+   * @returns PostTimeInfo with display and full time
+   */
+  extractPostTime(postContainer: HTMLElement): PostTimeInfo;
+
+  /**
+   * Detect if the post is from a company page (not a personal profile).
+   * Company posts have "/company/" in the author anchor href.
+   *
+   * @param postContainer - The LinkedIn post container element
+   * @returns True if the post is from a company page
+   */
+  detectCompanyPost(postContainer: HTMLElement): boolean;
+
+  /**
+   * Detect if the post is promoted/sponsored content.
+   *
+   * @param postContainer - The LinkedIn post container element
+   * @returns True if the post is promoted/sponsored
+   */
+  detectPromotedPost(postContainer: HTMLElement): boolean;
 }
