@@ -2,6 +2,7 @@ import type { CommentUtilities } from "./types";
 import { findEditableField } from "./utils-v2/find-editable-field";
 import { clickCommentButton } from "./utils-v2/click-comment-button";
 import { insertComment } from "./utils-v2/insert-comment";
+import { submitComment } from "./utils-v2/submit-comment";
 
 export class CommentUtilitiesV2 implements CommentUtilities {
   findEditableField(postContainer: HTMLElement): HTMLElement | null {
@@ -17,10 +18,10 @@ export class CommentUtilitiesV2 implements CommentUtilities {
   }
 
   submitComment(
-    _postContainer: HTMLElement,
-    _commentText: string
+    postContainer: HTMLElement,
+    commentText: string
   ): Promise<boolean> {
-    throw new Error("Not implemented yet");
+    return submitComment(postContainer, commentText);
   }
 
   waitForCommentsReady(
