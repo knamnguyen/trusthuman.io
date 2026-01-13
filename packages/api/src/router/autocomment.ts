@@ -509,7 +509,7 @@ export const autoCommentRouter = () =>
         }
 
         const permitted = await hasPermissionToAccessAccount(ctx.db, {
-          readerUserId: ctx.user.id,
+          actorUserId: ctx.user.id,
           accountId: account.id,
         });
 
@@ -596,7 +596,7 @@ export const autoCommentRouter = () =>
           }
 
           const permitted = await hasPermissionToAccessAccount(ctx.db, {
-            readerUserId: ctx.user.id,
+            actorUserId: ctx.user.id,
             accountId: account.id,
           });
 
@@ -681,99 +681,6 @@ export const autoCommentRouter = () =>
           return config;
         }),
     },
-
-    addCommentStyle: protectedProcedure
-      .input(
-        z.object({
-          name: z.string(),
-          description: z.string(),
-          content: z.string(),
-        }),
-      )
-      .mutation(async ({ ctx, input }) => {
-        const id = ulid();
-        await ctx.db.commentStyle.create({
-          data: {
-            id,
-            accountId: ctx.activeAccount!.id,
-            name: input.name,
-            content: input.content,
-            description: input.description,
-          },
-        });
-
-        return {
-          status: "success",
-          id,
-        } as const;
-      }),
-
-    listCommentStyles: protectedProcedure
-      .input(
-        z.object({
-          cursor: z.string().optional(),
-        }),
-      )
-      .query(async ({ ctx, input }) => {
-        const whereClause = [];
-        whereClause.push({ userId: ctx.user.id });
-        if (input.cursor) {
-          whereClause.push({ id: { lt: input.cursor } });
-        }
-        const styles = await ctx.db.commentStyle.findMany({
-          where: {
-            OR: whereClause,
-          },
-          orderBy: { id: "desc" },
-          take: 21,
-        });
-
-        return paginate(styles, { key: "id", size: 20 });
-      }),
-
-    deleteCommentStyle: protectedProcedure
-      .input(
-        z.object({
-          id: z.string(),
-        }),
-      )
-      .mutation(async ({ ctx, input }) => {
-        await ctx.db.commentStyle.deleteMany({
-          where: {
-            id: input.id,
-            userId: ctx.user.id,
-          },
-        });
-
-        return {
-          status: "success",
-        } as const;
-      }),
-
-    updateCommentStyle: protectedProcedure
-      .input(
-        z.object({
-          id: z.string(),
-          name: z.string().optional(),
-          content: z.string().optional(),
-        }),
-      )
-      .mutation(async ({ ctx, input }) => {
-        await ctx.db.commentStyle.updateMany({
-          where: {
-            id: input.id,
-            userId: ctx.user.id,
-          },
-          data: {
-            name: input.name,
-            content: input.content,
-          },
-        });
-
-        return {
-          status: "success",
-        } as const;
-      }),
   });
 
 export async function getAutocommentParamsWithFallback(

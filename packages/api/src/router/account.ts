@@ -1,6 +1,5 @@
 import type { ClerkClient } from "@clerk/backend";
 import { TRPCError } from "@trpc/server";
-import { Context } from "hono";
 import { ulid } from "ulidx";
 import z from "zod";
 
@@ -83,7 +82,7 @@ export const accountRouter = () =>
       )
       .query(async ({ ctx, input }) => {
         const permitted = await hasPermissionToAccessAccount(ctx.db, {
-          readerUserId: ctx.user.id,
+          actorUserId: ctx.user.id,
           accountId: input.id,
         });
 
@@ -131,7 +130,7 @@ export const accountRouter = () =>
 
           if (existingAccount !== null) {
             const permitted = await hasPermissionToAccessAccount(ctx.db, {
-              readerUserId: ctx.user.id,
+              actorUserId: ctx.user.id,
               accountId: existingAccount.id,
             });
 
@@ -225,7 +224,7 @@ export const accountRouter = () =>
         .mutation(async ({ ctx, input }) => {
           const hasAccess = await hasPermissionToAccessAccount(ctx.db, {
             accountId: input.accountId,
-            readerUserId: ctx.user.id,
+            actorUserId: ctx.user.id,
           });
 
           if (hasAccess === false) {
@@ -349,7 +348,7 @@ export const accountRouter = () =>
 
           // Case 3: Previously removed from an org (orgId and ownerId are both null)
           // Reclaim the account for the current user and org
-          if (existing.organizationId === null && existing.ownerId === null) {
+          if (existing.ownerId === null) {
             const reclaimed = await ctx.db.linkedInAccount.update({
               where: { id: existing.id },
               data: {
@@ -488,7 +487,7 @@ export const accountRouter = () =>
 
 export async function hasPermissionToAccessAccount(
   db: PrismaClient,
-  { readerUserId, accountId }: { readerUserId: string; accountId: string },
+  { actorUserId, accountId }: { actorUserId: string; accountId: string },
 ) {
   const exists = await db.linkedInAccount.count({
     where: {
@@ -496,7 +495,7 @@ export async function hasPermissionToAccessAccount(
         {
           id: accountId,
         },
-        hasPermissionToAccessAccountClause(readerUserId),
+        hasPermissionToAccessAccountClause(actorUserId),
       ],
     },
   });
