@@ -140,16 +140,27 @@ function extractName(container: Element): string | null {
 
 /**
  * Extract headline from container element.
+ * Skips "Author" badge when comment author is the post author.
  */
 function extractHeadline(container: Element): string | null {
   const nameContainer = findNameHeadlineContainer(container);
   if (!nameContainer) return null;
 
-  // Find all <p> elements - second one is headline
+  // Find all <p> elements
+  // Structure varies:
+  // - Normal: [name, headline]
+  // - Post author commenting: [name, "Author" badge, headline]
   const paragraphs = nameContainer.querySelectorAll("p");
-  if (paragraphs.length < 2) return null;
 
-  return paragraphs[1]?.textContent?.trim() || null;
+  for (let i = 1; i < paragraphs.length; i++) {
+    const text = paragraphs[i]?.textContent?.trim() || "";
+    // Skip "Author" badge, return first non-badge paragraph
+    if (text && text.toLowerCase() !== "author") {
+      return text;
+    }
+  }
+
+  return null;
 }
 
 /**
