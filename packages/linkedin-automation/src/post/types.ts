@@ -6,6 +6,16 @@
  */
 
 /**
+ * Post URL information extracted from a LinkedIn post.
+ */
+export interface PostUrlInfo {
+  /** The raw URN (e.g., "urn:li:activity:7410741511803297792") */
+  urn: string;
+  /** The full LinkedIn URL to the post */
+  url: string;
+}
+
+/**
  * Post Utilities Interface
  *
  * Defines operations for extracting data from LinkedIn posts.
@@ -20,4 +30,13 @@ export interface PostUtilities {
    * @returns The post container element, or null if not found
    */
   findPostContainer(anchorElement: Element): Element | null;
+
+  /**
+   * Extract post URL(s) from a LinkedIn post container.
+   * Handles both single activity URNs and aggregate URNs (multiple posts).
+   *
+   * @param postContainer - The LinkedIn post container element (or any child element)
+   * @returns Array of PostUrlInfo objects (empty if no valid URNs found)
+   */
+  extractPostUrl(postContainer: HTMLElement): PostUrlInfo[];
 }
