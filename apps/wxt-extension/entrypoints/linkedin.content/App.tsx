@@ -7,8 +7,8 @@ import { ToasterSimple } from "@sassy/ui/toast";
 import { ToggleButton } from "./_components/ToggleButton";
 import { PostNavigator } from "./compose-tab/PostNavigator";
 import { AutoEngageObserver } from "./engage-button/AutoEngageObserver";
-import { ButtonPortalManager } from "./engage-button/ButtonPortalManager";
 import { SpacebarEngageObserver } from "./engage-button/SpacebarEngageObserver";
+import { useEngageButtons } from "./engage-button/useEngageButtons";
 import { LinkedInSidebar } from "./LinkedInSidebar";
 import { useProfilePageButton } from "./save-profile/useProfilePageButton";
 import { useSaveProfileButtons } from "./save-profile/useSaveProfileButtons";
@@ -69,6 +69,9 @@ export default function App({ shadowRoot }: AppProps) {
   // Watch for profile page and inject save button (vanilla JS)
   useProfilePageButton();
 
+  // Watch for comment editors and inject engage buttons (vanilla JS, DOM v1/v2 support)
+  useEngageButtons();
+
   return (
     <>
       {/* Open button - only visible when sidebar is closed and animation finished */}
@@ -81,9 +84,6 @@ export default function App({ shadowRoot }: AppProps) {
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <LinkedInSidebar onClose={() => setIsOpen(false)} />
       </Sheet>
-
-      {/* Single React tree manages all injected engage buttons */}
-      <ButtonPortalManager />
 
       {/* Observer for auto-engage on native LinkedIn comment button clicks */}
       <AutoEngageObserver />

@@ -6,6 +6,28 @@
  */
 
 /**
+ * Target for injecting engage button next to comment editor.
+ * Similar to AuthorProfileTarget in profile utilities.
+ */
+export interface CommentEditorTarget {
+  /** Unique ID for this target */
+  id: string;
+  /** Container div for button injection */
+  container: HTMLDivElement;
+  /** The anchor element (add-image button or similar) */
+  anchorElement: Element;
+  /** The post container element (for extracting post info) */
+  postContainer: HTMLElement;
+}
+
+/**
+ * Callback type for comment editor target changes.
+ */
+export type OnCommentEditorTargetsChange = (
+  targets: CommentEditorTarget[]
+) => void;
+
+/**
  * Comment Utilities Interface
  *
  * Defines operations for creating and submitting comments on LinkedIn posts.
@@ -63,4 +85,14 @@ export interface CommentUtilities {
     container: HTMLElement,
     beforeCount: number
   ): Promise<void>;
+
+  /**
+   * Watch for comment editor elements where we can inject an engage button.
+   * Creates container divs for button injection next to the add-image button.
+   * Returns cleanup function.
+   *
+   * @param onChange - Callback fired when targets change
+   * @returns Cleanup function to stop watching and remove injected elements
+   */
+  watchForCommentEditors(onChange: OnCommentEditorTargetsChange): () => void;
 }

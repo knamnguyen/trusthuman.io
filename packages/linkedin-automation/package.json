@@ -8,7 +8,8 @@
     "./feed/*": "./src/feed/*.ts",
     "./account/*": "./src/account/*.ts",
     "./profile/*": "./src/profile/*.ts",
-    "./post/*": "./src/post/*.ts"
+    "./post/*": "./src/post/*.ts",
+    "./comment/*": "./src/comment/*.ts"
   },
   "license": "MIT",
   "scripts": {
