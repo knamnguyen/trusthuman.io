@@ -16,6 +16,20 @@ export interface PostUrlInfo {
 }
 
 /**
+ * Author information extracted from a LinkedIn post.
+ */
+export interface PostAuthorInfo {
+  /** Author's display name */
+  name: string | null;
+  /** URL to author's profile photo */
+  photoUrl: string | null;
+  /** Author's headline/title */
+  headline: string | null;
+  /** URL to author's LinkedIn profile */
+  profileUrl: string | null;
+}
+
+/**
  * Post Utilities Interface
  *
  * Defines operations for extracting data from LinkedIn posts.
@@ -39,4 +53,12 @@ export interface PostUtilities {
    * @returns Array of PostUrlInfo objects (empty if no valid URNs found)
    */
   extractPostUrl(postContainer: HTMLElement): PostUrlInfo[];
+
+  /**
+   * Extract author information from a LinkedIn post container.
+   *
+   * @param postContainer - The LinkedIn post container element
+   * @returns PostAuthorInfo object with available information
+   */
+  extractAuthorInfo(postContainer: HTMLElement): PostAuthorInfo;
 }
