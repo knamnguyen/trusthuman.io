@@ -61,4 +61,13 @@ export interface PostUtilities {
    * @returns PostAuthorInfo object with available information
    */
   extractAuthorInfo(postContainer: HTMLElement): PostAuthorInfo;
+
+  /**
+   * Extract post caption text from a LinkedIn post container.
+   * Preserves line breaks from <br> tags and block elements.
+   *
+   * @param postContainer - The LinkedIn post container element
+   * @returns The caption text, or empty string if not found
+   */
+  extractPostCaption(postContainer: Element): string;
 }
