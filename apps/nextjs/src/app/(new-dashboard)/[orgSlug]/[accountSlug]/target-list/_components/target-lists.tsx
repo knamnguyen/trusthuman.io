@@ -168,6 +168,9 @@ function ProfilesGrid({
               <ProfileCard
                 key={profile.id}
                 profile={profile}
+                listMemberships={profile.targetListProfiles.map(
+                  (tlp) => tlp.list,
+                )}
                 allLists={allLists}
               />
             ))}
@@ -194,12 +197,12 @@ interface ProfileCardProps {
   profile: {
     id: string;
     linkedinUrl: string;
-    listMemberships: { id: string; name: string }[];
   };
+  listMemberships: ListInfo[];
   allLists: ListInfo[];
 }
 
-function ProfileCard({ profile, allLists }: ProfileCardProps) {
+function ProfileCard({ profile, allLists, listMemberships }: ProfileCardProps) {
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -220,7 +223,7 @@ function ProfileCard({ profile, allLists }: ProfileCardProps) {
         </p>
         <div className="mb-3 flex flex-wrap gap-1">
           <span className="text-muted-foreground text-xs">Lists:</span>
-          {profile.listMemberships.map((list) => (
+          {listMemberships.map((list) => (
             <Badge key={list.id} variant="secondary" className="text-xs">
               {list.name}
             </Badge>
@@ -228,7 +231,7 @@ function ProfileCard({ profile, allLists }: ProfileCardProps) {
         </div>
         <ManageListButton
           linkedinUrl={profile.linkedinUrl}
-          listMemberships={profile.listMemberships}
+          listMemberships={listMemberships}
           allLists={allLists}
         />
       </CardContent>

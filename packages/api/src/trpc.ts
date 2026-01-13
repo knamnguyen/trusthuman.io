@@ -13,7 +13,7 @@ import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
 
-import type { AccessType, Prisma, PrismaClient } from "@sassy/db";
+import type { Prisma, PrismaClient } from "@sassy/db";
 import { db } from "@sassy/db";
 
 import type { BrowserSessionRegistry } from "./utils/browser-session";
@@ -53,7 +53,7 @@ function getCachedAuth(
   authCache.set(cacheKey, promise);
 
   // Clean up after TTL (whether success or failure)
-  promise.finally(() => {
+  void promise.finally(() => {
     setTimeout(() => {
       // Only delete if it's still the same promise (not replaced)
       if (authCache.get(cacheKey) === promise) {
@@ -197,14 +197,18 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
         user: result.user,
         activeAccount: result.activeAccount,
         memberships: result.memberships,
-        activeOrg: null, // Not available in assumed token mode
+        // have to do casting here else typescript narrows down to null
+        activeOrg: null as null | {
+          id: string;
+          slug: string | null;
+          role: string | null;
+        }, // Not available in assumed token mode
       },
     });
   }
 
   // Get account id and source for logging
   const activeAccountId = ctx.headers.get("x-account-id") ?? null;
-  const source = ctx.headers.get("x-trpc-source") ?? "nextjs";
 
   // Unified auth: authenticateRequest works for both NextJS and Chrome extension
   // Returns full Auth object with orgId from active organization
@@ -230,7 +234,6 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
   // Use cached auth to avoid redundant DB queries for parallel requests
   // Cache key: sessionId + orgId + accountId (covers all variations)
   const cacheKey = `${state.sessionId}:${activeOrg?.id ?? "none"}:${activeAccountId ?? "none"}`;
-  const dbCacheHit = authCache.has(cacheKey);
   const result = await getCachedAuth(cacheKey, () =>
     getOrInsertUser(ctx.db, clerkClient, {
       userId: state.userId,
