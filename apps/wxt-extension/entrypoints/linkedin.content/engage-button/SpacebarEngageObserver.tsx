@@ -6,6 +6,7 @@ import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post
 
 import { useTRPC } from "../../../lib/trpc/client";
 import { useComposeStore } from "../stores/compose-store";
+import { useSettingsStore } from "../stores/settings-store";
 import { SIDEBAR_TABS, useSidebarStore } from "../stores/sidebar-store";
 import { DEFAULT_STYLE_GUIDE, useMostVisiblePost } from "../utils";
 
@@ -52,12 +53,12 @@ export function SpacebarEngageObserver() {
     trpc.aiComments.generateComment.mutationOptions(),
   );
 
-  // Get settings - need to subscribe to both
-  const spacebarEnabled = useComposeStore(
-    (state) => state.settings.spacebarAutoEngage,
+  // Get settings from settings store
+  const spacebarEnabled = useSettingsStore(
+    (state) => state.behavior.spacebarAutoEngage,
   );
-  const postNavigatorEnabled = useComposeStore(
-    (state) => state.settings.postNavigator,
+  const postNavigatorEnabled = useSettingsStore(
+    (state) => state.behavior.postNavigator,
   );
 
   // Track the most visible post ref for spacebar handler (updated via callback)
@@ -108,8 +109,8 @@ export function SpacebarEngageObserver() {
         postContainer.getAttribute("data-id") ||
         `unknown-${Date.now()}`;
 
-      // Get humanOnlyMode setting
-      const { humanOnlyMode } = useComposeStore.getState().settings;
+      // Get humanOnlyMode setting from settings store
+      const { humanOnlyMode } = useSettingsStore.getState().behavior;
 
       // Create card IDs based on mode
       const manualCardId = humanOnlyMode ? crypto.randomUUID() : null;
@@ -310,19 +311,20 @@ export function SpacebarEngageObserver() {
         return;
       }
 
-      // Get fresh state from store to avoid closure issues
-      const state = useComposeStore.getState();
+      // Get fresh state from stores to avoid closure issues
+      const composeState = useComposeStore.getState();
+      const settingsState = useSettingsStore.getState();
 
       // Skip if feature is disabled
-      if (!state.settings.spacebarAutoEngage) {
+      if (!settingsState.behavior.spacebarAutoEngage) {
         return;
       }
 
       // Only block if Load Posts is running or Load Posts cards exist
-      const hasLoadPostsCardsNow = state.cards.some(
-        (c) => !state.singlePostCardIds.includes(c.id),
+      const hasLoadPostsCardsNow = composeState.cards.some(
+        (c) => !composeState.singlePostCardIds.includes(c.id),
       );
-      if (state.isCollecting || hasLoadPostsCardsNow) {
+      if (composeState.isCollecting || hasLoadPostsCardsNow) {
         console.log(
           "EngageKit SpacebarEngage: ignoring - Load Posts running or Load Posts cards exist",
         );

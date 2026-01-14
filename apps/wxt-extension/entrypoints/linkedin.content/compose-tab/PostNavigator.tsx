@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { Button } from "@sassy/ui/button";
 
-import { useComposeStore } from "../stores/compose-store";
+import { useSettingsStore } from "../stores/settings-store";
 import { useMostVisiblePost } from "../utils";
 
 /**
@@ -14,9 +14,9 @@ import { useMostVisiblePost } from "../utils";
  * Only renders when postNavigator setting is enabled.
  */
 export function PostNavigator() {
-  // Get settings from store
-  const postNavigatorEnabled = useComposeStore(
-    (state) => state.settings.postNavigator,
+  // Get settings from settings store
+  const postNavigatorEnabled = useSettingsStore(
+    (state) => state.behavior.postNavigator,
   );
 
   // Use shared hook for tracking most visible post

@@ -22,6 +22,7 @@ import { Switch } from "@sassy/ui/switch";
 
 import { useTRPC } from "../../../lib/trpc/client";
 import { useComposeStore } from "../stores/compose-store";
+import { useSettingsStore } from "../stores/settings-store";
 import { useShadowRootStore } from "../stores/shadow-root-store";
 import { DEFAULT_STYLE_GUIDE } from "../utils";
 import { ComposeCard } from "./ComposeCard";
@@ -52,9 +53,9 @@ export function ComposeTab() {
   const isEngageButtonGenerating = useComposeStore(
     (state) => state.isEngageButtonGenerating,
   );
-  // Subscribe to settings for toggles
-  const settings = useComposeStore((state) => state.settings);
-  const updateSetting = useComposeStore((state) => state.updateSetting);
+  // Subscribe to behavior settings for toggles (now in settings-store)
+  const behaviorSettings = useSettingsStore((state) => state.behavior);
+  const updateBehavior = useSettingsStore((state) => state.updateBehavior);
   const clearAllCards = useComposeStore((state) => state.clearAllCards);
 
   const trpc = useTRPC();
@@ -126,7 +127,7 @@ export function ComposeTab() {
     const existingUrns = new Set(getCards.map((card) => card.urn));
 
     // Check humanOnlyMode at start time (snapshot for this collection session)
-    const isHumanMode = useComposeStore.getState().settings.humanOnlyMode;
+    const isHumanMode = useSettingsStore.getState().behavior.humanOnlyMode;
 
     // Batch callback - called when each batch of posts is ready
     const onBatchReady = (posts: ReadyPost[]) => {
@@ -306,9 +307,9 @@ export function ComposeTab() {
             <div className="flex items-center gap-1.5">
               <Switch
                 id="human-only-mode"
-                checked={settings.humanOnlyMode}
+                checked={behaviorSettings.humanOnlyMode}
                 onCheckedChange={(checked) =>
-                  updateSetting("humanOnlyMode", checked)
+                  updateBehavior("humanOnlyMode", checked)
                 }
               />
               <Label
@@ -327,9 +328,9 @@ export function ComposeTab() {
           <div className="flex items-center gap-1.5">
             <Switch
               id="auto-open-engage"
-              checked={settings.autoEngageOnCommentClick}
+              checked={behaviorSettings.autoEngageOnCommentClick}
               onCheckedChange={(checked) =>
-                updateSetting("autoEngageOnCommentClick", checked)
+                updateBehavior("autoEngageOnCommentClick", checked)
               }
             />
             <Label
@@ -343,9 +344,9 @@ export function ComposeTab() {
           <div className="flex items-center gap-1.5">
             <Switch
               id="space-engage"
-              checked={settings.spacebarAutoEngage}
+              checked={behaviorSettings.spacebarAutoEngage}
               onCheckedChange={(checked) =>
-                updateSetting("spacebarAutoEngage", checked)
+                updateBehavior("spacebarAutoEngage", checked)
               }
             />
             <Label
@@ -359,9 +360,9 @@ export function ComposeTab() {
           <div className="flex items-center gap-1.5">
             <Switch
               id="post-navigator"
-              checked={settings.postNavigator}
+              checked={behaviorSettings.postNavigator}
               onCheckedChange={(checked) =>
-                updateSetting("postNavigator", checked)
+                updateBehavior("postNavigator", checked)
               }
             />
             <Label
