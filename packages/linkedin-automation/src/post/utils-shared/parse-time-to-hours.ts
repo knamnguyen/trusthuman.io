@@ -22,7 +22,7 @@ export function parseTimeToHours(displayTime: string | null): number | null {
 
   // Match number followed by unit (e.g., "21h", "2d", "1w", "3mo", "1y")
   const match = displayTime.match(/^(\d+)\s*([hdwmoy]+)/i);
-  if (!match) return null;
+  if (!match?.[1] || !match[2]) return null;
 
   const num = parseInt(match[1], 10);
   const unit = match[2].toLowerCase();
