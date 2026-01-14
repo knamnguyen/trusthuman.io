@@ -1,8 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-/** Selectors for LinkedIn post containers */
-export const POST_SELECTORS =
-  "div[data-urn], div[data-id], article[role='article']";
+import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post-utilities";
+
+// Initialize utilities (auto-detects DOM version)
+const postUtils = createPostUtilities();
+
+/** Selectors for LinkedIn post containers (auto-detected based on DOM version) */
+export const POST_SELECTORS = postUtils.getPostContainerSelector();
 
 /** Default highlight style for focused post */
 export const DEFAULT_HIGHLIGHT_STYLE = "3px solid #ec4899";

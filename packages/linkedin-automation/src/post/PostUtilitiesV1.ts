@@ -52,4 +52,8 @@ export class PostUtilitiesV1 implements PostUtilities {
   extractAdjacentComments(postContainer: HTMLElement): AdjacentCommentInfo[] {
     return extractAdjacentComments(postContainer);
   }
+
+  getPostContainerSelector(): string {
+    return "div[data-urn], div[data-id], article[role='article']";
+  }
 }

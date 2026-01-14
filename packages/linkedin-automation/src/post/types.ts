@@ -157,4 +157,15 @@ export interface PostUtilities {
    * @returns Array of simplified comment info objects
    */
   extractAdjacentComments(postContainer: HTMLElement): AdjacentCommentInfo[];
+
+  /**
+   * Get the CSS selector for post containers.
+   * Used for querying all posts in the feed.
+   *
+   * V1: "div[data-urn], div[data-id], article[role='article']"
+   * V2: 'div[role="listitem"]'
+   *
+   * @returns CSS selector string for post containers
+   */
+  getPostContainerSelector(): string;
 }

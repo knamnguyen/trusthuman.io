@@ -52,4 +52,8 @@ export class PostUtilitiesV2 implements PostUtilities {
   extractAdjacentComments(postContainer: HTMLElement): AdjacentCommentInfo[] {
     return extractAdjacentComments(postContainer);
   }
+
+  getPostContainerSelector(): string {
+    return 'div[role="listitem"]';
+  }
 }
