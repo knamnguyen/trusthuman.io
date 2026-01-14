@@ -137,16 +137,36 @@ CREATE TABLE "CommentStyle" (
 CREATE TABLE "PostLoadSetting" (
     "accountId" TEXT NOT NULL,
     "targetListId" TEXT,
-    "submitDelayRange" TEXT NOT NULL DEFAULT '5-20',
     "timeFilterEnabled" BOOLEAN NOT NULL DEFAULT false,
     "minPostAge" INTEGER,
     "skipFriendActivitiesEnabled" BOOLEAN NOT NULL DEFAULT false,
     "skipCompanyPagesEnabled" BOOLEAN NOT NULL DEFAULT true,
     "skipPromotedPostsEnabled" BOOLEAN NOT NULL DEFAULT true,
+    "skipblacklistEnabled" BOOLEAN NOT NULL DEFAULT false,
+    "blacklistId" TEXT,
+    "skipFirstDegree" BOOLEAN NOT NULL DEFAULT false,
+    "skipSecondDegree" BOOLEAN NOT NULL DEFAULT false,
+    "skipThirdDegree" BOOLEAN NOT NULL DEFAULT false,
+    "skipFollowing" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "PostLoadSetting_pkey" PRIMARY KEY ("accountId")
+);
+
+-- CreateTable
+CREATE TABLE "SubmitCommentSetting" (
+    "accountId" TEXT NOT NULL,
+    "submitDelayRange" TEXT NOT NULL DEFAULT '5-20',
+    "likePostEnabled" BOOLEAN NOT NULL DEFAULT true,
+    "likeCommentEnabled" BOOLEAN NOT NULL DEFAULT true,
+    "tagPostAuthorEnabled" BOOLEAN NOT NULL DEFAULT true,
+    "attachPictureEnabled" BOOLEAN NOT NULL DEFAULT false,
+    "defaultPictureAttachUrl" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "SubmitCommentSetting_pkey" PRIMARY KEY ("accountId")
 );
 
 -- CreateTable
@@ -158,14 +178,13 @@ CREATE TABLE "Comment" (
     "postFullCaption" TEXT NOT NULL,
     "postCaptionPreview" TEXT NOT NULL,
     "adjacentComments" JSONB,
-    "authorUrn" TEXT,
     "authorName" TEXT,
     "authorProfileUrl" TEXT,
     "authorAvatarUrl" TEXT,
     "authorHeadline" TEXT,
     "comment" TEXT NOT NULL,
     "originalAiComment" TEXT,
-    "postAlternateUrns" TEXT[],
+    "postAlternateUrns" TEXT[] DEFAULT ARRAY['']::TEXT[],
     "commentedAt" TIMESTAMP(3),
     "isAutoCommented" BOOLEAN NOT NULL DEFAULT true,
     "status" "CommentStatus" NOT NULL DEFAULT 'DRAFT',
@@ -593,6 +612,12 @@ ALTER TABLE "PostLoadSetting" ADD CONSTRAINT "PostLoadSetting_accountId_fkey" FO
 
 -- AddForeignKey
 ALTER TABLE "PostLoadSetting" ADD CONSTRAINT "PostLoadSetting_targetListId_fkey" FOREIGN KEY ("targetListId") REFERENCES "TargetList"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PostLoadSetting" ADD CONSTRAINT "PostLoadSetting_blacklistId_fkey" FOREIGN KEY ("blacklistId") REFERENCES "TargetList"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "SubmitCommentSetting" ADD CONSTRAINT "SubmitCommentSetting_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Comment" ADD CONSTRAINT "Comment_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

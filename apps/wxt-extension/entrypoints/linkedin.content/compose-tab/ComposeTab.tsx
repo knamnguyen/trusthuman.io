@@ -24,6 +24,7 @@ import { useSettingsStore } from "../stores/settings-store";
 import { DEFAULT_STYLE_GUIDE } from "../utils";
 import { ComposeCard } from "./ComposeCard";
 import { PostPreviewSheet } from "./PostPreviewSheet";
+import { saveCommentToDb } from "./save-comment-to-db";
 import { SettingsSheet } from "./SettingsSheet";
 import { SettingsTags } from "./SettingsTags";
 
@@ -349,6 +350,9 @@ export function ComposeTab() {
 
         // Mark as sent
         updateCardStatus(card.id, "sent");
+
+        // 8. Save to database (fire-and-forget)
+        void saveCommentToDb(card);
       }
 
       // Random delay between submissions (based on settings)

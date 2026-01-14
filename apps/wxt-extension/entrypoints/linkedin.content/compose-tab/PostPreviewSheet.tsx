@@ -28,6 +28,7 @@ import { useTRPC } from "../../../lib/trpc/client";
 import { useComposeStore } from "../stores/compose-store";
 import { useSettingsStore } from "../stores/settings-store";
 import { DEFAULT_STYLE_GUIDE } from "../utils";
+import { saveCommentToDb } from "./save-comment-to-db";
 
 // Initialize utilities (auto-detects DOM version)
 const postUtils = createPostUtilities();
@@ -321,6 +322,9 @@ export function PostPreviewSheet() {
         }
 
         updateCardStatus(previewingCard.id, "sent");
+
+        // 8. Save to database (fire-and-forget)
+        void saveCommentToDb(previewingCard);
       }
     } catch (err) {
       console.error("EngageKit: error submitting comment", err);
