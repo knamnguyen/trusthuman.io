@@ -1,10 +1,11 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import {
   Edit3,
   Feather,
   Loader2,
   Send,
+  Settings,
   Sparkles,
   Square,
   Trash2,
@@ -16,17 +17,15 @@ import { createCommentUtilities } from "@sassy/linkedin-automation/comment/creat
 import { collectPostsBatch } from "@sassy/linkedin-automation/feed/collect-posts";
 import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post-utilities";
 import { Button } from "@sassy/ui/button";
-import { TooltipWithDialog } from "@sassy/ui/components/tooltip-with-dialog";
-import { Label } from "@sassy/ui/label";
-import { Switch } from "@sassy/ui/switch";
 
 import { useTRPC } from "../../../lib/trpc/client";
 import { useComposeStore } from "../stores/compose-store";
 import { useSettingsStore } from "../stores/settings-store";
-import { useShadowRootStore } from "../stores/shadow-root-store";
 import { DEFAULT_STYLE_GUIDE } from "../utils";
 import { ComposeCard } from "./ComposeCard";
 import { PostPreviewSheet } from "./PostPreviewSheet";
+import { SettingsSheet } from "./SettingsSheet";
+import { SettingsTags } from "./SettingsTags";
 
 // Initialize utilities (auto-detects DOM version)
 const postUtils = createPostUtilities();
@@ -36,10 +35,8 @@ export function ComposeTab() {
   // DEBUG: Track renders
   console.log("[ComposeTab] Render");
 
-  // Get shadow root for portal containers (required for tooltips/dialogs in shadow DOM)
-  const shadowRoot = useShadowRootStore((s) => s.shadowRoot);
-
   const [isLoading, setIsLoading] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   /** Target number of drafts to collect (user configurable, max 100) */
   const [targetDraftCount, setTargetDraftCount] = useState<number>(10);
   /** Live progress counter during loading */
@@ -53,9 +50,6 @@ export function ComposeTab() {
   const isEngageButtonGenerating = useComposeStore(
     (state) => state.isEngageButtonGenerating,
   );
-  // Subscribe to behavior settings for toggles (now in settings-store)
-  const behaviorSettings = useSettingsStore((state) => state.behavior);
-  const updateBehavior = useSettingsStore((state) => state.updateBehavior);
   const clearAllCards = useComposeStore((state) => state.clearAllCards);
 
   const trpc = useTRPC();
@@ -106,9 +100,23 @@ export function ComposeTab() {
   // Get cards array only when needed for operations (not for rendering)
   const getCards = useComposeStore((state) => state.cards);
   const setPreviewingCard = useComposeStore((state) => state.setPreviewingCard);
+  const previewingCardId = useComposeStore((state) => state.previewingCardId);
 
   // Conflict flags - disable certain actions when others are running
   const isAnyGenerating = isLoading || isEngageButtonGenerating;
+
+  // Ensure only one sub-sidebar open at a time: close settings when post preview opens
+  useEffect(() => {
+    if (previewingCardId) {
+      setSettingsOpen(false);
+    }
+  }, [previewingCardId]);
+
+  // Handler to open settings (closes post preview first)
+  const handleOpenSettings = useCallback(() => {
+    setPreviewingCard(null);
+    setSettingsOpen(true);
+  }, [setPreviewingCard]);
 
   /**
    * Start batch collection:
@@ -118,6 +126,9 @@ export function ComposeTab() {
    * - Much faster than sequential processing
    */
   const handleStart = useCallback(async () => {
+    // Close settings sheet when starting load (post preview will open for first card)
+    setSettingsOpen(false);
+
     setIsLoading(true);
     setIsCollecting(true); // Mark as collecting so ComposeCard can refocus on blur
     setLoadingProgress(0);
@@ -203,7 +214,10 @@ export function ComposeTab() {
       }
     };
 
-    // Run batch collection
+    // Get post load filter settings (snapshot at start time)
+    const postLoadSettings = useSettingsStore.getState().postLoad;
+
+    // Run batch collection with filter config
     await collectPostsBatch(
       targetDraftCount,
       existingUrns,
@@ -211,6 +225,17 @@ export function ComposeTab() {
       onBatchReady,
       () => stopRequestedRef.current,
       () => useComposeStore.getState().isUserEditing,
+      {
+        timeFilterEnabled: postLoadSettings.timeFilterEnabled,
+        minPostAge: postLoadSettings.minPostAge,
+        skipPromotedPosts: postLoadSettings.skipPromotedPostsEnabled,
+        skipCompanyPages: postLoadSettings.skipCompanyPagesEnabled,
+        skipFriendActivities: postLoadSettings.skipFriendActivitiesEnabled,
+        skipFirstDegree: postLoadSettings.skipFirstDegree,
+        skipSecondDegree: postLoadSettings.skipSecondDegree,
+        skipThirdDegree: postLoadSettings.skipThirdDegree,
+        skipFollowing: postLoadSettings.skipFollowing,
+      },
     );
 
     setIsLoading(false);
@@ -279,99 +304,26 @@ export function ComposeTab() {
     <div className="bg-background flex flex-col gap-3 px-4">
       {/* Sticky Compact Header */}
       <div className="bg-background sticky top-0 z-10 -mx-4 border-b px-4 py-2">
-        {/* Row 0: 100% Human Mode Toggle */}
-        <div className="mb-2 flex items-center justify-start gap-4 border-b pb-2">
-          {/* Row 1: Title */}
+        {/* Row 1: Title + Settings Icon */}
+        <div className="mb-2 flex items-center justify-between border-b pb-2">
           <div className="flex items-center gap-2">
             <Feather className="h-3.5 w-3.5" />
             <span className="text-sm font-medium">Compose</span>
           </div>
-
-          <TooltipWithDialog
-            tooltipContent="Watch our tutorial video"
-            buttonText="Watch Video"
-            dialogTitle="Tutorial"
-            dialogClassName="max-w-3xl"
-            portalContainer={shadowRoot}
-            dialogContent={
-              <div className="aspect-video">
-                <iframe
-                  src="https://www.youtube.com/embed/your-video-id"
-                  className="h-full w-full rounded-lg"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              </div>
-            }
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 w-6 shrink-0 p-0"
+            onClick={handleOpenSettings}
+            title="Open settings"
           >
-            <div className="flex items-center gap-1.5">
-              <Switch
-                id="human-only-mode"
-                checked={behaviorSettings.humanOnlyMode}
-                onCheckedChange={(checked) =>
-                  updateBehavior("humanOnlyMode", checked)
-                }
-              />
-              <Label
-                htmlFor="human-only-mode"
-                className="text-muted-foreground cursor-pointer text-[10px]"
-              >
-                100% human mode
-              </Label>
-            </div>
-          </TooltipWithDialog>
+            <Settings className="h-3.5 w-3.5" />
+          </Button>
         </div>
 
-        {/* Row 2: Settings Toggles */}
-        <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
-          {/* Auto-open-engage toggle */}
-          <div className="flex items-center gap-1.5">
-            <Switch
-              id="auto-open-engage"
-              checked={behaviorSettings.autoEngageOnCommentClick}
-              onCheckedChange={(checked) =>
-                updateBehavior("autoEngageOnCommentClick", checked)
-              }
-            />
-            <Label
-              htmlFor="auto-open-engage"
-              className="text-muted-foreground cursor-pointer text-[10px]"
-            >
-              Auto-open-engage
-            </Label>
-          </div>
-          {/* Spacebar auto-engage toggle - highlights most visible post, press space to engage */}
-          <div className="flex items-center gap-1.5">
-            <Switch
-              id="space-engage"
-              checked={behaviorSettings.spacebarAutoEngage}
-              onCheckedChange={(checked) =>
-                updateBehavior("spacebarAutoEngage", checked)
-              }
-            />
-            <Label
-              htmlFor="space-engage"
-              className="text-muted-foreground cursor-pointer text-[10px]"
-            >
-              Space engage
-            </Label>
-          </div>
-          {/* Post navigator toggle - floating UI for quick scrolling between posts */}
-          <div className="flex items-center gap-1.5">
-            <Switch
-              id="post-navigator"
-              checked={behaviorSettings.postNavigator}
-              onCheckedChange={(checked) =>
-                updateBehavior("postNavigator", checked)
-              }
-            />
-            <Label
-              htmlFor="post-navigator"
-              className="text-muted-foreground cursor-pointer text-[10px]"
-            >
-              Post navigator
-            </Label>
-          </div>
+        {/* Row 2: Settings Tags */}
+        <div className="mb-2 overflow-x-auto">
+          <SettingsTags />
         </div>
 
         {/* Row 2: Load Posts + Target Input */}
@@ -520,6 +472,14 @@ export function ComposeTab() {
       {/* Post Preview Sheet - positioned at sidebar's left edge, clips content as it slides */}
       <div className="pointer-events-none absolute top-0 bottom-0 left-0 z-[-1] w-[600px] -translate-x-full overflow-hidden">
         <PostPreviewSheet />
+      </div>
+
+      {/* Settings Sheet - positioned at sidebar's left edge */}
+      <div className="pointer-events-none absolute top-0 bottom-0 left-0 z-10 w-[400px] -translate-x-full overflow-hidden">
+        <SettingsSheet
+          isOpen={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+        />
       </div>
     </div>
   );
