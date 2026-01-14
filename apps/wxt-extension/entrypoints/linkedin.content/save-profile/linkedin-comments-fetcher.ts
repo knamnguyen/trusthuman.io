@@ -36,14 +36,14 @@ const parseCommentEntityUrn = (
 ): { commentId: string; parentUrn: string } | null => {
   if (typeof entityUrn !== "string") return null;
   const match = entityUrn.match(/^urn:li:fsd_comment:\(([^,]+),(.+)\)$/);
-  if (!match) return null;
+  if (!match?.[1] || !match[2]) return null;
   return { commentId: match[1], parentUrn: match[2] };
 };
 
 const parseUpdateEntityUrn = (entityUrn: string): string | null => {
   if (typeof entityUrn !== "string") return null;
   const match = entityUrn.match(/^urn:li:fsd_update:\((urn:li:[^,]+),/);
-  if (!match) return null;
+  if (!match?.[1]) return null;
   return match[1];
 };
 
@@ -234,12 +234,12 @@ export const parseCommentsFromVoyagerResponse = (
       let parentCommentUrn: string | null = null;
       if (isReply) {
         const commentUrnMatch = permalink.match(/commentUrn=([^&]+)/);
-        if (commentUrnMatch) {
+        if (commentUrnMatch?.[1]) {
           const decodedCommentUrn = decodeURIComponent(commentUrnMatch[1]);
           const commentIdMatch = decodedCommentUrn.match(
             /urn:li:comment:\((activity|ugcPost):[^,]+,(\d+)\)/,
           );
-          if (commentIdMatch) {
+          if (commentIdMatch?.[1] && commentIdMatch[2]) {
             const parentType = commentIdMatch[1];
             const parentIdMatch = decodedCommentUrn.match(
               /(activity|ugcPost):(\d+)/,
@@ -292,7 +292,7 @@ export const parseCommentsFromVoyagerResponse = (
       const match = entityUrn?.match(
         /^urn:li:fsd_socialDetail:\(([^,]+),([^,]+),/,
       );
-      if (match) {
+      if (match?.[1] && match[2]) {
         const ugcPostUrn = match[1];
         const activityUrn = match[2];
         if (updatesByUrn.has(activityUrn)) {
