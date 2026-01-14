@@ -31,5 +31,6 @@ enum ConnectDegree {
   FIRST
   SECOND
   THIRD
+  THIRD+
   FOLLOWING
 }
