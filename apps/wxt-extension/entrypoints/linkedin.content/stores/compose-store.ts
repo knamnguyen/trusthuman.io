@@ -1,9 +1,11 @@
 import { create } from "zustand";
 
-import type { PostAuthorInfo } from "../utils/post/extract-author-info-from-post";
-import type { PostCommentInfo } from "../utils/post/extract-comment-from-post";
-import type { PostTimeInfo } from "../utils/post/extract-post-time";
-import type { PostUrlInfo } from "../utils/post/extract-post-url";
+import type {
+  PostAuthorInfo,
+  PostCommentInfo,
+  PostTimeInfo,
+  PostUrlInfo,
+} from "@sassy/linkedin-automation/post/types";
 
 // Separate settings type for localStorage persistence
 export interface ComposeSettings {
