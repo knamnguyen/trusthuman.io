@@ -82,16 +82,16 @@ export interface CommentUtilities {
 
   /**
    * Submit a comment to a LinkedIn post.
-   * Full flow: wait for editable field, insert text, click submit, verify posted.
+   * Clicks the submit button and verifies the comment was posted.
+   *
+   * Note: Comment text should already be inserted via insertComment()
+   * before calling this function. This allows for tagging and image
+   * attachment between insert and submit.
    *
    * @param postContainer - The LinkedIn post container element
-   * @param commentText - The comment text to submit
    * @returns true if comment was successfully submitted and verified
    */
-  submitComment(
-    postContainer: HTMLElement,
-    commentText: string
-  ): Promise<boolean>;
+  submitComment(postContainer: HTMLElement): Promise<boolean>;
 
   /**
    * Wait for comments to load after clicking the comment button.
@@ -161,17 +161,27 @@ export interface CommentUtilities {
 
   /**
    * Attach an image to a comment before submitting.
-   * Downloads the image from URL and attaches it to the comment box.
+   * Downloads the image from URL (or uses Blob directly) and attaches it to the comment box.
    *
    * Flow:
    * 1. Find "Add photo" button and click it (blocking file picker)
-   * 2. Fetch image from URL and convert to File object
+   * 2. If URL: Fetch image and convert to File object
+   *    If Blob: Wrap in File object directly
    * 3. Set file on the input using DataTransfer API
    * 4. Dispatch change event to trigger LinkedIn's handler
    *
    * @param postContainer - The LinkedIn post container element
-   * @param imageUrl - URL of the image to attach
+   * @param imageSource - URL string or Blob of the image to attach
    * @returns Promise<boolean> - true if image was attached successfully
    */
-  attachImageToComment(postContainer: HTMLElement, imageUrl: string): Promise<boolean>;
+  attachImageToComment(postContainer: HTMLElement, imageSource: string | Blob): Promise<boolean>;
+
+  /**
+   * Click the submit button (Comment/Reply) in a post's comment editor.
+   * Used by the manual flow after inserting text, tagging, and attaching.
+   *
+   * @param postContainer - The LinkedIn post container element
+   * @returns boolean - true if button was found and clicked
+   */
+  clickSubmitButton(postContainer: HTMLElement): boolean;
 }

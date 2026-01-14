@@ -8,51 +8,36 @@
  * 2. Ensure space before @ (mention picker requires it)
  * 3. Type "@" to trigger mention picker
  * 4. Wait for dropdown to appear
- * 5. Use keyboard navigation (ArrowDown + Enter) to select first option
+ * 5. Click on first option to select
  */
 
 /**
- * Waits for the mention picker dropdown to appear.
+ * Waits for the mention picker dropdown to appear and returns first option.
  * Polls until found or timeout reached.
  *
  * @param maxWaitMs - Maximum time to wait in milliseconds
  * @param pollIntervalMs - Interval between checks
- * @returns true if dropdown appeared, false otherwise
+ * @returns The first clickable option element, or null if not found
  */
-async function waitForMentionDropdown(
+async function waitForMentionOption(
   maxWaitMs: number = 3000,
   pollIntervalMs: number = 100
-): Promise<boolean> {
+): Promise<HTMLElement | null> {
   const startTime = Date.now();
 
   while (Date.now() - startTime < maxWaitMs) {
-    const dropdown = document.querySelector<HTMLElement>(
-      '[data-testid="typeahead-results-container"]'
+    // V2 uses floating UI portal with typeahead-results-container
+    // Options are div[role="option"] with div[role="button"] inside
+    const option = document.querySelector<HTMLElement>(
+      '[data-testid="typeahead-results-container"] [role="option"] [role="button"]'
     );
-    if (dropdown) {
-      return true;
+    if (option) {
+      return option;
     }
     await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
   }
 
-  return false;
-}
-
-/**
- * Dispatches a keyboard event to the active element.
- */
-function sendKey(key: string, code: string, keyCode: number): void {
-  const eventInit: KeyboardEventInit = {
-    key,
-    code,
-    keyCode,
-    which: keyCode,
-    bubbles: true,
-    cancelable: true,
-    composed: true,
-  };
-  document.activeElement?.dispatchEvent(new KeyboardEvent("keydown", eventInit));
-  document.activeElement?.dispatchEvent(new KeyboardEvent("keyup", eventInit));
+  return null;
 }
 
 /**
@@ -99,28 +84,24 @@ export async function tagPostAuthor(postContainer: HTMLElement): Promise<boolean
     // Post author typically appears as first suggestion
     document.execCommand("insertText", false, "@");
 
-    // Wait for the mention dropdown to appear
-    const dropdownVisible = await waitForMentionDropdown(3000, 100);
+    // Wait for the mention dropdown to appear with first option
+    const firstOption = await waitForMentionOption(3000, 100);
 
-    if (!dropdownVisible) {
+    if (!firstOption) {
       console.warn("EngageKit: Mention dropdown did not appear (v2)");
       // Clean up the @ we typed
       document.execCommand("delete", false);
       return false;
     }
 
-    // Wait for options to fully load
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    // Use keyboard navigation to select first option
-    // ArrowDown selects the first option, Enter confirms
-    sendKey("ArrowDown", "ArrowDown", 40);
+    // Wait a bit for options to fully render
     await new Promise((resolve) => setTimeout(resolve, 300));
 
-    sendKey("Enter", "Enter", 13);
+    // Click on the first option to select it
+    firstOption.click();
 
     // Wait for mention to be inserted
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 300));
 
     console.log("EngageKit: Post author tagged successfully (v2)");
     return true;

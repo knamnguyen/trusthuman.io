@@ -137,8 +137,9 @@ export function ComposeTab() {
     // Get current cards to find existing URNs (snapshot at start time)
     const existingUrns = new Set(getCards.map((card) => card.urn));
 
-    // Check humanOnlyMode at start time (snapshot for this collection session)
+    // Check settings at start time (snapshot for this collection session)
     const isHumanMode = useSettingsStore.getState().behavior.humanOnlyMode;
+    const generateSettings = useSettingsStore.getState().commentGenerate;
 
     // Batch callback - called when each batch of posts is ready
     const onBatchReady = (posts: ReadyPost[]) => {
@@ -179,10 +180,10 @@ export function ComposeTab() {
 
         // Only fire AI generation in AI mode
         if (!isHumanMode) {
-          // Extract adjacent comments for AI context
-          const adjacentComments = postUtils.extractAdjacentComments(
-            post.postContainer,
-          );
+          // Extract adjacent comments for AI context (only if enabled)
+          const adjacentComments = generateSettings.adjacentCommentsEnabled
+            ? postUtils.extractAdjacentComments(post.postContainer)
+            : [];
 
           // Fire AI request (don't await - run in parallel)
           generateComment
@@ -262,10 +263,14 @@ export function ComposeTab() {
   /**
    * Submit all draft comments to LinkedIn
    * Goes through each card from top to bottom:
-   * 1. Clicks the comment button to open comment box
-   * 2. Waits for editable field to appear
-   * 3. Inserts the comment text
-   * 4. Marks card as "sent"
+   * 1. Waits for editable field to appear
+   * 2. Inserts the comment text
+   * 3. Tags post author if enabled
+   * 4. Attaches image if enabled
+   * 5. Clicks submit button and verifies
+   * 6. Likes post if enabled
+   * 7. Likes own comment if enabled
+   * 8. Marks card as "sent"
    */
   const handleSubmitAll = useCallback(async () => {
     // Only submit cards that are drafts AND have finished generating
@@ -273,6 +278,12 @@ export function ComposeTab() {
       (c) => c.status === "draft" && !c.isGenerating,
     );
     if (cardsToSubmit.length === 0) return;
+
+    // Get submit settings
+    const submitSettings = useSettingsStore.getState().submitComment;
+    const [minDelay = 5, maxDelay = 20] = submitSettings.submitDelayRange
+      .split("-")
+      .map(Number);
 
     setIsSubmitting(true);
 
@@ -282,19 +293,67 @@ export function ComposeTab() {
         continue;
       }
 
-      // Submit comment to the post
-      const success = await commentUtils.submitComment(
-        card.postContainer,
-        card.commentText,
-      );
+      // 1. Wait for editable field (poll until found, max 3s)
+      let editableField: HTMLElement | null = null;
+      const startTime = Date.now();
+      while (Date.now() - startTime < 3000) {
+        editableField = commentUtils.findEditableField(card.postContainer);
+        if (editableField) break;
+        await new Promise((r) => setTimeout(r, 100));
+      }
+
+      if (!editableField) {
+        console.warn("EngageKit: Editable field not found for card", card.id);
+        continue;
+      }
+
+      // 2. Insert comment text
+      editableField.focus();
+      await commentUtils.insertComment(editableField, card.commentText);
+      await new Promise((r) => setTimeout(r, 300));
+
+      // 3. Tag author if enabled (adds mention at end)
+      if (submitSettings.tagPostAuthorEnabled) {
+        await commentUtils.tagPostAuthor(card.postContainer);
+        await new Promise((r) => setTimeout(r, 300));
+      }
+
+      // 4. Attach image if enabled
+      if (submitSettings.attachPictureEnabled) {
+        // Get random image from comment-image-store
+        const { useCommentImageStore } = await import(
+          "../stores/comment-image-store"
+        );
+        const imageUrl = useCommentImageStore.getState().getRandomImage();
+        if (imageUrl) {
+          await commentUtils.attachImageToComment(card.postContainer, imageUrl);
+          await new Promise((r) => setTimeout(r, 500)); // Wait for upload
+        }
+      }
+
+      // 5. Submit comment (click button + verify)
+      const success = await commentUtils.submitComment(card.postContainer);
 
       if (success) {
+        // 6. Like post if enabled
+        if (submitSettings.likePostEnabled) {
+          await commentUtils.likePost(card.postContainer);
+          await new Promise((r) => setTimeout(r, 300));
+        }
+
+        // 7. Like own comment if enabled
+        if (submitSettings.likeCommentEnabled) {
+          await new Promise((r) => setTimeout(r, 500)); // Wait for comment to appear
+          await commentUtils.likeOwnComment(card.postContainer);
+        }
+
         // Mark as sent
         updateCardStatus(card.id, "sent");
       }
 
-      // Delay between submissions to avoid rate limiting
-      await new Promise((r) => setTimeout(r, 2000));
+      // Random delay between submissions (based on settings)
+      const delay = minDelay + Math.random() * (maxDelay - minDelay);
+      await new Promise((r) => setTimeout(r, delay * 1000));
     }
 
     setIsSubmitting(false);

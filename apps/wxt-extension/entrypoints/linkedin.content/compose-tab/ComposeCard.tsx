@@ -22,6 +22,7 @@ import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post
 
 import { useTRPC } from "../../../lib/trpc/client";
 import { useComposeStore } from "../stores/compose-store";
+import { useSettingsStore } from "../stores/settings-store";
 import { DEFAULT_STYLE_GUIDE } from "../utils";
 
 // Initialize utilities (auto-detects DOM version)
@@ -145,7 +146,7 @@ export const ComposeCard = memo(function ComposeCard({
     setIsUserEditing(false);
   }, [setIsUserEditing]);
 
-  // Submit this card's comment to LinkedIn
+  // Submit this card's comment to LinkedIn (with submit settings)
   const handleSubmit = useCallback(async () => {
     if (!card.commentText.trim() || card.isGenerating || card.status === "sent")
       return;
@@ -153,13 +154,64 @@ export const ComposeCard = memo(function ComposeCard({
     // Close the preview panel before submitting
     setPreviewingCard(null);
 
+    // Get submit settings
+    const submitSettings = useSettingsStore.getState().submitComment;
+
     setIsLocalSubmitting(true);
     try {
-      const success = await commentUtils.submitComment(
-        card.postContainer,
-        card.commentText,
-      );
+      // 1. Wait for editable field (poll until found, max 3s)
+      let editableField: HTMLElement | null = null;
+      const startTime = Date.now();
+      while (Date.now() - startTime < 3000) {
+        editableField = commentUtils.findEditableField(card.postContainer);
+        if (editableField) break;
+        await new Promise((r) => setTimeout(r, 100));
+      }
+
+      if (!editableField) {
+        console.warn("EngageKit: Editable field not found for card", card.id);
+        return;
+      }
+
+      // 2. Insert comment text
+      editableField.focus();
+      await commentUtils.insertComment(editableField, card.commentText);
+      await new Promise((r) => setTimeout(r, 300));
+
+      // 3. Tag author if enabled
+      if (submitSettings.tagPostAuthorEnabled) {
+        await commentUtils.tagPostAuthor(card.postContainer);
+        await new Promise((r) => setTimeout(r, 300));
+      }
+
+      // 4. Attach image if enabled
+      if (submitSettings.attachPictureEnabled) {
+        const { useCommentImageStore } = await import(
+          "../stores/comment-image-store"
+        );
+        const imageUrl = useCommentImageStore.getState().getRandomImage();
+        if (imageUrl) {
+          await commentUtils.attachImageToComment(card.postContainer, imageUrl);
+          await new Promise((r) => setTimeout(r, 500));
+        }
+      }
+
+      // 5. Submit comment (click button + verify)
+      const success = await commentUtils.submitComment(card.postContainer);
+
       if (success) {
+        // 6. Like post if enabled
+        if (submitSettings.likePostEnabled) {
+          await commentUtils.likePost(card.postContainer);
+          await new Promise((r) => setTimeout(r, 300));
+        }
+
+        // 7. Like own comment if enabled
+        if (submitSettings.likeCommentEnabled) {
+          await new Promise((r) => setTimeout(r, 500));
+          await commentUtils.likeOwnComment(card.postContainer);
+        }
+
         updateCardStatus(card.id, "sent");
       }
     } catch (err) {

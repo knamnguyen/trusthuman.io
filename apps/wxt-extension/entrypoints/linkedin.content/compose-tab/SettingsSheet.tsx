@@ -131,6 +131,8 @@ import type {
 import { Label } from "@sassy/ui/label";
 import { Switch } from "@sassy/ui/switch";
 
+import { SettingsImageManager } from "./SettingsImageManager";
+
 /**
  * Section header component for organizing settings
  */
@@ -455,10 +457,8 @@ function SettingsSubmitContent({
           }
         />
         {submitComment.attachPictureEnabled && (
-          <div className="border-muted mt-3 rounded-md border border-dashed p-4">
-            <p className="text-muted-foreground text-center text-xs">
-              Image manager coming in Phase 2.6
-            </p>
+          <div className="mt-3">
+            <SettingsImageManager />
           </div>
         )}
       </SettingsSection>
