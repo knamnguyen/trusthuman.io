@@ -4,11 +4,7 @@
 model PostLoadSetting {
   accountId    String  @id
   targetListId String? @unique //optional 1:1 - each list can only be selected by 1 setting
-
-  //provide a range from 5-300 seconds - 2 input box not slider
-  //always forced randomization when submit delay
-  submitDelayRange String @default("5-20")
-
+  
   //input box of hours from minimum 1h to max 8760 - not slider
   //only get posts posted within (younger than) X hours
   timeFilterEnabled Boolean @default(false)
@@ -17,6 +13,10 @@ model PostLoadSetting {
   skipFriendActivitiesEnabled Boolean @default(false)
   skipCompanyPagesEnabled     Boolean @default(true)
   skipPromotedPostsEnabled    Boolean @default(true)
+
+  skipblacklistEnabled        Boolean @default(false)
+  blacklistIds
+
 
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
