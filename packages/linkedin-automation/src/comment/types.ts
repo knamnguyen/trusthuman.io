@@ -133,4 +133,13 @@ export interface CommentUtilities {
    * @returns Promise<boolean> - true if post was liked, false if already liked or error
    */
   likePost(postContainer: HTMLElement): Promise<boolean>;
+
+  /**
+   * Like the user's own comment after posting it.
+   * Finds comments with "• You" indicator and clicks the like button.
+   *
+   * @param postContainer - The LinkedIn post container element
+   * @returns Promise<boolean> - true if own comment was found and liked, false otherwise
+   */
+  likeOwnComment(postContainer: HTMLElement): Promise<boolean>;
 }

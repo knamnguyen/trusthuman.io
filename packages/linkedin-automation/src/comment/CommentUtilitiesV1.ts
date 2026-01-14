@@ -3,14 +3,15 @@ import type {
   OnCommentEditorTargetsChange,
   OnNativeCommentButtonClick,
 } from "./types";
-import { findEditableField } from "./utils-v1/find-editable-field";
 import { clickCommentButton } from "./utils-v1/click-comment-button";
+import { findEditableField } from "./utils-v1/find-editable-field";
 import { insertComment } from "./utils-v1/insert-comment";
+import { likeOwnComment } from "./utils-v1/like-own-comment";
+import { likePost } from "./utils-v1/like-post";
 import { submitComment } from "./utils-v1/submit-comment";
 import { waitForCommentsReady } from "./utils-v1/wait-for-comments-ready";
 import { watchForCommentEditors } from "./utils-v1/watch-for-comment-editors";
 import { watchForNativeCommentButtonClicks } from "./utils-v1/watch-for-native-comment-clicks";
-import { likePost } from "./utils-v1/like-post";
 
 export class CommentUtilitiesV1 implements CommentUtilities {
   findEditableField(postContainer: HTMLElement): HTMLElement | null {
@@ -27,14 +28,14 @@ export class CommentUtilitiesV1 implements CommentUtilities {
 
   submitComment(
     postContainer: HTMLElement,
-    commentText: string
+    commentText: string,
   ): Promise<boolean> {
     return submitComment(postContainer, commentText);
   }
 
   waitForCommentsReady(
     container: HTMLElement,
-    beforeCount: number
+    beforeCount: number,
   ): Promise<void> {
     return waitForCommentsReady(container, beforeCount);
   }
@@ -44,12 +45,16 @@ export class CommentUtilitiesV1 implements CommentUtilities {
   }
 
   watchForNativeCommentButtonClicks(
-    onClick: OnNativeCommentButtonClick
+    onClick: OnNativeCommentButtonClick,
   ): () => void {
     return watchForNativeCommentButtonClicks(onClick);
   }
 
   likePost(postContainer: HTMLElement): Promise<boolean> {
     return likePost(postContainer);
+  }
+
+  likeOwnComment(postContainer: HTMLElement): Promise<boolean> {
+    return likeOwnComment(postContainer);
   }
 }

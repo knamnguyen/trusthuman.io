@@ -11,6 +11,7 @@ import { waitForCommentsReady } from "./utils-v2/wait-for-comments-ready";
 import { watchForCommentEditors } from "./utils-v2/watch-for-comment-editors";
 import { watchForNativeCommentButtonClicks } from "./utils-v2/watch-for-native-comment-clicks";
 import { likePost } from "./utils-v2/like-post";
+import { likeOwnComment } from "./utils-v2/like-own-comment";
 
 export class CommentUtilitiesV2 implements CommentUtilities {
   findEditableField(postContainer: HTMLElement): HTMLElement | null {
@@ -51,5 +52,9 @@ export class CommentUtilitiesV2 implements CommentUtilities {
 
   likePost(postContainer: HTMLElement): Promise<boolean> {
     return likePost(postContainer);
+  }
+
+  likeOwnComment(postContainer: HTMLElement): Promise<boolean> {
+    return likeOwnComment(postContainer);
   }
 }
