@@ -21,10 +21,16 @@ import { Button } from "@sassy/ui/button";
 import { ScrollArea } from "@sassy/ui/scroll-area";
 import { Textarea } from "@sassy/ui/textarea";
 
+import { createCommentUtilities } from "@sassy/linkedin-automation/comment/create-comment-utilities";
+import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post-utilities";
+
 import { useTRPC } from "../../../lib/trpc/client";
 import { useComposeStore } from "../stores/compose-store";
-import { DEFAULT_STYLE_GUIDE, extractAdjacentComments } from "../utils";
-import { submitCommentToPost } from "../utils/comment/submit-comment";
+import { DEFAULT_STYLE_GUIDE } from "../utils";
+
+// Initialize utilities (auto-detects DOM version)
+const postUtils = createPostUtilities();
+const commentUtils = createCommentUtilities();
 
 /**
  * Panel that displays post details when clicking "View" on a compose card.
@@ -199,7 +205,7 @@ export function PostPreviewSheet() {
     setCardGenerating(cardId, true);
 
     // Extract adjacent comments for context
-    const adjacentComments = extractAdjacentComments(
+    const adjacentComments = postUtils.extractAdjacentComments(
       previewingCard.postContainer,
     );
 
@@ -244,7 +250,7 @@ export function PostPreviewSheet() {
 
     setIsLocalSubmitting(true);
     try {
-      const success = await submitCommentToPost(
+      const success = await commentUtils.submitComment(
         previewingCard.postContainer,
         previewingCard.commentText,
       );
