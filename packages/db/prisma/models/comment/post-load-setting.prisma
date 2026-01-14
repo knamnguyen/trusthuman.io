@@ -24,8 +24,8 @@ model PostLoadSetting {
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
   linkedInAccount LinkedInAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  targetList      TargetList?     @relation(fields: [targetListId], references: [id], onDelete: SetNull)
-  blacklist       TargetList?     @relation(fields: [blacklistId], references: [id], onDelete: SetNull)
+  targetList      TargetList?     @relation("PostLoadSetting_targetList", fields: [targetListId], references: [id], onDelete: SetNull)
+  blacklist       TargetList?     @relation("PostLoadSetting_blacklist", fields: [blacklistId], references: [id], onDelete: SetNull)
 }
 
 

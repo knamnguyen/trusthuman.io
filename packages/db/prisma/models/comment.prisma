@@ -8,7 +8,6 @@ model Comment {
 
   adjacentComments Json?
 
-  authorUrn        String?
   authorName       String?
   authorProfileUrl String?
   authorAvatarUrl  String?
@@ -16,7 +15,7 @@ model Comment {
 
   comment           String
   originalAiComment String?
-  postAlternateUrns String[]
+  postAlternateUrns String[]     @default([""])
   commentedAt       DateTime?
   isAutoCommented   Boolean       @default(true)
   status            CommentStatus @default(DRAFT)
