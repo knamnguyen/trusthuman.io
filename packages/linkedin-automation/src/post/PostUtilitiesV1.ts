@@ -9,6 +9,7 @@ import type {
 } from "./types";
 import { detectCompanyPost } from "./utils-v1/detect-company-post";
 import { detectConnectionDegree } from "./utils-v1/detect-connection-degree";
+import { detectFriendActivity } from "./utils-v1/detect-friend-activity";
 import { detectPromotedPost } from "./utils-v1/detect-promoted-post";
 import { extractAdjacentComments } from "./utils-v1/extract-adjacent-comments";
 import { extractPostAuthorInfo } from "./utils-v1/extract-post-author-info";
@@ -49,6 +50,10 @@ export class PostUtilitiesV1 implements PostUtilities {
 
   detectConnectionDegree(postContainer: HTMLElement): ConnectionDegree {
     return detectConnectionDegree(postContainer);
+  }
+
+  detectFriendActivity(postContainer: HTMLElement): boolean {
+    return detectFriendActivity(postContainer);
   }
 
   extractPostComments(postContainer: HTMLElement): PostCommentInfo[] {

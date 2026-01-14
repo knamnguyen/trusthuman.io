@@ -155,6 +155,16 @@ export interface PostUtilities {
   detectConnectionDegree(postContainer: HTMLElement): ConnectionDegree;
 
   /**
+   * Detect if the post is a "friend activity" post.
+   * Friend activity posts appear when a connection interacts with someone else's post
+   * (e.g., "X liked this", "X commented on this", "X celebrates this").
+   *
+   * @param postContainer - The LinkedIn post container element
+   * @returns True if this is a friend activity post
+   */
+  detectFriendActivity(postContainer: HTMLElement): boolean;
+
+  /**
    * Extract comments from a post container (assumes comments are already loaded).
    * Does NOT click any buttons - only extracts existing comment data.
    *
