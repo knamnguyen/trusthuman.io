@@ -16,8 +16,8 @@ import type {
   PostUrlInfo,
 } from "../post/types";
 import { createCommentUtilities } from "../comment/create-comment-utilities";
-import { createFeedUtilities } from "./create-feed-utilities";
 import { createPostUtilities } from "../post/create-post-utilities";
+import { createFeedUtilities } from "./create-feed-utilities";
 
 // Lazy-initialized utilities (created on first use when DOM is ready)
 let _postUtils: ReturnType<typeof createPostUtilities> | null = null;
@@ -80,11 +80,12 @@ function extractUrn(container: HTMLElement): string | null {
  * Find new posts in the DOM that haven't been processed yet.
  * Returns array of { urn, container } for posts that need processing.
  */
-function findNewPosts(
-  existingUrns: Set<string>,
-  processedUrns: Set<string>,
-  isUrnIgnored: (urn: string) => boolean
-): Array<{ urn: string; container: HTMLElement }> {
+function findNewPosts(opts: {
+  existingUrns?: Set<string>;
+  processedUrns?: Set<string>;
+  isUrnIgnored?: (urn: string) => boolean;
+}): Array<{ urn: string; container: HTMLElement }> {
+  const { existingUrns, processedUrns, isUrnIgnored } = opts ?? {};
   const newPosts: Array<{ urn: string; container: HTMLElement }> = [];
   const selector = getPostUtils().getPostContainerSelector();
   const posts = document.querySelectorAll<HTMLElement>(selector);
@@ -92,7 +93,11 @@ function findNewPosts(
   for (const container of posts) {
     const urn = extractUrn(container);
     if (!urn) continue;
-    if (existingUrns.has(urn) || processedUrns.has(urn) || isUrnIgnored(urn))
+    if (
+      existingUrns?.has(urn) ||
+      processedUrns?.has(urn) ||
+      isUrnIgnored?.(urn)
+    )
       continue;
 
     // Check if post has a caption (valid post)
@@ -143,19 +148,28 @@ function extractPostData(container: HTMLElement): ReadyPost | null {
  * @param onBatchReady - Callback fired when a batch of posts is ready
  * @param shouldStop - Function that returns true when collection should stop
  * @param isUserEditing - Function that returns true when user is editing (pauses collection)
- * @returns Number of posts collected
+ * @returns ReadyPost[] - All collected posts
  */
-export async function collectPostsBatch(
-  targetCount: number,
-  existingUrns: Set<string>,
-  isUrnIgnored: (urn: string) => boolean,
-  onBatchReady: (posts: ReadyPost[]) => void,
-  shouldStop: () => boolean,
-  isUserEditing: () => boolean
-): Promise<number> {
+export async function collectPosts({
+  targetCount,
+  existingUrns,
+  isUrnIgnored,
+  onBatchReady,
+  shouldStop,
+  isUserEditing,
+}: {
+  targetCount: number;
+  existingUrns?: Set<string>;
+  isUrnIgnored?: (urn: string) => boolean;
+  onBatchReady?: (posts: ReadyPost[]) => void;
+  shouldStop?: () => boolean;
+  isUserEditing?: () => boolean;
+}): Promise<ReadyPost[]> {
   const postUtils = getPostUtils();
   const commentUtils = getCommentUtils();
   const feedUtils = getFeedUtils();
+
+  const allPosts: ReadyPost[] = [];
 
   const processedUrns = new Set<string>();
   let emittedCount = 0;
@@ -167,7 +181,7 @@ export async function collectPostsBatch(
    * Pauses collection until user clicks outside the edit box.
    */
   const waitWhileEditing = async (): Promise<void> => {
-    while (isUserEditing()) {
+    while (isUserEditing?.()) {
       await new Promise((r) => setTimeout(r, 100));
     }
   };
@@ -176,20 +190,24 @@ export async function collectPostsBatch(
 
   while (emittedCount < targetCount && idleIterations < MAX_IDLE_ITERATIONS) {
     // Check if user requested stop
-    if (shouldStop()) {
+    if (shouldStop?.()) {
       console.log(`[EngageKit] Stop requested, exiting`);
       break;
     }
 
     // Find ALL new posts that haven't been processed
-    const newPosts = findNewPosts(existingUrns, processedUrns, isUrnIgnored);
+    const newPosts = findNewPosts({
+      existingUrns,
+      processedUrns,
+      isUrnIgnored,
+    });
 
     // Limit to remaining needed
     const postsToProcess = newPosts.slice(0, targetCount - emittedCount);
 
     if (postsToProcess.length > 0) {
       console.log(
-        `[EngageKit] Processing batch of ${postsToProcess.length} posts`
+        `[EngageKit] Processing batch of ${postsToProcess.length} posts`,
       );
 
       // Wait if user is editing - only once per batch before clicking
@@ -213,14 +231,14 @@ export async function collectPostsBatch(
       // Step 3: Wait for ALL comments to load in parallel
       await Promise.all(
         postContexts.map(({ container, beforeCount }) =>
-          commentUtils.waitForCommentsReady(container, beforeCount)
-        )
+          commentUtils.waitForCommentsReady(container, beforeCount),
+        ),
       );
 
       // Step 4: Collect ALL post data
       const readyPosts: ReadyPost[] = [];
       for (const { container } of postContexts) {
-        if (shouldStop()) break;
+        if (shouldStop?.()) break;
         const postData = extractPostData(container);
         if (postData) {
           readyPosts.push(postData);
@@ -229,10 +247,11 @@ export async function collectPostsBatch(
 
       // Step 5: Emit entire batch at once
       if (readyPosts.length > 0) {
-        onBatchReady(readyPosts);
+        onBatchReady?.(readyPosts);
         emittedCount += readyPosts.length;
+        allPosts.push(...readyPosts);
         console.log(
-          `[EngageKit] Batch complete: ${emittedCount}/${targetCount} posts ready`
+          `[EngageKit] Batch complete: ${emittedCount}/${targetCount} posts ready`,
         );
       }
     }
@@ -264,9 +283,9 @@ export async function collectPostsBatch(
 
   if (idleIterations >= MAX_IDLE_ITERATIONS) {
     console.log(
-      `[EngageKit] Exited due to max idle iterations. Final count: ${emittedCount}`
+      `[EngageKit] Exited due to max idle iterations. Final count: ${emittedCount}`,
     );
   }
 
-  return emittedCount;
+  return allPosts;
 }

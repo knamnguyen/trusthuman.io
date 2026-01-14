@@ -668,6 +668,9 @@ importers:
       '@sassy/feature-flags':
         specifier: workspace:*
         version: link:../feature-flags
+      '@sassy/linkedin-automation':
+        specifier: workspace:*
+        version: link:../linkedin-automation
       '@sassy/linkedin-scrape-apify':
         specifier: workspace:*
         version: link:../linkedin-scrape-apify
@@ -16608,7 +16611,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 9.30.0(jiti@2.6.1)
       eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.12.1(@typescript-eslint/parser@7.18.0(eslint@9.30.0(jiti@2.6.1))(typescript@5.8.3))(eslint-import-resolver-node@0.3.9)(eslint@9.30.0(jiti@2.6.1))
+      eslint-module-utils: 2.12.1(@typescript-eslint/parser@8.35.0(eslint@9.30.0(jiti@2.6.1))(typescript@5.8.3))(eslint-import-resolver-node@0.3.9)(eslint@9.30.0(jiti@2.6.1))
       hasown: 2.0.2
       is-core-module: 2.16.1
       is-glob: 4.0.3

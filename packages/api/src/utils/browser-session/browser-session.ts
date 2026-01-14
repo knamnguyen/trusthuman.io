@@ -13,7 +13,7 @@ import type { StartAutoCommentingParams } from "@sassy/validators";
 
 import type { Logger } from "../commons";
 import type { EngagekitInternals } from "./utilities";
-import { abortableAsyncIterator, safe } from "../commons";
+import { chunkify, safe } from "../commons";
 import { env } from "../env";
 import { jwtFactory } from "../jwt";
 
@@ -179,13 +179,19 @@ export class BrowserSession {
       },
     });
 
-    const linkedin = await this.browser.newPage().then(async (page) => {
-      await this.setup(page);
-      await page.goto("https://www.linkedin.com", {
-        timeout: 0,
-      });
+    const linkedin = await this.browser.newPage();
 
-      return page;
+    const utilities = await getEngagekitBundledUtilities();
+
+    await linkedin.evaluateOnNewDocument((utilities) => {
+      // eval in a function scope to avoid polluting global scope
+      {
+        eval(utilities);
+      }
+    }, utilities);
+
+    await linkedin.goto("https://www.linkedin.com", {
+      timeout: 0,
     });
 
     await linkedin.bringToFront();
@@ -195,6 +201,13 @@ export class BrowserSession {
     };
 
     await linkedin.bringToFront();
+
+    await linkedin.evaluate((utilities) => {
+      // eval in a function scope to avoid polluting global scope
+      {
+        eval(utilities);
+      }
+    }, utilities);
 
     await this.db.browserInstance.update({
       where: {
@@ -289,9 +302,7 @@ export class BrowserSession {
     pingCheck();
   }
 
-  private async setup(page: Page) {
-    await injectEngagekitUtilities(page);
-  }
+  private async setup(page: Page) {}
 
   async waitForSigninSuccess(signal: AbortSignal) {
     // just keep polling until we hit the feed page or an error
@@ -630,12 +641,14 @@ export class BrowserSession {
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
 
+    console.info("feed loaded");
+
     const anyPostsLoadedTimeout = Date.now() + 2 * 60 * 1000;
 
     // wait for any posts to be loaded
     while (Date.now() < anyPostsLoadedTimeout) {
-      const anyPostExists = await this.pages.linkedin.evaluate(() =>
-        window.engagekitInternals.doesAnyPostContainerExist(),
+      const anyPostExists = await this.pages.linkedin.evaluate(
+        () => window.engagekitInternals.feedUtilities.countPosts() > 0,
       );
 
       if (anyPostExists) {
@@ -644,104 +657,80 @@ export class BrowserSession {
 
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
+
+    console.info("posts loaded");
   }
 
-  private async *getFeedPostsBatch({ batchSize }: { batchSize: number }) {
+  private async getFeedPosts({ batchSize }: { batchSize: number }) {
     await this.ready;
 
     await this.waitForFeedPageToLoad();
 
-    const addedUrns = new Set<string>();
+    return await this.pages.linkedin.evaluate(async (targetCount) => {
+      const posts = await window.engagekitInternals.collectPosts({
+        targetCount,
+      });
 
-    while (true) {
-      const posts = await this.pages.linkedin.evaluate(
-        async (skipPostUrns, limit) =>
-          await window.engagekitInternals.findPosts({
-            skipPostUrns: new Set(skipPostUrns),
-            limit,
-          }),
-        [...addedUrns],
-        batchSize,
-      );
+      return posts.map((post) => {
+        let createdAt = new Date();
 
-      yield posts;
+        if (post.postTime?.displayTime) {
+          createdAt = window.engagekitInternals.parsePostTime({
+            type: "display",
+            value: post.postTime.displayTime,
+          });
+        }
 
-      for (const post of posts) {
-        addedUrns.add(post.urn);
-      }
+        if (post.postTime?.fullTime) {
+          createdAt = window.engagekitInternals.parsePostTime({
+            type: "full",
+            value: post.postTime.fullTime,
+          });
+        }
 
-      if (posts.length === 0) {
-        break;
-      }
-
-      await this.pages.linkedin.evaluate(() =>
-        window.engagekitInternals.loadMore(),
-      );
-    }
+        return {
+          postUrn: post.urn,
+          captionPreview: post.captionPreview,
+          fullCaption: post.fullCaption,
+          createdAt: createdAt.toISOString(),
+          postContentHtml: post.postContainer.innerHTML,
+          authorName: post.authorInfo?.name ?? null,
+          authorProfileUrl: post.authorInfo?.profileUrl ?? null,
+          authorAvatarUrl: post.authorInfo?.photoUrl ?? null,
+          authorHeadline: post.authorInfo?.headline ?? null,
+        };
+      });
+    }, batchSize);
   }
 
-  public async loadFeedAndSavePosts(totalPosts: number, signal?: AbortSignal) {
-    let totalCreated = 0;
-    // we do a max iteration of 20 in case the feed is not loading more posts
-    // or in case some shit happens in the fe that hangs stuff
-    // so we can shut down the session and not just leave it there hanging
+  public async loadFeedAndSavePosts(totalPosts: number) {
+    const posts = await this.getFeedPosts({ batchSize: totalPosts });
 
-    let maxIterations = 10;
+    let totalInserted = 0;
 
-    const combinedSignals = [this.controller.signal];
-
-    if (signal !== undefined) {
-      combinedSignals.push(signal);
-    }
-
-    for await (const postBatch of abortableAsyncIterator(
-      AbortSignal.any(combinedSignals),
-      this.getFeedPostsBatch({
-        batchSize: 20,
-      }),
-    )) {
-      const truncated = postBatch.slice(
-        0,
-        Math.max(totalPosts - totalCreated, 0),
-      );
-
-      if (truncated.length === 0) {
-        break;
-      }
-
-      const numInserted = await insertCommentOnNonPreviouslyCommentedPosts(
+    for (const batch of chunkify(posts, 20)) {
+      const inserted = await insertCommentOnNonPreviouslyCommentedPosts(
         this.db,
-        truncated.map((post) => ({
+        batch.map((post) => ({
           id: ulid(),
           comment: "",
           accountId: this.accountId,
-          postUrn: post.urn,
-          postContentHtml: post.contentHtml,
+          postUrn: post.postUrn,
+          postContentHtml: post.postContentHtml,
           postCaptionPreview: post.captionPreview,
           postFullCaption: post.fullCaption,
           postCreatedAt: new Date(post.createdAt),
-          authorUrn: post.author?.urn ?? null,
-          authorName: post.author?.name ?? null,
-          authorProfileUrl: post.author?.profileUrl ?? null,
-          authorAvatarUrl: post.author?.avatarUrl ?? null,
-          authorHeadline: post.author?.headline ?? null,
+          authorName: post.authorName,
+          authorProfileUrl: post.authorProfileUrl,
+          authorAvatarUrl: post.authorAvatarUrl,
+          authorHeadline: post.authorHeadline,
         })),
       );
 
-      totalCreated += numInserted;
-
-      if (totalCreated >= totalPosts) {
-        break;
-      }
-
-      maxIterations--;
-
-      if (maxIterations <= 0) {
-        break;
-      }
+      totalInserted += inserted;
     }
 
-    return totalCreated;
+    return totalInserted;
   }
 
   static async isAnySessionRunning(db: PrismaClient, accountId: string) {
@@ -811,7 +800,6 @@ export async function insertCommentOnNonPreviouslyCommentedPosts(
     postFullCaption: string;
     comment: string;
     postCreatedAt: Date;
-    authorUrn: string | null;
     authorName: string | null;
     authorProfileUrl: string | null;
     authorAvatarUrl: string | null;
@@ -870,7 +858,7 @@ export async function insertCommentOnNonPreviouslyCommentedPosts(
 
 let bundledEngagekitUtilitiesPromise: Promise<string> | null = null;
 
-export async function injectEngagekitUtilities(page: Page) {
+export async function getEngagekitBundledUtilities() {
   bundledEngagekitUtilitiesPromise ??= (async () => {
     const result = await Bun.build({
       entrypoints: [path.join(__dirname, "utilities.ts")],
@@ -894,13 +882,5 @@ export async function injectEngagekitUtilities(page: Page) {
     return await file.text();
   })();
 
-  const bundledUtilities = await bundledEngagekitUtilitiesPromise;
-
-  await page.evaluateOnNewDocument((utilities) => {
-    // eval inside a curly bracket to avoid polluting global scope
-    // and referencing variables from outer scope
-    {
-      eval(utilities);
-    }
-  }, bundledUtilities);
+  return await bundledEngagekitUtilitiesPromise;
 }

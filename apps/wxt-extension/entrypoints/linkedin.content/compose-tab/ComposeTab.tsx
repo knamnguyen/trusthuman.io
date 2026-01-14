@@ -13,7 +13,7 @@ import { useShallow } from "zustand/shallow";
 
 import type { ReadyPost } from "@sassy/linkedin-automation/feed/collect-posts";
 import { createCommentUtilities } from "@sassy/linkedin-automation/comment/create-comment-utilities";
-import { collectPostsBatch } from "@sassy/linkedin-automation/feed/collect-posts";
+import { collectPosts } from "@sassy/linkedin-automation/feed/collect-posts";
 import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post-utilities";
 import { Button } from "@sassy/ui/button";
 import { TooltipWithDialog } from "@sassy/ui/components/tooltip-with-dialog";
@@ -203,14 +203,14 @@ export function ComposeTab() {
     };
 
     // Run batch collection
-    await collectPostsBatch(
-      targetDraftCount,
+    await collectPosts({
+      targetCount: targetDraftCount,
       existingUrns,
       isUrnIgnored,
       onBatchReady,
-      () => stopRequestedRef.current,
-      () => useComposeStore.getState().isUserEditing,
-    );
+      shouldStop: () => stopRequestedRef.current,
+      isUserEditing: () => useComposeStore.getState().isUserEditing,
+    });
 
     setIsLoading(false);
     setIsCollecting(false); // Done collecting, stop refocusing on blur

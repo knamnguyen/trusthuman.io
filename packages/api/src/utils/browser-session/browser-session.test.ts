@@ -7,7 +7,7 @@ import { createTestPrismaClient } from "@sassy/db/client/test";
 import {
   browserRegistry,
   BrowserSession,
-  injectEngagekitUtilities,
+  getEngagekitBundledUtilities,
   insertCommentOnNonPreviouslyCommentedPosts,
 } from "./browser-session";
 
@@ -53,9 +53,15 @@ describe.skipIf(process.env.TEST_BROWSER_SESSION === undefined)(
     test(
       "injectEngagekitUtilities",
       async () => {
-        await injectEngagekitUtilities(session.pages.linkedin);
+        const utilities = await getEngagekitBundledUtilities();
+        await session.pages.linkedin.evaluate((utilities) => {
+          {
+            eval(utilities);
+          }
+        }, utilities);
         const defined = await session.pages.linkedin.evaluate(
-          () => typeof window.engagekitInternals !== "undefined",
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+          () => typeof (window as any).engagekitInternals !== "undefined",
         );
         expect(defined).toBe(true);
       },
@@ -126,9 +132,9 @@ describe.skipIf(process.env.TEST_BROWSER_SESSION === undefined)(
     test.skipIf(process.env.TEST_LOAD_FEED_AND_SAVE_POSTS === undefined)(
       "loadFeedAndSavePosts",
       async () => {
-        const added = await session.loadFeedAndSavePosts(5);
+        const added = await session.loadFeedAndSavePosts(50);
 
-        expect(added).toBe(5);
+        expect(added).toBe(50);
 
         const results = await prisma.comment.findMany({
           where: {
@@ -136,8 +142,7 @@ describe.skipIf(process.env.TEST_BROWSER_SESSION === undefined)(
           },
         });
 
-        expect(results.length).toBe(5);
-        console.info(results);
+        expect(results.length).toBe(50);
       },
       Infinity,
     );
