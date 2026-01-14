@@ -52,7 +52,7 @@ export const commentRouter = () =>
             comment: input.comment,
             originalAiComment: input.originalAiComment ?? null,
             postAlternateUrns: input.postAlternateUrns ?? [],
-            adjacentComments: input.adjacentComments ?? null,
+            adjacentComments: input.adjacentComments,
             authorName: input.authorName ?? null,
             authorProfileUrl: input.authorProfileUrl ?? null,
             authorAvatarUrl: input.authorAvatarUrl ?? null,

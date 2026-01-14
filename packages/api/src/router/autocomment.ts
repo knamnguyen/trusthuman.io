@@ -141,7 +141,6 @@ export const autoCommentRouter = () =>
             .or(z.string())
             .optional(),
           postAlternateUrns: z.string().array().optional(),
-          authorUrn: z.string().optional(),
           authorName: z.string().optional(),
           authorProfileUrl: z.string().optional(),
           authorAvatarUrl: z.string().optional(),
@@ -216,7 +215,6 @@ export const autoCommentRouter = () =>
             .or(z.string())
             .optional(),
           postAlternateUrns: z.string().array().optional(),
-          authorUrn: z.string().optional(),
           authorName: z.string().optional(),
           authorProfileUrl: z.string().optional(),
           authorAvatarUrl: z.string().optional(),
