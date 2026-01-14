@@ -142,4 +142,20 @@ export interface CommentUtilities {
    * @returns Promise<boolean> - true if own comment was found and liked, false otherwise
    */
   likeOwnComment(postContainer: HTMLElement): Promise<boolean>;
+
+  /**
+   * Tag the post author at the END of a comment.
+   * Uses LinkedIn's mention picker to create a proper mention.
+   * Should be called after inserting the comment text.
+   *
+   * Flow:
+   * 1. Moves cursor to end of content
+   * 2. Ensures space before @ (required for mention picker)
+   * 3. Types "@" and waits for dropdown
+   * 4. Uses keyboard navigation (ArrowDown + Enter) to select first option
+   *
+   * @param postContainer - The LinkedIn post container element
+   * @returns Promise<boolean> - true if author was tagged, false otherwise
+   */
+  tagPostAuthor(postContainer: HTMLElement): Promise<boolean>;
 }

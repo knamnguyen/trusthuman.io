@@ -8,6 +8,7 @@ import { findEditableField } from "./utils-v1/find-editable-field";
 import { insertComment } from "./utils-v1/insert-comment";
 import { likeOwnComment } from "./utils-v1/like-own-comment";
 import { likePost } from "./utils-v1/like-post";
+import { tagPostAuthor } from "./utils-v1/tag-post-author";
 import { submitComment } from "./utils-v1/submit-comment";
 import { waitForCommentsReady } from "./utils-v1/wait-for-comments-ready";
 import { watchForCommentEditors } from "./utils-v1/watch-for-comment-editors";
@@ -56,5 +57,9 @@ export class CommentUtilitiesV1 implements CommentUtilities {
 
   likeOwnComment(postContainer: HTMLElement): Promise<boolean> {
     return likeOwnComment(postContainer);
+  }
+
+  tagPostAuthor(postContainer: HTMLElement): Promise<boolean> {
+    return tagPostAuthor(postContainer);
   }
 }

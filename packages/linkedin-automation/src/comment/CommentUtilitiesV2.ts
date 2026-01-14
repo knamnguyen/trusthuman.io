@@ -12,6 +12,7 @@ import { watchForCommentEditors } from "./utils-v2/watch-for-comment-editors";
 import { watchForNativeCommentButtonClicks } from "./utils-v2/watch-for-native-comment-clicks";
 import { likePost } from "./utils-v2/like-post";
 import { likeOwnComment } from "./utils-v2/like-own-comment";
+import { tagPostAuthor } from "./utils-v2/tag-post-author";
 
 export class CommentUtilitiesV2 implements CommentUtilities {
   findEditableField(postContainer: HTMLElement): HTMLElement | null {
@@ -56,5 +57,9 @@ export class CommentUtilitiesV2 implements CommentUtilities {
 
   likeOwnComment(postContainer: HTMLElement): Promise<boolean> {
     return likeOwnComment(postContainer);
+  }
+
+  tagPostAuthor(postContainer: HTMLElement): Promise<boolean> {
+    return tagPostAuthor(postContainer);
   }
 }
