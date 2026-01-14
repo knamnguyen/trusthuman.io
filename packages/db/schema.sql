@@ -486,12 +486,6 @@ CREATE INDEX "BrowserJob_status_idx" ON "BrowserJob"("status");
 CREATE UNIQUE INDEX "CommentGenerateSetting_commentStyleId_key" ON "CommentGenerateSetting"("commentStyleId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "PostLoadSetting_targetListId_key" ON "PostLoadSetting"("targetListId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "PostLoadSetting_blacklistId_key" ON "PostLoadSetting"("blacklistId");
-
--- CreateIndex
 CREATE INDEX "Comment_postUrn_idx" ON "Comment"("postUrn");
 
 -- CreateIndex
