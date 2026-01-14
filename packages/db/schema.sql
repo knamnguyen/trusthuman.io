@@ -137,16 +137,36 @@ CREATE TABLE "CommentStyle" (
 CREATE TABLE "PostLoadSetting" (
     "accountId" TEXT NOT NULL,
     "targetListId" TEXT,
-    "submitDelayRange" TEXT NOT NULL DEFAULT '5-20',
     "timeFilterEnabled" BOOLEAN NOT NULL DEFAULT false,
     "minPostAge" INTEGER,
     "skipFriendActivitiesEnabled" BOOLEAN NOT NULL DEFAULT false,
     "skipCompanyPagesEnabled" BOOLEAN NOT NULL DEFAULT true,
     "skipPromotedPostsEnabled" BOOLEAN NOT NULL DEFAULT true,
+    "skipblacklistEnabled" BOOLEAN NOT NULL DEFAULT false,
+    "blacklistId" TEXT,
+    "skipFirstDegree" BOOLEAN NOT NULL DEFAULT false,
+    "skipSecondDegree" BOOLEAN NOT NULL DEFAULT false,
+    "skipThirdDegree" BOOLEAN NOT NULL DEFAULT false,
+    "skipFollowing" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "PostLoadSetting_pkey" PRIMARY KEY ("accountId")
+);
+
+-- CreateTable
+CREATE TABLE "SubmitCommentSetting" (
+    "accountId" TEXT NOT NULL,
+    "submitDelayRange" TEXT NOT NULL DEFAULT '5-20',
+    "likePostEnabled" BOOLEAN NOT NULL DEFAULT true,
+    "likeCommentEnabled" BOOLEAN NOT NULL DEFAULT true,
+    "tagPostAuthorEnabled" BOOLEAN NOT NULL DEFAULT true,
+    "attachPictureEnabled" BOOLEAN NOT NULL DEFAULT false,
+    "defaultPictureAttachUrl" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "SubmitCommentSetting_pkey" PRIMARY KEY ("accountId")
 );
 
 -- CreateTable
@@ -466,9 +486,6 @@ CREATE INDEX "BrowserJob_status_idx" ON "BrowserJob"("status");
 CREATE UNIQUE INDEX "CommentGenerateSetting_commentStyleId_key" ON "CommentGenerateSetting"("commentStyleId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "PostLoadSetting_targetListId_key" ON "PostLoadSetting"("targetListId");
-
--- CreateIndex
 CREATE INDEX "Comment_postUrn_idx" ON "Comment"("postUrn");
 
 -- CreateIndex
@@ -593,6 +610,12 @@ ALTER TABLE "PostLoadSetting" ADD CONSTRAINT "PostLoadSetting_accountId_fkey" FO
 
 -- AddForeignKey
 ALTER TABLE "PostLoadSetting" ADD CONSTRAINT "PostLoadSetting_targetListId_fkey" FOREIGN KEY ("targetListId") REFERENCES "TargetList"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PostLoadSetting" ADD CONSTRAINT "PostLoadSetting_blacklistId_fkey" FOREIGN KEY ("blacklistId") REFERENCES "TargetList"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "SubmitCommentSetting" ADD CONSTRAINT "SubmitCommentSetting_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Comment" ADD CONSTRAINT "Comment_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

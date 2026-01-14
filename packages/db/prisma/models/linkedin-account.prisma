@@ -32,6 +32,7 @@ model LinkedInAccount {
   //new settings (1:1)
   CommentGenerateSetting CommentGenerateSetting?
   PostLoadSetting        PostLoadSetting?
+  SubmitCommentSetting   SubmitCommentSetting?
   CommentStyle           CommentStyle[]
 
   //existing

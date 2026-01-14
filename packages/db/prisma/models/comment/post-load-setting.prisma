@@ -3,8 +3,8 @@
 
 model PostLoadSetting {
   accountId    String  @id
-  targetListId String? @unique //optional 1:1 - each list can only be selected by 1 setting
-  
+  targetListId String? //optional 1:1 - each list can only be selected by 1 setting
+
   //input box of hours from minimum 1h to max 8760 - not slider
   //only get posts posted within (younger than) X hours
   timeFilterEnabled Boolean @default(false)
@@ -12,20 +12,18 @@ model PostLoadSetting {
 
   skipFriendActivitiesEnabled Boolean @default(false)
   skipCompanyPagesEnabled     Boolean @default(true)
-  skipPromotedPostsEnabled    Boolean @default(true)  
+  skipPromotedPostsEnabled    Boolean @default(true)
   skipblacklistEnabled        Boolean @default(false)
-  blacklistId                String? 
+  blacklistId                 String?
 
-  skipFirstDegree             Boolean @default(false)
-  skipSecondDegree            Boolean @default(false)
-  skipThirdDegree             Boolean @default(false)
-  skipFollowing               Boolean @default(false)
+  skipFirstDegree  Boolean @default(false)
+  skipSecondDegree Boolean @default(false)
+  skipThirdDegree  Boolean @default(false)
+  skipFollowing    Boolean @default(false)
 
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
   linkedInAccount LinkedInAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  targetList      TargetList?     @relation(fields: [targetListId], references: [id], onDelete: SetNull)
-  blacklist       TargetList?     @relation(fields: [blacklistId], references: [id], onDelete: SetNull)
+  targetList      TargetList?     @relation("targetList", fields: [targetListId], references: [id], onDelete: SetNull)
+  blacklist       TargetList?     @relation("blacklist", fields: [blacklistId], references: [id], onDelete: SetNull)
 }
-
-
