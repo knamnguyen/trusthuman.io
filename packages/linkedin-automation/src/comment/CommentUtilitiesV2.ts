@@ -13,6 +13,7 @@ import { watchForNativeCommentButtonClicks } from "./utils-v2/watch-for-native-c
 import { likePost } from "./utils-v2/like-post";
 import { likeOwnComment } from "./utils-v2/like-own-comment";
 import { tagPostAuthor } from "./utils-v2/tag-post-author";
+import { attachImageToComment } from "./utils-v2/attach-image-to-comment";
 
 export class CommentUtilitiesV2 implements CommentUtilities {
   findEditableField(postContainer: HTMLElement): HTMLElement | null {
@@ -61,5 +62,9 @@ export class CommentUtilitiesV2 implements CommentUtilities {
 
   tagPostAuthor(postContainer: HTMLElement): Promise<boolean> {
     return tagPostAuthor(postContainer);
+  }
+
+  attachImageToComment(postContainer: HTMLElement, imageUrl: string): Promise<boolean> {
+    return attachImageToComment(postContainer, imageUrl);
   }
 }

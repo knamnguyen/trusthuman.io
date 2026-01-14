@@ -9,6 +9,7 @@ import { insertComment } from "./utils-v1/insert-comment";
 import { likeOwnComment } from "./utils-v1/like-own-comment";
 import { likePost } from "./utils-v1/like-post";
 import { tagPostAuthor } from "./utils-v1/tag-post-author";
+import { attachImageToComment } from "./utils-v1/attach-image-to-comment";
 import { submitComment } from "./utils-v1/submit-comment";
 import { waitForCommentsReady } from "./utils-v1/wait-for-comments-ready";
 import { watchForCommentEditors } from "./utils-v1/watch-for-comment-editors";
@@ -61,5 +62,9 @@ export class CommentUtilitiesV1 implements CommentUtilities {
 
   tagPostAuthor(postContainer: HTMLElement): Promise<boolean> {
     return tagPostAuthor(postContainer);
+  }
+
+  attachImageToComment(postContainer: HTMLElement, imageUrl: string): Promise<boolean> {
+    return attachImageToComment(postContainer, imageUrl);
   }
 }

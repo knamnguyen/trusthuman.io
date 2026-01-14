@@ -158,4 +158,20 @@ export interface CommentUtilities {
    * @returns Promise<boolean> - true if author was tagged, false otherwise
    */
   tagPostAuthor(postContainer: HTMLElement): Promise<boolean>;
+
+  /**
+   * Attach an image to a comment before submitting.
+   * Downloads the image from URL and attaches it to the comment box.
+   *
+   * Flow:
+   * 1. Find "Add photo" button and click it (blocking file picker)
+   * 2. Fetch image from URL and convert to File object
+   * 3. Set file on the input using DataTransfer API
+   * 4. Dispatch change event to trigger LinkedIn's handler
+   *
+   * @param postContainer - The LinkedIn post container element
+   * @param imageUrl - URL of the image to attach
+   * @returns Promise<boolean> - true if image was attached successfully
+   */
+  attachImageToComment(postContainer: HTMLElement, imageUrl: string): Promise<boolean>;
 }
