@@ -16,7 +16,10 @@ model PostLoadSetting {
   skipblacklistEnabled        Boolean @default(false)
   blacklistId                String? 
 
-  takeOnlyConnectDegree      ConnectDegree  @default(ALL)
+  skipFirstDegree             Boolean @default(false)
+  skipSecondDegree            Boolean @default(false)
+  skipThirdDegree             Boolean @default(false)
+  skipFollowing               Boolean @default(false)
 
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
@@ -26,11 +29,3 @@ model PostLoadSetting {
 }
 
 
-enum ConnectDegree {
-  ALL
-  FIRST
-  SECOND
-  THIRD
-  THIRD+
-  FOLLOWING
-}
