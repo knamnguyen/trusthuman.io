@@ -847,18 +847,30 @@ This is complex enough to warrant a separate plan.
 | **Phase A2: AutoEngage** | ✅ COMPLETED | useAutoEngage.ts hook with watchForNativeCommentButtonClicks |
 | **Phase A3: SpacebarEngageObserver** | ✅ COMPLETED | Migrated utility imports to factories |
 | **Phase A4: useMostVisiblePost** | ✅ COMPLETED | Added getPostContainerSelector() - fixes PostNavigator + SpacebarEngageObserver |
-| **Phase B: Compose-Tab** | ⏳ PENDING | 4 files need factory migration |
-| **Phase C: Utils Cleanup** | ⏳ PENDING | After B completes |
-| **Phase D: Testing** | 🔄 PARTIAL | Test SpacebarEngageObserver + PostNavigator on v2 |
+| **Phase B: Compose-Tab** | ✅ COMPLETED | load-posts.ts moved to collect-posts.ts in linkedin-automation, all files updated |
+| **Phase C: Utils Cleanup** | ✅ COMPLETED | Deleted old utils/post/, utils/comment/ (except attach-image), dead code removed |
+| **Phase D: Testing** | ✅ COMPLETED | Load Posts verified working on DOM v2 |
 
-### Next Steps (Recommended Order)
+### Completed Work Summary
 
-1. **Phase B1**: Update load-posts.ts - most complex file
-2. **Phase B2-B4**: Update ComposeTab.tsx, ComposeCard.tsx, PostPreviewSheet.tsx
-3. **Phase C**: Clean up utils/index.ts and delete old utilities
-4. **Phase D**: Full testing on DOM v1 and v2
+**Phase B (Compose-Tab):**
+- Created `packages/linkedin-automation/src/feed/collect-posts.ts` with lazy initialization and v2-compatible URN extraction
+- Updated ComposeTab.tsx, ComposeCard.tsx, PostPreviewSheet.tsx imports
+- Deleted old `load-posts.ts`
+
+**Phase C (Utils Cleanup):**
+- Deleted `utils/post/` directory (7 files)
+- Deleted `utils/comment/` migrated files (5 files, kept attach-image-to-comment.ts)
+- Deleted dead code: EngageButton.tsx, AutoEngageObserver.tsx, ButtonPortalManager.tsx
+- Updated `utils/index.ts` to re-export from linkedin-automation
+- Updated `stores/compose-store.ts` to import types from linkedin-automation
+
+**Files Kept (Active Code):**
+- `SpacebarEngageObserver.tsx` - still used in App.tsx
+- `use-most-visible-post.ts` - React hook for spacebar/navigator features
+- `attach-image-to-comment.ts` - not migrated (future work)
 
 ---
 
-**Plan Status**: IN PROGRESS (Phase A1-A4 completed, Phase B-D pending)
-**Complexity**: Moderate (systematic import replacement, thorough testing required)
+**Plan Status**: ✅ COMPLETED (2026-01-14)
+**Result**: All utilities migrated, DOM v1/v2 support verified, dead code removed
