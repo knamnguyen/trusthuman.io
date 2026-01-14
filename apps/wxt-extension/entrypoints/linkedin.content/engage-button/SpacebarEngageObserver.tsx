@@ -1,22 +1,24 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useMutation } from "@tanstack/react-query";
 
+import { createCommentUtilities } from "@sassy/linkedin-automation/comment/create-comment-utilities";
+import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post-utilities";
+
 import { useTRPC } from "../../../lib/trpc/client";
 import { useComposeStore } from "../stores/compose-store";
 import { SIDEBAR_TABS, useSidebarStore } from "../stores/sidebar-store";
-import {
-  DEFAULT_STYLE_GUIDE,
-  extractAdjacentComments,
-  extractAuthorInfoFromPost,
-  extractCommentsFromPost,
-  extractPostCaption,
-  extractPostTime,
-  extractPostUrl,
-  getCaptionPreview,
-  useMostVisiblePost,
-  waitForCommentsReady,
-} from "../utils";
-import { clickCommentButton } from "../utils/comment/click-comment-button";
+import { DEFAULT_STYLE_GUIDE, useMostVisiblePost } from "../utils";
+
+// Initialize utilities (auto-detects DOM version)
+const postUtils = createPostUtilities();
+const commentUtils = createCommentUtilities();
+
+// Helper function for caption preview
+function getCaptionPreview(fullCaption: string, wordLimit: number): string {
+  const words = fullCaption.split(/\s+/);
+  if (words.length <= wordLimit) return fullCaption;
+  return words.slice(0, wordLimit).join(" ") + "...";
+}
 
 /**
  * Observer component that highlights the most visible post and triggers
@@ -82,7 +84,7 @@ export function SpacebarEngageObserver() {
   const triggerGeneration = useCallback(
     async (postContainer: HTMLElement) => {
       // Extract full post data for ComposeCards
-      const fullCaption = extractPostCaption(postContainer);
+      const fullCaption = postUtils.extractPostCaption(postContainer);
       if (!fullCaption) {
         console.warn(
           "EngageKit SpacebarEngage: unable to extract post caption",
@@ -98,9 +100,9 @@ export function SpacebarEngageObserver() {
 
       // Extract basic post info immediately (no waiting required)
       const captionPreview = getCaptionPreview(fullCaption, 10);
-      const authorInfo = extractAuthorInfoFromPost(postContainer);
-      const postTime = extractPostTime(postContainer);
-      const postUrls = extractPostUrl(postContainer);
+      const authorInfo = postUtils.extractPostAuthorInfo(postContainer);
+      const postTime = postUtils.extractPostTime(postContainer);
+      const postUrls = postUtils.extractPostUrl(postContainer);
       const urn =
         postContainer.getAttribute("data-urn") ||
         postContainer.getAttribute("data-id") ||
@@ -164,9 +166,9 @@ export function SpacebarEngageObserver() {
       openToTab(SIDEBAR_TABS.COMPOSE);
 
       // Load comments for preview (useful in both modes)
-      const beforeCount = extractCommentsFromPost(postContainer).length;
-      clickCommentButton(postContainer);
-      await waitForCommentsReady(postContainer, beforeCount);
+      const beforeCount = postUtils.extractPostComments(postContainer).length;
+      commentUtils.clickCommentButton(postContainer);
+      await commentUtils.waitForCommentsReady(postContainer, beforeCount);
 
       // Blur focus from LinkedIn's comment box (contenteditable) so spacebar can trigger new generation
       // Only blur contenteditable elements (LinkedIn's comment box), not our sidebar's textarea
@@ -178,7 +180,7 @@ export function SpacebarEngageObserver() {
       }
 
       // Extract comments for display in preview
-      const loadedComments = extractCommentsFromPost(postContainer);
+      const loadedComments = postUtils.extractPostComments(postContainer);
       if (loadedComments.length > 0) {
         updateCardsComments(urn, loadedComments);
       }
@@ -190,7 +192,7 @@ export function SpacebarEngageObserver() {
       }
 
       // Extract adjacent comments for AI generation
-      const adjacentComments = extractAdjacentComments(postContainer);
+      const adjacentComments = postUtils.extractAdjacentComments(postContainer);
 
       // Request params for AI generation
       const requestParams = {

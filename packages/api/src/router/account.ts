@@ -82,7 +82,7 @@ export const accountRouter = () =>
       )
       .query(async ({ ctx, input }) => {
         const permitted = await hasPermissionToAccessAccount(ctx.db, {
-          readerUserId: ctx.user.id,
+          actorUserId: ctx.user.id,
           accountId: input.id,
         });
 
@@ -130,7 +130,7 @@ export const accountRouter = () =>
 
           if (existingAccount !== null) {
             const permitted = await hasPermissionToAccessAccount(ctx.db, {
-              readerUserId: ctx.user.id,
+              actorUserId: ctx.user.id,
               accountId: existingAccount.id,
             });
 
@@ -224,7 +224,7 @@ export const accountRouter = () =>
         .mutation(async ({ ctx, input }) => {
           const hasAccess = await hasPermissionToAccessAccount(ctx.db, {
             accountId: input.accountId,
-            readerUserId: ctx.user.id,
+            actorUserId: ctx.user.id,
           });
 
           if (hasAccess === false) {
@@ -292,51 +292,28 @@ export const accountRouter = () =>
 
     /**
      * Register a LinkedIn account by URL
-     * Links the account to the user's active organization (from ctx.activeOrg)
+     * Links the account to the user's current organization
      */
     registerByUrl: orgProcedure
-      .input(z.object({ profileUrl: z.string().url() }))
+      .input(
+        z.object({
+          profileUrl: z.string().url(),
+        }),
+      )
       .mutation(async ({ ctx, input }) => {
-        const orgId = ctx.activeOrg.id;
         const profileSlug = extractProfileSlug(input.profileUrl);
 
-        // 1. Check if already registered (globally unique)
-        const existing = await ctx.db.linkedInAccount.findUnique({
-          where: { profileSlug },
+        // 4. Check slot limit
+        const org = await ctx.db.organization.findUnique({
+          where: { id: ctx.activeOrg.id },
+          select: { purchasedSlots: true },
         });
 
-        if (existing) {
-          // Already registered - check if it's in this org or another
-          if (existing.organizationId === orgId) {
-            throw new TRPCError({
-              code: "CONFLICT",
-              message:
-                "This LinkedIn account is already registered in your organization",
-            });
-          } else if (existing.organizationId) {
-            throw new TRPCError({
-              code: "CONFLICT",
-              message:
-                "This LinkedIn account is registered in another organization",
-            });
-          }
-          // If organizationId is null, we could claim it - but for simplicity, block
-          throw new TRPCError({
-            code: "CONFLICT",
-            message: "This LinkedIn account already exists in the system",
-          });
-        }
+        const currentAccountCount = await ctx.db.linkedInAccount.count({
+          where: { organizationId: ctx.activeOrg.id },
+        });
 
-        // 4. Check slot limit
-        const [org, currentAccountCount] = await Promise.all([
-          ctx.db.organization.findUnique({
-            where: { id: orgId },
-            select: { purchasedSlots: true },
-          }),
-          ctx.db.linkedInAccount.count({
-            where: { organizationId: orgId },
-          }),
-        ]);
+        console.log("current account count is: ", currentAccountCount);
 
         if (org && currentAccountCount >= org.purchasedSlots) {
           throw new TRPCError({
@@ -345,25 +322,71 @@ export const accountRouter = () =>
           });
         }
 
-        // 5. Create the account and hyperbrowser profile
-        const accountId = ulid();
-
-        const profile = await hyperbrowser.profiles.create({
-          name: profileSlug,
+        // 3. Check if already registered (globally unique)
+        const existing = await ctx.db.linkedInAccount.findUnique({
+          where: { profileSlug },
         });
 
+        if (existing) {
+          // Case 1: Already in the same org
+          if (existing.organizationId === ctx.activeOrg.id) {
+            throw new TRPCError({
+              code: "CONFLICT",
+              message:
+                "This LinkedIn account is already registered in your organization",
+            });
+          }
+
+          // Case 2: Owned by another org (orgId is not null and different)
+          if (existing.organizationId !== null) {
+            throw new TRPCError({
+              code: "CONFLICT",
+              message:
+                "This LinkedIn account is registered in another organization",
+            });
+          }
+
+          // Case 3: Previously removed from an org (orgId and ownerId are both null)
+          // Reclaim the account for the current user and org
+          if (existing.ownerId === null) {
+            const reclaimed = await ctx.db.linkedInAccount.update({
+              where: { id: existing.id },
+              data: {
+                organizationId: ctx.activeOrg.id,
+                ownerId: ctx.user.id,
+                status: "REGISTERED",
+              },
+            });
+
+            return {
+              id: reclaimed.id,
+              profileSlug: reclaimed.profileSlug,
+              profileUrl: reclaimed.profileUrl,
+              registrationStatus: reclaimed.registrationStatus,
+            };
+          }
+
+          // Edge case: orgId is null but ownerId is not null (shouldn't happen with proper removeFromOrg)
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "This LinkedIn account is in an invalid state",
+          });
+        }
+
+        // Case 4: Completely new account - create it
+        const accountId = ulid();
         const account = await ctx.db.linkedInAccount.create({
           data: {
             id: accountId,
-            organizationId: orgId,
+            organizationId: ctx.activeOrg.id,
             profileUrl: input.profileUrl,
             profileSlug,
             registrationStatus: "registered",
             // Legacy required fields - fill with placeholders
             ownerId: ctx.user.id,
             email: `${profileSlug}@placeholder.linkedin`,
-            status: "CONNECTING",
-            browserProfileId: profile.id,
+            status: "REGISTERED",
+            browserProfileId: "pending",
             browserLocation: "unknown",
           },
         });
@@ -424,18 +447,20 @@ export const accountRouter = () =>
 
     /**
      * Remove a LinkedIn account from an organization
-     * Uses ctx.activeOrg from middleware
+     * Uses ctx.activeOrg from middleware for security
      */
     removeFromOrg: orgProcedure
-      .input(z.object({ accountId: z.string() }))
+      .input(
+        z.object({
+          accountId: z.string(),
+        }),
+      )
       .mutation(async ({ ctx, input }) => {
-        const orgId = ctx.activeOrg.id;
-
-        // Verify account belongs to org
+        // Verify account belongs to user's active org
         const account = await ctx.db.linkedInAccount.findFirst({
           where: {
             id: input.accountId,
-            organizationId: orgId,
+            organizationId: ctx.activeOrg.id,
           },
         });
 
@@ -451,6 +476,7 @@ export const accountRouter = () =>
           where: { id: input.accountId },
           data: {
             organizationId: null,
+            ownerId: null,
             status: null,
           },
         });
@@ -461,7 +487,7 @@ export const accountRouter = () =>
 
 export async function hasPermissionToAccessAccount(
   db: PrismaClient,
-  { readerUserId, accountId }: { readerUserId: string; accountId: string },
+  { actorUserId, accountId }: { actorUserId: string; accountId: string },
 ) {
   const exists = await db.linkedInAccount.count({
     where: {
@@ -469,7 +495,7 @@ export async function hasPermissionToAccessAccount(
         {
           id: accountId,
         },
-        hasPermissionToAccessAccountClause(readerUserId),
+        hasPermissionToAccessAccountClause(actorUserId),
       ],
     },
   });

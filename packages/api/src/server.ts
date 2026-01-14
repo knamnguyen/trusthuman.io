@@ -35,10 +35,27 @@ if (!VITE_APP_URL) {
 
 const url = new URL(VITE_APP_URL);
 
-console.log(`Starting server at port ${url.port}...`);
+console.log(`Starting server at port ${process.env.PORT ?? url.port}...`);
+
+let tls;
+
+// eslint-disable-next-line turbo/no-undeclared-env-vars
+if (process.env.TLS_KEY !== undefined && process.env.TLS_CERT !== undefined) {
+  console.info(
+    "detecting env TLS_KEY and TLS_CERT, enabling TLS for Bun server",
+  );
+  tls = {
+    // eslint-disable-next-line turbo/no-undeclared-env-vars
+    key: Bun.file(process.env.TLS_KEY),
+    // eslint-disable-next-line turbo/no-undeclared-env-vars
+    cert: Bun.file(process.env.TLS_CERT),
+  };
+}
 
 Bun.serve({
   port: url.port,
+  tls,
+  development: process.env.NODE_ENV !== "production",
   routes: {
     "/api/trpc/*": async (req) => {
       if (req.method === "OPTIONS") {
@@ -81,7 +98,8 @@ Bun.serve({
       return res;
     },
     "/api/webhooks/*": (req) => webhookRoutes.fetch(req),
+    "/*": new Response("NOT FOUND", { status: 404 }),
   },
 });
 
-console.log(`server running at ${VITE_APP_URL}/api/trpc`);
+console.log(`trpc server running at ${VITE_APP_URL}/api/trpc`);

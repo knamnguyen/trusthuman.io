@@ -1,6 +1,6 @@
 import { storage } from "wxt/storage";
 
-import { extractLinkedInProfileFromPage } from "../use-linkedin-profile";
+import { createAccountUtilities } from "@sassy/linkedin-automation/account/create-account-utilities";
 
 interface LinkedInAuth {
   cookie: string;
@@ -18,7 +18,7 @@ export interface InviteCountData {
  * NOTE: This fetches analytics for the CURRENTLY LOGGED IN user (based on auth cookies)
  */
 export async function fetchInviteCount(): Promise<InviteCountData | null> {
-  const currentProfile = extractLinkedInProfileFromPage();
+  const currentProfile = createAccountUtilities().extractCurrentProfile();
   console.log("🔍 Fetching invite count for logged-in user:", {
     profileUrl: currentProfile.profileUrl,
     profileSlug: currentProfile.profileSlug,

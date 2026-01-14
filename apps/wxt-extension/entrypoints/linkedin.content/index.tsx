@@ -1,8 +1,10 @@
 import ReactDOM from "react-dom/client";
 
+import { onDomVersionChange } from "@sassy/linkedin-automation/dom/detect";
+
 import { loadFonts } from "../../assets/fonts-loader";
+import { initAuthStoreListener, useAuthStore } from "../../lib/auth-store";
 import { getTrpcClient, TRPCReactProvider } from "../../lib/trpc/client";
-import { initAuthStoreListener, useAuthStore } from "../../stores/auth-store";
 import App from "./App";
 import { useAccountStore } from "./stores";
 import { autoFetchAllMetrics } from "./utils/data-fetch-mimic/unified-auto-fetch";
@@ -21,7 +23,10 @@ const warmupBackend = () => {
     })
     .catch((err) => {
       // Silently ignore warmup failures - it's just an optimization
-      console.debug("EngageKit WXT: Backend warmup failed (non-critical):", err);
+      console.debug(
+        "EngageKit WXT: Backend warmup failed (non-critical):",
+        err,
+      );
     });
 };
 
@@ -55,10 +60,11 @@ export default defineContentScript({
   cssInjectionMode: "ui",
 
   async main(ctx) {
-    console.log("EngageKit WXT: LinkedIn content script loaded");
-
     // Load custom fonts
     loadFonts();
+
+    // Initialize DOM version detection (debug=true logs to console)
+    const cleanupDomDetection = onDomVersionChange(() => {}, true);
 
     // Initialize auth store listener with callbacks to coordinate account data fetching
     // This ensures account data is fetched AFTER auth is confirmed (no race condition)
@@ -101,18 +107,26 @@ export default defineContentScript({
       const accountId = useAccountStore.getState().currentLinkedIn.profileUrn;
 
       if (!accountId) {
-        console.warn("EngageKit WXT: No LinkedIn account ID detected, skipping auto-collect");
+        console.warn(
+          "EngageKit WXT: No LinkedIn account ID detected, skipping auto-collect",
+        );
         return;
       }
 
-      console.log(`EngageKit WXT: Starting unified auto-collect for account: ${accountId}`);
+      console.log(
+        `EngageKit WXT: Starting unified auto-collect for account: ${accountId}`,
+      );
 
       try {
         const success = await autoFetchAllMetrics(accountId);
         if (success) {
-          console.log("EngageKit WXT: Unified auto-collect completed successfully");
+          console.log(
+            "EngageKit WXT: Unified auto-collect completed successfully",
+          );
         } else {
-          console.log("EngageKit WXT: Unified auto-collect skipped (rate limited or failed)");
+          console.log(
+            "EngageKit WXT: Unified auto-collect skipped (rate limited or failed)",
+          );
         }
       } catch (err) {
         console.error("EngageKit WXT: Unified auto-collect error:", err);
@@ -127,7 +141,9 @@ export default defineContentScript({
     const unsubscribe = useAccountStore.subscribe((state) => {
       const currentAccountId = state.currentLinkedIn.profileUrn;
       if (currentAccountId && currentAccountId !== lastAccountId) {
-        console.log(`EngageKit WXT: Account changed to ${currentAccountId}, triggering auto-collect`);
+        console.log(
+          `EngageKit WXT: Account changed to ${currentAccountId}, triggering auto-collect`,
+        );
         lastAccountId = currentAccountId;
         startAutoCollect();
       }
@@ -153,13 +169,12 @@ export default defineContentScript({
             <App shadowRoot={container} />
           </TRPCReactProvider>,
         );
-
-        console.log("EngageKit WXT: Sidebar mounted");
         return root;
       },
       onRemove: (root) => {
         stopPeriodicWarmup();
         cleanupAuthStore();
+        cleanupDomDetection();
         unsubscribe();
         root?.unmount();
         console.log("EngageKit WXT: Sidebar unmounted");

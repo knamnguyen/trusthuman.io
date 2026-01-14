@@ -1,15 +1,17 @@
 model TargetList {
-  id             String           @id
-  accountId      String
-  name           String
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  status         TargetListStatus
-  targetProfiles TargetProfile[]
+  id        String           @id
+  accountId String
+  name      String
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  status    TargetListStatus
 
   linkedInAccount     LinkedInAccount      @relation(fields: [accountId], references: [id])
   PostLoadSetting     PostLoadSetting? //optional 1:1 - this list may be selected in PostLoadSetting
   buildTargetListJobs BuildTargetListJob[]
+  targetListProfiles  TargetListProfile[]
+
+  @@index([accountId]) // For findListsWithProfileStatus query
 }
 
 enum TargetListStatus {
@@ -17,24 +19,41 @@ enum TargetListStatus {
   COMPLETED
 }
 
-model TargetProfile {
+model TargetListProfile {
   id        String @id
   listId    String
+  profileId String
+  accountId String
+
+  list    TargetList      @relation(fields: [listId], references: [id])
+  profile TargetProfile   @relation(fields: [profileId], references: [id])
+  account LinkedInAccount @relation(fields: [accountId], references: [id])
+
+  @@unique([listId, profileId, accountId])
+}
+
+model TargetProfile {
+  id        String @id
   accountId String
 
   //get url first to store - scrape profile in linkedinprofile first (or look up) and backfill to urn
-  linkedinUrl String
+  linkedinUrl String  @unique
   profileUrn  String?
+
+  // Profile data scraped from LinkedIn page for quick display
+  name        String?
+  profileSlug String?
+  headline    String?
+  photoUrl    String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  list TargetList @relation(fields: [listId], references: [id])
+  // profileUrn stored as plain string - query LinkedInProfile by urn when needed
+  account            LinkedInAccount     @relation(fields: [accountId], references: [id])
+  targetListProfiles TargetListProfile[]
 
-  profile LinkedInProfile? @relation(fields: [profileUrn], references: [urn])
-  account LinkedInAccount  @relation(fields: [accountId], references: [id])
-
-  @@unique([listId, linkedinUrl])
+  @@index([accountId, linkedinUrl]) // For findListsWithProfileStatus query
 }
 
 //ignore for chrome extension for now

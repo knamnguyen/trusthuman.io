@@ -20,6 +20,7 @@ import superjson from "superjson";
 
 import type { AppRouter } from "@sassy/api";
 
+import { useAccountStore } from "../../entrypoints/linkedin.content/stores/account-store";
 import { authService } from "../auth-service";
 import { getSyncHostUrl } from "../get-sync-host-url";
 
@@ -46,7 +47,7 @@ const getServerUrl = (): string => {
     baseUrl = import.meta.env.VITE_APP_URL;
   } else {
     // TODO: to be changed to api.engagekit.io when we move to a vps
-    baseUrl = "https://engagekit.io";
+    baseUrl = "https://api.engagekit.io";
   }
 
   console.log("tRPC Client: Server base URL:", baseUrl);
@@ -84,6 +85,17 @@ export const getTrpcClient = () => {
           } else {
             console.warn(
               "tRPC Client: No token available - request will be unauthenticated",
+            );
+          }
+
+          // Add x-account-id header if we have a matching account
+          // This is required for targetList endpoints that check ctx.activeAccount
+          const matchingAccount = useAccountStore.getState().matchingAccount;
+          if (matchingAccount?.id) {
+            headers["x-account-id"] = matchingAccount.id;
+            console.log(
+              "tRPC Client: Adding x-account-id header:",
+              matchingAccount.id,
             );
           }
 

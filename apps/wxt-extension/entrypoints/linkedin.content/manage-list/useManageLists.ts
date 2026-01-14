@@ -1,19 +1,18 @@
 import * as React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { useTRPC } from "../../../lib/trpc/client";
-import { useSavedProfileStore } from "../stores/saved-profile-store";
+import { toast } from "@sassy/ui/toast";
 
-const ALL_LIST_NAME = "All";
+import { useTRPC } from "../../../lib/trpc/client";
+import { useSavedProfileStore } from "../save-profile/saved-profile-store";
 
 /**
  * Hook that manages all list-related state, queries, and mutations.
  * Handles optimistic updates, cache management, and fast profile switching.
- * Automatically adds profiles to "All" list when selected.
  */
 export function useManageLists() {
   const { selectedProfile } = useSavedProfileStore();
-  const linkedinUrl = selectedProfile?.linkedinUrl;
+  const linkedinUrl = selectedProfile?.profileUrl;
 
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -21,9 +20,6 @@ export function useManageLists() {
   // UI state
   const [open, setOpen] = React.useState(false);
   const [searchValue, setSearchValue] = React.useState("");
-
-  // Track which URLs we've already auto-added to "All" list (avoid duplicate calls)
-  const processedUrls = React.useRef<Set<string>>(new Set());
 
   // Local state for selected list IDs (toggled by user)
   const [selectedListIds, setSelectedListIds] = React.useState<Set<string>>(
@@ -39,11 +35,15 @@ export function useManageLists() {
     linkedinUrl: linkedinUrl ?? "",
   });
 
-  // Prefetch lists as soon as profile is selected (instant popover open)
+  // Query lists data (prefetched in useSaveProfileButtons for instant popover open)
   const { data: listsData, isLoading: isLoadingLists } = useQuery(
     trpc.targetList.findListsWithProfileStatus.queryOptions(
       { linkedinUrl: linkedinUrl ?? "" },
-      { enabled: !!linkedinUrl },
+      {
+        enabled: !!linkedinUrl,
+        // Keep data fresh for 30s so re-opening popover is instant
+        staleTime: 30 * 1000,
+      },
     ),
   );
 
@@ -72,13 +72,18 @@ export function useManageLists() {
         queryClient.setQueryData(
           context.capturedQueryKey,
           (old: typeof listsData) => {
-            if (!old) return old;
+            if (!old || !old.lists) return old;
             return {
               ...old,
               listIdsWithProfile: context.capturedListIds,
             };
           },
         );
+      },
+      onError: () => {
+        toast.error("Failed to save list changes", {
+          description: "Please try again.",
+        });
       },
     }),
   );
@@ -102,7 +107,7 @@ export function useManageLists() {
 
         // Optimistically add the new list to cache
         queryClient.setQueryData(capturedQueryKey, (old: typeof listsData) => {
-          if (!old) return old;
+          if (!old || !old.lists) return old;
           const now = new Date();
           return {
             ...old,
@@ -112,7 +117,8 @@ export function useManageLists() {
                 name: variables.name,
                 createdAt: now,
                 updatedAt: now,
-                userId: "", // Placeholder, will be replaced on success
+                accountId: "",
+                status: "COMPLETED" as const,
               },
               ...old.lists,
             ],
@@ -127,17 +133,17 @@ export function useManageLists() {
       },
       // On success, swap temp ID with real ID
       onSuccess: (data, _variables, context) => {
-        if (!context) return;
+        if (!context || !data.id) return;
 
         // Update cache: replace temp ID with real ID (using captured key)
         queryClient.setQueryData(
           context.capturedQueryKey,
           (old: typeof listsData) => {
-            if (!old) return old;
+            if (!old || !old.lists) return old;
             return {
               ...old,
               lists: old.lists.map((list) =>
-                list.id === context.tempId ? { ...list, id: data.id } : list,
+                list.id === context.tempId ? { ...list, id: data.id! } : list,
               ),
             };
           },
@@ -147,7 +153,7 @@ export function useManageLists() {
         setSelectedListIds((prev) => {
           const next = new Set(prev);
           next.delete(context.tempId);
-          next.add(data.id);
+          next.add(data.id!);
           return next;
         });
       },
@@ -156,7 +162,10 @@ export function useManageLists() {
         if (!context) return;
 
         // Restore previous cache data (using captured key)
-        queryClient.setQueryData(context.capturedQueryKey, context.previousData);
+        queryClient.setQueryData(
+          context.capturedQueryKey,
+          context.previousData,
+        );
 
         // Remove temp ID from selection
         setSelectedListIds((prev) => {
@@ -167,186 +176,6 @@ export function useManageLists() {
       },
     }),
   );
-
-  // Auto-add profile to "All" list mutation with optimistic update
-  const ensureProfileInAllList = useMutation(
-    trpc.targetList.ensureProfileInAllList.mutationOptions({
-      onMutate: async (variables) => {
-        // Capture query key at mutation time
-        const capturedQueryKey =
-          trpc.targetList.findListsWithProfileStatus.queryKey({
-            linkedinUrl: variables.linkedinUrl,
-          });
-
-        // Snapshot previous value for rollback
-        const previousData = queryClient.getQueryData(capturedQueryKey);
-
-        // If no cache exists, skip optimistic update - let the query fetch real data
-        // DON'T cancel queries here - we want the initial fetch to complete
-        if (!previousData) {
-          return { previousData: null, tempListId: null, capturedQueryKey };
-        }
-
-        // Only cancel queries when we have existing cache and want to do optimistic update
-        await queryClient.cancelQueries({ queryKey: capturedQueryKey });
-
-        // Generate temp ID for optimistic "All" list
-        const tempListId = `temp-all-${Date.now()}`;
-        const now = new Date();
-
-        // Optimistically update cache (only when we have existing cache)
-        let allListId: string | null = null;
-        queryClient.setQueryData(capturedQueryKey, (old: typeof listsData) => {
-          if (!old) return old;
-
-          // Check if "All" list already exists
-          const existingAllList = old.lists.find(
-            (l) => l.name === ALL_LIST_NAME,
-          );
-
-          if (existingAllList) {
-            allListId = existingAllList.id;
-            // "All" list exists - just add to listIdsWithProfile if not already there
-            const alreadyInList = old.listIdsWithProfile.includes(
-              existingAllList.id,
-            );
-            if (alreadyInList) {
-              return old; // No change needed
-            }
-            return {
-              ...old,
-              listIdsWithProfile: [
-                existingAllList.id,
-                ...old.listIdsWithProfile,
-              ],
-            };
-          }
-
-          // "All" list doesn't exist - add it optimistically
-          allListId = tempListId;
-          return {
-            lists: [
-              {
-                id: tempListId,
-                name: ALL_LIST_NAME,
-                createdAt: now,
-                updatedAt: now,
-                userId: "",
-              },
-              ...old.lists,
-            ],
-            listIdsWithProfile: [tempListId, ...old.listIdsWithProfile],
-          };
-        });
-
-        // Also optimistically update selectedListIds and initialListIds
-        if (allListId) {
-          setSelectedListIds((prev) => {
-            if (prev.has(allListId!)) return prev;
-            return new Set([allListId!, ...prev]);
-          });
-          setInitialListIds((prev) => {
-            if (prev.has(allListId!)) return prev;
-            return new Set([allListId!, ...prev]);
-          });
-        }
-
-        return { previousData, tempListId, capturedQueryKey, allListId };
-      },
-
-      onSuccess: (data, _variables, context) => {
-        if (!context) return;
-
-        // If we skipped optimistic update (no previous cache), invalidate to ensure fresh data
-        if (!context.tempListId) {
-          void queryClient.invalidateQueries({
-            queryKey: context.capturedQueryKey,
-          });
-          return;
-        }
-
-        // Update cache with real list data from server
-        queryClient.setQueryData(
-          context.capturedQueryKey,
-          (old: typeof listsData) => {
-            if (!old) return old;
-
-            // Replace temp list with real list data
-            const updatedLists = old.lists.map((list) =>
-              list.id === context.tempListId ? data.list : list,
-            );
-
-            // If temp list wasn't in the array (list already existed), ensure real list is there
-            if (!old.lists.some((l) => l.id === context.tempListId)) {
-              const hasRealList = updatedLists.some(
-                (l) => l.id === data.list.id,
-              );
-              if (!hasRealList) {
-                updatedLists.unshift(data.list);
-              }
-            }
-
-            // Update listIdsWithProfile: replace temp ID with real ID
-            let updatedListIds = old.listIdsWithProfile.map((id) =>
-              id === context.tempListId ? data.list.id : id,
-            );
-
-            // Ensure real list ID is in the array
-            if (!updatedListIds.includes(data.list.id)) {
-              updatedListIds = [data.list.id, ...updatedListIds];
-            }
-
-            return {
-              lists: updatedLists,
-              listIdsWithProfile: updatedListIds,
-            };
-          },
-        );
-
-        // Also swap temp ID with real ID in selectedListIds and initialListIds
-        const tempId = context.tempListId;
-        if (context.allListId === tempId && tempId) {
-          setSelectedListIds((prev) => {
-            if (!prev.has(tempId)) return prev;
-            const next = new Set(prev);
-            next.delete(tempId);
-            next.add(data.list.id);
-            return next;
-          });
-          setInitialListIds((prev) => {
-            if (!prev.has(tempId)) return prev;
-            const next = new Set(prev);
-            next.delete(tempId);
-            next.add(data.list.id);
-            return next;
-          });
-        }
-      },
-
-      onError: (_err, _variables, context) => {
-        if (!context?.previousData) return;
-
-        // Rollback to previous state
-        queryClient.setQueryData(context.capturedQueryKey, context.previousData);
-      },
-    }),
-  );
-
-  // Auto-add profile to "All" list when selectedProfile changes
-  // Wait for query to have data first so we can do optimistic updates
-  React.useEffect(() => {
-    if (!linkedinUrl) return;
-    if (!listsData) return; // Wait for query to complete first
-
-    // Skip if we've already processed this URL in this session
-    if (processedUrls.current.has(linkedinUrl)) return;
-
-    // Mark as processed to avoid duplicate calls
-    processedUrls.current.add(linkedinUrl);
-
-    // Trigger mutation (now cache exists, so optimistic update will work)
-    ensureProfileInAllList.mutate({ linkedinUrl });
-  }, [linkedinUrl, listsData, ensureProfileInAllList]);
 
   // Track which profile we've synced state for (avoid re-syncing on cache updates from our own mutations)
   const lastSyncedUrl = React.useRef<string | null>(null);
@@ -382,6 +211,16 @@ export function useManageLists() {
           linkedinUrl,
           addToListIds,
           removeFromListIds,
+          // Pass profile data for quick display in target list UI
+          profileData: selectedProfile
+            ? {
+                name: selectedProfile.name,
+                profileSlug: selectedProfile.profileSlug,
+                profileUrn: selectedProfile.profileUrn,
+                headline: selectedProfile.headline,
+                photoUrl: selectedProfile.photoUrl,
+              }
+            : undefined,
         });
       }
     }

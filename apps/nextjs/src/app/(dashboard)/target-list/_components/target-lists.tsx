@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 
 import { Badge } from "@sassy/ui/badge";
@@ -25,7 +25,9 @@ export function TargetLists() {
   );
 
   // Auto-select first list when data loads
-  const allLists = targetLists.data?.pages.flatMap((p) => p.data) ?? [];
+  const allLists = useMemo(() => {
+    return targetLists.data?.pages.flatMap((p) => p.data) ?? [];
+  }, [targetLists.data]);
 
   // Prefetch profiles for all lists once lists are loaded
   useEffect(() => {
@@ -168,6 +170,7 @@ function ProfilesGrid({
               <ProfileCard
                 key={profile.id}
                 profile={profile}
+                lists={profile.targetListProfiles.map((tlp) => tlp.list)}
                 allLists={allLists}
               />
             ))}
@@ -194,12 +197,12 @@ interface ProfileCardProps {
   profile: {
     id: string;
     linkedinUrl: string;
-    listMemberships: { id: string; name: string }[];
   };
+  lists: { id: string; name: string }[];
   allLists: ListInfo[];
 }
 
-function ProfileCard({ profile, allLists }: ProfileCardProps) {
+function ProfileCard({ profile, allLists, lists }: ProfileCardProps) {
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -220,7 +223,7 @@ function ProfileCard({ profile, allLists }: ProfileCardProps) {
         </p>
         <div className="mb-3 flex flex-wrap gap-1">
           <span className="text-muted-foreground text-xs">Lists:</span>
-          {profile.listMemberships.map((list) => (
+          {lists.map((list) => (
             <Badge key={list.id} variant="secondary" className="text-xs">
               {list.name}
             </Badge>
@@ -228,7 +231,7 @@ function ProfileCard({ profile, allLists }: ProfileCardProps) {
         </div>
         <ManageListButton
           linkedinUrl={profile.linkedinUrl}
-          listMemberships={profile.listMemberships}
+          listMemberships={lists}
           allLists={allLists}
         />
       </CardContent>

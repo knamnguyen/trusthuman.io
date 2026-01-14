@@ -1,16 +1,18 @@
 import { useEffect, useState } from "react";
 
+import { createFeedUtilities } from "@sassy/linkedin-automation/feed/create-feed-utilities";
 import { Sheet } from "@sassy/ui/sheet";
+import { ToasterSimple } from "@sassy/ui/toast";
 
 import { ToggleButton } from "./_components/ToggleButton";
 import { PostNavigator } from "./compose-tab/PostNavigator";
-import { AutoEngageObserver } from "./engage-button/AutoEngageObserver";
-import { ButtonPortalManager } from "./engage-button/ButtonPortalManager";
 import { SpacebarEngageObserver } from "./engage-button/SpacebarEngageObserver";
+import { useAutoEngage } from "./engage-button/useAutoEngage";
+import { useEngageButtons } from "./engage-button/useEngageButtons";
 import { LinkedInSidebar } from "./LinkedInSidebar";
-import { SaveProfilePortalManager } from "./save-profile";
+import { useProfilePageButton } from "./save-profile/useProfilePageButton";
+import { useSaveProfileButtons } from "./save-profile/useSaveProfileButtons";
 import { useShadowRootStore, useSidebarStore } from "./stores";
-import { NewPostsPillRemover } from "./utils/feed/NewPostsPillRemover";
 
 interface AppProps {
   shadowRoot: HTMLElement;
@@ -55,6 +57,24 @@ export default function App({ shadowRoot }: AppProps) {
     }
   }, [isOpen]);
 
+  // Watch and remove "New posts" pill from feed
+  useEffect(() => {
+    const feedUtilities = createFeedUtilities();
+    return feedUtilities.watchAndRemoveNewPostsPill();
+  }, []);
+
+  // Watch for author profiles and inject save buttons (vanilla JS)
+  useSaveProfileButtons();
+
+  // Watch for profile page and inject save button (vanilla JS)
+  useProfilePageButton();
+
+  // Watch for comment editors and inject engage buttons (vanilla JS, DOM v1/v2 support)
+  useEngageButtons();
+
+  // Watch for native comment button clicks and auto-engage (DOM v1/v2 support)
+  useAutoEngage();
+
   return (
     <>
       {/* Open button - only visible when sidebar is closed and animation finished */}
@@ -68,23 +88,14 @@ export default function App({ shadowRoot }: AppProps) {
         <LinkedInSidebar onClose={() => setIsOpen(false)} />
       </Sheet>
 
-      {/* Single React tree manages all injected engage buttons */}
-      <ButtonPortalManager />
-
-      {/* Single React tree manages all injected save profile buttons */}
-      <SaveProfilePortalManager />
-
-      {/* Observer for auto-engage on native LinkedIn comment button clicks */}
-      <AutoEngageObserver />
-
       {/* Observer for spacebar auto-engage - highlights most visible post */}
       <SpacebarEngageObserver />
 
       {/* Floating post navigator UI for quick scrolling between posts */}
       <PostNavigator />
 
-      {/* Observer to remove "New posts" pill from feed */}
-      <NewPostsPillRemover />
+      {/* Toast notifications */}
+      <ToasterSimple container={shadowRoot} />
     </>
   );
 }

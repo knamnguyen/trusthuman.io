@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import type { ReactNode } from "react";
+import { useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useOrganization, useOrganizationList } from "@clerk/nextjs";
 import { useQueryClient } from "@tanstack/react-query";
@@ -14,7 +15,11 @@ export default function OrgLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { organization, isLoaded } = useOrganization();
-  const { userMemberships, setActive, isLoaded: isListLoaded } = useOrganizationList({
+  const {
+    userMemberships,
+    setActive,
+    isLoaded: isListLoaded,
+  } = useOrganizationList({
     userMemberships: { infinite: true },
   });
   const clearAccount = useAccountStore((s) => s.clearAccount);
@@ -39,7 +44,7 @@ export default function OrgLayout({ children }: { children: ReactNode }) {
     ) {
       console.log("[OrgLayout] Org switched, invalidating queries:", {
         from: prevOrgIdRef.current,
-        to: currentOrgId
+        to: currentOrgId,
       });
       void queryClient.invalidateQueries();
     }
@@ -52,33 +57,43 @@ export default function OrgLayout({ children }: { children: ReactNode }) {
 
   // Auto-switch to org matching URL slug
   useEffect(() => {
-    if (!isLoaded || !isListLoaded || !setActive || switchingOrgRef.current) return;
+    if (!isLoaded || !isListLoaded || switchingOrgRef.current) return;
 
     // If current org matches URL, we're good
     if (organization?.slug === orgSlug) return;
 
     // Wait for membership data to be populated before making decisions
     // isListLoaded can be true while data is still empty during initial load
-    if (userMemberships?.isLoading || !userMemberships?.data) return;
+    if (userMemberships.isLoading) return;
 
     // Find the org matching the URL slug
     const targetOrg = userMemberships.data.find(
-      (membership) => membership.organization.slug === orgSlug
+      (membership) => membership.organization.slug === orgSlug,
     );
 
     if (targetOrg) {
       // Switch to the org that matches the URL
       switchingOrgRef.current = true;
-      void setActive({ organization: targetOrg.organization.id }).finally(() => {
-        switchingOrgRef.current = false;
-      });
+      void setActive({ organization: targetOrg.organization.id }).finally(
+        () => {
+          switchingOrgRef.current = false;
+        },
+      );
     } else if (organization?.slug) {
       // User doesn't have access to this org, redirect to their current org
       router.replace(`/${organization.slug}/accounts`);
     }
-  }, [isLoaded, isListLoaded, organization, orgSlug, userMemberships, setActive, router]);
+  }, [
+    isLoaded,
+    isListLoaded,
+    organization,
+    orgSlug,
+    userMemberships,
+    setActive,
+    router,
+  ]);
 
-  if (!isLoaded || !isListLoaded || userMemberships?.isLoading) {
+  if (!isLoaded || !isListLoaded || userMemberships.isLoading) {
     return (
       <div className="flex flex-1 items-center justify-center p-8">
         <Skeleton className="h-8 w-48" />

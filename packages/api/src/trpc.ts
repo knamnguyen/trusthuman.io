@@ -13,7 +13,7 @@ import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
 
-import type { AccessType, Prisma, PrismaClient } from "@sassy/db";
+import type { Prisma, PrismaClient } from "@sassy/db";
 import { db } from "@sassy/db";
 
 import type { BrowserSessionRegistry } from "./utils/browser-session/browser-session";
@@ -56,7 +56,7 @@ function getCachedAuth(
   authCache.set(cacheKey, promise);
 
   // Clean up after TTL (whether success or failure)
-  promise.finally(() => {
+  void promise.finally(() => {
     setTimeout(() => {
       // Only delete if it's still the same promise (not replaced)
       if (authCache.get(cacheKey) === promise) {
@@ -156,58 +156,8 @@ const clerkClient = createClerkClient({
  * Uses auth cache (60s TTL) to deduplicate parallel DB queries
  */
 const isAuthed = t.middleware(async ({ ctx, next }) => {
-  // assumedUserToken is for assumed accounts from browserbase
-  const assumedUserToken = ctx.headers.get("x-assumed-user-token");
-
-  // check for assumedUserToken (for hyper browser mode)
-  if (assumedUserToken !== null) {
-    const decoded = await assumedAccountJwt.decode(assumedUserToken);
-    if (!decoded.success) {
-      throw new TRPCError({
-        code: "UNAUTHORIZED",
-        message: "Invalid assumed user token",
-      });
-    }
-
-    // Note: activeOrgId is null for assumed token (browser automation) mode
-    const result = await getUserAccount(
-      ctx.db,
-      decoded.payload.userId,
-      decoded.payload.accountId,
-      null,
-    );
-
-    if (result === null) {
-      throw new TRPCError({
-        code: "UNAUTHORIZED",
-        message: "Invalid assumed user token - user not found",
-      });
-    }
-
-    if (
-      result.activeAccount !== null &&
-      result.activeAccount.permitted === false
-    ) {
-      throw new TRPCError({
-        code: "FORBIDDEN",
-        message: "Access to this account is forbidden",
-      });
-    }
-
-    return next({
-      ctx: {
-        ...ctx,
-        user: result.user,
-        activeAccount: result.activeAccount,
-        memberships: result.memberships,
-        activeOrg: null, // Not available in assumed token mode
-      },
-    });
-  }
-
   // Get account id and source for logging
   const activeAccountId = ctx.headers.get("x-account-id") ?? null;
-  const source = ctx.headers.get("x-trpc-source") ?? "nextjs";
 
   // Unified auth: authenticateRequest works for both NextJS and Chrome extension
   // Returns full Auth object with orgId from active organization
@@ -233,7 +183,6 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
   // Use cached auth to avoid redundant DB queries for parallel requests
   // Cache key: sessionId + orgId + accountId (covers all variations)
   const cacheKey = `${state.sessionId}:${activeOrg?.id ?? "none"}:${activeAccountId ?? "none"}`;
-  const dbCacheHit = authCache.has(cacheKey);
   const result = await getCachedAuth(cacheKey, () =>
     getOrInsertUser(ctx.db, clerkClient, {
       userId: state.userId,
@@ -314,12 +263,19 @@ export const orgProcedure = protectedProcedure.use(({ ctx, next }) => {
       message: "No active organization selected",
     });
   }
+
   // Use type assertion to narrow the type after runtime check
   const activeOrg = ctx.activeOrg as {
     id: string;
     slug: string | null;
     role: string | null;
   };
+
+  console.log("Active org: ", activeOrg.slug);
+  console.log("Users membership: ", ctx.memberships);
+  const isMemberOrg = ctx.memberships.includes(activeOrg.id);
+  console.log("User is member of org: ", isMemberOrg);
+
   return next({
     ctx: {
       ...ctx,
@@ -346,6 +302,8 @@ export const accountProcedure = orgProcedure.use(({ ctx, next }) => {
       message: "No active account selected",
     });
   }
+
+  console.log("Active account is: ", ctx.activeAccount.profileUrl);
   // Use type assertion to narrow the type after runtime check
   const activeAccount = ctx.activeAccount as NonNullable<
     typeof ctx.activeAccount

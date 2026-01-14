@@ -17,15 +17,16 @@
 
 import { create } from "zustand";
 
-import type { LinkedInProfile } from "../utils/use-linkedin-profile";
+import type { LinkedInProfile } from "@sassy/linkedin-automation/account/types";
+import { createAccountUtilities } from "@sassy/linkedin-automation/account/create-account-utilities";
+
 import { getTrpcClient } from "../../../lib/trpc/client";
-import { useAuthStore } from "../../../stores/auth-store";
-import { extractLinkedInProfileFromPage } from "../utils/use-linkedin-profile";
 
 // Types inferred from API responses
 interface Organization {
   id: string;
   name: string;
+  slug: string | null;
   purchasedSlots: number;
   stripeCustomerId: string | null;
   createdAt: Date;
@@ -37,7 +38,6 @@ interface LinkedInAccount {
   profileUrl: string | null;
   profileSlug: string | null;
   status: string | null;
-  name: string | null;
   createdAt: Date;
 }
 
@@ -82,7 +82,7 @@ interface AccountActions {
    * Refresh just the current LinkedIn profile from the page
    * Useful when navigating to different LinkedIn pages
    */
-  refreshCurrentLinkedIn: () => void;
+  refreshCurrentLinkedIn: () => Promise<void>;
 
   /**
    * Clear all account data (on sign out)
@@ -157,13 +157,21 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
     try {
       const trpc = getTrpcClient();
 
-      // Extract current LinkedIn profile from page
-      const currentLinkedIn = extractLinkedInProfileFromPage();
+      // Fetch organization from API (has correct purchasedSlots from DB)
+      // Extract current LinkedIn profile and fetch accounts in parallel
+      const [apiOrg, currentLinkedIn, accounts] = await Promise.all([
+        trpc.organization.getCurrent.query(),
+        createAccountUtilities().extractCurrentProfileAsync(),
+        trpc.account.listByOrg.query(),
+      ]);
 
-      // Get organization from auth store (no API call needed!)
-      const authOrg = useAuthStore.getState().organization;
+      console.log("AccountStore: Fetched data", {
+        apiOrg: apiOrg?.name,
+        currentLinkedIn,
+        accountCount: accounts.length,
+      });
 
-      if (!authOrg) {
+      if (!apiOrg) {
         set({
           organization: null,
           accounts: [],
@@ -183,18 +191,16 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
         return;
       }
 
-      // Map auth org to account store org format
+      // Map API org to account store org format
       const org: Organization = {
-        id: authOrg.id,
-        name: authOrg.name,
-        purchasedSlots: authOrg.maxAllowedMemberships,
-        stripeCustomerId: null, // Not available from Clerk
-        createdAt: new Date(), // Not available from Clerk
-        role: "admin", // Would need to get from organizationMemberships if needed
+        id: apiOrg.id,
+        name: apiOrg.name,
+        slug: apiOrg.orgSlug,
+        purchasedSlots: apiOrg.purchasedSlots,
+        stripeCustomerId: apiOrg.stripeCustomerId,
+        createdAt: apiOrg.createdAt,
+        role: apiOrg.role,
       };
-
-      // Fetch accounts for the active organization (uses ctx.activeOrg on server)
-      const accounts = await trpc.account.listByOrg.query();
 
       // Find matching account
       const matchingAccount = currentLinkedIn.profileSlug
@@ -232,8 +238,9 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
     } catch (error) {
       console.error("AccountStore: Error fetching account data", error);
 
-      // Still try to get current LinkedIn even on error
-      const currentLinkedIn = extractLinkedInProfileFromPage();
+      // Still try to get current LinkedIn even on error (async for v2 DOM)
+      const currentLinkedIn =
+        await createAccountUtilities().extractCurrentProfileAsync();
 
       set({
         currentLinkedIn,
@@ -248,8 +255,9 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
     }
   },
 
-  refreshCurrentLinkedIn: () => {
-    const currentLinkedIn = extractLinkedInProfileFromPage();
+  refreshCurrentLinkedIn: async () => {
+    const currentLinkedIn =
+      await createAccountUtilities().extractCurrentProfileAsync();
     const { accounts, organization, isLoading } = get();
 
     const matchingAccount = currentLinkedIn.profileSlug

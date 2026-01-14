@@ -18,8 +18,8 @@ import {
   CardTitle,
 } from "@sassy/ui/card";
 
+import { useAuthStore } from "../../../lib/auth-store";
 import { getSyncHostUrl } from "../../../lib/get-sync-host-url";
-import { useAuthStore } from "../../../stores/auth-store";
 import { useAccountStore } from "../stores";
 
 /**
@@ -227,7 +227,7 @@ export function AccountTab() {
 
   const handleManageAccount = () => {
     const syncHost = getSyncHostUrl();
-    window.open(`${syncHost}/${organization?.name}/accounts`, "_blank");
+    window.open(`${syncHost}/${organization?.slug}/accounts`, "_blank");
   };
 
   // Signed in - show features UI (SignInOverlay handles unauthenticated state)

@@ -17,10 +17,16 @@ import { Button } from "@sassy/ui/button";
 import { Card, CardContent } from "@sassy/ui/card";
 import { Textarea } from "@sassy/ui/textarea";
 
+import { createCommentUtilities } from "@sassy/linkedin-automation/comment/create-comment-utilities";
+import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post-utilities";
+
 import { useTRPC } from "../../../lib/trpc/client";
 import { useComposeStore } from "../stores/compose-store";
-import { DEFAULT_STYLE_GUIDE, extractAdjacentComments } from "../utils";
-import { submitCommentToPost } from "../utils/comment/submit-comment";
+import { DEFAULT_STYLE_GUIDE } from "../utils";
+
+// Initialize utilities (auto-detects DOM version)
+const postUtils = createPostUtilities();
+const commentUtils = createCommentUtilities();
 
 interface ComposeCardProps {
   /** Card ID - component subscribes to its own card data */
@@ -149,7 +155,7 @@ export const ComposeCard = memo(function ComposeCard({
 
     setIsLocalSubmitting(true);
     try {
-      const success = await submitCommentToPost(
+      const success = await commentUtils.submitComment(
         card.postContainer,
         card.commentText,
       );
@@ -217,7 +223,7 @@ export const ComposeCard = memo(function ComposeCard({
     setCardGenerating(card.id, true);
 
     // Extract adjacent comments for context
-    const adjacentComments = extractAdjacentComments(card.postContainer);
+    const adjacentComments = postUtils.extractAdjacentComments(card.postContainer);
 
     // Fire regeneration request
     generateComment

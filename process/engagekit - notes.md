@@ -12,6 +12,13 @@
 [*] organization current id might not be able to deduce from clerk in the backend => check thi
 [*] => match current account id
 
+[] button to export current data and save to db
+
+//new dom fixing adapt task
+
+- mimic fetch data not succeeding in fetching - data different?
+- urn not available for post author in the feed
+
 //requires for db
 
 - target list can only have maximum 25 members - enforce default

@@ -404,6 +404,9 @@ importers:
       '@vercel/speed-insights':
         specifier: ^1.2.0
         version: 1.2.0(next@15.5.7(@opentelemetry/api@1.9.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(sass@1.94.2))(react@19.0.0)(svelte@4.2.2)(vue@3.3.4)
+      cookie:
+        specifier: ^1.1.1
+        version: 1.1.1
       date-fns:
         specifier: 'catalog:'
         version: 4.1.0
@@ -456,6 +459,9 @@ importers:
       '@tailwindcss/postcss':
         specifier: ^4.1.8
         version: 4.1.11
+      '@types/cookie':
+        specifier: ^1.0.0
+        version: 1.0.0
       '@types/node':
         specifier: ^22.10.10
         version: 22.15.34
@@ -492,6 +498,9 @@ importers:
       '@sassy/api':
         specifier: workspace:^
         version: link:../../packages/api
+      '@sassy/linkedin-automation':
+        specifier: workspace:*
+        version: link:../../packages/linkedin-automation
       '@sassy/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -845,6 +854,21 @@ importers:
       prettier:
         specifier: 'catalog:'
         version: 3.6.2
+      typescript:
+        specifier: 'catalog:'
+        version: 5.8.3
+
+  packages/linkedin-automation:
+    devDependencies:
+      '@sassy/eslint-config':
+        specifier: workspace:*
+        version: link:../../tooling/eslint
+      '@sassy/prettier-config':
+        specifier: workspace:*
+        version: link:../../tooling/prettier
+      '@sassy/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/typescript
       typescript:
         specifier: 'catalog:'
         version: 5.8.3
@@ -4647,6 +4671,10 @@ packages:
   '@types/chrome@0.0.323':
     resolution: {integrity: sha512-ipiDwx41lmGeLnbiT6ENOayvWXdkqKqNwqDQWEuz6dujaX7slSkk1nbSt5Q5c6xnQ708+kuCFrC00VLltSbWVA==}
 
+  '@types/cookie@1.0.0':
+    resolution: {integrity: sha512-mGFXbkDQJ6kAXByHS7QAggRXgols0mAdP4MuXgloGY1tXokvzaFFM4SMqWvf7AH0oafI7zlFJwoGWzmhDqTZ9w==}
+    deprecated: This is a stub types definition. cookie provides its own type definitions, so you do not need this installed.
+
   '@types/d3-array@3.2.2':
     resolution: {integrity: sha512-hOLWVbm7uRza0BYXpIIW5pxfrKe0W+D5lrFiAEYR+pb6w3N2SwSMaJbXdUfSEv+dT4MfHBLtn5js0LAWaO6otw==}
 
@@ -5744,6 +5772,10 @@ packages:
   cookie@0.7.2:
     resolution: {integrity: sha512-yki5XnKuf750l50uGTllt6kKILY4nQ1eNIQatoXEByZ5dWgnKqbnqmTrBE5B4N7lrMJKQ2ytWMiTO2o0v6Ew/w==}
     engines: {node: '>= 0.6'}
+
+  cookie@1.1.1:
+    resolution: {integrity: sha512-ei8Aos7ja0weRpFzJnEA9UHJ/7XQmqglbRwnf2ATjcB9Wq874VKH9kfjjirM6UhU2/E5fFYadylyhFldcqSidQ==}
+    engines: {node: '>=18'}
 
   copy-anything@2.0.6:
     resolution: {integrity: sha512-1j20GZTsvKNkc4BY3NpMOM8tt///wY3FpIzozTOFO2ffuZcV61nojHXVKIy3WM+7ADCy5FVhdZYHYDdgTU0yJw==}
@@ -14501,6 +14533,10 @@ snapshots:
       '@types/filesystem': 0.0.36
       '@types/har-format': 1.2.16
 
+  '@types/cookie@1.0.0':
+    dependencies:
+      cookie: 1.1.1
+
   '@types/d3-array@3.2.2': {}
 
   '@types/d3-color@3.1.3': {}
@@ -15866,6 +15902,8 @@ snapshots:
   cookie-signature@1.2.2: {}
 
   cookie@0.7.2: {}
+
+  cookie@1.1.1: {}
 
   copy-anything@2.0.6:
     dependencies:
