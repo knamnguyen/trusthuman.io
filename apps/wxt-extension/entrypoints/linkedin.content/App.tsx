@@ -6,8 +6,8 @@ import { ToasterSimple } from "@sassy/ui/toast";
 
 import { ToggleButton } from "./_components/ToggleButton";
 import { PostNavigator } from "./compose-tab/PostNavigator";
-import { AutoEngageObserver } from "./engage-button/AutoEngageObserver";
 import { SpacebarEngageObserver } from "./engage-button/SpacebarEngageObserver";
+import { useAutoEngage } from "./engage-button/useAutoEngage";
 import { useEngageButtons } from "./engage-button/useEngageButtons";
 import { LinkedInSidebar } from "./LinkedInSidebar";
 import { useProfilePageButton } from "./save-profile/useProfilePageButton";
@@ -72,6 +72,9 @@ export default function App({ shadowRoot }: AppProps) {
   // Watch for comment editors and inject engage buttons (vanilla JS, DOM v1/v2 support)
   useEngageButtons();
 
+  // Watch for native comment button clicks and auto-engage (DOM v1/v2 support)
+  useAutoEngage();
+
   return (
     <>
       {/* Open button - only visible when sidebar is closed and animation finished */}
@@ -84,9 +87,6 @@ export default function App({ shadowRoot }: AppProps) {
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <LinkedInSidebar onClose={() => setIsOpen(false)} />
       </Sheet>
-
-      {/* Observer for auto-engage on native LinkedIn comment button clicks */}
-      <AutoEngageObserver />
 
       {/* Observer for spacebar auto-engage - highlights most visible post */}
       <SpacebarEngageObserver />

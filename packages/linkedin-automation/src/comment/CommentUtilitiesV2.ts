@@ -1,6 +1,7 @@
 import type {
   CommentUtilities,
   OnCommentEditorTargetsChange,
+  OnNativeCommentButtonClick,
 } from "./types";
 import { findEditableField } from "./utils-v2/find-editable-field";
 import { clickCommentButton } from "./utils-v2/click-comment-button";
@@ -8,6 +9,7 @@ import { insertComment } from "./utils-v2/insert-comment";
 import { submitComment } from "./utils-v2/submit-comment";
 import { waitForCommentsReady } from "./utils-v2/wait-for-comments-ready";
 import { watchForCommentEditors } from "./utils-v2/watch-for-comment-editors";
+import { watchForNativeCommentButtonClicks } from "./utils-v2/watch-for-native-comment-clicks";
 
 export class CommentUtilitiesV2 implements CommentUtilities {
   findEditableField(postContainer: HTMLElement): HTMLElement | null {
@@ -38,5 +40,11 @@ export class CommentUtilitiesV2 implements CommentUtilities {
 
   watchForCommentEditors(onChange: OnCommentEditorTargetsChange): () => void {
     return watchForCommentEditors(onChange);
+  }
+
+  watchForNativeCommentButtonClicks(
+    onClick: OnNativeCommentButtonClick
+  ): () => void {
+    return watchForNativeCommentButtonClicks(onClick);
   }
 }

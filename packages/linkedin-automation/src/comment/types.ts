@@ -28,6 +28,25 @@ export type OnCommentEditorTargetsChange = (
 ) => void;
 
 /**
+ * Event data for native comment button click.
+ */
+export interface NativeCommentButtonClickEvent {
+  /** The post container element */
+  postContainer: HTMLElement;
+  /** The comment button that was clicked */
+  buttonElement: HTMLElement;
+  /** Type of button clicked */
+  buttonType: "number" | "show";
+}
+
+/**
+ * Callback type for native comment button clicks.
+ */
+export type OnNativeCommentButtonClick = (
+  event: NativeCommentButtonClickEvent
+) => void;
+
+/**
  * Comment Utilities Interface
  *
  * Defines operations for creating and submitting comments on LinkedIn posts.
@@ -95,4 +114,14 @@ export interface CommentUtilities {
    * @returns Cleanup function to stop watching and remove injected elements
    */
   watchForCommentEditors(onChange: OnCommentEditorTargetsChange): () => void;
+
+  /**
+   * Watch for clicks on LinkedIn's native comment buttons.
+   * Intercepts clicks on "X comments" number button and "Comment" action button.
+   * Returns cleanup function.
+   *
+   * @param onClick - Callback fired when a native comment button is clicked
+   * @returns Cleanup function to stop watching
+   */
+  watchForNativeCommentButtonClicks(onClick: OnNativeCommentButtonClick): () => void;
 }
