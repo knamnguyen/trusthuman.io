@@ -124,4 +124,13 @@ export interface CommentUtilities {
    * @returns Cleanup function to stop watching
    */
   watchForNativeCommentButtonClicks(onClick: OnNativeCommentButtonClick): () => void;
+
+  /**
+   * Click the like button on a post if not already liked.
+   * Used after commenting to also like the post.
+   *
+   * @param postContainer - The LinkedIn post container element
+   * @returns Promise<boolean> - true if post was liked, false if already liked or error
+   */
+  likePost(postContainer: HTMLElement): Promise<boolean>;
 }

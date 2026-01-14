@@ -10,6 +10,7 @@ import { submitComment } from "./utils-v2/submit-comment";
 import { waitForCommentsReady } from "./utils-v2/wait-for-comments-ready";
 import { watchForCommentEditors } from "./utils-v2/watch-for-comment-editors";
 import { watchForNativeCommentButtonClicks } from "./utils-v2/watch-for-native-comment-clicks";
+import { likePost } from "./utils-v2/like-post";
 
 export class CommentUtilitiesV2 implements CommentUtilities {
   findEditableField(postContainer: HTMLElement): HTMLElement | null {
@@ -46,5 +47,9 @@ export class CommentUtilitiesV2 implements CommentUtilities {
     onClick: OnNativeCommentButtonClick
   ): () => void {
     return watchForNativeCommentButtonClicks(onClick);
+  }
+
+  likePost(postContainer: HTMLElement): Promise<boolean> {
+    return likePost(postContainer);
   }
 }
