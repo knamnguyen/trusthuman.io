@@ -126,6 +126,8 @@ export const autoCommentRouter = () =>
         z.object({
           comment: z.string(),
           postContentHtml: z.string().nullable(),
+          postFullCaption: z.string().optional(),
+          postCaptionPreview: z.string().optional(),
           autoCommentRunId: z.string().optional(),
           postUrn: z.string(),
           postCreatedAt: z.date().optional(),
@@ -162,16 +164,23 @@ export const autoCommentRouter = () =>
           } as const;
         }
 
+        // Derive caption fields from postContentHtml if not provided
+        const postFullCaption =
+          input.postFullCaption ?? input.postContentHtml ?? "";
+        const postCaptionPreview =
+          input.postCaptionPreview ?? postFullCaption.slice(0, 100);
+
         const result = await ctx.db.comment.createMany({
           data: {
             id: ulid(),
             postUrn: input.postUrn,
             postContentHtml: input.postContentHtml,
+            postFullCaption,
+            postCaptionPreview,
             postCreatedAt: input.postCreatedAt,
 
             adjacentComments: input.adjacentComments,
 
-            authorUrn: input.authorUrn,
             authorName: input.authorName,
             authorHeadline: input.authorHeadline,
             authorProfileUrl: input.authorProfileUrl,
@@ -200,6 +209,8 @@ export const autoCommentRouter = () =>
       .input(
         z.object({
           postContentHtml: z.string(),
+          postFullCaption: z.string().optional(),
+          postCaptionPreview: z.string().optional(),
           autoCommentRunId: z.string().optional(),
           postUrn: z.string(),
           postCreatedAt: z.date().optional(),
@@ -262,16 +273,23 @@ export const autoCommentRouter = () =>
 
         const commentId = ulid();
 
+        // Derive caption fields from postContentHtml if not provided
+        const postFullCaption =
+          input.postFullCaption ?? input.postContentHtml ?? "";
+        const postCaptionPreview =
+          input.postCaptionPreview ?? postFullCaption.slice(0, 100);
+
         await ctx.db.comment.createMany({
           data: {
             id: commentId,
             postUrn: input.postUrn,
             postContentHtml: input.postContentHtml,
+            postFullCaption,
+            postCaptionPreview,
             postCreatedAt: input.postCreatedAt,
 
             adjacentComments: input.adjacentComments,
 
-            authorUrn: input.authorUrn,
             authorName: input.authorName,
             authorHeadline: input.authorHeadline,
             authorProfileUrl: input.authorProfileUrl,
