@@ -60,6 +60,12 @@ export interface PostCommentInfo {
 }
 
 /**
+ * Connection degree of a post author.
+ * Used for filtering posts by connection level.
+ */
+export type ConnectionDegree = "1st" | "2nd" | "3rd" | "following" | null;
+
+/**
  * Simplified comment info for AI context generation.
  * Used to provide adjacent comments as context for better AI comment generation.
  */
@@ -138,6 +144,15 @@ export interface PostUtilities {
    * @returns True if the post is promoted/sponsored
    */
   detectPromotedPost(postContainer: HTMLElement): boolean;
+
+  /**
+   * Detect the connection degree of the post author.
+   * Returns "1st", "2nd", "3rd", "following", or null if not detected.
+   *
+   * @param postContainer - The LinkedIn post container element
+   * @returns The connection degree or null if not found
+   */
+  detectConnectionDegree(postContainer: HTMLElement): ConnectionDegree;
 
   /**
    * Extract comments from a post container (assumes comments are already loaded).

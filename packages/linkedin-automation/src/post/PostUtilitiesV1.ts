@@ -1,20 +1,22 @@
 import type {
   AdjacentCommentInfo,
+  ConnectionDegree,
   PostAuthorInfo,
   PostCommentInfo,
   PostTimeInfo,
   PostUrlInfo,
   PostUtilities,
 } from "./types";
-import { findPostContainer } from "./utils-v1/find-post-container";
-import { extractPostUrl } from "./utils-v1/extract-post-url";
+import { detectCompanyPost } from "./utils-v1/detect-company-post";
+import { detectConnectionDegree } from "./utils-v1/detect-connection-degree";
+import { detectPromotedPost } from "./utils-v1/detect-promoted-post";
+import { extractAdjacentComments } from "./utils-v1/extract-adjacent-comments";
 import { extractPostAuthorInfo } from "./utils-v1/extract-post-author-info";
 import { extractPostCaption } from "./utils-v1/extract-post-caption";
-import { extractPostTime } from "./utils-v1/extract-post-time";
-import { detectCompanyPost } from "./utils-v1/detect-company-post";
-import { detectPromotedPost } from "./utils-v1/detect-promoted-post";
 import { extractPostComments } from "./utils-v1/extract-post-comments";
-import { extractAdjacentComments } from "./utils-v1/extract-adjacent-comments";
+import { extractPostTime } from "./utils-v1/extract-post-time";
+import { extractPostUrl } from "./utils-v1/extract-post-url";
+import { findPostContainer } from "./utils-v1/find-post-container";
 
 export class PostUtilitiesV1 implements PostUtilities {
   findPostContainer(anchorElement: Element): Element | null {
@@ -43,6 +45,10 @@ export class PostUtilitiesV1 implements PostUtilities {
 
   detectPromotedPost(postContainer: HTMLElement): boolean {
     return detectPromotedPost(postContainer);
+  }
+
+  detectConnectionDegree(postContainer: HTMLElement): ConnectionDegree {
+    return detectConnectionDegree(postContainer);
   }
 
   extractPostComments(postContainer: HTMLElement): PostCommentInfo[] {

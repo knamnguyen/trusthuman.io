@@ -1,5 +1,6 @@
 import type {
   AdjacentCommentInfo,
+  ConnectionDegree,
   PostAuthorInfo,
   PostCommentInfo,
   PostTimeInfo,
@@ -7,6 +8,7 @@ import type {
   PostUtilities,
 } from "./types";
 import { detectCompanyPost } from "./utils-v2/detect-company-post";
+import { detectConnectionDegree } from "./utils-v2/detect-connection-degree";
 import { detectPromotedPost } from "./utils-v2/detect-promoted-post";
 import { extractAdjacentComments } from "./utils-v2/extract-adjacent-comments";
 import { extractPostAuthorInfo } from "./utils-v2/extract-post-author-info";
@@ -43,6 +45,10 @@ export class PostUtilitiesV2 implements PostUtilities {
 
   detectPromotedPost(postContainer: HTMLElement): boolean {
     return detectPromotedPost(postContainer);
+  }
+
+  detectConnectionDegree(postContainer: HTMLElement): ConnectionDegree {
+    return detectConnectionDegree(postContainer);
   }
 
   extractPostComments(postContainer: HTMLElement): PostCommentInfo[] {
