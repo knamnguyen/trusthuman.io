@@ -11,21 +11,20 @@ import {
 } from "lucide-react";
 import { useShallow } from "zustand/shallow";
 
+import type { ReadyPost } from "@sassy/linkedin-automation/feed/collect-posts";
+import { createCommentUtilities } from "@sassy/linkedin-automation/comment/create-comment-utilities";
+import { collectPostsBatch } from "@sassy/linkedin-automation/feed/collect-posts";
+import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post-utilities";
 import { Button } from "@sassy/ui/button";
 import { TooltipWithDialog } from "@sassy/ui/components/tooltip-with-dialog";
 import { Label } from "@sassy/ui/label";
 import { Switch } from "@sassy/ui/switch";
 
-import { createCommentUtilities } from "@sassy/linkedin-automation/comment/create-comment-utilities";
-import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post-utilities";
-
-import type { ReadyPost } from "./load-posts";
 import { useTRPC } from "../../../lib/trpc/client";
 import { useComposeStore } from "../stores/compose-store";
 import { useShadowRootStore } from "../stores/shadow-root-store";
 import { DEFAULT_STYLE_GUIDE } from "../utils";
 import { ComposeCard } from "./ComposeCard";
-import { collectPostsBatch } from "./load-posts";
 import { PostPreviewSheet } from "./PostPreviewSheet";
 
 // Initialize utilities (auto-detects DOM version)
@@ -169,7 +168,9 @@ export function ComposeTab() {
         // Only fire AI generation in AI mode
         if (!isHumanMode) {
           // Extract adjacent comments for AI context
-          const adjacentComments = postUtils.extractAdjacentComments(post.postContainer);
+          const adjacentComments = postUtils.extractAdjacentComments(
+            post.postContainer,
+          );
 
           // Fire AI request (don't await - run in parallel)
           generateComment
