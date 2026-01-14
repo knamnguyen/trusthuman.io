@@ -8,8 +8,7 @@ import { Toaster } from "@sassy/ui/toast";
 import "~/app/globals.css";
 
 import { env } from "~/env";
-import { getQueryClient, trpc } from "~/trpc/server";
-import { Providers } from "./providers";
+import { Providers } from "../lib/providers/providers";
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -54,7 +53,12 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout(props: { children: React.ReactNode }) {
+export default async function RootLayout(props: {
+  children: React.ReactNode;
+  params?: {
+    source?: "extension" | "app";
+  };
+}) {
   return (
     <html lang="en" suppressHydrationWarning>
       {/* tracking for Endoresely affiliate referral */}

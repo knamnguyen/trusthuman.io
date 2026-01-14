@@ -37,13 +37,12 @@ export default function AccountsPage() {
     error: orgError,
   } = useQuery({
     ...trpc.organization.getCurrent.queryOptions(),
-    queryKey: [...trpc.organization.getCurrent.queryKey(), { orgId }],
     enabled: !!orgId,
   });
+  console.info({ currentOrg });
 
   const accountsQuery = useQuery({
     ...trpc.account.listByOrg.queryOptions(),
-    queryKey: [...trpc.account.listByOrg.queryKey(), { orgId }],
     enabled: !!orgId,
   });
   const { data: accounts, isLoading: isAccountsLoading } = accountsQuery;
@@ -90,13 +89,15 @@ export default function AccountsPage() {
   };
 
   // Show loading while Clerk org loads or org data fetches
-  if (!isOrgLoaded || isOrgLoading) {
+  if (!isOrgLoaded) {
     return (
       <div className="min-h-dvh bg-gray-50 p-6">
         <div className="mx-auto max-w-4xl">
           <Card>
             <CardContent className="py-8">
-              <p className="text-center text-gray-500">Loading organization...</p>
+              <p className="text-center text-gray-500">
+                Loading organization...
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -215,9 +216,7 @@ export default function AccountsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Your Accounts</CardTitle>
-              <CardDescription>
-                Click an account to manage it
-              </CardDescription>
+              <CardDescription>Click an account to manage it</CardDescription>
             </CardHeader>
             <CardContent>
               {isAccountsLoading ? (

@@ -7,6 +7,7 @@ import { browserRouter } from "./browser";
 import { linkedinProfileScrapeRouter } from "./linkedin-profile-scrape";
 import { linkedinScrapeApifyRouter } from "./linkedin-scrape-apify";
 import { organizationRouter } from "./organization";
+import { personaRouter } from "./persona";
 import { profileImportRouter } from "./profile-import";
 import { s3UploadRouter } from "./s3-upload";
 import { stripeRouter } from "./stripe";
@@ -19,6 +20,7 @@ export const appRouter = createTRPCRouter({
   stripe: stripeRouter(),
   aiComments: aiCommentsRouter(),
   user: userRouter(),
+  persona: personaRouter(),
   organization: organizationRouter(),
   profileImport: profileImportRouter(),
   linkedinScrapeApify: linkedinScrapeApifyRouter(),
