@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useOrganization } from "@clerk/nextjs";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import type { CountrySchema } from "@sassy/validators";
 import { Button } from "@sassy/ui/button";
 import {
   Card,
@@ -16,7 +17,6 @@ import {
 } from "@sassy/ui/card";
 import { Input } from "@sassy/ui/input";
 import { Label } from "@sassy/ui/label";
-import { CountrySchema } from "@sassy/validators";
 
 import { useTRPC, useTRPCClient } from "~/trpc/react";
 
@@ -260,9 +260,7 @@ export default function AccountsPage() {
                       <div className="flex items-center gap-2">
                         <Button
                           onClick={() =>
-                            initiateConnectionMutation.mutate({
-                              accountId: account.id,
-                            })
+                            initiateConnectionMutation.mutate(account.id)
                           }
                           variant="primary"
                           size="sm"
