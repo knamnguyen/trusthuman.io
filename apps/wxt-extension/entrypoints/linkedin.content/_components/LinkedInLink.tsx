@@ -1,4 +1,4 @@
-import { navigateLinkedIn } from "../utils/linkedin-navigate";
+import { navigateLinkedIn } from "@sassy/linkedin-automation/navigate/navigate-linkedin";
 
 interface LinkedInLinkProps
   extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "href"> {

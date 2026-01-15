@@ -12,13 +12,7 @@ export type {
 } from "@sassy/linkedin-automation/post/types";
 
 // Keep local utilities (not migrated)
-export { attachImageToComment } from "./comment/attach-image-to-comment";
 export { DEFAULT_STYLE_GUIDE } from "./constants";
-export {
-  navigateLinkedIn,
-  createNavigateHandler,
-  linkedInLinkProps,
-} from "./linkedin-navigate";
 export {
   useMostVisiblePost,
   DEFAULT_HIGHLIGHT_STYLE,
