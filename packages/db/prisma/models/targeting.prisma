@@ -7,7 +7,6 @@ model TargetList {
   status    TargetListStatus
 
   linkedInAccount     LinkedInAccount      @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  postLoadSetting     PostLoadSetting?     @relation("PostLoadSetting_targetList")
   blacklistedInSettings PostLoadSetting[]  @relation("PostLoadSetting_blacklist")
   buildTargetListJobs BuildTargetListJob[]
   targetListProfiles  TargetListProfile[]
