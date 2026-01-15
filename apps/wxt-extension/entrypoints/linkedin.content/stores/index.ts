@@ -1,21 +1,20 @@
 // Barrel exports for Zustand stores
 export { useAccountStore } from "./account-store";
 export {
-  useCommentImageStore,
+  useSettingsLocalStore,
   type CommentImage,
-} from "./comment-image-store";
+  type BehaviorSettings as LocalBehaviorSettings,
+  DEFAULT_BEHAVIOR as DEFAULT_LOCAL_BEHAVIOR,
+} from "./settings-local-store";
 export { useComposeStore } from "./compose-store";
 export type { ComposeCard } from "./compose-store";
 export {
-  useSettingsStore,
-  type PostLoadSettings,
-  type SubmitCommentSettings,
-  type CommentGenerateSettings,
-  type BehaviorSettings,
-  DEFAULT_POST_LOAD,
-  DEFAULT_SUBMIT_COMMENT,
-  DEFAULT_COMMENT_GENERATE,
-  DEFAULT_BEHAVIOR,
-} from "./settings-store";
+  useSettingsDBStore,
+  initSettingsDBStoreListener,
+  type PostLoadSettingDB,
+  type SubmitCommentSettingDB,
+  type CommentGenerateSettingDB,
+} from "./settings-db-store";
+// Note: settings-store.ts is deprecated - use settings-db-store.ts and settings-local-store.ts
 export { useShadowRootStore } from "./shadow-root-store";
 export { SIDEBAR_TABS, useSidebarStore } from "./sidebar-store";
