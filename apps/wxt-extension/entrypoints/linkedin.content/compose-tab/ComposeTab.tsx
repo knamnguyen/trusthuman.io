@@ -15,11 +15,16 @@ import { useShallow } from "zustand/shallow";
 import type { ReadyPost } from "@sassy/linkedin-automation/feed/collect-posts";
 import { createCommentUtilities } from "@sassy/linkedin-automation/comment/create-comment-utilities";
 import { collectPostsBatch } from "@sassy/linkedin-automation/feed/collect-posts";
+import { buildListFeedUrl } from "@sassy/linkedin-automation/navigate/build-list-feed-url";
 import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post-utilities";
 import { Button } from "@sassy/ui/button";
 
 import { useTRPC } from "../../../lib/trpc/client";
 import { useComposeStore } from "../stores/compose-store";
+import {
+  consumePendingNavigation,
+  savePendingNavigation,
+} from "../stores/navigation-state";
 import { useSettingsStore } from "../stores/settings-store";
 import { DEFAULT_STYLE_GUIDE } from "../utils";
 import { ComposeCard } from "./ComposeCard";
@@ -113,6 +118,48 @@ export function ComposeTab() {
     }
   }, [previewingCardId]);
 
+  // Track if we've checked for pending navigation (prevent double-trigger)
+  const checkedPendingNavRef = useRef(false);
+  // Ref to store pending targetDraftCount for auto-resume
+  const pendingTargetCountRef = useRef<number | null>(null);
+
+  // Check for pending navigation on mount (auto-resume after target list redirect)
+  useEffect(() => {
+    if (checkedPendingNavRef.current) return;
+    checkedPendingNavRef.current = true;
+
+    console.log("[EngageKit] Checking for pending navigation...");
+    console.log("[EngageKit] Current URL:", window.location.href);
+
+    const checkAndResume = async () => {
+      const pending = await consumePendingNavigation();
+      console.log("[EngageKit] Pending navigation result:", pending);
+      if (!pending) return;
+
+      console.log("[EngageKit] Resuming from target list navigation");
+
+      // Restore settings
+      const { postLoadSettings, targetDraftCount: savedCount } = pending;
+      const updatePostLoad = useSettingsStore.getState().updatePostLoad;
+
+      // Restore all postLoad settings
+      Object.entries(postLoadSettings).forEach(([key, value]) => {
+        updatePostLoad(
+          key as keyof typeof postLoadSettings,
+          value as (typeof postLoadSettings)[keyof typeof postLoadSettings],
+        );
+      });
+
+      // Store the target count for the follow-up effect to use
+      pendingTargetCountRef.current = savedCount;
+
+      // Restore target draft count - triggers re-render with new value
+      setTargetDraftCount(savedCount);
+    };
+
+    void checkAndResume();
+  }, []);
+
   // Handler to open settings (closes post preview first)
   const handleOpenSettings = useCallback(() => {
     setPreviewingCard(null);
@@ -134,6 +181,43 @@ export function ComposeTab() {
     setIsCollecting(true); // Mark as collecting so ComposeCard can refocus on blur
     setLoadingProgress(0);
     stopRequestedRef.current = false;
+
+    // Get post load settings (snapshot at start time)
+    const postLoadSettings = useSettingsStore.getState().postLoad;
+
+    // If target list is enabled with URNs, navigate to the filtered feed first
+    // Only navigate if we're not already on a search/content page
+    const isOnSearchPage = window.location.pathname.startsWith(
+      "/search/results/content",
+    );
+
+    if (
+      postLoadSettings.targetListEnabled &&
+      postLoadSettings.selectedTargetListUrns.length > 0 &&
+      !isOnSearchPage
+    ) {
+      const feedUrl = buildListFeedUrl(postLoadSettings.selectedTargetListUrns);
+      console.log(
+        `[EngageKit] Target list URNs:`,
+        postLoadSettings.selectedTargetListUrns,
+      );
+      console.log(`[EngageKit] Navigating to:`, feedUrl);
+      console.log(`[EngageKit] Current location before:`, window.location.href);
+
+      // Save state before navigation so we can auto-resume after reload
+      try {
+        await savePendingNavigation(postLoadSettings, targetDraftCount);
+        console.log(`[EngageKit] State saved successfully`);
+      } catch (err) {
+        console.error(`[EngageKit] Failed to save state:`, err);
+      }
+
+      // Full page navigation required - LinkedIn's SPA router doesn't handle search URLs
+      console.log(`[EngageKit] About to set window.location.href`);
+      window.location.href = feedUrl;
+      console.log(`[EngageKit] window.location.href set to:`, window.location.href);
+      return; // Stop here - page will reload, auto-resume will trigger
+    }
 
     // Get current cards to find existing URNs (snapshot at start time)
     const existingUrns = new Set(getCards.map((card) => card.urn));
@@ -216,9 +300,6 @@ export function ComposeTab() {
       }
     };
 
-    // Get post load filter settings (snapshot at start time)
-    const postLoadSettings = useSettingsStore.getState().postLoad;
-
     // Run batch collection with filter config
     await collectPostsBatch(
       targetDraftCount,
@@ -252,6 +333,23 @@ export function ComposeTab() {
     targetDraftCount,
     updateCardComment,
   ]);
+
+  // Follow-up effect: auto-start after targetDraftCount is updated from pending navigation
+  useEffect(() => {
+    if (pendingTargetCountRef.current === null) return;
+    if (targetDraftCount !== pendingTargetCountRef.current) return;
+
+    // Clear the pending flag
+    pendingTargetCountRef.current = null;
+
+    // Wait for LinkedIn page to fully load, then auto-start
+    const timer = setTimeout(() => {
+      console.log("[EngageKit] Auto-triggering Load Posts after navigation");
+      handleStart();
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [targetDraftCount, handleStart]);
 
   /**
    * Stop the batch collection

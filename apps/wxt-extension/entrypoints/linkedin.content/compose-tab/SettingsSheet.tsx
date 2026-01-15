@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { Brain, Cog, Filter, Send, Settings, X } from "lucide-react";
 
@@ -6,6 +7,7 @@ import { Button } from "@sassy/ui/button";
 import { ExpandableTabs } from "@sassy/ui/expandable-tabs";
 import { ScrollArea } from "@sassy/ui/scroll-area";
 
+import { useTRPC } from "../../../lib/trpc/client";
 import { useSettingsStore } from "../stores/settings-store";
 
 // Tab configuration for settings
@@ -29,6 +31,19 @@ interface SettingsSheetProps {
 export function SettingsSheet({ isOpen, onClose }: SettingsSheetProps) {
   // Local tab state (no need to persist)
   const [selectedTab, setSelectedTab] = useState(0);
+  const trpc = useTRPC();
+
+  // Prefetch target lists when settings sheet opens
+  // This ensures the dropdown is instant when user enables "Use Target List"
+  useQuery(
+    trpc.targetList.findLists.queryOptions(
+      { cursor: undefined },
+      {
+        enabled: isOpen,
+        staleTime: 30 * 1000,
+      }
+    )
+  );
 
   // Get settings from store
   const behavior = useSettingsStore((state) => state.behavior);
@@ -132,6 +147,7 @@ import { Label } from "@sassy/ui/label";
 import { Switch } from "@sassy/ui/switch";
 
 import { SettingsImageManager } from "./SettingsImageManager";
+import { TargetListSelector } from "./TargetListSelector";
 
 /**
  * Section header component for organizing settings
@@ -258,6 +274,34 @@ function SettingsFiltersContent({
 }) {
   return (
     <div className="space-y-6">
+      <SettingsSection title="Target List">
+        <SettingToggle
+          label="Use Target List"
+          description="Only engage with people on your target list"
+          checked={postLoad.targetListEnabled}
+          onCheckedChange={(v) => {
+            updatePostLoad("targetListEnabled", v);
+            // Clear selection when disabling
+            if (!v) {
+              updatePostLoad("selectedTargetListId", null);
+            }
+          }}
+        />
+        <div className="mt-2">
+          <TargetListSelector />
+        </div>
+      </SettingsSection>
+
+      <SettingsSection title="Blacklist (Coming Soon)">
+        <SettingToggle
+          label="Skip Blacklist"
+          description="Never engage with people on your blacklist"
+          checked={false}
+          onCheckedChange={() => {}}
+          disabled
+        />
+      </SettingsSection>
+
       <SettingsSection title="Time Filter">
         <SettingToggle
           label="Filter by Post Age"
@@ -339,25 +383,6 @@ function SettingsFiltersContent({
             description="Skip posts from people you follow but aren't connected to"
             checked={postLoad.skipFollowing}
             onCheckedChange={(v) => updatePostLoad("skipFollowing", v)}
-          />
-        </div>
-      </SettingsSection>
-
-      <SettingsSection title="Lists (Coming Soon)">
-        <div className="space-y-4">
-          <SettingToggle
-            label="Use Target List"
-            description="Only engage with people on your target list"
-            checked={false}
-            onCheckedChange={() => {}}
-            disabled
-          />
-          <SettingToggle
-            label="Skip Blacklist"
-            description="Never engage with people on your blacklist"
-            checked={false}
-            onCheckedChange={() => {}}
-            disabled
           />
         </div>
       </SettingsSection>

@@ -35,8 +35,12 @@ export interface PostLoadSettings {
   /** Skip posts from people you follow (not connected) */
   skipFollowing: boolean;
 
-  /** Target list ID for filtering (disabled until DB integration) */
-  targetListId: string | null;
+  /** Enable target list filtering - only engage with people on selected list */
+  targetListEnabled: boolean;
+  /** Selected target list ID for filtering (single selection) */
+  selectedTargetListId: string | null;
+  /** Cached profile URNs for the selected target list (max 25) */
+  selectedTargetListUrns: string[];
 }
 
 const DEFAULT_POST_LOAD: PostLoadSettings = {
@@ -51,7 +55,9 @@ const DEFAULT_POST_LOAD: PostLoadSettings = {
   skipSecondDegree: false,
   skipThirdDegree: false,
   skipFollowing: false,
-  targetListId: null,
+  targetListEnabled: false,
+  selectedTargetListId: null,
+  selectedTargetListUrns: [],
 };
 
 // =============================================================================
@@ -227,7 +233,7 @@ function generateSettingsTags(state: SettingsState): string[] {
   if (state.postLoad.skipBlacklistEnabled) {
     tags.push("Blacklist");
   }
-  if (state.postLoad.targetListId) {
+  if (state.postLoad.targetListEnabled && state.postLoad.selectedTargetListId) {
     tags.push("Target List");
   }
 
