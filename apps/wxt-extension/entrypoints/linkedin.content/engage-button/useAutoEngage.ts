@@ -15,7 +15,7 @@ import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post
 
 import { getTrpcClient } from "../../../lib/trpc/client";
 import { useComposeStore } from "../stores/compose-store";
-import { useSettingsStore } from "../stores/settings-store";
+import { useSettingsLocalStore } from "../stores/settings-local-store";
 import { SIDEBAR_TABS, useSidebarStore } from "../stores/sidebar-store";
 import { DEFAULT_STYLE_GUIDE } from "../utils/constants";
 
@@ -66,7 +66,7 @@ export function useAutoEngage() {
     ) => {
       // Get fresh state from stores
       const composeState = useComposeStore.getState();
-      const settingsState = useSettingsStore.getState();
+      const settingsState = useSettingsLocalStore.getState();
 
       // Skip if auto-engage is disabled
       if (!settingsState.behavior.autoEngageOnCommentClick) {
@@ -121,7 +121,7 @@ export function useAutoEngage() {
       const urn = postUrls[0]?.urn || `unknown-${Date.now()}`;
 
       // Get humanOnlyMode setting from settings store
-      const { humanOnlyMode } = useSettingsStore.getState().behavior;
+      const { humanOnlyMode } = useSettingsLocalStore.getState().behavior;
 
       // Create card IDs based on mode
       const manualCardId = humanOnlyMode ? crypto.randomUUID() : null;

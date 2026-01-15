@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { Button } from "@sassy/ui/button";
 
-import { useSettingsStore } from "../stores/settings-store";
+import { useSettingsLocalStore } from "../stores/settings-local-store";
 import { useMostVisiblePost } from "../utils";
 
 /**
@@ -15,7 +15,7 @@ import { useMostVisiblePost } from "../utils";
  */
 export function PostNavigator() {
   // Get settings from settings store
-  const postNavigatorEnabled = useSettingsStore(
+  const postNavigatorEnabled = useSettingsLocalStore(
     (state) => state.behavior.postNavigator,
   );
 

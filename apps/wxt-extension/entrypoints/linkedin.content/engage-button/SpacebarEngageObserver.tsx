@@ -6,7 +6,7 @@ import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post
 
 import { useTRPC } from "../../../lib/trpc/client";
 import { useComposeStore } from "../stores/compose-store";
-import { useSettingsStore } from "../stores/settings-store";
+import { useSettingsLocalStore } from "../stores/settings-local-store";
 import { SIDEBAR_TABS, useSidebarStore } from "../stores/sidebar-store";
 import { DEFAULT_STYLE_GUIDE, useMostVisiblePost } from "../utils";
 
@@ -54,10 +54,10 @@ export function SpacebarEngageObserver() {
   );
 
   // Get settings from settings store
-  const spacebarEnabled = useSettingsStore(
+  const spacebarEnabled = useSettingsLocalStore(
     (state) => state.behavior.spacebarAutoEngage,
   );
-  const postNavigatorEnabled = useSettingsStore(
+  const postNavigatorEnabled = useSettingsLocalStore(
     (state) => state.behavior.postNavigator,
   );
 
@@ -110,7 +110,7 @@ export function SpacebarEngageObserver() {
         `unknown-${Date.now()}`;
 
       // Get humanOnlyMode setting from settings store
-      const { humanOnlyMode } = useSettingsStore.getState().behavior;
+      const { humanOnlyMode } = useSettingsLocalStore.getState().behavior;
 
       // Create card IDs based on mode
       const manualCardId = humanOnlyMode ? crypto.randomUUID() : null;
@@ -315,7 +315,7 @@ export function SpacebarEngageObserver() {
 
       // Get fresh state from stores to avoid closure issues
       const composeState = useComposeStore.getState();
-      const settingsState = useSettingsStore.getState();
+      const settingsState = useSettingsLocalStore.getState();
 
       // Skip if feature is disabled
       if (!settingsState.behavior.spacebarAutoEngage) {

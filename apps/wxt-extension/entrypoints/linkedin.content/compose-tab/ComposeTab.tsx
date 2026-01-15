@@ -19,19 +19,20 @@ import { buildListFeedUrl } from "@sassy/linkedin-automation/navigate/build-list
 import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post-utilities";
 import { Button } from "@sassy/ui/button";
 
-import { useTRPC } from "../../../lib/trpc/client";
+import { getTrpcClient, useTRPC } from "../../../lib/trpc/client";
 import { useComposeStore } from "../stores/compose-store";
 import {
   consumePendingNavigation,
   savePendingNavigation,
 } from "../stores/navigation-state";
-import { useSettingsStore } from "../stores/settings-store";
+import { useSettingsDBStore } from "../stores/settings-db-store";
+import { useSettingsLocalStore } from "../stores/settings-local-store";
 import { DEFAULT_STYLE_GUIDE } from "../utils";
 import { ComposeCard } from "./ComposeCard";
 import { PostPreviewSheet } from "./PostPreviewSheet";
-import { saveCommentToDb } from "./save-comment-to-db";
-import { SettingsSheet } from "./SettingsSheet";
-import { SettingsTags } from "./SettingsTags";
+import { SettingsSheet } from "./settings/SettingsSheet";
+import { SettingsTags } from "./settings/SettingsTags";
+import { submitCommentFullFlow } from "./utils/submit-comment-full-flow";
 
 // Initialize utilities (auto-detects DOM version)
 const postUtils = createPostUtilities();
@@ -138,17 +139,9 @@ export function ComposeTab() {
 
       console.log("[EngageKit] Resuming from target list navigation");
 
-      // Restore settings
-      const { postLoadSettings, targetDraftCount: savedCount } = pending;
-      const updatePostLoad = useSettingsStore.getState().updatePostLoad;
-
-      // Restore all postLoad settings
-      Object.entries(postLoadSettings).forEach(([key, value]) => {
-        updatePostLoad(
-          key as keyof typeof postLoadSettings,
-          value as (typeof postLoadSettings)[keyof typeof postLoadSettings],
-        );
-      });
+      // Settings are already persisted in DB, no need to restore them
+      // Just restore the target draft count for the UI
+      const { targetDraftCount: savedCount } = pending;
 
       // Store the target count for the follow-up effect to use
       pendingTargetCountRef.current = savedCount;
@@ -182,49 +175,94 @@ export function ComposeTab() {
     setLoadingProgress(0);
     stopRequestedRef.current = false;
 
-    // Get post load settings (snapshot at start time)
-    const postLoadSettings = useSettingsStore.getState().postLoad;
+    // Get post load settings from DB store (snapshot at start time)
+    const postLoadSettings = useSettingsDBStore.getState().postLoad;
 
-    // If target list is enabled with URNs, navigate to the filtered feed first
+    // If target list is enabled with list IDs, fetch URNs and navigate to filtered feed
     // Only navigate if we're not already on a search/content page
     const isOnSearchPage = window.location.pathname.startsWith(
       "/search/results/content",
     );
 
+    const targetListIds = postLoadSettings?.targetListIds ?? [];
     if (
-      postLoadSettings.targetListEnabled &&
-      postLoadSettings.selectedTargetListUrns.length > 0 &&
+      postLoadSettings?.targetListEnabled &&
+      targetListIds.length > 0 &&
       !isOnSearchPage
     ) {
-      const feedUrl = buildListFeedUrl(postLoadSettings.selectedTargetListUrns);
-      console.log(
-        `[EngageKit] Target list URNs:`,
-        postLoadSettings.selectedTargetListUrns,
-      );
-      console.log(`[EngageKit] Navigating to:`, feedUrl);
-      console.log(`[EngageKit] Current location before:`, window.location.href);
+      // Fetch URNs on-demand from the selected target lists
+      console.log(`[EngageKit] Fetching URNs for ${targetListIds.length} target lists...`);
+      const trpcClient = getTrpcClient();
 
-      // Save state before navigation so we can auto-resume after reload
       try {
-        await savePendingNavigation(postLoadSettings, targetDraftCount);
-        console.log(`[EngageKit] State saved successfully`);
-      } catch (err) {
-        console.error(`[EngageKit] Failed to save state:`, err);
-      }
+        // Fetch profiles from all selected lists in parallel
+        const allProfiles = await Promise.all(
+          targetListIds.map((listId) =>
+            trpcClient.targetList.getProfilesInList.query({ listId })
+          )
+        );
 
-      // Full page navigation required - LinkedIn's SPA router doesn't handle search URLs
-      console.log(`[EngageKit] About to set window.location.href`);
-      window.location.href = feedUrl;
-      console.log(`[EngageKit] window.location.href set to:`, window.location.href);
-      return; // Stop here - page will reload, auto-resume will trigger
+        // Extract unique URNs from all profiles (filter out null/undefined)
+        const allUrns = new Set<string>();
+        for (const response of allProfiles) {
+          for (const profile of response.data) {
+            if (profile.profileUrn) {
+              allUrns.add(profile.profileUrn);
+            }
+          }
+        }
+
+        const targetListUrns = Array.from(allUrns);
+        console.log(`[EngageKit] Fetched ${targetListUrns.length} unique URNs from target lists`);
+
+        if (targetListUrns.length > 0) {
+          const feedUrl = buildListFeedUrl(targetListUrns);
+          console.log(`[EngageKit] Target list URNs:`, targetListUrns);
+          console.log(`[EngageKit] Navigating to:`, feedUrl);
+          console.log(`[EngageKit] Current location before:`, window.location.href);
+
+          // Save state before navigation so we can auto-resume after reload
+          // Convert DB settings to the expected PostLoadSettings format
+          const settingsForNav = {
+            targetListEnabled: postLoadSettings.targetListEnabled,
+            targetListIds: postLoadSettings.targetListIds,
+            timeFilterEnabled: postLoadSettings.timeFilterEnabled,
+            minPostAge: postLoadSettings.minPostAge,
+            skipFriendActivitiesEnabled: postLoadSettings.skipFriendActivitiesEnabled,
+            skipCompanyPagesEnabled: postLoadSettings.skipCompanyPagesEnabled,
+            skipPromotedPostsEnabled: postLoadSettings.skipPromotedPostsEnabled,
+            skipBlacklistEnabled: postLoadSettings.skipBlacklistEnabled,
+            blacklistId: postLoadSettings.blacklistId,
+            skipFirstDegree: postLoadSettings.skipFirstDegree,
+            skipSecondDegree: postLoadSettings.skipSecondDegree,
+            skipThirdDegree: postLoadSettings.skipThirdDegree,
+            skipFollowing: postLoadSettings.skipFollowing,
+          };
+          try {
+            await savePendingNavigation(settingsForNav, targetDraftCount);
+            console.log(`[EngageKit] State saved successfully`);
+          } catch (err) {
+            console.error(`[EngageKit] Failed to save state:`, err);
+          }
+
+          // Full page navigation required - LinkedIn's SPA router doesn't handle search URLs
+          console.log(`[EngageKit] About to set window.location.href`);
+          window.location.href = feedUrl;
+          console.log(`[EngageKit] window.location.href set to:`, window.location.href);
+          return; // Stop here - page will reload, auto-resume will trigger
+        }
+      } catch (err) {
+        console.error(`[EngageKit] Failed to fetch target list URNs:`, err);
+        // Continue without target list filtering
+      }
     }
 
     // Get current cards to find existing URNs (snapshot at start time)
     const existingUrns = new Set(getCards.map((card) => card.urn));
 
     // Check settings at start time (snapshot for this collection session)
-    const isHumanMode = useSettingsStore.getState().behavior.humanOnlyMode;
-    const generateSettings = useSettingsStore.getState().commentGenerate;
+    const isHumanMode = useSettingsLocalStore.getState().behavior.humanOnlyMode;
+    const generateSettings = useSettingsDBStore.getState().commentGenerate;
 
     // Batch callback - called when each batch of posts is ready
     const onBatchReady = (posts: ReadyPost[]) => {
@@ -267,7 +305,7 @@ export function ComposeTab() {
         // Only fire AI generation in AI mode
         if (!isHumanMode) {
           // Extract adjacent comments for AI context (only if enabled)
-          const adjacentComments = generateSettings.adjacentCommentsEnabled
+          const adjacentComments = generateSettings?.adjacentCommentsEnabled
             ? postUtils.extractAdjacentComments(post.postContainer)
             : [];
 
@@ -301,7 +339,7 @@ export function ComposeTab() {
       }
     };
 
-    // Run batch collection with filter config
+    // Run batch collection with filter config (use defaults if settings not loaded)
     await collectPostsBatch(
       targetDraftCount,
       existingUrns,
@@ -310,15 +348,15 @@ export function ComposeTab() {
       () => stopRequestedRef.current,
       () => useComposeStore.getState().isUserEditing,
       {
-        timeFilterEnabled: postLoadSettings.timeFilterEnabled,
-        minPostAge: postLoadSettings.minPostAge,
-        skipPromotedPosts: postLoadSettings.skipPromotedPostsEnabled,
-        skipCompanyPages: postLoadSettings.skipCompanyPagesEnabled,
-        skipFriendActivities: postLoadSettings.skipFriendActivitiesEnabled,
-        skipFirstDegree: postLoadSettings.skipFirstDegree,
-        skipSecondDegree: postLoadSettings.skipSecondDegree,
-        skipThirdDegree: postLoadSettings.skipThirdDegree,
-        skipFollowing: postLoadSettings.skipFollowing,
+        timeFilterEnabled: postLoadSettings?.timeFilterEnabled ?? false,
+        minPostAge: postLoadSettings?.minPostAge ?? null,
+        skipPromotedPosts: postLoadSettings?.skipPromotedPostsEnabled ?? true,
+        skipCompanyPages: postLoadSettings?.skipCompanyPagesEnabled ?? true,
+        skipFriendActivities: postLoadSettings?.skipFriendActivitiesEnabled ?? false,
+        skipFirstDegree: postLoadSettings?.skipFirstDegree ?? false,
+        skipSecondDegree: postLoadSettings?.skipSecondDegree ?? false,
+        skipThirdDegree: postLoadSettings?.skipThirdDegree ?? false,
+        skipFollowing: postLoadSettings?.skipFollowing ?? false,
       },
     );
 
@@ -362,15 +400,7 @@ export function ComposeTab() {
 
   /**
    * Submit all draft comments to LinkedIn
-   * Goes through each card from top to bottom:
-   * 1. Waits for editable field to appear
-   * 2. Inserts the comment text
-   * 3. Tags post author if enabled
-   * 4. Attaches image if enabled
-   * 5. Clicks submit button and verifies
-   * 6. Likes post if enabled
-   * 7. Likes own comment if enabled
-   * 8. Marks card as "sent"
+   * Uses submitCommentFullFlow utility for each card with random delays between submissions.
    */
   const handleSubmitAll = useCallback(async () => {
     // Only submit cards that are drafts AND have finished generating
@@ -379,9 +409,11 @@ export function ComposeTab() {
     );
     if (cardsToSubmit.length === 0) return;
 
-    // Get submit settings
-    const submitSettings = useSettingsStore.getState().submitComment;
-    const [minDelay = 5, maxDelay = 20] = submitSettings.submitDelayRange
+    // Get submit delay settings (use defaults if not loaded yet)
+    const submitSettings = useSettingsDBStore.getState().submitComment;
+    const [minDelay = 5, maxDelay = 20] = (
+      submitSettings?.submitDelayRange ?? "5-20"
+    )
       .split("-")
       .map(Number);
 
@@ -393,65 +425,9 @@ export function ComposeTab() {
         continue;
       }
 
-      // 1. Wait for editable field (poll until found, max 3s)
-      let editableField: HTMLElement | null = null;
-      const startTime = Date.now();
-      while (Date.now() - startTime < 3000) {
-        editableField = commentUtils.findEditableField(card.postContainer);
-        if (editableField) break;
-        await new Promise((r) => setTimeout(r, 100));
-      }
-
-      if (!editableField) {
-        console.warn("EngageKit: Editable field not found for card", card.id);
-        continue;
-      }
-
-      // 2. Insert comment text
-      editableField.focus();
-      await commentUtils.insertComment(editableField, card.commentText);
-      await new Promise((r) => setTimeout(r, 300));
-
-      // 3. Tag author if enabled (adds mention at end)
-      if (submitSettings.tagPostAuthorEnabled) {
-        await commentUtils.tagPostAuthor(card.postContainer);
-        await new Promise((r) => setTimeout(r, 300));
-      }
-
-      // 4. Attach image if enabled
-      if (submitSettings.attachPictureEnabled) {
-        // Get random image from comment-image-store
-        const { useCommentImageStore } = await import(
-          "../stores/comment-image-store"
-        );
-        const imageUrl = useCommentImageStore.getState().getRandomImage();
-        if (imageUrl) {
-          await commentUtils.attachImageToComment(card.postContainer, imageUrl);
-          await new Promise((r) => setTimeout(r, 500)); // Wait for upload
-        }
-      }
-
-      // 5. Submit comment (click button + verify)
-      const success = await commentUtils.submitComment(card.postContainer);
-
+      const success = await submitCommentFullFlow(card, commentUtils);
       if (success) {
-        // 6. Like post if enabled
-        if (submitSettings.likePostEnabled) {
-          await commentUtils.likePost(card.postContainer);
-          await new Promise((r) => setTimeout(r, 300));
-        }
-
-        // 7. Like own comment if enabled
-        if (submitSettings.likeCommentEnabled) {
-          await new Promise((r) => setTimeout(r, 500)); // Wait for comment to appear
-          await commentUtils.likeOwnComment(card.postContainer);
-        }
-
-        // Mark as sent
         updateCardStatus(card.id, "sent");
-
-        // 8. Save to database (fire-and-forget)
-        void saveCommentToDb(card);
       }
 
       // Random delay between submissions (based on settings)
