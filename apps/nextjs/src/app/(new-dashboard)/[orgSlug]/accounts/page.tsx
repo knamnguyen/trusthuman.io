@@ -16,8 +16,9 @@ import {
 } from "@sassy/ui/card";
 import { Input } from "@sassy/ui/input";
 import { Label } from "@sassy/ui/label";
+import { CountrySchema } from "@sassy/validators";
 
-import { useTRPC } from "~/trpc/react";
+import { useTRPC, useTRPCClient } from "~/trpc/react";
 
 export default function AccountsPage() {
   const [profileUrl, setProfileUrl] = useState("");
@@ -39,13 +40,14 @@ export default function AccountsPage() {
     ...trpc.organization.getCurrent.queryOptions(),
     enabled: !!orgId,
   });
-  console.info({ currentOrg });
 
   const accountsQuery = useQuery({
     ...trpc.account.listByOrg.queryOptions(),
     enabled: !!orgId,
   });
   const { data: accounts, isLoading: isAccountsLoading } = accountsQuery;
+
+  const [location, setLocation] = useState<CountrySchema>("US");
 
   // Register new account mutation
   const registerMutation = useMutation({
@@ -64,12 +66,30 @@ export default function AccountsPage() {
   });
 
   // Remove account mutation
-  const removeMutation = useMutation({
-    ...trpc.account.removeFromOrg.mutationOptions(),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: trpc.account.listByOrg.queryKey(),
+  const removeMutation = useMutation(
+    trpc.account.removeFromOrg.mutationOptions({
+      onSuccess: () => {
+        void queryClient.invalidateQueries({
+          queryKey: trpc.account.listByOrg.queryKey(),
+        });
+      },
+    }),
+  );
+
+  const trpcClient = useTRPCClient();
+
+  const initiateConnectionMutation = useMutation({
+    mutationFn: async (accountId: string) => {
+      const result = await trpcClient.account.init.continue.mutate({
+        accountId,
+        location,
       });
+
+      if (result.status === "error") {
+        throw new Error(result.error);
+      }
+
+      return result;
     },
   });
 
@@ -227,7 +247,7 @@ export default function AccountsPage() {
                     <Link
                       key={account.id}
                       href={`/${orgSlug}/${account.profileSlug}`}
-                      className="flex items-center justify-between py-3 transition-colors hover:bg-gray-50"
+                      className="-mx-2.5 flex items-center justify-between rounded-lg px-2.5 py-3 transition-colors hover:bg-gray-50"
                     >
                       <div>
                         <p className="font-mono text-sm font-medium">
@@ -238,6 +258,17 @@ export default function AccountsPage() {
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
+                        <Button
+                          onClick={() =>
+                            initiateConnectionMutation.mutate({
+                              accountId: account.id,
+                            })
+                          }
+                          variant="primary"
+                          size="sm"
+                        >
+                          Connect
+                        </Button>
                         <Button
                           variant="outline"
                           size="sm"

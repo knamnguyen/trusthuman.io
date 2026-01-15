@@ -244,6 +244,61 @@ export const accountRouter = () =>
             status: "success",
           } as const;
         }),
+
+      continue: protectedProcedure
+        .input(
+          z.object({
+            accountId: z.string(),
+            location: countrySchema,
+          }),
+        )
+        .mutation(async ({ ctx, input }) => {
+          const account = await ctx.db.linkedInAccount.findFirst({
+            where: {
+              AND: [
+                { id: input.accountId },
+                hasPermissionToAccessAccountClause(input.accountId),
+              ],
+            },
+            select: {
+              id: true,
+              browserLocation: true,
+              browserProfileId: true,
+            },
+          });
+
+          if (account === null) {
+            return {
+              status: "error",
+              error: "Account not found",
+            } as const;
+          }
+
+          await ctx.db.linkedInAccount.update({
+            where: { id: input.accountId },
+            data: {
+              browserLocation: input.location,
+            },
+          });
+
+          const browserSession = new BrowserSession(
+            ctx.db,
+            ctx.browserRegistry,
+            input.accountId,
+            ctx.user.id,
+            {
+              location: input.location,
+              browserProfileId: account.browserProfileId,
+            },
+          );
+
+          await browserSession.ready;
+
+          return {
+            status: "success",
+            liveUrl: browserSession.liveUrl,
+          } as const;
+        }),
     },
 
     list: protectedProcedure
