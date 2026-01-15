@@ -22,7 +22,11 @@
     "@sassy/eslint-config": "workspace:*",
     "@sassy/prettier-config": "workspace:*",
     "@sassy/tsconfig": "workspace:*",
+    "@types/fast-levenshtein": "^0.0.4",
     "typescript": "catalog:"
   },
-  "prettier": "@sassy/prettier-config"
+  "prettier": "@sassy/prettier-config",
+  "dependencies": {
+    "fast-levenshtein": "^3.0.0"
+  }
 }
