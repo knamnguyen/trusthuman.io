@@ -232,9 +232,6 @@ export const targetListRouter = () =>
           where: {
             AND: clauses,
           },
-          include: {
-            profile: true, // Include linked LinkedInProfile if scraped
-          },
           orderBy: {
             id: "desc",
           },
@@ -333,55 +330,34 @@ export const targetListRouter = () =>
           } as const;
         }
 
-        const activeAccountId = ctx.activeAccount.id;
-
-        return await ctx.db.$transaction(async (tx) => {
-          const targetListProfile = await tx.targetListProfile.findFirst({
-            where: {
-              id: input.id,
-            },
-          });
-
-          if (targetListProfile === null) {
-            return {
-              status: "error",
-              code: 404,
-              message: "Target list profile not found",
-            } as const;
-          }
-
-          await tx.targetListProfile.deleteMany({
-            where: {
-              id: input.id,
-            },
-          });
-
-          const targetProfileAttachedToOtherLists =
-            await tx.targetProfile.findFirst({
-              where: {
-                id: targetListProfile.profileId,
-                accountId: activeAccountId,
-                // we use this clause to check if the profile is still attached to other lists
-                targetListProfiles: {
-                  some: { id: { not: input.id } },
-                },
-              },
-            });
-
-          if (targetProfileAttachedToOtherLists === null) {
-            // Delete target profile if not attached to any other lists
-            await tx.targetProfile.deleteMany({
-              where: {
-                id: targetListProfile.profileId,
-                accountId: activeAccountId,
-              },
-            });
-          }
-
-          return {
-            status: "success",
-          } as const;
+        const targetListProfile = await ctx.db.targetListProfile.findFirst({
+          where: {
+            id: input.id,
+            accountId: ctx.activeAccount.id,
+          },
         });
+
+        if (targetListProfile === null) {
+          return {
+            status: "error",
+            code: 404,
+            message: "Target list profile not found",
+          } as const;
+        }
+
+        await ctx.db.targetListProfile.delete({
+          where: {
+            id: input.id,
+          },
+        });
+
+        // Note: We intentionally keep orphaned TargetProfiles.
+        // Profiles without list membership appear in "All Profiles" view.
+        // Use deleteProfile endpoint for explicit deletion.
+
+        return {
+          status: "success",
+        } as const;
       }),
 
     /**
@@ -572,10 +548,9 @@ export const targetListRouter = () =>
       }),
 
     /**
-     * Get profiles in a list with their full list membership info
-     * Used by target-list page to show profiles with list badges
+     * Get profiles in a list with their list membership info (for showing list badges)
      */
-    findProfilesByListIdWithMembership: protectedProcedure
+    getProfilesInList: accountProcedure
       .input(
         z.object({
           listId: z.string(),
@@ -583,13 +558,6 @@ export const targetListRouter = () =>
         }),
       )
       .query(async ({ ctx, input }) => {
-        if (ctx.activeAccount === null) {
-          return {
-            data: [],
-            next: null,
-          };
-        }
-
         const profiles = await ctx.db.targetProfile.findMany({
           where: {
             targetListProfiles: {
@@ -601,7 +569,6 @@ export const targetListRouter = () =>
             id: input.cursor ? { lt: input.cursor } : undefined,
           },
           include: {
-            profile: true,
             targetListProfiles: {
               select: {
                 list: {
@@ -616,15 +583,57 @@ export const targetListRouter = () =>
           orderBy: {
             id: "desc",
           },
-          take: 21,
+          take: 26,
         });
 
         return paginate(profiles, {
           key: "id",
-          size: 20,
+          size: 25,
+        });
+      }),
+
+    /**
+     * Get all profiles (regardless of list membership)
+     * Used for "All Profiles" view
+     */
+    getAllProfiles: accountProcedure
+      .input(
+        z.object({
+          cursor: z.string().optional(),
+        }),
+      )
+      .query(async ({ ctx, input }) => {
+        const profiles = await ctx.db.targetProfile.findMany({
+          where: {
+            accountId: ctx.activeAccount.id,
+            id: input.cursor ? { lt: input.cursor } : undefined,
+          },
+          include: {
+            targetListProfiles: {
+              select: {
+                list: {
+                  select: {
+                    name: true,
+                    id: true,
+                  },
+                },
+              },
+            },
+          },
+          orderBy: {
+            id: "desc",
+          },
+          take: 26,
+        });
+
+        return paginate(profiles, {
+          key: "id",
+          size: 25,
         });
       }),
   });
+
+// END OF ROUTERS, BELOW ARE UTILS ///
 
 const linkedInUrlSchema = z
   .string()
