@@ -3,7 +3,7 @@
 
 model PostLoadSetting {
   accountId    String  @id
-  targetListId String? //optional 1:1 - each list can only be selected by 1 setting
+  targetListId String? @unique //optional 1:1 - each list can only be selected by 1 setting
 
   //input box of hours from minimum 1h to max 8760 - not slider
   //only get posts posted within (younger than) X hours
@@ -14,7 +14,7 @@ model PostLoadSetting {
   skipCompanyPagesEnabled     Boolean @default(true)
   skipPromotedPostsEnabled    Boolean @default(true)
   skipblacklistEnabled        Boolean @default(false)
-  blacklistId                 String?
+  blacklistId                 String? @unique
 
   skipFirstDegree  Boolean @default(false)
   skipSecondDegree Boolean @default(false)

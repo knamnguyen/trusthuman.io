@@ -6,7 +6,7 @@ model TargetList {
   updatedAt DateTime         @updatedAt
   status    TargetListStatus
 
-  linkedInAccount     LinkedInAccount      @relation(fields: [accountId], references: [id])
+  linkedInAccount     LinkedInAccount      @relation(fields: [accountId], references: [id], onDelete: Cascade)
   postLoadSetting     PostLoadSetting?     @relation("PostLoadSetting_targetList")
   blacklistedInSettings PostLoadSetting[]  @relation("PostLoadSetting_blacklist")
   buildTargetListJobs BuildTargetListJob[]
@@ -26,9 +26,9 @@ model TargetListProfile {
   profileId String
   accountId String
 
-  list    TargetList      @relation(fields: [listId], references: [id])
-  profile TargetProfile   @relation(fields: [profileId], references: [id])
-  account LinkedInAccount @relation(fields: [accountId], references: [id])
+  list    TargetList      @relation(fields: [listId], references: [id], onDelete: Cascade)
+  profile TargetProfile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  account LinkedInAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
 
   @@unique([listId, profileId, accountId])
 }
@@ -51,7 +51,7 @@ model TargetProfile {
   updatedAt DateTime @updatedAt
 
   // profileUrn stored as plain string - query LinkedInProfile by urn when needed
-  account            LinkedInAccount     @relation(fields: [accountId], references: [id])
+  account            LinkedInAccount     @relation(fields: [accountId], references: [id], onDelete: Cascade)
   targetListProfiles TargetListProfile[]
 
   @@index([accountId, linkedinUrl]) // For findListsWithProfileStatus query

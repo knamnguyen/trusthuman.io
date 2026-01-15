@@ -42,6 +42,8 @@ model LinkedInAccount {
   targetProfiles     TargetProfile[]
   targetListProfiles TargetListProfile[]
 
+  
+
   //existing relations
   AutoCommentConfig       AutoCommentConfig[]
   BlacklistedProfile      BlacklistedProfile[]
