@@ -45,6 +45,13 @@ export function useManageLists({
   // Track if popover is open to avoid syncing while user is editing
   const isOpenRef = useRef(false);
 
+  // Track pending list creation promises so we can await them before saving
+  const pendingListCreations = useRef<Promise<unknown>[]>([]);
+
+  // Track temp→real ID mapping (updated synchronously in onSuccess)
+  // This solves the stale closure problem where React state updates are async
+  const tempToRealIdMap = useRef<Map<string, string>>(new Map());
+
   // Sync local state when listMemberships prop changes (e.g., after cache invalidation)
   // Only sync when popover is closed to avoid overwriting user's pending changes
   useEffect(() => {
@@ -61,9 +68,9 @@ export function useManageLists({
   const updateProfileLists = useMutation(
     trpc.targetList.updateProfileLists.mutationOptions({
       onSuccess: () => {
-        // Invalidate all findProfilesByListIdWithMembership queries to refresh badges
+        // Invalidate all getProfilesInList queries to refresh badges
         void queryClient.invalidateQueries({
-          queryKey: [["targetList", "findProfilesByListIdWithMembership"]],
+          queryKey: [["targetList", "getProfilesInList"]],
         });
 
         // Also invalidate findLists in case a new list was created
@@ -87,7 +94,11 @@ export function useManageLists({
         return { tempId, name: variables.name };
       },
       onSuccess: (data, _variables, context) => {
-        if (!context) return;
+        if (!context || data.status !== "success") return;
+
+        // Store mapping synchronously (before React state updates)
+        // This is critical for handleOpenChange to resolve IDs correctly
+        tempToRealIdMap.current.set(context.tempId, data.id);
 
         // Swap temp ID with real ID
         setSelectedListIds((prev) => {
@@ -116,20 +127,31 @@ export function useManageLists({
   );
 
   // Handle popover close - save changes
-  const handleOpenChange = (isOpen: boolean) => {
+  const handleOpenChange = async (isOpen: boolean) => {
     isOpenRef.current = isOpen;
 
     if (!isOpen) {
-      // Filter out temp IDs
-      const currentIds = [...selectedListIds].filter(
-        (id) => !id.startsWith("temp-"),
+      // Wait for any pending list creations to complete
+      if (pendingListCreations.current.length > 0) {
+        await Promise.allSettled(pendingListCreations.current);
+        pendingListCreations.current = [];
+      }
+
+      // Resolve temp IDs to real IDs using the mapping
+      // (React state might still have temp IDs due to async state updates)
+      const resolveId = (id: string) => tempToRealIdMap.current.get(id) ?? id;
+      const resolvedSelectedIds = [...selectedListIds].map(resolveId);
+
+      // Compute diff with resolved IDs
+      const addToListIds = resolvedSelectedIds.filter(
+        (id) => !initialListIds.has(id),
+      );
+      const removeFromListIds = [...initialListIds].filter(
+        (id) => !resolvedSelectedIds.includes(id),
       );
 
-      // Compute diff
-      const addToListIds = currentIds.filter((id) => !initialListIds.has(id));
-      const removeFromListIds = [...initialListIds].filter(
-        (id) => !selectedListIds.has(id),
-      );
+      // Clear the mapping after use
+      tempToRealIdMap.current.clear();
 
       // Only call API if there are changes
       if (addToListIds.length > 0 || removeFromListIds.length > 0) {
@@ -140,7 +162,7 @@ export function useManageLists({
         });
 
         // Update initial state optimistically
-        setInitialListIds(new Set(currentIds));
+        setInitialListIds(new Set(resolvedSelectedIds));
       }
 
       // Reset search
@@ -164,7 +186,18 @@ export function useManageLists({
 
   const handleCreateList = () => {
     if (!searchValue.trim()) return;
-    addList.mutate({ name: searchValue.trim() });
+
+    // Use mutateAsync and track the promise so we can await it before saving
+    const promise = addList.mutateAsync({ name: searchValue.trim() });
+    pendingListCreations.current.push(promise);
+
+    // Clean up promise from tracking when it completes
+    void promise.finally(() => {
+      pendingListCreations.current = pendingListCreations.current.filter(
+        (p) => p !== promise,
+      );
+    });
+
     setSearchValue("");
   };
 
