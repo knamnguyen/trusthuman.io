@@ -1,5 +1,6 @@
 import { create } from "zustand";
 
+import { calculateTouchScore } from "@sassy/linkedin-automation/comment/calculate-touch-score";
 import type {
   PostAuthorInfo,
   PostCommentInfo,
@@ -23,6 +24,8 @@ export interface ComposeCard {
   commentText: string;
   /** The original AI-generated comment text (for calculating "Your Touch" score) */
   originalCommentText: string;
+  /** Peak touch score achieved (score floor - never decreases) */
+  peakTouchScore: number;
   /** Reference to the post container element */
   postContainer: HTMLElement;
   /** Post URN for identification */
@@ -135,9 +138,20 @@ export const useComposeStore = create<ComposeStore>((set, get) => ({
 
   updateCardText: (id, text) => {
     set((state) => ({
-      cards: state.cards.map((card) =>
-        card.id === id ? { ...card, commentText: text } : card,
-      ),
+      cards: state.cards.map((card) => {
+        if (card.id !== id) return card;
+        // Calculate new score with floor (never decreases)
+        const newScore = calculateTouchScore(
+          card.originalCommentText,
+          text,
+          card.peakTouchScore,
+        );
+        return {
+          ...card,
+          commentText: text,
+          peakTouchScore: newScore,
+        };
+      }),
     }));
   },
 
@@ -162,6 +176,7 @@ export const useComposeStore = create<ComposeStore>((set, get) => ({
               ...card,
               commentText: comment,
               originalCommentText: comment,
+              peakTouchScore: 0, // Reset peak score when new AI comment is set
               isGenerating: false,
             }
           : card,

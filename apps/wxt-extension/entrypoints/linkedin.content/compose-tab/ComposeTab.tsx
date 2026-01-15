@@ -254,6 +254,7 @@ export function ComposeTab() {
           fullCaption: post.fullCaption,
           commentText: "", // Empty - user writes in human mode, AI fills in AI mode
           originalCommentText: "",
+          peakTouchScore: 0,
           postContainer: post.postContainer,
           status: "draft",
           isGenerating: !isHumanMode, // Not generating in human mode

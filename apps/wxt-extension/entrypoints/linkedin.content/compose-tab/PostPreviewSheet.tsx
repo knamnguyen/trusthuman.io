@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import levenshtein from "fast-levenshtein";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ChevronLeft,
@@ -21,6 +20,7 @@ import { Button } from "@sassy/ui/button";
 import { ScrollArea } from "@sassy/ui/scroll-area";
 import { Textarea } from "@sassy/ui/textarea";
 
+import { getTouchScoreColor } from "@sassy/linkedin-automation/comment/calculate-touch-score";
 import { createCommentUtilities } from "@sassy/linkedin-automation/comment/create-comment-utilities";
 import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post-utilities";
 
@@ -344,28 +344,8 @@ export function PostPreviewSheet() {
     [handleSubmit],
   );
 
-  // Calculate "Your Touch" score
-  const yourTouchScore = useMemo(() => {
-    if (!previewingCard) return 0;
-    const original = previewingCard.originalCommentText;
-    const current = previewingCard.commentText;
-
-    if (!original && !current) return 0;
-    if (original === current) return 0;
-    if (!original && current) return 100;
-    if (original && !current) return 100;
-
-    const editDistance = levenshtein.get(original, current);
-    const yourTouchRatio = editDistance / original.length;
-    return Math.min(100, Math.round(yourTouchRatio * 100));
-  }, [previewingCard]);
-
-  // Score color
-  const getScoreColor = (score: number) => {
-    if (score >= 50) return "text-green-600";
-    if (score >= 20) return "text-amber-600";
-    return "text-muted-foreground";
-  };
+  // Touch score is tracked in the store (with floor - never decreases)
+  const yourTouchScore = previewingCard?.peakTouchScore ?? 0;
 
   // Get initials for avatar fallback
   const getInitials = (name: string | null): string => {
@@ -566,7 +546,7 @@ export function PostPreviewSheet() {
                   </div>
                 ) : (
                   <div
-                    className={`flex items-center gap-1 text-xs ${getScoreColor(yourTouchScore)}`}
+                    className={`flex items-center gap-1 text-xs ${getTouchScoreColor(yourTouchScore)}`}
                     title="How much you've personalized the AI-generated comment"
                   >
                     <Sparkles className="h-3 w-3" />
