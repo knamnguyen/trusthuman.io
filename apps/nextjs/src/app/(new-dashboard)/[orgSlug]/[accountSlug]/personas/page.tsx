@@ -1,25 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { useParams } from "next/navigation";
-import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  useInfiniteQuery,
-  useMutation,
-  useQueryClient,
-} from "@tanstack/react-query";
-import { EditIcon, LoaderIcon, TrashIcon } from "lucide-react";
-import { Controller, useForm } from "react-hook-form";
-import z from "zod";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Loader2, Plus, User } from "lucide-react";
 
 import { Button } from "@sassy/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@sassy/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -28,511 +14,170 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@sassy/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@sassy/ui/table";
 import { toast } from "@sassy/ui/toast";
 
 import { useTRPC } from "~/trpc/react";
+import { PersonaCard, type Persona } from "./_components/PersonaCard";
+import { PersonaSidebar } from "./_components/PersonaSidebar";
 
 export default function PersonasPage() {
   const { accountSlug } = useParams<{ accountSlug: string }>();
-  const [createCommentStyleModalOpen, setCreateCommentStyleModalOpen] =
-    useState(false);
-
-  return (
-    <div className="min-h-dvh bg-gray-50 p-6">
-      <div className="mx-auto max-w-4xl">
-        <h1 className="mb-2 text-2xl font-bold text-gray-900">Personas</h1>
-        <p className="mb-6 text-gray-600">AI personas for {accountSlug}</p>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-end justify-between">
-              <div className="space-y-1">
-                <div>AI Personas</div>
-                <CardDescription className="font-normal">
-                  Custom personas for engagement style
-                </CardDescription>
-              </div>
-              <Button onClick={() => setCreateCommentStyleModalOpen(true)}>
-                Create Persona
-              </Button>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ManageCommentStyle
-              createCommentStyleModalOpen={createCommentStyleModalOpen}
-              setCreateCommentStyleModalOpen={setCreateCommentStyleModalOpen}
-            />
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
-}
-
-const shortDateFormatter = new Intl.DateTimeFormat("en-US", {
-  year: "numeric",
-  month: "short",
-  day: "numeric",
-});
-
-function ManageCommentStyle({
-  createCommentStyleModalOpen,
-  setCreateCommentStyleModalOpen,
-}: {
-  createCommentStyleModalOpen: boolean;
-  setCreateCommentStyleModalOpen: (open: boolean) => void;
-}) {
   const trpc = useTRPC();
-  const [page, setPage] = useState(0);
 
-  const [commentStyleToEdit, setCommentStyleToEdit] = useState<{
-    id: string;
-    name: string;
-    description: string;
-    content: string;
-  } | null>(null);
+  // Sidebar state
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [sidebarMode, setSidebarMode] = useState<"create" | "edit" | null>(null);
+  const [selectedPersona, setSelectedPersona] = useState<Persona | null>(null);
 
-  const [styleToDelete, setStyleToDelete] = useState<{
-    id: string;
-    name: string;
-  } | null>(null);
+  // Delete confirmation state
+  const [personaToDelete, setPersonaToDelete] = useState<Persona | null>(null);
 
-  const commentStyles = useInfiniteQuery(
+  const personas = useInfiniteQuery(
     trpc.persona.commentStyle.list.infiniteQueryOptions(
       {},
       {
         getNextPageParam: (lastPage) => lastPage.next,
-      },
-    ),
+      }
+    )
   );
 
-  const currentPageCommentStyles = useMemo(() => {
-    return commentStyles.data?.pages[page]?.data ?? [];
-  }, [commentStyles.data, page]);
+  const allPersonas = personas.data?.pages.flatMap((p) => p.data) ?? [];
 
-  if (!commentStyles.data?.pages) {
-    return <div>No personas found</div>;
-  }
-
-  function renderTableBody() {
-    if (commentStyles.isFetching)
-      return (
-        <TableRow>
-          <TableCell colSpan={3}>
-            <LoaderIcon className="mx-auto animate-spin" />
-          </TableCell>
-        </TableRow>
-      );
-
-    if (currentPageCommentStyles.length === 0) {
-      return (
-        <TableRow>
-          <TableCell colSpan={3}>
-            <div className="grid place-items-center py-2 text-gray-500">
-              <div className="my-3">No personas found</div>
-              <Button
-                onClick={() => setCreateCommentStyleModalOpen(true)}
-                size="sm"
-              >
-                Create your first
-              </Button>
-            </div>
-          </TableCell>
-        </TableRow>
-      );
+  // Handle persona card click - open edit sidebar
+  const handleSelectPersona = (persona: Persona) => {
+    setSelectedPersona(persona);
+    setSidebarMode("edit");
+    if (!isSidebarOpen) {
+      setIsSidebarOpen(true);
     }
+  };
 
-    return currentPageCommentStyles.map((style) => (
-      <TableRow key={style.id}>
-        <TableCell className="w-10">
-          <div className="flex items-center gap-x-1">
-            <button onClick={() => setCommentStyleToEdit(style)}>
-              <EditIcon className="h-4 w-4 text-orange-500" />
-            </button>
-            <button onClick={() => setStyleToDelete(style)}>
-              {/* add confirmation dialog */}
-              <TrashIcon className="h-4 w-4 text-red-500" />
-            </button>
-          </div>
-        </TableCell>
-        <TableCell>{style.name}</TableCell>
-        <TableCell className="text-right">
-          {shortDateFormatter.format(style.createdAt)}
-        </TableCell>
-      </TableRow>
-    ));
-  }
+  // Handle create button click - open create sidebar
+  const handleCreateClick = () => {
+    setSelectedPersona(null);
+    setSidebarMode("create");
+    setIsSidebarOpen(true);
+  };
+
+  // Handle sidebar close
+  const handleCloseSidebar = () => {
+    setSidebarMode(null);
+    setSelectedPersona(null);
+  };
+
+  // Handle delete request from sidebar
+  const handleDeleteRequest = (persona: Persona) => {
+    setPersonaToDelete(persona);
+  };
 
   return (
-    <div>
-      <CreateCommentStyleModal
-        open={createCommentStyleModalOpen}
-        onClose={() => setCreateCommentStyleModalOpen(false)}
-      />
-      <UpdateCommentStyleModal
-        style={commentStyleToEdit}
-        onClose={() => setCommentStyleToEdit(null)}
-      />
-      <DeleteStyleConfirmationDialog
-        styleToDelete={styleToDelete}
-        onClose={() => setStyleToDelete(null)}
-      />
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead />
-            <TableHead>Name</TableHead>
-            <TableHead className="text-right">Created At</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>{renderTableBody()}</TableBody>
-      </Table>
-
-      <div className="mt-4 flex items-center justify-end gap-x-4">
-        <Button
-          onClick={() => {
-            void commentStyles.fetchPreviousPage();
-            setPage((page) => Math.max(0, page - 1));
-          }}
-          disabled={
-            !commentStyles.hasPreviousPage ||
-            commentStyles.isFetchingPreviousPage
-          }
-          variant="outline"
-        >
-          Previous
+    <div className="flex h-full flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b px-6 py-4">
+        <div>
+          <h1 className="text-xl font-semibold">Personas</h1>
+          <p className="text-muted-foreground text-sm">
+            AI personas for {accountSlug}
+          </p>
+        </div>
+        <Button onClick={handleCreateClick}>
+          <Plus className="mr-2 h-4 w-4" />
+          Create Persona
         </Button>
+      </div>
 
-        <span className="text-sm text-gray-600">Page {page}</span>
+      {/* Main layout with sidebar */}
+      <div className="relative flex flex-1 overflow-hidden">
+        {/* Main Content */}
+        <div className="flex-1 overflow-auto p-6">
+          {personas.isLoading ? (
+            <div className="flex h-[400px] items-center justify-center">
+              <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
+            </div>
+          ) : allPersonas.length === 0 ? (
+            <EmptyState onCreateClick={handleCreateClick} />
+          ) : (
+            <>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {allPersonas.map((persona) => (
+                  <PersonaCard
+                    key={persona.id}
+                    persona={persona}
+                    isSelected={selectedPersona?.id === persona.id}
+                    onSelect={() => handleSelectPersona(persona)}
+                  />
+                ))}
+              </div>
 
-        <Button
-          onClick={() => {
-            void commentStyles.fetchNextPage();
-            setPage((page) => page + 1);
-          }}
-          disabled={
-            !commentStyles.hasNextPage || commentStyles.isFetchingNextPage
-          }
-          variant="outline"
-        >
-          Next
+              {personas.hasNextPage && (
+                <div className="mt-6 flex justify-center">
+                  <Button
+                    variant="outline"
+                    onClick={() => personas.fetchNextPage()}
+                    disabled={personas.isFetchingNextPage}
+                  >
+                    {personas.isFetchingNextPage ? "Loading..." : "Load more"}
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Right Sidebar */}
+        <PersonaSidebar
+          isOpen={isSidebarOpen}
+          onToggle={() => setIsSidebarOpen((prev) => !prev)}
+          mode={sidebarMode}
+          selectedPersona={selectedPersona}
+          onClose={handleCloseSidebar}
+          onDelete={handleDeleteRequest}
+        />
+      </div>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        persona={personaToDelete}
+        onClose={() => setPersonaToDelete(null)}
+        onDeleted={handleCloseSidebar}
+      />
+    </div>
+  );
+}
+
+function EmptyState({ onCreateClick }: { onCreateClick: () => void }) {
+  return (
+    <div className="flex h-[400px] flex-col items-center justify-center gap-4 rounded-lg border border-dashed">
+      <div className="bg-muted flex h-16 w-16 items-center justify-center rounded-full">
+        <User className="text-muted-foreground h-8 w-8" />
+      </div>
+      <div className="text-center">
+        <p className="text-muted-foreground mb-1">No personas yet</p>
+        <p className="text-muted-foreground mb-4 text-sm">
+          Create personas to customize AI comment generation
+        </p>
+        <Button onClick={onCreateClick}>
+          <Plus className="mr-2 h-4 w-4" />
+          Create your first persona
         </Button>
       </div>
     </div>
   );
 }
 
-const createCommentStyleFormSchema = z.object({
-  name: z.string().min(1, "Name is required").max(100, "Name is too long"),
-  description: z.string().max(500, "Description is too long").optional(),
-  content: z.string().min(1, "Content is required"),
-});
-
-function CreateCommentStyleModal({
-  open,
+function DeleteConfirmationDialog({
+  persona,
   onClose,
+  onDeleted,
 }: {
-  open: boolean;
+  persona: Persona | null;
   onClose: () => void;
-}) {
-  const trpc = useTRPC();
-
-  const {
-    handleSubmit,
-    control,
-    reset: resetForm,
-  } = useForm({
-    resolver: zodResolver(createCommentStyleFormSchema),
-    defaultValues: {
-      name: "",
-      description: "",
-      content: "",
-    },
-  });
-
-  const queryClient = useQueryClient();
-
-  const createCommentStyle = useMutation(
-    trpc.persona.commentStyle.create.mutationOptions({
-      async onSuccess(data) {
-        if (data.status === "error") {
-          toast.error(data.message);
-          return;
-        }
-
-        toast.success("Persona created successfully");
-        onClose();
-        await queryClient.invalidateQueries({
-          queryKey: trpc.persona.commentStyle.list.infiniteQueryKey(),
-        });
-      },
-    }),
-  );
-
-  useEffect(() => {
-    if (open === false) {
-      resetForm();
-    }
-  }, [open, resetForm]);
-
-  return (
-    <Dialog open={open} onOpenChange={(v) => v === false && onClose()}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Create Persona</DialogTitle>
-          <DialogDescription>
-            A comment style can be used to customize the tone and style of
-            AI-assisted comment generation.
-          </DialogDescription>
-        </DialogHeader>
-        <form
-          onSubmit={handleSubmit((data) => createCommentStyle.mutate(data))}
-        >
-          <div className="mt-4">
-            <div className="mb-6">
-              <label className="mb-1 block text-sm font-medium text-gray-700">
-                Name of your persona
-              </label>
-              <Controller
-                control={control}
-                name="name"
-                render={({ field: { value, onChange, ...rest } }) => (
-                  <input
-                    type="text"
-                    value={value}
-                    onChange={(e) => onChange(e.target.value)}
-                    placeholder="Tech enthusiast"
-                    className="w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
-                    {...rest}
-                  />
-                )}
-              />
-            </div>
-            <div className="mb-6">
-              <label className="mb-1 block text-sm font-medium text-gray-700">
-                Description of your persona
-              </label>
-              <Controller
-                control={control}
-                name="description"
-                render={({ field: { value, onChange, ...rest } }) => (
-                  <textarea
-                    rows={3}
-                    value={value}
-                    onChange={(e) => onChange(e.target.value)}
-                    placeholder="A tech enthusiast that loves to share insights about the latest trends in technology and innovation."
-                    className="w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
-                    {...rest}
-                  />
-                )}
-              />
-              <p className="-mt-1 pl-0.5 text-xs text-gray-500">
-                When auto-persona selection is enabled, this description will
-                help Engagekit AI choose the most appropriate persona for each
-                comment.
-              </p>
-            </div>
-            <div className="mb-4">
-              <label className="mb-1 block text-sm font-medium text-gray-700">
-                Specific Instructions
-              </label>
-              <Controller
-                control={control}
-                name="content"
-                render={({ field: { value, onChange, ...rest } }) => (
-                  <textarea
-                    rows={3}
-                    value={value}
-                    onChange={(e) => onChange(e.target.value)}
-                    placeholder="Talk about web based tech only, and avoid mobile apps. Avoid ego boasting and be humble."
-                    className="w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
-                    {...rest}
-                  />
-                )}
-              />
-              <p className="-mt-1 pl-0.5 text-xs text-gray-500">
-                Specific instructions to guide Engagekit AI to generate
-                comments. Good for placing guardrails or rules.
-              </p>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button disabled={createCommentStyle.isPending} type="submit">
-              {createCommentStyle.isPending ? (
-                <LoaderIcon className="animate-spin" />
-              ) : (
-                "Create Persona"
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function UpdateCommentStyleModal({
-  style,
-  onClose,
-}: {
-  style: {
-    id: string;
-    name: string;
-    description: string;
-    content: string;
-  } | null;
-  onClose: () => void;
-}) {
-  const trpc = useTRPC();
-
-  const { control, handleSubmit } = useForm({
-    resolver: zodResolver(createCommentStyleFormSchema),
-    values: {
-      name: style?.name ?? "",
-      description: style?.description ?? "",
-      content: style?.content ?? "",
-    },
-  });
-
-  const queryClient = useQueryClient();
-
-  const updateCommentStyle = useMutation(
-    trpc.persona.commentStyle.update.mutationOptions({
-      async onSuccess(data) {
-        if (data.status === "error") {
-          toast.error(data.message);
-          return;
-        }
-
-        toast.success("Persona updated successfully");
-        onClose();
-        await queryClient.invalidateQueries({
-          queryKey: trpc.persona.commentStyle.list.infiniteQueryKey(),
-        });
-      },
-    }),
-  );
-
-  return (
-    <Dialog
-      open={style !== null}
-      onOpenChange={(v) => v === false && onClose()}
-    >
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Update Persona</DialogTitle>
-        </DialogHeader>
-        <form
-          onSubmit={handleSubmit((data) => {
-            if (style == null) return;
-            updateCommentStyle.mutate({ id: style.id, ...data });
-          })}
-        >
-          <div className="mt-4">
-            <div className="mb-6">
-              <label className="mb-1 block text-sm font-medium text-gray-700">
-                Name of your persona
-              </label>
-              <Controller
-                control={control}
-                name="name"
-                render={({ field: { value, onChange, ...rest } }) => (
-                  <input
-                    type="text"
-                    value={value}
-                    onChange={(e) => onChange(e.target.value)}
-                    placeholder="Tech enthusiast"
-                    className="w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
-                    {...rest}
-                  />
-                )}
-              />
-            </div>
-            <div className="mb-6">
-              <label className="mb-1 block text-sm font-medium text-gray-700">
-                Description of your persona
-              </label>
-              <Controller
-                control={control}
-                name="description"
-                render={({ field: { value, onChange, ...rest } }) => (
-                  <textarea
-                    rows={3}
-                    value={value}
-                    onChange={(e) => onChange(e.target.value)}
-                    placeholder="A tech enthusiast that loves to share insights about the latest trends in technology and innovation."
-                    className="w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
-                    {...rest}
-                  />
-                )}
-              />
-              <p className="-mt-1 pl-0.5 text-xs text-gray-500">
-                When auto-persona selection is enabled, this description will
-                help Engagekit AI choose the most appropriate persona for each
-                comment.
-              </p>
-            </div>
-            <div className="mb-4">
-              <label className="mb-1 block text-sm font-medium text-gray-700">
-                Specific Instructions
-              </label>
-              <Controller
-                control={control}
-                name="content"
-                render={({ field: { value, onChange, ...rest } }) => (
-                  <textarea
-                    rows={3}
-                    value={value}
-                    onChange={(e) => onChange(e.target.value)}
-                    placeholder="Talk about web based tech only, and avoid mobile apps. Avoid ego boasting and be humble."
-                    className="w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
-                    {...rest}
-                  />
-                )}
-              />
-              <p className="-mt-1 pl-0.5 text-xs text-gray-500">
-                Specific instructions to guide Engagekit AI to generate
-                comments. Good for placing guardrails or rules.
-              </p>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button disabled={updateCommentStyle.isPending} type="submit">
-              {updateCommentStyle.isPending ? (
-                <LoaderIcon className="animate-spin" />
-              ) : (
-                "Update Persona"
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function DeleteStyleConfirmationDialog({
-  styleToDelete,
-  onClose,
-}: {
-  styleToDelete: {
-    id: string;
-    name: string;
-  } | null;
-  onClose: () => void;
+  onDeleted: () => void;
 }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  const deleteCommentStyle = useMutation(
+  const deletePersona = useMutation(
     trpc.persona.commentStyle.delete.mutationOptions({
       async onSuccess(data) {
         if (data.status === "error") {
@@ -541,22 +186,19 @@ function DeleteStyleConfirmationDialog({
         }
         toast.success("Persona deleted successfully");
         onClose();
-        void queryClient.invalidateQueries({
+        onDeleted();
+        await queryClient.invalidateQueries({
           queryKey: trpc.persona.commentStyle.list.infiniteQueryKey(),
         });
       },
-    }),
+    })
   );
+
   return (
-    <Dialog
-      open={styleToDelete !== null}
-      onOpenChange={(v) => v === false && onClose()}
-    >
+    <Dialog open={persona !== null} onOpenChange={(v) => !v && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>
-            Are you sure you want to delete {styleToDelete?.name}?
-          </DialogTitle>
+          <DialogTitle>Delete "{persona?.name}"?</DialogTitle>
           <DialogDescription>
             This action cannot be undone. This will permanently delete the
             persona.
@@ -567,17 +209,18 @@ function DeleteStyleConfirmationDialog({
             Cancel
           </Button>
           <Button
-            disabled={deleteCommentStyle.isPending}
+            variant="destructive"
+            disabled={deletePersona.isPending}
             onClick={() => {
-              if (styleToDelete == null) return;
-              deleteCommentStyle.mutate({ id: styleToDelete.id });
+              if (persona) {
+                deletePersona.mutate({ id: persona.id });
+              }
             }}
           >
-            {deleteCommentStyle.isPending ? (
-              <LoaderIcon className="animate-spin" />
-            ) : (
-              "Delete"
-            )}
+            {deletePersona.isPending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : null}
+            Delete
           </Button>
         </DialogFooter>
       </DialogContent>
