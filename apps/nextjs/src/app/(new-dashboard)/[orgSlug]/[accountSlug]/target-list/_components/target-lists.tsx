@@ -89,19 +89,19 @@ export function TargetLists() {
     : allLists.find((l) => l.id === selectedListId)?.name ?? "";
 
   return (
-    <div className="flex h-full flex-col">
-      {/* Header */}
-      <div className="border-b px-6 py-4">
+    <div className="flex h-[calc(100vh-var(--header-height,0px))] flex-col">
+      {/* Header - fixed at top */}
+      <div className="shrink-0 border-b px-6 py-4">
         <h1 className="text-xl font-semibold">Target Lists</h1>
         <p className="text-muted-foreground text-sm">
           Viewing: {selectedListName}
         </p>
       </div>
 
-      {/* Main layout with sidebar */}
-      <div className="relative flex flex-1 overflow-hidden">
-        {/* Main Content */}
-        <div className="flex-1 overflow-auto p-6">
+      {/* Main layout with sidebar - fills remaining height */}
+      <div className="flex min-h-0 flex-1">
+        {/* Main Content - independent scroll */}
+        <div className="flex-1 overflow-y-auto p-6">
           {targetLists.isLoading ? (
             <div className="flex h-[400px] items-center justify-center">
               <p className="text-muted-foreground">Loading...</p>

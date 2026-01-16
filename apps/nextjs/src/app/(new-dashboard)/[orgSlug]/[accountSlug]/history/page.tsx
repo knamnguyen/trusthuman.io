@@ -58,9 +58,9 @@ export default function HistoryPage() {
   };
 
   return (
-    <div className="bg-background flex h-full min-h-dvh flex-col">
-      {/* Header */}
-      <div className="border-b px-6 py-4">
+    <div className="bg-background flex h-[calc(100vh-var(--header-height,0px))] flex-col">
+      {/* Header - fixed at top, doesn't scroll */}
+      <div className="shrink-0 border-b px-6 py-4">
         <div className="flex items-center gap-2">
           <MessageSquare className="h-5 w-5" />
           <h1 className="text-xl font-semibold">Comment History</h1>
@@ -75,10 +75,10 @@ export default function HistoryPage() {
         </p>
       </div>
 
-      {/* Main layout with 50/50 split */}
-      <div className="relative flex flex-1 overflow-hidden">
-        {/* Left side - Comment Cards List (50%) */}
-        <div className="w-1/2 overflow-auto border-r p-4">
+      {/* Main layout with 50/50 split - fills remaining height */}
+      <div className="flex min-h-0 flex-1">
+        {/* Left side - Comment Cards List (50%) - independent scroll */}
+        <div className="w-1/2 overflow-y-auto border-r p-4">
           {isLoading && (
             <div className="flex flex-col gap-3">
               {[1, 2, 3].map((i) => (
@@ -128,8 +128,8 @@ export default function HistoryPage() {
           )}
         </div>
 
-        {/* Right side - Post Preview Sidebar (50%) */}
-        <div className="w-1/2">
+        {/* Right side - Post Preview Sidebar (50%) - independent scroll */}
+        <div className="flex w-1/2 flex-col">
           <PostPreviewSidebar
             comment={selectedComment}
             currentIndex={selectedIndex}

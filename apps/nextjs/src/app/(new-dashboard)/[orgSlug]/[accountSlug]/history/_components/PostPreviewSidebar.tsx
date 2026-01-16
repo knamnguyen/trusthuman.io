@@ -80,7 +80,7 @@ export function PostPreviewSidebar({
   // Empty state
   if (!comment) {
     return (
-      <div className="bg-background flex h-full flex-col border-l">
+      <div className="bg-background flex min-h-0 flex-1 flex-col border-l">
         <div className="flex flex-1 items-center justify-center">
           <p className="text-muted-foreground text-sm">
             Select a comment to view details
@@ -91,9 +91,9 @@ export function PostPreviewSidebar({
   }
 
   return (
-    <div className="bg-background flex h-full flex-col border-l">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b px-4 py-3">
+    <div className="bg-background flex min-h-0 flex-1 flex-col border-l">
+      {/* Header - fixed */}
+      <div className="shrink-0 border-b px-4 py-3">
         <div className="flex items-center gap-2">
           <h2 className="text-sm font-semibold">Post Preview</h2>
           {comment.postUrl && (
@@ -110,8 +110,8 @@ export function PostPreviewSidebar({
         </div>
       </div>
 
-      {/* Scrollable Content */}
-      <ScrollArea className="flex-1">
+      {/* Scrollable Content - takes remaining space */}
+      <ScrollArea className="min-h-0 flex-1">
         <div className="flex flex-col gap-4 p-4">
           {/* Author Section */}
           <div className="flex items-start gap-3">
@@ -214,8 +214,8 @@ export function PostPreviewSidebar({
         </div>
       </ScrollArea>
 
-      {/* Sticky Your Comment Section at Bottom */}
-      <div className="bg-background flex flex-col gap-3 border-t p-4">
+      {/* Sticky Your Comment Section at Bottom - fixed */}
+      <div className="bg-background flex shrink-0 flex-col gap-3 border-t p-4">
         <p className="text-muted-foreground text-xs font-medium uppercase">
           Your Comment
         </p>

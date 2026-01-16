@@ -92,7 +92,7 @@ export function TargetListSidebar({
   return (
     <div
       className={cn(
-        "bg-background relative flex h-full flex-col border-l transition-all duration-200",
+        "bg-background relative flex min-h-0 flex-col border-l transition-all duration-200",
         isOpen ? "w-[400px]" : "w-0"
       )}
     >
@@ -104,7 +104,7 @@ export function TargetListSidebar({
       {/* Sidebar content - only visible when open */}
       {isOpen && (
         <>
-          <div className="border-b p-4">
+          <div className="shrink-0 border-b p-4">
             <div className="flex justify-center">
               <ExpandableTabs
                 tabs={tabs}
@@ -113,7 +113,7 @@ export function TargetListSidebar({
               />
             </div>
           </div>
-          <div className="flex-1 overflow-y-auto">
+          <div className="min-h-0 flex-1 overflow-y-auto">
             {selectedTab === SIDEBAR_TABS.LISTS && (
               <ListsTab
                 lists={lists}
