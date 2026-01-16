@@ -7,9 +7,6 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   HistoryIcon,
-  HomeIcon,
-  SettingsIcon,
-  UserIcon,
   UsersIcon,
   UsersRoundIcon,
 } from "lucide-react";
@@ -88,40 +85,23 @@ export function DashboardSidebar() {
   const { orgSlug, accountSlug } = params;
 
   // Build navigation items based on current context
-  const orgItems = [
-    {
-      title: "Accounts",
-      url: orgSlug ? `/${orgSlug}/accounts` : "#",
-      icon: UserIcon,
-    },
-  ];
-
+  // Account-level navigation (only shown when an account is selected)
   const accountItems = accountSlug
     ? [
-        {
-          title: "Dashboard",
-          url: `/${orgSlug}/${accountSlug}`,
-          icon: HomeIcon,
-        },
-        {
-          title: "Target list",
-          url: `/${orgSlug}/${accountSlug}/target-list`,
-          icon: UsersRoundIcon,
-        },
         {
           title: "History",
           url: `/${orgSlug}/${accountSlug}/history`,
           icon: HistoryIcon,
         },
         {
+          title: "Target List",
+          url: `/${orgSlug}/${accountSlug}/target-list`,
+          icon: UsersRoundIcon,
+        },
+        {
           title: "Personas",
           url: `/${orgSlug}/${accountSlug}/personas`,
           icon: UsersIcon,
-        },
-        {
-          title: "Run Settings",
-          url: `/${orgSlug}/${accountSlug}/run-settings`,
-          icon: SettingsIcon,
         },
       ]
     : [];
@@ -156,24 +136,6 @@ export function DashboardSidebar() {
       <AccountSwitcher />
 
       <SidebarContent>
-        {/* Org-level navigation */}
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {orgItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <Link href={item.url}>
-                      <item.icon />
-                      <span className="font-medium">{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
         {/* Account-level navigation (only shown when an account is selected) */}
         {accountItems.length > 0 && (
           <SidebarGroup>
