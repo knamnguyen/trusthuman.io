@@ -15,8 +15,11 @@
 [*] mimic fetch data not succeeding in fetching - data different?
 [*] urn not available for post author in the feed
 
+[*] ui for comment history to view posts as welL
+[] flow for commenting manually for target list
+[] export/import button old persons+targetlist
+
 [] sync chrome extension setting to db setting
-[] fix target list web ui
 
 [] check again account id in header and active org
 [] fix comment saving table data (no ui touch for history for now)

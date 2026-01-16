@@ -143,8 +143,12 @@ model PostLoadSetting {
 #### Step 1.1: Update Prisma Schema
 - [ ] Open `/packages/db/prisma/models/comment/post-load-setting.prisma`
 - [ ] Change `targetListId String? @unique` to `targetListIds String[]`
+- [ ] **ADD**: `targetListEnabled Boolean @default(false)` - toggle independent of selection
 - [ ] Remove `targetList TargetList? @relation("PostLoadSetting_targetList", fields: [targetListId], references: [id], onDelete: SetNull)` line
 - [ ] Keep all other fields unchanged
+- [ ] **NOTE**: Toggle (`targetListEnabled`) and selection (`targetListIds[]`) are independent:
+  - User can select lists but keep toggle OFF → normal feed loading
+  - User can toggle ON later → previously selected lists are used
 
 #### Step 1.2: Generate Migration
 - [ ] Run `pnpm db:push` from root to apply schema changes
@@ -163,6 +167,7 @@ model PostLoadSetting {
   - `commentGenerate.upsert` - Create or update CommentGenerateSetting
 - [ ] All procedures require authenticated user + selected account from context
 - [ ] Use `ctx.db.postLoadSetting.upsert()` pattern with `accountId` as key
+- [ ] **CASING FIX**: Map DB `skipblacklistEnabled` (lowercase 'b') to store `skipBlacklistEnabled` (uppercase 'B') in response
 
 #### Step 1.4: Create Zod Validators
 - [ ] Create `/packages/validators/src/settings.ts`
@@ -176,14 +181,18 @@ model PostLoadSetting {
 - [ ] Import `settingsRouter` from `./settings`
 - [ ] Add to router: `settings: settingsRouter()`
 
-### Phase 2: Frontend Stores (Extension)
+### Phase 2: DB Settings Store (Extension - Minimal for Testing)
 
 #### Step 2.1: Create DB Settings Store
 - [ ] Create `/apps/wxt-extension/entrypoints/linkedin.content/stores/settings-db-store.ts`
 - [ ] Define interfaces matching Prisma models:
-  - `PostLoadSettingDB` (with `targetListIds: string[]`)
+  - `PostLoadSettingDB` (with `targetListEnabled: boolean` AND `targetListIds: string[]`)
   - `SubmitCommentSettingDB`
   - `CommentGenerateSettingDB`
+- [ ] **NOTE**: Toggle and selection are independent (both stored in DB):
+  - `targetListEnabled` + `targetListIds[]` (target list feature)
+  - `skipBlacklistEnabled` + `blacklistId` (blacklist feature)
+- [ ] **NOTE**: `selectedTargetListUrns` is runtime cache (fetched on-demand, not stored in DB)
 - [ ] Create Zustand store with state:
   - `postLoad: PostLoadSettingDB | null`
   - `submitComment: SubmitCommentSettingDB | null`
@@ -201,7 +210,53 @@ model PostLoadSetting {
 - [ ] Listen for `authStateChanged` message from background script
 - [ ] Call `fetchSettings()` when `isSignedIn === true`
 
-#### Step 2.2: Create Local Behavior Store
+### Phase 3: UI Updates (Test DB Sync Early)
+
+#### Step 3.1: Update ComposeTab for Multiple Target Lists
+- [ ] Open `/apps/wxt-extension/entrypoints/linkedin.content/compose-tab/ComposeTab.tsx`
+- [ ] Replace `selectedTargetListId` usage with `selectedTargetListIds: string[]`
+- [ ] Connect to `useSettingsDBStore()` for DB-synced settings
+- [ ] Test: Toggle a setting in UI → Verify saved in DB
+- [ ] Test: Reload page → Verify setting loaded from DB
+
+#### Step 3.2: Create Target List Multi-Select Component
+- [ ] Create `/apps/wxt-extension/entrypoints/linkedin.content/compose-tab/TargetListSelector.tsx`
+- [ ] Fetch target lists from tRPC (`targetList.list`)
+- [ ] Display as checkbox list (not dropdown - multiple selection)
+- [ ] Show selected count in header ("3 of 10 selected")
+- [ ] Update `settings-db-store.postLoad.targetListIds` on selection change
+- [ ] Display selected list names in compact chips/badges below selector
+
+#### Step 3.3: Create Blacklist Selector Component
+- [ ] Create `/apps/wxt-extension/entrypoints/linkedin.content/compose-tab/BlacklistSelector.tsx`
+- [ ] Fetch target lists from tRPC (`targetList.list`) - filter by type or show all
+- [ ] Display as single-select dropdown (only 1 blacklist allowed)
+- [ ] Update `settings-db-store.postLoad.blacklistId` on selection change
+- [ ] Connect `skipBlacklistEnabled` toggle to enable/disable blacklist filtering
+- [ ] Test: Select blacklist → Verify saved in DB
+
+#### Step 3.4: Create Default Comment Style Selector
+- [ ] Create `/apps/wxt-extension/entrypoints/linkedin.content/compose-tab/CommentStyleSelector.tsx`
+- [ ] Fetch comment styles from tRPC (`commentStyle.list`)
+- [ ] Display as single-select dropdown (enforced: exactly 1 default style)
+- [ ] Update `settings-db-store.commentGenerate.commentStyleId` on selection change
+- [ ] Connect `dynamicChooseStyleEnabled` toggle (if true, AI picks style dynamically)
+- [ ] Test: Select style → Verify saved in DB
+
+#### Step 3.5: Update Settings UI (Attach Picture Toggle)
+- [ ] Find settings panel component
+- [ ] Connect `attachPictureEnabled` toggle to `settings-db-store.submitComment.attachPictureEnabled`
+- [ ] Test: Toggle → Verify saved in DB → Reload → Verify persisted
+
+#### Step 3.6: Update Settings Tags Display
+- [ ] Open `/apps/wxt-extension/entrypoints/linkedin.content/compose-tab/SettingsTags.tsx` (or equivalent)
+- [ ] Update to read from `settings-db-store` for DB settings
+- [ ] Update tag generation logic:
+  - For multiple target lists: Show "Target Lists (3)" instead of "Target List"
+
+### Phase 4: Local Stores (Behavior + Image)
+
+#### Step 4.1: Create Local Behavior Store
 - [ ] Create `/apps/wxt-extension/entrypoints/linkedin.content/stores/settings-behavior-store.ts`
 - [ ] Define `BehaviorSettings` interface:
   - `humanOnlyMode: boolean`
@@ -214,37 +269,46 @@ model PostLoadSetting {
   - `loadFromStorage()` - Load from `browser.storage.local.get('behaviorSettings')`
   - `updateSetting<K>(key: K, value: BehaviorSettings[K])` - Update in-memory and save to storage
   - `resetToDefaults()` - Reset all to false
-- [ ] Call `loadFromStorage()` on store initialization (in background script or content script init)
+- [ ] Call `loadFromStorage()` on store initialization
 
-#### Step 2.3: Refactor Image Store (Single Image Enforcement)
+#### Step 4.2: Refactor Image Store (Single Image Enforcement)
 - [ ] Open `/apps/wxt-extension/entrypoints/linkedin.content/stores/comment-image-store.ts`
+- [ ] **NOTE**: Ignore DB field `defaultPictureAttachUrl` - using local blob storage instead
 - [ ] Change state interface:
   - Remove `images: CommentImage[]`
-  - Add `image: CommentImage | null` (single image)
+  - Add `image: CommentImage | null` (single image, enforced limit)
   - Remove `isLoading` (not needed for local storage)
   - Remove `attachImageEnabled` (moved to DB setting: `submitComment.attachPictureEnabled`)
 - [ ] Update `CommentImage` interface:
   - Add `base64Data?: string` (for persistent storage)
-  - Add `arrayBuffer?: ArrayBuffer` (for blob recreation)
   - Keep `blob?: Blob` (for submission)
 - [ ] Update storage format to save base64 data, not blob URL
 - [ ] Update actions:
   - `setImage(file: File)` - Convert to base64, save to storage, create blob
   - `removeImage()` - Clear image, revoke blob URL, remove from storage
   - `loadImage()` - Load from storage, recreate blob from base64
-  - `getImageBlob()` - Return blob for comment submission (check DB setting for enabled)
+  - `getImageBlob()` - Return blob for comment submission
   - Remove `addImage`, `addLocalImage`, `getRandomImage`
 - [ ] Store image as `{id, name, base64Data, addedAt}` in `browser.storage.local`
 - [ ] On load, recreate blob from base64 and generate blob URL
 
-#### Step 2.4: Deprecate Old Settings Store
+#### Step 4.3: Update Settings UI (Behavior + Image Sections)
+- [ ] Add section titled "Behavior Settings (Local Only)"
+- [ ] Add toggles for: humanOnlyMode, autoEngageOnCommentClick, spacebarAutoEngage, postNavigator
+- [ ] Connect toggles to `settings-behavior-store.updateSetting()`
+- [ ] Replace image gallery with single image upload (1/1 limit)
+- [ ] Show "No image" placeholder when empty
+- [ ] Add "Remove Image" button
+- [ ] Update to use `comment-image-store.setImage()` and `removeImage()`
+
+#### Step 4.4: Deprecate Old Settings Store
 - [ ] Open `/apps/wxt-extension/entrypoints/linkedin.content/stores/settings-store.ts`
 - [ ] Add deprecation comment at top: "// DEPRECATED: Use settings-db-store.ts and settings-behavior-store.ts instead"
-- [ ] Do NOT delete yet (migration will happen in Phase 4)
+- [ ] Do NOT delete yet (migration will happen in Phase 7)
 
-### Phase 3: Target List Queue System
+### Phase 5: Target List Queue System
 
-#### Step 3.1: Create Queue State Module
+#### Step 5.1: Create Queue State Module
 - [ ] Create `/apps/wxt-extension/entrypoints/linkedin.content/stores/target-list-queue.ts`
 - [ ] Define `TargetListQueueItem` interface:
   - `targetListId: string`
@@ -263,7 +327,7 @@ model PostLoadSetting {
   - `getNextQueueItem(): Promise<TargetListQueueItem | null>` - Get next item, increment index
   - `isQueueComplete(): Promise<boolean>` - Check if all items processed
 
-#### Step 3.2: Update Navigation State
+#### Step 5.2: Update Navigation State
 - [ ] Open `/apps/wxt-extension/entrypoints/linkedin.content/stores/navigation-state.ts`
 - [ ] Rename `PendingNavigationState` to `PendingNavigationStateLegacy`
 - [ ] Create new `PendingNavigationState` interface:
@@ -275,7 +339,7 @@ model PostLoadSetting {
 - [ ] Update `savePendingNavigation()` to accept optional `queueState` parameter
 - [ ] Update `consumePendingNavigation()` to return new interface
 
-#### Step 3.3: Create Multi-Tab Navigation Handler
+#### Step 5.3: Create Multi-Tab Navigation Handler
 - [ ] Create `/apps/wxt-extension/entrypoints/linkedin.content/utils/multi-tab-navigation.ts`
 - [ ] Import `buildListFeedUrl` from `@sassy/linkedin-automation/navigate/build-list-feed-url`
 - [ ] Create `processTargetListQueue(selectedLists: TargetListQueueItem[], settings: PostLoadSettings, targetDraftCount: number)`:
@@ -292,9 +356,9 @@ model PostLoadSetting {
   - Save updated state
   - Open new tab with next feed URL
 
-### Phase 4: Auto-Resume System
+### Phase 6: Auto-Resume System
 
-#### Step 4.1: Create Dependency Checker
+#### Step 6.1: Create Dependency Checker
 - [ ] Create `/apps/wxt-extension/entrypoints/linkedin.content/utils/auto-resume-checker.ts`
 - [ ] Create `waitForStoresReady(): Promise<void>`:
   - Check `useAuthStore.getState().isAuthReady === true`
@@ -314,7 +378,7 @@ model PostLoadSetting {
     - Trigger Load Posts with current queue item settings
     - On Load Posts completion, call `continueQueueProcessing()`
 
-#### Step 4.2: Integrate Auto-Resume into Content Script
+#### Step 6.2: Integrate Auto-Resume into Content Script
 - [ ] Open `/apps/wxt-extension/entrypoints/linkedin.content/index.tsx` (or main content script)
 - [ ] Import `initSettingsDBStoreListener` from `settings-db-store`
 - [ ] Import `checkAndResumeLoadPosts` from `auto-resume-checker`
@@ -322,54 +386,9 @@ model PostLoadSetting {
 - [ ] After auth + account + settings stores initialized, call `checkAndResumeLoadPosts()`
 - [ ] Ensure this runs on every LinkedIn page load (not just first mount)
 
-### Phase 5: UI Updates
+### Phase 7: Migration and Cleanup
 
-#### Step 5.1: Update ComposeTab for Multiple Target Lists
-- [ ] Open `/apps/wxt-extension/entrypoints/linkedin.content/compose-tab/ComposeTab.tsx`
-- [ ] Replace `selectedTargetListId` usage with `selectedTargetListIds: string[]`
-- [ ] Update Load Posts click handler:
-  - If `selectedTargetListIds.length === 1`: Use existing single navigation (backward compat)
-  - If `selectedTargetListIds.length > 1`: Call `processTargetListQueue()` with all selected lists
-- [ ] Update UI to show selected count (e.g., "Load Posts (3 lists)")
-
-#### Step 5.2: Create Target List Multi-Select Component
-- [ ] Create `/apps/wxt-extension/entrypoints/linkedin.content/compose-tab/TargetListSelector.tsx`
-- [ ] Fetch target lists from tRPC (`targetList.list`)
-- [ ] Display as checkbox list (not dropdown - multiple selection)
-- [ ] Show selected count in header ("3 of 10 selected")
-- [ ] Update `settings-db-store` on selection change
-- [ ] Display selected list names in compact chips/badges below selector
-
-#### Step 5.3: Update Settings UI (Image Upload)
-- [ ] Open settings panel component (find via grep for "attachPictureEnabled")
-- [ ] Replace image gallery with single image upload
-- [ ] Show "1/1" when image uploaded
-- [ ] Show "No image" placeholder when empty
-- [ ] Disable upload button when image exists (enforce single image)
-- [ ] Add "Remove Image" button
-- [ ] Update to use `comment-image-store.setImage()` and `removeImage()`
-
-#### Step 5.4: Update Settings UI (Behavior Settings)
-- [ ] Find settings panel component
-- [ ] Add section titled "Behavior Settings (Local Only)"
-- [ ] Add toggles for:
-  - Human Only Mode
-  - Auto-engage on Comment Click
-  - Spacebar Auto-engage
-  - Post Navigator
-- [ ] Connect toggles to `settings-behavior-store.updateSetting()`
-- [ ] Add tooltip: "These settings are stored locally and never synced to the cloud"
-
-#### Step 5.5: Update Settings Tags Display
-- [ ] Open `/apps/wxt-extension/entrypoints/linkedin.content/compose-tab/SettingsTags.tsx` (or equivalent)
-- [ ] Update to read from both `settings-db-store` and `settings-behavior-store`
-- [ ] Update tag generation logic:
-  - For multiple target lists: Show "Target Lists (3)" instead of "Target List"
-  - For attach image: Check `settings-db-store.submitComment.attachPictureEnabled` AND `comment-image-store.image !== null`
-
-### Phase 6: Migration and Cleanup
-
-#### Step 6.1: Migrate ComposeTab from Old Settings Store
+#### Step 7.1: Migrate ComposeTab from Old Settings Store
 - [ ] Open `/apps/wxt-extension/entrypoints/linkedin.content/compose-tab/ComposeTab.tsx`
 - [ ] Replace all `useSettingsStore()` calls with:
   - `useSettingsDBStore()` for DB settings
@@ -377,7 +396,7 @@ model PostLoadSetting {
 - [ ] Update all setting reads and writes to use new stores
 - [ ] Test Load Posts with new store integration
 
-#### Step 6.2: Migrate Other Components
+#### Step 7.2: Migrate Other Components
 - [ ] Grep for `useSettingsStore` across all extension files
 - [ ] Update each component to use new stores:
   - `SpacebarEngageObserver.tsx` → use `settings-behavior-store`
@@ -385,11 +404,11 @@ model PostLoadSetting {
   - `useEngageButtons.ts` → use `settings-db-store` for comment generate settings
 - [ ] Update imports
 
-#### Step 6.3: Delete Old Settings Store
+#### Step 7.3: Delete Old Settings Store
 - [ ] Delete `/apps/wxt-extension/entrypoints/linkedin.content/stores/settings-store.ts`
 - [ ] Verify no remaining imports (TypeScript will error if any exist)
 
-#### Step 6.4: Update Documentation
+#### Step 7.4: Update Documentation
 - [ ] Update `process/context/all-context.md`:
   - Document new settings architecture (3-store pattern)
   - Document target list queue system
@@ -403,6 +422,8 @@ model PostLoadSetting {
 ### Functional Requirements
 
 - [ ] User can select multiple target lists in UI (checkbox list)
+- [ ] User can select single blacklist in UI (dropdown, single-select)
+- [ ] User can select single default comment style in UI (dropdown, enforced single)
 - [ ] Clicking "Load Posts" with multiple lists opens sequential tabs (one per list)
 - [ ] Each tab auto-resumes Load Posts after page navigation
 - [ ] Tabs remain open after Load Posts completes
@@ -414,6 +435,8 @@ model PostLoadSetting {
 - [ ] `attachPictureEnabled` toggle in UI controls whether image is attached
 - [ ] Settings UI shows "Behavior Settings (Local Only)" section
 - [ ] Settings tags display correctly for multiple lists ("Target Lists (3)")
+- [ ] Blacklist selector shows selected list name
+- [ ] Comment style selector shows selected style name
 
 ### Technical Requirements
 
