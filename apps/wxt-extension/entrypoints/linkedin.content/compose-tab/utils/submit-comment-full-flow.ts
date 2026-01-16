@@ -72,9 +72,9 @@ export async function submitCommentFullFlow(
     }
 
     // 5. Submit comment (click button + verify)
-    const success = await commentUtils.submitComment(card.postContainer);
+    const result = await commentUtils.submitComment(card.postContainer);
 
-    if (success) {
+    if (result.success) {
       // 6. Like post if enabled
       if (submitSettings?.likePostEnabled) {
         await commentUtils.likePost(card.postContainer);
@@ -91,7 +91,7 @@ export async function submitCommentFullFlow(
       void saveCommentToDb(card);
     }
 
-    return success;
+    return result.success;
   } catch (err) {
     console.error("EngageKit: Error in submit flow", err);
     return false;

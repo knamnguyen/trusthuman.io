@@ -28,7 +28,7 @@ export class CommentUtilitiesV2 implements CommentUtilities {
     return insertComment(editableField, comment);
   }
 
-  submitComment(postContainer: HTMLElement): Promise<boolean> {
+  submitComment(postContainer: HTMLElement) {
     return submitComment(postContainer);
   }
 

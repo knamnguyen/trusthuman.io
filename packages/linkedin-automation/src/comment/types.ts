@@ -6,6 +6,18 @@
  */
 
 /**
+ * Result of submitting a comment
+ */
+export interface SubmitCommentResult {
+  /** Whether the comment was successfully submitted and verified */
+  success: boolean;
+  /** URN of the new comment, e.g., "urn:li:comment:(urn:li:activity:123,456)" */
+  commentUrn?: string;
+  /** URL to the new comment */
+  commentUrl?: string;
+}
+
+/**
  * Target for injecting engage button next to comment editor.
  * Similar to AuthorProfileTarget in profile utilities.
  */
@@ -83,15 +95,16 @@ export interface CommentUtilities {
   /**
    * Submit a comment to a LinkedIn post.
    * Clicks the submit button and verifies the comment was posted.
+   * Returns the URL of the newly posted comment.
    *
    * Note: Comment text should already be inserted via insertComment()
    * before calling this function. This allows for tagging and image
    * attachment between insert and submit.
    *
    * @param postContainer - The LinkedIn post container element
-   * @returns true if comment was successfully submitted and verified
+   * @returns Result with success status and comment URL info
    */
-  submitComment(postContainer: HTMLElement): Promise<boolean>;
+  submitComment(postContainer: HTMLElement): Promise<SubmitCommentResult>;
 
   /**
    * Wait for comments to load after clicking the comment button.

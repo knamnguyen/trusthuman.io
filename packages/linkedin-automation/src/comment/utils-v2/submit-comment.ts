@@ -5,15 +5,19 @@
  * Note: Comment text should already be inserted before calling this.
  *
  * Flow:
- * 1. Find submit button (Comment/Reply)
- * 2. Click submit button
+ * 1. Capture comment URLs before submission
+ * 2. Find and click submit button
  * 3. Verify comment was posted (count increased)
+ * 4. Extract the new comment's URL by comparing before/after
  *
  * V2 DOM Structure:
  * - No <form> element wrapping comment input
  * - Submit button: button[data-view-name="comment-post"]
  * - Comments: a[data-view-name="comment-actor-picture"] (main) + a[data-view-name="reply-actor-picture"] (replies)
  */
+
+import { getCommentUrls, findNewCommentUrl } from "./extract-comment-url";
+import type { SubmitCommentResult } from "../types";
 
 /**
  * Finds the submit button (Comment/Reply) within a post container.
@@ -97,18 +101,20 @@ async function waitForNewComment(
 /**
  * Submit a comment to a LinkedIn post.
  * Clicks the submit button and verifies the comment was posted.
+ * Returns the URL of the newly posted comment.
  *
  * Note: Comment text should already be inserted via insertComment()
  * before calling this function. This allows for tagging and image
  * attachment between insert and submit.
  *
  * @param postContainer - The LinkedIn post container element
- * @returns true if comment was successfully submitted and verified
+ * @returns Result with success status and comment URL info
  */
 export async function submitComment(
   postContainer: HTMLElement
-): Promise<boolean> {
-  // Get comment count before submission for verification
+): Promise<SubmitCommentResult> {
+  // Capture comment URLs before submission
+  const commentUrlsBefore = getCommentUrls(postContainer);
   const commentCountBefore = getCommentCount(postContainer);
   console.log(
     `EngageKit: Comment count before submission: ${commentCountBefore}`
@@ -118,7 +124,7 @@ export async function submitComment(
   const submitButton = findSubmitButton(postContainer);
   if (!submitButton) {
     console.warn("EngageKit: Submit button not found (v2)");
-    return false;
+    return { success: false };
   }
 
   // Click the submit button
@@ -134,17 +140,31 @@ export async function submitComment(
       `EngageKit: Comment verified! Count: ${commentCountBefore} → ${newCount}`
     );
 
+    // Extract the new comment's URL
+    const commentUrlsAfter = getCommentUrls(postContainer);
+    const newCommentInfo = findNewCommentUrl(commentUrlsBefore, commentUrlsAfter);
+
+    if (newCommentInfo) {
+      console.log(`EngageKit: New comment URL: ${newCommentInfo.url}`);
+    } else {
+      console.warn("EngageKit: Could not extract new comment URL");
+    }
+
     // Blur focus so spacebar can trigger new generation
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
 
-    return true;
+    return {
+      success: true,
+      commentUrn: newCommentInfo?.urn,
+      commentUrl: newCommentInfo?.url,
+    };
   } else {
     const currentCount = getCommentCount(postContainer);
     console.warn(
       `EngageKit: Verification failed (v2). Count still at ${currentCount} (expected > ${commentCountBefore})`
     );
-    return false;
+    return { success: false };
   }
 }

@@ -5,15 +5,19 @@
  * Note: Comment text should already be inserted before calling this.
  *
  * Flow:
- * 1. Find submit button (Comment/Reply)
- * 2. Click submit button
+ * 1. Capture comment URLs before submission
+ * 2. Find and click submit button
  * 3. Verify comment was posted (count increased)
+ * 4. Extract the new comment's URL by comparing before/after
  *
  * V1 DOM Structure:
  * - Comment form wrapped in <form> element
  * - Submit button inside form with "Comment" or "Reply" text
  * - Comments are article elements with data-id="urn:li:comment:*"
  */
+
+import { getCommentUrls, findNewCommentUrl } from "./extract-comment-url";
+import type { SubmitCommentResult } from "../types";
 
 /**
  * Finds the submit button (Comment/Reply) within a post container.
@@ -90,12 +94,13 @@ async function waitForNewComment(
  * attachment between insert and submit.
  *
  * @param postContainer - The LinkedIn post container element
- * @returns true if comment was successfully submitted and verified
+ * @returns Result with success status (URL extraction TODO for V1)
  */
 export async function submitComment(
   postContainer: HTMLElement
-): Promise<boolean> {
-  // Get comment count before submission for verification
+): Promise<SubmitCommentResult> {
+  // Capture comment URLs before submission
+  const commentUrlsBefore = getCommentUrls(postContainer);
   const commentCountBefore = getCommentCount(postContainer);
   console.log(
     `EngageKit: Comment count before submission: ${commentCountBefore}`
@@ -105,7 +110,7 @@ export async function submitComment(
   const submitButton = findSubmitButton(postContainer);
   if (!submitButton) {
     console.warn("EngageKit: Submit button not found (v1)");
-    return false;
+    return { success: false };
   }
 
   // Click the submit button
@@ -121,17 +126,31 @@ export async function submitComment(
       `EngageKit: Comment verified! Count: ${commentCountBefore} → ${newCount}`
     );
 
+    // Extract the new comment's URL
+    const commentUrlsAfter = getCommentUrls(postContainer);
+    const newCommentInfo = findNewCommentUrl(commentUrlsBefore, commentUrlsAfter);
+
+    if (newCommentInfo) {
+      console.log(`EngageKit: New comment URL: ${newCommentInfo.url}`);
+    } else {
+      console.warn("EngageKit: Could not extract new comment URL");
+    }
+
     // Blur focus so spacebar can trigger new generation
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
 
-    return true;
+    return {
+      success: true,
+      commentUrn: newCommentInfo?.urn,
+      commentUrl: newCommentInfo?.url,
+    };
   } else {
     const currentCount = getCommentCount(postContainer);
     console.warn(
       `EngageKit: Verification failed (v1). Count still at ${currentCount} (expected > ${commentCountBefore})`
     );
-    return false;
+    return { success: false };
   }
 }
