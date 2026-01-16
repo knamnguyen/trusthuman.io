@@ -955,12 +955,9 @@ export class BrowserSession {
           id: ulid(),
           comment: "",
           accountId: this.accountId,
-          postUrn: post.urn,
-          postContentHtml: post.contentHtml,
-          postCaptionPreview: post.captionPreview,
+          postUrl: post.url,
           postFullCaption: post.fullCaption,
           postCreatedAt: new Date(post.createdAt),
-          authorUrn: post.author?.urn ?? null,
           authorName: post.author?.name ?? null,
           authorProfileUrl: post.author?.profileUrl ?? null,
           authorAvatarUrl: post.author?.avatarUrl ?? null,
@@ -1047,8 +1044,7 @@ interface AuthorInfo {
 
 interface Post {
   urn: string;
-  contentHtml: string;
-  captionPreview: string;
+  url: string;
   fullCaption: string;
   createdAt: string;
   author: AuthorInfo | null;
@@ -1449,11 +1445,13 @@ async function injectEngagekitInternals(page: Page) {
         const fullCaption = this.extractPostCaption(container);
         if (!fullCaption) return null;
 
+        // Build LinkedIn post URL from URN
+        const url = `https://www.linkedin.com/feed/update/${urn}`;
+
         return {
           urn,
+          url,
           fullCaption,
-          contentHtml: container.innerHTML,
-          captionPreview: this.getPostCaptionPreview(fullCaption, 10),
           createdAt: this.extractPostTime(container).toISOString(),
           author: this.extractPostAuthorInfo(container),
         };
@@ -1636,20 +1634,17 @@ async function injectEngagekitInternals(page: Page) {
 }
 
 // this query inserts comments only on posts that have not been commented on before
-// caveat: if there are multiple comments for the same postUrn in the input array
+// caveat: if there are multiple comments for the same postUrl in the input array
 // all of them will be inserted, we can accept this limitation for now bcs it's unlikely
-// that the same input array contains duped postUrns
+// that the same input array contains duped postUrls
 export async function insertCommentOnNonPreviouslyCommentedPosts(
   db: PrismaClient,
   comments: {
     id: string;
-    postUrn: string;
-    postContentHtml: string;
-    postCaptionPreview: string;
+    postUrl: string;
     postFullCaption: string;
     comment: string;
     postCreatedAt: Date;
-    authorUrn: string | null;
     authorName: string | null;
     authorProfileUrl: string | null;
     authorAvatarUrl: string | null;
@@ -1671,27 +1666,21 @@ export async function insertCommentOnNonPreviouslyCommentedPosts(
 
   const inserted = await db.$executeRaw`
     insert into "Comment" (
-      "id", 
-      "postUrn", 
-      "postContentHtml", 
-      "postCaptionPreview", 
-      "postFullCaption", 
-      "postCreatedAt", 
-      "authorUrn", 
-      "authorName", 
-      "authorProfileUrl", 
-      "authorAvatarUrl", 
-      "authorHeadline", 
+      "id",
+      "postUrl",
+      "postFullCaption",
+      "postCreatedAt",
+      "authorName",
+      "authorProfileUrl",
+      "authorAvatarUrl",
+      "authorHeadline",
       "accountId",
       "comment"
-    ) select 
+    ) select
       values->>'id',
-      values->>'postUrn',
-      values->>'postContentHtml',
-      values->>'postCaptionPreview',
+      values->>'postUrl',
       values->>'postFullCaption',
-      (values->>'createdAt')::timestamp,
-      values->>'authorUrn',
+      (values->>'postCreatedAt')::timestamp,
       values->>'authorName',
       values->>'authorProfileUrl',
       values->>'authorAvatarUrl',
@@ -1699,7 +1688,7 @@ export async function insertCommentOnNonPreviouslyCommentedPosts(
       values->>'accountId',
       values->>'comment'
     from jsonb_array_elements(${stringifiedValues}) as values where not exists (
-      select 1 from "Comment" where "Comment"."postUrn" = values->>'postUrn' and "Comment"."accountId" = values->>'accountId' limit 1
+      select 1 from "Comment" where "Comment"."postUrl" = values->>'postUrl' and "Comment"."accountId" = values->>'accountId' limit 1
     )
   `;
 
