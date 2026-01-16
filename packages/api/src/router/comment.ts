@@ -20,17 +20,24 @@ export const commentRouter = () =>
     saveSubmitted: accountProcedure
       .input(
         z.object({
-          postUrn: z.string(),
+          postUrl: z.string(),
           postFullCaption: z.string(),
-          postCaptionPreview: z.string(),
+          postCreatedAt: z.date().optional(),
           comment: z.string(),
+          commentUrl: z.string().optional(),
           originalAiComment: z.string().optional(),
+          peakTouchScore: z.number().int().min(0).max(100).optional(),
           postAlternateUrns: z.array(z.string()).optional(),
-          adjacentComments: z
+          postComments: z
             .array(
               z.object({
                 authorName: z.string().nullable(),
+                authorHeadline: z.string().nullable(),
+                authorProfileUrl: z.string().nullable(),
+                authorPhotoUrl: z.string().nullable(),
                 content: z.string().nullable(),
+                urn: z.string().nullable(),
+                isReply: z.boolean(),
               }),
             )
             .optional(),
@@ -46,13 +53,15 @@ export const commentRouter = () =>
         await ctx.db.comment.create({
           data: {
             id: commentId,
-            postUrn: input.postUrn,
+            postUrl: input.postUrl,
             postFullCaption: input.postFullCaption,
-            postCaptionPreview: input.postCaptionPreview,
+            postCreatedAt: input.postCreatedAt ?? null,
             comment: input.comment,
+            commentUrl: input.commentUrl ?? null,
             originalAiComment: input.originalAiComment ?? null,
+            peakTouchScore: input.peakTouchScore ?? null,
             postAlternateUrns: input.postAlternateUrns ?? [],
-            adjacentComments: input.adjacentComments,
+            postComments: input.postComments,
             authorName: input.authorName ?? null,
             authorProfileUrl: input.authorProfileUrl ?? null,
             authorAvatarUrl: input.authorAvatarUrl ?? null,
@@ -99,12 +108,13 @@ export const commentRouter = () =>
           take: limit + 1, // Take one extra for pagination
           select: {
             id: true,
-            postUrn: true,
-            postCaptionPreview: true,
+            postUrl: true,
+            postFullCaption: true,
             comment: true,
             commentedAt: true,
             authorName: true,
             authorAvatarUrl: true,
+            peakTouchScore: true,
           },
         });
 

@@ -88,7 +88,7 @@ export async function submitCommentFullFlow(
       }
 
       // 8. Save to database (fire-and-forget)
-      void saveCommentToDb(card);
+      void saveCommentToDb(card, { commentUrl: result.commentUrl });
     }
 
     return result.success;

@@ -1,6 +1,6 @@
 model Comment {
   id              String    @id
-  postUrl         String
+  postUrl         String    @default("")
   postCreatedAt   DateTime?
   postFullCaption String
   postComments     Json?

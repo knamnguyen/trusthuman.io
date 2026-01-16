@@ -37,14 +37,10 @@ export default function HistoryPage() {
     ).toUpperCase();
   };
 
-  // Build LinkedIn post URL from URN
-  const getPostUrl = (postUrn: string): string => {
-    // Extract activity ID from URN like "urn:li:activity:7410741511803297792"
-    const match = postUrn.match(/urn:li:activity:(\d+)/);
-    if (match?.[1]) {
-      return `https://www.linkedin.com/feed/update/urn:li:activity:${match[1]}`;
-    }
-    return "#";
+  // Derive caption preview from full caption
+  const getCaptionPreview = (fullCaption: string, maxLength = 100): string => {
+    if (fullCaption.length <= maxLength) return fullCaption;
+    return fullCaption.slice(0, maxLength) + "...";
   };
 
   return (
@@ -124,18 +120,20 @@ export default function HistoryPage() {
                               })
                             : "Unknown time"}
                         </span>
-                        <a
-                          href={getPostUrl(comment.postUrn)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-muted-foreground hover:text-foreground ml-auto"
-                          title="View post on LinkedIn"
-                        >
-                          <ExternalLink className="h-3.5 w-3.5" />
-                        </a>
+                        {comment.postUrl && (
+                          <a
+                            href={comment.postUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-muted-foreground hover:text-foreground ml-auto"
+                            title="View post on LinkedIn"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </a>
+                        )}
                       </div>
                       <p className="text-muted-foreground mb-2 line-clamp-1 text-xs">
-                        On: {comment.postCaptionPreview}
+                        On: {getCaptionPreview(comment.postFullCaption)}
                       </p>
                       <p className="text-sm">{comment.comment}</p>
                     </div>
