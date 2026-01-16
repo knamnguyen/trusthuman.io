@@ -1,8 +1,4 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-#ai context
-context/
-
+# See https://help.github.com/articles/ignoring-files/ for more 
 # dependencies
 node_modules
 .pnp
@@ -11,7 +7,7 @@ node_modules
 # testing
 coverage
 
-# next.js
+.roo/
 .next/
 out/
 next-env.d.ts
