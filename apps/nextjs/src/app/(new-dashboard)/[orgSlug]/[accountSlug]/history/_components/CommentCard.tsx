@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { ExternalLink, Sparkles } from "lucide-react";
 
@@ -30,6 +31,38 @@ interface CommentCardProps {
  * Similar to ComposeCard but readonly (no edit/submit actions).
  */
 export function CommentCard({ comment, isSelected, onSelect }: CommentCardProps) {
+  // Ref for scrolling into view when selected
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  // Scroll into view when this card becomes selected (e.g., via prev/next navigation)
+  useEffect(() => {
+    if (isSelected && cardRef.current) {
+      // Find the scrollable parent (overflow-y-auto container)
+      let scrollParent: HTMLElement | null = cardRef.current.parentElement;
+      while (scrollParent) {
+        const style = getComputedStyle(scrollParent);
+        if (style.overflowY === "auto" || style.overflowY === "scroll") {
+          break;
+        }
+        scrollParent = scrollParent.parentElement;
+      }
+
+      if (scrollParent) {
+        // Calculate scroll position to center the card in view
+        const cardRect = cardRef.current.getBoundingClientRect();
+        const parentRect = scrollParent.getBoundingClientRect();
+        const cardTop = cardRef.current.offsetTop;
+        const targetScroll =
+          cardTop - parentRect.height / 2 + cardRect.height / 2;
+
+        scrollParent.scrollTo({
+          top: Math.max(0, targetScroll),
+          behavior: "smooth",
+        });
+      }
+    }
+  }, [isSelected]);
+
   // Get initials for avatar fallback
   const getInitials = (name: string | null | undefined): string => {
     if (!name) return "?";
@@ -54,6 +87,7 @@ export function CommentCard({ comment, isSelected, onSelect }: CommentCardProps)
 
   return (
     <Card
+      ref={cardRef}
       className={cn(
         "cursor-pointer transition-all hover:shadow-md",
         isSelected && "bg-accent ring-ring ring-2"
