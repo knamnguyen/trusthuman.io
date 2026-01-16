@@ -109,11 +109,17 @@ export const commentRouter = () =>
           select: {
             id: true,
             postUrl: true,
+            commentUrl: true,
             postFullCaption: true,
+            postCreatedAt: true,
+            postComments: true,
             comment: true,
+            originalAiComment: true,
             commentedAt: true,
             authorName: true,
+            authorProfileUrl: true,
             authorAvatarUrl: true,
+            authorHeadline: true,
             peakTouchScore: true,
           },
         });
