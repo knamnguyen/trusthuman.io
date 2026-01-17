@@ -177,7 +177,6 @@ export const accountRouter = () =>
             ctx.db,
             ctx.browserRegistry,
             accountId,
-            ctx.user.id,
             {
               location: input.location,
               browserProfileId: profileId,
@@ -285,7 +284,6 @@ export const accountRouter = () =>
             ctx.db,
             ctx.browserRegistry,
             input.accountId,
-            ctx.user.id,
             {
               location: input.location,
               browserProfileId: account.browserProfileId,

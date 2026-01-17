@@ -33,7 +33,7 @@ export class BrowserJobWorker<TWorkerContext = unknown> {
   private readonly hyperbrowser: Hyperbrowser;
   private readonly processJobFn: (
     ctx: NoInfer<TWorkerContext>,
-    jobCtx: { jobId: string; accountId: string; accountOwnerId: string },
+    jobCtx: { jobId: string; accountId: string },
   ) => JsonValue | Promise<JsonValue> | void | Promise<void>;
   private readonly onJobCompleted?: (
     ctx: NoInfer<TWorkerContext>,
@@ -52,7 +52,7 @@ export class BrowserJobWorker<TWorkerContext = unknown> {
     readonly browserRegistry: BrowserSessionRegistry;
     readonly processJobFn: (
       ctx: NoInfer<TWorkerContext>,
-      jobCtx: { jobId: string; accountId: string; accountOwnerId: string },
+      jobCtx: { jobId: string; accountId: string },
     ) => JsonValue | Promise<JsonValue> | void | Promise<void>;
     readonly onJobCompleted?: (
       ctx: NoInfer<TWorkerContext>,
@@ -411,7 +411,6 @@ export const browserJobs = new BrowserJobWorker<WorkerContext>({
         ctx.db,
         ctx.browserRegistry,
         jobCtx.accountId,
-        jobCtx.accountOwnerId,
         {
           location: account!.browserLocation as ProxyLocation,
           browserProfileId: account!.browserProfileId,
@@ -424,13 +423,13 @@ export const browserJobs = new BrowserJobWorker<WorkerContext>({
       return internalCtx.session;
     }
 
-    await safe(() =>
-      runAutocomment({
-        db: ctx.db,
-        getSession,
-        accountId: jobCtx.accountId,
-      }),
-    );
+    // await safe(() =>
+    //   runAutocomment({
+    //     db: ctx.db,
+    //     getSession,
+    //     accountId: jobCtx.accountId,
+    //   }),
+    // );
 
     await safe(() =>
       submitScheduledComments({
@@ -494,20 +493,20 @@ async function runAutocomment({
         }),
       );
 
-      if (result.status === "errored") {
-        await db.autoCommentRun.update({
-          where: { id: pendingRun.id },
-          data: {
-            status: "errored",
-            error: result.error,
-            endedAt: new Date(),
-          },
-        });
-        return {
-          status: "error",
-          message: result.error,
-        } as const;
-      }
+      // if (result.status === "errored") {
+      //   await db.autoCommentRun.update({
+      //     where: { id: pendingRun.id },
+      //     data: {
+      //       status: "errored",
+      //       error: result.error,
+      //       endedAt: new Date(),
+      //     },
+      //   });
+      //   return {
+      //     status: "error",
+      //     message: result.error,
+      //   } as const;
+      // }
 
       return {
         status: "success",
