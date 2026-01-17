@@ -81,7 +81,6 @@ export class BrowserSession {
     private readonly db: PrismaClient,
     private readonly registry: BrowserSessionRegistry,
     public readonly accountId: string,
-    public readonly userId: string,
     private readonly opts: BrowserSessionParams,
     private readonly logger: Logger = console,
   ) {
@@ -340,68 +339,11 @@ export class BrowserSession {
     await this.pages.linkedin.bringToFront();
     await this.ready;
 
-    const assumedUserToken = await assumedAccountJwt.encode({
-      accountId: this.accountId,
-      userId: this.userId,
-    });
-
-    // can return an async iterator in the future to stream updates back to caller
-    // for now just return a completed promise
-    const resolver = Promise.withResolvers<void>();
-
-    try {
-      await this.pages.linkedin.evaluate(
-        (params, assumedUserToken) => {
-          window.postMessage({
-            source: "engagekit_page_to_contentscript",
-            payload: {
-              action: "setAssumedUserToken",
-              token: assumedUserToken,
-            },
-          });
-
-          window.postMessage({
-            source: "engagekit_page_to_contentscript",
-            payload: {
-              action: "startNewCommentingFlow",
-              params,
-            },
-          });
-        },
-        params,
-        assumedUserToken,
-      );
-
-      await resolver.promise;
-
-      return {
-        status: "completed",
-      } as const;
-    } catch (err) {
-      const error = err instanceof Error ? err.message : String(err);
-      this.logger.error(error);
-      await this.destroy();
-      return {
-        status: "errored",
-        error,
-      } as const;
-    }
+    // TODO:
   }
 
   async stopAutoCommenting() {
-    const result = await this.pages.linkedin.evaluate(() => {
-      window.postMessage({
-        source: "engagekit_page_to_contentscript",
-        payload: {
-          action: "stopAutoCommenting",
-        },
-      });
-    });
-
-    return {
-      status: "success",
-      output: result,
-    } as const;
+    // TODO:
   }
 
   async commentOnPost(postUrn: string, comment: string, now = new Date()) {
@@ -433,198 +375,42 @@ export class BrowserSession {
     }
 
     await this.pages.linkedin.evaluate((postUrn) => {
-      // use window.history.pushstate for client side spa navigation
-      window.history.pushState({}, "", `/feed/update/${postUrn}`);
-      window.dispatchEvent(new PopStateEvent("popstate"));
+      window.engagekitInternals.navigate(`/feed/update/${postUrn}`);
     }, postUrn);
 
-    return await this.pages.linkedin.evaluate(async (comment) => {
-      const postContainer = await window.engagekitInternals.retry(() => {
-        const element = document.querySelector("div.feed-shared-update-v2");
-        if (element === null) {
-          throw new Error("Post container not found, throwing for retry");
-        }
+    const submitCommentSettings = await this.db.submitCommentSetting.findFirst({
+      where: {
+        accountId: this.accountId,
+      },
+    });
 
-        return element as HTMLDivElement;
-      });
-
-      if (postContainer.ok === false) {
-        return {
-          status: "error",
-          reason: "Post container not found",
-        } as const;
-      }
-
-      const commentButton = postContainer.data.querySelector(
-        'button[aria-label="Comment"]',
-      ) as HTMLButtonElement | null;
-
-      if (commentButton === null) {
-        return {
-          status: "error",
-          reason: "Comment button not found",
-        } as const;
-      }
-
-      commentButton.click();
-
-      async function getEditableField() {
-        const commentEditor = await window.engagekitInternals.retry(() => {
-          const element = document.querySelector(
-            ".comments-comment-box-comment__text-editor",
-          );
+    return await this.pages.linkedin.evaluate(
+      async (comment, settings) => {
+        const postContainer = await window.engagekitInternals.retry(() => {
+          const element = document.querySelector("div.feed-shared-update-v2");
           if (element === null) {
-            throw new Error("Comment editor not found, throwing for retry");
+            throw new Error("Post container not found, throwing for retry");
           }
 
           return element as HTMLDivElement;
         });
 
-        if (!commentEditor.ok) {
-          return null;
+        if (postContainer.ok === false) {
+          return {
+            status: "error",
+            reason: "Post container not found",
+          } as const;
         }
 
-        const result = await window.engagekitInternals.retry(() => {
-          const editable = commentEditor.data.querySelector(
-            "[contenteditable='true']",
-          );
-          if (editable === null) {
-            throw new Error("Editable field not found, throwing for retry");
-          }
+        // TODO: submit comment
 
-          return editable as HTMLDivElement;
-        });
-
-        if (!result.ok) {
-          return null;
-        }
-
-        return result.data;
-      }
-
-      const editableField = await getEditableField();
-      if (editableField === null) {
         return {
-          status: "error",
-          reason: "Editable field not found",
+          status: "success",
         } as const;
-      }
-
-      editableField.focus();
-      editableField.click();
-      editableField.innerHTML = "";
-
-      // Input the comment text
-      const lines = comment.split("\n");
-      lines.forEach((lineText) => {
-        const p = document.createElement("p");
-        if (lineText === "") {
-          p.appendChild(document.createElement("br"));
-        } else {
-          p.textContent = lineText;
-        }
-        editableField.appendChild(p);
-      });
-
-      // Set cursor position and trigger input event
-      const selection = window.getSelection();
-      if (selection) {
-        const range = document.createRange();
-        if (editableField.lastChild) {
-          range.setStartAfter(editableField.lastChild);
-        } else {
-          range.selectNodeContents(editableField);
-        }
-        range.collapse(true);
-        selection.removeAllRanges();
-        selection.addRange(range);
-      }
-      editableField.focus();
-
-      const inputEvent = new Event("input", {
-        bubbles: true,
-        cancelable: true,
-      });
-      editableField.dispatchEvent(inputEvent);
-
-      const submitButton = await window.engagekitInternals.retry(() => {
-        const button = document.querySelector(
-          ".comments-comment-box__submit-button--cr",
-        ) as HTMLButtonElement | null;
-
-        if (button === null) {
-          throw new Error("Submit button not found, throwing for retry");
-        }
-
-        if (button.disabled) {
-          throw new Error("Submit button is disabled, throwing for retry");
-        }
-
-        return button;
-      });
-
-      if (!submitButton.ok) {
-        return {
-          status: "error",
-          reason: "Submit button not found or disabled",
-        } as const;
-      }
-
-      async function getFirstCommentUrn() {
-        const result = await window.engagekitInternals.retry(() => {
-          const commentsContainer = document.querySelector(
-            ".scaffold-finite-scroll__content",
-          ) as HTMLDivElement | null;
-
-          if (commentsContainer === null) {
-            return null;
-          }
-
-          const firstComment = commentsContainer.querySelector(
-            "article",
-          ) as HTMLElement | null;
-
-          if (firstComment === null) {
-            throw new Error("First comment not found, throwing for retry");
-          }
-
-          return firstComment.getAttribute("data-id");
-        });
-
-        return result.ok ? result.data : null;
-      }
-
-      const firstCommentUrnBeforePosting = await getFirstCommentUrn();
-
-      submitButton.data.click();
-
-      const commentPosted = await window.engagekitInternals.retry(
-        async () => {
-          // get first comment urn again, and compare with firstCommentUrnBeforePosting
-          const urn = await getFirstCommentUrn();
-          if (urn === null || urn === firstCommentUrnBeforePosting) {
-            throw new Error("Comment not posted yet, throwing for retry");
-          }
-
-          return true;
-        },
-        {
-          timeout: 50_000,
-          interval: 500,
-        },
-      );
-
-      if (!commentPosted.ok) {
-        return {
-          status: "error",
-          reason: "Comment not posted within timeout",
-        } as const;
-      }
-
-      return {
-        status: "success",
-      } as const;
-    }, comment);
+      },
+      comment,
+      submitCommentSettings,
+    );
   }
 
   private async waitForFeedPageToLoad() {
