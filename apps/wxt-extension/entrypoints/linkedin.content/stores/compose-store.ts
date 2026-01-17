@@ -1,5 +1,6 @@
 import { create } from "zustand";
 
+import { calculateTouchScore } from "@sassy/linkedin-automation/comment/calculate-touch-score";
 import type {
   PostAuthorInfo,
   PostCommentInfo,
@@ -7,62 +8,8 @@ import type {
   PostUrlInfo,
 } from "@sassy/linkedin-automation/post/types";
 
-// Separate settings type for localStorage persistence
-export interface ComposeSettings {
-  /** 100% human mode - only create empty card, no AI generation */
-  humanOnlyMode: boolean;
-  /** Auto-trigger generation when user clicks LinkedIn's comment button */
-  autoEngageOnCommentClick: boolean;
-  /** Highlight most visible post and trigger engage on spacebar press */
-  spacebarAutoEngage: boolean;
-  /** Show floating post navigator UI for quick scrolling between posts */
-  postNavigator: boolean;
-}
-
-// localStorage key for persisting settings
-const SETTINGS_STORAGE_KEY = "engagekit-compose-settings";
-
-// Default settings
-const DEFAULT_SETTINGS: ComposeSettings = {
-  humanOnlyMode: false,
-  autoEngageOnCommentClick: false,
-  spacebarAutoEngage: false,
-  postNavigator: false,
-};
-
-/**
- * Load settings from localStorage, falling back to defaults
- */
-function loadSettings(): ComposeSettings {
-  try {
-    const stored = localStorage.getItem(SETTINGS_STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored) as Partial<ComposeSettings>;
-      // Merge with defaults to handle missing keys from older versions
-      return { ...DEFAULT_SETTINGS, ...parsed };
-    }
-  } catch (error) {
-    console.warn(
-      "[ComposeStore] Failed to load settings from localStorage:",
-      error,
-    );
-  }
-  return DEFAULT_SETTINGS;
-}
-
-/**
- * Save settings to localStorage
- */
-function saveSettings(settings: ComposeSettings): void {
-  try {
-    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
-  } catch (error) {
-    console.warn(
-      "[ComposeStore] Failed to save settings to localStorage:",
-      error,
-    );
-  }
-}
+// Note: Settings have been moved to settings-store.ts
+// Use useSettingsStore for all settings-related state
 
 /**
  * Represents a single compose card with reference to the LinkedIn post
@@ -77,6 +24,8 @@ export interface ComposeCard {
   commentText: string;
   /** The original AI-generated comment text (for calculating "Your Touch" score) */
   originalCommentText: string;
+  /** Peak touch score achieved (score floor - never decreases) */
+  peakTouchScore: number;
   /** Reference to the post container element */
   postContainer: HTMLElement;
   /** Post URN for identification */
@@ -116,8 +65,7 @@ interface ComposeState {
   isUserEditing: boolean;
   /** IDs of cards from single-post generation (EngageButton/comment click) */
   singlePostCardIds: string[];
-  /** Settings for compose behavior */
-  settings: ComposeSettings;
+  // Note: settings moved to useSettingsStore
 }
 
 interface ComposeActions {
@@ -161,11 +109,7 @@ interface ComposeActions {
    * Not needed by Load Posts mode which extracts comments at card creation time.
    */
   updateCardsComments: (urn: string, comments: PostCommentInfo[]) => void;
-  /** Update a setting (persists to localStorage) */
-  updateSetting: <K extends keyof ComposeSettings>(
-    key: K,
-    value: ComposeSettings[K],
-  ) => void;
+  // Note: updateSetting moved to useSettingsStore
   /** Clear all cards and reset all generating/collecting states */
   clearAllCards: () => void;
 }
@@ -182,7 +126,7 @@ export const useComposeStore = create<ComposeStore>((set, get) => ({
   previewingCardId: null,
   isUserEditing: false,
   singlePostCardIds: [],
-  settings: loadSettings(),
+  // Note: settings moved to useSettingsStore
 
   // Actions
   addCard: (card) => {
@@ -194,9 +138,20 @@ export const useComposeStore = create<ComposeStore>((set, get) => ({
 
   updateCardText: (id, text) => {
     set((state) => ({
-      cards: state.cards.map((card) =>
-        card.id === id ? { ...card, commentText: text } : card,
-      ),
+      cards: state.cards.map((card) => {
+        if (card.id !== id) return card;
+        // Calculate new score with floor (never decreases)
+        const newScore = calculateTouchScore(
+          card.originalCommentText,
+          text,
+          card.peakTouchScore,
+        );
+        return {
+          ...card,
+          commentText: text,
+          peakTouchScore: newScore,
+        };
+      }),
     }));
   },
 
@@ -221,6 +176,7 @@ export const useComposeStore = create<ComposeStore>((set, get) => ({
               ...card,
               commentText: comment,
               originalCommentText: comment,
+              peakTouchScore: 0, // Reset peak score when new AI comment is set
               isGenerating: false,
             }
           : card,
@@ -313,13 +269,7 @@ export const useComposeStore = create<ComposeStore>((set, get) => ({
     }));
   },
 
-  /** Update a setting and persist to localStorage */
-  updateSetting: (key, value) =>
-    set((state) => {
-      const newSettings = { ...state.settings, [key]: value };
-      saveSettings(newSettings);
-      return { settings: newSettings };
-    }),
+  // Note: updateSetting moved to useSettingsStore
 
   /** Clear all cards and reset all generating/collecting states */
   clearAllCards: () =>

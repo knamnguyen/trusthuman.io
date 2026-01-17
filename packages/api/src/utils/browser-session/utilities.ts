@@ -1,4 +1,4 @@
-import { collectPosts } from "@sassy/linkedin-automation/feed/collect-posts";
+import { collectPostsBatch } from "@sassy/linkedin-automation/feed/collect-posts";
 import { createFeedUtilities } from "@sassy/linkedin-automation/feed/create-feed-utilities";
 import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post-utilities";
 
@@ -133,7 +133,7 @@ function parsePostTime(input: {
 
 const engagekitInternals = {
   retry,
-  collectPosts,
+  collectPostsBatch,
   parsePostTime,
   feedUtilities: createFeedUtilities(),
   postUtilities: createPostUtilities(),

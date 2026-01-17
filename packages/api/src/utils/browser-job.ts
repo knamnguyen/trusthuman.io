@@ -635,11 +635,11 @@ async function submitScheduledComments({
     }
 
     const result = await getSession().then((session) =>
-      session.commentOnPost(comment.postUrn, comment.comment),
+      session.commentOnPost(comment.postUrl, comment.comment),
     );
 
     if (result.status === "error") {
-      console.error(`Failed to post comment on ${comment.postUrn}`);
+      console.error(`Failed to post comment on ${comment.postUrl}`);
       await db.comment.updateMany({
         where: {
           id: comment.id,

@@ -7,6 +7,7 @@ import { initAuthStoreListener, useAuthStore } from "../../lib/auth-store";
 import { getTrpcClient, TRPCReactProvider } from "../../lib/trpc/client";
 import App from "./App";
 import { useAccountStore } from "./stores";
+import { initSettingsDBStoreListener, useSettingsDBStore } from "./stores/settings-db-store";
 import { autoFetchAllMetrics } from "./utils/data-fetch-mimic/unified-auto-fetch";
 
 import "../../assets/globals.css";
@@ -73,13 +74,19 @@ export default defineContentScript({
         console.log("EngageKit WXT: Sign-in confirmed, fetching account data");
         startPeriodicWarmup();
         useAccountStore.getState().fetchAccountData();
+        // Settings are fetched by initSettingsDBStoreListener when matchingAccount is populated
       },
       onSignOut: () => {
         console.log("EngageKit WXT: Sign-out confirmed, clearing account data");
         stopPeriodicWarmup();
         useAccountStore.getState().clear();
+        useSettingsDBStore.getState().clear();
       },
     });
+
+    // Initialize settings store listener (fetches when account is selected)
+    // Pass account store so settings are only fetched after matchingAccount is populated
+    const cleanupSettingsStore = initSettingsDBStoreListener(useAccountStore);
 
     // Always extract current LinkedIn profile from page (for SignInOverlay)
     useAccountStore.getState().refreshCurrentLinkedIn();
@@ -96,6 +103,7 @@ export default defineContentScript({
           );
           startPeriodicWarmup();
           useAccountStore.getState().fetchAccountData();
+          // Settings are fetched by initSettingsDBStoreListener when matchingAccount is populated
         }
       });
 
@@ -174,6 +182,7 @@ export default defineContentScript({
       onRemove: (root) => {
         stopPeriodicWarmup();
         cleanupAuthStore();
+        cleanupSettingsStore();
         cleanupDomDetection();
         unsubscribe();
         root?.unmount();

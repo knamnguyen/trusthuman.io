@@ -1,6 +1,5 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import levenshtein from "fast-levenshtein";
 import {
   ExternalLink,
   Eye,
@@ -17,12 +16,14 @@ import { Button } from "@sassy/ui/button";
 import { Card, CardContent } from "@sassy/ui/card";
 import { Textarea } from "@sassy/ui/textarea";
 
+import { getTouchScoreColor } from "@sassy/linkedin-automation/comment/calculate-touch-score";
 import { createCommentUtilities } from "@sassy/linkedin-automation/comment/create-comment-utilities";
 import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post-utilities";
 
 import { useTRPC } from "../../../lib/trpc/client";
 import { useComposeStore } from "../stores/compose-store";
 import { DEFAULT_STYLE_GUIDE } from "../utils";
+import { submitCommentFullFlow } from "./utils/submit-comment-full-flow";
 
 // Initialize utilities (auto-detects DOM version)
 const postUtils = createPostUtilities();
@@ -145,7 +146,7 @@ export const ComposeCard = memo(function ComposeCard({
     setIsUserEditing(false);
   }, [setIsUserEditing]);
 
-  // Submit this card's comment to LinkedIn
+  // Submit this card's comment to LinkedIn (with submit settings)
   const handleSubmit = useCallback(async () => {
     if (!card.commentText.trim() || card.isGenerating || card.status === "sent")
       return;
@@ -155,10 +156,7 @@ export const ComposeCard = memo(function ComposeCard({
 
     setIsLocalSubmitting(true);
     try {
-      const success = await commentUtils.submitComment(
-        card.postContainer,
-        card.commentText,
-      );
+      const success = await submitCommentFullFlow(card, commentUtils);
       if (success) {
         updateCardStatus(card.id, "sent");
       }
@@ -167,15 +165,7 @@ export const ComposeCard = memo(function ComposeCard({
     } finally {
       setIsLocalSubmitting(false);
     }
-  }, [
-    card.id,
-    card.commentText,
-    card.isGenerating,
-    card.status,
-    card.postContainer,
-    setPreviewingCard,
-    updateCardStatus,
-  ]);
+  }, [card, setPreviewingCard, updateCardStatus]);
 
   // Keyboard shortcut: Ctrl/Cmd+Enter to submit
   const handleKeyDown = useCallback(
@@ -273,40 +263,8 @@ export const ComposeCard = memo(function ComposeCard({
 
   const authorInfo = card.authorInfo;
 
-  // Calculate "Your Touch" score - how much the user has personalized the AI comment
-  // Uses Levenshtein distance normalized by original length
-  // This gives proper credit for each character added/removed/changed
-  const yourTouchScore = useMemo(() => {
-    const original = card.originalCommentText;
-    const current = card.commentText;
-
-    // If both are empty or identical, no touch
-    if (!original && !current) return 0;
-    if (original === current) return 0;
-
-    // If original was empty but user wrote something, 100% their touch
-    if (!original && current) return 100;
-
-    // If user cleared everything, 100% their touch (they removed AI content)
-    if (original && !current) return 100;
-
-    // Calculate Levenshtein distance (number of single-character edits)
-    const editDistance = levenshtein.get(original, current);
-
-    // Normalize by original length to get percentage of changes
-    // Each edit (add/remove/change) counts proportionally to original size
-    const yourTouchRatio = editDistance / original.length;
-
-    // Cap at 100% and round
-    return Math.min(100, Math.round(yourTouchRatio * 100));
-  }, [card.originalCommentText, card.commentText]);
-
-  // Get color based on score
-  const getScoreColor = (score: number) => {
-    if (score >= 50) return "text-green-600";
-    if (score >= 20) return "text-amber-600";
-    return "text-muted-foreground";
-  };
+  // Touch score is tracked in the store (with floor - never decreases)
+  const yourTouchScore = card.peakTouchScore;
 
   return (
     <Card
@@ -374,7 +332,7 @@ export const ComposeCard = memo(function ComposeCard({
             </div>
           ) : (
             <div
-              className={`flex items-center gap-1 text-xs ${getScoreColor(yourTouchScore)}`}
+              className={`flex items-center gap-1 text-xs ${getTouchScoreColor(yourTouchScore)}`}
               title="How much you've personalized the AI-generated comment"
             >
               <Sparkles className="h-3 w-3" />

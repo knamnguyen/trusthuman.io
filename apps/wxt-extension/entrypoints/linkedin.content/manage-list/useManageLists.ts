@@ -21,6 +21,13 @@ export function useManageLists() {
   const [open, setOpen] = React.useState(false);
   const [searchValue, setSearchValue] = React.useState("");
 
+  // Track pending list creation promises so we can await them before saving
+  const pendingListCreations = React.useRef<Promise<unknown>[]>([]);
+
+  // Track temp→real ID mapping (updated synchronously in onSuccess)
+  // This solves the stale closure problem where React state updates are async
+  const tempToRealIdMap = React.useRef<Map<string, string>>(new Map());
+
   // Local state for selected list IDs (toggled by user)
   const [selectedListIds, setSelectedListIds] = React.useState<Set<string>>(
     new Set(),
@@ -135,6 +142,10 @@ export function useManageLists() {
       onSuccess: (data, _variables, context) => {
         if (!context || !data.id) return;
 
+        // Store mapping synchronously (before React state updates)
+        // This is critical for handleOpenChange to resolve IDs correctly
+        tempToRealIdMap.current.set(context.tempId, data.id);
+
         // Update cache: replace temp ID with real ID (using captured key)
         queryClient.setQueryData(
           context.capturedQueryKey,
@@ -195,15 +206,29 @@ export function useManageLists() {
   }, [listsData?.listIdsWithProfile, linkedinUrl]);
 
   // Handle popover close - save changes
-  const handleOpenChange = (isOpen: boolean) => {
+  const handleOpenChange = async (isOpen: boolean) => {
     if (!isOpen && linkedinUrl) {
-      // Compute diff
-      const addToListIds = [...selectedListIds].filter(
+      // Wait for any pending list creations to complete
+      if (pendingListCreations.current.length > 0) {
+        await Promise.allSettled(pendingListCreations.current);
+        pendingListCreations.current = [];
+      }
+
+      // Resolve temp IDs to real IDs using the mapping
+      // (React state might still have temp IDs due to async state updates)
+      const resolveId = (id: string) => tempToRealIdMap.current.get(id) ?? id;
+      const resolvedSelectedIds = [...selectedListIds].map(resolveId);
+
+      // Compute diff with resolved IDs
+      const addToListIds = resolvedSelectedIds.filter(
         (id) => !initialListIds.has(id),
       );
       const removeFromListIds = [...initialListIds].filter(
-        (id) => !selectedListIds.has(id),
+        (id) => !resolvedSelectedIds.includes(id),
       );
+
+      // Clear the mapping after use
+      tempToRealIdMap.current.clear();
 
       // Only call API if there are changes
       if (addToListIds.length > 0 || removeFromListIds.length > 0) {
@@ -248,7 +273,17 @@ export function useManageLists() {
   const handleCreateList = () => {
     if (!searchValue.trim()) return;
 
-    addList.mutate({ name: searchValue.trim() });
+    // Use mutateAsync and track the promise so we can await it before saving
+    const promise = addList.mutateAsync({ name: searchValue.trim() });
+    pendingListCreations.current.push(promise);
+
+    // Clean up promise from tracking when it completes
+    void promise.finally(() => {
+      pendingListCreations.current = pendingListCreations.current.filter(
+        (p) => p !== promise,
+      );
+    });
+
     setSearchValue("");
   };
 

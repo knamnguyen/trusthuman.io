@@ -10,7 +10,7 @@ import { likeOwnComment } from "./utils-v1/like-own-comment";
 import { likePost } from "./utils-v1/like-post";
 import { tagPostAuthor } from "./utils-v1/tag-post-author";
 import { attachImageToComment } from "./utils-v1/attach-image-to-comment";
-import { submitComment } from "./utils-v1/submit-comment";
+import { submitComment, findSubmitButton } from "./utils-v1/submit-comment";
 import { waitForCommentsReady } from "./utils-v1/wait-for-comments-ready";
 import { watchForCommentEditors } from "./utils-v1/watch-for-comment-editors";
 import { watchForNativeCommentButtonClicks } from "./utils-v1/watch-for-native-comment-clicks";
@@ -28,11 +28,17 @@ export class CommentUtilitiesV1 implements CommentUtilities {
     return insertComment(editableField, comment);
   }
 
-  submitComment(
-    postContainer: HTMLElement,
-    commentText: string,
-  ): Promise<boolean> {
-    return submitComment(postContainer, commentText);
+  submitComment(postContainer: HTMLElement) {
+    return submitComment(postContainer);
+  }
+
+  clickSubmitButton(postContainer: HTMLElement): boolean {
+    const button = findSubmitButton(postContainer);
+    if (button) {
+      button.click();
+      return true;
+    }
+    return false;
   }
 
   waitForCommentsReady(
@@ -64,7 +70,7 @@ export class CommentUtilitiesV1 implements CommentUtilities {
     return tagPostAuthor(postContainer);
   }
 
-  attachImageToComment(postContainer: HTMLElement, imageUrl: string): Promise<boolean> {
-    return attachImageToComment(postContainer, imageUrl);
+  attachImageToComment(postContainer: HTMLElement, imageSource: string | Blob): Promise<boolean> {
+    return attachImageToComment(postContainer, imageSource);
   }
 }

@@ -2,8 +2,9 @@
 //load this to show as "tags" in the compose tab - apply for "load posts" - don't care about individual mode
 
 model PostLoadSetting {
-  accountId    String  @id
-  targetListId String? //optional 1:1 - each list can only be selected by 1 setting
+  accountId         String   @id
+  targetListEnabled Boolean  @default(false)
+  targetListIds     String[]
 
   //input box of hours from minimum 1h to max 8760 - not slider
   //only get posts posted within (younger than) X hours
@@ -14,7 +15,7 @@ model PostLoadSetting {
   skipCompanyPagesEnabled     Boolean @default(true)
   skipPromotedPostsEnabled    Boolean @default(true)
   skipblacklistEnabled        Boolean @default(false)
-  blacklistId                 String?
+  blacklistId                 String? @unique
 
   skipFirstDegree  Boolean @default(false)
   skipSecondDegree Boolean @default(false)
@@ -24,6 +25,5 @@ model PostLoadSetting {
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
   linkedInAccount LinkedInAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  targetList      TargetList?     @relation("targetList", fields: [targetListId], references: [id], onDelete: SetNull)
-  blacklist       TargetList?     @relation("blacklist", fields: [blacklistId], references: [id], onDelete: SetNull)
+  blacklist       TargetList?     @relation("PostLoadSetting_blacklist", fields: [blacklistId], references: [id], onDelete: SetNull)
 }

@@ -53,6 +53,7 @@ export default defineConfig({
           "engagekit-sprite-default.svg",
           "engagekit-sprite-blink.svg",
           "engagekit-sprite-breathe.svg",
+          "block-file-picker.js",
         ],
         matches: ["https://*.linkedin.com/*"],
       },

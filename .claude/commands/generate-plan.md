@@ -69,17 +69,21 @@ ALWAYS produce EXACTLY ONE file named [feature or system's name]\_PLAN\_[dd-mm-y
 
 1. Overview
 2. Goals and Success Metrics
-3. Scope (In/Out)
-4. Assumptions and Constraints
-5. Functional Requirements (concise bullets)
-6. Non-Functional Requirements (only critical items)
-7. Acceptance Criteria (testable, 5–10 bullets)
-8. Implementation Checklist (single-session TODO)
+3. **Execution Brief** (NEW - required section)
+   - Group implementation into 3-6 logical phases
+   - For each phase: "What happens" (1-2 sentences) + "Test" (how to verify)
+   - End with "Expected Outcome" (bullet list of final state)
+4. Scope (In/Out)
+5. Assumptions and Constraints
+6. Functional Requirements (concise bullets)
+7. Non-Functional Requirements (only critical items)
+8. Acceptance Criteria (testable, 5–10 bullets)
+9. Implementation Checklist (single-session TODO)
    - 8–15 atomic steps, each independently verifiable
    - Ordered logically for Cursor Plan mode
-9. Risks and Mitigations (brief)
-10. Integration Notes (dependencies, environment, data model touches)
-11. Cursor + RIPER-5 Guidance
+10. Risks and Mitigations (brief)
+11. Integration Notes (dependencies, environment, data model touches)
+12. Cursor + RIPER-5 Guidance
 
 - Use Cursor Plan mode: import this checklist
 - RIPER-5: RESEARCH → INNOVATE → PLAN, then request EXECUTE
@@ -90,29 +94,33 @@ ALWAYS produce EXACTLY ONE file named [feature or system's name]\_PLAN\_[dd-mm-y
 Before generating, review `process/context/example-complex-prd.md` to calibrate the expected depth. Your output should be comparable in structure and specificity.
 
 1. Context and Goals
-2. Non-Goals and Constraints
-3. Architecture Decisions (Final)
+2. **Execution Brief** (NEW - required section)
+   - Group implementation into logical phase groups (e.g., "Phase 1-4: Foundation")
+   - For each phase group: "What happens" (1-2 sentences) + "Test" (how to verify)
+   - End with "Expected Outcome" (bullet list of final state)
+3. Non-Goals and Constraints
+4. Architecture Decisions (Final)
    - Numbered decisions with Rationale and Implications
-4. Architecture Clarification (Service Separation if any)
-5. High-level Data Flow (ASCII ok)
-6. Security Posture
-7. Component Details
+5. Architecture Clarification (Service Separation if any)
+6. High-level Data Flow (ASCII ok)
+7. Security Posture
+8. Component Details
    - Responsibilities
    - Key Flows
    - Future Enhancements
-8. Backend Endpoints and Workers
-9. Infrastructure Deployment
-10. Database Schema (Prisma-style)
-11. API Surface (tRPC/REST/GraphQL)
-12. Real-time Event Model (if applicable)
-13. Phased Delivery Plan
+9. Backend Endpoints and Workers
+10. Infrastructure Deployment
+11. Database Schema (Prisma-style)
+12. API Surface (tRPC/REST/GraphQL)
+13. Real-time Event Model (if applicable)
+14. Phased Delivery Plan
 
 - Current Status (with ✅/🚧/⏳)
-- Phases: each with Overview, Implementation Summary, Files/Modules touched, What’s Functional Now, Ready For Next
+- Phases: each with Overview, Implementation Summary, Files/Modules touched, What's Functional Now, Ready For Next
 - Immediate Next Steps
 
-14. Features List (MoSCoW + IDs)
-15. RFCs (STRICT sequential order; within this same [feature or system's name]\_PLAN.md)
+15. Features List (MoSCoW + IDs)
+16. RFCs (STRICT sequential order; within this same [feature or system's name]\_PLAN.md)
 
 - RFC-001 ... RFC-00N
 - For each RFC:
@@ -120,21 +128,21 @@ Before generating, review `process/context/example-complex-prd.md` to calibrate 
   - Stages (3–8), Steps (2–6 each)
   - Acceptance Criteria
   - API contracts / Data models
-  - What’s Functional Now / Ready For
+  - What's Functional Now / Ready For
   - Implementation Checklist (copyable)
 
-16. Rules (for this project)
+17. Rules (for this project)
 
 - Tech stack, code standards, architecture patterns, performance, security, documentation
 
-17. Verification (Comprehensive Review)
+18. Verification (Comprehensive Review)
 
 - Gap Analysis
 - Improvement Recommendations
 - Improved PRD (if applicable)
 - Quality Assessment (scores with reasons)
 
-18. Change Management (for updates mid-flight)
+19. Change Management (for updates mid-flight)
 
 - Change Classification (New/Modify/Remove/Scope/Technical/Timeline)
 - Impact Analysis (components, timeline, dependencies, UX)
@@ -143,9 +151,9 @@ Before generating, review `process/context/example-complex-prd.md` to calibrate 
 - Communication plan
 - Added Risks and mitigations
 
-19. Ops Runbook (level-appropriate)
-20. Acceptance Criteria (versioned)
-21. Future Work
+20. Ops Runbook (level-appropriate)
+21. Acceptance Criteria (versioned)
+22. Future Work
 
 ### Cursor Plan + RIPER-5 integration (both modes)
 

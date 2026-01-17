@@ -125,23 +125,24 @@ export const autoCommentRouter = () =>
       .input(
         z.object({
           comment: z.string(),
-          postContentHtml: z.string().nullable(),
+          postFullCaption: z.string(),
           autoCommentRunId: z.string().optional(),
-          postUrn: z.string(),
+          postUrl: z.string(),
           postCreatedAt: z.date().optional(),
-          adjacentComments: z
+          postComments: z
             .array(
               z.object({
-                commentContent: z.string(),
-                likeCount: z.number(),
-                replyCount: z.number(),
+                authorName: z.string().nullable(),
+                authorHeadline: z.string().nullable(),
+                authorProfileUrl: z.string().nullable(),
+                authorPhotoUrl: z.string().nullable(),
+                content: z.string().nullable(),
+                urn: z.string().nullable(),
+                isReply: z.boolean(),
               }),
             )
-            .min(0)
-            .or(z.string())
             .optional(),
           postAlternateUrns: z.string().array().optional(),
-          authorUrn: z.string().optional(),
           authorName: z.string().optional(),
           authorProfileUrl: z.string().optional(),
           authorAvatarUrl: z.string().optional(),
@@ -166,13 +167,12 @@ export const autoCommentRouter = () =>
         const result = await ctx.db.comment.createMany({
           data: {
             id: ulid(),
-            postUrn: input.postUrn,
-            postContentHtml: input.postContentHtml,
+            postUrl: input.postUrl,
+            postFullCaption: input.postFullCaption,
             postCreatedAt: input.postCreatedAt,
 
-            adjacentComments: input.adjacentComments,
+            postComments: input.postComments,
 
-            authorUrn: input.authorUrn,
             authorName: input.authorName,
             authorHeadline: input.authorHeadline,
             authorProfileUrl: input.authorProfileUrl,
@@ -197,105 +197,6 @@ export const autoCommentRouter = () =>
         } as const;
       }),
 
-    generateCommentAndSave: protectedProcedure
-      .input(
-        z.object({
-          postContentHtml: z.string(),
-          autoCommentRunId: z.string().optional(),
-          postUrn: z.string(),
-          postCreatedAt: z.date().optional(),
-          adjacentComments: z
-            .array(
-              z.object({
-                commentContent: z.string(),
-                likeCount: z.number(),
-                replyCount: z.number(),
-              }),
-            )
-            .min(0)
-            .or(z.string())
-            .optional(),
-          postAlternateUrns: z.string().array().optional(),
-          authorUrn: z.string().optional(),
-          authorName: z.string().optional(),
-          authorProfileUrl: z.string().optional(),
-          authorAvatarUrl: z.string().optional(),
-          schedulePostAt: z.date().optional(),
-          authorHeadline: z.string().optional(),
-          isDuplicate: z.boolean().default(false),
-          isAutoCommented: z.boolean().default(true),
-          commentedAt: z.date().optional(),
-          hitlMode: z.boolean().optional(),
-          styleGuide: z.string().optional(),
-        }),
-      )
-      .mutation(async ({ ctx, input }) => {
-        if (ctx.activeAccount === null) {
-          return {
-            status: "error",
-            code: 400,
-            message:
-              "You must have a Linked In Account registered to save comments.",
-          } as const;
-        }
-
-        const uncommentedUrnsResult = await filterCommentedUrns(ctx.db, {
-          postUrns: [input.postUrn],
-          accountId: ctx.activeAccount.id,
-        });
-
-        if (uncommentedUrnsResult.uncommentedUrns.length === 0) {
-          return {
-            status: "error",
-            code: 409,
-            message: "Comment for this post already exists.",
-          } as const;
-        }
-
-        const generateCommentResult = await ctx.ai.generateComment({
-          postContent: input.postContentHtml,
-          styleGuide: input.styleGuide,
-          adjacentComments: input.adjacentComments,
-        });
-
-        if (generateCommentResult.success === false) {
-          // do some logging here about ai failure?
-        }
-
-        const commentId = ulid();
-
-        await ctx.db.comment.createMany({
-          data: {
-            id: commentId,
-            postUrn: input.postUrn,
-            postContentHtml: input.postContentHtml,
-            postCreatedAt: input.postCreatedAt,
-
-            adjacentComments: input.adjacentComments,
-
-            authorUrn: input.authorUrn,
-            authorName: input.authorName,
-            authorHeadline: input.authorHeadline,
-            authorProfileUrl: input.authorProfileUrl,
-            authorAvatarUrl: input.authorAvatarUrl,
-            comment: generateCommentResult.comment,
-            postAlternateUrns: input.postAlternateUrns,
-            commentedAt: input.hitlMode === true ? null : input.commentedAt,
-            isAutoCommented: input.isAutoCommented,
-            schedulePostAt: input.schedulePostAt,
-
-            accountId: ctx.activeAccount.id,
-            autoCommentRunId: input.autoCommentRunId,
-          },
-          skipDuplicates: true,
-        });
-
-        return {
-          status: "success",
-          generatedComment: generateCommentResult.comment,
-          commentId,
-        } as const;
-      }),
     // check if UserComment exists based on urns
     // return the non-existent ones along with the generated comments
 
@@ -897,7 +798,7 @@ async function filterCommentedUrns(
 
   if (postUrns.length > 0) {
     clause.push({
-      postUrn: { in: postUrns },
+      postUrl: { in: postUrns },
       postAlternateUrns: { hasSome: postUrns },
     } as const);
   }
@@ -923,10 +824,10 @@ async function filterCommentedUrns(
         },
       ],
     },
-    select: { postUrn: true },
+    select: { postUrl: true },
   });
 
-  const commentedUrns = new Set(comments.map((comment) => comment.postUrn));
+  const commentedUrns = new Set(comments.map((comment) => comment.postUrl));
 
   return {
     status: "success",

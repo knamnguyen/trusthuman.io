@@ -1,11 +1,14 @@
 /**
  * Submit Comment - DOM v1 (Legacy)
  *
- * Full flow to submit a comment to a LinkedIn post:
- * 1. Wait for editable field to appear
- * 2. Insert comment text
- * 3. Click submit button
- * 4. Verify comment was posted
+ * Clicks the submit button and verifies the comment was posted.
+ * Note: Comment text should already be inserted before calling this.
+ *
+ * Flow:
+ * 1. Capture comment URLs before submission
+ * 2. Find and click submit button
+ * 3. Verify comment was posted (count increased)
+ * 4. Extract the new comment's URL by comparing before/after
  *
  * V1 DOM Structure:
  * - Comment form wrapped in <form> element
@@ -13,8 +16,8 @@
  * - Comments are article elements with data-id="urn:li:comment:*"
  */
 
-import { findEditableField } from "./find-editable-field";
-import { insertComment } from "./insert-comment";
+import { getCommentUrls, findNewCommentUrl } from "./extract-comment-url";
+import type { SubmitCommentResult } from "../types";
 
 /**
  * Finds the submit button (Comment/Reply) within a post container.
@@ -43,32 +46,6 @@ export function findSubmitButton(
   return null;
 }
 
-/**
- * Wait for the editable field to appear in the post container.
- * LinkedIn loads the comment box asynchronously after clicking.
- *
- * @param postContainer - The LinkedIn post container element
- * @param timeout - Maximum time to wait in ms (default 3000ms)
- * @returns The editable field, or null if timeout
- */
-export async function waitForEditableField(
-  postContainer: HTMLElement,
-  timeout = 3000
-): Promise<HTMLElement | null> {
-  const startTime = Date.now();
-
-  while (Date.now() - startTime < timeout) {
-    const field = findEditableField(postContainer);
-    if (field) {
-      return field;
-    }
-    // Poll every 100ms
-    await new Promise((r) => setTimeout(r, 100));
-  }
-
-  console.warn("EngageKit: Timeout waiting for editable field");
-  return null;
-}
 
 /**
  * Get the count of comments in a post container.
@@ -110,42 +87,30 @@ async function waitForNewComment(
 
 /**
  * Submit a comment to a LinkedIn post.
- * Note: Comment button should already be clicked during the loading phase.
- * This function waits for the editable field, inserts the comment text,
- * clicks the submit button, and verifies the comment was posted.
+ * Clicks the submit button and verifies the comment was posted.
+ *
+ * Note: Comment text should already be inserted via insertComment()
+ * before calling this function. This allows for tagging and image
+ * attachment between insert and submit.
  *
  * @param postContainer - The LinkedIn post container element
- * @param commentText - The comment to insert
- * @returns true if comment was successfully submitted and verified
+ * @returns Result with success status (URL extraction TODO for V1)
  */
 export async function submitComment(
-  postContainer: HTMLElement,
-  commentText: string
-): Promise<boolean> {
-  // Wait for editable field to appear (comment button already clicked during load)
-  const editableField = await waitForEditableField(postContainer);
-  if (!editableField) {
-    return false;
-  }
-
-  // Get comment count before submission for verification
+  postContainer: HTMLElement
+): Promise<SubmitCommentResult> {
+  // Capture comment URLs before submission
+  const commentUrlsBefore = getCommentUrls(postContainer);
   const commentCountBefore = getCommentCount(postContainer);
   console.log(
     `EngageKit: Comment count before submission: ${commentCountBefore}`
   );
 
-  // Focus and insert comment
-  editableField.focus();
-  await insertComment(editableField, commentText);
-
-  // Small delay to let LinkedIn react to the input
-  await new Promise((r) => setTimeout(r, 500));
-
-  // Find and click the submit button
+  // Find the submit button
   const submitButton = findSubmitButton(postContainer);
   if (!submitButton) {
-    console.warn("EngageKit: Submit button not found");
-    return false;
+    console.warn("EngageKit: Submit button not found (v1)");
+    return { success: false };
   }
 
   // Click the submit button
@@ -161,17 +126,31 @@ export async function submitComment(
       `EngageKit: Comment verified! Count: ${commentCountBefore} → ${newCount}`
     );
 
+    // Extract the new comment's URL
+    const commentUrlsAfter = getCommentUrls(postContainer);
+    const newCommentInfo = findNewCommentUrl(commentUrlsBefore, commentUrlsAfter);
+
+    if (newCommentInfo) {
+      console.log(`EngageKit: New comment URL: ${newCommentInfo.url}`);
+    } else {
+      console.warn("EngageKit: Could not extract new comment URL");
+    }
+
     // Blur focus so spacebar can trigger new generation
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
 
-    return true;
+    return {
+      success: true,
+      commentUrn: newCommentInfo?.urn,
+      commentUrl: newCommentInfo?.url,
+    };
   } else {
     const currentCount = getCommentCount(postContainer);
     console.warn(
-      `EngageKit: Verification failed. Count still at ${currentCount} (expected > ${commentCountBefore})`
+      `EngageKit: Verification failed (v1). Count still at ${currentCount} (expected > ${commentCountBefore})`
     );
-    return false;
+    return { success: false };
   }
 }

@@ -11,13 +11,28 @@
 [*] needs organization switcher manually in sidebar chrome extension (get from clerk for single source of truth) => maybe no need
 [*] organization current id might not be able to deduce from clerk in the backend => check thi
 [*] => match current account id
+[*] fix duplicate issues on old dom
+[*] mimic fetch data not succeeding in fetching - data different?
+[*] urn not available for post author in the feed
 
+[*] ui for comment history to view posts as welL
+[] flow for commenting manually for target list
+[] export/import button old persons+targetlist
+
+[] sync chrome extension setting to db setting
+
+[] check again account id in header and active org
+[] fix comment saving table data (no ui touch for history for now)
+
+[] connect target list to setting chrome extension
+[] connect comment style to setting to chrome extension
+[] connect comment style to ai comment gen flow
+
+[] ui for setting web app
+[] fix data analytics visualize - time filter week, month, year
 [] button to export current data and save to db
 
 //new dom fixing adapt task
-
-- mimic fetch data not succeeding in fetching - data different?
-- urn not available for post author in the feed
 
 //requires for db
 

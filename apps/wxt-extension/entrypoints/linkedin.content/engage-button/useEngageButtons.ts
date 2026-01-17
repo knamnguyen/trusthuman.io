@@ -14,6 +14,7 @@ import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post
 
 import { getTrpcClient } from "../../../lib/trpc/client";
 import { useComposeStore } from "../stores/compose-store";
+import { useSettingsLocalStore } from "../stores/settings-local-store";
 import { SIDEBAR_TABS, useSidebarStore } from "../stores/sidebar-store";
 import { DEFAULT_STYLE_GUIDE } from "../utils/constants";
 import {
@@ -238,8 +239,8 @@ export function useEngageButtons() {
       const postUrls = postUtils.extractPostUrl(postContainer);
       const urn = postUrls[0]?.urn || `unknown-${Date.now()}`;
 
-      // Get humanOnlyMode setting
-      const { humanOnlyMode } = useComposeStore.getState().settings;
+      // Get humanOnlyMode setting from settings store
+      const { humanOnlyMode } = useSettingsLocalStore.getState().behavior;
 
       // Create card IDs based on mode
       const manualCardId = humanOnlyMode ? crypto.randomUUID() : null;
@@ -276,6 +277,7 @@ export function useEngageButtons() {
           fullCaption,
           commentText: "",
           originalCommentText: "",
+          peakTouchScore: 0,
           postContainer,
           status: "draft",
           isGenerating: false,
@@ -294,6 +296,7 @@ export function useEngageButtons() {
             fullCaption,
             commentText: "",
             originalCommentText: "",
+            peakTouchScore: 0,
             postContainer,
             status: "draft",
             isGenerating: true,

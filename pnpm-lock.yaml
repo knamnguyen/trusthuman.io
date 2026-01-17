@@ -862,6 +862,10 @@ importers:
         version: 5.8.3
 
   packages/linkedin-automation:
+    dependencies:
+      fast-levenshtein:
+        specifier: ^3.0.0
+        version: 3.0.0
     devDependencies:
       '@sassy/eslint-config':
         specifier: workspace:*
@@ -872,6 +876,9 @@ importers:
       '@sassy/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript
+      '@types/fast-levenshtein':
+        specifier: ^0.0.4
+        version: 0.0.4
       typescript:
         specifier: 'catalog:'
         version: 5.8.3

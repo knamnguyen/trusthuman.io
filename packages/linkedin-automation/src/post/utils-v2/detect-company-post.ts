@@ -2,7 +2,8 @@
  * Detect Company Post - DOM v2 (React SSR + SDUI)
  *
  * Detects if a post is from a company page (not a personal profile).
- * Company posts have "/company/" in the author anchor href.
+ * Company posts have "/company/" or "/showcase/" in the author anchor href.
+ * Showcase pages are a type of company page with a different URL pattern.
  */
 
 /**
@@ -19,7 +20,12 @@ export function detectCompanyPost(postContainer: HTMLElement): boolean {
     );
 
     if (authorAnchor?.href) {
-      return authorAnchor.href.includes("/company/");
+      // Check for both /company/ and /showcase/ URLs
+      // Showcase pages are company sub-pages (e.g., LinkedIn News Asia)
+      return (
+        authorAnchor.href.includes("/company/") ||
+        authorAnchor.href.includes("/showcase/")
+      );
     }
   } catch (error) {
     console.error("EngageKit: Failed to detect company post (v2)", error);

@@ -302,8 +302,6 @@ export class BrowserSession {
     pingCheck();
   }
 
-  private async setup(page: Page) {}
-
   async waitForSigninSuccess(signal: AbortSignal) {
     // just keep polling until we hit the feed page or an error
     // if we hit the feed page, means signin has succeeded
@@ -667,7 +665,7 @@ export class BrowserSession {
     await this.waitForFeedPageToLoad();
 
     return await this.pages.linkedin.evaluate(async (targetCount) => {
-      const posts = await window.engagekitInternals.collectPosts({
+      const posts = await window.engagekitInternals.collectPostsBatch({
         targetCount,
       });
 

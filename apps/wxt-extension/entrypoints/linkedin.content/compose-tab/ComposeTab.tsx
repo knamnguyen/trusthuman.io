@@ -1,10 +1,11 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import {
   Edit3,
   Feather,
   Loader2,
   Send,
+  Settings,
   Sparkles,
   Square,
   Trash2,
@@ -13,19 +14,25 @@ import { useShallow } from "zustand/shallow";
 
 import type { ReadyPost } from "@sassy/linkedin-automation/feed/collect-posts";
 import { createCommentUtilities } from "@sassy/linkedin-automation/comment/create-comment-utilities";
-import { collectPosts } from "@sassy/linkedin-automation/feed/collect-posts";
+import { collectPostsBatch } from "@sassy/linkedin-automation/feed/collect-posts";
+import { buildListFeedUrl } from "@sassy/linkedin-automation/navigate/build-list-feed-url";
 import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post-utilities";
 import { Button } from "@sassy/ui/button";
-import { TooltipWithDialog } from "@sassy/ui/components/tooltip-with-dialog";
-import { Label } from "@sassy/ui/label";
-import { Switch } from "@sassy/ui/switch";
 
-import { useTRPC } from "../../../lib/trpc/client";
+import { getTrpcClient, useTRPC } from "../../../lib/trpc/client";
 import { useComposeStore } from "../stores/compose-store";
-import { useShadowRootStore } from "../stores/shadow-root-store";
+import {
+  consumePendingNavigation,
+  savePendingNavigation,
+} from "../stores/navigation-state";
+import { useSettingsDBStore } from "../stores/settings-db-store";
+import { useSettingsLocalStore } from "../stores/settings-local-store";
 import { DEFAULT_STYLE_GUIDE } from "../utils";
 import { ComposeCard } from "./ComposeCard";
 import { PostPreviewSheet } from "./PostPreviewSheet";
+import { SettingsSheet } from "./settings/SettingsSheet";
+import { SettingsTags } from "./settings/SettingsTags";
+import { submitCommentFullFlow } from "./utils/submit-comment-full-flow";
 
 // Initialize utilities (auto-detects DOM version)
 const postUtils = createPostUtilities();
@@ -35,10 +42,8 @@ export function ComposeTab() {
   // DEBUG: Track renders
   console.log("[ComposeTab] Render");
 
-  // Get shadow root for portal containers (required for tooltips/dialogs in shadow DOM)
-  const shadowRoot = useShadowRootStore((s) => s.shadowRoot);
-
   const [isLoading, setIsLoading] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   /** Target number of drafts to collect (user configurable, max 100) */
   const [targetDraftCount, setTargetDraftCount] = useState<number>(10);
   /** Live progress counter during loading */
@@ -52,9 +57,6 @@ export function ComposeTab() {
   const isEngageButtonGenerating = useComposeStore(
     (state) => state.isEngageButtonGenerating,
   );
-  // Subscribe to settings for toggles
-  const settings = useComposeStore((state) => state.settings);
-  const updateSetting = useComposeStore((state) => state.updateSetting);
   const clearAllCards = useComposeStore((state) => state.clearAllCards);
 
   const trpc = useTRPC();
@@ -105,9 +107,57 @@ export function ComposeTab() {
   // Get cards array only when needed for operations (not for rendering)
   const getCards = useComposeStore((state) => state.cards);
   const setPreviewingCard = useComposeStore((state) => state.setPreviewingCard);
+  const previewingCardId = useComposeStore((state) => state.previewingCardId);
 
   // Conflict flags - disable certain actions when others are running
   const isAnyGenerating = isLoading || isEngageButtonGenerating;
+
+  // Ensure only one sub-sidebar open at a time: close settings when post preview opens
+  useEffect(() => {
+    if (previewingCardId) {
+      setSettingsOpen(false);
+    }
+  }, [previewingCardId]);
+
+  // Track if we've checked for pending navigation (prevent double-trigger)
+  const checkedPendingNavRef = useRef(false);
+  // Ref to store pending targetDraftCount for auto-resume
+  const pendingTargetCountRef = useRef<number | null>(null);
+
+  // Check for pending navigation on mount (auto-resume after target list redirect)
+  useEffect(() => {
+    if (checkedPendingNavRef.current) return;
+    checkedPendingNavRef.current = true;
+
+    console.log("[EngageKit] Checking for pending navigation...");
+    console.log("[EngageKit] Current URL:", window.location.href);
+
+    const checkAndResume = async () => {
+      const pending = await consumePendingNavigation();
+      console.log("[EngageKit] Pending navigation result:", pending);
+      if (!pending) return;
+
+      console.log("[EngageKit] Resuming from target list navigation");
+
+      // Settings are already persisted in DB, no need to restore them
+      // Just restore the target draft count for the UI
+      const { targetDraftCount: savedCount } = pending;
+
+      // Store the target count for the follow-up effect to use
+      pendingTargetCountRef.current = savedCount;
+
+      // Restore target draft count - triggers re-render with new value
+      setTargetDraftCount(savedCount);
+    };
+
+    void checkAndResume();
+  }, []);
+
+  // Handler to open settings (closes post preview first)
+  const handleOpenSettings = useCallback(() => {
+    setPreviewingCard(null);
+    setSettingsOpen(true);
+  }, [setPreviewingCard]);
 
   /**
    * Start batch collection:
@@ -117,16 +167,113 @@ export function ComposeTab() {
    * - Much faster than sequential processing
    */
   const handleStart = useCallback(async () => {
+    // Close settings sheet when starting load (post preview will open for first card)
+    setSettingsOpen(false);
+
     setIsLoading(true);
     setIsCollecting(true); // Mark as collecting so ComposeCard can refocus on blur
     setLoadingProgress(0);
     stopRequestedRef.current = false;
 
+    // Get post load settings from DB store (snapshot at start time)
+    const postLoadSettings = useSettingsDBStore.getState().postLoad;
+
+    // If target list is enabled with list IDs, fetch URNs and navigate to filtered feed
+    // Only navigate if we're not already on a search/content page
+    const isOnSearchPage = window.location.pathname.startsWith(
+      "/search/results/content",
+    );
+
+    const targetListIds = postLoadSettings?.targetListIds ?? [];
+    if (
+      postLoadSettings?.targetListEnabled &&
+      targetListIds.length > 0 &&
+      !isOnSearchPage
+    ) {
+      // Fetch URNs on-demand from the selected target lists
+      console.log(
+        `[EngageKit] Fetching URNs for ${targetListIds.length} target lists...`,
+      );
+      const trpcClient = getTrpcClient();
+
+      try {
+        // Fetch profiles from all selected lists in parallel
+        const allProfiles = await Promise.all(
+          targetListIds.map((listId) =>
+            trpcClient.targetList.getProfilesInList.query({ listId }),
+          ),
+        );
+
+        // Extract unique URNs from all profiles (filter out null/undefined)
+        const allUrns = new Set<string>();
+        for (const response of allProfiles) {
+          for (const profile of response.data) {
+            if (profile.profileUrn) {
+              allUrns.add(profile.profileUrn);
+            }
+          }
+        }
+
+        const targetListUrns = Array.from(allUrns);
+        console.log(
+          `[EngageKit] Fetched ${targetListUrns.length} unique URNs from target lists`,
+        );
+
+        if (targetListUrns.length > 0) {
+          const feedUrl = buildListFeedUrl(targetListUrns);
+          console.log(`[EngageKit] Target list URNs:`, targetListUrns);
+          console.log(`[EngageKit] Navigating to:`, feedUrl);
+          console.log(
+            `[EngageKit] Current location before:`,
+            window.location.href,
+          );
+
+          // Save state before navigation so we can auto-resume after reload
+          // Convert DB settings to the expected PostLoadSettings format
+          const settingsForNav = {
+            targetListEnabled: postLoadSettings.targetListEnabled,
+            targetListIds: postLoadSettings.targetListIds,
+            timeFilterEnabled: postLoadSettings.timeFilterEnabled,
+            minPostAge: postLoadSettings.minPostAge,
+            skipFriendActivitiesEnabled:
+              postLoadSettings.skipFriendActivitiesEnabled,
+            skipCompanyPagesEnabled: postLoadSettings.skipCompanyPagesEnabled,
+            skipPromotedPostsEnabled: postLoadSettings.skipPromotedPostsEnabled,
+            skipBlacklistEnabled: postLoadSettings.skipBlacklistEnabled,
+            blacklistId: postLoadSettings.blacklistId,
+            skipFirstDegree: postLoadSettings.skipFirstDegree,
+            skipSecondDegree: postLoadSettings.skipSecondDegree,
+            skipThirdDegree: postLoadSettings.skipThirdDegree,
+            skipFollowing: postLoadSettings.skipFollowing,
+          };
+          try {
+            await savePendingNavigation(settingsForNav, targetDraftCount);
+            console.log(`[EngageKit] State saved successfully`);
+          } catch (err) {
+            console.error(`[EngageKit] Failed to save state:`, err);
+          }
+
+          // Full page navigation required - LinkedIn's SPA router doesn't handle search URLs
+          console.log(`[EngageKit] About to set window.location.href`);
+          window.location.href = feedUrl;
+          console.log(
+            `[EngageKit] window.location.href set to:`,
+            window.location.href,
+          );
+          return; // Stop here - page will reload, auto-resume will trigger
+        }
+      } catch (err) {
+        console.error(`[EngageKit] Failed to fetch target list URNs:`, err);
+        // Continue without target list filtering
+      }
+    }
+
     // Get current cards to find existing URNs (snapshot at start time)
     const existingUrns = new Set(getCards.map((card) => card.urn));
 
-    // Check humanOnlyMode at start time (snapshot for this collection session)
-    const isHumanMode = useComposeStore.getState().settings.humanOnlyMode;
+    // Check settings at start time (snapshot for this collection session)
+    const isHumanMode = useSettingsLocalStore.getState().behavior.humanOnlyMode;
+    const generateSettings = useSettingsDBStore.getState().commentGenerate;
 
     // Batch callback - called when each batch of posts is ready
     const onBatchReady = (posts: ReadyPost[]) => {
@@ -156,6 +303,7 @@ export function ComposeTab() {
           fullCaption: post.fullCaption,
           commentText: "", // Empty - user writes in human mode, AI fills in AI mode
           originalCommentText: "",
+          peakTouchScore: 0,
           postContainer: post.postContainer,
           status: "draft",
           isGenerating: !isHumanMode, // Not generating in human mode
@@ -167,10 +315,10 @@ export function ComposeTab() {
 
         // Only fire AI generation in AI mode
         if (!isHumanMode) {
-          // Extract adjacent comments for AI context
-          const adjacentComments = postUtils.extractAdjacentComments(
-            post.postContainer,
-          );
+          // Extract adjacent comments for AI context (only if enabled)
+          const adjacentComments = generateSettings?.adjacentCommentsEnabled
+            ? postUtils.extractAdjacentComments(post.postContainer)
+            : [];
 
           // Fire AI request (don't await - run in parallel)
           generateComment
@@ -202,14 +350,26 @@ export function ComposeTab() {
       }
     };
 
-    // Run batch collection
-    await collectPosts({
+    // Run batch collection with filter config (use defaults if settings not loaded)
+    await collectPostsBatch({
       targetCount: targetDraftCount,
       existingUrns,
       isUrnIgnored,
       onBatchReady,
       shouldStop: () => stopRequestedRef.current,
       isUserEditing: () => useComposeStore.getState().isUserEditing,
+      filterConfig: {
+        timeFilterEnabled: postLoadSettings?.timeFilterEnabled ?? false,
+        minPostAge: postLoadSettings?.minPostAge ?? null,
+        skipPromotedPosts: postLoadSettings?.skipPromotedPostsEnabled ?? true,
+        skipCompanyPages: postLoadSettings?.skipCompanyPagesEnabled ?? true,
+        skipFriendActivities:
+          postLoadSettings?.skipFriendActivitiesEnabled ?? false,
+        skipFirstDegree: postLoadSettings?.skipFirstDegree ?? false,
+        skipSecondDegree: postLoadSettings?.skipSecondDegree ?? false,
+        skipThirdDegree: postLoadSettings?.skipThirdDegree ?? false,
+        skipFollowing: postLoadSettings?.skipFollowing ?? false,
+      },
     });
 
     setIsLoading(false);
@@ -225,6 +385,23 @@ export function ComposeTab() {
     updateCardComment,
   ]);
 
+  // Follow-up effect: auto-start after targetDraftCount is updated from pending navigation
+  useEffect(() => {
+    if (pendingTargetCountRef.current === null) return;
+    if (targetDraftCount !== pendingTargetCountRef.current) return;
+
+    // Clear the pending flag
+    pendingTargetCountRef.current = null;
+
+    // Wait for LinkedIn page to fully load, then auto-start
+    const timer = setTimeout(() => {
+      console.log("[EngageKit] Auto-triggering Load Posts after navigation");
+      handleStart();
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [targetDraftCount, handleStart]);
+
   /**
    * Stop the batch collection
    */
@@ -235,11 +412,7 @@ export function ComposeTab() {
 
   /**
    * Submit all draft comments to LinkedIn
-   * Goes through each card from top to bottom:
-   * 1. Clicks the comment button to open comment box
-   * 2. Waits for editable field to appear
-   * 3. Inserts the comment text
-   * 4. Marks card as "sent"
+   * Uses submitCommentFullFlow utility for each card with random delays between submissions.
    */
   const handleSubmitAll = useCallback(async () => {
     // Only submit cards that are drafts AND have finished generating
@@ -247,6 +420,14 @@ export function ComposeTab() {
       (c) => c.status === "draft" && !c.isGenerating,
     );
     if (cardsToSubmit.length === 0) return;
+
+    // Get submit delay settings (use defaults if not loaded yet)
+    const submitSettings = useSettingsDBStore.getState().submitComment;
+    const [minDelay = 5, maxDelay = 20] = (
+      submitSettings?.submitDelayRange ?? "5-20"
+    )
+      .split("-")
+      .map(Number);
 
     setIsSubmitting(true);
 
@@ -256,19 +437,14 @@ export function ComposeTab() {
         continue;
       }
 
-      // Submit comment to the post
-      const success = await commentUtils.submitComment(
-        card.postContainer,
-        card.commentText,
-      );
-
+      const success = await submitCommentFullFlow(card, commentUtils);
       if (success) {
-        // Mark as sent
         updateCardStatus(card.id, "sent");
       }
 
-      // Delay between submissions to avoid rate limiting
-      await new Promise((r) => setTimeout(r, 2000));
+      // Random delay between submissions (based on settings)
+      const delay = minDelay + Math.random() * (maxDelay - minDelay);
+      await new Promise((r) => setTimeout(r, delay * 1000));
     }
 
     setIsSubmitting(false);
@@ -278,99 +454,26 @@ export function ComposeTab() {
     <div className="bg-background flex flex-col gap-3 px-4">
       {/* Sticky Compact Header */}
       <div className="bg-background sticky top-0 z-10 -mx-4 border-b px-4 py-2">
-        {/* Row 0: 100% Human Mode Toggle */}
-        <div className="mb-2 flex items-center justify-start gap-4 border-b pb-2">
-          {/* Row 1: Title */}
+        {/* Row 1: Title + Settings Icon */}
+        <div className="mb-2 flex items-center justify-between border-b pb-2">
           <div className="flex items-center gap-2">
             <Feather className="h-3.5 w-3.5" />
             <span className="text-sm font-medium">Compose</span>
           </div>
-
-          <TooltipWithDialog
-            tooltipContent="Watch our tutorial video"
-            buttonText="Watch Video"
-            dialogTitle="Tutorial"
-            dialogClassName="max-w-3xl"
-            portalContainer={shadowRoot}
-            dialogContent={
-              <div className="aspect-video">
-                <iframe
-                  src="https://www.youtube.com/embed/your-video-id"
-                  className="h-full w-full rounded-lg"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              </div>
-            }
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 w-6 shrink-0 p-0"
+            onClick={handleOpenSettings}
+            title="Open settings"
           >
-            <div className="flex items-center gap-1.5">
-              <Switch
-                id="human-only-mode"
-                checked={settings.humanOnlyMode}
-                onCheckedChange={(checked) =>
-                  updateSetting("humanOnlyMode", checked)
-                }
-              />
-              <Label
-                htmlFor="human-only-mode"
-                className="text-muted-foreground cursor-pointer text-[10px]"
-              >
-                100% human mode
-              </Label>
-            </div>
-          </TooltipWithDialog>
+            <Settings className="h-3.5 w-3.5" />
+          </Button>
         </div>
 
-        {/* Row 2: Settings Toggles */}
-        <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
-          {/* Auto-open-engage toggle */}
-          <div className="flex items-center gap-1.5">
-            <Switch
-              id="auto-open-engage"
-              checked={settings.autoEngageOnCommentClick}
-              onCheckedChange={(checked) =>
-                updateSetting("autoEngageOnCommentClick", checked)
-              }
-            />
-            <Label
-              htmlFor="auto-open-engage"
-              className="text-muted-foreground cursor-pointer text-[10px]"
-            >
-              Auto-open-engage
-            </Label>
-          </div>
-          {/* Spacebar auto-engage toggle - highlights most visible post, press space to engage */}
-          <div className="flex items-center gap-1.5">
-            <Switch
-              id="space-engage"
-              checked={settings.spacebarAutoEngage}
-              onCheckedChange={(checked) =>
-                updateSetting("spacebarAutoEngage", checked)
-              }
-            />
-            <Label
-              htmlFor="space-engage"
-              className="text-muted-foreground cursor-pointer text-[10px]"
-            >
-              Space engage
-            </Label>
-          </div>
-          {/* Post navigator toggle - floating UI for quick scrolling between posts */}
-          <div className="flex items-center gap-1.5">
-            <Switch
-              id="post-navigator"
-              checked={settings.postNavigator}
-              onCheckedChange={(checked) =>
-                updateSetting("postNavigator", checked)
-              }
-            />
-            <Label
-              htmlFor="post-navigator"
-              className="text-muted-foreground cursor-pointer text-[10px]"
-            >
-              Post navigator
-            </Label>
-          </div>
+        {/* Row 2: Settings Tags */}
+        <div className="mb-2 overflow-x-auto">
+          <SettingsTags />
         </div>
 
         {/* Row 2: Load Posts + Target Input */}
@@ -519,6 +622,14 @@ export function ComposeTab() {
       {/* Post Preview Sheet - positioned at sidebar's left edge, clips content as it slides */}
       <div className="pointer-events-none absolute top-0 bottom-0 left-0 z-[-1] w-[600px] -translate-x-full overflow-hidden">
         <PostPreviewSheet />
+      </div>
+
+      {/* Settings Sheet - positioned at sidebar's left edge */}
+      <div className="pointer-events-none absolute top-0 bottom-0 left-0 z-10 w-[400px] -translate-x-full overflow-hidden">
+        <SettingsSheet
+          isOpen={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+        />
       </div>
     </div>
   );

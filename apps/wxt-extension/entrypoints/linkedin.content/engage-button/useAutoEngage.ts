@@ -15,6 +15,7 @@ import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post
 
 import { getTrpcClient } from "../../../lib/trpc/client";
 import { useComposeStore } from "../stores/compose-store";
+import { useSettingsLocalStore } from "../stores/settings-local-store";
 import { SIDEBAR_TABS, useSidebarStore } from "../stores/sidebar-store";
 import { DEFAULT_STYLE_GUIDE } from "../utils/constants";
 
@@ -63,19 +64,20 @@ export function useAutoEngage() {
     const handleNativeCommentClick = async (
       event: NativeCommentButtonClickEvent
     ) => {
-      // Get fresh state from store
-      const state = useComposeStore.getState();
+      // Get fresh state from stores
+      const composeState = useComposeStore.getState();
+      const settingsState = useSettingsLocalStore.getState();
 
       // Skip if auto-engage is disabled
-      if (!state.settings.autoEngageOnCommentClick) {
+      if (!settingsState.behavior.autoEngageOnCommentClick) {
         return;
       }
 
       // Only block if Load Posts is running or Load Posts cards exist
-      const hasLoadPostsCards = state.cards.some(
-        (c) => !state.singlePostCardIds.includes(c.id)
+      const hasLoadPostsCards = composeState.cards.some(
+        (c) => !composeState.singlePostCardIds.includes(c.id)
       );
-      if (state.isCollecting || hasLoadPostsCards) {
+      if (composeState.isCollecting || hasLoadPostsCards) {
         console.log(
           "EngageKit AutoEngage: ignoring - Load Posts running or Load Posts cards exist"
         );
@@ -118,8 +120,8 @@ export function useAutoEngage() {
       const postUrls = postUtils.extractPostUrl(postContainer);
       const urn = postUrls[0]?.urn || `unknown-${Date.now()}`;
 
-      // Get humanOnlyMode setting
-      const { humanOnlyMode } = useComposeStore.getState().settings;
+      // Get humanOnlyMode setting from settings store
+      const { humanOnlyMode } = useSettingsLocalStore.getState().behavior;
 
       // Create card IDs based on mode
       const manualCardId = humanOnlyMode ? crypto.randomUUID() : null;
@@ -156,6 +158,7 @@ export function useAutoEngage() {
           fullCaption,
           commentText: "",
           originalCommentText: "",
+          peakTouchScore: 0,
           postContainer,
           status: "draft",
           isGenerating: false,
@@ -174,6 +177,7 @@ export function useAutoEngage() {
             fullCaption,
             commentText: "",
             originalCommentText: "",
+            peakTouchScore: 0,
             postContainer,
             status: "draft",
             isGenerating: true,
