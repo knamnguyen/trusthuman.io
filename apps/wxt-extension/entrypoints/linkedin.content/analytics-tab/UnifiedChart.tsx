@@ -83,14 +83,14 @@ const METRIC_CONFIGS: MetricConfig[] = [
   },
   {
     id: "profileImpressions",
-    label: "Profile Impressions",
+    label: "Engage Reach",
     dataKey: "profileImpressions",
     color: "#e5496d", // Pink/Magenta
     valueFormatter: (v) => `${v.toLocaleString()} impressions`,
   },
   {
     id: "contentImpressions",
-    label: "Content Impressions",
+    label: "Content Reach",
     dataKey: "contentImpressions",
     color: "#8b5cf6", // Purple
     valueFormatter: (v) => `${v.toLocaleString()} impressions`,
