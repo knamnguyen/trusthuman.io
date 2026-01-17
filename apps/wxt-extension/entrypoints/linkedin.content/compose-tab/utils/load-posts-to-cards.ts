@@ -49,6 +49,19 @@ export interface LoadPostsToCardsParams {
   addCard: (card: ComposeCard) => void;
   /** Function to update a card's comment text */
   updateCardComment: (cardId: string, commentText: string) => void;
+  /** Function to update a card's style info */
+  updateCardStyleInfo: (
+    cardId: string,
+    styleInfo: {
+      commentStyleId: string | null;
+      styleSnapshot: {
+        name: string | null;
+        content: string;
+        maxWords: number;
+        creativity: number;
+      } | null;
+    },
+  ) => void;
   /** Mutation function to generate AI comment */
   generateCommentMutate: (params: {
     postContent: string;
@@ -102,6 +115,7 @@ export async function loadPostsToCards(
     shouldStop,
     addCard,
     updateCardComment,
+    updateCardStyleInfo,
     generateCommentMutate,
     onProgress,
     setPreviewingCard,
@@ -207,6 +221,8 @@ export async function loadPostsToCards(
         postTime: post.postTime,
         postUrls: post.postAlternateUrls,
         comments: post.comments,
+        commentStyleId: null, // Will be set after AI generation
+        styleSnapshot: null, // Will be set after AI generation
       });
 
       // Only fire AI generation in AI mode
@@ -227,6 +243,16 @@ export async function loadPostsToCards(
         })
           .then((result) => {
             updateCardComment(cardId, result.comment);
+            // Store the style info that was used to generate this comment
+            updateCardStyleInfo(cardId, {
+              commentStyleId: styleConfig.styleId,
+              styleSnapshot: {
+                name: styleConfig.styleName,
+                content: styleConfig.styleGuide,
+                maxWords: styleConfig.maxWords,
+                creativity: styleConfig.creativity,
+              },
+            });
           })
           .catch((err) => {
             console.error(

@@ -115,6 +115,7 @@ export function ComposeTab() {
   const setIsCollecting = useComposeStore((state) => state.setIsCollecting);
   const updateCardStatus = useComposeStore((state) => state.updateCardStatus);
   const updateCardComment = useComposeStore((state) => state.updateCardComment);
+  const updateCardStyleInfo = useComposeStore((state) => state.updateCardStyleInfo);
   const isUrnIgnored = useComposeStore((state) => state.isUrnIgnored);
 
   // Get cards array only when needed for operations (not for rendering)
@@ -236,6 +237,7 @@ export function ComposeTab() {
           shouldStop: () => stopRequestedRef.current,
           addCard,
           updateCardComment,
+          updateCardStyleInfo,
           generateCommentMutate: generateComment.mutateAsync,
           onProgress: setLoadingProgress,
           setPreviewingCard,
@@ -388,6 +390,7 @@ export function ComposeTab() {
       shouldStop: () => stopRequestedRef.current,
       addCard,
       updateCardComment,
+      updateCardStyleInfo,
       generateCommentMutate: generateComment.mutateAsync,
       onProgress: setLoadingProgress,
       setPreviewingCard,
@@ -404,6 +407,7 @@ export function ComposeTab() {
     setPreviewingCard,
     targetDraftCount,
     updateCardComment,
+    updateCardStyleInfo,
   ]);
 
   /**

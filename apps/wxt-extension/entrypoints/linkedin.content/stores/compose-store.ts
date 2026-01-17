@@ -42,6 +42,15 @@ export interface ComposeCard {
   postUrls: PostUrlInfo[];
   /** Pre-loaded comments on this post */
   comments: PostCommentInfo[];
+  /** ID of the CommentStyle used to generate this comment (null if default/none) */
+  commentStyleId: string | null;
+  /** Snapshot of style config at generation time */
+  styleSnapshot: {
+    name: string | null;
+    content: string;
+    maxWords: number;
+    creativity: number;
+  } | null;
 }
 
 interface ComposeState {
@@ -109,6 +118,19 @@ interface ComposeActions {
    * Not needed by Load Posts mode which extracts comments at card creation time.
    */
   updateCardsComments: (urn: string, comments: PostCommentInfo[]) => void;
+  /** Update style info for a card (called after AI generation) */
+  updateCardStyleInfo: (
+    id: string,
+    styleInfo: {
+      commentStyleId: string | null;
+      styleSnapshot: {
+        name: string | null;
+        content: string;
+        maxWords: number;
+        creativity: number;
+      } | null;
+    },
+  ) => void;
   // Note: updateSetting moved to useSettingsStore
   /** Clear all cards and reset all generating/collecting states */
   clearAllCards: () => void;
@@ -265,6 +287,27 @@ export const useComposeStore = create<ComposeStore>((set, get) => ({
     set((state) => ({
       cards: state.cards.map((card) =>
         card.urn === urn ? { ...card, comments } : card,
+      ),
+    }));
+  },
+
+  /** Update style info for a card (called after AI generation) */
+  updateCardStyleInfo: (id, styleInfo) => {
+    console.log(
+      "[ComposeStore] updateCardStyleInfo:",
+      id.slice(0, 8),
+      "styleId:",
+      styleInfo.commentStyleId,
+    );
+    set((state) => ({
+      cards: state.cards.map((card) =>
+        card.id === id
+          ? {
+              ...card,
+              commentStyleId: styleInfo.commentStyleId,
+              styleSnapshot: styleInfo.styleSnapshot,
+            }
+          : card,
       ),
     }));
   },

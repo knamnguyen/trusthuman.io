@@ -30,7 +30,16 @@ model Comment {
   account        LinkedInAccount? @relation(fields: [accountId], references: [id])
   autoCommentRun AutoCommentRun?  @relation(fields: [autoCommentRunId], references: [id])
 
+  // Track which CommentStyle (persona) was used to generate this comment
+  commentStyleId String?
+  commentStyle   CommentStyle? @relation(fields: [commentStyleId], references: [id], onDelete: SetNull)
+
+  // Snapshot of the style config at generation time (in case style is deleted/modified later)
+  // Contains: { name, content, maxWords, creativity }
+  styleSnapshot  Json?
+
   @@index([postUrn])
+  @@index([commentStyleId])
   @@index([commentedAt])
   @@index([status])
   @@index([postAlternateUrns], type: Gin)

@@ -14,6 +14,8 @@ import { DEFAULT_STYLE_GUIDE } from "../utils/constants";
 // =============================================================================
 
 export interface CommentStyleConfig {
+  /** ID of the style (null if using default) */
+  styleId: string | null;
   /** Style guide / content - instructions for AI */
   styleGuide: string;
   /** Maximum words (1-300), default 100 */
@@ -33,6 +35,7 @@ let cachedConfig: CommentStyleConfig | null = null;
 
 // Default config when no style is selected
 const DEFAULT_CONFIG: CommentStyleConfig = {
+  styleId: null,
   styleGuide: DEFAULT_STYLE_GUIDE,
   maxWords: 100,
   creativity: 1.0,
@@ -82,6 +85,7 @@ export async function getCommentStyleConfig(): Promise<CommentStyleConfig> {
     // Cache the config
     cachedStyleId = selectedStyleId;
     cachedConfig = {
+      styleId: selectedStyleId,
       styleGuide: style.content,
       maxWords: style.maxWords ?? 100,
       creativity: style.creativity ?? 1.0,

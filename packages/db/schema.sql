@@ -197,6 +197,8 @@ CREATE TABLE "Comment" (
     "accountId" TEXT NOT NULL,
     "autoCommentRunId" TEXT,
     "autoCommentError" TEXT,
+    "commentStyleId" TEXT,
+    "styleSnapshot" JSONB,
 
     CONSTRAINT "Comment_pkey" PRIMARY KEY ("id")
 );
@@ -496,6 +498,9 @@ CREATE UNIQUE INDEX "PostLoadSetting_blacklistId_key" ON "PostLoadSetting"("blac
 CREATE INDEX "Comment_postUrn_idx" ON "Comment"("postUrn");
 
 -- CreateIndex
+CREATE INDEX "Comment_commentStyleId_idx" ON "Comment"("commentStyleId");
+
+-- CreateIndex
 CREATE INDEX "Comment_commentedAt_idx" ON "Comment"("commentedAt");
 
 -- CreateIndex
@@ -626,6 +631,9 @@ ALTER TABLE "Comment" ADD CONSTRAINT "Comment_accountId_fkey" FOREIGN KEY ("acco
 
 -- AddForeignKey
 ALTER TABLE "Comment" ADD CONSTRAINT "Comment_autoCommentRunId_fkey" FOREIGN KEY ("autoCommentRunId") REFERENCES "AutoCommentRun"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Comment" ADD CONSTRAINT "Comment_commentStyleId_fkey" FOREIGN KEY ("commentStyleId") REFERENCES "CommentStyle"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "LinkedInAccount" ADD CONSTRAINT "LinkedInAccount_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;

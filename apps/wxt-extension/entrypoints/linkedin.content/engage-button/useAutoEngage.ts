@@ -26,6 +26,7 @@ export function useAutoEngage() {
   const {
     addCard,
     updateCardComment,
+    updateCardStyleInfo,
     setSinglePostCards,
     setIsEngageButtonGenerating,
     clearSinglePostCards,
@@ -37,6 +38,7 @@ export function useAutoEngage() {
   const storeRef = useRef({
     addCard,
     updateCardComment,
+    updateCardStyleInfo,
     setSinglePostCards,
     setIsEngageButtonGenerating,
     clearSinglePostCards,
@@ -49,6 +51,7 @@ export function useAutoEngage() {
     storeRef.current = {
       addCard,
       updateCardComment,
+      updateCardStyleInfo,
       setSinglePostCards,
       setIsEngageButtonGenerating,
       clearSinglePostCards,
@@ -88,6 +91,7 @@ export function useAutoEngage() {
       const {
         addCard,
         updateCardComment,
+        updateCardStyleInfo,
         setSinglePostCards,
         setIsEngageButtonGenerating,
         clearSinglePostCards,
@@ -166,6 +170,8 @@ export function useAutoEngage() {
           postTime: postTimeMapped,
           postUrls,
           comments: [],
+          commentStyleId: null,
+          styleSnapshot: null,
         });
       } else {
         // AI MODE: Add 3 AI cards in generating state
@@ -185,6 +191,8 @@ export function useAutoEngage() {
             postTime: postTimeMapped,
             postUrls,
             comments: [],
+            commentStyleId: null,
+            styleSnapshot: null,
           });
         });
       }
@@ -265,6 +273,16 @@ export function useAutoEngage() {
                   requestParams
                 );
               updateCardComment(cardId, result.comment);
+              // Store the style info that was used to generate this comment
+              updateCardStyleInfo(cardId, {
+                commentStyleId: styleConfig.styleId,
+                styleSnapshot: {
+                  name: styleConfig.styleName,
+                  content: styleConfig.styleGuide,
+                  maxWords: styleConfig.maxWords,
+                  creativity: styleConfig.creativity,
+                },
+              });
             } catch (err) {
               console.error(
                 `EngageKit AutoEngage: failed to generate for card ${cardId}`,

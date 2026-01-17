@@ -112,6 +112,7 @@ export const ComposeCard = memo(function ComposeCard({
   // Use selective subscriptions for actions (these are stable references)
   const updateCardText = useComposeStore((state) => state.updateCardText);
   const updateCardComment = useComposeStore((state) => state.updateCardComment);
+  const updateCardStyleInfo = useComposeStore((state) => state.updateCardStyleInfo);
   const setCardGenerating = useComposeStore((state) => state.setCardGenerating);
   const removeCard = useComposeStore((state) => state.removeCard);
   const removeSinglePostCard = useComposeStore(
@@ -240,6 +241,16 @@ export const ComposeCard = memo(function ComposeCard({
       })
       .then((result) => {
         updateCardComment(card.id, result.comment);
+        // Store the style info that was used to generate this comment
+        updateCardStyleInfo(card.id, {
+          commentStyleId: styleConfig.styleId,
+          styleSnapshot: {
+            name: styleConfig.styleName,
+            content: styleConfig.styleGuide,
+            maxWords: styleConfig.maxWords,
+            creativity: styleConfig.creativity,
+          },
+        });
       })
       .catch((err) => {
         console.error(
@@ -260,6 +271,7 @@ export const ComposeCard = memo(function ComposeCard({
     setCardGenerating,
     generateComment,
     updateCardComment,
+    updateCardStyleInfo,
   ]);
 
   // Get initials for avatar fallback
