@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   BarChart3,
   Eye,
@@ -18,6 +18,7 @@ import {
   INTERVAL_OPTIONS,
   setAutoFetchIntervalHours,
 } from "../utils/data-fetch-mimic/auto-fetch-config";
+import type { DataSnapshot } from "../utils/data-fetch-mimic/data-collector";
 import { useContentImpressionsHistory } from "../utils/data-fetch-mimic/use-content-impressions-history";
 import {
   useCommentsHistory,
@@ -28,7 +29,40 @@ import { useInviteCountHistory } from "../utils/data-fetch-mimic/use-invite-coun
 import { useProfileImpressionsHistory } from "../utils/data-fetch-mimic/use-profile-impressions-history";
 import { useProfileViewsHistory } from "../utils/data-fetch-mimic/use-profile-views-history";
 import { MetricCard } from "./MetricCard";
-import { UnifiedChart } from "./UnifiedChart";
+import { TIME_RANGE_OPTIONS, TimeRange, UnifiedChart } from "./UnifiedChart";
+
+/**
+ * Calculate percentage change between first and last value in time range
+ */
+function calculatePercentageChange<T>(
+  snapshots: DataSnapshot<T>[] | undefined,
+  getValue: (data: T) => number,
+  timeRangeDays: number
+): number | null {
+  if (!snapshots || snapshots.length < 2) return null;
+
+  const now = Date.now();
+  const cutoffTime = timeRangeDays === Infinity
+    ? 0
+    : now - timeRangeDays * 24 * 60 * 60 * 1000;
+
+  // Filter snapshots within the time range and sort by timestamp
+  const filteredSnapshots = snapshots
+    .filter((s) => s.timestamp >= cutoffTime)
+    .sort((a, b) => a.timestamp - b.timestamp);
+
+  if (filteredSnapshots.length < 2) return null;
+
+  const firstValue = getValue(filteredSnapshots[0]!.data);
+  const lastValue = getValue(filteredSnapshots[filteredSnapshots.length - 1]!.data);
+
+  // Avoid division by zero
+  if (firstValue === 0) {
+    return lastValue > 0 ? 100 : 0;
+  }
+
+  return ((lastValue - firstValue) / firstValue) * 100;
+}
 
 export function AnalyticsTab() {
   const accountId = useAccountStore(
@@ -39,6 +73,9 @@ export function AnalyticsTab() {
   const [selectedMetrics, setSelectedMetrics] = useState<Set<string>>(
     new Set(["profileViews", "inviteCount", "comments"]), // Default: first 3 selected
   );
+
+  // Time range for chart and percentage calculations
+  const [timeRange, setTimeRange] = useState<TimeRange>("all");
 
   // Auto-fetch interval setting (1-24 hours)
   const [autoFetchIntervalHours, setAutoFetchInterval] = useState(
@@ -120,6 +157,54 @@ export function AnalyticsTab() {
     refetch: contentImpressionsRefetch,
   } = useContentImpressionsHistory();
 
+  // Get time range in days for percentage calculations
+  const timeRangeDays = useMemo(() => {
+    const config = TIME_RANGE_OPTIONS.find((t) => t.value === timeRange);
+    return config?.days ?? Infinity;
+  }, [timeRange]);
+
+  // Calculate percentage changes for each metric
+  const percentageChanges = useMemo(() => ({
+    profileViews: calculatePercentageChange(
+      profileViewsSnapshots,
+      (d) => d.totalViews,
+      timeRangeDays
+    ),
+    inviteCount: calculatePercentageChange(
+      inviteCountSnapshots,
+      (d) => d.totalInvites,
+      timeRangeDays
+    ),
+    comments: calculatePercentageChange(
+      commentsSnapshots,
+      (d) => d.totalComments,
+      timeRangeDays
+    ),
+    followers: calculatePercentageChange(
+      followersSnapshots,
+      (d) => d.totalFollowers,
+      timeRangeDays
+    ),
+    profileImpressions: calculatePercentageChange(
+      profileImpressionsSnapshots,
+      (d) => d.totalImpressions,
+      timeRangeDays
+    ),
+    contentImpressions: calculatePercentageChange(
+      contentImpressionsSnapshots,
+      (d) => d.totalImpressions,
+      timeRangeDays
+    ),
+  }), [
+    profileViewsSnapshots,
+    inviteCountSnapshots,
+    commentsSnapshots,
+    followersSnapshots,
+    profileImpressionsSnapshots,
+    contentImpressionsSnapshots,
+    timeRangeDays,
+  ]);
+
   // Toggle metric selection
   const toggleMetric = (metricId: string) => {
     setSelectedMetrics((prev) => {
@@ -193,6 +278,7 @@ export function AnalyticsTab() {
             isLoading={profileViewsLoading}
             error={profileViewsError}
             selected={selectedMetrics.has("profileViews")}
+            percentageChange={percentageChanges.profileViews}
             compact
           />
         </div>
@@ -229,6 +315,7 @@ export function AnalyticsTab() {
             isLoading={inviteCountLoading}
             error={inviteCountError}
             selected={selectedMetrics.has("inviteCount")}
+            percentageChange={percentageChanges.inviteCount}
             compact
           />
         </div>
@@ -247,6 +334,7 @@ export function AnalyticsTab() {
             isLoading={commentsLoading}
             error={commentsError}
             selected={selectedMetrics.has("comments")}
+            percentageChange={percentageChanges.comments}
             compact
           />
         </div>
@@ -264,6 +352,7 @@ export function AnalyticsTab() {
             isLoading={followersLoading}
             error={followersError}
             selected={selectedMetrics.has("followers")}
+            percentageChange={percentageChanges.followers}
             compact
           />
         </div>
@@ -282,6 +371,7 @@ export function AnalyticsTab() {
             isLoading={profileImpressionsLoading}
             error={profileImpressionsError}
             selected={selectedMetrics.has("profileImpressions")}
+            percentageChange={percentageChanges.profileImpressions}
             compact
           />
         </div>
@@ -300,6 +390,7 @@ export function AnalyticsTab() {
             isLoading={contentImpressionsLoading}
             error={contentImpressionsError}
             selected={selectedMetrics.has("contentImpressions")}
+            percentageChange={percentageChanges.contentImpressions}
             compact
           />
         </div>
@@ -317,6 +408,8 @@ export function AnalyticsTab() {
           contentImpressions: contentImpressionsSnapshots,
         }}
         selectedMetrics={selectedMetrics}
+        timeRange={timeRange}
+        onTimeRangeChange={setTimeRange}
       />
 
       {/* Auto-fetch Settings */}
@@ -329,7 +422,9 @@ export function AnalyticsTab() {
         >
           {INTERVAL_OPTIONS.map((hours) => (
             <option key={hours} value={hours}>
-              {hours} {hours === 1 ? "hour" : "hours"}
+              {hours === 0
+                ? "Stop fetching"
+                : `${hours} ${hours === 1 ? "hour" : "hours"}`}
             </option>
           ))}
         </select>

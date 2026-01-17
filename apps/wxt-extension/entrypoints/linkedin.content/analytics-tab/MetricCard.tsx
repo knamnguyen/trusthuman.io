@@ -33,6 +33,8 @@ export interface MetricCardProps {
   selected?: boolean;
   /** Compact mode for grid layout */
   compact?: boolean;
+  /** Percentage change from first to last value in time range (e.g., -48.5 or 12.3) */
+  percentageChange?: number | null;
 }
 
 function formatTimeAgo(timestamp: number): string {
@@ -70,6 +72,11 @@ function formatCompactNumber(value: number): string {
  * - Compact layout for grid display
  * - Selection state for chart filtering
  */
+function formatPercentageChange(change: number): string {
+  const sign = change >= 0 ? "+" : "";
+  return `${sign}${change.toFixed(1)}%`;
+}
+
 export function MetricCard({
   title,
   icon: Icon,
@@ -82,6 +89,7 @@ export function MetricCard({
   onRefresh,
   selected = false,
   compact = false,
+  percentageChange,
 }: MetricCardProps) {
   // Loading state (no data yet)
   if (isLoading && (value === null || value === undefined)) {
@@ -182,7 +190,21 @@ export function MetricCard({
             <div className="text-3xl font-bold leading-none">
               {typeof value === "number" ? formatCompactNumber(value) : value}
             </div>
-            {description && (
+            {percentageChange !== null && percentageChange !== undefined && (
+              <div
+                className={cn(
+                  "mt-1 text-xs font-semibold",
+                  percentageChange > 0
+                    ? "text-green-600 dark:text-green-400"
+                    : percentageChange < 0
+                      ? "text-red-600 dark:text-red-400"
+                      : "text-muted-foreground"
+                )}
+              >
+                {formatPercentageChange(percentageChange)}
+              </div>
+            )}
+            {description && !percentageChange && (
               <div className="text-muted-foreground mt-1.5 text-[10px] text-center leading-tight">
                 {description.replace(/in the (past|last) /i, "")}
               </div>

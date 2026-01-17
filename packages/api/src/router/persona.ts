@@ -1,9 +1,13 @@
 import { ulid } from "ulidx";
 import z from "zod";
 
-import { PrismaClient } from "@sassy/db";
+import type { PrismaClient } from "@sassy/db";
 
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import {
+  accountProcedure,
+  createTRPCRouter,
+  protectedProcedure,
+} from "../trpc";
 import { paginate } from "../utils/pagination";
 import { hasPermissionToAccessAccount } from "./account";
 
@@ -16,6 +20,11 @@ export const personaRouter = () =>
             name: z.string(),
             description: z.string(),
             content: z.string(),
+            // AI Generation Config
+            // "Comment Length" in words (1-300)
+            maxWords: z.number().min(1).max(300).optional().default(100),
+            // "Creativity Level" - temperature (0.0-2.0)
+            creativity: z.number().min(0).max(2).optional().default(1.0),
           }),
         )
         .mutation(async ({ ctx, input }) => {
@@ -47,6 +56,8 @@ export const personaRouter = () =>
               name: input.name,
               content: input.content,
               description: input.description,
+              maxWords: input.maxWords,
+              creativity: input.creativity,
             },
           });
 
@@ -56,21 +67,16 @@ export const personaRouter = () =>
           } as const;
         }),
 
-      list: protectedProcedure
+      list: accountProcedure
         .input(
           z.object({
             cursor: z.string().optional(),
           }),
         )
         .query(async ({ ctx, input }) => {
-          if (ctx.activeAccount === null) {
-            return {
-              data: [],
-              next: null,
-            };
-          }
           const styles = await ctx.db.commentStyle.findMany({
             where: {
+              accountId: ctx.activeAccount.id,
               id: input.cursor
                 ? {
                     lt: input.cursor,
@@ -158,6 +164,9 @@ export const personaRouter = () =>
             name: z.string().optional(),
             description: z.string().optional(),
             content: z.string().optional(),
+            // AI Generation Config
+            maxWords: z.number().min(1).max(300).optional(),
+            creativity: z.number().min(0).max(2).optional(),
           }),
         )
         .mutation(async ({ ctx, input }) => {
@@ -190,6 +199,8 @@ export const personaRouter = () =>
               name: input.name,
               content: input.content,
               description: input.description,
+              maxWords: input.maxWords,
+              creativity: input.creativity,
             },
           });
 

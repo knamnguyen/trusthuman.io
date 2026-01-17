@@ -17,6 +17,7 @@ import z from "zod";
 import { Button } from "@sassy/ui/button";
 import { Input } from "@sassy/ui/input";
 import { Label } from "@sassy/ui/label";
+import { Slider } from "@sassy/ui/slider";
 import { Textarea } from "@sassy/ui/textarea";
 import { toast } from "@sassy/ui/toast";
 import { cn } from "@sassy/ui/utils";
@@ -53,6 +54,9 @@ const personaFormSchema = z.object({
   name: z.string().min(1, "Name is required").max(100, "Name is too long"),
   description: z.string().max(500, "Description is too long").default(""),
   content: z.string().min(1, "Instructions are required"),
+  // AI Generation Config
+  maxWords: z.number().min(1).max(300).default(100),
+  creativity: z.number().min(0).max(2).default(1.0),
 });
 
 type PersonaFormData = z.infer<typeof personaFormSchema>;
@@ -83,6 +87,8 @@ export function PersonaSidebar({
       name: "",
       description: "",
       content: "",
+      maxWords: 100,
+      creativity: 1.0,
     },
   });
 
@@ -93,12 +99,16 @@ export function PersonaSidebar({
         name: selectedPersona.name,
         description: selectedPersona.description,
         content: selectedPersona.content,
+        maxWords: selectedPersona.maxWords ?? 100,
+        creativity: selectedPersona.creativity ?? 1.0,
       });
     } else if (mode === "create") {
       reset({
         name: "",
         description: "",
         content: "",
+        maxWords: 100,
+        creativity: 1.0,
       });
     }
   }, [mode, selectedPersona, reset]);
@@ -140,6 +150,8 @@ export function PersonaSidebar({
       name: data.name,
       description: data.description ?? "",
       content: data.content,
+      maxWords: data.maxWords,
+      creativity: data.creativity,
     };
 
     if (mode === "create") {
@@ -154,7 +166,7 @@ export function PersonaSidebar({
   return (
     <div
       className={cn(
-        "bg-background relative flex h-full flex-col border-l transition-all duration-200",
+        "bg-background relative flex shrink-0 flex-col border-l transition-all duration-200",
         isOpen ? "w-[400px]" : "w-0"
       )}
     >
@@ -166,8 +178,8 @@ export function PersonaSidebar({
       {/* Sidebar content - only visible when open */}
       {isOpen && (
         <>
-          {/* Header */}
-          <div className="flex items-center justify-between border-b p-4">
+          {/* Header - fixed at top */}
+          <div className="shrink-0 flex items-center justify-between border-b p-4">
             <h2 className="text-lg font-semibold">
               {mode === "create" ? "Create Persona" : "Edit Persona"}
             </h2>
@@ -176,12 +188,12 @@ export function PersonaSidebar({
             </Button>
           </div>
 
-          {/* Form */}
+          {/* Form - scrollable content with fixed footer */}
           <form
             onSubmit={handleSubmit(onSubmit)}
-            className="flex flex-1 flex-col overflow-y-auto"
+            className="flex min-h-0 flex-1 flex-col"
           >
-            <div className="flex-1 space-y-4 p-4">
+            <div className="flex-1 space-y-4 overflow-y-auto p-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Name</Label>
                 <Controller
@@ -257,10 +269,85 @@ export function PersonaSidebar({
                   placing guardrails or rules.
                 </p>
               </div>
+
+              {/* AI Generation Config Section */}
+              <div className="border-t pt-4 mt-4">
+                <h3 className="text-sm font-medium mb-4">AI Generation Settings</h3>
+
+                {/* Comment Length (Words) - Slider */}
+                <div className="space-y-4 mb-6">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="maxWords">Comment Length</Label>
+                    <Controller
+                      control={control}
+                      name="maxWords"
+                      render={({ field }) => (
+                        <span className="text-sm text-muted-foreground">
+                          {field.value} words
+                        </span>
+                      )}
+                    />
+                  </div>
+                  <Controller
+                    control={control}
+                    name="maxWords"
+                    render={({ field }) => (
+                      <div className="pt-6">
+                        <Slider
+                          value={[field.value]}
+                          onValueChange={(values) => field.onChange(values[0])}
+                          min={1}
+                          max={300}
+                          step={1}
+                          aria-label="Comment length in words"
+                        />
+                      </div>
+                    )}
+                  />
+                  <p className="text-muted-foreground text-xs">
+                    Maximum number of words for generated comments (1-300).
+                  </p>
+                </div>
+
+                {/* Creativity Level - Slider */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="creativity">Creativity Level</Label>
+                    <Controller
+                      control={control}
+                      name="creativity"
+                      render={({ field }) => (
+                        <span className="text-sm text-muted-foreground">
+                          {field.value.toFixed(1)}
+                        </span>
+                      )}
+                    />
+                  </div>
+                  <Controller
+                    control={control}
+                    name="creativity"
+                    render={({ field }) => (
+                      <div className="pt-6">
+                        <Slider
+                          value={[field.value]}
+                          onValueChange={(values) => field.onChange(values[0])}
+                          min={0}
+                          max={2}
+                          step={0.1}
+                          aria-label="Creativity level"
+                        />
+                      </div>
+                    )}
+                  />
+                  <p className="text-muted-foreground text-xs">
+                    0 = Very predictable, 1 = Balanced, 2 = Very creative
+                  </p>
+                </div>
+              </div>
             </div>
 
-            {/* Footer */}
-            <div className="border-t p-4">
+            {/* Footer - fixed at bottom */}
+            <div className="shrink-0 border-t p-4">
               <div className="flex gap-2">
                 {mode === "edit" && selectedPersona && (
                   <Button

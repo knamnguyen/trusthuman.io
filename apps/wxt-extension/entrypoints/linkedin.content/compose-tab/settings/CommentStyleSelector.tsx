@@ -18,6 +18,7 @@ import { cn } from "@sassy/ui/utils";
 
 import { useTRPC } from "../../../../lib/trpc/client";
 import { useShadowRootStore } from "../../stores";
+import { clearCommentStyleCache, prefetchCommentStyle } from "../../stores/comment-style-cache";
 import { useSettingsDBStore } from "../../stores/settings-db-store";
 
 /**
@@ -90,6 +91,15 @@ export function CommentStyleSelector() {
     try {
       await updateCommentGenerate({ commentStyleId: newStyleId });
       console.log("[CommentStyleSelector] Saved style:", newStyleId);
+
+      // Prefetch the new style (or clear cache if deselected)
+      if (newStyleId) {
+        // Clear old cache first, then prefetch new style
+        clearCommentStyleCache();
+        void prefetchCommentStyle();
+      } else {
+        clearCommentStyleCache();
+      }
     } catch (error) {
       console.error("[CommentStyleSelector] Failed to save:", error);
     } finally {
@@ -105,6 +115,9 @@ export function CommentStyleSelector() {
     try {
       await updateCommentGenerate({ commentStyleId: null });
       console.log("[CommentStyleSelector] Cleared style");
+
+      // Clear the cache so default style is used
+      clearCommentStyleCache();
     } catch (error) {
       console.error("[CommentStyleSelector] Failed to clear:", error);
     } finally {

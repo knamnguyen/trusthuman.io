@@ -126,17 +126,15 @@ function shouldSkipByConnectionDegree(
  * Applies filter config to skip posts based on user settings.
  * Returns array of { urn, container } for posts that need processing.
  */
-function findNewPosts({
-  existingUrns,
-  processedUrns,
-  isUrnIgnored,
-  filterConfig,
-}: {
-  existingUrns?: Set<string>;
-  processedUrns?: Set<string>;
-  isUrnIgnored?: (urn: string) => boolean;
-  filterConfig?: PostFilterConfig;
-}): Array<{ urn: string; container: HTMLElement }> {
+function findNewPosts(
+  existingUrns: Set<string>,
+  processedUrns: Set<string>,
+  isUrnIgnored: (urn: string) => boolean,
+  filterConfig: PostFilterConfig,
+  isAuthorBlacklisted?: (
+    authorProfileUrl: string | null | undefined,
+  ) => boolean,
+): Array<{ urn: string; container: HTMLElement }> {
   const newPosts: Array<{ urn: string; container: HTMLElement }> = [];
   const postUtils = getPostUtils();
   const selector = postUtils.getPostContainerSelector();
@@ -224,6 +222,17 @@ function findNewPosts({
       console.log(`[EngageKit] Time filter enabled but minPostAge is null`);
     }
 
+    // 6. Blacklist filter - skip posts from blacklisted authors
+    if (isAuthorBlacklisted) {
+      const authorInfo = postUtils.extractPostAuthorInfo(container);
+      if (isAuthorBlacklisted(authorInfo?.profileUrl)) {
+        console.log(
+          `[EngageKit] ⛔ Skipping blacklisted author: ${authorInfo?.name ?? "Unknown"} (${authorInfo?.profileUrl})`,
+        );
+        continue;
+      }
+    }
+
     newPosts.push({ urn, container });
   }
 
@@ -279,25 +288,21 @@ function extractPostData(container: HTMLElement): ReadyPost | null {
  * @param shouldStop - Function that returns true when collection should stop
  * @param isUserEditing - Function that returns true when user is editing (pauses collection)
  * @param filterConfig - Configuration for filtering posts (promoted, company, connection degree, etc.)
+ * @param isAuthorBlacklisted - Optional function to check if a post author should be skipped (blacklist)
  * @returns Number of posts collected
  */
-export async function collectPostsBatch({
-  targetCount,
-  existingUrns,
-  isUrnIgnored,
-  onBatchReady,
-  shouldStop,
-  isUserEditing,
-  filterConfig,
-}: {
-  targetCount: number;
-  existingUrns?: Set<string>;
-  isUrnIgnored?: (urn: string) => boolean;
-  onBatchReady?: (posts: ReadyPost[]) => void;
-  shouldStop?: () => boolean;
-  isUserEditing?: () => boolean;
-  filterConfig?: PostFilterConfig;
-}): Promise<ReadyPost[]> {
+export async function collectPostsBatch(
+  targetCount: number,
+  existingUrns: Set<string>,
+  isUrnIgnored: (urn: string) => boolean,
+  onBatchReady: (posts: ReadyPost[]) => void,
+  shouldStop: () => boolean,
+  isUserEditing: () => boolean,
+  filterConfig: PostFilterConfig,
+  isAuthorBlacklisted?: (
+    authorProfileUrl: string | null | undefined,
+  ) => boolean,
+): Promise<ReadyPost[]> {
   const postUtils = getPostUtils();
   const commentUtils = getCommentUtils();
   const feedUtils = getFeedUtils();
@@ -335,12 +340,13 @@ export async function collectPostsBatch({
     }
 
     // Find ALL new posts that haven't been processed (with filters applied)
-    const newPosts = findNewPosts({
+    const newPosts = findNewPosts(
       existingUrns,
       processedUrns,
       isUrnIgnored,
       filterConfig,
-    });
+      isAuthorBlacklisted,
+    );
 
     // Limit to remaining needed
     const postsToProcess = newPosts.slice(0, targetCount - emittedCount);

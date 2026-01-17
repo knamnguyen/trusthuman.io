@@ -34,6 +34,8 @@ export class MessageRouter {
         return this.handleGetAuthStatus(request, sender, sendResponse);
       case "getToken":
         return this.handleGetToken(request, sender, sendResponse);
+      case "openTargetListTab":
+        return this.handleOpenTargetListTab(request, sender, sendResponse);
       default:
         console.warn("MessageRouter: Unknown action:", request.action);
         sendResponse({ success: false, error: "Unknown action" });
@@ -162,6 +164,43 @@ export class MessageRouter {
         sendResponse({
           success: false,
           error: error instanceof Error ? error.message : "Unknown error",
+        });
+      });
+
+    return true; // Asynchronous response
+  };
+
+  /**
+   * Handle openTargetListTab request
+   * Opens a new tab with the specified URL (bypasses popup blocker)
+   * Used by queue system to open target list feed tabs sequentially
+   */
+  private handleOpenTargetListTab = (
+    request: MessageRequest,
+    _sender: chrome.runtime.MessageSender,
+    sendResponse: (response: MessageResponse<{ tabId: number }>) => void,
+  ): boolean => {
+    const { url } = request;
+
+    if (!url) {
+      console.error("MessageRouter: openTargetListTab called without URL");
+      sendResponse({ success: false, error: "URL is required" });
+      return false;
+    }
+
+    console.log("MessageRouter: Opening target list tab:", { url });
+
+    chrome.tabs
+      .create({ url, active: true })
+      .then((tab) => {
+        console.log("MessageRouter: Tab created:", { tabId: tab.id, url });
+        sendResponse({ success: true, data: { tabId: tab.id ?? -1 } });
+      })
+      .catch((error) => {
+        console.error("MessageRouter: Error creating tab:", error);
+        sendResponse({
+          success: false,
+          error: error instanceof Error ? error.message : "Failed to create tab",
         });
       });
 

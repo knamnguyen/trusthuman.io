@@ -71,9 +71,9 @@ export default function PersonasPage() {
   };
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-[calc(100vh-var(--header-height,0px))] flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between border-b px-6 py-4">
+      <div className="shrink-0 flex items-center justify-between border-b px-6 py-4">
         <div>
           <h1 className="text-xl font-semibold">Personas</h1>
           <p className="text-muted-foreground text-sm">
@@ -87,9 +87,9 @@ export default function PersonasPage() {
       </div>
 
       {/* Main layout with sidebar */}
-      <div className="relative flex flex-1 overflow-hidden">
-        {/* Main Content */}
-        <div className="flex-1 overflow-auto p-6">
+      <div className="relative flex min-h-0 flex-1">
+        {/* Main Content - scrolls independently */}
+        <div className="flex-1 overflow-y-auto p-6">
           {personas.isLoading ? (
             <div className="flex h-[400px] items-center justify-center">
               <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />

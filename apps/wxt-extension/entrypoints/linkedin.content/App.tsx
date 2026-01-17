@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { createFeedUtilities } from "@sassy/linkedin-automation/feed/create-feed-utilities";
 import { Sheet } from "@sassy/ui/sheet";
 import { ToasterSimple } from "@sassy/ui/toast";
+import { TooltipProvider } from "@sassy/ui/tooltip";
 
 import { ToggleButton } from "./_components/ToggleButton";
 import { PostNavigator } from "./compose-tab/PostNavigator";
@@ -76,7 +77,7 @@ export default function App({ shadowRoot }: AppProps) {
   useAutoEngage();
 
   return (
-    <>
+    <TooltipProvider>
       {/* Open button - only visible when sidebar is closed and animation finished */}
       {showOpenButton && (
         <div className="fixed top-1/2 right-0 z-[9999] -translate-y-1/2">
@@ -96,6 +97,6 @@ export default function App({ shadowRoot }: AppProps) {
 
       {/* Toast notifications */}
       <ToasterSimple container={shadowRoot} />
-    </>
+    </TooltipProvider>
   );
 }

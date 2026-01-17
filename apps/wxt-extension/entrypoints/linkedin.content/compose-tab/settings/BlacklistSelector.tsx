@@ -19,6 +19,7 @@ import { cn } from "@sassy/ui/utils";
 import { useTRPC } from "../../../../lib/trpc/client";
 import { useShadowRootStore } from "../../stores";
 import { useSettingsDBStore } from "../../stores/settings-db-store";
+import { prefetchBlacklist } from "../../stores/blacklist-cache";
 
 /**
  * Blacklist selector for settings.
@@ -90,6 +91,13 @@ export function BlacklistSelector() {
     try {
       await updatePostLoad({ blacklistId: newBlacklistId });
       console.log("[BlacklistSelector] Saved blacklist:", newBlacklistId);
+
+      // Pre-fetch blacklist profile URLs (fire-and-forget)
+      // This warms the cache so filtering is instant when Load Posts runs
+      if (newBlacklistId) {
+        console.log("[BlacklistSelector] Pre-fetching blacklist profiles...");
+        void prefetchBlacklist(newBlacklistId);
+      }
     } catch (error) {
       console.error("[BlacklistSelector] Failed to save:", error);
     } finally {

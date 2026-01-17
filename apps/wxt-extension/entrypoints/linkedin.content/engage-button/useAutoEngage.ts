@@ -15,9 +15,9 @@ import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post
 
 import { getTrpcClient } from "../../../lib/trpc/client";
 import { useComposeStore } from "../stores/compose-store";
+import { getCommentStyleConfig } from "../stores/comment-style-cache";
 import { useSettingsLocalStore } from "../stores/settings-local-store";
 import { SIDEBAR_TABS, useSidebarStore } from "../stores/sidebar-store";
-import { DEFAULT_STYLE_GUIDE } from "../utils/constants";
 
 /**
  * Hook to watch for native comment button clicks and auto-engage.
@@ -233,15 +233,26 @@ export function useAutoEngage() {
       // Extract adjacent comments for AI generation
       const adjacentComments = postUtils.extractAdjacentComments(postContainer);
 
-      // Request params for AI generation
+      // Get comment style config (styleGuide, maxWords, creativity)
+      const styleConfig = await getCommentStyleConfig();
+      console.log("[useAutoEngage] Using comment style config:", {
+        styleName: styleConfig.styleName,
+        maxWords: styleConfig.maxWords,
+        creativity: styleConfig.creativity,
+      });
+
+      // Request params for AI generation with style config
       const requestParams = {
         postContent: fullCaption,
-        styleGuide: DEFAULT_STYLE_GUIDE,
+        styleGuide: styleConfig.styleGuide,
         adjacentComments: adjacentComments.map((c) => ({
           commentContent: c.commentContent,
           likeCount: c.likeCount,
           replyCount: c.replyCount,
         })),
+        // Pass AI generation config from CommentStyle
+        maxWords: styleConfig.maxWords,
+        creativity: styleConfig.creativity,
       };
 
       // Fire 3 parallel AI requests

@@ -26,7 +26,7 @@ import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post
 
 import { useTRPC } from "../../../lib/trpc/client";
 import { useComposeStore } from "../stores/compose-store";
-import { DEFAULT_STYLE_GUIDE } from "../utils";
+import { getCommentStyleConfig } from "../stores/comment-style-cache";
 import { submitCommentFullFlow } from "./utils/submit-comment-full-flow";
 
 // Initialize utilities (auto-detects DOM version)
@@ -195,7 +195,7 @@ export function PostPreviewSheet() {
   ]);
 
   // Regenerate comment handler
-  const handleRegenerate = useCallback(() => {
+  const handleRegenerate = useCallback(async () => {
     if (!previewingCard || previewingCard.isGenerating) return;
 
     const cardId = previewingCard.id;
@@ -210,17 +210,28 @@ export function PostPreviewSheet() {
       previewingCard.postContainer,
     );
 
-    // Fire regeneration request
+    // Get comment style config (styleGuide, maxWords, creativity)
+    const styleConfig = await getCommentStyleConfig();
+    console.log("[PostPreviewSheet] Using comment style config:", {
+      styleName: styleConfig.styleName,
+      maxWords: styleConfig.maxWords,
+      creativity: styleConfig.creativity,
+    });
+
+    // Fire regeneration request with style config
     generateComment
       .mutateAsync({
         postContent: previewingCard.fullCaption,
-        styleGuide: DEFAULT_STYLE_GUIDE,
+        styleGuide: styleConfig.styleGuide,
         adjacentComments,
         previousAiComment,
         humanEditedComment:
           humanEditedComment !== previousAiComment
             ? humanEditedComment
             : undefined,
+        // Pass AI generation config from CommentStyle
+        maxWords: styleConfig.maxWords,
+        creativity: styleConfig.creativity,
       })
       .then((result) => {
         updateCardComment(cardId, result.comment);

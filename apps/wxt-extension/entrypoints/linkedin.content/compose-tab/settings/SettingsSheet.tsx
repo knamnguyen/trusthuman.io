@@ -319,11 +319,8 @@ function SettingsFiltersContent({
           description="Only engage with people on your target list"
           checked={settings.targetListEnabled}
           onCheckedChange={(v) => {
-            void updatePostLoad({
-              targetListEnabled: v,
-              // Clear selection when disabling
-              ...(v ? {} : { targetListIds: [] }),
-            });
+            // Only update the enabled flag - preserve selection for when user re-enables
+            void updatePostLoad({ targetListEnabled: v });
           }}
         />
         <div className="mt-2">
@@ -337,11 +334,8 @@ function SettingsFiltersContent({
           description="Never engage with people on your blacklist"
           checked={settings.skipBlacklistEnabled}
           onCheckedChange={(v) => {
-            void updatePostLoad({
-              skipBlacklistEnabled: v,
-              // Clear selection when disabling
-              ...(v ? {} : { blacklistId: null }),
-            });
+            // Only update the enabled flag - preserve selection for when user re-enables
+            void updatePostLoad({ skipBlacklistEnabled: v });
           }}
         />
         <div className="mt-2">

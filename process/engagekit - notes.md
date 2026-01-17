@@ -16,21 +16,42 @@
 [*] urn not available for post author in the feed
 
 [*] ui for comment history to view posts as welL
-[] flow for commenting manually for target list
-[] export/import button old persons+targetlist
+[*] flow for commenting manually for target list
+[] lam doing - export/import button old persons+targetlist
 
-[] sync chrome extension setting to db setting
+[*] sync chrome extension setting to db setting
 
-[] check again account id in header and active org
-[] fix comment saving table data (no ui touch for history for now)
+[*] check again account id in header and active org
+[*] fix comment saving table data (no ui touch for history for now)
 
-[] connect target list to setting chrome extension
-[] connect comment style to setting to chrome extension
-[] connect comment style to ai comment gen flow
+[*] connect target list to setting chrome extension
+[*] connect comment style to setting to chrome extension
+[*] connect comment style to ai comment gen flow
 
-[] ui for setting web app
-[] fix data analytics visualize - time filter week, month, year
-[] button to export current data and save to db
+[*] fix data analytics visualize - time filter week, month, year
+
+[] comment style personas add more config options for ai to adjust length and language
+[] save comment style data on each comment generated
+[] dynamic ai generation flow
+
+//onboarding flow extensible design
+
+- tooltip -
+  --- in-active - normal i hover => open tooltip => button to open modal teaching => most existing users have this
+  --- active - tooltip auto open step by step => highlight only that section and blurred overlay rest
+  => option to open modal teaching => for first time users only
+  --- details:
+  ----- short text guide
+  ----- close button
+  ----- navigation button to go back and forward + step order (to next/prev tooltip)
+  ----- button to open modal teaching (same corresponding with tooltip)
+
+- teaching - open modal central with video - blurred overlay rest except for the element which triggered the specific teaching modal/tooltip
+  --- details:
+  ----- video player
+  ----- close button
+  ----- navigation button to go back and forward + step order (to next/prev teaching modal)
+  ----- button to open modal teaching (same corresponding with tooltip)
 
 //new dom fixing adapt task
 
