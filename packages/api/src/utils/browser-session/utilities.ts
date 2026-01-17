@@ -1,5 +1,7 @@
+import { createCommentUtilities } from "@sassy/linkedin-automation/comment/create-comment-utilities";
 import { collectPostsBatch } from "@sassy/linkedin-automation/feed/collect-posts";
 import { createFeedUtilities } from "@sassy/linkedin-automation/feed/create-feed-utilities";
+import { navigateLinkedIn } from "@sassy/linkedin-automation/navigate/navigate-linkedin";
 import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post-utilities";
 
 async function retry<TOutput>(
@@ -133,16 +135,21 @@ function parsePostTime(input: {
 
 let _feedUtilities: ReturnType<typeof createFeedUtilities> | null = null;
 let _postUtilities: ReturnType<typeof createPostUtilities> | null = null;
+let _commentUtilities: ReturnType<typeof createCommentUtilities> | null = null;
 
 const engagekitInternals = {
   retry,
   collectPostsBatch,
   parsePostTime,
+  navigate: navigateLinkedIn,
   get feedUtilities() {
     return (_feedUtilities ??= createFeedUtilities());
   },
   get postUtilities() {
     return (_postUtilities ??= createPostUtilities());
+  },
+  get commentUtilities() {
+    return (_commentUtilities ??= createCommentUtilities());
   },
 };
 
