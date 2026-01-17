@@ -11,6 +11,9 @@ export interface Persona {
   description: string;
   content: string;
   createdAt: Date;
+  // AI Generation Config
+  maxTokens: number | null;
+  creativity: number | null;
 }
 
 interface PersonaCardProps {

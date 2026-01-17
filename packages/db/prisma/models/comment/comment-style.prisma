@@ -6,6 +6,12 @@ model CommentStyle {
   content     String
   createdAt   DateTime @default(now())
 
+  // AI Generation Config (human-friendly names)
+  // "Comment Length" - controls maxOutputTokens (50=Short, 150=Medium, 300=Long)
+  maxTokens   Int?     @default(150)
+  // "Creativity Level" - controls temperature (0.3=Conservative, 0.8=Balanced, 1.2=Creative)
+  creativity  Float?   @default(0.8)
+
   linkedInAccount        LinkedInAccount         @relation(fields: [accountId], references: [id], onDelete: Cascade)
   CommentGenerateSetting CommentGenerateSetting? //optional 1:1 - this style may be chosen as default
 

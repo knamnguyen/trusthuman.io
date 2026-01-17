@@ -16,6 +16,11 @@ export const personaRouter = () =>
             name: z.string(),
             description: z.string(),
             content: z.string(),
+            // AI Generation Config - human-friendly names
+            // "Comment Length" - maps to maxOutputTokens (50=Short, 150=Medium, 300=Long)
+            maxTokens: z.number().min(50).max(500).optional().default(150),
+            // "Creativity Level" - maps to temperature (0.3=Conservative, 0.8=Balanced, 1.2=Creative)
+            creativity: z.number().min(0).max(2).optional().default(0.8),
           }),
         )
         .mutation(async ({ ctx, input }) => {
@@ -47,6 +52,8 @@ export const personaRouter = () =>
               name: input.name,
               content: input.content,
               description: input.description,
+              maxTokens: input.maxTokens,
+              creativity: input.creativity,
             },
           });
 
@@ -158,6 +165,9 @@ export const personaRouter = () =>
             name: z.string().optional(),
             description: z.string().optional(),
             content: z.string().optional(),
+            // AI Generation Config - human-friendly names
+            maxTokens: z.number().min(50).max(500).optional(),
+            creativity: z.number().min(0).max(2).optional(),
           }),
         )
         .mutation(async ({ ctx, input }) => {
@@ -190,6 +200,8 @@ export const personaRouter = () =>
               name: input.name,
               content: input.content,
               description: input.description,
+              maxTokens: input.maxTokens,
+              creativity: input.creativity,
             },
           });
 
