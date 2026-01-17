@@ -1,12 +1,18 @@
 import { browser } from "wxt/browser";
 
-import type { PostLoadSettings } from "./settings-store";
+import type { PostLoadSettings, TargetListQueueState } from "./target-list-queue";
 
 /**
  * State saved before navigating to target list feed.
  * Used to restore settings and auto-resume loading after page reload.
+ *
+ * Supports two types:
+ * - 'single': Single target list navigation (legacy)
+ * - 'queue': Multiple target lists processed sequentially
  */
-interface PendingNavigationState {
+
+// Legacy type (for backward compatibility)
+interface PendingNavigationStateLegacy {
   /** Post load settings to restore */
   postLoadSettings: PostLoadSettings;
   /** Target draft count for Load Posts */
@@ -15,28 +21,51 @@ interface PendingNavigationState {
   savedAt: number;
 }
 
+// New type (supports both single and queue)
+export interface PendingNavigationState {
+  /** Type of navigation */
+  type: "single" | "queue";
+  /** Post load settings to restore */
+  postLoadSettings: PostLoadSettings;
+  /** Target draft count for Load Posts */
+  targetDraftCount: number;
+  /** Timestamp when saved (for expiry check) */
+  savedAt: number;
+  /** Queue state (only for type === 'queue') */
+  queueState?: TargetListQueueState;
+}
+
 const STORAGE_KEY = "pendingTargetListNavigation";
 /** Max age in ms - expire after 30 seconds (navigation should be quick) */
 const MAX_AGE_MS = 30_000;
 
 /**
- * Save state before navigating to target list feed.
+ * Save state before navigating to target list feed (single navigation)
  * This allows us to restore settings and auto-resume after page reload.
  */
 export async function savePendingNavigation(
   postLoadSettings: PostLoadSettings,
-  targetDraftCount: number
+  targetDraftCount: number,
+  queueState?: TargetListQueueState,
 ): Promise<void> {
   const state: PendingNavigationState = {
+    type: queueState ? "queue" : "single",
     postLoadSettings,
     targetDraftCount,
     savedAt: Date.now(),
+    queueState,
   };
 
-  console.log("[NavigationState] Saving state:", state);
-  console.log("[NavigationState] browser.storage.session available:", !!browser?.storage?.session);
+  console.log("[NavigationState] Saving state:", {
+    type: state.type,
+    hasQueue: !!queueState,
+  });
+  console.log(
+    "[NavigationState] browser.storage.local available:",
+    !!browser?.storage?.local,
+  );
 
-  await browser.storage.session.set({ [STORAGE_KEY]: state });
+  await browser.storage.local.set({ [STORAGE_KEY]: state });
   console.log("[NavigationState] Saved pending navigation state");
 }
 
@@ -47,9 +76,12 @@ export async function savePendingNavigation(
  */
 export async function consumePendingNavigation(): Promise<PendingNavigationState | null> {
   console.log("[NavigationState] Checking for pending navigation...");
-  const result = await browser.storage.session.get(STORAGE_KEY);
+  const result = await browser.storage.local.get(STORAGE_KEY);
   console.log("[NavigationState] Storage result:", result);
-  const state = result[STORAGE_KEY] as PendingNavigationState | undefined;
+  const state = result[STORAGE_KEY] as
+    | PendingNavigationState
+    | PendingNavigationStateLegacy
+    | undefined;
 
   if (!state) {
     console.log("[NavigationState] No pending state found");
@@ -57,7 +89,7 @@ export async function consumePendingNavigation(): Promise<PendingNavigationState
   }
 
   // Clear immediately (one-time use)
-  await browser.storage.session.remove(STORAGE_KEY);
+  await browser.storage.local.remove(STORAGE_KEY);
 
   // Check if expired
   if (Date.now() - state.savedAt > MAX_AGE_MS) {
@@ -67,10 +99,26 @@ export async function consumePendingNavigation(): Promise<PendingNavigationState
 
   // Check if we're on the correct page (search results)
   if (!window.location.pathname.startsWith("/search/results/content")) {
-    console.log("[NavigationState] Not on search page, ignoring pending navigation");
+    console.log(
+      "[NavigationState] Not on search page, ignoring pending navigation",
+    );
     return null;
   }
 
-  console.log("[NavigationState] Found valid pending navigation state");
+  // Upgrade legacy format to new format
+  if (!("type" in state)) {
+    console.log("[NavigationState] Upgrading legacy format to new format");
+    const upgraded: PendingNavigationState = {
+      type: "single",
+      postLoadSettings: state.postLoadSettings,
+      targetDraftCount: state.targetDraftCount,
+      savedAt: state.savedAt,
+    };
+    return upgraded;
+  }
+
+  console.log("[NavigationState] Found valid pending navigation state", {
+    type: state.type,
+  });
   return state;
 }

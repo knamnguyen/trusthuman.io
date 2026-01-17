@@ -19,6 +19,7 @@ import { cn } from "@sassy/ui/utils";
 import { useTRPC } from "../../../../lib/trpc/client";
 import { useShadowRootStore } from "../../stores";
 import { useSettingsDBStore } from "../../stores/settings-db-store";
+import { prefetchUrnsForLists } from "../../stores/target-list-queue";
 
 // Default for when settings haven't loaded yet
 const DEFAULT_TARGET_LIST_IDS: string[] = [];
@@ -131,6 +132,18 @@ export function TargetListSelector() {
         try {
           await updatePostLoad({ targetListIds: pendingSelections });
           console.log("[TargetListSelector] Saved target lists:", pendingSelections);
+
+          // Find newly added lists (not in previous selection)
+          const newlyAddedIds = pendingSelections.filter(
+            (id) => !savedTargetListIds.includes(id)
+          );
+
+          // Pre-fetch URNs only for newly added lists (fire-and-forget)
+          // Existing lists were already pre-fetched when settings loaded
+          if (newlyAddedIds.length > 0) {
+            console.log(`[TargetListSelector] Pre-fetching URNs for ${newlyAddedIds.length} newly added lists`);
+            void prefetchUrnsForLists(newlyAddedIds);
+          }
         } catch (error) {
           console.error("[TargetListSelector] Failed to save:", error);
           // Revert local state on error
@@ -139,6 +152,7 @@ export function TargetListSelector() {
           setIsSaving(false);
         }
       }
+      // No changes = no pre-fetch needed (already cached from settings load)
     }
     setOpen(newOpen);
   };

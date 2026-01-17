@@ -12,35 +12,44 @@ import {
 } from "lucide-react";
 import { useShallow } from "zustand/shallow";
 
-import type { ReadyPost } from "@sassy/linkedin-automation/feed/collect-posts";
 import { createCommentUtilities } from "@sassy/linkedin-automation/comment/create-comment-utilities";
-import { collectPostsBatch } from "@sassy/linkedin-automation/feed/collect-posts";
-import { buildListFeedUrl } from "@sassy/linkedin-automation/navigate/build-list-feed-url";
-import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post-utilities";
 import { Button } from "@sassy/ui/button";
+import { TooltipWithDialog } from "@sassy/ui/components/tooltip-with-dialog";
 
-import { getTrpcClient, useTRPC } from "../../../lib/trpc/client";
+import type { PendingNavigationState } from "../stores/navigation-state";
+import type { PostLoadSettings } from "../stores/target-list-queue";
+import { useTRPC } from "../../../lib/trpc/client";
+import { useShadowRootStore } from "../stores";
 import { useComposeStore } from "../stores/compose-store";
-import {
-  consumePendingNavigation,
-  savePendingNavigation,
-} from "../stores/navigation-state";
 import { useSettingsDBStore } from "../stores/settings-db-store";
-import { useSettingsLocalStore } from "../stores/settings-local-store";
-import { DEFAULT_STYLE_GUIDE } from "../utils";
+import {
+  continueQueueProcessing,
+  processTargetListQueue,
+} from "../utils/multi-tab-navigation";
 import { ComposeCard } from "./ComposeCard";
 import { PostPreviewSheet } from "./PostPreviewSheet";
 import { SettingsSheet } from "./settings/SettingsSheet";
 import { SettingsTags } from "./settings/SettingsTags";
+import { buildQueueItems } from "./utils/build-queue-items";
+import { loadPostsToCards } from "./utils/load-posts-to-cards";
 import { submitCommentFullFlow } from "./utils/submit-comment-full-flow";
 
 // Initialize utilities (auto-detects DOM version)
-const postUtils = createPostUtilities();
 const commentUtils = createCommentUtilities();
+
+/** Queue progress info for display */
+interface QueueProgressInfo {
+  currentIndex: number;
+  totalLists: number;
+  currentListName: string;
+}
 
 export function ComposeTab() {
   // DEBUG: Track renders
   console.log("[ComposeTab] Render");
+
+  // Shadow root for tooltip/dialog portals
+  const shadowRoot = useShadowRootStore((s) => s.shadowRoot);
 
   const [isLoading, setIsLoading] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -50,6 +59,10 @@ export function ComposeTab() {
   const [loadingProgress, setLoadingProgress] = useState<number>(0);
   /** Ref to signal stop request to the streaming loop */
   const stopRequestedRef = useRef(false);
+  /** Queue progress info (only set during queue processing) */
+  const [queueProgress, setQueueProgress] = useState<QueueProgressInfo | null>(
+    null,
+  );
 
   // Subscribe to isUserEditing for paused indicator
   const isUserEditing = useComposeStore((state) => state.isUserEditing);
@@ -121,37 +134,149 @@ export function ComposeTab() {
 
   // Track if we've checked for pending navigation (prevent double-trigger)
   const checkedPendingNavRef = useRef(false);
-  // Ref to store pending targetDraftCount for auto-resume
-  const pendingTargetCountRef = useRef<number | null>(null);
 
-  // Check for pending navigation on mount (auto-resume after target list redirect)
+  // Auto-resume system: checks global variable set by content script
+  // Content script detects pending navigation and opens sidebar, ComposeTab triggers Load Posts
   useEffect(() => {
     if (checkedPendingNavRef.current) return;
     checkedPendingNavRef.current = true;
 
-    console.log("[EngageKit] Checking for pending navigation...");
-    console.log("[EngageKit] Current URL:", window.location.href);
+    console.log(
+      "[ComposeTab] Checking for pending navigation from content script...",
+    );
 
-    const checkAndResume = async () => {
-      const pending = await consumePendingNavigation();
-      console.log("[EngageKit] Pending navigation result:", pending);
-      if (!pending) return;
+    // Check for pending navigation set by content script
+    const pendingNav = (
+      window as unknown as {
+        __engagekit_pending_navigation?: PendingNavigationState;
+      }
+    ).__engagekit_pending_navigation;
 
-      console.log("[EngageKit] Resuming from target list navigation");
+    if (!pendingNav) {
+      console.log("[ComposeTab] No pending navigation found");
+      return;
+    }
 
-      // Settings are already persisted in DB, no need to restore them
-      // Just restore the target draft count for the UI
-      const { targetDraftCount: savedCount } = pending;
+    // Clear the global variable (one-time use)
+    delete (
+      window as unknown as {
+        __engagekit_pending_navigation?: PendingNavigationState;
+      }
+    ).__engagekit_pending_navigation;
 
-      // Store the target count for the follow-up effect to use
-      pendingTargetCountRef.current = savedCount;
+    console.log(
+      "[ComposeTab] Found pending navigation, triggering Load Posts",
+      {
+        type: pendingNav.type,
+        targetDraftCount: pendingNav.targetDraftCount,
+      },
+    );
 
-      // Restore target draft count - triggers re-render with new value
-      setTargetDraftCount(savedCount);
+    // Trigger Load Posts with the saved settings
+    const runAutoResume = async () => {
+      console.log("[ComposeTab] runAutoResume started");
+      const {
+        postLoadSettings,
+        targetDraftCount: savedTargetDraftCount,
+        queueState,
+      } = pendingNav;
+
+      console.log("[ComposeTab] runAutoResume settings:", {
+        targetDraftCount: savedTargetDraftCount,
+        postLoadSettings,
+        queueState: queueState
+          ? {
+              currentIndex: queueState.currentIndex,
+              totalLists: queueState.queue.length,
+            }
+          : null,
+      });
+
+      // Update the target draft count in UI
+      setTargetDraftCount(savedTargetDraftCount);
+
+      // Set queue progress info if this is a queue
+      // NOTE: queueState.currentIndex is the NEXT index (already incremented by getNextQueueItem)
+      // So we use currentIndex - 1 to get the actual current item being processed
+      if (pendingNav.type === "queue" && queueState) {
+        const actualIndex = Math.max(0, queueState.currentIndex - 1);
+        const currentItem = queueState.queue[actualIndex];
+        setQueueProgress({
+          currentIndex: actualIndex + 1, // 1-indexed for display
+          totalLists: queueState.queue.length,
+          currentListName: currentItem?.targetListName ?? "Unknown",
+        });
+      }
+
+      // Set up loading state
+      setIsLoading(true);
+      setIsCollecting(true);
+      setLoadingProgress(0);
+      stopRequestedRef.current = false;
+
+      // NOTE: We skip restoring settings to DB store during auto-resume
+      // because the account store might not be loaded yet (we skipped waitForStoresReady).
+      // The postLoadSettings from pendingNavigation already has all the settings we need.
+      // The DB store will sync when the account loads in the background.
+      console.log(
+        "[ComposeTab] runAutoResume: Using settings from pendingNavigation (skipping DB update)",
+      );
+
+      // Get existing URNs to skip
+      const existingUrns = new Set(getCards.map((card) => card.urn));
+
+      // Run post collection using utility
+      console.log("[ComposeTab] runAutoResume: Starting loadPostsToCards...");
+      try {
+        await loadPostsToCards({
+          targetCount: savedTargetDraftCount,
+          postLoadSettings,
+          existingUrns,
+          isUrnIgnored,
+          shouldStop: () => stopRequestedRef.current,
+          addCard,
+          updateCardComment,
+          generateCommentMutate: generateComment.mutateAsync,
+          onProgress: setLoadingProgress,
+          setPreviewingCard,
+        });
+        console.log(
+          "[ComposeTab] runAutoResume: loadPostsToCards completed successfully",
+        );
+      } catch (error) {
+        console.error(
+          "[ComposeTab] runAutoResume: loadPostsToCards FAILED:",
+          error,
+        );
+      }
+
+      console.log("[ComposeTab] Auto-resume Load Posts completed");
+      setIsLoading(false);
+      setIsCollecting(false);
+
+      // If this was part of a queue, continue to next tab
+      if (pendingNav.type === "queue") {
+        console.log("[ComposeTab] Queue processing, checking for next tab");
+        const hasNext = await continueQueueProcessing();
+
+        if (hasNext) {
+          console.log("[ComposeTab] Opened next tab in queue");
+        } else {
+          console.log("[ComposeTab] Queue complete");
+        }
+      }
     };
 
-    void checkAndResume();
-  }, []);
+    void runAutoResume();
+  }, [
+    addCard,
+    generateComment,
+    getCards,
+    isUrnIgnored,
+    setIsCollecting,
+    setPreviewingCard,
+    updateCardComment,
+  ]);
 
   // Handler to open settings (closes post preview first)
   const handleOpenSettings = useCallback(() => {
@@ -178,8 +303,8 @@ export function ComposeTab() {
     // Get post load settings from DB store (snapshot at start time)
     const postLoadSettings = useSettingsDBStore.getState().postLoad;
 
-    // If target list is enabled with list IDs, fetch URNs and navigate to filtered feed
-    // Only navigate if we're not already on a search/content page
+    // If target list is enabled with list IDs, use queue system to process lists
+    // Only use queue if we're not already on a search/content page (already navigated)
     const isOnSearchPage = window.location.pathname.startsWith(
       "/search/results/content",
     );
@@ -190,45 +315,30 @@ export function ComposeTab() {
       targetListIds.length > 0 &&
       !isOnSearchPage
     ) {
-      // Fetch URNs on-demand from the selected target lists
-      console.log(`[EngageKit] Fetching URNs for ${targetListIds.length} target lists...`);
-      const trpcClient = getTrpcClient();
+      // Build queue from cached URNs (pre-fetched when target list selector closed)
+      console.log(
+        `[EngageKit] Building queue for ${targetListIds.length} target lists...`,
+      );
 
       try {
-        // Fetch profiles from all selected lists in parallel
-        const allProfiles = await Promise.all(
-          targetListIds.map((listId) =>
-            trpcClient.targetList.getProfilesInList.query({ listId })
-          )
-        );
+        const queueItems = await buildQueueItems(targetListIds);
 
-        // Extract unique URNs from all profiles (filter out null/undefined)
-        const allUrns = new Set<string>();
-        for (const response of allProfiles) {
-          for (const profile of response.data) {
-            if (profile.profileUrn) {
-              allUrns.add(profile.profileUrn);
-            }
-          }
-        }
+        if (queueItems.length > 0) {
+          console.log(
+            `[EngageKit] Starting queue with ${queueItems.length} lists`,
+            {
+              queueItems: JSON.stringify(queueItems),
+            },
+          );
 
-        const targetListUrns = Array.from(allUrns);
-        console.log(`[EngageKit] Fetched ${targetListUrns.length} unique URNs from target lists`);
-
-        if (targetListUrns.length > 0) {
-          const feedUrl = buildListFeedUrl(targetListUrns);
-          console.log(`[EngageKit] Target list URNs:`, targetListUrns);
-          console.log(`[EngageKit] Navigating to:`, feedUrl);
-          console.log(`[EngageKit] Current location before:`, window.location.href);
-
-          // Save state before navigation so we can auto-resume after reload
-          // Convert DB settings to the expected PostLoadSettings format
-          const settingsForNav = {
+          // Build settings snapshot for queue
+          const settingsForQueue: PostLoadSettings = {
             targetListEnabled: postLoadSettings.targetListEnabled,
             targetListIds: postLoadSettings.targetListIds,
             timeFilterEnabled: postLoadSettings.timeFilterEnabled,
             minPostAge: postLoadSettings.minPostAge,
-            skipFriendActivitiesEnabled: postLoadSettings.skipFriendActivitiesEnabled,
+            skipFriendActivitiesEnabled:
+              postLoadSettings.skipFriendActivitiesEnabled,
             skipCompanyPagesEnabled: postLoadSettings.skipCompanyPagesEnabled,
             skipPromotedPostsEnabled: postLoadSettings.skipPromotedPostsEnabled,
             skipBlacklistEnabled: postLoadSettings.skipBlacklistEnabled,
@@ -238,127 +348,50 @@ export function ComposeTab() {
             skipThirdDegree: postLoadSettings.skipThirdDegree,
             skipFollowing: postLoadSettings.skipFollowing,
           };
-          try {
-            await savePendingNavigation(settingsForNav, targetDraftCount);
-            console.log(`[EngageKit] State saved successfully`);
-          } catch (err) {
-            console.error(`[EngageKit] Failed to save state:`, err);
-          }
 
-          // Full page navigation required - LinkedIn's SPA router doesn't handle search URLs
-          console.log(`[EngageKit] About to set window.location.href`);
-          window.location.href = feedUrl;
-          console.log(`[EngageKit] window.location.href set to:`, window.location.href);
-          return; // Stop here - page will reload, auto-resume will trigger
+          // Start queue processing - this opens first tab via background script
+          await processTargetListQueue(
+            queueItems,
+            settingsForQueue,
+            targetDraftCount,
+          );
+
+          // Reset loading state - the new tab will handle Load Posts via auto-resume
+          setIsLoading(false);
+          setIsCollecting(false);
+          return;
+        } else {
+          // No valid URNs in any target list - show error and stop
+          console.error(`[EngageKit] No valid target lists with URNs`);
+          setIsLoading(false);
+          setIsCollecting(false);
+          return;
         }
       } catch (err) {
-        console.error(`[EngageKit] Failed to fetch target list URNs:`, err);
-        // Continue without target list filtering
+        // Target list enabled but failed - stop, don't fall through to feed collection
+        console.error(`[EngageKit] Failed to build queue:`, err);
+        setIsLoading(false);
+        setIsCollecting(false);
+        return;
       }
     }
 
     // Get current cards to find existing URNs (snapshot at start time)
     const existingUrns = new Set(getCards.map((card) => card.urn));
 
-    // Check settings at start time (snapshot for this collection session)
-    const isHumanMode = useSettingsLocalStore.getState().behavior.humanOnlyMode;
-    const generateSettings = useSettingsDBStore.getState().commentGenerate;
-
-    // Batch callback - called when each batch of posts is ready
-    const onBatchReady = (posts: ReadyPost[]) => {
-      console.log(
-        `[EngageKit] Batch received: ${posts.length} posts (humanMode: ${isHumanMode})`,
-      );
-
-      // Check if no card is being previewed yet - we'll set first card as preview
-      const needsFirstPreview =
-        useComposeStore.getState().previewingCardId === null;
-      let firstCardId: string | null = null;
-
-      // Process all posts in the batch
-      for (const post of posts) {
-        const cardId = crypto.randomUUID();
-
-        // Track first card ID for setting preview
-        if (needsFirstPreview && !firstCardId) {
-          firstCardId = cardId;
-        }
-
-        // Add card - generating state depends on mode
-        addCard({
-          id: cardId,
-          urn: post.urn,
-          captionPreview: post.captionPreview,
-          fullCaption: post.fullCaption,
-          commentText: "", // Empty - user writes in human mode, AI fills in AI mode
-          originalCommentText: "",
-          peakTouchScore: 0,
-          postContainer: post.postContainer,
-          status: "draft",
-          isGenerating: !isHumanMode, // Not generating in human mode
-          authorInfo: post.authorInfo,
-          postTime: post.postTime,
-          postUrls: post.postUrls,
-          comments: post.comments,
-        });
-
-        // Only fire AI generation in AI mode
-        if (!isHumanMode) {
-          // Extract adjacent comments for AI context (only if enabled)
-          const adjacentComments = generateSettings?.adjacentCommentsEnabled
-            ? postUtils.extractAdjacentComments(post.postContainer)
-            : [];
-
-          // Fire AI request (don't await - run in parallel)
-          generateComment
-            .mutateAsync({
-              postContent: post.fullCaption,
-              styleGuide: DEFAULT_STYLE_GUIDE,
-              adjacentComments,
-            })
-            .then((result) => {
-              updateCardComment(cardId, result.comment);
-            })
-            .catch((err) => {
-              console.error(
-                "EngageKit: error generating comment for card",
-                cardId,
-                err,
-              );
-              updateCardComment(cardId, "");
-            });
-        }
-      }
-
-      // Update progress for the whole batch
-      setLoadingProgress((prev) => prev + posts.length);
-
-      // Set first card as preview (panel already open from isCollecting)
-      if (firstCardId) {
-        setPreviewingCard(firstCardId);
-      }
-    };
-
-    // Run batch collection with filter config (use defaults if settings not loaded)
-    await collectPostsBatch(
-      targetDraftCount,
+    // Run post collection using utility
+    await loadPostsToCards({
+      targetCount: targetDraftCount,
+      postLoadSettings,
       existingUrns,
       isUrnIgnored,
-      onBatchReady,
-      () => stopRequestedRef.current,
-      () => useComposeStore.getState().isUserEditing,
-      {
-        timeFilterEnabled: postLoadSettings?.timeFilterEnabled ?? false,
-        minPostAge: postLoadSettings?.minPostAge ?? null,
-        skipPromotedPosts: postLoadSettings?.skipPromotedPostsEnabled ?? true,
-        skipCompanyPages: postLoadSettings?.skipCompanyPagesEnabled ?? true,
-        skipFriendActivities: postLoadSettings?.skipFriendActivitiesEnabled ?? false,
-        skipFirstDegree: postLoadSettings?.skipFirstDegree ?? false,
-        skipSecondDegree: postLoadSettings?.skipSecondDegree ?? false,
-        skipThirdDegree: postLoadSettings?.skipThirdDegree ?? false,
-        skipFollowing: postLoadSettings?.skipFollowing ?? false,
-      },
-    );
+      shouldStop: () => stopRequestedRef.current,
+      addCard,
+      updateCardComment,
+      generateCommentMutate: generateComment.mutateAsync,
+      onProgress: setLoadingProgress,
+      setPreviewingCard,
+    });
 
     setIsLoading(false);
     setIsCollecting(false); // Done collecting, stop refocusing on blur
@@ -372,23 +405,6 @@ export function ComposeTab() {
     targetDraftCount,
     updateCardComment,
   ]);
-
-  // Follow-up effect: auto-start after targetDraftCount is updated from pending navigation
-  useEffect(() => {
-    if (pendingTargetCountRef.current === null) return;
-    if (targetDraftCount !== pendingTargetCountRef.current) return;
-
-    // Clear the pending flag
-    pendingTargetCountRef.current = null;
-
-    // Wait for LinkedIn page to fully load, then auto-start
-    const timer = setTimeout(() => {
-      console.log("[EngageKit] Auto-triggering Load Posts after navigation");
-      handleStart();
-    }, 2000);
-
-    return () => clearTimeout(timer);
-  }, [targetDraftCount, handleStart]);
 
   /**
    * Stop the batch collection
@@ -444,10 +460,51 @@ export function ComposeTab() {
       <div className="bg-background sticky top-0 z-10 -mx-4 border-b px-4 py-2">
         {/* Row 1: Title + Settings Icon */}
         <div className="mb-2 flex items-center justify-between border-b pb-2">
-          <div className="flex items-center gap-2">
-            <Feather className="h-3.5 w-3.5" />
-            <span className="text-sm font-medium">Compose</span>
-          </div>
+          <TooltipWithDialog
+            tooltipContent={
+              <p className="text-sm">
+                Load posts from your feed and generate AI comments.
+              </p>
+            }
+            buttonText="Watch tutorial"
+            dialogTitle="How to use Compose"
+            dialogDescription="Learn how to efficiently engage with posts using EngageKit."
+            dialogContent={
+              <div className="flex flex-col gap-4">
+                <div className="bg-muted flex aspect-video w-full items-center justify-center rounded-lg">
+                  <span className="text-muted-foreground text-sm">
+                    Tutorial video coming soon
+                  </span>
+                </div>
+                <div className="space-y-2 text-sm">
+                  <p>
+                    <strong>1. Load Posts:</strong> Click "Load Posts" to
+                    collect posts from your current feed.
+                  </p>
+                  <p>
+                    <strong>2. Configure Settings:</strong> Use the settings
+                    icon to customize filters and AI behavior.
+                  </p>
+                  <p>
+                    <strong>3. Review & Edit:</strong> Review AI-generated
+                    comments and edit as needed.
+                  </p>
+                  <p>
+                    <strong>4. Submit:</strong> Submit comments individually or
+                    use "Submit All" for batch posting.
+                  </p>
+                </div>
+              </div>
+            }
+            tooltipSide="bottom"
+            portalContainer={shadowRoot}
+            dialogClassName="max-w-md"
+          >
+            <div className="flex cursor-help items-center gap-2">
+              <Feather className="h-3.5 w-3.5" />
+              <span className="text-sm font-medium">Compose</span>
+            </div>
+          </TooltipWithDialog>
           <Button
             variant="ghost"
             size="sm"
@@ -458,6 +515,19 @@ export function ComposeTab() {
             <Settings className="h-3.5 w-3.5" />
           </Button>
         </div>
+
+        {/* Queue Progress Banner (only shown during queue processing) */}
+        {queueProgress && (
+          <div className="mb-2 rounded-md bg-blue-50 px-3 py-2 text-xs">
+            <div className="font-medium text-blue-700">
+              Loading list {queueProgress.currentIndex}/
+              {queueProgress.totalLists}
+            </div>
+            <div className="truncate text-blue-600">
+              {queueProgress.currentListName}
+            </div>
+          </div>
+        )}
 
         {/* Row 2: Settings Tags */}
         <div className="mb-2 overflow-x-auto">

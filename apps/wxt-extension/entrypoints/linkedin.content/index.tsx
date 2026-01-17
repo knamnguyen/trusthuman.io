@@ -6,7 +6,8 @@ import { loadFonts } from "../../assets/fonts-loader";
 import { initAuthStoreListener, useAuthStore } from "../../lib/auth-store";
 import { getTrpcClient, TRPCReactProvider } from "../../lib/trpc/client";
 import App from "./App";
-import { useAccountStore } from "./stores";
+import { SIDEBAR_TABS, useAccountStore, useSidebarStore } from "./stores";
+import { consumePendingNavigation } from "./stores/navigation-state";
 import { initSettingsDBStoreListener, useSettingsDBStore } from "./stores/settings-db-store";
 import { autoFetchAllMetrics } from "./utils/data-fetch-mimic/unified-auto-fetch";
 
@@ -106,6 +107,44 @@ export default defineContentScript({
           // Settings are fetched by initSettingsDBStoreListener when matchingAccount is populated
         }
       });
+
+    // Auto-resume system: Check for pending navigation and auto-open sidebar
+    // This runs at content script level so it works even if sidebar is closed
+    //
+    // PERFORMANCE OPTIMIZATION: Don't wait for stores to be ready.
+    // The pendingNavigation contains all settings needed for Load Posts.
+    // Auth token is available via background worker (no store dependency).
+    // Stores will load in background for UI display correctness.
+    const checkAutoResume = async () => {
+      console.log("[AutoResume] Content script checking for pending navigation...");
+
+      try {
+        // Check immediately - don't wait for stores
+        // pendingNavigation contains the settings snapshot we need
+        const navigationState = await consumePendingNavigation();
+
+        if (navigationState) {
+          console.log("[AutoResume] Found pending navigation, starting immediately", {
+            type: navigationState.type,
+          });
+
+          // Store the pending state in a global so ComposeTab can pick it up
+          (window as unknown as { __engagekit_pending_navigation?: typeof navigationState }).__engagekit_pending_navigation = navigationState;
+
+          // Auto-open sidebar and switch to Compose tab
+          // ComposeTab will trigger Load Posts using the settings from pendingNavigation
+          useSidebarStore.getState().setIsOpen(true);
+          useSidebarStore.getState().setSelectedTab(SIDEBAR_TABS.COMPOSE);
+        } else {
+          console.log("[AutoResume] No pending navigation found");
+        }
+      } catch (error) {
+        console.error("[AutoResume] Error checking for pending navigation:", error);
+      }
+    };
+
+    // Start auto-resume check (fire-and-forget)
+    void checkAutoResume();
 
     // Unified auto-collect for all analytics metrics
     // - Fetches ALL 6 metrics together (all-or-nothing)
