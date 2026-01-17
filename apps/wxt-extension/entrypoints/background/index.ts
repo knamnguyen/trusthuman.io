@@ -21,31 +21,31 @@ export default defineBackground(() => {
   });
 
   /**
-   * Initialize Clerk client (lazy, on-demand)
+   * Initialize Clerk client eagerly on background script load
+   * This eliminates the cold-start delay when content scripts first request auth
    */
-  let clerkClientPromise: ReturnType<typeof createClerkClient> | null = null;
+  const syncHost = getSyncHostUrl();
+  console.log("Background: Initializing Clerk client eagerly with syncHost:", syncHost);
+
+  let clerkClientPromise: ReturnType<typeof createClerkClient> = createClerkClient({
+    publishableKey: import.meta.env.VITE_CLERK_PUBLISHABLE_KEY!,
+    syncHost,
+  });
 
   const getClerkClient = async () => {
-    if (!clerkClientPromise) {
-      const syncHost = getSyncHostUrl();
-      console.log("Background: Creating Clerk client with syncHost:", syncHost);
-
-      clerkClientPromise = createClerkClient({
-        publishableKey: import.meta.env.VITE_CLERK_PUBLISHABLE_KEY!,
-        syncHost,
-      });
-    }
     return await clerkClientPromise;
   };
 
   /**
-   * Invalidate cached Clerk client
-   * Call this before getClerkClient to force a fresh client
+   * Invalidate and recreate Clerk client
+   * Call this to force a fresh client (e.g., after org switch)
    */
   const invalidateClerkCache = () => {
-    const hadCache = clerkClientPromise !== null;
-    clerkClientPromise = null;
-    console.log("Background: Invalidated Clerk client cache:", { hadCache });
+    console.log("Background: Recreating Clerk client");
+    clerkClientPromise = createClerkClient({
+      publishableKey: import.meta.env.VITE_CLERK_PUBLISHABLE_KEY!,
+      syncHost,
+    });
   };
 
   /**
@@ -95,12 +95,8 @@ export default defineBackground(() => {
         });
 
         // Refresh auth status after potential sign-in/sign-out
-        // Invalidate cached client to force fresh check
-        const hadCachedClient = clerkClientPromise !== null;
-        clerkClientPromise = null;
-        console.log("Background: Invalidated Clerk client cache:", {
-          hadCachedClient,
-        });
+        // Recreate client to force fresh check
+        invalidateClerkCache();
 
         setTimeout(async () => {
           console.log(
