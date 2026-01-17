@@ -37,32 +37,26 @@ export async function submitCommentFullFlow(
   const submitSettings = useSettingsDBStore.getState().submitComment;
 
   try {
-    // 1. Wait for editable field (poll until found, max 3s)
-    let editableField: HTMLElement | null = null;
-    const startTime = Date.now();
-    while (Date.now() - startTime < 3000) {
-      editableField = commentUtils.findEditableField(card.postContainer);
-      if (editableField) break;
-      await new Promise((r) => setTimeout(r, 100));
-    }
+    // 1. Insert comment into editable field
+    const inserted = await commentUtils.insertComment(
+      card.postContainer,
+      card.commentText,
+    );
 
-    if (!editableField) {
-      console.warn("EngageKit: Editable field not found for card", card.id);
+    if (!inserted) {
+      console.warn("EngageKit: Failed to insert comment text");
       return false;
     }
 
-    // 2. Insert comment text
-    editableField.focus();
-    await commentUtils.insertComment(editableField, card.commentText);
     await new Promise((r) => setTimeout(r, 300));
 
-    // 3. Tag author if enabled
+    // 2. Tag author if enabled
     if (submitSettings?.tagPostAuthorEnabled) {
       await commentUtils.tagPostAuthor(card.postContainer);
       await new Promise((r) => setTimeout(r, 300));
     }
 
-    // 4. Attach image if enabled
+    // 3. Attach image if enabled
     if (submitSettings?.attachPictureEnabled) {
       const imageBlob = useSettingsLocalStore.getState().getImageBlob();
       if (imageBlob) {
@@ -71,17 +65,17 @@ export async function submitCommentFullFlow(
       }
     }
 
-    // 5. Submit comment (click button + verify)
+    // 4. Submit comment (click button + verify)
     const result = await commentUtils.submitComment(card.postContainer);
 
     if (result.success) {
-      // 6. Like post if enabled
+      // 5. Like post if enabled
       if (submitSettings?.likePostEnabled) {
         await commentUtils.likePost(card.postContainer);
         await new Promise((r) => setTimeout(r, 300));
       }
 
-      // 7. Like own comment if enabled
+      // 6. Like own comment if enabled
       if (submitSettings?.likeCommentEnabled) {
         await new Promise((r) => setTimeout(r, 500));
         await commentUtils.likeOwnComment(card.postContainer);

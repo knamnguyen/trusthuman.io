@@ -16,8 +16,10 @@
  * - Comments are article elements with data-id="urn:li:comment:*"
  */
 
-import { getCommentUrls, findNewCommentUrl } from "./extract-comment-url";
+import { navigateLinkedIn } from "@sassy/linkedin-automation/navigate/navigate-linkedin";
+
 import type { SubmitCommentResult } from "../types";
+import { findNewCommentUrl, getCommentUrls } from "./extract-comment-url";
 
 /**
  * Finds the submit button (Comment/Reply) within a post container.
@@ -27,7 +29,7 @@ import type { SubmitCommentResult } from "../types";
  * @returns The submit button element, or null if not found
  */
 export function findSubmitButton(
-  postContainer: HTMLElement
+  postContainer: HTMLElement,
 ): HTMLButtonElement | null {
   // V1: Find the form containing the comment box
   const form = postContainer.querySelector("form");
@@ -46,14 +48,13 @@ export function findSubmitButton(
   return null;
 }
 
-
 /**
  * Get the count of comments in a post container.
  * Comments are identified by article elements with data-id containing "urn:li:comment".
  */
 function getCommentCount(postContainer: HTMLElement): number {
   const comments = postContainer.querySelectorAll(
-    'article[data-id^="urn:li:comment"]'
+    'article[data-id^="urn:li:comment"]',
   );
   return comments.length;
 }
@@ -69,7 +70,7 @@ function getCommentCount(postContainer: HTMLElement): number {
 async function waitForNewComment(
   postContainer: HTMLElement,
   previousCount: number,
-  timeout = 5000
+  timeout = 5000,
 ): Promise<boolean> {
   const startTime = Date.now();
 
@@ -97,13 +98,13 @@ async function waitForNewComment(
  * @returns Result with success status (URL extraction TODO for V1)
  */
 export async function submitComment(
-  postContainer: HTMLElement
+  postContainer: HTMLElement,
 ): Promise<SubmitCommentResult> {
   // Capture comment URLs before submission
   const commentUrlsBefore = getCommentUrls(postContainer);
   const commentCountBefore = getCommentCount(postContainer);
   console.log(
-    `EngageKit: Comment count before submission: ${commentCountBefore}`
+    `EngageKit: Comment count before submission: ${commentCountBefore}`,
   );
 
   // Find the submit button
@@ -123,12 +124,15 @@ export async function submitComment(
   if (verified) {
     const newCount = getCommentCount(postContainer);
     console.log(
-      `EngageKit: Comment verified! Count: ${commentCountBefore} → ${newCount}`
+      `EngageKit: Comment verified! Count: ${commentCountBefore} → ${newCount}`,
     );
 
     // Extract the new comment's URL
     const commentUrlsAfter = getCommentUrls(postContainer);
-    const newCommentInfo = findNewCommentUrl(commentUrlsBefore, commentUrlsAfter);
+    const newCommentInfo = findNewCommentUrl(
+      commentUrlsBefore,
+      commentUrlsAfter,
+    );
 
     if (newCommentInfo) {
       console.log(`EngageKit: New comment URL: ${newCommentInfo.url}`);
@@ -149,7 +153,7 @@ export async function submitComment(
   } else {
     const currentCount = getCommentCount(postContainer);
     console.warn(
-      `EngageKit: Verification failed (v1). Count still at ${currentCount} (expected > ${commentCountBefore})`
+      `EngageKit: Verification failed (v1). Count still at ${currentCount} (expected > ${commentCountBefore})`,
     );
     return { success: false };
   }

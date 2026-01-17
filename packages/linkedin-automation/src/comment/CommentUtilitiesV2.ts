@@ -3,17 +3,17 @@ import type {
   OnCommentEditorTargetsChange,
   OnNativeCommentButtonClick,
 } from "./types";
-import { findEditableField } from "./utils-v2/find-editable-field";
+import { attachImageToComment } from "./utils-v2/attach-image-to-comment";
 import { clickCommentButton } from "./utils-v2/click-comment-button";
+import { findEditableField } from "./utils-v2/find-editable-field";
 import { insertComment } from "./utils-v2/insert-comment";
-import { submitComment, findSubmitButton } from "./utils-v2/submit-comment";
+import { likeOwnComment } from "./utils-v2/like-own-comment";
+import { likePost } from "./utils-v2/like-post";
+import { findSubmitButton, submitComment } from "./utils-v2/submit-comment";
+import { tagPostAuthor } from "./utils-v2/tag-post-author";
 import { waitForCommentsReady } from "./utils-v2/wait-for-comments-ready";
 import { watchForCommentEditors } from "./utils-v2/watch-for-comment-editors";
 import { watchForNativeCommentButtonClicks } from "./utils-v2/watch-for-native-comment-clicks";
-import { likePost } from "./utils-v2/like-post";
-import { likeOwnComment } from "./utils-v2/like-own-comment";
-import { tagPostAuthor } from "./utils-v2/tag-post-author";
-import { attachImageToComment } from "./utils-v2/attach-image-to-comment";
 
 export class CommentUtilitiesV2 implements CommentUtilities {
   findEditableField(postContainer: HTMLElement): HTMLElement | null {
@@ -24,7 +24,7 @@ export class CommentUtilitiesV2 implements CommentUtilities {
     return clickCommentButton(postContainer);
   }
 
-  insertComment(editableField: HTMLElement, comment: string): Promise<void> {
+  insertComment(editableField: HTMLElement, comment: string): Promise<boolean> {
     return insertComment(editableField, comment);
   }
 
@@ -43,7 +43,7 @@ export class CommentUtilitiesV2 implements CommentUtilities {
 
   waitForCommentsReady(
     container: HTMLElement,
-    beforeCount: number
+    beforeCount: number,
   ): Promise<void> {
     return waitForCommentsReady(container, beforeCount);
   }
@@ -53,7 +53,7 @@ export class CommentUtilitiesV2 implements CommentUtilities {
   }
 
   watchForNativeCommentButtonClicks(
-    onClick: OnNativeCommentButtonClick
+    onClick: OnNativeCommentButtonClick,
   ): () => void {
     return watchForNativeCommentButtonClicks(onClick);
   }
@@ -70,7 +70,10 @@ export class CommentUtilitiesV2 implements CommentUtilities {
     return tagPostAuthor(postContainer);
   }
 
-  attachImageToComment(postContainer: HTMLElement, imageSource: string | Blob): Promise<boolean> {
+  attachImageToComment(
+    postContainer: HTMLElement,
+    imageSource: string | Blob,
+  ): Promise<boolean> {
     return attachImageToComment(postContainer, imageSource);
   }
 }

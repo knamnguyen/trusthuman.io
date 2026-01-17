@@ -28,17 +28,21 @@ export function detectDomVersion(debug = false): DomVersion {
     return cachedVersion;
   }
 
-  // Check framework markers
+  // Check framework markers (this might not be there if dom is not rehydrated yet)
   const hasRehydrated = document.body?.hasAttribute("data-rehydrated");
-  const hasStrictMode = !!document.querySelector("#root[data-strictmode]");
-  const hasSdui = !!document.querySelector("[data-sdui-screen]");
+  // So we fallback to check if there's a root div
+  // :scope to limit to direct children of body, so we dont need to traverse entire DOM
+  const hasStrictMode = !!document.body.querySelector(":scope > #root");
 
-  const isV2 = hasRehydrated || hasStrictMode || hasSdui;
+  const isV2 = hasRehydrated || hasStrictMode;
   cachedVersion = isV2 ? "dom-v2" : "dom-v1";
   lastUrl = currentUrl;
 
   if (debug) {
-    logDetection(cachedVersion, false, { hasRehydrated, hasStrictMode, hasSdui });
+    logDetection(cachedVersion, false, {
+      hasRehydrated,
+      hasStrictMode,
+    });
   }
 
   return cachedVersion;
@@ -47,12 +51,15 @@ export function detectDomVersion(debug = false): DomVersion {
 function logDetection(
   version: DomVersion,
   fromCache: boolean,
-  markers?: { hasRehydrated: boolean; hasStrictMode: boolean; hasSdui: boolean }
+  markers?: {
+    hasRehydrated: boolean;
+    hasStrictMode: boolean;
+  },
 ) {
   console.log(
     `[linkedin-dom] ${version}${fromCache ? " (cached)" : ""}`,
     markers ?? "",
-    window.location.pathname
+    window.location.pathname,
   );
 }
 
@@ -73,7 +80,7 @@ export function redetectDomVersion(debug = false): DomVersion {
  */
 export function onDomVersionChange(
   callback: (version: DomVersion) => void,
-  debug = false
+  debug = false,
 ): () => void {
   let lastDetectedVersion = detectDomVersion(debug);
   callback(lastDetectedVersion);

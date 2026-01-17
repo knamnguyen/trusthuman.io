@@ -95,6 +95,13 @@ export interface PostUtilities {
   findPostContainer(anchorElement: Element): Element | null;
 
   /**
+   * Find post container in feed update ('/feed/update') page.
+   *
+   * @returns The post container element, or null if not found
+   */
+  findPostContainerFromFeedUpdatePage(): HTMLElement | null;
+
+  /**
    * Extract post URL(s) from a LinkedIn post container.
    * Handles both single activity URNs and aggregate URNs (multiple posts).
    *

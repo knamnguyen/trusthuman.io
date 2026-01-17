@@ -17,11 +17,18 @@ import { extractPostCaption } from "./utils-v1/extract-post-caption";
 import { extractPostComments } from "./utils-v1/extract-post-comments";
 import { extractPostTime } from "./utils-v1/extract-post-time";
 import { extractPostUrl } from "./utils-v1/extract-post-url";
-import { findPostContainer } from "./utils-v1/find-post-container";
+import {
+  findPostContainer,
+  findPostContainerFromFeedUpdatePage,
+} from "./utils-v1/find-post-container";
 
 export class PostUtilitiesV1 implements PostUtilities {
   findPostContainer(anchorElement: Element): Element | null {
     return findPostContainer(anchorElement);
+  }
+
+  findPostContainerFromFeedUpdatePage(): HTMLElement | null {
+    return findPostContainerFromFeedUpdatePage();
   }
 
   extractPostUrl(postContainer: HTMLElement): PostUrlInfo[] {
