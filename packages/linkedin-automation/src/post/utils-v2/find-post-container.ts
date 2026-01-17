@@ -33,7 +33,7 @@ export function findPostContainer(anchorElement: Element): Element | null {
   // Fallback: Try finding feed-full-update and get its parent
   // (for cases where listitem isn't present)
   const feedUpdate = anchorElement.closest(
-    'div[data-view-name="feed-full-update"]'
+    'div[data-view-name="feed-full-update"]',
   );
   if (feedUpdate?.parentElement) {
     return feedUpdate.parentElement;
@@ -41,4 +41,16 @@ export function findPostContainer(anchorElement: Element): Element | null {
 
   // Last resort fallback
   return document.querySelector("main");
+}
+
+/**
+ * Find Post Container on /feed/update page - DOM v2 (React SSR + SDUI)
+ *
+ * On /feed/update page, posts are in div[role="listitem"] or
+ * div[data-view-name="feed-full-update"]
+ *
+ * @returns The post container element, or null if not found
+ */
+export function findPostContainerFromFeedUpdatePage(): HTMLElement | null {
+  return document.querySelector('div[data-view-name="feed-detail-page"]');
 }

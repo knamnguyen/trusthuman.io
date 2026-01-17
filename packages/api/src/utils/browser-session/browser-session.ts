@@ -374,46 +374,38 @@ export class BrowserSession {
       } as const;
     }
 
-    await this.pages.linkedin.evaluate((postUrn) => {
-      window.engagekitInternals.navigate(`/feed/update/${postUrn}`);
-    }, postUrn);
-
-    const submitCommentSettings = await this.db.submitCommentSetting.findFirst({
+    const settings = await this.db.submitCommentSetting.findFirst({
       where: {
         accountId: this.accountId,
       },
     });
 
-    return await this.pages.linkedin.evaluate(
-      async (comment, settings) => {
-        const postContainer = await window.engagekitInternals.retry(() => {
-          const element = document.querySelector("div.feed-shared-update-v2");
-          if (element === null) {
-            throw new Error("Post container not found, throwing for retry");
-          }
-
-          return element as HTMLDivElement;
-        });
-
-        if (postContainer.ok === false) {
-          return {
-            status: "error",
-            reason: "Post container not found",
-          } as const;
-        }
-
-        // TODO: submit comment
-
-        return {
-          status: "success",
-        } as const;
-      },
+    const result = await this.pages.linkedin.evaluate(
+      (postUrn, comment, settings) =>
+        window.engagekitInternals.navigateToPostAndSubmitComment(
+          postUrn,
+          comment,
+          settings ?? undefined,
+        ),
+      postUrn,
       comment,
-      submitCommentSettings,
+      settings,
     );
+
+    if (result.ok === false) {
+      console.warn(`Failed to comment on post ${postUrn}: ${result.reason}`);
+      return {
+        status: "error",
+        reason: result.reason,
+      } as const;
+    }
+
+    return {
+      status: "success",
+    } as const;
   }
 
-  private async waitForFeedPageToLoad() {
+  async waitForFeedPageToLoad() {
     const feedPageTimeout = Date.now() + 2 * 60 * 1000;
 
     // wait for url to change to feed page
@@ -431,7 +423,7 @@ export class BrowserSession {
     // wait for any posts to be loaded
     while (Date.now() < anyPostsLoadedTimeout) {
       const anyPostExists = await this.pages.linkedin.evaluate(
-        () => window.engagekitInternals.feedUtilities.countPosts() > 0,
+        () => window.engagekitInternals.feedUtils.countPosts() > 0,
       );
 
       if (anyPostExists) {
@@ -440,8 +432,6 @@ export class BrowserSession {
 
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
-
-    console.info("posts loaded");
   }
 
   private async getFeedPosts({ batchSize }: { batchSize: number }) {
@@ -455,29 +445,13 @@ export class BrowserSession {
       });
 
       return posts.map((post) => {
-        let createdAt = new Date();
-
-        if (post.postTime?.displayTime) {
-          createdAt = window.engagekitInternals.parsePostTime({
-            type: "display",
-            value: post.postTime.displayTime,
-          });
-        }
-
-        if (post.postTime?.fullTime) {
-          createdAt = window.engagekitInternals.parsePostTime({
-            type: "full",
-            value: post.postTime.fullTime,
-          });
-        }
-
         return {
           postUrn: post.urn,
           postUrl: post.url,
           postAlternateUrns: post.postAlternateUrls.map((p) => p.urn),
           captionPreview: post.captionPreview,
           fullCaption: post.fullCaption,
-          createdAt: createdAt.toISOString(),
+          postCreatedAt: post.postCreatedAt.toISOString(),
           authorName: post.authorInfo?.name ?? null,
           postComments: post.comments,
           authorProfileUrl: post.authorInfo?.profileUrl ?? null,
@@ -506,7 +480,7 @@ export class BrowserSession {
           postComments: post.postComments,
           postCaptionPreview: post.captionPreview,
           postFullCaption: post.fullCaption,
-          postCreatedAt: new Date(post.createdAt),
+          postCreatedAt: new Date(post.postCreatedAt),
           authorName: post.authorName,
           authorProfileUrl: post.authorProfileUrl,
           authorAvatarUrl: post.authorAvatarUrl,

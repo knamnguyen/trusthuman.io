@@ -39,3 +39,16 @@ export function findPostContainer(anchorElement: Element): Element | null {
   // Last resort fallback
   return document.querySelector("main");
 }
+
+/**
+ * Find Post Container on /feed/update page - DOM v1 (legacy)
+ *
+ * On /feed/update page, posts are in article elements with role="article"
+ *
+ * @returns The post container element, or null if not found
+ */
+export function findPostContainerFromFeedUpdatePage(): HTMLElement | null {
+  return document.querySelector(
+    "div[data-urn], div[data-id], article[role='article']",
+  );
+}

@@ -39,7 +39,7 @@ describe.skipIf(process.env.TEST_BROWSER_SESSION === undefined)(
         },
       });
       // figure out how to stub and test
-      session = new BrowserSession(prisma, browserRegistry, accountId, userId, {
+      session = new BrowserSession(prisma, browserRegistry, accountId, {
         location: "US",
         browserProfileId: "mock-profile-id",
       });
@@ -116,14 +116,16 @@ describe.skipIf(process.env.TEST_BROWSER_SESSION === undefined)(
         if (process.env.TEST_LINKEDIN_POST_URN === undefined) {
           throw new Error("TEST_LINKEDIN_POST_URN is not defined");
         }
+
+        await session.waitForFeedPageToLoad();
+
         const result = await session.commentOnPost(
           // eslint-disable-next-line turbo/no-undeclared-env-vars
           process.env.TEST_LINKEDIN_POST_URN,
-          "best feeling ever!",
+          "love this! theres always something to learn from everyone u meet",
         );
 
         expect(result.status === "success");
-        await new Promise(() => {});
       },
       Infinity,
     );

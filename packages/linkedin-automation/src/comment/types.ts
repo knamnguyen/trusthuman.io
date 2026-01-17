@@ -36,7 +36,7 @@ export interface CommentEditorTarget {
  * Callback type for comment editor target changes.
  */
 export type OnCommentEditorTargetsChange = (
-  targets: CommentEditorTarget[]
+  targets: CommentEditorTarget[],
 ) => void;
 
 /**
@@ -55,7 +55,7 @@ export interface NativeCommentButtonClickEvent {
  * Callback type for native comment button clicks.
  */
 export type OnNativeCommentButtonClick = (
-  event: NativeCommentButtonClickEvent
+  event: NativeCommentButtonClickEvent,
 ) => void;
 
 /**
@@ -90,7 +90,7 @@ export interface CommentUtilities {
    * @param editableField - The contenteditable element
    * @param comment - The comment text to insert
    */
-  insertComment(editableField: HTMLElement, comment: string): Promise<void>;
+  insertComment(editableField: HTMLElement, comment: string): Promise<boolean>;
 
   /**
    * Submit a comment to a LinkedIn post.
@@ -115,7 +115,7 @@ export interface CommentUtilities {
    */
   waitForCommentsReady(
     container: HTMLElement,
-    beforeCount: number
+    beforeCount: number,
   ): Promise<void>;
 
   /**
@@ -136,7 +136,9 @@ export interface CommentUtilities {
    * @param onClick - Callback fired when a native comment button is clicked
    * @returns Cleanup function to stop watching
    */
-  watchForNativeCommentButtonClicks(onClick: OnNativeCommentButtonClick): () => void;
+  watchForNativeCommentButtonClicks(
+    onClick: OnNativeCommentButtonClick,
+  ): () => void;
 
   /**
    * Click the like button on a post if not already liked.
@@ -187,7 +189,10 @@ export interface CommentUtilities {
    * @param imageSource - URL string or Blob of the image to attach
    * @returns Promise<boolean> - true if image was attached successfully
    */
-  attachImageToComment(postContainer: HTMLElement, imageSource: string | Blob): Promise<boolean>;
+  attachImageToComment(
+    postContainer: HTMLElement,
+    imageSource: string | Blob,
+  ): Promise<boolean>;
 
   /**
    * Click the submit button (Comment/Reply) in a post's comment editor.
