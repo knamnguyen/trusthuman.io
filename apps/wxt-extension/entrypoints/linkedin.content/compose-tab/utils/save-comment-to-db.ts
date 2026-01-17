@@ -40,9 +40,11 @@ export async function saveCommentToDb(
 
     // Get post URL from the first postUrls entry
     const postUrl = card.postUrls[0]?.url ?? "";
+    const postUrn = card.postUrls[0]?.urn ?? "";
 
     await trpc.comment.saveSubmitted.mutate({
       postUrl,
+      postUrn,
       postFullCaption: card.fullCaption,
       postCreatedAt,
       comment: card.commentText,

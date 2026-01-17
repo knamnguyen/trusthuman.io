@@ -366,10 +366,10 @@ function addEngageButton(form: HTMLFormElement): void {
                         .getTrpcClient()
                         .autocomment.saveComments.mutate({
                           postUrn,
-                          hash: hashToSave ?? null,
                           comment: generated,
-                          postContentHtml: extractedPostContent.html,
-                          urns: postUrns,
+                          postAlternateUrns: postUrns,
+                          postFullCaption: extractedPostContent.content,
+                          postUrl: `https://www.linkedin.com/feed/update/${postUrn}`,
                         }),
                     );
                   }

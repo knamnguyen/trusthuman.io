@@ -180,10 +180,10 @@ describe("insertCommentOnNonPreviouslyCommentedPosts", () => {
       ],
     });
 
-    const values = [
+    const inserted = await insertCommentOnNonPreviouslyCommentedPosts(db, [
       {
         id: "test-comment-id-1",
-        postUrl: "https://www.linkedin.com/feed/update/urn:li:share:test-post-id-1",
+        postUrn: "urn:li:share:test-post-id-1",
         postFullCaption: "This is a test comment 1",
         comment: "",
         postCreatedAt: new Date(),
@@ -191,33 +191,31 @@ describe("insertCommentOnNonPreviouslyCommentedPosts", () => {
         authorProfileUrl: "https://www.linkedin.com/in/test-author-1",
         authorAvatarUrl: "https://www.example.com/avatar1.jpg",
         authorHeadline: "Test Headline 1",
+        postComments: [],
         accountId: "test-account-id-1",
       },
       {
         id: "test-comment-id-2",
-        postUrl: "https://www.linkedin.com/feed/update/urn:li:share:test-post-id-2",
+        postUrn: "urn:li:share:test-post-id-2",
         postFullCaption: "This is a test comment 2",
         comment: "",
         postCreatedAt: new Date(),
         authorName: "Test Author 2",
         authorProfileUrl: "https://www.linkedin.com/in/test-author-2",
         authorAvatarUrl: "https://www.example.com/avatar2.jpg",
+        postComments: [],
         authorHeadline: "Test Headline 2",
         accountId: "test-account-id-1",
       },
-    ];
-
-    const inserted = await insertCommentOnNonPreviouslyCommentedPosts(
-      db,
-      values,
-    );
+    ]);
 
     expect(inserted).toBe(2);
 
-    const values2 = [
+    const insertedAgain = await insertCommentOnNonPreviouslyCommentedPosts(db, [
       {
         id: "test-comment-id-3",
-        postUrl: "https://www.linkedin.com/feed/update/urn:li:share:test-post-id-3",
+        postUrl:
+          "https://www.linkedin.com/feed/update/urn:li:share:test-post-id-3",
         postFullCaption: "This is a test comment 1",
         comment: "",
         postCreatedAt: new Date(),
@@ -225,26 +223,24 @@ describe("insertCommentOnNonPreviouslyCommentedPosts", () => {
         authorProfileUrl: "https://www.linkedin.com/in/test-author-1",
         authorAvatarUrl: "https://www.example.com/avatar1.jpg",
         authorHeadline: "Test Headline 1",
+        postComments: [],
         accountId: "test-account-id-1",
       },
       {
         id: "test-comment-id-4",
-        postUrl: "https://www.linkedin.com/feed/update/urn:li:share:test-post-id-2",
+        postUrl:
+          "https://www.linkedin.com/feed/update/urn:li:share:test-post-id-2",
         postFullCaption: "This is a test comment 2",
         comment: "",
         postCreatedAt: new Date(),
         authorName: "Test Author 2",
         authorProfileUrl: "https://www.linkedin.com/in/test-author-2",
         authorAvatarUrl: "https://www.example.com/avatar2.jpg",
+        postComments: [],
         authorHeadline: "Test Headline 2",
         accountId: "test-account-id-1",
       },
-    ];
-
-    const insertedAgain = await insertCommentOnNonPreviouslyCommentedPosts(
-      db,
-      values2,
-    );
+    ]);
 
     expect(insertedAgain).toBe(1);
   });

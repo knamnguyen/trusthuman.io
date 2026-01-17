@@ -20,9 +20,10 @@ export const commentRouter = () =>
     saveSubmitted: accountProcedure
       .input(
         z.object({
-          postUrl: z.string(),
+          postUrn: z.string(),
           postFullCaption: z.string(),
           postCreatedAt: z.date().optional(),
+          postUrl: z.string(),
           comment: z.string(),
           commentUrl: z.string().optional(),
           originalAiComment: z.string().optional(),
@@ -53,7 +54,7 @@ export const commentRouter = () =>
         await ctx.db.comment.create({
           data: {
             id: commentId,
-            postUrl: input.postUrl,
+            postUrn: input.postUrn,
             postFullCaption: input.postFullCaption,
             postCreatedAt: input.postCreatedAt ?? null,
             comment: input.comment,

@@ -127,6 +127,7 @@ export const autoCommentRouter = () =>
           comment: z.string(),
           postFullCaption: z.string(),
           autoCommentRunId: z.string().optional(),
+          postUrn: z.string(),
           postUrl: z.string(),
           postCreatedAt: z.date().optional(),
           postComments: z
@@ -167,6 +168,7 @@ export const autoCommentRouter = () =>
         const result = await ctx.db.comment.createMany({
           data: {
             id: ulid(),
+            postUrn: input.postUrn,
             postUrl: input.postUrl,
             postFullCaption: input.postFullCaption,
             postCreatedAt: input.postCreatedAt,
@@ -798,7 +800,7 @@ async function filterCommentedUrns(
 
   if (postUrns.length > 0) {
     clause.push({
-      postUrl: { in: postUrns },
+      postUrn: { in: postUrns },
       postAlternateUrns: { hasSome: postUrns },
     } as const);
   }
@@ -824,10 +826,10 @@ async function filterCommentedUrns(
         },
       ],
     },
-    select: { postUrl: true },
+    select: { postUrn: true },
   });
 
-  const commentedUrns = new Set(comments.map((comment) => comment.postUrl));
+  const commentedUrns = new Set(comments.map((comment) => comment.postUrn));
 
   return {
     status: "success",

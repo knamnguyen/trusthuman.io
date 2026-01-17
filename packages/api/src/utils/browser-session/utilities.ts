@@ -131,12 +131,19 @@ function parsePostTime(input: {
   }
 }
 
+let _feedUtilities: ReturnType<typeof createFeedUtilities> | null = null;
+let _postUtilities: ReturnType<typeof createPostUtilities> | null = null;
+
 const engagekitInternals = {
   retry,
   collectPostsBatch,
   parsePostTime,
-  feedUtilities: createFeedUtilities(),
-  postUtilities: createPostUtilities(),
+  get feedUtilities() {
+    return (_feedUtilities ??= createFeedUtilities());
+  },
+  get postUtilities() {
+    return (_postUtilities ??= createPostUtilities());
+  },
 };
 
 function inject() {

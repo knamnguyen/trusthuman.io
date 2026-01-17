@@ -136,7 +136,8 @@ CREATE TABLE "CommentStyle" (
 -- CreateTable
 CREATE TABLE "PostLoadSetting" (
     "accountId" TEXT NOT NULL,
-    "targetListId" TEXT,
+    "targetListEnabled" BOOLEAN NOT NULL DEFAULT false,
+    "targetListIds" TEXT[],
     "timeFilterEnabled" BOOLEAN NOT NULL DEFAULT false,
     "minPostAge" INTEGER,
     "skipFriendActivitiesEnabled" BOOLEAN NOT NULL DEFAULT false,
@@ -172,19 +173,21 @@ CREATE TABLE "SubmitCommentSetting" (
 -- CreateTable
 CREATE TABLE "Comment" (
     "id" TEXT NOT NULL,
-    "postUrn" TEXT NOT NULL,
-    "postContentHtml" TEXT,
+    "postUrn" TEXT NOT NULL DEFAULT '',
+    "postUrl" TEXT NOT NULL DEFAULT '',
     "postCreatedAt" TIMESTAMP(3),
     "postFullCaption" TEXT NOT NULL,
-    "postCaptionPreview" TEXT NOT NULL,
-    "adjacentComments" JSONB,
+    "postComments" JSONB,
     "authorName" TEXT,
     "authorProfileUrl" TEXT,
     "authorAvatarUrl" TEXT,
     "authorHeadline" TEXT,
-    "comment" TEXT NOT NULL,
-    "originalAiComment" TEXT,
     "postAlternateUrns" TEXT[] DEFAULT ARRAY['']::TEXT[],
+    "peakTouchScore" INTEGER,
+    "comment" TEXT NOT NULL,
+    "commentUrn" TEXT,
+    "commentUrl" TEXT,
+    "originalAiComment" TEXT,
     "commentedAt" TIMESTAMP(3),
     "isAutoCommented" BOOLEAN NOT NULL DEFAULT true,
     "status" "CommentStatus" NOT NULL DEFAULT 'DRAFT',
@@ -485,6 +488,9 @@ CREATE INDEX "BrowserJob_status_idx" ON "BrowserJob"("status");
 CREATE UNIQUE INDEX "CommentGenerateSetting_commentStyleId_key" ON "CommentGenerateSetting"("commentStyleId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "PostLoadSetting_blacklistId_key" ON "PostLoadSetting"("blacklistId");
+
+-- CreateIndex
 CREATE INDEX "Comment_postUrn_idx" ON "Comment"("postUrn");
 
 -- CreateIndex
@@ -608,9 +614,6 @@ ALTER TABLE "CommentStyle" ADD CONSTRAINT "CommentStyle_userId_fkey" FOREIGN KEY
 ALTER TABLE "PostLoadSetting" ADD CONSTRAINT "PostLoadSetting_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "PostLoadSetting" ADD CONSTRAINT "PostLoadSetting_targetListId_fkey" FOREIGN KEY ("targetListId") REFERENCES "TargetList"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "PostLoadSetting" ADD CONSTRAINT "PostLoadSetting_blacklistId_fkey" FOREIGN KEY ("blacklistId") REFERENCES "TargetList"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -641,19 +644,19 @@ ALTER TABLE "OrganizationMember" ADD CONSTRAINT "OrganizationMember_linkedInAcco
 ALTER TABLE "ProfileImportRun" ADD CONSTRAINT "ProfileImportRun_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "TargetList" ADD CONSTRAINT "TargetList_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "TargetList" ADD CONSTRAINT "TargetList_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "TargetListProfile" ADD CONSTRAINT "TargetListProfile_listId_fkey" FOREIGN KEY ("listId") REFERENCES "TargetList"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "TargetListProfile" ADD CONSTRAINT "TargetListProfile_listId_fkey" FOREIGN KEY ("listId") REFERENCES "TargetList"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "TargetListProfile" ADD CONSTRAINT "TargetListProfile_profileId_fkey" FOREIGN KEY ("profileId") REFERENCES "TargetProfile"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "TargetListProfile" ADD CONSTRAINT "TargetListProfile_profileId_fkey" FOREIGN KEY ("profileId") REFERENCES "TargetProfile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "TargetListProfile" ADD CONSTRAINT "TargetListProfile_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "TargetListProfile" ADD CONSTRAINT "TargetListProfile_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "TargetProfile" ADD CONSTRAINT "TargetProfile_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "TargetProfile" ADD CONSTRAINT "TargetProfile_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "BlacklistedProfile" ADD CONSTRAINT "BlacklistedProfile_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

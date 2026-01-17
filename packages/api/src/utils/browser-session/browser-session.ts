@@ -9,6 +9,7 @@ import { ulid } from "ulidx";
 import { z } from "zod";
 
 import type { PrismaClient } from "@sassy/db";
+import type { PostCommentInfo } from "@sassy/linkedin-automation/post/types";
 import type { StartAutoCommentingParams } from "@sassy/validators";
 
 import type { Logger } from "../commons";
@@ -639,8 +640,6 @@ export class BrowserSession {
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
 
-    console.info("feed loaded");
-
     const anyPostsLoadedTimeout = Date.now() + 2 * 60 * 1000;
 
     // wait for any posts to be loaded
@@ -688,11 +687,13 @@ export class BrowserSession {
 
         return {
           postUrn: post.urn,
+          postUrl: post.url,
+          postAlternateUrns: post.postAlternateUrls.map((p) => p.urn),
           captionPreview: post.captionPreview,
           fullCaption: post.fullCaption,
           createdAt: createdAt.toISOString(),
-          postContentHtml: post.postContainer.innerHTML,
           authorName: post.authorInfo?.name ?? null,
+          postComments: post.comments,
           authorProfileUrl: post.authorInfo?.profileUrl ?? null,
           authorAvatarUrl: post.authorInfo?.photoUrl ?? null,
           authorHeadline: post.authorInfo?.headline ?? null,
@@ -712,9 +713,11 @@ export class BrowserSession {
         batch.map((post) => ({
           id: ulid(),
           comment: "",
-          accountId: this.accountId,
           postUrn: post.postUrn,
-          postContentHtml: post.postContentHtml,
+          postUrl: post.postUrl,
+          accountId: this.accountId,
+          postAlternateUrns: post.postAlternateUrns,
+          postComments: post.postComments,
           postCaptionPreview: post.captionPreview,
           postFullCaption: post.fullCaption,
           postCreatedAt: new Date(post.createdAt),
@@ -793,9 +796,10 @@ export async function insertCommentOnNonPreviouslyCommentedPosts(
   comments: {
     id: string;
     postUrn: string;
-    postContentHtml: string;
-    postCaptionPreview: string;
+    postUrl: string;
+    postAlternateUrns: string[];
     postFullCaption: string;
+    postComments: PostCommentInfo[];
     comment: string;
     postCreatedAt: Date;
     authorName: string | null;
@@ -814,6 +818,7 @@ export async function insertCommentOnNonPreviouslyCommentedPosts(
         .toISOString()
         .slice(0, 19)
         .replace("T", " "),
+      postAlternateUrns: `{${comment.postAlternateUrns.join(",")}}`,
     })),
   );
 
@@ -821,11 +826,11 @@ export async function insertCommentOnNonPreviouslyCommentedPosts(
     insert into "Comment" (
       "id", 
       "postUrn", 
-      "postContentHtml", 
-      "postCaptionPreview", 
+      "postUrl",
+      "postAlternateUrns",
+      "postCreatedAt",
       "postFullCaption", 
-      "postCreatedAt", 
-      "authorUrn", 
+      "postComments",
       "authorName", 
       "authorProfileUrl", 
       "authorAvatarUrl", 
@@ -833,21 +838,21 @@ export async function insertCommentOnNonPreviouslyCommentedPosts(
       "accountId",
       "comment"
     ) select 
-      values->>'id',
-      values->>'postUrn',
-      values->>'postContentHtml',
-      values->>'postCaptionPreview',
-      values->>'postFullCaption',
-      (values->>'createdAt')::timestamp,
-      values->>'authorUrn',
-      values->>'authorName',
-      values->>'authorProfileUrl',
-      values->>'authorAvatarUrl',
-      values->>'authorHeadline',
-      values->>'accountId',
-      values->>'comment'
-    from jsonb_array_elements(${stringifiedValues}) as values where not exists (
-      select 1 from "Comment" where "Comment"."postUrn" = values->>'postUrn' and "Comment"."accountId" = values->>'accountId' limit 1
+      payload->>'id',
+      payload->>'postUrn',
+      payload->>'postUrl',
+      payload->>'postAlternateUrns',
+      (payload->>'postCreatedAt')::timestamp,
+      payload->>'postFullCaption',
+      (payload->>'postComments')::jsonb,
+      payload->>'authorName',
+      payload->>'authorProfileUrl',
+      payload->>'authorAvatarUrl',
+      payload->>'authorHeadline',
+      payload->>'accountId',
+      payload->>'comment'
+    from jsonb_array_elements(${stringifiedValues}) as payload where not exists (
+      select 1 from "Comment" where "Comment"."accountId" = payload->>'accountId' and ("Comment"."postUrl" = payload->>'postUrl' or payload->>'postUrl' in any("Comment"."postAlternateUrls")) limit 1
     )
   `;
 

@@ -81,12 +81,13 @@ function getCaptionPreview(fullCaption: string, wordLimit: number): string {
  */
 export interface ReadyPost {
   urn: string;
+  url: string;
   captionPreview: string;
   fullCaption: string;
   postContainer: HTMLElement;
   authorInfo: PostAuthorInfo | null;
   postTime: PostTimeInfo | null;
-  postUrls: PostUrlInfo[];
+  postAlternateUrls: PostUrlInfo[];
   comments: PostCommentInfo[];
 }
 
@@ -241,12 +242,13 @@ function extractPostData(container: HTMLElement): ReadyPost | null {
 
   return {
     urn,
+    url: `https://www.linkedin.com/feed/update/${urn}`,
     captionPreview: getCaptionPreview(fullCaption, 10),
     fullCaption,
     postContainer: container,
     authorInfo: postUtils.extractPostAuthorInfo(container),
     postTime: postUtils.extractPostTime(container),
-    postUrls: postUtils.extractPostUrl(container),
+    postAlternateUrls: postUtils.extractPostUrl(container),
     comments: postUtils.extractPostComments(container),
   };
 }
