@@ -4,7 +4,7 @@ import z from "zod";
 import { storageStateSchema } from "@sassy/validators";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { hyperbrowser } from "../utils/browser-session";
+import { hyperbrowser } from "../utils/browser-session/browser-session";
 import { hasPermissionToAccessAccountClause } from "./account";
 
 export const browserRouter = () =>

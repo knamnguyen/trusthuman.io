@@ -17,9 +17,9 @@ import type {
   PostUrlInfo,
 } from "../post/types";
 import { createCommentUtilities } from "../comment/create-comment-utilities";
-import { createFeedUtilities } from "./create-feed-utilities";
 import { createPostUtilities } from "../post/create-post-utilities";
 import { parseTimeToHours } from "../post/utils-shared/parse-time-to-hours";
+import { createFeedUtilities } from "./create-feed-utilities";
 
 /**
  * Configuration for filtering posts during collection.
@@ -81,12 +81,13 @@ function getCaptionPreview(fullCaption: string, wordLimit: number): string {
  */
 export interface ReadyPost {
   urn: string;
+  url: string;
   captionPreview: string;
   fullCaption: string;
   postContainer: HTMLElement;
   authorInfo: PostAuthorInfo | null;
   postTime: PostTimeInfo | null;
-  postUrls: PostUrlInfo[];
+  postAlternateUrls: PostUrlInfo[];
   comments: PostCommentInfo[];
 }
 
@@ -110,7 +111,7 @@ function extractUrn(container: HTMLElement): string | null {
  */
 function shouldSkipByConnectionDegree(
   degree: ConnectionDegree,
-  filterConfig: PostFilterConfig
+  filterConfig: PostFilterConfig,
 ): boolean {
   if (degree === "1st" && filterConfig.skipFirstDegree) return true;
   if (degree === "2nd" && filterConfig.skipSecondDegree) return true;
@@ -129,7 +130,9 @@ function findNewPosts(
   processedUrns: Set<string>,
   isUrnIgnored: (urn: string) => boolean,
   filterConfig: PostFilterConfig,
-  isAuthorBlacklisted?: (authorProfileUrl: string | null | undefined) => boolean
+  isAuthorBlacklisted?: (
+    authorProfileUrl: string | null | undefined,
+  ) => boolean,
 ): Array<{ urn: string; container: HTMLElement }> {
   const newPosts: Array<{ urn: string; container: HTMLElement }> = [];
   const postUtils = getPostUtils();
@@ -150,9 +153,9 @@ function findNewPosts(
 
     if (
       seenInThisIteration.has(urn) ||
-      existingUrns.has(urn) ||
-      processedUrns.has(urn) ||
-      isUrnIgnored(urn)
+      existingUrns?.has(urn) ||
+      processedUrns?.has(urn) ||
+      isUrnIgnored?.(urn)
     ) {
       continue;
     }
@@ -165,26 +168,35 @@ function findNewPosts(
     // === Apply Filters ===
 
     // 1. Skip promoted/sponsored posts
-    if (filterConfig.skipPromotedPosts && postUtils.detectPromotedPost(container)) {
+    if (
+      filterConfig?.skipPromotedPosts &&
+      postUtils.detectPromotedPost(container)
+    ) {
       continue;
     }
 
     // 2. Skip company page posts
-    if (filterConfig.skipCompanyPages && postUtils.detectCompanyPost(container)) {
+    if (
+      filterConfig?.skipCompanyPages &&
+      postUtils.detectCompanyPost(container)
+    ) {
       continue;
     }
 
     // 3. Skip friend activity posts ("X liked this", "X commented on this")
-    if (filterConfig.skipFriendActivities && postUtils.detectFriendActivity(container)) {
+    if (
+      filterConfig?.skipFriendActivities &&
+      postUtils.detectFriendActivity(container)
+    ) {
       continue;
     }
 
     // 4. Skip by connection degree
     const hasConnectionFilter =
-      filterConfig.skipFirstDegree ||
-      filterConfig.skipSecondDegree ||
-      filterConfig.skipThirdDegree ||
-      filterConfig.skipFollowing;
+      filterConfig?.skipFirstDegree ||
+      filterConfig?.skipSecondDegree ||
+      filterConfig?.skipThirdDegree ||
+      filterConfig?.skipFollowing;
 
     if (hasConnectionFilter) {
       const degree = postUtils.detectConnectionDegree(container);
@@ -194,16 +206,18 @@ function findNewPosts(
     }
 
     // 5. Time filter - skip posts older than max age
-    if (filterConfig.timeFilterEnabled && filterConfig.minPostAge !== null) {
+    if (filterConfig?.timeFilterEnabled && filterConfig.minPostAge !== null) {
       const postTime = postUtils.extractPostTime(container);
       if (postTime?.displayTime) {
         const postAgeHours = parseTimeToHours(postTime.displayTime);
-        console.log(`[EngageKit] Time filter: "${postTime.displayTime}" = ${postAgeHours}h, max: ${filterConfig.minPostAge}h, skip: ${postAgeHours !== null && postAgeHours > filterConfig.minPostAge}`);
+        console.log(
+          `[EngageKit] Time filter: "${postTime.displayTime}" = ${postAgeHours}h, max: ${filterConfig.minPostAge}h, skip: ${postAgeHours !== null && postAgeHours > filterConfig.minPostAge}`,
+        );
         if (postAgeHours !== null && postAgeHours > filterConfig.minPostAge) {
           continue; // Post is older than max allowed age
         }
       }
-    } else if (filterConfig.timeFilterEnabled) {
+    } else if (filterConfig?.timeFilterEnabled) {
       console.log(`[EngageKit] Time filter enabled but minPostAge is null`);
     }
 
@@ -212,7 +226,7 @@ function findNewPosts(
       const authorInfo = postUtils.extractPostAuthorInfo(container);
       if (isAuthorBlacklisted(authorInfo?.profileUrl)) {
         console.log(
-          `[EngageKit] ⛔ Skipping blacklisted author: ${authorInfo?.name ?? "Unknown"} (${authorInfo?.profileUrl})`
+          `[EngageKit] ⛔ Skipping blacklisted author: ${authorInfo?.name ?? "Unknown"} (${authorInfo?.profileUrl})`,
         );
         continue;
       }
@@ -237,12 +251,13 @@ function extractPostData(container: HTMLElement): ReadyPost | null {
 
   return {
     urn,
+    url: `https://www.linkedin.com/feed/update/${urn}`,
     captionPreview: getCaptionPreview(fullCaption, 10),
     fullCaption,
     postContainer: container,
     authorInfo: postUtils.extractPostAuthorInfo(container),
     postTime: postUtils.extractPostTime(container),
-    postUrls: postUtils.extractPostUrl(container),
+    postAlternateUrls: postUtils.extractPostUrl(container),
     comments: postUtils.extractPostComments(container),
   };
 }
@@ -274,11 +289,15 @@ export async function collectPostsBatch(
   shouldStop: () => boolean,
   isUserEditing: () => boolean,
   filterConfig: PostFilterConfig,
-  isAuthorBlacklisted?: (authorProfileUrl: string | null | undefined) => boolean
+  isAuthorBlacklisted?: (
+    authorProfileUrl: string | null | undefined,
+  ) => boolean,
 ): Promise<number> {
   const postUtils = getPostUtils();
   const commentUtils = getCommentUtils();
   const feedUtils = getFeedUtils();
+
+  const allPosts: ReadyPost[] = [];
 
   const processedUrns = new Set<string>();
   let emittedCount = 0;
@@ -290,35 +309,41 @@ export async function collectPostsBatch(
    * Pauses collection until user clicks outside the edit box.
    */
   const waitWhileEditing = async (): Promise<void> => {
-    while (isUserEditing()) {
+    while (isUserEditing?.()) {
       await new Promise((r) => setTimeout(r, 100));
     }
   };
 
   console.log(`[EngageKit] Starting batch collection - target: ${targetCount}`);
   console.log(`[EngageKit] Filter config:`, {
-    timeFilterEnabled: filterConfig.timeFilterEnabled,
-    minPostAge: filterConfig.minPostAge,
-    skipPromotedPosts: filterConfig.skipPromotedPosts,
-    skipCompanyPages: filterConfig.skipCompanyPages,
+    timeFilterEnabled: filterConfig?.timeFilterEnabled,
+    minPostAge: filterConfig?.minPostAge,
+    skipPromotedPosts: filterConfig?.skipPromotedPosts,
+    skipCompanyPages: filterConfig?.skipCompanyPages,
   });
 
   while (emittedCount < targetCount && idleIterations < MAX_IDLE_ITERATIONS) {
     // Check if user requested stop
-    if (shouldStop()) {
+    if (shouldStop?.()) {
       console.log(`[EngageKit] Stop requested, exiting`);
       break;
     }
 
     // Find ALL new posts that haven't been processed (with filters applied)
-    const newPosts = findNewPosts(existingUrns, processedUrns, isUrnIgnored, filterConfig, isAuthorBlacklisted);
+    const newPosts = findNewPosts(
+      existingUrns,
+      processedUrns,
+      isUrnIgnored,
+      filterConfig,
+      isAuthorBlacklisted,
+    );
 
     // Limit to remaining needed
     const postsToProcess = newPosts.slice(0, targetCount - emittedCount);
 
     if (postsToProcess.length > 0) {
       console.log(
-        `[EngageKit] Processing batch of ${postsToProcess.length} posts`
+        `[EngageKit] Processing batch of ${postsToProcess.length} posts`,
       );
 
       // Wait if user is editing - only once per batch before clicking
@@ -342,14 +367,14 @@ export async function collectPostsBatch(
       // Step 3: Wait for ALL comments to load in parallel
       await Promise.all(
         postContexts.map(({ container, beforeCount }) =>
-          commentUtils.waitForCommentsReady(container, beforeCount)
-        )
+          commentUtils.waitForCommentsReady(container, beforeCount),
+        ),
       );
 
       // Step 4: Collect ALL post data
       const readyPosts: ReadyPost[] = [];
       for (const { container } of postContexts) {
-        if (shouldStop()) break;
+        if (shouldStop?.()) break;
         const postData = extractPostData(container);
         if (postData) {
           readyPosts.push(postData);
@@ -358,10 +383,11 @@ export async function collectPostsBatch(
 
       // Step 5: Emit entire batch at once
       if (readyPosts.length > 0) {
-        onBatchReady(readyPosts);
+        onBatchReady?.(readyPosts);
         emittedCount += readyPosts.length;
+        allPosts.push(...readyPosts);
         console.log(
-          `[EngageKit] Batch complete: ${emittedCount}/${targetCount} posts ready`
+          `[EngageKit] Batch complete: ${emittedCount}/${targetCount} posts ready`,
         );
       }
     }
@@ -393,9 +419,9 @@ export async function collectPostsBatch(
 
   if (idleIterations >= MAX_IDLE_ITERATIONS) {
     console.log(
-      `[EngageKit] Exited due to max idle iterations. Final count: ${emittedCount}`
+      `[EngageKit] Exited due to max idle iterations. Final count: ${emittedCount}`,
     );
   }
 
-  return emittedCount;
+  return allPosts;
 }

@@ -398,8 +398,7 @@ export async function runListMode(params: {
           .autocomment.saveComments.mutate({
             comment,
             postUrn,
-            hash: hashRes?.hash ?? null,
-            postContentHtml,
+            // NOTE: dont need to fix cause we are deprecating chrome-extension
           })
           .catch((err) => {
             // just catch this error here and continue

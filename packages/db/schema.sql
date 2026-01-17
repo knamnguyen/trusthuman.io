@@ -175,6 +175,7 @@ CREATE TABLE "SubmitCommentSetting" (
 -- CreateTable
 CREATE TABLE "Comment" (
     "id" TEXT NOT NULL,
+    "postUrn" TEXT NOT NULL DEFAULT '',
     "postUrl" TEXT NOT NULL DEFAULT '',
     "postCreatedAt" TIMESTAMP(3),
     "postFullCaption" TEXT NOT NULL,
@@ -186,6 +187,7 @@ CREATE TABLE "Comment" (
     "postAlternateUrns" TEXT[] DEFAULT ARRAY['']::TEXT[],
     "peakTouchScore" INTEGER,
     "comment" TEXT NOT NULL,
+    "commentUrn" TEXT,
     "commentUrl" TEXT,
     "originalAiComment" TEXT,
     "commentedAt" TIMESTAMP(3),
@@ -491,7 +493,7 @@ CREATE UNIQUE INDEX "CommentGenerateSetting_commentStyleId_key" ON "CommentGener
 CREATE UNIQUE INDEX "PostLoadSetting_blacklistId_key" ON "PostLoadSetting"("blacklistId");
 
 -- CreateIndex
-CREATE INDEX "Comment_postUrl_idx" ON "Comment"("postUrl");
+CREATE INDEX "Comment_postUrn_idx" ON "Comment"("postUrn");
 
 -- CreateIndex
 CREATE INDEX "Comment_commentedAt_idx" ON "Comment"("commentedAt");

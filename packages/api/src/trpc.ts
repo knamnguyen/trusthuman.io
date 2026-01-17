@@ -16,11 +16,14 @@ import { ZodError } from "zod";
 import type { Prisma, PrismaClient } from "@sassy/db";
 import { db } from "@sassy/db";
 
-import type { BrowserSessionRegistry } from "./utils/browser-session";
+import type { BrowserSessionRegistry } from "./utils/browser-session/browser-session";
 import { getOrInsertUser, getUserAccount } from "./router/account";
 import { AIService } from "./utils/ai-service/ai-service";
 import { browserJobs } from "./utils/browser-job";
-import { assumedAccountJwt, browserRegistry } from "./utils/browser-session";
+import {
+  assumedAccountJwt,
+  browserRegistry,
+} from "./utils/browser-session/browser-session";
 import { env } from "./utils/env";
 
 /**

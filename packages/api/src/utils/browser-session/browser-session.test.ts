@@ -1,11 +1,13 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { ulid } from "ulidx";
 
+import type { PrismaClient } from "@sassy/db";
 import { createTestPrismaClient } from "@sassy/db/client/test";
 
 import {
   browserRegistry,
   BrowserSession,
+  getEngagekitBundledUtilities,
   insertCommentOnNonPreviouslyCommentedPosts,
 } from "./browser-session";
 
@@ -14,8 +16,10 @@ describe.skipIf(process.env.TEST_BROWSER_SESSION === undefined)(
   "LinkedInBrowserSession",
   () => {
     let session!: BrowserSession;
+    let prisma!: PrismaClient;
+    let accountId!: string;
     beforeAll(async () => {
-      const prisma = await createTestPrismaClient();
+      prisma = await createTestPrismaClient();
       const userId = ulid();
       await prisma.user.create({
         data: {
@@ -23,7 +27,7 @@ describe.skipIf(process.env.TEST_BROWSER_SESSION === undefined)(
           primaryEmailAddress: "test@email.com",
         },
       });
-      const accountId = ulid();
+      accountId = ulid();
       await prisma.linkedInAccount.create({
         data: {
           id: accountId,
@@ -39,14 +43,30 @@ describe.skipIf(process.env.TEST_BROWSER_SESSION === undefined)(
         location: "US",
         browserProfileId: "mock-profile-id",
       });
-      console.info("this shit here");
       await session.ready;
-      console.info("this shit here ready");
     });
 
     afterAll(async () => {
       await session.destroy();
     });
+
+    test(
+      "injectEngagekitUtilities",
+      async () => {
+        const utilities = await getEngagekitBundledUtilities();
+        await session.pages.linkedin.evaluate((utilities) => {
+          {
+            eval(utilities);
+          }
+        }, utilities);
+        const defined = await session.pages.linkedin.evaluate(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+          () => typeof (window as any).engagekitInternals !== "undefined",
+        );
+        expect(defined).toBe(true);
+      },
+      Infinity,
+    );
 
     // flow
     // 1. login with linkedin page
@@ -65,7 +85,6 @@ describe.skipIf(process.env.TEST_BROWSER_SESSION === undefined)(
     test.skipIf(process.env.TEST_AUTOCOMMENT === undefined)(
       "startAutoCommenting",
       async () => {
-        await session.bringToFront("linkedin");
         const signedin = await session.waitForSigninSuccess(
           new AbortController().signal,
         );
@@ -113,9 +132,17 @@ describe.skipIf(process.env.TEST_BROWSER_SESSION === undefined)(
     test.skipIf(process.env.TEST_LOAD_FEED_AND_SAVE_POSTS === undefined)(
       "loadFeedAndSavePosts",
       async () => {
-        const added = await session.loadFeedAndSavePosts(5);
+        const added = await session.loadFeedAndSavePosts(20);
 
-        console.info(`Added ${added} posts`);
+        expect(added).toBe(20);
+
+        const results = await prisma.comment.findMany({
+          where: {
+            accountId,
+          },
+        });
+
+        expect(results.length).toBe(20);
       },
       Infinity,
     );
@@ -153,71 +180,77 @@ describe("insertCommentOnNonPreviouslyCommentedPosts", () => {
       ],
     });
 
-    const values = [
+    const inserted = await insertCommentOnNonPreviouslyCommentedPosts(db, [
       {
         id: "test-comment-id-1",
-        postUrl: "https://www.linkedin.com/feed/update/urn:li:share:test-post-id-1",
+        postUrn: "urn:li:share:test-post-id-1",
+        postUrl:
+          "https://www.linkedin.com/feed/update/urn:li:share:test-post-id-1",
         postFullCaption: "This is a test comment 1",
+        postAlternateUrns: [],
         comment: "",
         postCreatedAt: new Date(),
         authorName: "Test Author 1",
         authorProfileUrl: "https://www.linkedin.com/in/test-author-1",
         authorAvatarUrl: "https://www.example.com/avatar1.jpg",
         authorHeadline: "Test Headline 1",
+        postComments: [],
         accountId: "test-account-id-1",
       },
       {
         id: "test-comment-id-2",
-        postUrl: "https://www.linkedin.com/feed/update/urn:li:share:test-post-id-2",
+        postUrn: "urn:li:share:test-post-id-2",
+        postUrl:
+          "https://www.linkedin.com/feed/update/urn:li:share:test-post-id-2",
         postFullCaption: "This is a test comment 2",
+        postAlternateUrns: [],
         comment: "",
         postCreatedAt: new Date(),
         authorName: "Test Author 2",
         authorProfileUrl: "https://www.linkedin.com/in/test-author-2",
         authorAvatarUrl: "https://www.example.com/avatar2.jpg",
+        postComments: [],
         authorHeadline: "Test Headline 2",
         accountId: "test-account-id-1",
       },
-    ];
-
-    const inserted = await insertCommentOnNonPreviouslyCommentedPosts(
-      db,
-      values,
-    );
+    ]);
 
     expect(inserted).toBe(2);
 
-    const values2 = [
+    const insertedAgain = await insertCommentOnNonPreviouslyCommentedPosts(db, [
       {
         id: "test-comment-id-3",
-        postUrl: "https://www.linkedin.com/feed/update/urn:li:share:test-post-id-3",
+        postUrl:
+          "https://www.linkedin.com/feed/update/urn:li:share:test-post-id-3",
+        postUrn: "urn:li:share:test-post-id-3",
         postFullCaption: "This is a test comment 1",
         comment: "",
+        postAlternateUrns: [],
         postCreatedAt: new Date(),
         authorName: "Test Author 1",
         authorProfileUrl: "https://www.linkedin.com/in/test-author-1",
         authorAvatarUrl: "https://www.example.com/avatar1.jpg",
         authorHeadline: "Test Headline 1",
+        postComments: [],
         accountId: "test-account-id-1",
       },
       {
         id: "test-comment-id-4",
-        postUrl: "https://www.linkedin.com/feed/update/urn:li:share:test-post-id-2",
+        postUrl:
+          "https://www.linkedin.com/feed/update/urn:li:share:test-post-id-2",
+        postUrn: "urn:li:share:test-post-id-2",
         postFullCaption: "This is a test comment 2",
+        postAlternateUrns: [],
         comment: "",
         postCreatedAt: new Date(),
         authorName: "Test Author 2",
         authorProfileUrl: "https://www.linkedin.com/in/test-author-2",
         authorAvatarUrl: "https://www.example.com/avatar2.jpg",
+        postComments: [],
         authorHeadline: "Test Headline 2",
         accountId: "test-account-id-1",
       },
-    ];
-
-    const insertedAgain = await insertCommentOnNonPreviouslyCommentedPosts(
-      db,
-      values2,
-    );
+    ]);
 
     expect(insertedAgain).toBe(1);
   });

@@ -342,12 +342,47 @@ export function ComposeTab() {
       targetListIds.length > 0 &&
       !isOnSearchPage
     ) {
+      // Fetch URNs on-demand from the selected target lists
+      console.log(
+        `[EngageKit] Fetching URNs for ${targetListIds.length} target lists...`,
+      );
+      const trpcClient = getTrpcClient();
       // Build queue from cached URNs (pre-fetched when target list selector closed)
       console.log(
         `[EngageKit] Building queue for ${targetListIds.length} target lists...`,
       );
 
       try {
+        // Fetch profiles from all selected lists in parallel
+        const allProfiles = await Promise.all(
+          targetListIds.map((listId) =>
+            trpcClient.targetList.getProfilesInList.query({ listId }),
+          ),
+        );
+
+        // Extract unique URNs from all profiles (filter out null/undefined)
+        const allUrns = new Set<string>();
+        for (const response of allProfiles) {
+          for (const profile of response.data) {
+            if (profile.profileUrn) {
+              allUrns.add(profile.profileUrn);
+            }
+          }
+        }
+
+        const targetListUrns = Array.from(allUrns);
+        console.log(
+          `[EngageKit] Fetched ${targetListUrns.length} unique URNs from target lists`,
+        );
+
+        if (targetListUrns.length > 0) {
+          const feedUrl = buildListFeedUrl(targetListUrns);
+          console.log(`[EngageKit] Target list URNs:`, targetListUrns);
+          console.log(`[EngageKit] Navigating to:`, feedUrl);
+          console.log(
+            `[EngageKit] Current location before:`,
+            window.location.href,
+          );
         const queueItems = await buildQueueItems(targetListIds);
 
         if (queueItems.length > 0) {
@@ -366,6 +401,8 @@ export function ComposeTab() {
             minPostAge: postLoadSettings.minPostAge,
             skipFriendActivitiesEnabled:
               postLoadSettings.skipFriendActivitiesEnabled,
+            skipFriendActivitiesEnabled:
+              postLoadSettings.skipFriendActivitiesEnabled,
             skipCompanyPagesEnabled: postLoadSettings.skipCompanyPagesEnabled,
             skipPromotedPostsEnabled: postLoadSettings.skipPromotedPostsEnabled,
             skipBlacklistEnabled: postLoadSettings.skipBlacklistEnabled,
@@ -375,6 +412,21 @@ export function ComposeTab() {
             skipThirdDegree: postLoadSettings.skipThirdDegree,
             skipFollowing: postLoadSettings.skipFollowing,
           };
+          try {
+            await savePendingNavigation(settingsForNav, targetDraftCount);
+            console.log(`[EngageKit] State saved successfully`);
+          } catch (err) {
+            console.error(`[EngageKit] Failed to save state:`, err);
+          }
+
+          // Full page navigation required - LinkedIn's SPA router doesn't handle search URLs
+          console.log(`[EngageKit] About to set window.location.href`);
+          window.location.href = feedUrl;
+          console.log(
+            `[EngageKit] window.location.href set to:`,
+            window.location.href,
+          );
+          return; // Stop here - page will reload, auto-resume will trigger
 
           // Start queue processing - this opens first tab via background script
           await processTargetListQueue(

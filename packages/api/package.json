@@ -31,6 +31,7 @@
     "@sassy/apify-runners": "workspace:*",
     "@sassy/db": "workspace:*",
     "@sassy/feature-flags": "workspace:*",
+    "@sassy/linkedin-automation": "workspace:*",
     "@sassy/linkedin-scrape-apify": "workspace:*",
     "@sassy/s3": "workspace:*",
     "@sassy/stripe": "workspace:*",
