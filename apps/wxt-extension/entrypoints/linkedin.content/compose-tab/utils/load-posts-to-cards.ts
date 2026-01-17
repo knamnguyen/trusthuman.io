@@ -205,7 +205,7 @@ export async function loadPostsToCards(
         isGenerating: !isHumanMode, // Not generating in human mode
         authorInfo: post.authorInfo,
         postTime: post.postTime,
-        postUrls: post.postUrls,
+        postUrls: post.postAlternateUrls,
         comments: post.comments,
       });
 
