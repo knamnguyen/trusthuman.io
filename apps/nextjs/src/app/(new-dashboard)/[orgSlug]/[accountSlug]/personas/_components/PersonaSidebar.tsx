@@ -17,13 +17,6 @@ import z from "zod";
 import { Button } from "@sassy/ui/button";
 import { Input } from "@sassy/ui/input";
 import { Label } from "@sassy/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@sassy/ui/select";
 import { Slider } from "@sassy/ui/slider";
 import { Textarea } from "@sassy/ui/textarea";
 import { toast } from "@sassy/ui/toast";
@@ -57,27 +50,13 @@ function ToggleButton({
   );
 }
 
-// Comment length presets (maps to maxOutputTokens)
-const COMMENT_LENGTH_PRESETS = {
-  short: { value: 50, label: "Short", description: "1-2 sentences" },
-  medium: { value: 150, label: "Medium", description: "2-3 sentences" },
-  long: { value: 300, label: "Long", description: "3-5 sentences" },
-} as const;
-
-// Creativity level presets (maps to temperature)
-const CREATIVITY_PRESETS = {
-  conservative: { value: 0.3, label: "Conservative", description: "More predictable" },
-  balanced: { value: 0.8, label: "Balanced", description: "Mix of creative & safe" },
-  creative: { value: 1.2, label: "Creative", description: "More varied & unique" },
-} as const;
-
 const personaFormSchema = z.object({
   name: z.string().min(1, "Name is required").max(100, "Name is too long"),
   description: z.string().max(500, "Description is too long").default(""),
   content: z.string().min(1, "Instructions are required"),
   // AI Generation Config
-  maxTokens: z.number().min(50).max(500).default(150),
-  creativity: z.number().min(0).max(2).default(0.8),
+  maxWords: z.number().min(1).max(300).default(100),
+  creativity: z.number().min(0).max(2).default(1.0),
 });
 
 type PersonaFormData = z.infer<typeof personaFormSchema>;
@@ -108,8 +87,8 @@ export function PersonaSidebar({
       name: "",
       description: "",
       content: "",
-      maxTokens: 150,
-      creativity: 0.8,
+      maxWords: 100,
+      creativity: 1.0,
     },
   });
 
@@ -120,16 +99,16 @@ export function PersonaSidebar({
         name: selectedPersona.name,
         description: selectedPersona.description,
         content: selectedPersona.content,
-        maxTokens: selectedPersona.maxTokens ?? 150,
-        creativity: selectedPersona.creativity ?? 0.8,
+        maxWords: selectedPersona.maxWords ?? 100,
+        creativity: selectedPersona.creativity ?? 1.0,
       });
     } else if (mode === "create") {
       reset({
         name: "",
         description: "",
         content: "",
-        maxTokens: 150,
-        creativity: 0.8,
+        maxWords: 100,
+        creativity: 1.0,
       });
     }
   }, [mode, selectedPersona, reset]);
@@ -171,7 +150,7 @@ export function PersonaSidebar({
       name: data.name,
       description: data.description ?? "",
       content: data.content,
-      maxTokens: data.maxTokens,
+      maxWords: data.maxWords,
       creativity: data.creativity,
     };
 
@@ -293,81 +272,75 @@ export function PersonaSidebar({
 
               {/* AI Generation Config Section */}
               <div className="border-t pt-4 mt-4">
-                <h3 className="text-sm font-medium mb-3">AI Generation Settings</h3>
+                <h3 className="text-sm font-medium mb-4">AI Generation Settings</h3>
 
-                {/* Comment Length */}
-                <div className="space-y-2 mb-4">
-                  <Label htmlFor="maxTokens">Comment Length</Label>
+                {/* Comment Length (Words) - Slider */}
+                <div className="space-y-4 mb-6">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="maxWords">Comment Length</Label>
+                    <Controller
+                      control={control}
+                      name="maxWords"
+                      render={({ field }) => (
+                        <span className="text-sm text-muted-foreground">
+                          {field.value} words
+                        </span>
+                      )}
+                    />
+                  </div>
                   <Controller
                     control={control}
-                    name="maxTokens"
+                    name="maxWords"
                     render={({ field }) => (
-                      <Select
-                        value={
-                          field.value <= 75 ? "short" :
-                          field.value <= 200 ? "medium" : "long"
-                        }
-                        onValueChange={(preset) => {
-                          const value = COMMENT_LENGTH_PRESETS[preset as keyof typeof COMMENT_LENGTH_PRESETS]?.value ?? 150;
-                          field.onChange(value);
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select length" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Object.entries(COMMENT_LENGTH_PRESETS).map(([key, preset]) => (
-                            <SelectItem key={key} value={key}>
-                              <span className="font-medium">{preset.label}</span>
-                              <span className="text-muted-foreground ml-2 text-xs">
-                                ({preset.description})
-                              </span>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <div className="pt-6">
+                        <Slider
+                          value={[field.value]}
+                          onValueChange={(values) => field.onChange(values[0])}
+                          min={1}
+                          max={300}
+                          step={1}
+                          aria-label="Comment length in words"
+                        />
+                      </div>
                     )}
                   />
                   <p className="text-muted-foreground text-xs">
-                    Controls how long the generated comments will be.
+                    Maximum number of words for generated comments (1-300).
                   </p>
                 </div>
 
-                {/* Creativity Level */}
-                <div className="space-y-2">
-                  <Label htmlFor="creativity">Creativity Level</Label>
+                {/* Creativity Level - Slider */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="creativity">Creativity Level</Label>
+                    <Controller
+                      control={control}
+                      name="creativity"
+                      render={({ field }) => (
+                        <span className="text-sm text-muted-foreground">
+                          {field.value.toFixed(1)}
+                        </span>
+                      )}
+                    />
+                  </div>
                   <Controller
                     control={control}
                     name="creativity"
                     render={({ field }) => (
-                      <Select
-                        value={
-                          field.value <= 0.5 ? "conservative" :
-                          field.value <= 1.0 ? "balanced" : "creative"
-                        }
-                        onValueChange={(preset) => {
-                          const value = CREATIVITY_PRESETS[preset as keyof typeof CREATIVITY_PRESETS]?.value ?? 0.8;
-                          field.onChange(value);
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select creativity" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Object.entries(CREATIVITY_PRESETS).map(([key, preset]) => (
-                            <SelectItem key={key} value={key}>
-                              <span className="font-medium">{preset.label}</span>
-                              <span className="text-muted-foreground ml-2 text-xs">
-                                ({preset.description})
-                              </span>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <div className="pt-6">
+                        <Slider
+                          value={[field.value]}
+                          onValueChange={(values) => field.onChange(values[0])}
+                          min={0}
+                          max={2}
+                          step={0.1}
+                          aria-label="Creativity level"
+                        />
+                      </div>
                     )}
                   />
                   <p className="text-muted-foreground text-xs">
-                    Higher creativity produces more varied and unique comments.
+                    0 = Very predictable, 1 = Balanced, 2 = Very creative
                   </p>
                 </div>
               </div>

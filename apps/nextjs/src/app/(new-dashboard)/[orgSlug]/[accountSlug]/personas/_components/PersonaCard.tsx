@@ -12,7 +12,7 @@ export interface Persona {
   content: string;
   createdAt: Date;
   // AI Generation Config
-  maxTokens: number | null;
+  maxWords: number | null;
   creativity: number | null;
 }
 
