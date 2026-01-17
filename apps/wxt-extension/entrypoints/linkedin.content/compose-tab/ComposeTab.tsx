@@ -191,15 +191,17 @@ export function ComposeTab() {
       !isOnSearchPage
     ) {
       // Fetch URNs on-demand from the selected target lists
-      console.log(`[EngageKit] Fetching URNs for ${targetListIds.length} target lists...`);
+      console.log(
+        `[EngageKit] Fetching URNs for ${targetListIds.length} target lists...`,
+      );
       const trpcClient = getTrpcClient();
 
       try {
         // Fetch profiles from all selected lists in parallel
         const allProfiles = await Promise.all(
           targetListIds.map((listId) =>
-            trpcClient.targetList.getProfilesInList.query({ listId })
-          )
+            trpcClient.targetList.getProfilesInList.query({ listId }),
+          ),
         );
 
         // Extract unique URNs from all profiles (filter out null/undefined)
@@ -213,13 +215,18 @@ export function ComposeTab() {
         }
 
         const targetListUrns = Array.from(allUrns);
-        console.log(`[EngageKit] Fetched ${targetListUrns.length} unique URNs from target lists`);
+        console.log(
+          `[EngageKit] Fetched ${targetListUrns.length} unique URNs from target lists`,
+        );
 
         if (targetListUrns.length > 0) {
           const feedUrl = buildListFeedUrl(targetListUrns);
           console.log(`[EngageKit] Target list URNs:`, targetListUrns);
           console.log(`[EngageKit] Navigating to:`, feedUrl);
-          console.log(`[EngageKit] Current location before:`, window.location.href);
+          console.log(
+            `[EngageKit] Current location before:`,
+            window.location.href,
+          );
 
           // Save state before navigation so we can auto-resume after reload
           // Convert DB settings to the expected PostLoadSettings format
@@ -228,7 +235,8 @@ export function ComposeTab() {
             targetListIds: postLoadSettings.targetListIds,
             timeFilterEnabled: postLoadSettings.timeFilterEnabled,
             minPostAge: postLoadSettings.minPostAge,
-            skipFriendActivitiesEnabled: postLoadSettings.skipFriendActivitiesEnabled,
+            skipFriendActivitiesEnabled:
+              postLoadSettings.skipFriendActivitiesEnabled,
             skipCompanyPagesEnabled: postLoadSettings.skipCompanyPagesEnabled,
             skipPromotedPostsEnabled: postLoadSettings.skipPromotedPostsEnabled,
             skipBlacklistEnabled: postLoadSettings.skipBlacklistEnabled,
@@ -248,7 +256,10 @@ export function ComposeTab() {
           // Full page navigation required - LinkedIn's SPA router doesn't handle search URLs
           console.log(`[EngageKit] About to set window.location.href`);
           window.location.href = feedUrl;
-          console.log(`[EngageKit] window.location.href set to:`, window.location.href);
+          console.log(
+            `[EngageKit] window.location.href set to:`,
+            window.location.href,
+          );
           return; // Stop here - page will reload, auto-resume will trigger
         }
       } catch (err) {
@@ -298,7 +309,7 @@ export function ComposeTab() {
           isGenerating: !isHumanMode, // Not generating in human mode
           authorInfo: post.authorInfo,
           postTime: post.postTime,
-          postUrls: post.postUrls,
+          postUrls: post.postAlternateUrls,
           comments: post.comments,
         });
 
@@ -340,25 +351,26 @@ export function ComposeTab() {
     };
 
     // Run batch collection with filter config (use defaults if settings not loaded)
-    await collectPostsBatch(
-      targetDraftCount,
+    await collectPostsBatch({
+      targetCount: targetDraftCount,
       existingUrns,
       isUrnIgnored,
       onBatchReady,
-      () => stopRequestedRef.current,
-      () => useComposeStore.getState().isUserEditing,
-      {
+      shouldStop: () => stopRequestedRef.current,
+      isUserEditing: () => useComposeStore.getState().isUserEditing,
+      filterConfig: {
         timeFilterEnabled: postLoadSettings?.timeFilterEnabled ?? false,
         minPostAge: postLoadSettings?.minPostAge ?? null,
         skipPromotedPosts: postLoadSettings?.skipPromotedPostsEnabled ?? true,
         skipCompanyPages: postLoadSettings?.skipCompanyPagesEnabled ?? true,
-        skipFriendActivities: postLoadSettings?.skipFriendActivitiesEnabled ?? false,
+        skipFriendActivities:
+          postLoadSettings?.skipFriendActivitiesEnabled ?? false,
         skipFirstDegree: postLoadSettings?.skipFirstDegree ?? false,
         skipSecondDegree: postLoadSettings?.skipSecondDegree ?? false,
         skipThirdDegree: postLoadSettings?.skipThirdDegree ?? false,
         skipFollowing: postLoadSettings?.skipFollowing ?? false,
       },
-    );
+    });
 
     setIsLoading(false);
     setIsCollecting(false); // Done collecting, stop refocusing on blur

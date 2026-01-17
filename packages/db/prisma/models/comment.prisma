@@ -1,24 +1,26 @@
 model Comment {
-  id              String    @id
-  postUrl         String    @default("")
-  postCreatedAt   DateTime?
-  postFullCaption String
-  postComments     Json?
-  authorName       String?
-  authorProfileUrl String?
-  authorAvatarUrl  String?
-  authorHeadline   String?
-  postAlternateUrns String[]     @default([""])
+  id                String    @id
+  postUrn           String    @default("")
+  postUrl           String    @default("")
+  postCreatedAt     DateTime?
+  postFullCaption   String
+  postComments      Json?
+  authorName        String?
+  authorProfileUrl  String?
+  authorAvatarUrl   String?
+  authorHeadline    String?
+  postAlternateUrns String[]  @default([""])
 
-  peakTouchScore   Int?
+  peakTouchScore    Int?
   comment           String
+  commentUrn        String?
   commentUrl        String?
   originalAiComment String?
   commentedAt       DateTime?
 
-  isAutoCommented   Boolean       @default(true)
-  status            CommentStatus @default(DRAFT)
-  schedulePostAt    DateTime?
+  isAutoCommented Boolean       @default(true)
+  status          CommentStatus @default(DRAFT)
+  schedulePostAt  DateTime?
 
   accountId String
 
@@ -28,7 +30,7 @@ model Comment {
   account        LinkedInAccount? @relation(fields: [accountId], references: [id])
   autoCommentRun AutoCommentRun?  @relation(fields: [autoCommentRunId], references: [id])
 
-  @@index([postUrl])
+  @@index([postUrn])
   @@index([commentedAt])
   @@index([status])
   @@index([postAlternateUrns], type: Gin)

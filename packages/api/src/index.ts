@@ -7,7 +7,7 @@ import { createCallerFactory, createTRPCContext } from "./trpc";
 export type {
   BrowserFunctions,
   BrowserBackendChannelMessage,
-} from "./utils/browser-session";
+} from "./utils/browser-session/browser-session";
 
 /**
  * Create a server-side caller for the tRPC API

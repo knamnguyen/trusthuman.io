@@ -39,7 +39,6 @@ export default function AccountsPage() {
     ...trpc.organization.getCurrent.queryOptions(),
     enabled: !!orgId,
   });
-  console.info({ currentOrg });
 
   const accountsQuery = useQuery({
     ...trpc.account.listByOrg.queryOptions(),
