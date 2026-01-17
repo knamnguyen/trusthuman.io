@@ -81,10 +81,10 @@ export function ComposeTab() {
   // Card IDs for rendering the list - only changes when cards are added/removed
   const cardIds = useComposeStore(
     useShallow((state) => {
-      console.log(
-        "[ComposeTab] cardIds selector called, count:",
-        state.cards.length,
-      );
+      // console.log(
+      //   "[ComposeTab] cardIds selector called, count:",
+      //   state.cards.length,
+      // );
       return state.cards.map((c) => c.id);
     }),
   );

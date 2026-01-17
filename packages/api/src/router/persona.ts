@@ -1,9 +1,13 @@
 import { ulid } from "ulidx";
 import z from "zod";
 
-import { PrismaClient } from "@sassy/db";
+import type { PrismaClient } from "@sassy/db";
 
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import {
+  accountProcedure,
+  createTRPCRouter,
+  protectedProcedure,
+} from "../trpc";
 import { paginate } from "../utils/pagination";
 import { hasPermissionToAccessAccount } from "./account";
 
@@ -63,21 +67,16 @@ export const personaRouter = () =>
           } as const;
         }),
 
-      list: protectedProcedure
+      list: accountProcedure
         .input(
           z.object({
             cursor: z.string().optional(),
           }),
         )
         .query(async ({ ctx, input }) => {
-          if (ctx.activeAccount === null) {
-            return {
-              data: [],
-              next: null,
-            };
-          }
           const styles = await ctx.db.commentStyle.findMany({
             where: {
+              accountId: ctx.activeAccount.id,
               id: input.cursor
                 ? {
                     lt: input.cursor,
