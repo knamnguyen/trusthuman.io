@@ -18,6 +18,7 @@ import { TooltipWithDialog } from "@sassy/ui/components/tooltip-with-dialog";
 
 import type { PendingNavigationState } from "../stores/navigation-state";
 import type { PostLoadSettings } from "../stores/target-list-queue";
+import { getCachedBlacklist, prefetchBlacklist } from "../stores/blacklist-cache";
 import { useTRPC } from "../../../lib/trpc/client";
 import { useShadowRootStore } from "../stores";
 import { useComposeStore } from "../stores/compose-store";
@@ -225,6 +226,31 @@ export function ComposeTab() {
       // Get existing URNs to skip
       const existingUrns = new Set(getCards.map((card) => card.urn));
 
+      // === BLACKLIST SETUP ===
+      // Get blacklist profile URLs from cache (if enabled and configured)
+      let blacklistProfileUrls: string[] = [];
+      if (postLoadSettings?.skipBlacklistEnabled && postLoadSettings?.blacklistId) {
+        // Try to get from cache first (should be pre-fetched)
+        const cached = getCachedBlacklist(postLoadSettings.blacklistId);
+        if (cached) {
+          blacklistProfileUrls = cached.profileUrls;
+          console.log(
+            `[ComposeTab] runAutoResume: Blacklist loaded from cache (${blacklistProfileUrls.length} profiles from "${cached.listName}")`,
+          );
+        } else {
+          // Cache miss - fetch now (shouldn't happen if prefetch worked)
+          console.log("[ComposeTab] runAutoResume: Blacklist cache miss, fetching now...");
+          await prefetchBlacklist(postLoadSettings.blacklistId);
+          const freshCached = getCachedBlacklist(postLoadSettings.blacklistId);
+          if (freshCached) {
+            blacklistProfileUrls = freshCached.profileUrls;
+            console.log(
+              `[ComposeTab] runAutoResume: Blacklist fetched (${blacklistProfileUrls.length} profiles)`,
+            );
+          }
+        }
+      }
+
       // Run post collection using utility
       console.log("[ComposeTab] runAutoResume: Starting loadPostsToCards...");
       try {
@@ -239,6 +265,7 @@ export function ComposeTab() {
           generateCommentMutate: generateComment.mutateAsync,
           onProgress: setLoadingProgress,
           setPreviewingCard,
+          blacklistProfileUrls,
         });
         console.log(
           "[ComposeTab] runAutoResume: loadPostsToCards completed successfully",
@@ -379,6 +406,31 @@ export function ComposeTab() {
     // Get current cards to find existing URNs (snapshot at start time)
     const existingUrns = new Set(getCards.map((card) => card.urn));
 
+    // === BLACKLIST SETUP ===
+    // Get blacklist profile URLs from cache (if enabled and configured)
+    let blacklistProfileUrls: string[] = [];
+    if (postLoadSettings?.skipBlacklistEnabled && postLoadSettings?.blacklistId) {
+      // Try to get from cache first (should be pre-fetched when settings loaded)
+      const cached = getCachedBlacklist(postLoadSettings.blacklistId);
+      if (cached) {
+        blacklistProfileUrls = cached.profileUrls;
+        console.log(
+          `[ComposeTab] handleStart: Blacklist loaded from cache (${blacklistProfileUrls.length} profiles from "${cached.listName}")`,
+        );
+      } else {
+        // Cache miss - fetch now (shouldn't happen if prefetch worked)
+        console.log("[ComposeTab] handleStart: Blacklist cache miss, fetching now...");
+        await prefetchBlacklist(postLoadSettings.blacklistId);
+        const freshCached = getCachedBlacklist(postLoadSettings.blacklistId);
+        if (freshCached) {
+          blacklistProfileUrls = freshCached.profileUrls;
+          console.log(
+            `[ComposeTab] handleStart: Blacklist fetched (${blacklistProfileUrls.length} profiles)`,
+          );
+        }
+      }
+    }
+
     // Run post collection using utility
     await loadPostsToCards({
       targetCount: targetDraftCount,
@@ -391,6 +443,7 @@ export function ComposeTab() {
       generateCommentMutate: generateComment.mutateAsync,
       onProgress: setLoadingProgress,
       setPreviewingCard,
+      blacklistProfileUrls,
     });
 
     setIsLoading(false);

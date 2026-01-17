@@ -21,6 +21,7 @@ import { useComposeStore } from "../../stores/compose-store";
 import { useSettingsDBStore } from "../../stores/settings-db-store";
 import { useSettingsLocalStore } from "../../stores/settings-local-store";
 import { DEFAULT_STYLE_GUIDE } from "../../utils";
+import { isAuthorBlacklisted } from "./is-author-blacklisted";
 
 // Lazily initialized
 let _postUtils: ReturnType<typeof createPostUtilities> | null = null;
@@ -39,7 +40,7 @@ export interface LoadPostsToCardsParams {
   postLoadSettings: PostLoadSettings | null;
   /** Existing URNs to skip (already in store) */
   existingUrns: Set<string>;
-  /** Function to check if a URN is ignored/blacklisted */
+  /** Function to check if a URN is ignored (manually dismissed) */
   isUrnIgnored: (urn: string) => boolean;
   /** Function that returns true when collection should stop */
   shouldStop: () => boolean;
@@ -57,6 +58,8 @@ export interface LoadPostsToCardsParams {
   onProgress: (count: number) => void;
   /** Callback to set the first card as preview */
   setPreviewingCard: (cardId: string) => void;
+  /** Profile URLs from the blacklist (for filtering) */
+  blacklistProfileUrls?: string[];
 }
 
 /**
@@ -101,15 +104,24 @@ export async function loadPostsToCards(
     generateCommentMutate,
     onProgress,
     setPreviewingCard,
+    blacklistProfileUrls = [],
   } = params;
 
   // Get settings snapshots
   const isHumanMode = useSettingsLocalStore.getState().behavior.humanOnlyMode;
   const generateSettings = useSettingsDBStore.getState().commentGenerate;
 
+  // Log blacklist status
+  if (blacklistProfileUrls.length > 0) {
+    console.log(
+      `[loadPostsToCards] Blacklist active with ${blacklistProfileUrls.length} profiles`,
+    );
+  }
+
   let loadedCount = 0;
 
   // Batch callback - called when each batch of posts is ready
+  // NOTE: Blacklist filtering happens in collectPostsBatch, so all posts here are valid
   const onBatchReady = (posts: ReadyPost[]) => {
     console.log(
       `[loadPostsToCards] Batch received: ${posts.length} posts (humanMode: ${isHumanMode})`,
@@ -188,6 +200,15 @@ export async function loadPostsToCards(
   // Build filter config from settings
   const filterConfig = buildFilterConfig(postLoadSettings);
 
+  // Build blacklist filter callback (if blacklist is active)
+  // This is passed to collectPostsBatch so filtering happens DURING collection,
+  // not after - ensuring we collect the full targetCount of non-blacklisted posts
+  const blacklistFilter =
+    blacklistProfileUrls.length > 0
+      ? (authorProfileUrl: string | null | undefined) =>
+          isAuthorBlacklisted(authorProfileUrl, blacklistProfileUrls)
+      : undefined;
+
   // Run batch collection
   await collectPostsBatch(
     targetCount,
@@ -197,7 +218,11 @@ export async function loadPostsToCards(
     shouldStop,
     () => useComposeStore.getState().isUserEditing,
     filterConfig,
+    blacklistFilter,
   );
+
+  // Log summary
+  console.log(`[loadPostsToCards] ✅ Complete: ${loadedCount} posts loaded`);
 
   return loadedCount;
 }

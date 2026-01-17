@@ -19,6 +19,7 @@
 import { create } from "zustand";
 
 import { getTrpcClient } from "../../../lib/trpc/client";
+import { prefetchBlacklist } from "./blacklist-cache";
 import { prefetchUrnsForLists } from "./target-list-queue";
 
 // =============================================================================
@@ -230,6 +231,13 @@ export const useSettingsDBStore = create<SettingsDBStore>((set, get) => ({
       if (postLoad?.targetListIds?.length) {
         console.log("SettingsDBStore: Pre-fetching URNs for saved target lists...");
         void prefetchUrnsForLists(postLoad.targetListIds);
+      }
+
+      // Pre-fetch blacklist profile URLs (fire-and-forget)
+      // This warms the cache so blacklist filtering is instant
+      if (postLoad?.skipBlacklistEnabled && postLoad?.blacklistId) {
+        console.log("SettingsDBStore: Pre-fetching blacklist profiles...");
+        void prefetchBlacklist(postLoad.blacklistId);
       }
     } catch (error) {
       console.error("SettingsDBStore: Error fetching settings", error);
