@@ -84,6 +84,7 @@ export interface ReadyPost {
   url: string;
   captionPreview: string;
   fullCaption: string;
+  postCreatedAt: Date;
   postContainer: HTMLElement;
   authorInfo: PostAuthorInfo | null;
   postTime: PostTimeInfo | null;
@@ -240,10 +241,19 @@ function extractPostData(container: HTMLElement): ReadyPost | null {
   const fullCaption = postUtils.extractPostCaption(container);
   if (!fullCaption) return null;
 
+  const postTime = postUtils.extractPostTime(container);
+  const postTimeHoursAgo = postTime?.displayTime
+    ? parseTimeToHours(postTime.displayTime)
+    : null;
+  const postCreatedAt = postTimeHoursAgo
+    ? new Date(Date.now() - postTimeHoursAgo * 60 * 60 * 1000)
+    : new Date();
+
   return {
     urn,
     url: `https://www.linkedin.com/feed/update/${urn}`,
     captionPreview: getCaptionPreview(fullCaption, 10),
+    postCreatedAt,
     fullCaption,
     postContainer: container,
     authorInfo: postUtils.extractPostAuthorInfo(container),

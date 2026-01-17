@@ -1,5 +1,5 @@
 import type { AccountUtilities } from "./types";
-import { detectDomVersion } from "../dom/detect";
+import { createProxiedUtilities } from "../create-proxied-utilities";
 import { AccountUtilitiesV1 } from "./AccountUtilitiesV1";
 import { AccountUtilitiesV2 } from "./AccountUtilitiesV2";
 
@@ -7,7 +7,8 @@ import { AccountUtilitiesV2 } from "./AccountUtilitiesV2";
  * Create AccountUtilities instance based on detected DOM version.
  */
 export function createAccountUtilities(): AccountUtilities {
-  return detectDomVersion() === "dom-v2"
-    ? new AccountUtilitiesV2()
-    : new AccountUtilitiesV1();
+  return createProxiedUtilities(
+    new AccountUtilitiesV1(),
+    new AccountUtilitiesV2(),
+  );
 }
