@@ -22,7 +22,7 @@ import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post
 
 import { useTRPC } from "../../../lib/trpc/client";
 import { useComposeStore } from "../stores/compose-store";
-import { DEFAULT_STYLE_GUIDE } from "../utils";
+import { getCommentStyleConfig } from "../stores/comment-style-cache";
 import { submitCommentFullFlow } from "./utils/submit-comment-full-flow";
 
 // Initialize utilities (auto-detects DOM version)
@@ -203,7 +203,7 @@ export const ComposeCard = memo(function ComposeCard({
   }, [card.id, isSinglePostCard, removeCard, removeSinglePostCard]);
 
   // Regenerate comment handler
-  const handleRegenerate = useCallback(() => {
+  const handleRegenerate = useCallback(async () => {
     if (card.isGenerating) return;
 
     const previousAiComment = card.originalCommentText;
@@ -215,17 +215,28 @@ export const ComposeCard = memo(function ComposeCard({
     // Extract adjacent comments for context
     const adjacentComments = postUtils.extractAdjacentComments(card.postContainer);
 
-    // Fire regeneration request
+    // Get comment style config (styleGuide, maxWords, creativity)
+    const styleConfig = await getCommentStyleConfig();
+    console.log("[ComposeCard] Using comment style config:", {
+      styleName: styleConfig.styleName,
+      maxWords: styleConfig.maxWords,
+      creativity: styleConfig.creativity,
+    });
+
+    // Fire regeneration request with style config
     generateComment
       .mutateAsync({
         postContent: card.fullCaption,
-        styleGuide: DEFAULT_STYLE_GUIDE,
+        styleGuide: styleConfig.styleGuide,
         adjacentComments,
         previousAiComment,
         humanEditedComment:
           humanEditedComment !== previousAiComment
             ? humanEditedComment
             : undefined,
+        // Pass AI generation config from CommentStyle
+        maxWords: styleConfig.maxWords,
+        creativity: styleConfig.creativity,
       })
       .then((result) => {
         updateCardComment(card.id, result.comment);

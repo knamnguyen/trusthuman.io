@@ -11,23 +11,39 @@ export class AIService {
   }
 
   async generateComment(input: CommentGenerationInput) {
+    // Use provided config or fall back to defaults
+    const creativity = input.creativity ?? 1.0;
+    const maxWords = input.maxWords ?? 100;
+
+    // Convert maxWords to approximate maxOutputTokens (roughly 1.3 tokens per word)
+    const maxOutputTokens = Math.ceil(maxWords * 1.3);
+
     console.log(
-      "AI Comments Router: Starting comment generation for content length:",
-      input.postContent.length || 0,
+      "AI Comments Router: Starting comment generation",
+      {
+        postContentLength: input.postContent.length || 0,
+        creativity,
+        maxWords,
+        maxOutputTokens,
+        hasStyleGuide: !!input.styleGuide,
+      },
     );
 
     const systemPrompt = getPostCommentSystemPrompt(input);
-    // console.log("Final prompt fed into the ai:", systemPrompt);
+
+    // Debug logging for the full prompt
+    console.log("🤖 [AI Debug] Full prompt sent to AI:\n", systemPrompt);
+    console.log("🤖 [AI Debug] Config:", { temperature: creativity, maxOutputTokens });
 
     try {
       const response = await this.ai.models.generateContent({
         model: "gemini-2.5-flash-lite",
         contents: systemPrompt,
         config: {
-          // Lower temperature = faster sampling, still creative enough
-          temperature: 0.8,
-          // Limit output tokens for shorter comments
-          maxOutputTokens: 150,
+          // Use creativity from CommentStyle (0 = predictable, 1 = balanced, 2 = creative)
+          temperature: creativity,
+          // Convert maxWords to tokens (approximately 1.3 tokens per word)
+          maxOutputTokens,
         },
       });
 

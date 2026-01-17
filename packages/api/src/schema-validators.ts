@@ -26,6 +26,11 @@ export const commentGenerationInputSchema = z.object({
   previousAiComment: z.string().optional(),
   /** Human-edited version of the comment (for regeneration to learn from) */
   humanEditedComment: z.string().optional(),
+  /** AI Generation Config from CommentStyle */
+  /** Maximum words for generated comment (1-300), default 100 */
+  maxWords: z.number().min(1).max(300).optional(),
+  /** Creativity level / temperature (0-2), default 1.0 */
+  creativity: z.number().min(0).max(2).optional(),
 });
 
 // Output schema for AI comment generation

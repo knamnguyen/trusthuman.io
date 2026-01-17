@@ -20,6 +20,7 @@ import { create } from "zustand";
 
 import { getTrpcClient } from "../../../lib/trpc/client";
 import { prefetchBlacklist } from "./blacklist-cache";
+import { prefetchCommentStyle } from "./comment-style-cache";
 import { prefetchUrnsForLists } from "./target-list-queue";
 
 // =============================================================================
@@ -238,6 +239,13 @@ export const useSettingsDBStore = create<SettingsDBStore>((set, get) => ({
       if (postLoad?.skipBlacklistEnabled && postLoad?.blacklistId) {
         console.log("SettingsDBStore: Pre-fetching blacklist profiles...");
         void prefetchBlacklist(postLoad.blacklistId);
+      }
+
+      // Pre-fetch selected comment style (fire-and-forget)
+      // This warms the cache so AI generation is instant
+      if (commentGenerate?.commentStyleId) {
+        console.log("SettingsDBStore: Pre-fetching comment style...");
+        void prefetchCommentStyle();
       }
     } catch (error) {
       console.error("SettingsDBStore: Error fetching settings", error);

@@ -6,9 +6,10 @@ import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post
 
 import { useTRPC } from "../../../lib/trpc/client";
 import { useComposeStore } from "../stores/compose-store";
+import { getCommentStyleConfig } from "../stores/comment-style-cache";
 import { useSettingsLocalStore } from "../stores/settings-local-store";
 import { SIDEBAR_TABS, useSidebarStore } from "../stores/sidebar-store";
-import { DEFAULT_STYLE_GUIDE, useMostVisiblePost } from "../utils";
+import { useMostVisiblePost } from "../utils";
 
 // Initialize utilities (auto-detects DOM version)
 const postUtils = createPostUtilities();
@@ -197,11 +198,22 @@ export function SpacebarEngageObserver() {
       // Extract adjacent comments for AI generation
       const adjacentComments = postUtils.extractAdjacentComments(postContainer);
 
-      // Request params for AI generation
+      // Get comment style config (styleGuide, maxWords, creativity)
+      const styleConfig = await getCommentStyleConfig();
+      console.log("[SpacebarEngageObserver] Using comment style config:", {
+        styleName: styleConfig.styleName,
+        maxWords: styleConfig.maxWords,
+        creativity: styleConfig.creativity,
+      });
+
+      // Request params for AI generation with style config
       const requestParams = {
         postContent: fullCaption,
-        styleGuide: DEFAULT_STYLE_GUIDE,
+        styleGuide: styleConfig.styleGuide,
         adjacentComments,
+        // Pass AI generation config from CommentStyle
+        maxWords: styleConfig.maxWords,
+        creativity: styleConfig.creativity,
       };
 
       // Fire 3 parallel AI requests, update each card as it completes

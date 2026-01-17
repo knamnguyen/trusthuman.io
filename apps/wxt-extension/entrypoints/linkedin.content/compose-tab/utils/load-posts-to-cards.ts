@@ -18,9 +18,10 @@ import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post
 import type { PostLoadSettings } from "../../stores/target-list-queue";
 import type { ComposeCard } from "../../stores/compose-store";
 import { useComposeStore } from "../../stores/compose-store";
+import { getCommentStyleConfig } from "../../stores/comment-style-cache";
+import { getCachedBlacklist, prefetchBlacklist } from "../../stores/blacklist-cache";
 import { useSettingsDBStore } from "../../stores/settings-db-store";
 import { useSettingsLocalStore } from "../../stores/settings-local-store";
-import { DEFAULT_STYLE_GUIDE } from "../../utils";
 import { isAuthorBlacklisted } from "./is-author-blacklisted";
 
 // Lazily initialized
@@ -53,13 +54,13 @@ export interface LoadPostsToCardsParams {
     postContent: string;
     styleGuide: string;
     adjacentComments: AdjacentCommentInfo[];
+    maxWords?: number;
+    creativity?: number;
   }) => Promise<{ comment: string }>;
   /** Callback when progress updates (posts loaded so far) */
   onProgress: (count: number) => void;
   /** Callback to set the first card as preview */
   setPreviewingCard: (cardId: string) => void;
-  /** Profile URLs from the blacklist (for filtering) */
-  blacklistProfileUrls?: string[];
 }
 
 /**
@@ -104,12 +105,53 @@ export async function loadPostsToCards(
     generateCommentMutate,
     onProgress,
     setPreviewingCard,
-    blacklistProfileUrls = [],
   } = params;
 
   // Get settings snapshots
   const isHumanMode = useSettingsLocalStore.getState().behavior.humanOnlyMode;
   const generateSettings = useSettingsDBStore.getState().commentGenerate;
+
+  // Debug: Log all postLoadSettings to see what's being passed
+  console.log("[loadPostsToCards] postLoadSettings:", {
+    targetListEnabled: postLoadSettings?.targetListEnabled,
+    targetListIds: postLoadSettings?.targetListIds,
+    skipBlacklistEnabled: postLoadSettings?.skipBlacklistEnabled,
+    blacklistId: postLoadSettings?.blacklistId,
+    timeFilterEnabled: postLoadSettings?.timeFilterEnabled,
+    minPostAge: postLoadSettings?.minPostAge,
+    skipCompanyPagesEnabled: postLoadSettings?.skipCompanyPagesEnabled,
+    skipPromotedPostsEnabled: postLoadSettings?.skipPromotedPostsEnabled,
+    skipFriendActivitiesEnabled: postLoadSettings?.skipFriendActivitiesEnabled,
+    skipFirstDegree: postLoadSettings?.skipFirstDegree,
+    skipSecondDegree: postLoadSettings?.skipSecondDegree,
+    skipThirdDegree: postLoadSettings?.skipThirdDegree,
+    skipFollowing: postLoadSettings?.skipFollowing,
+  });
+
+  // === BLACKLIST SETUP ===
+  // Get blacklist profile URLs from cache (if enabled and configured)
+  let blacklistProfileUrls: string[] = [];
+  if (postLoadSettings?.skipBlacklistEnabled && postLoadSettings?.blacklistId) {
+    // Try to get from cache first (should be pre-fetched when settings loaded)
+    const cached = getCachedBlacklist(postLoadSettings.blacklistId);
+    if (cached) {
+      blacklistProfileUrls = cached.profileUrls;
+      console.log(
+        `[loadPostsToCards] Blacklist loaded from cache (${blacklistProfileUrls.length} profiles from "${cached.listName}")`,
+      );
+    } else {
+      // Cache miss - fetch now (shouldn't happen if prefetch worked)
+      console.log("[loadPostsToCards] Blacklist cache miss, fetching now...");
+      await prefetchBlacklist(postLoadSettings.blacklistId);
+      const freshCached = getCachedBlacklist(postLoadSettings.blacklistId);
+      if (freshCached) {
+        blacklistProfileUrls = freshCached.profileUrls;
+        console.log(
+          `[loadPostsToCards] Blacklist fetched (${blacklistProfileUrls.length} profiles)`,
+        );
+      }
+    }
+  }
 
   // Log blacklist status
   if (blacklistProfileUrls.length > 0) {
@@ -122,7 +164,7 @@ export async function loadPostsToCards(
 
   // Batch callback - called when each batch of posts is ready
   // NOTE: Blacklist filtering happens in collectPostsBatch, so all posts here are valid
-  const onBatchReady = (posts: ReadyPost[]) => {
+  const onBatchReady = async (posts: ReadyPost[]) => {
     console.log(
       `[loadPostsToCards] Batch received: ${posts.length} posts (humanMode: ${isHumanMode})`,
     );
@@ -131,6 +173,14 @@ export async function loadPostsToCards(
     const needsFirstPreview =
       useComposeStore.getState().previewingCardId === null;
     let firstCardId: string | null = null;
+
+    // Get comment style config once for the batch (styleGuide, maxWords, creativity)
+    const styleConfig = await getCommentStyleConfig();
+    console.log("[loadPostsToCards] Using comment style config:", {
+      styleName: styleConfig.styleName,
+      maxWords: styleConfig.maxWords,
+      creativity: styleConfig.creativity,
+    });
 
     // Process all posts in the batch
     for (const post of posts) {
@@ -170,8 +220,10 @@ export async function loadPostsToCards(
         // Fire AI request (don't await - run in parallel)
         generateCommentMutate({
           postContent: post.fullCaption,
-          styleGuide: DEFAULT_STYLE_GUIDE,
+          styleGuide: styleConfig.styleGuide,
           adjacentComments,
+          maxWords: styleConfig.maxWords,
+          creativity: styleConfig.creativity,
         })
           .then((result) => {
             updateCardComment(cardId, result.comment);

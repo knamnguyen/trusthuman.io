@@ -18,7 +18,6 @@ import { TooltipWithDialog } from "@sassy/ui/components/tooltip-with-dialog";
 
 import type { PendingNavigationState } from "../stores/navigation-state";
 import type { PostLoadSettings } from "../stores/target-list-queue";
-import { getCachedBlacklist, prefetchBlacklist } from "../stores/blacklist-cache";
 import { useTRPC } from "../../../lib/trpc/client";
 import { useShadowRootStore } from "../stores";
 import { useComposeStore } from "../stores/compose-store";
@@ -226,32 +225,7 @@ export function ComposeTab() {
       // Get existing URNs to skip
       const existingUrns = new Set(getCards.map((card) => card.urn));
 
-      // === BLACKLIST SETUP ===
-      // Get blacklist profile URLs from cache (if enabled and configured)
-      let blacklistProfileUrls: string[] = [];
-      if (postLoadSettings?.skipBlacklistEnabled && postLoadSettings?.blacklistId) {
-        // Try to get from cache first (should be pre-fetched)
-        const cached = getCachedBlacklist(postLoadSettings.blacklistId);
-        if (cached) {
-          blacklistProfileUrls = cached.profileUrls;
-          console.log(
-            `[ComposeTab] runAutoResume: Blacklist loaded from cache (${blacklistProfileUrls.length} profiles from "${cached.listName}")`,
-          );
-        } else {
-          // Cache miss - fetch now (shouldn't happen if prefetch worked)
-          console.log("[ComposeTab] runAutoResume: Blacklist cache miss, fetching now...");
-          await prefetchBlacklist(postLoadSettings.blacklistId);
-          const freshCached = getCachedBlacklist(postLoadSettings.blacklistId);
-          if (freshCached) {
-            blacklistProfileUrls = freshCached.profileUrls;
-            console.log(
-              `[ComposeTab] runAutoResume: Blacklist fetched (${blacklistProfileUrls.length} profiles)`,
-            );
-          }
-        }
-      }
-
-      // Run post collection using utility
+      // Run post collection using utility (blacklist is fetched internally)
       console.log("[ComposeTab] runAutoResume: Starting loadPostsToCards...");
       try {
         await loadPostsToCards({
@@ -265,7 +239,6 @@ export function ComposeTab() {
           generateCommentMutate: generateComment.mutateAsync,
           onProgress: setLoadingProgress,
           setPreviewingCard,
-          blacklistProfileUrls,
         });
         console.log(
           "[ComposeTab] runAutoResume: loadPostsToCards completed successfully",
@@ -342,47 +315,12 @@ export function ComposeTab() {
       targetListIds.length > 0 &&
       !isOnSearchPage
     ) {
-      // Fetch URNs on-demand from the selected target lists
-      console.log(
-        `[EngageKit] Fetching URNs for ${targetListIds.length} target lists...`,
-      );
-      const trpcClient = getTrpcClient();
       // Build queue from cached URNs (pre-fetched when target list selector closed)
       console.log(
         `[EngageKit] Building queue for ${targetListIds.length} target lists...`,
       );
 
       try {
-        // Fetch profiles from all selected lists in parallel
-        const allProfiles = await Promise.all(
-          targetListIds.map((listId) =>
-            trpcClient.targetList.getProfilesInList.query({ listId }),
-          ),
-        );
-
-        // Extract unique URNs from all profiles (filter out null/undefined)
-        const allUrns = new Set<string>();
-        for (const response of allProfiles) {
-          for (const profile of response.data) {
-            if (profile.profileUrn) {
-              allUrns.add(profile.profileUrn);
-            }
-          }
-        }
-
-        const targetListUrns = Array.from(allUrns);
-        console.log(
-          `[EngageKit] Fetched ${targetListUrns.length} unique URNs from target lists`,
-        );
-
-        if (targetListUrns.length > 0) {
-          const feedUrl = buildListFeedUrl(targetListUrns);
-          console.log(`[EngageKit] Target list URNs:`, targetListUrns);
-          console.log(`[EngageKit] Navigating to:`, feedUrl);
-          console.log(
-            `[EngageKit] Current location before:`,
-            window.location.href,
-          );
         const queueItems = await buildQueueItems(targetListIds);
 
         if (queueItems.length > 0) {
@@ -401,8 +339,6 @@ export function ComposeTab() {
             minPostAge: postLoadSettings.minPostAge,
             skipFriendActivitiesEnabled:
               postLoadSettings.skipFriendActivitiesEnabled,
-            skipFriendActivitiesEnabled:
-              postLoadSettings.skipFriendActivitiesEnabled,
             skipCompanyPagesEnabled: postLoadSettings.skipCompanyPagesEnabled,
             skipPromotedPostsEnabled: postLoadSettings.skipPromotedPostsEnabled,
             skipBlacklistEnabled: postLoadSettings.skipBlacklistEnabled,
@@ -412,21 +348,6 @@ export function ComposeTab() {
             skipThirdDegree: postLoadSettings.skipThirdDegree,
             skipFollowing: postLoadSettings.skipFollowing,
           };
-          try {
-            await savePendingNavigation(settingsForNav, targetDraftCount);
-            console.log(`[EngageKit] State saved successfully`);
-          } catch (err) {
-            console.error(`[EngageKit] Failed to save state:`, err);
-          }
-
-          // Full page navigation required - LinkedIn's SPA router doesn't handle search URLs
-          console.log(`[EngageKit] About to set window.location.href`);
-          window.location.href = feedUrl;
-          console.log(
-            `[EngageKit] window.location.href set to:`,
-            window.location.href,
-          );
-          return; // Stop here - page will reload, auto-resume will trigger
 
           // Start queue processing - this opens first tab via background script
           await processTargetListQueue(
@@ -458,32 +379,7 @@ export function ComposeTab() {
     // Get current cards to find existing URNs (snapshot at start time)
     const existingUrns = new Set(getCards.map((card) => card.urn));
 
-    // === BLACKLIST SETUP ===
-    // Get blacklist profile URLs from cache (if enabled and configured)
-    let blacklistProfileUrls: string[] = [];
-    if (postLoadSettings?.skipBlacklistEnabled && postLoadSettings?.blacklistId) {
-      // Try to get from cache first (should be pre-fetched when settings loaded)
-      const cached = getCachedBlacklist(postLoadSettings.blacklistId);
-      if (cached) {
-        blacklistProfileUrls = cached.profileUrls;
-        console.log(
-          `[ComposeTab] handleStart: Blacklist loaded from cache (${blacklistProfileUrls.length} profiles from "${cached.listName}")`,
-        );
-      } else {
-        // Cache miss - fetch now (shouldn't happen if prefetch worked)
-        console.log("[ComposeTab] handleStart: Blacklist cache miss, fetching now...");
-        await prefetchBlacklist(postLoadSettings.blacklistId);
-        const freshCached = getCachedBlacklist(postLoadSettings.blacklistId);
-        if (freshCached) {
-          blacklistProfileUrls = freshCached.profileUrls;
-          console.log(
-            `[ComposeTab] handleStart: Blacklist fetched (${blacklistProfileUrls.length} profiles)`,
-          );
-        }
-      }
-    }
-
-    // Run post collection using utility
+    // Run post collection using utility (blacklist is fetched internally)
     await loadPostsToCards({
       targetCount: targetDraftCount,
       postLoadSettings,
@@ -495,7 +391,6 @@ export function ComposeTab() {
       generateCommentMutate: generateComment.mutateAsync,
       onProgress: setLoadingProgress,
       setPreviewingCard,
-      blacklistProfileUrls,
     });
 
     setIsLoading(false);
