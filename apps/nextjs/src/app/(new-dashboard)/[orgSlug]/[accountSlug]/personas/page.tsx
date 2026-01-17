@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { Loader2, Plus, User } from "lucide-react";
 
 import { Button } from "@sassy/ui/button";
@@ -16,8 +20,9 @@ import {
 } from "@sassy/ui/dialog";
 import { toast } from "@sassy/ui/toast";
 
+import type { Persona } from "./_components/PersonaCard";
 import { useTRPC } from "~/trpc/react";
-import { PersonaCard, type Persona } from "./_components/PersonaCard";
+import { PersonaCard } from "./_components/PersonaCard";
 import { PersonaSidebar } from "./_components/PersonaSidebar";
 
 export default function PersonasPage() {
@@ -26,7 +31,9 @@ export default function PersonasPage() {
 
   // Sidebar state
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [sidebarMode, setSidebarMode] = useState<"create" | "edit" | null>(null);
+  const [sidebarMode, setSidebarMode] = useState<"create" | "edit" | null>(
+    null,
+  );
   const [selectedPersona, setSelectedPersona] = useState<Persona | null>(null);
 
   // Delete confirmation state
@@ -37,8 +44,8 @@ export default function PersonasPage() {
       {},
       {
         getNextPageParam: (lastPage) => lastPage.next,
-      }
-    )
+      },
+    ),
   );
 
   const allPersonas = personas.data?.pages.flatMap((p) => p.data) ?? [];
@@ -71,9 +78,9 @@ export default function PersonasPage() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-var(--header-height,0px))] flex-col">
+    <div className="flex h-screen flex-col">
       {/* Header */}
-      <div className="shrink-0 flex items-center justify-between border-b px-6 py-4">
+      <div className="flex shrink-0 items-center justify-between border-b px-6 py-4">
         <div>
           <h1 className="text-xl font-semibold">Personas</h1>
           <p className="text-muted-foreground text-sm">
@@ -191,7 +198,7 @@ function DeleteConfirmationDialog({
           queryKey: trpc.persona.commentStyle.list.infiniteQueryKey(),
         });
       },
-    })
+    }),
   );
 
   return (

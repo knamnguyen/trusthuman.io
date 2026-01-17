@@ -39,7 +39,7 @@ export function TargetLists() {
   // Selection state - default to "All Profiles"
   const [selectedListId, setSelectedListId] = useState<string>(ALL_PROFILES_ID);
   const [selectedProfile, setSelectedProfile] = useState<TargetProfile | null>(
-    null
+    null,
   );
 
   const targetLists = useInfiniteQuery(
@@ -47,8 +47,8 @@ export function TargetLists() {
       {},
       {
         getNextPageParam: (lastPage) => lastPage.next,
-      }
-    )
+      },
+    ),
   );
 
   const allLists = targetLists.data?.pages.flatMap((p) => p.data) ?? [];
@@ -61,8 +61,8 @@ export function TargetLists() {
       void queryClient.prefetchInfiniteQuery(
         trpc.targetList.getProfilesInList.infiniteQueryOptions(
           { listId: list.id },
-          { getNextPageParam: (lastPage) => lastPage.next }
-        )
+          { getNextPageParam: (lastPage) => lastPage.next },
+        ),
       );
     }
   }, [allLists, queryClient, trpc]);
@@ -86,10 +86,10 @@ export function TargetLists() {
   const isAllProfiles = selectedListId === ALL_PROFILES_ID;
   const selectedListName = isAllProfiles
     ? "All Profiles"
-    : allLists.find((l) => l.id === selectedListId)?.name ?? "";
+    : (allLists.find((l) => l.id === selectedListId)?.name ?? "");
 
   return (
-    <div className="flex h-[calc(100vh-var(--header-height,0px))] flex-col">
+    <div className="flex h-screen flex-col">
       {/* Header - fixed at top */}
       <div className="shrink-0 border-b px-6 py-4">
         <h1 className="text-xl font-semibold">Target Lists</h1>
@@ -125,20 +125,20 @@ export function TargetLists() {
 
         {/* Right Sidebar */}
         <TargetListSidebar
-        isOpen={isSidebarOpen}
-        onToggle={() => setIsSidebarOpen((prev) => !prev)}
-        selectedTab={selectedTab}
-        onTabChange={setSelectedTab}
-        lists={allLists}
-        selectedListId={selectedListId}
-        onSelectList={handleSelectList}
-        selectedProfile={selectedProfile}
-        onClearProfile={() => setSelectedProfile(null)}
-        isLoadingLists={targetLists.isLoading}
-        hasMoreLists={targetLists.hasNextPage ?? false}
-        onLoadMoreLists={() => targetLists.fetchNextPage()}
-        isLoadingMoreLists={targetLists.isFetchingNextPage}
-      />
+          isOpen={isSidebarOpen}
+          onToggle={() => setIsSidebarOpen((prev) => !prev)}
+          selectedTab={selectedTab}
+          onTabChange={setSelectedTab}
+          lists={allLists}
+          selectedListId={selectedListId}
+          onSelectList={handleSelectList}
+          selectedProfile={selectedProfile}
+          onClearProfile={() => setSelectedProfile(null)}
+          isLoadingLists={targetLists.isLoading}
+          hasMoreLists={targetLists.hasNextPage ?? false}
+          onLoadMoreLists={() => targetLists.fetchNextPage()}
+          isLoadingMoreLists={targetLists.isFetchingNextPage}
+        />
       </div>
     </div>
   );
@@ -160,8 +160,8 @@ function AllProfilesGrid({
       {},
       {
         getNextPageParam: (lastPage) => lastPage.next,
-      }
-    )
+      },
+    ),
   );
 
   const allProfiles = profiles.data?.pages.flatMap((p) => p.data) ?? [];
@@ -195,7 +195,7 @@ function AllProfilesGrid({
                 key={profile.id}
                 profile={profile}
                 listMemberships={profile.targetListProfiles.map(
-                  (tlp) => tlp.list
+                  (tlp) => tlp.list,
                 )}
                 allLists={allLists}
                 isSelected={selectedProfileId === profile.id}
@@ -241,8 +241,8 @@ function ProfilesGrid({
       { listId },
       {
         getNextPageParam: (lastPage) => lastPage.next,
-      }
-    )
+      },
+    ),
   );
 
   const allProfiles = profiles.data?.pages.flatMap((p) => p.data) ?? [];
@@ -274,7 +274,7 @@ function ProfilesGrid({
                 key={profile.id}
                 profile={profile}
                 listMemberships={profile.targetListProfiles.map(
-                  (tlp) => tlp.list
+                  (tlp) => tlp.list,
                 )}
                 allLists={allLists}
                 isSelected={selectedProfileId === profile.id}
@@ -319,7 +319,7 @@ function ProfileCard({
     <Card
       className={cn(
         "cursor-pointer transition-all hover:shadow-md",
-        isSelected && "ring-primary ring-2"
+        isSelected && "ring-primary ring-2",
       )}
       onClick={onSelect}
     >

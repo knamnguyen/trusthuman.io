@@ -11,7 +11,7 @@ import { Skeleton } from "@sassy/ui/skeleton";
 import { useTRPC } from "~/trpc/react";
 import { CommentCard } from "./_components/CommentCard";
 import { PostPreviewSidebar } from "./_components/PostPreviewSidebar";
-import type { HistoryComment, PostCommentInfo } from "./_components/types";
+import type { HistoryComment, PostCommentInfo, StyleSnapshot } from "./_components/types";
 
 export default function HistoryPage() {
   const { accountSlug } = useParams<{ accountSlug: string }>();
@@ -28,6 +28,7 @@ export default function HistoryPage() {
   const comments: HistoryComment[] = (data?.data ?? []).map((c) => ({
     ...c,
     postComments: c.postComments as PostCommentInfo[] | null,
+    styleSnapshot: c.styleSnapshot as StyleSnapshot | null,
   }));
 
   // Find selected comment
@@ -58,7 +59,7 @@ export default function HistoryPage() {
   };
 
   return (
-    <div className="bg-background flex h-[calc(100vh-var(--header-height,0px))] flex-col">
+    <div className="bg-background flex h-screen flex-col">
       {/* Header - fixed at top, doesn't scroll */}
       <div className="shrink-0 border-b px-6 py-4">
         <div className="flex items-center gap-2">

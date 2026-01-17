@@ -50,6 +50,7 @@ export function PostPreviewSidebar({
   canGoNext,
 }: PostPreviewSidebarProps) {
   const [showAiDraft, setShowAiDraft] = useState(false);
+  const [showPersonaSettings, setShowPersonaSettings] = useState(false);
 
   // Get initials for avatar fallback
   const getInitials = (name: string | null | undefined): string => {
@@ -74,8 +75,7 @@ export function PostPreviewSidebar({
 
   // Check if the comment was AI-generated and edited
   const hasAiDraft =
-    comment?.originalAiComment &&
-    comment.originalAiComment !== comment.comment;
+    comment?.originalAiComment && comment.originalAiComment !== comment.comment;
 
   // Empty state
   if (!comment) {
@@ -179,7 +179,7 @@ export function PostPreviewSidebar({
                     key={pc.urn || index}
                     className={cn(
                       "rounded-md border p-3",
-                      pc.isReply ? "bg-muted/50 ml-4" : "bg-muted/30"
+                      pc.isReply ? "bg-muted/50 ml-4" : "bg-muted/30",
                     )}
                   >
                     <div className="mb-1 flex items-center gap-2">
@@ -195,11 +195,11 @@ export function PostPreviewSidebar({
                         </Avatar>
                       )}
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-xs font-medium">
+                        <p className="text-xs font-medium">
                           {pc.authorName || "Unknown"}
                         </p>
                         {pc.authorHeadline && (
-                          <p className="text-muted-foreground truncate text-[10px]">
+                          <p className="text-muted-foreground text-[10px]">
                             {pc.authorHeadline}
                           </p>
                         )}
@@ -255,12 +255,72 @@ export function PostPreviewSidebar({
           </div>
         )}
 
+        {/* Persona Settings Toggle (if styleSnapshot exists) */}
+        {comment.styleSnapshot && (
+          <div>
+            <button
+              onClick={() => setShowPersonaSettings(!showPersonaSettings)}
+              className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs transition-colors"
+            >
+              {showPersonaSettings ? (
+                <ChevronUp className="h-3 w-3" />
+              ) : (
+                <ChevronDown className="h-3 w-3" />
+              )}
+              <span>View Persona Settings</span>
+              <span className="text-muted-foreground">
+                ({comment.styleSnapshot.name ?? "Default"})
+              </span>
+            </button>
+            {showPersonaSettings && (
+              <div className="bg-muted/50 mt-2 space-y-2 rounded-md border p-3">
+                <div className="flex items-center gap-4">
+                  <div>
+                    <p className="text-muted-foreground text-[10px] font-medium uppercase">
+                      Persona
+                    </p>
+                    <p className="text-sm">
+                      {comment.styleSnapshot.name ?? "Default"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-[10px] font-medium uppercase">
+                      Max Words
+                    </p>
+                    <p className="text-sm">{comment.styleSnapshot.maxWords}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-[10px] font-medium uppercase">
+                      Creativity
+                    </p>
+                    <p className="text-sm">
+                      {comment.styleSnapshot.creativity.toFixed(1)}
+                    </p>
+                  </div>
+                </div>
+                {comment.styleSnapshot.content && (
+                  <div>
+                    <p className="text-muted-foreground text-[10px] font-medium uppercase">
+                      Style Guide
+                    </p>
+                    <div className="mt-1 max-h-24 overflow-y-auto rounded border bg-background p-2">
+                      <p className="text-muted-foreground text-xs whitespace-pre-wrap">
+                        {comment.styleSnapshot.content}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Touch Score + Time */}
         <div className="flex items-center gap-3">
           <div
             className={cn(
               "flex items-center gap-1 text-xs",
-              getTouchScoreColor(comment.peakTouchScore)
+              getTouchScoreColor(comment.peakTouchScore),
             )}
             title="How much you personalized the AI-generated comment"
           >

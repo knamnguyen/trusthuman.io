@@ -13,6 +13,14 @@ export interface PostCommentInfo {
   isReply: boolean;
 }
 
+/** StyleSnapshot - Snapshot of persona settings at comment generation time */
+export interface StyleSnapshot {
+  name: string | null;
+  content: string;
+  maxWords: number;
+  creativity: number;
+}
+
 /** HistoryComment - Comment data from the listByAccount query */
 export interface HistoryComment {
   id: string;
@@ -29,4 +37,6 @@ export interface HistoryComment {
   authorAvatarUrl: string | null;
   authorHeadline: string | null;
   peakTouchScore: number | null;
+  commentStyleId: string | null;
+  styleSnapshot: StyleSnapshot | null;
 }
