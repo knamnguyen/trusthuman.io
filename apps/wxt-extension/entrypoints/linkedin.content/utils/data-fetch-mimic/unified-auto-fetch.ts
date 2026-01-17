@@ -40,6 +40,12 @@ export async function autoFetchAllMetrics(accountId: string): Promise<boolean> {
     getLastUnifiedFetchTime(),
   ]);
 
+  // If fetching is disabled (intervalMs is Infinity), skip
+  if (intervalMs === Infinity) {
+    console.log(`⏸️ Auto-fetch is disabled`);
+    return false;
+  }
+
   if (lastFetch) {
     const timeSinceLastFetch = Date.now() - lastFetch;
     if (timeSinceLastFetch < intervalMs) {
@@ -137,10 +143,11 @@ export async function autoFetchAllMetrics(accountId: string): Promise<boolean> {
 /**
  * Check if auto-fetch is due (rate limit check only, no fetching)
  *
- * @returns Object with isDue flag and time info
+ * @returns Object with isDue flag, disabled state, and time info
  */
 export async function checkAutoFetchStatus(): Promise<{
   isDue: boolean;
+  isDisabled: boolean;
   lastFetchTime: number | null;
   nextFetchTime: number | null;
   intervalMs: number;
@@ -150,11 +157,14 @@ export async function checkAutoFetchStatus(): Promise<{
     getLastUnifiedFetchTime(),
   ]);
 
-  const isDue = !lastFetch || Date.now() - lastFetch >= intervalMs;
-  const nextFetchTime = lastFetch ? lastFetch + intervalMs : null;
+  // If intervalMs is Infinity, fetching is disabled
+  const isDisabled = intervalMs === Infinity;
+  const isDue = !isDisabled && (!lastFetch || Date.now() - lastFetch >= intervalMs);
+  const nextFetchTime = isDisabled ? null : (lastFetch ? lastFetch + intervalMs : null);
 
   return {
     isDue,
+    isDisabled,
     lastFetchTime: lastFetch,
     nextFetchTime,
     intervalMs,
