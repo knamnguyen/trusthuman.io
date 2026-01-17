@@ -128,8 +128,8 @@ CREATE TABLE "CommentStyle" (
     "description" TEXT NOT NULL,
     "content" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "maxTokens" INTEGER DEFAULT 150,
-    "creativity" DOUBLE PRECISION DEFAULT 0.8,
+    "maxWords" INTEGER DEFAULT 100,
+    "creativity" DOUBLE PRECISION DEFAULT 1.0,
     "userId" TEXT,
 
     CONSTRAINT "CommentStyle_pkey" PRIMARY KEY ("id")

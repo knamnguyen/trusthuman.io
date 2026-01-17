@@ -292,7 +292,7 @@ export async function collectPostsBatch(
   isAuthorBlacklisted?: (
     authorProfileUrl: string | null | undefined,
   ) => boolean,
-): Promise<number> {
+): Promise<ReadyPost[]> {
   const postUtils = getPostUtils();
   const commentUtils = getCommentUtils();
   const feedUtils = getFeedUtils();
