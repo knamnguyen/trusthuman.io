@@ -841,7 +841,7 @@ export async function insertCommentOnNonPreviouslyCommentedPosts(
       payload->>'id',
       payload->>'postUrn',
       payload->>'postUrl',
-      payload->>'postAlternateUrns',
+      (payload->>'postAlternateUrns')::text[],
       (payload->>'postCreatedAt')::timestamp,
       payload->>'postFullCaption',
       (payload->>'postComments')::jsonb,
@@ -852,7 +852,7 @@ export async function insertCommentOnNonPreviouslyCommentedPosts(
       payload->>'accountId',
       payload->>'comment'
     from jsonb_array_elements(${stringifiedValues}) as payload where not exists (
-      select 1 from "Comment" where "Comment"."accountId" = payload->>'accountId' and ("Comment"."postUrl" = payload->>'postUrl' or payload->>'postUrl' in any("Comment"."postAlternateUrls")) limit 1
+      select 1 from "Comment" where "Comment"."accountId" = payload->>'accountId' and ("Comment"."postUrn" = payload->>'postUrn' or payload->>'postUrn' = any("Comment"."postAlternateUrns")) limit 1
     )
   `;
 

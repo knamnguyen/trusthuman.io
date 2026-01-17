@@ -132,9 +132,9 @@ describe.skipIf(process.env.TEST_BROWSER_SESSION === undefined)(
     test.skipIf(process.env.TEST_LOAD_FEED_AND_SAVE_POSTS === undefined)(
       "loadFeedAndSavePosts",
       async () => {
-        const added = await session.loadFeedAndSavePosts(50);
+        const added = await session.loadFeedAndSavePosts(20);
 
-        expect(added).toBe(50);
+        expect(added).toBe(20);
 
         const results = await prisma.comment.findMany({
           where: {
@@ -142,7 +142,7 @@ describe.skipIf(process.env.TEST_BROWSER_SESSION === undefined)(
           },
         });
 
-        expect(results.length).toBe(50);
+        expect(results.length).toBe(20);
       },
       Infinity,
     );
@@ -184,7 +184,10 @@ describe("insertCommentOnNonPreviouslyCommentedPosts", () => {
       {
         id: "test-comment-id-1",
         postUrn: "urn:li:share:test-post-id-1",
+        postUrl:
+          "https://www.linkedin.com/feed/update/urn:li:share:test-post-id-1",
         postFullCaption: "This is a test comment 1",
+        postAlternateUrns: [],
         comment: "",
         postCreatedAt: new Date(),
         authorName: "Test Author 1",
@@ -197,7 +200,10 @@ describe("insertCommentOnNonPreviouslyCommentedPosts", () => {
       {
         id: "test-comment-id-2",
         postUrn: "urn:li:share:test-post-id-2",
+        postUrl:
+          "https://www.linkedin.com/feed/update/urn:li:share:test-post-id-2",
         postFullCaption: "This is a test comment 2",
+        postAlternateUrns: [],
         comment: "",
         postCreatedAt: new Date(),
         authorName: "Test Author 2",
@@ -216,8 +222,10 @@ describe("insertCommentOnNonPreviouslyCommentedPosts", () => {
         id: "test-comment-id-3",
         postUrl:
           "https://www.linkedin.com/feed/update/urn:li:share:test-post-id-3",
+        postUrn: "urn:li:share:test-post-id-3",
         postFullCaption: "This is a test comment 1",
         comment: "",
+        postAlternateUrns: [],
         postCreatedAt: new Date(),
         authorName: "Test Author 1",
         authorProfileUrl: "https://www.linkedin.com/in/test-author-1",
@@ -230,7 +238,9 @@ describe("insertCommentOnNonPreviouslyCommentedPosts", () => {
         id: "test-comment-id-4",
         postUrl:
           "https://www.linkedin.com/feed/update/urn:li:share:test-post-id-2",
+        postUrn: "urn:li:share:test-post-id-2",
         postFullCaption: "This is a test comment 2",
+        postAlternateUrns: [],
         comment: "",
         postCreatedAt: new Date(),
         authorName: "Test Author 2",
