@@ -9,7 +9,7 @@ import type { createClerkClient } from "@clerk/chrome-extension/background";
 /**
  * Auth-related message actions
  */
-export type MessageAction = "getAuthStatus" | "getToken";
+export type MessageAction = "getAuthStatus" | "getToken" | "openTargetListTab";
 
 /**
  * Message request from content script
@@ -21,6 +21,10 @@ export interface MessageRequest {
    * Use when user may have switched orgs externally
    */
   forceRefresh?: boolean;
+  /**
+   * URL to open in new tab (for openTargetListTab action)
+   */
+  url?: string;
 }
 
 /**
