@@ -13,6 +13,8 @@ import { getTrpcClient } from "../../../../lib/trpc/client";
 interface SaveCommentOptions {
   /** URL of the submitted comment (from SubmitCommentResult) */
   commentUrl?: string;
+  /** URN of the submitted comment (from SubmitCommentResult) */
+  commentUrn?: string;
 }
 
 /**
@@ -49,6 +51,7 @@ export async function saveCommentToDb(
       postCreatedAt,
       comment: card.commentText,
       commentUrl: options?.commentUrl,
+      commentUrn: options?.commentUrn,
       originalAiComment: card.originalCommentText || undefined,
       peakTouchScore: card.peakTouchScore,
       postAlternateUrns: card.postUrls.map((p) => p.urn),
@@ -65,6 +68,9 @@ export async function saveCommentToDb(
       authorProfileUrl: card.authorInfo?.profileUrl ?? null,
       authorAvatarUrl: card.authorInfo?.photoUrl ?? null,
       authorHeadline: card.authorInfo?.headline ?? null,
+      // CommentStyle tracking
+      commentStyleId: card.commentStyleId ?? undefined,
+      styleSnapshot: card.styleSnapshot ?? undefined,
     });
 
     console.log("EngageKit: Comment saved to DB", postUrl);

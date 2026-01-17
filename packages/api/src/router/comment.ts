@@ -26,6 +26,7 @@ export const commentRouter = () =>
           postUrl: z.string(),
           comment: z.string(),
           commentUrl: z.string().optional(),
+          commentUrn: z.string().optional(),
           originalAiComment: z.string().optional(),
           peakTouchScore: z.number().int().min(0).max(100).optional(),
           postAlternateUrns: z.array(z.string()).optional(),
@@ -46,6 +47,14 @@ export const commentRouter = () =>
           authorProfileUrl: z.string().nullable().optional(),
           authorAvatarUrl: z.string().nullable().optional(),
           authorHeadline: z.string().nullable().optional(),
+          // CommentStyle tracking
+          commentStyleId: z.string().optional(),
+          styleSnapshot: z.object({
+            name: z.string().nullable(),
+            content: z.string(),
+            maxWords: z.number(),
+            creativity: z.number(),
+          }).optional(),
         }),
       )
       .mutation(async ({ ctx, input }) => {
@@ -55,10 +64,12 @@ export const commentRouter = () =>
           data: {
             id: commentId,
             postUrn: input.postUrn,
+            postUrl: input.postUrl,
             postFullCaption: input.postFullCaption,
             postCreatedAt: input.postCreatedAt ?? null,
             comment: input.comment,
             commentUrl: input.commentUrl ?? null,
+            commentUrn: input.commentUrn ?? null,
             originalAiComment: input.originalAiComment ?? null,
             peakTouchScore: input.peakTouchScore ?? null,
             postAlternateUrns: input.postAlternateUrns ?? [],
@@ -72,6 +83,9 @@ export const commentRouter = () =>
             commentedAt: new Date(),
             isAutoCommented: false,
             accountId: ctx.activeAccount.id,
+            // CommentStyle tracking
+            commentStyleId: input.commentStyleId ?? null,
+            styleSnapshot: input.styleSnapshot ?? undefined,
           },
         });
 
@@ -122,6 +136,9 @@ export const commentRouter = () =>
             authorAvatarUrl: true,
             authorHeadline: true,
             peakTouchScore: true,
+            // CommentStyle tracking
+            commentStyleId: true,
+            styleSnapshot: true,
           },
         });
 
