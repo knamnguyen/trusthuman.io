@@ -166,7 +166,7 @@ export function PersonaSidebar({
   return (
     <div
       className={cn(
-        "bg-background relative flex h-full flex-col border-l transition-all duration-200",
+        "bg-background relative flex shrink-0 flex-col border-l transition-all duration-200",
         isOpen ? "w-[400px]" : "w-0"
       )}
     >
@@ -178,8 +178,8 @@ export function PersonaSidebar({
       {/* Sidebar content - only visible when open */}
       {isOpen && (
         <>
-          {/* Header */}
-          <div className="flex items-center justify-between border-b p-4">
+          {/* Header - fixed at top */}
+          <div className="shrink-0 flex items-center justify-between border-b p-4">
             <h2 className="text-lg font-semibold">
               {mode === "create" ? "Create Persona" : "Edit Persona"}
             </h2>
@@ -188,12 +188,12 @@ export function PersonaSidebar({
             </Button>
           </div>
 
-          {/* Form */}
+          {/* Form - scrollable content with fixed footer */}
           <form
             onSubmit={handleSubmit(onSubmit)}
-            className="flex flex-1 flex-col overflow-y-auto"
+            className="flex min-h-0 flex-1 flex-col"
           >
-            <div className="flex-1 space-y-4 p-4">
+            <div className="flex-1 space-y-4 overflow-y-auto p-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Name</Label>
                 <Controller
@@ -346,8 +346,8 @@ export function PersonaSidebar({
               </div>
             </div>
 
-            {/* Footer */}
-            <div className="border-t p-4">
+            {/* Footer - fixed at bottom */}
+            <div className="shrink-0 border-t p-4">
               <div className="flex gap-2">
                 {mode === "edit" && selectedPersona && (
                   <Button
