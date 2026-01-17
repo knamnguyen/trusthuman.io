@@ -19,6 +19,7 @@
 import { create } from "zustand";
 
 import { getTrpcClient } from "../../../lib/trpc/client";
+import { prefetchUrnsForLists } from "./target-list-queue";
 
 // =============================================================================
 // TYPES
@@ -223,6 +224,13 @@ export const useSettingsDBStore = create<SettingsDBStore>((set, get) => ({
         error: null,
         lastFetchedAt: Date.now(),
       });
+
+      // Pre-fetch URNs for selected target lists (fire-and-forget)
+      // This warms the cache so "Load Posts" is instant
+      if (postLoad?.targetListIds?.length) {
+        console.log("SettingsDBStore: Pre-fetching URNs for saved target lists...");
+        void prefetchUrnsForLists(postLoad.targetListIds);
+      }
     } catch (error) {
       console.error("SettingsDBStore: Error fetching settings", error);
 
