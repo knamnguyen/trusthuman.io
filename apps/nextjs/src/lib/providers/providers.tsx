@@ -9,7 +9,7 @@ import { EngagekitClerkProvider } from "./clerk-provider";
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
-    <ThemeProvider attribute="class" defaultTheme="light">
+    <ThemeProvider attribute="class" forcedTheme="light" defaultTheme="light">
       {/* important to have linkedIn account provider outside of TRPC provider */}
       <LinkedInAccountProvider>
         <TRPCReactProvider>
