@@ -135,11 +135,13 @@ export class AIService {
           responseText,
         );
 
-        // Parse the guaranteed JSON response
-        const parsed = JSON.parse(responseText) as {
-          selectedStyleIds?: string[];
-        };
-        const styleIds = parsed.selectedStyleIds ?? [];
+        // Parse the JSON response - handle both array and object formats
+        const parsed = JSON.parse(responseText) as
+          | string[]
+          | { selectedStyleIds?: string[] };
+        const styleIds = Array.isArray(parsed)
+          ? parsed
+          : (parsed.selectedStyleIds ?? []);
 
         // Validate that the IDs are from our valid set
         const validIds = styleIds.filter((id) => validStyleIds.has(id));
