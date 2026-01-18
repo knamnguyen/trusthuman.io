@@ -53,6 +53,11 @@
   ----- navigation button to go back and forward + step order (to next/prev teaching modal)
   ----- button to open modal teaching (same corresponding with tooltip)
 
+https://github.com/zihaolam/papergrind/blob/main/apps/web/components/question/tutorial.tsx
+https://github.com/gilbarbara/react-joyride
+https://github.com/elrumordelaluz/reactour
+https://github.com/tonghohin/tour
+
 //new dom fixing adapt task
 
 //requires for db
