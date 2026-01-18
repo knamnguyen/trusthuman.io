@@ -29,7 +29,6 @@ model User {
   linkedInPostPreviews LinkedInPostPreview[]
   commentAnalyses      CommentAnalysis[]
   AutoCommentConfig    AutoCommentConfig[]
-  CommentStyle         CommentStyle[]
 }
 
 enum AccessType {
