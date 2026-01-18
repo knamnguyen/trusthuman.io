@@ -1,16 +1,13 @@
 import { useCallback, useEffect, useRef } from "react";
-import { useMutation } from "@tanstack/react-query";
 
 import { createCommentUtilities } from "@sassy/linkedin-automation/comment/create-comment-utilities";
 import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post-utilities";
 
-import { getTrpcClient, useTRPC } from "../../../lib/trpc/client";
-import { useComposeStore } from "../stores/compose-store";
-import { getCommentStyleConfig } from "../stores/comment-style-cache";
-import { useSettingsDBStore } from "../stores/settings-db-store";
-import { useSettingsLocalStore } from "../stores/settings-local-store";
-import { SIDEBAR_TABS, useSidebarStore } from "../stores/sidebar-store";
-import { useMostVisiblePost } from "../utils";
+import { useComposeStore } from "../../stores/compose-store";
+import { useSettingsLocalStore } from "../../stores/settings-local-store";
+import { SIDEBAR_TABS, useSidebarStore } from "../../stores/sidebar-store";
+import { useMostVisiblePost } from "../../utils";
+import { generateAndUpdateCards } from "../utils/generate-ai-comments";
 
 // Initialize utilities (auto-detects DOM version)
 const postUtils = createPostUtilities();
@@ -36,8 +33,6 @@ function getCaptionPreview(fullCaption: string, wordLimit: number): string {
  * This component renders nothing - it only sets up observers and listeners.
  */
 export function SpacebarEngageObserver() {
-  const trpc = useTRPC();
-
   // Compose store for creating cards and checking settings
   const {
     addCard,
@@ -51,10 +46,6 @@ export function SpacebarEngageObserver() {
 
   // Sidebar store for UI state
   const { openToTab } = useSidebarStore();
-
-  const generateComment = useMutation(
-    trpc.aiComments.generateComment.mutationOptions(),
-  );
 
   // Get settings from settings store
   const spacebarEnabled = useSettingsLocalStore(
@@ -201,101 +192,16 @@ export function SpacebarEngageObserver() {
         return;
       }
 
-      // Get comment generation settings
-      const commentGenerateSettings = useSettingsDBStore.getState().commentGenerate;
-      const dynamicStyleEnabled = commentGenerateSettings?.dynamicChooseStyleEnabled ?? false;
-      const adjacentCommentsEnabled = commentGenerateSettings?.adjacentCommentsEnabled ?? true;
-
-      // Extract adjacent comments for AI generation (if enabled)
-      const adjacentComments = adjacentCommentsEnabled
-        ? postUtils.extractAdjacentComments(postContainer)
-        : [];
-      const mappedAdjacentComments = adjacentComments.map((c) => ({
-        commentContent: c.commentContent,
-        likeCount: c.likeCount,
-        replyCount: c.replyCount,
-      }));
-
-      console.log("[SpacebarEngageObserver] Generation settings:", {
-        dynamicStyleEnabled,
-        adjacentCommentsEnabled,
-        adjacentCommentsCount: mappedAdjacentComments.length,
-      });
-
-      // Get tRPC client for dynamic generation
-      const trpcClient = getTrpcClient();
-
+      // Generate AI comments using shared utility
       try {
-        if (dynamicStyleEnabled) {
-          // Dynamic mode: AI selects styles, generates 3 comments in one call
-          console.log("[SpacebarEngageObserver] Using dynamic style selection");
-          const results = await trpcClient.aiComments.generateDynamic.mutate({
-            postContent: fullCaption,
-            adjacentComments: mappedAdjacentComments.length > 0 ? mappedAdjacentComments : undefined,
-            count: 3,
-          });
-
-          // Map results to cards (results[0] -> aiCardIds[0], etc.)
-          results.forEach((result, index) => {
-            const cardId = aiCardIds[index];
-            if (cardId) {
-              updateCardComment(cardId, result.comment);
-              updateCardStyleInfo(cardId, {
-                commentStyleId: result.styleId,
-                styleSnapshot: result.styleSnapshot,
-              });
-            }
-          });
-        } else {
-          // Static mode: Use selected default style for all 3 cards
-          const styleConfig = await getCommentStyleConfig();
-          console.log("[SpacebarEngageObserver] Using static style config:", {
-            styleName: styleConfig.styleName,
-            maxWords: styleConfig.maxWords,
-            creativity: styleConfig.creativity,
-          });
-
-          const requestParams = {
-            postContent: fullCaption,
-            styleGuide: styleConfig.styleGuide,
-            adjacentComments: mappedAdjacentComments.length > 0 ? mappedAdjacentComments : undefined,
-            maxWords: styleConfig.maxWords,
-            creativity: styleConfig.creativity,
-          };
-
-          // Fire 3 parallel AI requests with same style
-          await Promise.all(
-            aiCardIds.map(async (cardId) => {
-              try {
-                const result = await generateComment.mutateAsync(requestParams);
-                updateCardComment(cardId, result.comment);
-                updateCardStyleInfo(cardId, {
-                  commentStyleId: styleConfig.styleId,
-                  styleSnapshot: styleConfig.styleId
-                    ? {
-                        name: styleConfig.styleName,
-                        content: styleConfig.styleGuide,
-                        maxWords: styleConfig.maxWords,
-                        creativity: styleConfig.creativity,
-                      }
-                    : null,
-                });
-              } catch (err) {
-                console.error(
-                  `EngageKit SpacebarEngage: failed to generate for card ${cardId}`,
-                  err,
-                );
-                // Set empty comment on failure so isGenerating becomes false
-                updateCardComment(cardId, "");
-              }
-            }),
-          );
-        }
-      } catch (err) {
-        console.error(
-          "EngageKit SpacebarEngage: error generating comments",
-          err,
-        );
+        await generateAndUpdateCards({
+          postContent: fullCaption,
+          postContainer,
+          count: 3,
+          cardIds: aiCardIds,
+          updateCardComment,
+          updateCardStyleInfo,
+        });
       } finally {
         // Mark as done generating
         setIsEngageButtonGenerating(false);
@@ -310,7 +216,6 @@ export function SpacebarEngageObserver() {
       clearSinglePostCards,
       updateCardsComments,
       openToTab,
-      generateComment,
     ],
   );
 

@@ -7,9 +7,9 @@ import { TooltipProvider } from "@sassy/ui/tooltip";
 
 import { ToggleButton } from "./_components/ToggleButton";
 import { PostNavigator } from "./compose-tab/PostNavigator";
-import { SpacebarEngageObserver } from "./engage-button/SpacebarEngageObserver";
-import { useAutoEngage } from "./engage-button/useAutoEngage";
-import { useEngageButtons } from "./engage-button/useEngageButtons";
+import { SpacebarEngageObserver } from "./compose-tab/engage-button/SpacebarEngageObserver";
+import { useAutoEngage } from "./compose-tab/engage-button/useAutoEngage";
+import { useEngageButtons } from "./compose-tab/engage-button/useEngageButtons";
 import { LinkedInSidebar } from "./LinkedInSidebar";
 import { useProfilePageButton } from "./save-profile/useProfilePageButton";
 import { useSaveProfileButtons } from "./save-profile/useSaveProfileButtons";
