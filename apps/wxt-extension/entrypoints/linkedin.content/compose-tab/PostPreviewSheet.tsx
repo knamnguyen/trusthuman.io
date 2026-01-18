@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -477,21 +477,34 @@ export function PostPreviewSheet() {
                 />
               )}
 
-              {/* Your Touch Score + Actions Row */}
+              {/* Your Touch Score + Style Name + Actions Row */}
               <div className="flex items-center justify-between gap-2">
-                {/* Your Touch indicator - hide while generating */}
+                {/* Your Touch indicator + Style Name - hide while generating */}
                 {previewingCard.isGenerating ? (
                   <div className="text-muted-foreground text-xs">
                     <span>AI is writing...</span>
                   </div>
                 ) : (
-                  <div
-                    className={`flex items-center gap-1 text-xs ${getTouchScoreColor(yourTouchScore)}`}
-                    title="How much you've personalized the AI-generated comment"
-                  >
-                    <Sparkles className="h-3 w-3" />
-                    <span className="font-medium">Your Touch:</span>
-                    <span>{yourTouchScore}%</span>
+                  <div className="flex items-center gap-2 text-xs">
+                    <div
+                      className={`flex items-center gap-1 ${getTouchScoreColor(yourTouchScore)}`}
+                      title="How much you've personalized the AI-generated comment"
+                    >
+                      <Sparkles className="h-3 w-3" />
+                      <span className="font-medium">Your Touch:</span>
+                      <span>{yourTouchScore}%</span>
+                    </div>
+                    {previewingCard.styleSnapshot?.name && (
+                      <>
+                        <span className="text-muted-foreground">•</span>
+                        <span
+                          className="text-muted-foreground max-w-[120px] truncate"
+                          title={`Style: ${previewingCard.styleSnapshot.name}`}
+                        >
+                          {previewingCard.styleSnapshot.name}
+                        </span>
+                      </>
+                    )}
                   </div>
                 )}
 
