@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useMutation } from "@tanstack/react-query";
 import {
   Edit3,
   Feather,
@@ -18,7 +17,6 @@ import { TooltipWithDialog } from "@sassy/ui/components/tooltip-with-dialog";
 
 import type { PendingNavigationState } from "../stores/navigation-state";
 import type { PostLoadSettings } from "../stores/target-list-queue";
-import { useTRPC } from "../../../lib/trpc/client";
 import { useShadowRootStore } from "../stores";
 import { useComposeStore } from "../stores/compose-store";
 import { useSettingsDBStore } from "../stores/settings-db-store";
@@ -72,10 +70,6 @@ export function ComposeTab() {
   );
   const clearAllCards = useComposeStore((state) => state.clearAllCards);
 
-  const trpc = useTRPC();
-  const generateComment = useMutation(
-    trpc.aiComments.generateComment.mutationOptions(),
-  );
 
   // Use separate subscriptions for different concerns to minimize re-renders
   // Card IDs for rendering the list - only changes when cards are added/removed
@@ -178,6 +172,7 @@ export function ComposeTab() {
       console.log("[ComposeTab] runAutoResume started");
       const {
         postLoadSettings,
+        commentGenerateSettings,
         targetDraftCount: savedTargetDraftCount,
         queueState,
       } = pendingNav;
@@ -185,6 +180,7 @@ export function ComposeTab() {
       console.log("[ComposeTab] runAutoResume settings:", {
         targetDraftCount: savedTargetDraftCount,
         postLoadSettings,
+        commentGenerateSettings,
         queueState: queueState
           ? {
               currentIndex: queueState.currentIndex,
@@ -232,13 +228,13 @@ export function ComposeTab() {
         await loadPostsToCards({
           targetCount: savedTargetDraftCount,
           postLoadSettings,
+          commentGenerateSettings,
           existingUrns,
           isUrnIgnored,
           shouldStop: () => stopRequestedRef.current,
           addCard,
           updateCardComment,
           updateCardStyleInfo,
-          generateCommentMutate: generateComment.mutateAsync,
           onProgress: setLoadingProgress,
           setPreviewingCard,
         });
@@ -272,12 +268,12 @@ export function ComposeTab() {
     void runAutoResume();
   }, [
     addCard,
-    generateComment,
     getCards,
     isUrnIgnored,
     setIsCollecting,
     setPreviewingCard,
     updateCardComment,
+    updateCardStyleInfo,
   ]);
 
   // Handler to open settings (closes post preview first)
@@ -302,8 +298,9 @@ export function ComposeTab() {
     setLoadingProgress(0);
     stopRequestedRef.current = false;
 
-    // Get post load settings from DB store (snapshot at start time)
+    // Get settings from DB store (snapshot at start time)
     const postLoadSettings = useSettingsDBStore.getState().postLoad;
+    const commentGenerateSettingsDB = useSettingsDBStore.getState().commentGenerate;
 
     // If target list is enabled with list IDs, use queue system to process lists
     // Only use queue if we're not already on a search/content page (already navigated)
@@ -351,11 +348,22 @@ export function ComposeTab() {
             skipFollowing: postLoadSettings.skipFollowing,
           };
 
+          // Build comment generate settings snapshot for dynamic style branching
+          const commentGenerateSettings = commentGenerateSettingsDB
+            ? {
+                dynamicChooseStyleEnabled:
+                  commentGenerateSettingsDB.dynamicChooseStyleEnabled,
+                adjacentCommentsEnabled:
+                  commentGenerateSettingsDB.adjacentCommentsEnabled,
+              }
+            : undefined;
+
           // Start queue processing - this opens first tab via background script
           await processTargetListQueue(
             queueItems,
             settingsForQueue,
             targetDraftCount,
+            commentGenerateSettings,
           );
 
           // Reset loading state - the new tab will handle Load Posts via auto-resume
@@ -391,7 +399,6 @@ export function ComposeTab() {
       addCard,
       updateCardComment,
       updateCardStyleInfo,
-      generateCommentMutate: generateComment.mutateAsync,
       onProgress: setLoadingProgress,
       setPreviewingCard,
     });
@@ -401,7 +408,6 @@ export function ComposeTab() {
   }, [
     addCard,
     getCards,
-    generateComment,
     isUrnIgnored,
     setIsCollecting,
     setPreviewingCard,

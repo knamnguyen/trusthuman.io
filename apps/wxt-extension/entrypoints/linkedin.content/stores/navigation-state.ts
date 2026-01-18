@@ -1,6 +1,10 @@
 import { browser } from "wxt/browser";
 
-import type { PostLoadSettings, TargetListQueueState } from "./target-list-queue";
+import type {
+  CommentGenerateSettings,
+  PostLoadSettings,
+  TargetListQueueState,
+} from "./target-list-queue";
 
 /**
  * State saved before navigating to target list feed.
@@ -10,6 +14,9 @@ import type { PostLoadSettings, TargetListQueueState } from "./target-list-queue
  * - 'single': Single target list navigation (legacy)
  * - 'queue': Multiple target lists processed sequentially
  */
+
+// Re-export for convenience
+export type { CommentGenerateSettings as CommentGenerateSettingsSnapshot };
 
 // Legacy type (for backward compatibility)
 interface PendingNavigationStateLegacy {
@@ -33,6 +40,8 @@ export interface PendingNavigationState {
   savedAt: number;
   /** Queue state (only for type === 'queue') */
   queueState?: TargetListQueueState;
+  /** Comment generation settings snapshot (for dynamic style branching) */
+  commentGenerateSettings?: CommentGenerateSettings;
 }
 
 const STORAGE_KEY = "pendingTargetListNavigation";
@@ -47,6 +56,7 @@ export async function savePendingNavigation(
   postLoadSettings: PostLoadSettings,
   targetDraftCount: number,
   queueState?: TargetListQueueState,
+  commentGenerateSettings?: CommentGenerateSettings,
 ): Promise<void> {
   const state: PendingNavigationState = {
     type: queueState ? "queue" : "single",
@@ -54,11 +64,13 @@ export async function savePendingNavigation(
     targetDraftCount,
     savedAt: Date.now(),
     queueState,
+    commentGenerateSettings,
   };
 
   console.log("[NavigationState] Saving state:", {
     type: state.type,
     hasQueue: !!queueState,
+    hasDynamicStyle: commentGenerateSettings?.dynamicChooseStyleEnabled,
   });
   console.log(
     "[NavigationState] browser.storage.local available:",

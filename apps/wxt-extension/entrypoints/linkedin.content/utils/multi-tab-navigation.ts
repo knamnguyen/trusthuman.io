@@ -17,6 +17,7 @@ import { buildListFeedUrl } from "@sassy/linkedin-automation/navigate/build-list
 
 import { savePendingNavigation } from "../stores/navigation-state";
 import type {
+  CommentGenerateSettings,
   PostLoadSettings,
   TargetListQueueItem,
   TargetListQueueState,
@@ -37,11 +38,13 @@ import { openTabViaBackground } from "./open-tab-via-background";
  * @param selectedLists - Array of target lists to process
  * @param settings - Post load settings snapshot
  * @param targetDraftCount - Number of drafts to collect per list
+ * @param commentGenerateSettings - Comment generation settings snapshot (for dynamic style)
  */
 export async function processTargetListQueue(
   selectedLists: TargetListQueueItem[],
   settings: PostLoadSettings,
   targetDraftCount: number,
+  commentGenerateSettings?: CommentGenerateSettings,
 ): Promise<void> {
   if (selectedLists.length === 0) {
     console.error("[MultiTabNav] No target lists provided");
@@ -51,6 +54,7 @@ export async function processTargetListQueue(
   console.log("[MultiTabNav] Starting queue processing", {
     listCount: selectedLists.length,
     targetDraftCount,
+    dynamicStyleEnabled: commentGenerateSettings?.dynamicChooseStyleEnabled,
   });
 
   // Create queue state
@@ -58,6 +62,7 @@ export async function processTargetListQueue(
     queue: selectedLists,
     currentIndex: 0,
     postLoadSettings: settings,
+    commentGenerateSettings,
     targetDraftCount,
     createdAt: Date.now(),
   };
@@ -86,7 +91,7 @@ export async function processTargetListQueue(
   });
 
   // Save pending navigation state so auto-resume triggers in the new tab
-  await savePendingNavigation(settings, targetDraftCount, queueState);
+  await savePendingNavigation(settings, targetDraftCount, queueState, commentGenerateSettings);
 
   // Open via background script (bypasses popup blocker)
   await openTabViaBackground(feedUrl);
@@ -136,6 +141,7 @@ export async function continueQueueProcessing(): Promise<boolean> {
       queueState.postLoadSettings,
       queueState.targetDraftCount,
       queueState,
+      queueState.commentGenerateSettings,
     );
   }
 

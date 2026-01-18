@@ -1,5 +1,4 @@
 import { memo, useCallback, useEffect, useRef, useState } from "react";
-import { useMutation } from "@tanstack/react-query";
 import {
   ExternalLink,
   Eye,
@@ -18,15 +17,12 @@ import { Textarea } from "@sassy/ui/textarea";
 
 import { getTouchScoreColor } from "@sassy/linkedin-automation/comment/calculate-touch-score";
 import { createCommentUtilities } from "@sassy/linkedin-automation/comment/create-comment-utilities";
-import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post-utilities";
 
-import { useTRPC } from "../../../lib/trpc/client";
 import { useComposeStore } from "../stores/compose-store";
-import { getCommentStyleConfig } from "../stores/comment-style-cache";
 import { submitCommentFullFlow } from "./utils/submit-comment-full-flow";
+import { generateSingleComment } from "./utils/generate-ai-comments";
 
 // Initialize utilities (auto-detects DOM version)
-const postUtils = createPostUtilities();
 const commentUtils = createCommentUtilities();
 
 interface ComposeCardProps {
@@ -123,11 +119,6 @@ export const ComposeCard = memo(function ComposeCard({
   const setIsUserEditing = useComposeStore((state) => state.setIsUserEditing);
   const updateCardStatus = useComposeStore((state) => state.updateCardStatus);
 
-  const trpc = useTRPC();
-  const generateComment = useMutation(
-    trpc.aiComments.generateComment.mutationOptions(),
-  );
-
   // Early return if card not found (shouldn't happen, but safety check)
   if (!card) return null;
 
@@ -203,7 +194,7 @@ export const ComposeCard = memo(function ComposeCard({
     }
   }, [card.id, isSinglePostCard, removeCard, removeSinglePostCard]);
 
-  // Regenerate comment handler
+  // Regenerate comment handler using shared utility
   const handleRegenerate = useCallback(async () => {
     if (card.isGenerating) return;
 
@@ -213,43 +204,22 @@ export const ComposeCard = memo(function ComposeCard({
     // Mark as generating
     setCardGenerating(card.id, true);
 
-    // Extract adjacent comments for context
-    const adjacentComments = postUtils.extractAdjacentComments(card.postContainer);
-
-    // Get comment style config (styleGuide, maxWords, creativity)
-    const styleConfig = await getCommentStyleConfig();
-    console.log("[ComposeCard] Using comment style config:", {
-      styleName: styleConfig.styleName,
-      maxWords: styleConfig.maxWords,
-      creativity: styleConfig.creativity,
-    });
-
-    // Fire regeneration request with style config
-    generateComment
-      .mutateAsync({
-        postContent: card.fullCaption,
-        styleGuide: styleConfig.styleGuide,
-        adjacentComments,
-        previousAiComment,
-        humanEditedComment:
-          humanEditedComment !== previousAiComment
-            ? humanEditedComment
-            : undefined,
-        // Pass AI generation config from CommentStyle
-        maxWords: styleConfig.maxWords,
-        creativity: styleConfig.creativity,
-      })
+    // Fire regeneration request using shared utility
+    // generateSingleComment handles dynamic vs static mode internally
+    generateSingleComment({
+      postContent: card.fullCaption,
+      postContainer: card.postContainer,
+      previousAiComment,
+      humanEditedComment:
+        humanEditedComment !== previousAiComment
+          ? humanEditedComment
+          : undefined,
+    })
       .then((result) => {
         updateCardComment(card.id, result.comment);
-        // Store the style info that was used to generate this comment
         updateCardStyleInfo(card.id, {
-          commentStyleId: styleConfig.styleId,
-          styleSnapshot: {
-            name: styleConfig.styleName,
-            content: styleConfig.styleGuide,
-            maxWords: styleConfig.maxWords,
-            creativity: styleConfig.creativity,
-          },
+          commentStyleId: result.styleId,
+          styleSnapshot: result.styleSnapshot,
         });
       })
       .catch((err) => {
@@ -269,7 +239,6 @@ export const ComposeCard = memo(function ComposeCard({
     card.postContainer,
     card.fullCaption,
     setCardGenerating,
-    generateComment,
     updateCardComment,
     updateCardStyleInfo,
   ]);

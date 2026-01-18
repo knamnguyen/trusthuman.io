@@ -50,10 +50,20 @@ export interface PostLoadSettings {
   skipFollowing: boolean;
 }
 
+/**
+ * Snapshot of comment generation settings for queue processing.
+ * Only includes fields needed for AI generation branching logic.
+ */
+export interface CommentGenerateSettings {
+  dynamicChooseStyleEnabled: boolean;
+  adjacentCommentsEnabled: boolean;
+}
+
 export interface TargetListQueueState {
   queue: TargetListQueueItem[];
   currentIndex: number;
   postLoadSettings: PostLoadSettings; // Settings snapshot for entire queue
+  commentGenerateSettings?: CommentGenerateSettings; // AI generation settings snapshot
   targetDraftCount: number;
   createdAt: number;
 }

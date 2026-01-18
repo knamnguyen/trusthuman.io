@@ -11,25 +11,15 @@
 
 import type { ReadyPost } from "@sassy/linkedin-automation/feed/collect-posts";
 import type { PostFilterConfig } from "@sassy/linkedin-automation/feed/collect-posts";
-import type { AdjacentCommentInfo } from "@sassy/linkedin-automation/post/types";
 import { collectPostsBatch } from "@sassy/linkedin-automation/feed/collect-posts";
-import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post-utilities";
 
 import type { PostLoadSettings } from "../../stores/target-list-queue";
 import type { ComposeCard } from "../../stores/compose-store";
 import { useComposeStore } from "../../stores/compose-store";
-import { getCommentStyleConfig } from "../../stores/comment-style-cache";
 import { getCachedBlacklist, prefetchBlacklist } from "../../stores/blacklist-cache";
-import { useSettingsDBStore } from "../../stores/settings-db-store";
 import { useSettingsLocalStore } from "../../stores/settings-local-store";
 import { isAuthorBlacklisted } from "./is-author-blacklisted";
-
-// Lazily initialized
-let _postUtils: ReturnType<typeof createPostUtilities> | null = null;
-function getPostUtils() {
-  if (!_postUtils) _postUtils = createPostUtilities();
-  return _postUtils;
-}
+import { generateSingleComment, type CommentGenerateSettingsSnapshot } from "./generate-ai-comments";
 
 /**
  * Parameters for loadPostsToCards
@@ -39,6 +29,8 @@ export interface LoadPostsToCardsParams {
   targetCount: number;
   /** Post load settings (filters) */
   postLoadSettings: PostLoadSettings | null;
+  /** Comment generation settings snapshot (for auto-resume with snapshotted settings) */
+  commentGenerateSettings?: CommentGenerateSettingsSnapshot;
   /** Existing URNs to skip (already in store) */
   existingUrns: Set<string>;
   /** Function to check if a URN is ignored (manually dismissed) */
@@ -62,14 +54,6 @@ export interface LoadPostsToCardsParams {
       } | null;
     },
   ) => void;
-  /** Mutation function to generate AI comment */
-  generateCommentMutate: (params: {
-    postContent: string;
-    styleGuide: string;
-    adjacentComments: AdjacentCommentInfo[];
-    maxWords?: number;
-    creativity?: number;
-  }) => Promise<{ comment: string }>;
   /** Callback when progress updates (posts loaded so far) */
   onProgress: (count: number) => void;
   /** Callback to set the first card as preview */
@@ -110,20 +94,19 @@ export async function loadPostsToCards(
   const {
     targetCount,
     postLoadSettings,
+    commentGenerateSettings,
     existingUrns,
     isUrnIgnored,
     shouldStop,
     addCard,
     updateCardComment,
     updateCardStyleInfo,
-    generateCommentMutate,
     onProgress,
     setPreviewingCard,
   } = params;
 
   // Get settings snapshots
   const isHumanMode = useSettingsLocalStore.getState().behavior.humanOnlyMode;
-  const generateSettings = useSettingsDBStore.getState().commentGenerate;
 
   // Debug: Log all postLoadSettings to see what's being passed
   console.log("[loadPostsToCards] postLoadSettings:", {
@@ -188,14 +171,6 @@ export async function loadPostsToCards(
       useComposeStore.getState().previewingCardId === null;
     let firstCardId: string | null = null;
 
-    // Get comment style config once for the batch (styleGuide, maxWords, creativity)
-    const styleConfig = await getCommentStyleConfig();
-    console.log("[loadPostsToCards] Using comment style config:", {
-      styleName: styleConfig.styleName,
-      maxWords: styleConfig.maxWords,
-      creativity: styleConfig.creativity,
-    });
-
     // Process all posts in the batch
     for (const post of posts) {
       const cardId = crypto.randomUUID();
@@ -227,31 +202,25 @@ export async function loadPostsToCards(
 
       // Only fire AI generation in AI mode
       if (!isHumanMode) {
-        const postUtils = getPostUtils();
-        // Extract adjacent comments for AI context (only if enabled)
-        const adjacentComments = generateSettings?.adjacentCommentsEnabled
-          ? postUtils.extractAdjacentComments(post.postContainer)
-          : [];
-
-        // Fire AI request (don't await - run in parallel)
-        generateCommentMutate({
+        // Fire AI request using shared utility (don't await - run in parallel)
+        // generateSingleComment handles dynamic vs static mode internally
+        // Pass settingsOverride if provided (for auto-resume with snapshotted settings)
+        generateSingleComment({
           postContent: post.fullCaption,
-          styleGuide: styleConfig.styleGuide,
-          adjacentComments,
-          maxWords: styleConfig.maxWords,
-          creativity: styleConfig.creativity,
+          postContainer: post.postContainer,
+          settingsOverride: commentGenerateSettings,
         })
           .then((result) => {
+            console.log("[loadPostsToCards] AI result for card", cardId.slice(0, 8), {
+              commentLength: result.comment?.length,
+              styleId: result.styleId,
+              styleSnapshotName: result.styleSnapshot?.name,
+              hasStyleSnapshot: !!result.styleSnapshot,
+            });
             updateCardComment(cardId, result.comment);
-            // Store the style info that was used to generate this comment
             updateCardStyleInfo(cardId, {
-              commentStyleId: styleConfig.styleId,
-              styleSnapshot: {
-                name: styleConfig.styleName,
-                content: styleConfig.styleGuide,
-                maxWords: styleConfig.maxWords,
-                creativity: styleConfig.creativity,
-              },
+              commentStyleId: result.styleId,
+              styleSnapshot: result.styleSnapshot,
             });
           })
           .catch((err) => {

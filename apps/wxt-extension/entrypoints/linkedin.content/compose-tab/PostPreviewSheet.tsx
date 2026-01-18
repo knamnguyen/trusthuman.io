@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useMutation } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ChevronLeft,
@@ -22,15 +21,12 @@ import { Textarea } from "@sassy/ui/textarea";
 
 import { getTouchScoreColor } from "@sassy/linkedin-automation/comment/calculate-touch-score";
 import { createCommentUtilities } from "@sassy/linkedin-automation/comment/create-comment-utilities";
-import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post-utilities";
 
-import { useTRPC } from "../../../lib/trpc/client";
 import { useComposeStore } from "../stores/compose-store";
-import { getCommentStyleConfig } from "../stores/comment-style-cache";
 import { submitCommentFullFlow } from "./utils/submit-comment-full-flow";
+import { generateSingleComment } from "./utils/generate-ai-comments";
 
 // Initialize utilities (auto-detects DOM version)
-const postUtils = createPostUtilities();
 const commentUtils = createCommentUtilities();
 
 /**
@@ -74,17 +70,13 @@ export function PostPreviewSheet() {
   const setPreviewingCard = useComposeStore((state) => state.setPreviewingCard);
   const updateCardText = useComposeStore((state) => state.updateCardText);
   const updateCardComment = useComposeStore((state) => state.updateCardComment);
+  const updateCardStyleInfo = useComposeStore((state) => state.updateCardStyleInfo);
   const setCardGenerating = useComposeStore((state) => state.setCardGenerating);
   const removeCard = useComposeStore((state) => state.removeCard);
   const isSubmitting = useComposeStore((state) => state.isSubmitting);
   const setIsUserEditing = useComposeStore((state) => state.setIsUserEditing);
   const isCollecting = useComposeStore((state) => state.isCollecting);
   const updateCardStatus = useComposeStore((state) => state.updateCardStatus);
-
-  const trpc = useTRPC();
-  const generateComment = useMutation(
-    trpc.aiComments.generateComment.mutationOptions(),
-  );
 
   // Get author info, caption, post time, and post URL from the card (already extracted during collection)
   const authorInfo = previewingCard?.authorInfo ?? null;
@@ -194,7 +186,7 @@ export function PostPreviewSheet() {
     removeCard,
   ]);
 
-  // Regenerate comment handler
+  // Regenerate comment handler using shared utility
   const handleRegenerate = useCallback(async () => {
     if (!previewingCard || previewingCard.isGenerating) return;
 
@@ -205,36 +197,23 @@ export function PostPreviewSheet() {
     // Mark as generating
     setCardGenerating(cardId, true);
 
-    // Extract adjacent comments for context
-    const adjacentComments = postUtils.extractAdjacentComments(
-      previewingCard.postContainer,
-    );
-
-    // Get comment style config (styleGuide, maxWords, creativity)
-    const styleConfig = await getCommentStyleConfig();
-    console.log("[PostPreviewSheet] Using comment style config:", {
-      styleName: styleConfig.styleName,
-      maxWords: styleConfig.maxWords,
-      creativity: styleConfig.creativity,
-    });
-
-    // Fire regeneration request with style config
-    generateComment
-      .mutateAsync({
-        postContent: previewingCard.fullCaption,
-        styleGuide: styleConfig.styleGuide,
-        adjacentComments,
-        previousAiComment,
-        humanEditedComment:
-          humanEditedComment !== previousAiComment
-            ? humanEditedComment
-            : undefined,
-        // Pass AI generation config from CommentStyle
-        maxWords: styleConfig.maxWords,
-        creativity: styleConfig.creativity,
-      })
+    // Fire regeneration request using shared utility
+    // generateSingleComment handles dynamic vs static mode internally
+    generateSingleComment({
+      postContent: previewingCard.fullCaption,
+      postContainer: previewingCard.postContainer,
+      previousAiComment,
+      humanEditedComment:
+        humanEditedComment !== previousAiComment
+          ? humanEditedComment
+          : undefined,
+    })
       .then((result) => {
         updateCardComment(cardId, result.comment);
+        updateCardStyleInfo(cardId, {
+          commentStyleId: result.styleId,
+          styleSnapshot: result.styleSnapshot,
+        });
       })
       .catch((err) => {
         console.error(
@@ -245,7 +224,7 @@ export function PostPreviewSheet() {
         // On error, just mark as done (keep existing text)
         setCardGenerating(cardId, false);
       });
-  }, [previewingCard, setCardGenerating, generateComment, updateCardComment]);
+  }, [previewingCard, setCardGenerating, updateCardComment, updateCardStyleInfo]);
 
   // Submit this card's comment to LinkedIn (with submit settings)
   const handleSubmit = useCallback(async () => {

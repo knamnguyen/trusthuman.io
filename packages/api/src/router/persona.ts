@@ -18,7 +18,7 @@ export const personaRouter = () =>
         .input(
           z.object({
             name: z.string(),
-            description: z.string(),
+            description: z.string().max(500),
             content: z.string(),
             // AI Generation Config
             // "Comment Length" in words (1-300)
@@ -162,7 +162,7 @@ export const personaRouter = () =>
           z.object({
             id: z.string(),
             name: z.string().optional(),
-            description: z.string().optional(),
+            description: z.string().max(500).optional(),
             content: z.string().optional(),
             // AI Generation Config
             maxWords: z.number().min(1).max(300).optional(),
