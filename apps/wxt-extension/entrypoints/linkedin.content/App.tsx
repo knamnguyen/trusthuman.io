@@ -5,6 +5,7 @@ import { Sheet } from "@sassy/ui/sheet";
 import { ToasterSimple } from "@sassy/ui/toast";
 import { TooltipProvider } from "@sassy/ui/tooltip";
 
+import { useMigrateLegacyStorage } from "../../lib/migrate-legacy-storage";
 import { ToggleButton } from "./_components/ToggleButton";
 import { PostNavigator } from "./compose-tab/PostNavigator";
 import { SpacebarEngageObserver } from "./engage-button/SpacebarEngageObserver";
@@ -63,6 +64,8 @@ export default function App({ shadowRoot }: AppProps) {
     const feedUtilities = createFeedUtilities();
     return feedUtilities.watchAndRemoveNewPostsPill();
   }, []);
+
+  useMigrateLegacyStorage();
 
   // Watch for author profiles and inject save buttons (vanilla JS)
   useSaveProfileButtons();
