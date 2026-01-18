@@ -53,7 +53,7 @@ export const viewport: Viewport = {
   ],
 };
 
-export default async function RootLayout(props: {
+export default function RootLayout(props: {
   children: React.ReactNode;
   params?: {
     source?: "extension" | "app";
