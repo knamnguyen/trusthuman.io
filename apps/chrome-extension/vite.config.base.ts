@@ -53,10 +53,7 @@ export default defineConfig(({ mode }) => {
     define: {
       // Expose production app URL
       "import.meta.env.VITE_APP_URL": JSON.stringify(
-        isDev
-          ? (process.env.NEXTJS_URL ??
-              `http://localhost:${process.env.PORT ?? "3000"}`)
-          : (process.env.VITE_APP_URL ?? "https://engagekit.io"),
+        process.env.VITE_APP_URL ?? "https://api.engagekit.io",
       ),
       // Explicitly expose Clerk environment variable
       "import.meta.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY": JSON.stringify(
