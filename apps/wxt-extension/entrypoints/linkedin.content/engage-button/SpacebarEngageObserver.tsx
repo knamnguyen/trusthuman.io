@@ -4,9 +4,10 @@ import { useMutation } from "@tanstack/react-query";
 import { createCommentUtilities } from "@sassy/linkedin-automation/comment/create-comment-utilities";
 import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post-utilities";
 
-import { useTRPC } from "../../../lib/trpc/client";
+import { getTrpcClient, useTRPC } from "../../../lib/trpc/client";
 import { useComposeStore } from "../stores/compose-store";
 import { getCommentStyleConfig } from "../stores/comment-style-cache";
+import { useSettingsDBStore } from "../stores/settings-db-store";
 import { useSettingsLocalStore } from "../stores/settings-local-store";
 import { SIDEBAR_TABS, useSidebarStore } from "../stores/sidebar-store";
 import { useMostVisiblePost } from "../utils";
@@ -122,7 +123,7 @@ export function SpacebarEngageObserver() {
       const allCardIds = manualCardId ? [manualCardId] : aiCardIds;
 
       console.log(
-        `EngageKit SpacebarEngage: ${humanOnlyMode ? "creating 1 manual card (100% human mode)" : "generating 3 AI variations"} for post:`,
+        `[SpacebarEngageObserver] ▶▶▶ TRIGGERED - ${humanOnlyMode ? "creating 1 manual card (100% human mode)" : "generating 3 AI variations"} for post:`,
         fullCaption.slice(0, 100),
       );
 
@@ -200,54 +201,96 @@ export function SpacebarEngageObserver() {
         return;
       }
 
-      // Extract adjacent comments for AI generation
-      const adjacentComments = postUtils.extractAdjacentComments(postContainer);
+      // Get comment generation settings
+      const commentGenerateSettings = useSettingsDBStore.getState().commentGenerate;
+      const dynamicStyleEnabled = commentGenerateSettings?.dynamicChooseStyleEnabled ?? false;
+      const adjacentCommentsEnabled = commentGenerateSettings?.adjacentCommentsEnabled ?? true;
 
-      // Get comment style config (styleGuide, maxWords, creativity)
-      const styleConfig = await getCommentStyleConfig();
-      console.log("[SpacebarEngageObserver] Using comment style config:", {
-        styleName: styleConfig.styleName,
-        maxWords: styleConfig.maxWords,
-        creativity: styleConfig.creativity,
+      // Extract adjacent comments for AI generation (if enabled)
+      const adjacentComments = adjacentCommentsEnabled
+        ? postUtils.extractAdjacentComments(postContainer)
+        : [];
+      const mappedAdjacentComments = adjacentComments.map((c) => ({
+        commentContent: c.commentContent,
+        likeCount: c.likeCount,
+        replyCount: c.replyCount,
+      }));
+
+      console.log("[SpacebarEngageObserver] Generation settings:", {
+        dynamicStyleEnabled,
+        adjacentCommentsEnabled,
+        adjacentCommentsCount: mappedAdjacentComments.length,
       });
 
-      // Request params for AI generation with style config
-      const requestParams = {
-        postContent: fullCaption,
-        styleGuide: styleConfig.styleGuide,
-        adjacentComments,
-        // Pass AI generation config from CommentStyle
-        maxWords: styleConfig.maxWords,
-        creativity: styleConfig.creativity,
-      };
+      // Get tRPC client for dynamic generation
+      const trpcClient = getTrpcClient();
 
-      // Fire 3 parallel AI requests, update each card as it completes
       try {
-        await Promise.all(
-          aiCardIds.map(async (cardId) => {
-            try {
-              const result = await generateComment.mutateAsync(requestParams);
+        if (dynamicStyleEnabled) {
+          // Dynamic mode: AI selects styles, generates 3 comments in one call
+          console.log("[SpacebarEngageObserver] Using dynamic style selection");
+          const results = await trpcClient.aiComments.generateDynamic.mutate({
+            postContent: fullCaption,
+            adjacentComments: mappedAdjacentComments.length > 0 ? mappedAdjacentComments : undefined,
+            count: 3,
+          });
+
+          // Map results to cards (results[0] -> aiCardIds[0], etc.)
+          results.forEach((result, index) => {
+            const cardId = aiCardIds[index];
+            if (cardId) {
               updateCardComment(cardId, result.comment);
-              // Store the style info that was used to generate this comment
               updateCardStyleInfo(cardId, {
-                commentStyleId: styleConfig.styleId,
-                styleSnapshot: {
-                  name: styleConfig.styleName,
-                  content: styleConfig.styleGuide,
-                  maxWords: styleConfig.maxWords,
-                  creativity: styleConfig.creativity,
-                },
+                commentStyleId: result.styleId,
+                styleSnapshot: result.styleSnapshot,
               });
-            } catch (err) {
-              console.error(
-                `EngageKit SpacebarEngage: failed to generate for card ${cardId}`,
-                err,
-              );
-              // Set empty comment on failure so isGenerating becomes false
-              updateCardComment(cardId, "");
             }
-          }),
-        );
+          });
+        } else {
+          // Static mode: Use selected default style for all 3 cards
+          const styleConfig = await getCommentStyleConfig();
+          console.log("[SpacebarEngageObserver] Using static style config:", {
+            styleName: styleConfig.styleName,
+            maxWords: styleConfig.maxWords,
+            creativity: styleConfig.creativity,
+          });
+
+          const requestParams = {
+            postContent: fullCaption,
+            styleGuide: styleConfig.styleGuide,
+            adjacentComments: mappedAdjacentComments.length > 0 ? mappedAdjacentComments : undefined,
+            maxWords: styleConfig.maxWords,
+            creativity: styleConfig.creativity,
+          };
+
+          // Fire 3 parallel AI requests with same style
+          await Promise.all(
+            aiCardIds.map(async (cardId) => {
+              try {
+                const result = await generateComment.mutateAsync(requestParams);
+                updateCardComment(cardId, result.comment);
+                updateCardStyleInfo(cardId, {
+                  commentStyleId: styleConfig.styleId,
+                  styleSnapshot: styleConfig.styleId
+                    ? {
+                        name: styleConfig.styleName,
+                        content: styleConfig.styleGuide,
+                        maxWords: styleConfig.maxWords,
+                        creativity: styleConfig.creativity,
+                      }
+                    : null,
+                });
+              } catch (err) {
+                console.error(
+                  `EngageKit SpacebarEngage: failed to generate for card ${cardId}`,
+                  err,
+                );
+                // Set empty comment on failure so isGenerating becomes false
+                updateCardComment(cardId, "");
+              }
+            }),
+          );
+        }
       } catch (err) {
         console.error(
           "EngageKit SpacebarEngage: error generating comments",

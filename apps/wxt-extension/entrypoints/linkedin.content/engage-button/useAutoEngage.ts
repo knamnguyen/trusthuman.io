@@ -16,6 +16,7 @@ import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post
 import { getTrpcClient } from "../../../lib/trpc/client";
 import { useComposeStore } from "../stores/compose-store";
 import { getCommentStyleConfig } from "../stores/comment-style-cache";
+import { useSettingsDBStore } from "../stores/settings-db-store";
 import { useSettingsLocalStore } from "../stores/settings-local-store";
 import { SIDEBAR_TABS, useSidebarStore } from "../stores/sidebar-store";
 
@@ -76,13 +77,22 @@ export function useAutoEngage() {
         return;
       }
 
+      // Skip if another trigger (EngageButton or SpacebarEngage) already started generation
+      // This prevents duplicate requests when programmatic clickCommentButton triggers this watcher
+      if (composeState.isEngageButtonGenerating) {
+        console.log(
+          "[useAutoEngage] SKIPPED - isEngageButtonGenerating already true (another trigger is active)"
+        );
+        return;
+      }
+
       // Only block if Load Posts is running or Load Posts cards exist
       const hasLoadPostsCards = composeState.cards.some(
         (c) => !composeState.singlePostCardIds.includes(c.id)
       );
       if (composeState.isCollecting || hasLoadPostsCards) {
         console.log(
-          "EngageKit AutoEngage: ignoring - Load Posts running or Load Posts cards exist"
+          "[useAutoEngage] SKIPPED - Load Posts running or Load Posts cards exist"
         );
         return;
       }
@@ -110,7 +120,7 @@ export function useAutoEngage() {
       }
 
       console.log(
-        "EngageKit AutoEngage: native comment button clicked, triggering generation"
+        "[useAutoEngage] ▶▶▶ TRIGGERED - native comment button clicked, starting generation"
       );
 
       // Clear any existing single-post cards
@@ -238,60 +248,95 @@ export function useAutoEngage() {
         return;
       }
 
-      // Extract adjacent comments for AI generation
-      const adjacentComments = postUtils.extractAdjacentComments(postContainer);
+      // Get comment generation settings
+      const commentGenerateSettings = useSettingsDBStore.getState().commentGenerate;
+      const dynamicStyleEnabled = commentGenerateSettings?.dynamicChooseStyleEnabled ?? false;
+      const adjacentCommentsEnabled = commentGenerateSettings?.adjacentCommentsEnabled ?? true;
 
-      // Get comment style config (styleGuide, maxWords, creativity)
-      const styleConfig = await getCommentStyleConfig();
-      console.log("[useAutoEngage] Using comment style config:", {
-        styleName: styleConfig.styleName,
-        maxWords: styleConfig.maxWords,
-        creativity: styleConfig.creativity,
+      // Extract adjacent comments for AI generation (if enabled)
+      const adjacentComments = adjacentCommentsEnabled
+        ? postUtils.extractAdjacentComments(postContainer)
+        : [];
+      const mappedAdjacentComments = adjacentComments.map((c) => ({
+        commentContent: c.commentContent,
+        likeCount: c.likeCount,
+        replyCount: c.replyCount,
+      }));
+
+      console.log("[useAutoEngage] Generation settings:", {
+        dynamicStyleEnabled,
+        adjacentCommentsEnabled,
+        adjacentCommentsCount: mappedAdjacentComments.length,
       });
 
-      // Request params for AI generation with style config
-      const requestParams = {
-        postContent: fullCaption,
-        styleGuide: styleConfig.styleGuide,
-        adjacentComments: adjacentComments.map((c) => ({
-          commentContent: c.commentContent,
-          likeCount: c.likeCount,
-          replyCount: c.replyCount,
-        })),
-        // Pass AI generation config from CommentStyle
-        maxWords: styleConfig.maxWords,
-        creativity: styleConfig.creativity,
-      };
-
-      // Fire 3 parallel AI requests
       try {
-        await Promise.all(
-          aiCardIds.map(async (cardId) => {
-            try {
-              const result =
-                await trpcClient.aiComments.generateComment.mutate(
-                  requestParams
-                );
+        if (dynamicStyleEnabled) {
+          // Dynamic mode: AI selects styles, generates 3 comments in one call
+          console.log("[useAutoEngage] Using dynamic style selection");
+          const results = await trpcClient.aiComments.generateDynamic.mutate({
+            postContent: fullCaption,
+            adjacentComments: mappedAdjacentComments.length > 0 ? mappedAdjacentComments : undefined,
+            count: 3,
+          });
+
+          // Map results to cards (results[0] -> aiCardIds[0], etc.)
+          results.forEach((result, index) => {
+            const cardId = aiCardIds[index];
+            if (cardId) {
               updateCardComment(cardId, result.comment);
-              // Store the style info that was used to generate this comment
               updateCardStyleInfo(cardId, {
-                commentStyleId: styleConfig.styleId,
-                styleSnapshot: {
-                  name: styleConfig.styleName,
-                  content: styleConfig.styleGuide,
-                  maxWords: styleConfig.maxWords,
-                  creativity: styleConfig.creativity,
-                },
+                commentStyleId: result.styleId,
+                styleSnapshot: result.styleSnapshot,
               });
-            } catch (err) {
-              console.error(
-                `EngageKit AutoEngage: failed to generate for card ${cardId}`,
-                err
-              );
-              updateCardComment(cardId, "");
             }
-          })
-        );
+          });
+        } else {
+          // Static mode: Use selected default style for all 3 cards
+          const styleConfig = await getCommentStyleConfig();
+          console.log("[useAutoEngage] Using static style config:", {
+            styleName: styleConfig.styleName,
+            maxWords: styleConfig.maxWords,
+            creativity: styleConfig.creativity,
+          });
+
+          const requestParams = {
+            postContent: fullCaption,
+            styleGuide: styleConfig.styleGuide,
+            adjacentComments: mappedAdjacentComments.length > 0 ? mappedAdjacentComments : undefined,
+            maxWords: styleConfig.maxWords,
+            creativity: styleConfig.creativity,
+          };
+
+          // Fire 3 parallel AI requests with same style
+          await Promise.all(
+            aiCardIds.map(async (cardId) => {
+              try {
+                const result =
+                  await trpcClient.aiComments.generateComment.mutate(
+                    requestParams
+                  );
+                updateCardComment(cardId, result.comment);
+                updateCardStyleInfo(cardId, {
+                  commentStyleId: styleConfig.styleId,
+                  styleSnapshot: styleConfig.styleId
+                    ? {
+                        name: styleConfig.styleName,
+                        content: styleConfig.styleGuide,
+                        maxWords: styleConfig.maxWords,
+                        creativity: styleConfig.creativity,
+                      }
+                    : null,
+                });
+              } catch (err) {
+                console.error(
+                  `EngageKit AutoEngage: failed to generate for card ${cardId}`,
+                  err
+                );
+                updateCardComment(cardId, "");
+              }
+            })
+          );
+        }
       } catch (err) {
         console.error("EngageKit AutoEngage: error generating comments", err);
       } finally {
