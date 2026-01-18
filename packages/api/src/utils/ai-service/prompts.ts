@@ -1,6 +1,67 @@
 import type { CommentGenerationInput } from "../../schema-validators";
 
 /**
+ * Input for style selector prompt
+ */
+export interface StyleSelectorInput {
+  postContent: string;
+  adjacentComments?: Array<{
+    commentContent: string;
+    likeCount: number;
+    replyCount: number;
+  }>;
+  styles: Array<{
+    id: string;
+    name: string;
+    description: string;
+  }>;
+}
+
+/**
+ * Build prompt for AI to select the most appropriate comment styles for a post.
+ * Always requests 3 style selections (may repeat if fewer styles available).
+ */
+export const getStyleSelectorPrompt = ({
+  postContent,
+  adjacentComments,
+  styles,
+}: StyleSelectorInput): string => {
+  const stylesListText = styles
+    .map((s, i) => `${i + 1}. ID: "${s.id}" | Name: "${s.name}" | Description: ${s.description}`)
+    .join("\n");
+
+  const adjacentCommentsText = adjacentComments && adjacentComments.length > 0
+    ? `
+EXISTING COMMENTS ON THIS POST (for context):
+${JSON.stringify(adjacentComments, null, 2)}
+`
+    : "";
+
+  return `You are selecting comment styles for a LinkedIn post.
+
+POST CONTENT:
+---begin post content---
+${postContent}
+---end post content---
+${adjacentCommentsText}
+AVAILABLE COMMENT STYLES:
+${stylesListText}
+
+YOUR TASK:
+Select the 3 most appropriate styles for commenting on this post.
+Consider the post's tone, topic, industry, and existing discussion.
+
+RULES:
+- You MUST return exactly 3 style IDs
+- You MAY repeat a style ID if it's clearly the best fit and there are fewer than 3 distinct good matches
+- Return ONLY a valid JSON array of style IDs, nothing else
+- Example valid response: ["id1", "id2", "id3"]
+- Example with repeat: ["id1", "id1", "id2"]
+
+RESPOND WITH ONLY THE JSON ARRAY:`;
+};
+
+/**
  * Build regeneration instructions if this is a regeneration request
  */
 const getRegenerationInstructions = ({

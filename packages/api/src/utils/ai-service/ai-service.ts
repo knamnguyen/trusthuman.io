@@ -1,7 +1,17 @@
 import { GoogleGenAI } from "@google/genai";
+import { z } from "zod";
+import { zodToJsonSchema } from "zod-to-json-schema";
 
 import type { CommentGenerationInput } from "../../schema-validators";
-import { getPostCommentSystemPrompt } from "./prompts";
+import type { StyleSelectorInput } from "./prompts";
+import { getPostCommentSystemPrompt, getStyleSelectorPrompt } from "./prompts";
+
+// Zod schema for style selector response - guarantees valid JSON structure
+const styleSelectorResponseSchema = z.object({
+  selectedStyleIds: z
+    .array(z.string())
+    .describe("Array of exactly 3 style IDs selected for this post"),
+});
 
 export class AIService {
   private ai: GoogleGenAI;
@@ -18,22 +28,22 @@ export class AIService {
     // Convert maxWords to approximate maxOutputTokens (roughly 1.3 tokens per word)
     const maxOutputTokens = Math.ceil(maxWords * 1.3);
 
-    console.log(
-      "AI Comments Router: Starting comment generation",
-      {
-        postContentLength: input.postContent.length || 0,
-        creativity,
-        maxWords,
-        maxOutputTokens,
-        hasStyleGuide: !!input.styleGuide,
-      },
-    );
+    console.log("AI Comments Router: Starting comment generation", {
+      postContentLength: input.postContent.length || 0,
+      creativity,
+      maxWords,
+      maxOutputTokens,
+      hasStyleGuide: !!input.styleGuide,
+    });
 
     const systemPrompt = getPostCommentSystemPrompt(input);
 
     // Debug logging for the full prompt
-    console.log("🤖 [AI Debug] Full prompt sent to AI:\n", systemPrompt);
-    console.log("🤖 [AI Debug] Config:", { temperature: creativity, maxOutputTokens });
+    // console.log("🤖 [AI Debug] Full prompt sent to AI:\n", systemPrompt);
+    console.log("🤖 [AI Debug] Config:", {
+      temperature: creativity,
+      maxOutputTokens,
+    });
 
     try {
       const response = await this.ai.models.generateContent({
@@ -79,6 +89,91 @@ export class AIService {
         error: error instanceof Error ? error.message : String(error),
       } as const;
     }
+  }
+
+  /**
+   * Select the most appropriate comment styles for a given post.
+   * Always returns exactly 3 style IDs (may repeat if fewer styles available).
+   * Uses Gemini's structured output to guarantee valid JSON response.
+   *
+   * @param input - Post content, adjacent comments, and available styles
+   * @returns Array of 3 style IDs
+   * @throws Error if AI fails after retries
+   */
+  async selectCommentStyles(input: StyleSelectorInput): Promise<string[]> {
+    const MAX_RETRIES = 3;
+    const validStyleIds = new Set(input.styles.map((s) => s.id));
+
+    console.log("[AIService] selectCommentStyles: Starting style selection", {
+      postContentLength: input.postContent.length,
+      stylesCount: input.styles.length,
+      styleIds: Array.from(validStyleIds),
+    });
+
+    const prompt = getStyleSelectorPrompt(input);
+
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        console.log(
+          `[AIService] selectCommentStyles: Attempt ${attempt}/${MAX_RETRIES}`,
+        );
+
+        const response = await this.ai.models.generateContent({
+          model: "gemini-2.5-flash-lite",
+          contents: prompt,
+          config: {
+            temperature: 0.3, // Lower temperature for more consistent selection
+            maxOutputTokens: 200, // Enough for JSON response
+            responseMimeType: "application/json",
+            responseJsonSchema: zodToJsonSchema(styleSelectorResponseSchema),
+          },
+        });
+
+        const responseText = response.text?.trim() ?? "";
+        console.log(
+          "[AIService] selectCommentStyles: Raw JSON response:",
+          responseText,
+        );
+
+        // Parse the guaranteed JSON response
+        const parsed = JSON.parse(responseText) as {
+          selectedStyleIds?: string[];
+        };
+        const styleIds = parsed.selectedStyleIds ?? [];
+
+        // Validate that the IDs are from our valid set
+        const validIds = styleIds.filter((id) => validStyleIds.has(id));
+
+        if (validIds.length === 3) {
+          console.log(
+            "[AIService] selectCommentStyles: Successfully selected styles:",
+            validIds,
+          );
+          return validIds;
+        }
+
+        // If we got fewer than 3 valid IDs, the AI may have returned invalid IDs
+        // Retry to get a proper response
+        console.warn(
+          `[AIService] selectCommentStyles: Got ${validIds.length} valid IDs (expected 3), retrying...`,
+          { returned: styleIds, valid: validIds },
+        );
+      } catch (error) {
+        console.error(
+          `[AIService] selectCommentStyles: Attempt ${attempt} failed:`,
+          error,
+        );
+
+        if (attempt === MAX_RETRIES) {
+          throw new Error(
+            `Failed to select comment styles after ${MAX_RETRIES} attempts: ${error instanceof Error ? error.message : String(error)}`,
+          );
+        }
+      }
+    }
+
+    // This should never be reached due to the throw above, but TypeScript needs it
+    throw new Error("Failed to select comment styles: exhausted retries");
   }
 
   /**
