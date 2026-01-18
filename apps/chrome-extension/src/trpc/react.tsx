@@ -26,9 +26,12 @@ export const { useTRPC, TRPCProvider } = createTRPCContext<AppRouter>();
  * Get the server URL based on environment
  */
 const getServerUrl = (): string => {
+  console.info(import.meta.env);
   // For development with ngrok - check both VITE_NGROK_URL and NEXTJS_URL
   if (import.meta.env.VITE_NGROK_URL) {
     return `${import.meta.env.VITE_NGROK_URL}/api/trpc`;
+  } else if (import.meta.env.VITE_APP_URL) {
+    return `${import.meta.env.VITE_APP_URL}/api/trpc`;
   } else if (import.meta.env.VITE_NEXTJS_URL) {
     return `${import.meta.env.VITE_NEXTJS_URL}/api/trpc`;
   } else if (import.meta.env.DEV) {
@@ -40,6 +43,8 @@ const getServerUrl = (): string => {
     return "https://engagekit.io/api/trpc";
   }
 };
+
+console.info({ serverUrl: getServerUrl() });
 
 /**
  * Get fresh Clerk session token exclusively from background service

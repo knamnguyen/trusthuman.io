@@ -6,6 +6,7 @@ import { SheetContent, SheetHeader } from "@sassy/ui/sheet";
 
 import { useAuthStore } from "../../lib/auth-store";
 import { AccountMismatchOverlay } from "./_components/AccountMismatchOverlay";
+import { CreateLinkedInAccountOverlay } from "./_components/CreateLinkedInAccountOverlay";
 import { SignInOverlay } from "./_components/SignInOverlay";
 import { ToggleButton } from "./_components/ToggleButton";
 import { AccountTab } from "./account-tab/AccountTab";
@@ -39,11 +40,16 @@ export function LinkedInSidebar({ onClose }: LinkedInSidebarProps) {
 
   // Auth state from store (singleton - shared across all components)
   const { isSignedIn, isLoaded: isAuthLoaded } = useAuthStore();
-  const { currentLinkedInStatus } = useAccountStore();
+  const { currentLinkedInStatus, accounts, isLoading } = useAccountStore();
 
   // Determine if we should show overlays
   const showSignInOverlay = isAuthLoaded && !isSignedIn;
+
+  const showNoAccountRegisteredOverlay =
+    isLoading === false && showSignInOverlay === false && accounts.length === 0;
+
   const showMismatchOverlay =
+    !showNoAccountRegisteredOverlay &&
     isSignedIn &&
     selectedTab !== SIDEBAR_TABS.ACCOUNT &&
     currentLinkedInStatus === "not_registered";
@@ -85,6 +91,9 @@ export function LinkedInSidebar({ onClose }: LinkedInSidebarProps) {
 
         {/* Sign-in overlay - covers everything when not signed in */}
         {showSignInOverlay && <SignInOverlay />}
+
+        {/* No account registered overlay - shows when no LinkedIn accounts */}
+        {showNoAccountRegisteredOverlay && <CreateLinkedInAccountOverlay />}
 
         {/* Account mismatch overlay - shows on non-Account tabs when LinkedIn not registered */}
         {showMismatchOverlay && <AccountMismatchOverlay />}

@@ -543,13 +543,13 @@ CREATE UNIQUE INDEX "OrganizationMember_orgId_userId_key" ON "OrganizationMember
 CREATE INDEX "TargetList_accountId_idx" ON "TargetList"("accountId");
 
 -- CreateIndex
+CREATE INDEX "TargetList_name_idx" ON "TargetList"("name");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "TargetListProfile_listId_profileId_accountId_key" ON "TargetListProfile"("listId", "profileId", "accountId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "TargetProfile_linkedinUrl_key" ON "TargetProfile"("linkedinUrl");
-
--- CreateIndex
-CREATE INDEX "TargetProfile_accountId_linkedinUrl_idx" ON "TargetProfile"("accountId", "linkedinUrl");
+CREATE UNIQUE INDEX "TargetProfile_accountId_linkedinUrl_key" ON "TargetProfile"("accountId", "linkedinUrl");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "BlacklistedProfile_accountId_profileUrn_key" ON "BlacklistedProfile"("accountId", "profileUrn");

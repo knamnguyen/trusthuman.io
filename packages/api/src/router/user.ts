@@ -1,3 +1,4 @@
+import { ulid } from "ulidx";
 import z from "zod";
 
 import {
@@ -115,4 +116,158 @@ export const userRouter = () =>
     //       });
     //     }
     //   }),
+
+    saveDataFromLegacyStorage: protectedProcedure
+      .input(
+        z.object({
+          lists: z.array(z.string()).nullable(),
+          profileData: z
+            .record(
+              z.string(),
+              z.object({
+                profilePhotoUrl: z.string().optional(),
+                profileUrl: z.string(),
+                fullName: z.string().optional(),
+                headline: z.string().optional(),
+                profileUrn: z.string().optional(),
+                lists: z.array(z.string()),
+              }),
+            )
+            .nullable(),
+          personas: z
+            .array(
+              z.object({
+                name: z.string(),
+                prompt: z.string(),
+              }),
+            )
+            .nullable(),
+        }),
+      )
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.activeAccount === null) {
+          return {
+            status: "error",
+            reason: "No active account to save data for",
+          } as const;
+        }
+
+        const activeAccountId = ctx.activeAccount.id;
+
+        return await ctx.db.$transaction(async (tx) => {
+          const listIdMapping = new Map<string, string>();
+
+          if (input.lists && input.lists.length > 0) {
+            const existingLists = await tx.targetList.findMany({
+              where: {
+                accountId: activeAccountId,
+                name: { in: input.lists },
+              },
+              select: { name: true, id: true },
+            });
+
+            existingLists.forEach((list) => {
+              listIdMapping.set(list.name, list.id);
+            });
+
+            const listsToCreate = new Set<string>();
+
+            input.lists.forEach((listName) => {
+              if (!listIdMapping.has(listName)) {
+                listsToCreate.add(listName);
+              }
+            });
+
+            for (const profile of Object.values(input.profileData ?? {})) {
+              for (const listName of profile.lists) {
+                if (!listIdMapping.has(listName)) {
+                  listsToCreate.add(listName);
+                }
+              }
+            }
+
+            const newlyCreatedLists = await tx.targetList.createManyAndReturn({
+              data: Array.from(listsToCreate).map((listName) => ({
+                id: ulid(),
+                name: listName,
+                accountId: activeAccountId,
+                status: "COMPLETED",
+              })),
+            });
+
+            newlyCreatedLists.forEach((list) => {
+              listIdMapping.set(list.name, list.id);
+            });
+          }
+
+          if (input.profileData && Object.keys(input.profileData).length > 0) {
+            // map of profileUrl to profileId
+            const profiles = new Map<string, string>();
+            const existing = await tx.targetProfile.findMany({
+              where: {
+                accountId: activeAccountId,
+                linkedinUrl: {
+                  in: Object.values(input.profileData).map((p) => p.profileUrl),
+                },
+              },
+              select: {
+                id: true,
+                linkedinUrl: true,
+              },
+            });
+
+            existing.forEach((profile) => {
+              profiles.set(profile.linkedinUrl, profile.id);
+            });
+
+            const nonExistingProfiles = Object.values(input.profileData).filter(
+              (p) => !profiles.has(p.profileUrl),
+            );
+
+            const newlyInserted = await tx.targetProfile.createManyAndReturn({
+              data: nonExistingProfiles.map((profile) => ({
+                id: ulid(),
+                accountId: activeAccountId,
+                linkedinUrl: profile.profileUrl,
+                photoUrl: profile.profilePhotoUrl,
+                headline: profile.headline,
+                profileUrn: profile.profileUrn,
+              })),
+              skipDuplicates: true,
+            });
+
+            newlyInserted.forEach((profile) => {
+              profiles.set(profile.linkedinUrl, profile.id);
+            });
+
+            await tx.targetListProfile.createMany({
+              data: Object.values(input.profileData).flatMap((profile) =>
+                profile.lists.map((listName) => ({
+                  id: ulid(),
+                  accountId: activeAccountId,
+                  // we can null assert here because we know for sure we just created the missing profiles or list id mappings
+                  profileId: profiles.get(profile.profileUrl)!,
+                  listId: listIdMapping.get(listName)!,
+                })),
+              ),
+            });
+          }
+
+          if (input.personas && input.personas.length > 0) {
+            await tx.commentStyle.createMany({
+              data: input.personas.map((persona) => ({
+                id: ulid(),
+                accountId: activeAccountId,
+                name: persona.name,
+                content: persona.prompt,
+                description: "",
+              })),
+            });
+          }
+
+          return {
+            status: "success",
+          } as const;
+        });
+      }),
   });
