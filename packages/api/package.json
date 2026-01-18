@@ -49,7 +49,8 @@
     "puppeteer-core": "^24.22.3",
     "superjson": "2.2.2",
     "ulidx": "^2.4.1",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "zod-to-json-schema": "^3.24.1"
   },
   "devDependencies": {
     "@sassy/eslint-config": "workspace:*",

@@ -70,3 +70,49 @@ export type CommentGeneratorConfig = z.infer<
   typeof commentGeneratorConfigSchema
 >;
 export type CommentGeneratorError = z.infer<typeof commentGeneratorErrorSchema>;
+
+/**
+ * Dynamic Style Selection Schemas
+ *
+ * Used by the generateDynamic route for AI-powered style selection
+ */
+
+// Input schema for generateDynamic
+export const generateDynamicInputSchema = z.object({
+  postContent: z.string().min(1, "Post content is required"),
+  adjacentComments: z
+    .array(
+      z.object({
+        commentContent: z.string(),
+        likeCount: z.number(),
+        replyCount: z.number(),
+      }),
+    )
+    .optional(),
+  count: z.union([z.literal(1), z.literal(3)]),
+});
+
+// Style snapshot schema - null when using hardcoded defaults
+export const styleSnapshotSchema = z
+  .object({
+    name: z.string().nullable(),
+    content: z.string(),
+    maxWords: z.number(),
+    creativity: z.number(),
+  })
+  .nullable();
+
+// Output schema for generateDynamic
+export const generateDynamicOutputSchema = z.array(
+  z.object({
+    comment: z.string(),
+    styleId: z.string().nullable(),
+    styleSnapshot: styleSnapshotSchema,
+  }),
+);
+
+// Type exports for dynamic style selection
+export type GenerateDynamicInput = z.infer<typeof generateDynamicInputSchema>;
+export type StyleSnapshot = z.infer<typeof styleSnapshotSchema>;
+export type GenerateDynamicOutput = z.infer<typeof generateDynamicOutputSchema>;
+export type DynamicStyleResult = GenerateDynamicOutput[number];

@@ -61,4 +61,9 @@ export type {
   CommentGenerationOutput,
   CommentGeneratorConfig,
   CommentGeneratorError,
+  // Dynamic style selection types
+  GenerateDynamicInput,
+  GenerateDynamicOutput,
+  DynamicStyleResult,
+  StyleSnapshot,
 } from "./schema-validators";
