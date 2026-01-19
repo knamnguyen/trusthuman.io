@@ -26,8 +26,8 @@ export default defineConfig({
   },
 
   manifest: {
-    name: "EngageKit WXT Extension",
-    description: "AI-powered LinkedIn engagement with Clerk authentication",
+    name: "EngageKit",
+    description: "Your trusty LinkedIn engagekit assistant.",
     version: "0.0.1",
     permissions: [
       "activeTab",
