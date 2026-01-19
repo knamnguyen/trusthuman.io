@@ -50,8 +50,13 @@ export default defineConfig({
     ],
     host_permissions: [
       "https://*.linkedin.com/*",
-      // Allow access to web app for auth sync (dynamic based on environment)
-      ...(process.env.VITE_APP_URL ? [process.env.VITE_APP_URL + "/*"] : []),
+      // Production domains for Clerk syncHost
+      "https://engagekit.io/*",
+      "https://accounts.engagekit.io/*",
+      "https://clerk.engagekit.io/*",
+      // Clerk dev domains
+      "https://*.clerk.accounts.dev/*",
+      "https://*.clerk.dev/*",
       // Add localhost for development
       "http://localhost/*",
     ],
