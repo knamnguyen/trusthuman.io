@@ -8,17 +8,15 @@ model CommentStyle {
 
   // AI Generation Config (human-friendly names)
   // "Comment Length" in words (1-300), default 100 words
-  maxWords    Int?     @default(100)
+  maxWords   Int?   @default(100)
   // "Creativity Level" - temperature (0.0=Very predictable, 1.0=Balanced, 2.0=Very creative)
-  creativity  Float?   @default(1.0)
+  creativity Float? @default(1.0)
 
   linkedInAccount        LinkedInAccount         @relation(fields: [accountId], references: [id], onDelete: Cascade)
   CommentGenerateSetting CommentGenerateSetting? //optional 1:1 - this style may be chosen as default
 
   //not needed for new chrome extension
   AutoCommentConfig AutoCommentConfig[]
-  user              User?               @relation(fields: [userId], references: [id])
-  userId            String?
 
   // Comments generated with this style
   comments Comment[]

@@ -6,12 +6,13 @@ model TargetList {
   updatedAt DateTime         @updatedAt
   status    TargetListStatus
 
-  linkedInAccount     LinkedInAccount      @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  blacklistedInSettings PostLoadSetting[]  @relation("PostLoadSetting_blacklist")
-  buildTargetListJobs BuildTargetListJob[]
-  targetListProfiles  TargetListProfile[]
+  linkedInAccount       LinkedInAccount      @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  blacklistedInSettings PostLoadSetting[]    @relation("PostLoadSetting_blacklist")
+  buildTargetListJobs   BuildTargetListJob[]
+  targetListProfiles    TargetListProfile[]
 
   @@index([accountId]) // For findListsWithProfileStatus query
+  @@index([name])
 }
 
 enum TargetListStatus {
@@ -37,7 +38,7 @@ model TargetProfile {
   accountId String
 
   //get url first to store - scrape profile in linkedinprofile first (or look up) and backfill to urn
-  linkedinUrl String  @unique
+  linkedinUrl String
   profileUrn  String?
 
   // Profile data scraped from LinkedIn page for quick display
@@ -53,7 +54,7 @@ model TargetProfile {
   account            LinkedInAccount     @relation(fields: [accountId], references: [id], onDelete: Cascade)
   targetListProfiles TargetListProfile[]
 
-  @@index([accountId, linkedinUrl]) // For findListsWithProfileStatus query
+  @@unique([accountId, linkedinUrl]) // For findListsWithProfileStatus query
 }
 
 //ignore for chrome extension for now
