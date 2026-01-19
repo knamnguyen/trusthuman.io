@@ -59,6 +59,11 @@ export default defineConfig({
       "https://*.clerk.dev/*",
       // Add localhost for development
       "http://localhost/*",
+      "https://*.clerk.accounts.dev/*",
+      "https://*.clerk.dev/*",
+      "https://engagekit.io/*",
+      "https://accounts.engagekit.io/*",
+      "https://clerk.engagekit.io/*",
     ],
     web_accessible_resources: [
       {

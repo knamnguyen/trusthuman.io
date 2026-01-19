@@ -69,6 +69,7 @@ class AuthService {
           isSignedIn: false,
           user: null,
           session: null,
+          organization: null,
         };
       }
 
@@ -79,6 +80,7 @@ class AuthService {
         isSignedIn: false,
         user: null,
         session: null,
+        organization: null,
       };
     }
   }
@@ -105,7 +107,6 @@ class AuthService {
       return null;
     }
   }
-
 }
 
 export const authService = new AuthService();
