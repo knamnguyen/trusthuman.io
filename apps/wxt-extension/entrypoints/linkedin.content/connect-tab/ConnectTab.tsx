@@ -301,7 +301,7 @@ export function ConnectTab() {
   // Empty state
   if (!selectedProfile) {
     return (
-      <div className="flex flex-col gap-4 px-4">
+      <div id="ek-connect-tab" className="flex flex-col gap-4 px-4">
         <div className="flex h-full flex-col items-center justify-center gap-4 py-8">
           <Upload className="text-muted-foreground h-12 w-12" />
           <div className="text-center">
@@ -319,7 +319,7 @@ export function ConnectTab() {
   }
 
   return (
-    <div className="flex flex-col gap-4 px-4">
+    <div id="ek-connect-tab" className="flex flex-col gap-4 px-4">
       <ProfileCard />
     </div>
   );

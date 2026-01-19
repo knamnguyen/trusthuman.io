@@ -58,6 +58,10 @@ export interface TourFlow {
   steps: TourStep[];
   /** Default modal position for all steps in this flow (default: "center-center") */
   defaultModalPosition?: ModalPosition;
+  /** Action to run before this tour starts (e.g., open sidebar, navigate) */
+  onBeforeTour?: (context: {
+    shadowRoot?: Element | DocumentFragment | null;
+  }) => void | Promise<void>;
 }
 
 export interface TourContextValue {

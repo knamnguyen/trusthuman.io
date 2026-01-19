@@ -96,15 +96,16 @@ export function TourModal({
 
         {/* Video Hero Section */}
         {hasAnyVideo && (
-          <div
-            className="relative h-[360px] w-full overflow-hidden bg-neutral-100 bg-cover bg-center"
-            style={{
-              // Show thumbnail while iframe loads to avoid black flash
-              backgroundImage: hasPreviewVideo
-                ? `url(${getYouTubeThumbnailUrl(step.previewVideo!)})`
-                : undefined,
-            }}
-          >
+          <div className="relative h-[360px] w-full overflow-hidden bg-neutral-100">
+            {/* Thumbnail background - scaled up to avoid black bars */}
+            {hasPreviewVideo && (
+              <div
+                className="absolute inset-0 scale-150 bg-cover bg-center"
+                style={{
+                  backgroundImage: `url(${getYouTubeThumbnailUrl(step.previewVideo!)})`,
+                }}
+              />
+            )}
             {!isWatchingTutorial && hasPreviewVideo ? (
               <>
                 {/* Scale 1.5x to crop YouTube UI (title bar, progress indicator) */}
@@ -149,6 +150,7 @@ export function TourModal({
                   })}
                   className="absolute inset-0 h-full w-full"
                   allow="autoplay; encrypted-media; fullscreen"
+                  allowFullScreen
                   title={`${step.title} tutorial`}
                 />
                 {hasPreviewVideo && (

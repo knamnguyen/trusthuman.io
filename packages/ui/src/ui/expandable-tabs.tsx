@@ -7,6 +7,7 @@ import { LucideIcon } from "lucide-react";
 import { cn } from "../utils";
 
 interface Tab {
+  id?: string;
   title: string;
   icon: LucideIcon;
   type?: never;
@@ -103,6 +104,7 @@ export function ExpandableTabs({
             custom={selected === index}
             onClick={() => handleSelect(index)}
             transition={transition}
+            id={tab.id}
             className={cn(
               "relative flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-colors duration-300",
               selected === index

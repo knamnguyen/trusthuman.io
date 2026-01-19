@@ -10,6 +10,7 @@ interface ToggleButtonProps {
 export function ToggleButton({ isOpen, onToggle }: ToggleButtonProps) {
   return (
     <Button
+      id="ek-sidebar-toggle-button"
       onClick={onToggle}
       variant="primary"
       size="icon"

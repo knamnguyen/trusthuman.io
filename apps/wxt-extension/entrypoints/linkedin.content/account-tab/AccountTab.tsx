@@ -2,6 +2,7 @@ import {
   Building2,
   CheckCircle,
   ExternalLink,
+  HelpCircle,
   Link,
   Loader2,
   RefreshCw,
@@ -17,6 +18,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@sassy/ui/card";
+import { useTour } from "@sassy/ui/components/tour";
 
 import { useAuthStore } from "../../../lib/auth-store";
 import { getSyncHostUrl } from "../../../lib/get-sync-host-url";
@@ -218,6 +220,7 @@ export function AccountTab() {
     matchingAccount,
   } = useAccountStore();
   const organization = useAuthStore.getState().organization;
+  const { startTour } = useTour();
 
   const handleRefresh = async () => {
     // Force refresh auth (invalidates Clerk cache) then re-fetch account data
@@ -232,7 +235,7 @@ export function AccountTab() {
 
   // Signed in - show features UI (SignInOverlay handles unauthenticated state)
   return (
-    <div className="flex flex-col gap-4 px-4">
+    <div id="ek-account-tab" className="flex flex-col gap-4 px-4">
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -244,6 +247,7 @@ export function AccountTab() {
               disabled={isAccountsLoading}
               className="h-8 w-8 p-0"
               title="Refresh account data"
+              id="refresh-account-button"
             >
               <RefreshCw
                 className={`h-4 w-4 ${isAccountsLoading ? "animate-spin" : ""}`}
@@ -283,6 +287,7 @@ export function AccountTab() {
               onClick={handleManageAccount}
               disabled={isAccountsLoading || !matchingAccount}
               className="text-muted-foreground hover:text-destructive"
+              id="manage-account-button"
             >
               Manage Account
             </Button>
@@ -295,6 +300,29 @@ export function AccountTab() {
 
       {/* Current LinkedIn Profile - data from store */}
       <CurrentLinkedInCard />
+
+      {/* Help & Tour Card */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2">
+            <HelpCircle className="h-4 w-4" />
+            <CardTitle className="text-base">Help & Support</CardTitle>
+          </div>
+          <CardDescription>
+            Learn how to get the most out of EngageKit
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => startTour("extension-intro")}
+          >
+            <HelpCircle className="mr-2 h-4 w-4" />
+            Take a Tour
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 }

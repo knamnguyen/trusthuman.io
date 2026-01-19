@@ -28,8 +28,14 @@ interface UnifiedChartProps {
     inviteCount?: DataSnapshot<{ totalInvites: number }>[];
     comments?: DataSnapshot<{ totalComments: number; period: string }>[];
     followers?: DataSnapshot<{ totalFollowers: number }>[];
-    profileImpressions?: DataSnapshot<{ totalImpressions: number; period: string }>[];
-    contentImpressions?: DataSnapshot<{ totalImpressions: number; period: string }>[];
+    profileImpressions?: DataSnapshot<{
+      totalImpressions: number;
+      period: string;
+    }>[];
+    contentImpressions?: DataSnapshot<{
+      totalImpressions: number;
+      period: string;
+    }>[];
   };
   selectedMetrics: Set<string>;
 }
@@ -48,7 +54,11 @@ interface ChartDataPoint {
 type ViewMode = "absolute" | "delta";
 type TimeRange = "7d" | "2w" | "4w" | "3m" | "1y" | "all";
 
-export const TIME_RANGE_OPTIONS: { value: TimeRange; label: string; days: number }[] = [
+export const TIME_RANGE_OPTIONS: {
+  value: TimeRange;
+  label: string;
+  days: number;
+}[] = [
   { value: "7d", label: "7D", days: 7 },
   { value: "2w", label: "2W", days: 14 },
   { value: "4w", label: "4W", days: 28 },
@@ -115,7 +125,7 @@ function getDayStart(timestamp: number): number {
 
 function aggregateByDay<T>(
   snapshots: DataSnapshot<T>[] | undefined,
-  getValue: (data: T) => number
+  getValue: (data: T) => number,
 ): Map<number, number> {
   const dailyData = new Map<number, { value: number; timestamp: number }>();
 
@@ -140,7 +150,10 @@ function aggregateByDay<T>(
   return result;
 }
 
-function generateDayRange(minTimestamp: number, maxTimestamp: number): number[] {
+function generateDayRange(
+  minTimestamp: number,
+  maxTimestamp: number,
+): number[] {
   const days: number[] = [];
   const start = getDayStart(minTimestamp);
   const end = getDayStart(maxTimestamp);
@@ -161,7 +174,12 @@ interface UnifiedChartPropsExtended extends UnifiedChartProps {
   onTimeRangeChange: (range: TimeRange) => void;
 }
 
-export function UnifiedChart({ snapshots, selectedMetrics, timeRange, onTimeRangeChange }: UnifiedChartPropsExtended) {
+export function UnifiedChart({
+  snapshots,
+  selectedMetrics,
+  timeRange,
+  onTimeRangeChange,
+}: UnifiedChartPropsExtended) {
   const [viewMode, setViewMode] = useState<ViewMode>("delta");
 
   // Show empty state if no metrics selected
@@ -222,10 +240,13 @@ export function UnifiedChart({ snapshots, selectedMetrics, timeRange, onTimeRang
 
   // Apply time range filter
   const now = Date.now();
-  const timeRangeConfig = TIME_RANGE_OPTIONS.find((t) => t.value === timeRange)!;
-  const cutoffDate = timeRange === "all"
-    ? sortedDaysWithData[0]!
-    : getDayStart(now - timeRangeConfig.days * 24 * 60 * 60 * 1000);
+  const timeRangeConfig = TIME_RANGE_OPTIONS.find(
+    (t) => t.value === timeRange,
+  )!;
+  const cutoffDate =
+    timeRange === "all"
+      ? sortedDaysWithData[0]!
+      : getDayStart(now - timeRangeConfig.days * 24 * 60 * 60 * 1000);
 
   const lastDay = sortedDaysWithData[sortedDaysWithData.length - 1]!;
   const firstDay = Math.max(sortedDaysWithData[0]!, cutoffDate);
@@ -270,14 +291,16 @@ export function UnifiedChart({ snapshots, selectedMetrics, timeRange, onTimeRang
     }
 
     if (dailyProfileImpressions.has(dayStart)) {
-      lastKnownValues.profileImpressions = dailyProfileImpressions.get(dayStart)!;
+      lastKnownValues.profileImpressions =
+        dailyProfileImpressions.get(dayStart)!;
     }
     if (lastKnownValues.profileImpressions !== undefined) {
       dataPoint.profileImpressions = lastKnownValues.profileImpressions;
     }
 
     if (dailyContentImpressions.has(dayStart)) {
-      lastKnownValues.contentImpressions = dailyContentImpressions.get(dayStart)!;
+      lastKnownValues.contentImpressions =
+        dailyContentImpressions.get(dayStart)!;
     }
     if (lastKnownValues.contentImpressions !== undefined) {
       dataPoint.contentImpressions = lastKnownValues.contentImpressions;
@@ -287,34 +310,53 @@ export function UnifiedChart({ snapshots, selectedMetrics, timeRange, onTimeRang
   });
 
   // Build delta data (change from previous day)
-  const deltaData: ChartDataPoint[] = absoluteData.slice(1).map((current, index) => {
-    const previous = absoluteData[index];
-    const dataPoint: ChartDataPoint = {
-      timestamp: current.timestamp,
-      date: current.date,
-    };
+  const deltaData: ChartDataPoint[] = absoluteData
+    .slice(1)
+    .map((current, index) => {
+      const previous = absoluteData[index];
+      const dataPoint: ChartDataPoint = {
+        timestamp: current.timestamp,
+        date: current.date,
+      };
 
-    if (current.profileViews !== undefined && previous?.profileViews !== undefined) {
-      dataPoint.profileViews = current.profileViews - previous.profileViews;
-    }
-    if (current.inviteCount !== undefined && previous?.inviteCount !== undefined) {
-      dataPoint.inviteCount = current.inviteCount - previous.inviteCount;
-    }
-    if (current.comments !== undefined && previous?.comments !== undefined) {
-      dataPoint.comments = current.comments - previous.comments;
-    }
-    if (current.followers !== undefined && previous?.followers !== undefined) {
-      dataPoint.followers = current.followers - previous.followers;
-    }
-    if (current.profileImpressions !== undefined && previous?.profileImpressions !== undefined) {
-      dataPoint.profileImpressions = current.profileImpressions - previous.profileImpressions;
-    }
-    if (current.contentImpressions !== undefined && previous?.contentImpressions !== undefined) {
-      dataPoint.contentImpressions = current.contentImpressions - previous.contentImpressions;
-    }
+      if (
+        current.profileViews !== undefined &&
+        previous?.profileViews !== undefined
+      ) {
+        dataPoint.profileViews = current.profileViews - previous.profileViews;
+      }
+      if (
+        current.inviteCount !== undefined &&
+        previous?.inviteCount !== undefined
+      ) {
+        dataPoint.inviteCount = current.inviteCount - previous.inviteCount;
+      }
+      if (current.comments !== undefined && previous?.comments !== undefined) {
+        dataPoint.comments = current.comments - previous.comments;
+      }
+      if (
+        current.followers !== undefined &&
+        previous?.followers !== undefined
+      ) {
+        dataPoint.followers = current.followers - previous.followers;
+      }
+      if (
+        current.profileImpressions !== undefined &&
+        previous?.profileImpressions !== undefined
+      ) {
+        dataPoint.profileImpressions =
+          current.profileImpressions - previous.profileImpressions;
+      }
+      if (
+        current.contentImpressions !== undefined &&
+        previous?.contentImpressions !== undefined
+      ) {
+        dataPoint.contentImpressions =
+          current.contentImpressions - previous.contentImpressions;
+      }
 
-    return dataPoint;
-  });
+      return dataPoint;
+    });
 
   // Select data based on view mode
   const chartData = viewMode === "absolute" ? absoluteData : deltaData;
@@ -326,41 +368,62 @@ export function UnifiedChart({ snapshots, selectedMetrics, timeRange, onTimeRang
     const data = payload[0].payload as ChartDataPoint;
 
     if (viewMode === "delta") {
-      const absoluteIndex = absoluteData.findIndex((d) => d.timestamp === data.timestamp);
-      const absoluteValues = absoluteIndex >= 0 ? absoluteData[absoluteIndex] : null;
+      const absoluteIndex = absoluteData.findIndex(
+        (d) => d.timestamp === data.timestamp,
+      );
+      const absoluteValues =
+        absoluteIndex >= 0 ? absoluteData[absoluteIndex] : null;
 
       return (
         <div className="bg-background rounded-lg border p-3 shadow-md">
-          <div className="mb-2 text-sm font-medium">{formatDate(data.timestamp)}</div>
-          <div className="space-y-1">
-            {METRIC_CONFIGS.filter((m) => selectedMetrics.has(m.id)).map((metric) => {
-              const delta = data[metric.dataKey as keyof ChartDataPoint] as number | undefined;
-              const absoluteValue = absoluteValues?.[metric.dataKey as keyof ChartDataPoint] as number | undefined;
-
-              if (delta === undefined) return null;
-
-              const deltaText = delta > 0 ? `+${delta}` : delta < 0 ? `${delta}` : "±0";
-
-              return (
-                <div key={metric.id} className="flex items-center gap-2 text-xs">
-                  <div
-                    className="h-2 w-2 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: metric.color }}
-                  />
-                  <span className={`font-medium ${delta > 0 ? "text-green-600 dark:text-green-400" : delta < 0 ? "text-red-600 dark:text-red-400" : "text-muted-foreground"}`}>
-                    {deltaText}
-                  </span>
-                  <span className="text-muted-foreground">{metric.label}:</span>
-                  <span className="font-medium">
-                    {absoluteValue !== undefined
-                      ? (metric.valueFormatter ? metric.valueFormatter(absoluteValue) : absoluteValue)
-                      : "N/A"}
-                  </span>
-                </div>
-              );
-            })}
+          <div className="mb-2 text-sm font-medium">
+            {formatDate(data.timestamp)}
           </div>
-          <div className="mt-2 pt-2 border-t text-xs text-muted-foreground">
+          <div className="space-y-1">
+            {METRIC_CONFIGS.filter((m) => selectedMetrics.has(m.id)).map(
+              (metric) => {
+                const delta = data[metric.dataKey as keyof ChartDataPoint] as
+                  | number
+                  | undefined;
+                const absoluteValue = absoluteValues?.[
+                  metric.dataKey as keyof ChartDataPoint
+                ] as number | undefined;
+
+                if (delta === undefined) return null;
+
+                const deltaText =
+                  delta > 0 ? `+${delta}` : delta < 0 ? `${delta}` : "±0";
+
+                return (
+                  <div
+                    key={metric.id}
+                    className="flex items-center gap-2 text-xs"
+                  >
+                    <div
+                      className="h-2 w-2 flex-shrink-0 rounded-full"
+                      style={{ backgroundColor: metric.color }}
+                    />
+                    <span
+                      className={`font-medium ${delta > 0 ? "text-green-600 dark:text-green-400" : delta < 0 ? "text-red-600 dark:text-red-400" : "text-muted-foreground"}`}
+                    >
+                      {deltaText}
+                    </span>
+                    <span className="text-muted-foreground">
+                      {metric.label}:
+                    </span>
+                    <span className="font-medium">
+                      {absoluteValue !== undefined
+                        ? metric.valueFormatter
+                          ? metric.valueFormatter(absoluteValue)
+                          : absoluteValue
+                        : "N/A"}
+                    </span>
+                  </div>
+                );
+              },
+            )}
+          </div>
+          <div className="text-muted-foreground mt-2 border-t pt-2 text-xs">
             Daily change from previous day
           </div>
         </div>
@@ -370,25 +433,36 @@ export function UnifiedChart({ snapshots, selectedMetrics, timeRange, onTimeRang
     // Absolute mode tooltip
     return (
       <div className="bg-background rounded-lg border p-3 shadow-md">
-        <div className="mb-2 text-sm font-medium">{formatDate(data.timestamp)}</div>
+        <div className="mb-2 text-sm font-medium">
+          {formatDate(data.timestamp)}
+        </div>
         <div className="space-y-1">
-          {METRIC_CONFIGS.filter((m) => selectedMetrics.has(m.id)).map((metric) => {
-            const value = data[metric.dataKey as keyof ChartDataPoint] as number | undefined;
-            if (value === undefined) return null;
+          {METRIC_CONFIGS.filter((m) => selectedMetrics.has(m.id)).map(
+            (metric) => {
+              const value = data[metric.dataKey as keyof ChartDataPoint] as
+                | number
+                | undefined;
+              if (value === undefined) return null;
 
-            return (
-              <div key={metric.id} className="flex items-center gap-2 text-xs">
+              return (
                 <div
-                  className="h-2 w-2 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: metric.color }}
-                />
-                <span className="text-muted-foreground">{metric.label}:</span>
-                <span className="font-medium">
-                  {metric.valueFormatter ? metric.valueFormatter(value) : value}
-                </span>
-              </div>
-            );
-          })}
+                  key={metric.id}
+                  className="flex items-center gap-2 text-xs"
+                >
+                  <div
+                    className="h-2 w-2 flex-shrink-0 rounded-full"
+                    style={{ backgroundColor: metric.color }}
+                  />
+                  <span className="text-muted-foreground">{metric.label}:</span>
+                  <span className="font-medium">
+                    {metric.valueFormatter
+                      ? metric.valueFormatter(value)
+                      : value}
+                  </span>
+                </div>
+              );
+            },
+          )}
         </div>
       </div>
     );
@@ -411,12 +485,13 @@ export function UnifiedChart({ snapshots, selectedMetrics, timeRange, onTimeRang
               {viewMode === "delta" ? "Daily Changes" : "Analytics Trends"}
             </CardTitle>
             <CardDescription>
-              {selectedMetrics.size} metric{selectedMetrics.size > 1 ? "s" : ""} · {chartData.length} day{chartData.length !== 1 ? "s" : ""}
+              {selectedMetrics.size} metric{selectedMetrics.size > 1 ? "s" : ""}{" "}
+              · {chartData.length} day{chartData.length !== 1 ? "s" : ""}
             </CardDescription>
           </div>
         </div>
         {/* Controls row */}
-        <div className="flex items-center justify-between gap-2 mt-3">
+        <div className="mt-3 flex items-center justify-between gap-2">
           {/* Time range buttons */}
           <div className="flex items-center gap-1">
             {TIME_RANGE_OPTIONS.map((option) => (
@@ -432,12 +507,15 @@ export function UnifiedChart({ snapshots, selectedMetrics, timeRange, onTimeRang
             ))}
           </div>
           {/* View mode toggle */}
-          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
-            <TabsList className="h-8">
-              <TabsTrigger value="delta" className="text-xs px-2 py-1">
+          <Tabs
+            value={viewMode}
+            onValueChange={(v) => setViewMode(v as ViewMode)}
+          >
+            <TabsList className="h-8" id="ek-chart-view-mode">
+              <TabsTrigger value="delta" className="px-2 py-1 text-xs">
                 Change
               </TabsTrigger>
-              <TabsTrigger value="absolute" className="text-xs px-2 py-1">
+              <TabsTrigger value="absolute" className="px-2 py-1 text-xs">
                 Total
               </TabsTrigger>
             </TabsList>
@@ -446,7 +524,10 @@ export function UnifiedChart({ snapshots, selectedMetrics, timeRange, onTimeRang
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-[300px] w-full">
-          <LineChart data={chartData} margin={{ top: 20, left: 12, right: 12, bottom: 0 }}>
+          <LineChart
+            data={chartData}
+            margin={{ top: 20, left: 12, right: 12, bottom: 0 }}
+          >
             <CartesianGrid vertical={false} strokeDasharray="3 3" />
             <XAxis
               dataKey="date"
@@ -464,18 +545,20 @@ export function UnifiedChart({ snapshots, selectedMetrics, timeRange, onTimeRang
               tick={{ fontSize: 10 }}
             />
             <ChartTooltip content={<CustomTooltip />} />
-            {METRIC_CONFIGS.filter((m) => selectedMetrics.has(m.id)).map((metric) => (
-              <Line
-                key={metric.id}
-                dataKey={metric.dataKey}
-                type="monotone"
-                stroke={metric.color}
-                strokeWidth={2}
-                dot={{ fill: metric.color, r: 3 }}
-                activeDot={{ r: 5 }}
-                connectNulls
-              />
-            ))}
+            {METRIC_CONFIGS.filter((m) => selectedMetrics.has(m.id)).map(
+              (metric) => (
+                <Line
+                  key={metric.id}
+                  dataKey={metric.dataKey}
+                  type="monotone"
+                  stroke={metric.color}
+                  strokeWidth={2}
+                  dot={{ fill: metric.color, r: 3 }}
+                  activeDot={{ r: 5 }}
+                  connectNulls
+                />
+              ),
+            )}
           </LineChart>
         </ChartContainer>
       </CardContent>

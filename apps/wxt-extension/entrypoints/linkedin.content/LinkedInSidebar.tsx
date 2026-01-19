@@ -1,8 +1,10 @@
-import { BarChart3, Feather, User, Users } from "lucide-react";
+import { BarChart3, BookOpen, Feather, User, Users } from "lucide-react";
 
 import { detectDomVersion } from "@sassy/linkedin-automation/dom/detect";
+import { useTour } from "@sassy/ui/components/tour";
 import { ExpandableTabs } from "@sassy/ui/expandable-tabs";
 import { SheetContent, SheetHeader } from "@sassy/ui/sheet";
+import { Button } from "@sassy/ui/button";
 
 import { useAuthStore } from "../../lib/auth-store";
 import { AccountMismatchOverlay } from "./_components/AccountMismatchOverlay";
@@ -22,10 +24,10 @@ import {
 // Tab items for the expandable tabs menu
 // Order: Compose, Connect, Analytics, Account (4 tabs)
 const tabs = [
-  { title: "Compose", icon: Feather },
-  { title: "Connect", icon: Users },
-  { title: "Analytics", icon: BarChart3 },
-  { title: "Account", icon: User },
+  { id: "ek-compose-tab-button", title: "Compose", icon: Feather },
+  { id: "ek-connect-tab-button", title: "Connect", icon: Users },
+  { id: "ek-analytics-tab-button", title: "Analytics", icon: BarChart3 },
+  { id: "ek-account-tab-button", title: "Account", icon: User },
 ];
 
 export interface LinkedInSidebarProps {
@@ -40,6 +42,9 @@ export function LinkedInSidebar({ onClose }: LinkedInSidebarProps) {
   // Auth state from store (singleton - shared across all components)
   const { isSignedIn, isLoaded: isAuthLoaded } = useAuthStore();
   const { currentLinkedInStatus } = useAccountStore();
+
+  // Tour context for Guide button
+  const { startTour } = useTour();
 
   // Determine if we should show overlays
   const showSignInOverlay = isAuthLoaded && !isSignedIn;
@@ -62,12 +67,25 @@ export function LinkedInSidebar({ onClose }: LinkedInSidebarProps) {
         <ToggleButton isOpen={true} onToggle={onClose} />
       </div>
       <SheetHeader>
-        <div className="bg-background z-10 flex justify-center">
+        <div className="bg-background z-10 flex items-center justify-between">
+          {/* Left spacer for symmetry */}
+          <div className="w-20" />
           <ExpandableTabs
             tabs={tabs}
             value={selectedTab}
             onChange={setSelectedTab}
           />
+          {/* Guide button - right side */}
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={currentLinkedInStatus !== "registered"}
+            onClick={() => startTour("extension-intro")}
+            className="h-8 w-20 gap-1.5 px-2.5"
+          >
+            <BookOpen className="h-4 w-4" />
+            Guide
+          </Button>
         </div>
       </SheetHeader>
       <div className="flex-1 overflow-y-auto">

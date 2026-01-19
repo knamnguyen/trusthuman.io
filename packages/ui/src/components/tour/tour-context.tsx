@@ -10,12 +10,7 @@ import {
   useState,
 } from "react";
 
-import type {
-  TourContextValue,
-  TourFlow,
-  TourProviderProps,
-  TourStep,
-} from "./types";
+import type { TourContextValue, TourProviderProps } from "./types";
 import { TourLayer } from "./tour-layer";
 
 const TourContext = createContext<TourContextValue | null>(null);
@@ -65,9 +60,14 @@ export function TourProvider({
   }, [isActive, currentFlowId, currentStepIndex, currentFlow, portalContainer]);
 
   const startTour = useCallback(
-    (flowId: string) => {
+    async (flowId: string) => {
       const flow = flows.find((f) => f.id === flowId);
       if (!flow || flow.steps.length === 0) return;
+
+      // Run flow's onBeforeTour callback (e.g., open sidebar, navigate)
+      if (flow.onBeforeTour) {
+        await flow.onBeforeTour({ shadowRoot: portalContainer });
+      }
 
       setCurrentFlowId(flowId);
       setCurrentStepIndex(0);
@@ -75,7 +75,7 @@ export function TourProvider({
       setIsActive(true);
       onStepChange?.(flowId, 0);
     },
-    [flows, onStepChange],
+    [flows, portalContainer, onStepChange],
   );
 
   const endTour = useCallback(

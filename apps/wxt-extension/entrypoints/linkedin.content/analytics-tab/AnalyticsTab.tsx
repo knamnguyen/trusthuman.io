@@ -11,6 +11,7 @@ import {
 
 import { Button } from "@sassy/ui/button";
 
+import type { DataSnapshot } from "../utils/data-fetch-mimic/data-collector";
 import { useAccountStore } from "../stores/account-store";
 import {
   DEFAULT_AUTO_FETCH_INTERVAL_HOURS,
@@ -18,7 +19,6 @@ import {
   INTERVAL_OPTIONS,
   setAutoFetchIntervalHours,
 } from "../utils/data-fetch-mimic/auto-fetch-config";
-import type { DataSnapshot } from "../utils/data-fetch-mimic/data-collector";
 import { useContentImpressionsHistory } from "../utils/data-fetch-mimic/use-content-impressions-history";
 import {
   useCommentsHistory,
@@ -37,14 +37,13 @@ import { TIME_RANGE_OPTIONS, TimeRange, UnifiedChart } from "./UnifiedChart";
 function calculatePercentageChange<T>(
   snapshots: DataSnapshot<T>[] | undefined,
   getValue: (data: T) => number,
-  timeRangeDays: number
+  timeRangeDays: number,
 ): number | null {
   if (!snapshots || snapshots.length < 2) return null;
 
   const now = Date.now();
-  const cutoffTime = timeRangeDays === Infinity
-    ? 0
-    : now - timeRangeDays * 24 * 60 * 60 * 1000;
+  const cutoffTime =
+    timeRangeDays === Infinity ? 0 : now - timeRangeDays * 24 * 60 * 60 * 1000;
 
   // Filter snapshots within the time range and sort by timestamp
   const filteredSnapshots = snapshots
@@ -54,7 +53,9 @@ function calculatePercentageChange<T>(
   if (filteredSnapshots.length < 2) return null;
 
   const firstValue = getValue(filteredSnapshots[0]!.data);
-  const lastValue = getValue(filteredSnapshots[filteredSnapshots.length - 1]!.data);
+  const lastValue = getValue(
+    filteredSnapshots[filteredSnapshots.length - 1]!.data,
+  );
 
   // Avoid division by zero
   if (firstValue === 0) {
@@ -79,7 +80,7 @@ export function AnalyticsTab() {
 
   // Auto-fetch interval setting (1-24 hours)
   const [autoFetchIntervalHours, setAutoFetchInterval] = useState(
-    DEFAULT_AUTO_FETCH_INTERVAL_HOURS
+    DEFAULT_AUTO_FETCH_INTERVAL_HOURS,
   );
 
   // Load saved interval on mount
@@ -164,46 +165,49 @@ export function AnalyticsTab() {
   }, [timeRange]);
 
   // Calculate percentage changes for each metric
-  const percentageChanges = useMemo(() => ({
-    profileViews: calculatePercentageChange(
+  const percentageChanges = useMemo(
+    () => ({
+      profileViews: calculatePercentageChange(
+        profileViewsSnapshots,
+        (d) => d.totalViews,
+        timeRangeDays,
+      ),
+      inviteCount: calculatePercentageChange(
+        inviteCountSnapshots,
+        (d) => d.totalInvites,
+        timeRangeDays,
+      ),
+      comments: calculatePercentageChange(
+        commentsSnapshots,
+        (d) => d.totalComments,
+        timeRangeDays,
+      ),
+      followers: calculatePercentageChange(
+        followersSnapshots,
+        (d) => d.totalFollowers,
+        timeRangeDays,
+      ),
+      profileImpressions: calculatePercentageChange(
+        profileImpressionsSnapshots,
+        (d) => d.totalImpressions,
+        timeRangeDays,
+      ),
+      contentImpressions: calculatePercentageChange(
+        contentImpressionsSnapshots,
+        (d) => d.totalImpressions,
+        timeRangeDays,
+      ),
+    }),
+    [
       profileViewsSnapshots,
-      (d) => d.totalViews,
-      timeRangeDays
-    ),
-    inviteCount: calculatePercentageChange(
       inviteCountSnapshots,
-      (d) => d.totalInvites,
-      timeRangeDays
-    ),
-    comments: calculatePercentageChange(
       commentsSnapshots,
-      (d) => d.totalComments,
-      timeRangeDays
-    ),
-    followers: calculatePercentageChange(
       followersSnapshots,
-      (d) => d.totalFollowers,
-      timeRangeDays
-    ),
-    profileImpressions: calculatePercentageChange(
       profileImpressionsSnapshots,
-      (d) => d.totalImpressions,
-      timeRangeDays
-    ),
-    contentImpressions: calculatePercentageChange(
       contentImpressionsSnapshots,
-      (d) => d.totalImpressions,
-      timeRangeDays
-    ),
-  }), [
-    profileViewsSnapshots,
-    inviteCountSnapshots,
-    commentsSnapshots,
-    followersSnapshots,
-    profileImpressionsSnapshots,
-    contentImpressionsSnapshots,
-    timeRangeDays,
-  ]);
+      timeRangeDays,
+    ],
+  );
 
   // Toggle metric selection
   const toggleMetric = (metricId: string) => {
@@ -261,7 +265,7 @@ export function AnalyticsTab() {
   // };
 
   return (
-    <div className="flex flex-col gap-4 px-4">
+    <div id="ek-analytics-tab" className="flex flex-col gap-4 px-4">
       {/* Grid of metric cards - 2 rows x 3 columns */}
       <div className="grid grid-cols-3 gap-3">
         <div
@@ -413,12 +417,12 @@ export function AnalyticsTab() {
       />
 
       {/* Auto-fetch Settings */}
-      <div className="flex items-center justify-between rounded-lg border bg-muted/30 px-3 py-2">
-        <span className="text-xs text-muted-foreground">Auto-fetch every:</span>
+      <div className="bg-muted/30 flex items-center justify-between rounded-lg border px-3 py-2">
+        <span className="text-muted-foreground text-xs">Auto-fetch every:</span>
         <select
           value={autoFetchIntervalHours}
           onChange={(e) => handleIntervalChange(Number(e.target.value))}
-          className="rounded border bg-background px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+          className="bg-background focus:ring-primary rounded border px-2 py-1 text-xs focus:ring-1 focus:outline-none"
         >
           {INTERVAL_OPTIONS.map((hours) => (
             <option key={hours} value={hours}>

@@ -27,77 +27,47 @@ Create a **minimal viable tour system** in `@sassy/ui` package that enables:
    - Title, subtitle, content area
    - Back/Next navigation
    - Progress dots
+   - "Switch to tooltip view" link
 
 2. **TourProvider + useTour Hook**
-   - Start/stop tour flows
+   - Start/stop tour flows (`startTour(flowId)` can be called from anywhere)
    - Navigate between steps
-   - Track current step
+   - Track current step and view mode
+   - **Switch between modal ↔ tooltip views** at any time
    - Simple callback for analytics
 
 3. **TourOverlay (SVG Mask)**
-   - Spotlight on single element
+   - Spotlight on **single or multiple elements** (array of selectors)
+   - Multi-highlight: union of all element rects creates combined spotlight
    - Semi-transparent backdrop
-   - Click-through on highlighted area
+   - Click-through on highlighted areas
 
 4. **AnchoredTooltip** (simpler version)
    - Positioned near element using Radix Popover
    - Same content structure as modal
-   - "Switch to Video" button → opens CenteredModal
+   - "Watch video tutorial" link → switches to CenteredModal
+
+**Note on Auto-launch**: The tour system exposes `startTour(flowId)` which can be called programmatically. Auto-launch logic (checking sign-in status, LinkedIn account registration, settings loaded, etc.) lives in consuming app code, not in the tour components.
 
 ---
 
-## Feature Flows to Support
+## Feature Flow (Single Simple Flow)
 
-### WXT Extension (LinkedIn Content Script)
+**One flow, 4 steps — one step per tab.** Each step gives a high-level overview of what that tab does.
 
-**Flow 1: Compose Tab Introduction**
+### Extension Intro Flow
 ```
-Step 1: "Load Posts" button → Modal explaining what it does
-Step 2: Settings icon → Modal showing settings overview
-Step 3: Compose card → Tooltip explaining card elements
-Step 4: Submit button → Tooltip explaining submission
-```
-
-**Flow 2: Connect Tab Introduction**
-```
-Step 1: Save profile button (on LinkedIn) → Modal explaining feature
-Step 2: Profile card → Tooltip showing engagement stats
+Step 1: Compose Tab → Modal explaining "Generate AI comments on posts"
+Step 2: Connect Tab → Modal explaining "Save profiles & track engagement"
+Step 3: Analytics Tab → Modal explaining "View your commenting stats"
+Step 4: Accounts Tab → Modal explaining "Manage your LinkedIn accounts"
 ```
 
-**Flow 3: Analytics Tab Introduction**
-```
-Step 1: Metric cards → Modal explaining each metric
-Step 2: Chart → Tooltip explaining data visualization
-Step 3: Auto-fetch dropdown → Tooltip explaining setting
-```
-
-### Next.js Dashboard
-
-**Flow 1: First-Time Setup**
-```
-Step 1: Account page → Modal explaining adding LinkedIn account
-Step 2: Account switcher → Tooltip showing how to switch
-```
-
-**Flow 2: History Tab**
-```
-Step 1: Comment card → Tooltip explaining history view
-Step 2: Post preview → Modal showing AI draft comparison
-```
-
-**Flow 3: Personas Tab**
-```
-Step 1: Create button → Modal explaining personas concept
-Step 2: Persona card → Tooltip showing settings
-Step 3: Sidebar form → Tooltip explaining each field
-```
-
-**Flow 4: Target List Tab**
-```
-Step 1: Profile card → Tooltip explaining target lists
-Step 2: Lists sidebar → Tooltip showing list management
-Step 3: Manage lists button → Tooltip explaining list assignment
-```
+**Why this approach:**
+- Users get the big picture quickly (< 90 seconds)
+- No feature-level detail that might overwhelm
+- Easy to record 4 short preview videos
+- Can add detailed per-feature tours later if needed
 
 ---
 
@@ -108,7 +78,7 @@ Step 3: Manage lists button → Tooltip explaining list assignment
 
 interface TourStep {
   id: string
-  selector: string                    // CSS selector for element to highlight
+  selector: string | string[]         // Single selector OR array for multi-highlight
 
   // Content
   title: string
@@ -122,6 +92,10 @@ interface TourStep {
   // Display mode
   preferredView: 'tooltip' | 'modal'  // Which view to show first
 }
+
+// Multi-highlight example:
+// selector: ['[data-tour="compose-tab"]', '.feed-shared-update-v2']
+// This highlights both the extension tab AND LinkedIn post elements
 
 interface TourFlow {
   id: string
@@ -285,7 +259,7 @@ export function useTour() {
 }
 ```
 
-### 2. TourOverlay (SVG Mask)
+### 2. TourOverlay (SVG Mask with Multi-Highlight)
 
 ```tsx
 // tour-overlay.tsx
@@ -294,49 +268,66 @@ export function useTour() {
 import { useEffect, useState } from 'react'
 import { cn } from '../../utils'
 
+interface HighlightRect {
+  left: number
+  top: number
+  width: number
+  height: number
+}
+
 interface TourOverlayProps {
-  selector: string
+  selector: string | string[]  // Single selector or array for multi-highlight
   onOverlayClick?: () => void
   className?: string
 }
 
 export function TourOverlay({ selector, onOverlayClick, className }: TourOverlayProps) {
-  const [highlight, setHighlight] = useState<DOMRect | null>(null)
+  const [highlights, setHighlights] = useState<HighlightRect[]>([])
   const [viewport, setViewport] = useState({ width: 0, height: 0 })
 
   useEffect(() => {
-    const updateHighlight = () => {
-      const element = document.querySelector(selector)
-      if (element) {
-        const rect = element.getBoundingClientRect()
-        setHighlight(rect)
-      } else {
-        setHighlight(null)
+    const updateHighlights = () => {
+      // Normalize to array
+      const selectors = Array.isArray(selector) ? selector : [selector]
+
+      const rects: HighlightRect[] = []
+      for (const sel of selectors) {
+        const element = document.querySelector(sel)
+        if (element) {
+          const rect = element.getBoundingClientRect()
+          rects.push({
+            left: rect.left,
+            top: rect.top,
+            width: rect.width,
+            height: rect.height,
+          })
+        }
       }
+
+      setHighlights(rects)
       setViewport({
         width: window.innerWidth,
         height: window.innerHeight,
       })
     }
 
-    updateHighlight()
-    window.addEventListener('resize', updateHighlight)
-    window.addEventListener('scroll', updateHighlight, true)
+    updateHighlights()
+    window.addEventListener('resize', updateHighlights)
+    window.addEventListener('scroll', updateHighlights, true)
 
     return () => {
-      window.removeEventListener('resize', updateHighlight)
-      window.removeEventListener('scroll', updateHighlight, true)
+      window.removeEventListener('resize', updateHighlights)
+      window.removeEventListener('scroll', updateHighlights, true)
     }
   }, [selector])
 
-  if (!highlight) return null
+  if (highlights.length === 0) return null
 
   const padding = 8
   const borderRadius = 8
-  const left = highlight.left - padding
-  const top = highlight.top - padding
-  const width = highlight.width + padding * 2
-  const height = highlight.height + padding * 2
+
+  // Generate unique mask ID to avoid conflicts
+  const maskId = 'tour-spotlight-mask'
 
   return (
     <svg
@@ -345,28 +336,33 @@ export function TourOverlay({ selector, onOverlayClick, className }: TourOverlay
       height={viewport.height}
     >
       <defs>
-        <mask id="tour-spotlight-mask">
+        <mask id={maskId}>
+          {/* White = visible overlay, Black = transparent (spotlight) */}
           <rect x="0" y="0" width="100%" height="100%" fill="white" />
-          <rect
-            x={left}
-            y={top}
-            width={width}
-            height={height}
-            rx={borderRadius}
-            fill="black"
-          />
+          {/* Cut out each highlighted element */}
+          {highlights.map((rect, index) => (
+            <rect
+              key={index}
+              x={rect.left - padding}
+              y={rect.top - padding}
+              width={rect.width + padding * 2}
+              height={rect.height + padding * 2}
+              rx={borderRadius}
+              fill="black"
+            />
+          ))}
         </mask>
       </defs>
 
-      {/* Darkened overlay */}
+      {/* Darkened overlay with cutouts */}
       <rect
         width="100%"
         height="100%"
-        mask="url(#tour-spotlight-mask)"
+        mask={`url(#${maskId})`}
         className="fill-black/50"
       />
 
-      {/* Clickable overlay area (outside spotlight) */}
+      {/* Clickable overlay area (outside spotlights) */}
       <rect
         width="100%"
         height="100%"
@@ -374,25 +370,31 @@ export function TourOverlay({ selector, onOverlayClick, className }: TourOverlay
         onClick={onOverlayClick}
       />
 
-      {/* Transparent clickable area over spotlight (allows interaction) */}
-      <rect
-        x={left}
-        y={top}
-        width={width}
-        height={height}
-        rx={borderRadius}
-        className="fill-transparent pointer-events-auto"
-      />
+      {/* Transparent clickable areas over each spotlight (allows interaction) */}
+      {highlights.map((rect, index) => (
+        <rect
+          key={`click-${index}`}
+          x={rect.left - padding}
+          y={rect.top - padding}
+          width={rect.width + padding * 2}
+          height={rect.height + padding * 2}
+          rx={borderRadius}
+          className="fill-transparent pointer-events-auto"
+        />
+      ))}
 
-      {/* Spotlight border */}
-      <rect
-        x={left}
-        y={top}
-        width={width}
-        height={height}
-        rx={borderRadius}
-        className="fill-none stroke-primary stroke-2"
-      />
+      {/* Spotlight borders */}
+      {highlights.map((rect, index) => (
+        <rect
+          key={`border-${index}`}
+          x={rect.left - padding}
+          y={rect.top - padding}
+          width={rect.width + padding * 2}
+          height={rect.height + padding * 2}
+          rx={borderRadius}
+          className="fill-none stroke-primary stroke-2"
+        />
+      ))}
     </svg>
   )
 }
@@ -843,56 +845,77 @@ export function TourProgress({
 ## Usage Example
 
 ```tsx
-// In your app
+// In WXT extension content script
 
 import { TourProvider, useTour } from '@sassy/ui/components/tour'
 
-const tourFlows: TourFlow[] = [
-  {
-    id: 'compose-intro',
-    name: 'Compose Tab Introduction',
-    steps: [
-      {
-        id: 'load-posts',
-        selector: '[data-tour="load-posts-btn"]',
-        title: 'Load Posts from Your Feed',
-        subtitle: 'Click here to collect posts from your LinkedIn feed for AI-powered commenting.',
-        previewVideo: 'https://youtube.com/watch?v=PREVIEW_ID',
-        tutorialVideo: 'https://youtube.com/watch?v=FULL_TUTORIAL_ID',
-        preferredView: 'modal',
-      },
-      {
-        id: 'settings',
-        selector: '[data-tour="settings-btn"]',
-        title: 'Customize Your Settings',
-        subtitle: 'Configure filters, AI style, and submission behavior.',
-        preferredView: 'tooltip',
-      },
-      // ... more steps
-    ],
-  },
-]
+const extensionIntroFlow: TourFlow = {
+  id: 'extension-intro',
+  name: 'Extension Introduction',
+  steps: [
+    {
+      id: 'compose-tab',
+      // Multi-highlight: extension tab + LinkedIn feed posts
+      selector: ['[data-tour="compose-tab"]', '.feed-shared-update-v2:first-of-type'],
+      title: 'Generate AI Comments',
+      subtitle: 'Load posts from your feed and let AI craft engaging comments for you.',
+      previewVideo: 'https://youtube.com/watch?v=COMPOSE_PREVIEW',
+      tutorialVideo: 'https://youtube.com/watch?v=COMPOSE_TUTORIAL',
+      preferredView: 'modal',
+    },
+    {
+      id: 'connect-tab',
+      // Multi-highlight: extension tab + LinkedIn profile card (if on profile page)
+      selector: ['[data-tour="connect-tab"]', '.pv-top-card'],
+      title: 'Save & Track Profiles',
+      subtitle: 'Build your network by saving profiles and tracking your engagement history.',
+      previewVideo: 'https://youtube.com/watch?v=CONNECT_PREVIEW',
+      tutorialVideo: 'https://youtube.com/watch?v=CONNECT_TUTORIAL',
+      preferredView: 'modal',
+    },
+    {
+      id: 'analytics-tab',
+      // Single highlight: just the extension tab
+      selector: '[data-tour="analytics-tab"]',
+      title: 'View Your Stats',
+      subtitle: 'See how many comments you\'ve made, your engagement rate, and more.',
+      previewVideo: 'https://youtube.com/watch?v=ANALYTICS_PREVIEW',
+      tutorialVideo: 'https://youtube.com/watch?v=ANALYTICS_TUTORIAL',
+      preferredView: 'modal',
+    },
+    {
+      id: 'accounts-tab',
+      // Single highlight: just the extension tab
+      selector: '[data-tour="accounts-tab"]',
+      title: 'Manage Your Accounts',
+      subtitle: 'Add, switch, or remove LinkedIn accounts connected to the extension.',
+      previewVideo: 'https://youtube.com/watch?v=ACCOUNTS_PREVIEW',
+      tutorialVideo: 'https://youtube.com/watch?v=ACCOUNTS_TUTORIAL',
+      preferredView: 'modal',
+    },
+  ],
+}
 
-function App() {
+function ExtensionApp() {
   return (
     <TourProvider
-      flows={tourFlows}
+      flows={[extensionIntroFlow]}
       onTourEnd={(flowId, completed) => {
         console.log(`Tour ${flowId} ended, completed: ${completed}`)
       }}
     >
-      <YourApp />
+      <ExtensionContent />
     </TourProvider>
   )
 }
 
-// Trigger tour from anywhere
+// Trigger tour from a "Start Tour" button or help menu
 function StartTourButton() {
   const { startTour } = useTour()
 
   return (
-    <button onClick={() => startTour('compose-intro')}>
-      Start Tour
+    <button onClick={() => startTour('extension-intro')}>
+      Take a Tour
     </button>
   )
 }
@@ -915,19 +938,24 @@ function StartTourButton() {
 - [ ] Implement `tour-layer.tsx` - Combines everything
 - [ ] Create `index.ts` exports
 
-### Phase 2: Integration
+### Phase 2: Integration (WXT Extension Only)
 
-- [ ] Add `data-tour` attributes to WXT extension elements
-- [ ] Add `data-tour` attributes to Next.js dashboard elements
-- [ ] Create tour flow definitions for each feature
-- [ ] Test in both environments
+- [ ] Add `data-tour="compose-tab"` attribute to compose tab element
+- [ ] Add `data-tour="connect-tab"` attribute to connect tab element
+- [ ] Add `data-tour="analytics-tab"` attribute to analytics tab element
+- [ ] Add `data-tour="accounts-tab"` attribute to accounts tab element
+- [ ] Create `extension-intro` flow definition (4 steps, one per tab)
+- [ ] Test in extension content script environment
 
 ### Phase 3: Content Creation
 
-- [ ] Record preview videos (5-10s each)
-- [ ] Record full tutorial videos
+- [ ] Record compose tab preview video (5-10s)
+- [ ] Record connect tab preview video (5-10s)
+- [ ] Record analytics tab preview video (5-10s)
+- [ ] Record accounts tab preview video (5-10s)
+- [ ] Record full tutorial videos (optional, can defer)
 - [ ] Upload to YouTube
-- [ ] Update flow definitions with video URLs
+- [ ] Update flow definition with video URLs
 
 ---
 
@@ -963,14 +991,16 @@ These features from the v11 plan are NOT in MVP:
 1. Learn Mode toggle + localStorage persistence
 2. Pulsing hotspots (HoverTrigger)
 3. Inactive tooltips on hover
-4. Multi-element highlighting (union calculation)
-5. Observable system (resize/mutation observers)
-6. Cross-route navigation (pending step pattern)
-7. Lifecycle states (init/ready/active/error)
-8. Full callback system with event types
-9. actionTrigger / actionAfter hooks
-10. waitForElement / waitForAction
-11. interactToNext behavior
-12. autoSkipMissing error recovery
+4. Observable system (resize/mutation observers)
+5. Cross-route navigation (pending step pattern)
+6. Lifecycle states (init/ready/active/error)
+7. Full callback system with event types
+8. actionTrigger / actionAfter hooks
+9. waitForElement / waitForAction
+10. interactToNext behavior
+11. autoSkipMissing error recovery
 
 These can be added incrementally after MVP is working and content is created.
+
+**Included in MVP (moved from deferred):**
+- Multi-element highlighting (array of selectors) ✓

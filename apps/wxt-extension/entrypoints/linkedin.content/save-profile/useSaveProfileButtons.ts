@@ -31,6 +31,7 @@ function createSaveButton(
 ): HTMLButtonElement {
   const button = document.createElement("button");
   button.type = "button";
+  button.classList.add("ek-save-profile-button");
   button.style.cssText = `
     display: inline-flex;
     align-items: center;

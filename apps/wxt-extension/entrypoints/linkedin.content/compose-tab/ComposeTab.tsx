@@ -70,7 +70,6 @@ export function ComposeTab() {
   );
   const clearAllCards = useComposeStore((state) => state.clearAllCards);
 
-
   // Use separate subscriptions for different concerns to minimize re-renders
   // Card IDs for rendering the list - only changes when cards are added/removed
   const cardIds = useComposeStore(
@@ -109,7 +108,9 @@ export function ComposeTab() {
   const setIsCollecting = useComposeStore((state) => state.setIsCollecting);
   const updateCardStatus = useComposeStore((state) => state.updateCardStatus);
   const updateCardComment = useComposeStore((state) => state.updateCardComment);
-  const updateCardStyleInfo = useComposeStore((state) => state.updateCardStyleInfo);
+  const updateCardStyleInfo = useComposeStore(
+    (state) => state.updateCardStyleInfo,
+  );
   const isUrnIgnored = useComposeStore((state) => state.isUrnIgnored);
 
   // Get cards array only when needed for operations (not for rendering)
@@ -300,7 +301,8 @@ export function ComposeTab() {
 
     // Get settings from DB store (snapshot at start time)
     const postLoadSettings = useSettingsDBStore.getState().postLoad;
-    const commentGenerateSettingsDB = useSettingsDBStore.getState().commentGenerate;
+    const commentGenerateSettingsDB =
+      useSettingsDBStore.getState().commentGenerate;
 
     // If target list is enabled with list IDs, use queue system to process lists
     // Only use queue if we're not already on a search/content page (already navigated)
@@ -465,7 +467,7 @@ export function ComposeTab() {
   }, [getCards, setIsSubmitting, updateCardStatus]);
 
   return (
-    <div className="bg-background flex flex-col gap-3 px-4">
+    <div id="ek-compose-tab" className="bg-background flex flex-col gap-3 px-4">
       {/* Sticky Compact Header */}
       <div className="bg-background sticky top-0 z-10 -mx-4 border-b px-4 py-2">
         {/* Row 1: Title + Settings Icon */}
@@ -558,6 +560,7 @@ export function ComposeTab() {
             </Button>
           ) : (
             <Button
+              id="ek-load-posts-button"
               onClick={handleStart}
               disabled={
                 isSubmitting || isEngageButtonGenerating || hasEngageButtonCards

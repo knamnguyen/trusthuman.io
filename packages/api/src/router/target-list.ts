@@ -243,7 +243,7 @@ export const targetListRouter = () =>
           size: 20,
         });
       }),
-    addProfileToList: protectedProcedure
+    addProfileToList: accountProcedure
       .input(
         z.object({
           listId: z.string(),
@@ -251,15 +251,6 @@ export const targetListRouter = () =>
         }),
       )
       .mutation(async ({ ctx, input }) => {
-        if (ctx.activeAccount === null) {
-          return {
-            status: "error",
-            code: 400,
-            message:
-              "You must link a LinkedIn account to add profiles to a target list",
-          } as const;
-        }
-
         const activeAccountId = ctx.activeAccount.id;
 
         return await ctx.db.$transaction(async (tx) => {
@@ -430,121 +421,110 @@ export const targetListRouter = () =>
         }),
       )
       .mutation(async ({ ctx, input }) => {
-        if (ctx.activeAccount === null) {
+        const activeAccountId = ctx.activeAccount.id;
+
+        // Try to find existing TargetProfile by URL
+        const existingProfile = await ctx.db.targetProfile.findFirst({
+          where: { linkedinUrl: input.linkedinUrl },
+          select: {
+            id: true,
+            profileUrn: true,
+          },
+        });
+
+        let targetProfileId = existingProfile?.id;
+        if (targetProfileId === undefined) {
+          // Create new profile with scraped data
+          targetProfileId = ulid();
+          await ctx.db.targetProfile.create({
+            data: {
+              id: targetProfileId,
+              linkedinUrl: input.linkedinUrl,
+              accountId: activeAccountId,
+              name: input.profileData?.name ?? null,
+              profileSlug: input.profileData?.profileSlug ?? null,
+              profileUrn: input.profileData?.profileUrn ?? null,
+              headline: input.profileData?.headline ?? null,
+              photoUrl: input.profileData?.photoUrl ?? null,
+            },
+          });
+        } else if (input.profileData) {
+          // Update existing profile with new scraped data (if provided)
+          await ctx.db.targetProfile.update({
+            where: { id: targetProfileId },
+            data: {
+              name: input.profileData.name ?? undefined,
+              profileSlug: input.profileData.profileSlug ?? undefined,
+              profileUrn: input.profileData.profileUrn ?? undefined,
+              headline: input.profileData.headline ?? undefined,
+              photoUrl: input.profileData.photoUrl ?? undefined,
+            },
+          });
+        }
+
+        const listIdsToValidate = [
+          ...input.addToListIds,
+          ...input.removeFromListIds,
+        ];
+
+        // early return here if no lists to add or remove
+        if (listIdsToValidate.length === 0) {
           return {
-            status: "error",
-            code: 400,
-            message:
-              "You must link a LinkedIn account to update profile's target lists",
+            status: "success",
+            added: 0,
+            removed: 0,
           } as const;
         }
 
-        const activeAccountId = ctx.activeAccount.id;
-
-        return await ctx.db.$transaction(async (tx) => {
-          // Try to find existing TargetProfile by URL
-          const existingProfile = await tx.targetProfile.findFirst({
-            where: { linkedinUrl: input.linkedinUrl },
-            select: {
-              id: true,
-              profileUrn: true,
-            },
-          });
-
-          let targetProfileId = existingProfile?.id;
-          if (targetProfileId === undefined) {
-            // Create new profile with scraped data
-            targetProfileId = ulid();
-            await tx.targetProfile.create({
-              data: {
-                id: targetProfileId,
-                linkedinUrl: input.linkedinUrl,
-                accountId: activeAccountId,
-                name: input.profileData?.name ?? null,
-                profileSlug: input.profileData?.profileSlug ?? null,
-                profileUrn: input.profileData?.profileUrn ?? null,
-                headline: input.profileData?.headline ?? null,
-                photoUrl: input.profileData?.photoUrl ?? null,
-              },
-            });
-          } else if (input.profileData) {
-            // Update existing profile with new scraped data (if provided)
-            await ctx.db.targetProfile.update({
-              where: { id: targetProfileId },
-              data: {
-                name: input.profileData.name ?? undefined,
-                profileSlug: input.profileData.profileSlug ?? undefined,
-                profileUrn: input.profileData.profileUrn ?? undefined,
-                headline: input.profileData.headline ?? undefined,
-                photoUrl: input.profileData.photoUrl ?? undefined,
-              },
-            });
-          }
-
-          const listIdsToValidate = [
-            ...input.addToListIds,
-            ...input.removeFromListIds,
-          ];
-
-          // early return here if no lists to add or remove
-          if (listIdsToValidate.length === 0) {
-            return {
-              status: "success",
-              added: 0,
-              removed: 0,
-            } as const;
-          }
-
-          // TODO: setup access control that's tied to user instead of relying on exists check with accountId: ctx.activeAccount.id
-          // validate add to and remove from lists exists and belong to user
-          const validLists = await tx.targetList.findMany({
-            where: {
-              id: { in: listIdsToValidate },
-              accountId: activeAccountId,
-            },
-            select: { id: true },
-          });
-
-          if (validLists.length !== new Set(listIdsToValidate).size) {
-            return {
-              status: "error",
-              code: 400,
-              message: "One or more target lists not found",
-            } as const;
-          }
-
-          // Remove from lists
-          if (input.removeFromListIds.length > 0) {
-            await tx.targetListProfile.deleteMany({
-              where: {
-                accountId: activeAccountId,
-                profile: {
-                  linkedinUrl: input.linkedinUrl,
-                },
-                listId: { in: input.removeFromListIds },
-              },
-            });
-          }
-
-          // Add to lists - first validate all list IDs exist and belong to user
-          if (input.addToListIds.length > 0) {
-            await tx.targetListProfile.createMany({
-              data: input.addToListIds.map((listId) => ({
-                id: ulid(),
-                accountId: ctx.activeAccount!.id,
-                listId,
-                profileId: targetProfileId,
-              })),
-              skipDuplicates: true,
-            });
-          }
-
-          return {
-            status: "success",
-            added: input.addToListIds.length,
-            removed: input.removeFromListIds.length,
-          } as const;
+        // TODO: setup access control that's tied to user instead of relying on exists check with accountId: ctx.activeAccount.id
+        // validate add to and remove from lists exists and belong to user
+        const validLists = await ctx.db.targetList.findMany({
+          where: {
+            id: { in: listIdsToValidate },
+            accountId: activeAccountId,
+          },
+          select: { id: true },
         });
+
+        if (validLists.length !== new Set(listIdsToValidate).size) {
+          return {
+            status: "error",
+            code: 400,
+            message: "One or more target lists not found",
+          } as const;
+        }
+
+        // Remove from lists
+        if (input.removeFromListIds.length > 0) {
+          await ctx.db.targetListProfile.deleteMany({
+            where: {
+              accountId: activeAccountId,
+              profile: {
+                linkedinUrl: input.linkedinUrl,
+              },
+              listId: { in: input.removeFromListIds },
+            },
+          });
+        }
+
+        // Add to lists
+        if (input.addToListIds.length > 0) {
+          await ctx.db.targetListProfile.createMany({
+            data: input.addToListIds.map((listId) => ({
+              id: ulid(),
+              accountId: activeAccountId,
+              listId,
+              profileId: targetProfileId,
+            })),
+            skipDuplicates: true,
+          });
+        }
+
+        return {
+          status: "success",
+          added: input.addToListIds.length,
+          removed: input.removeFromListIds.length,
+        } as const;
       }),
 
     /**
