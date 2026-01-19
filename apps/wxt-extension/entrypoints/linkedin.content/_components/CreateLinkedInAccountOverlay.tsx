@@ -3,7 +3,7 @@
  * Displayed on all tabs
  */
 
-import { AlertTriangle, UserPlus } from "lucide-react";
+import { AlertTriangle, Loader2, UserPlus } from "lucide-react";
 
 import { Button } from "@sassy/ui/button";
 import {
@@ -18,13 +18,28 @@ import { getSyncHostUrl } from "../../../lib/get-sync-host-url";
 import { useAccountStore } from "../stores";
 
 export function CreateLinkedInAccountOverlay() {
-  const { organization, fetchAccountData } = useAccountStore();
+  const { organization, fetchAccountData, isLoading, accounts, isLoaded } =
+    useAccountStore();
 
   const handleRegisterNewLinkedInAccount = () => {
     const syncHost = getSyncHostUrl();
     const registerUrl = `${syncHost}/${organization?.slug}/accounts`;
     window.open(registerUrl, "_blank");
   };
+
+  if (isLoaded === false || isLoading) {
+    return (
+      <div className="bg-background/90 absolute inset-0 z-40 grid place-items-center backdrop-blur-sm">
+        <Loader2 className="size-6 animate-spin" />
+      </div>
+    );
+  }
+
+  const showNoAccountRegisteredOverlay = accounts.length === 0;
+
+  if (!showNoAccountRegisteredOverlay) {
+    return null;
+  }
 
   return (
     <div className="bg-background/90 absolute inset-0 z-40 flex items-center justify-center backdrop-blur-sm">

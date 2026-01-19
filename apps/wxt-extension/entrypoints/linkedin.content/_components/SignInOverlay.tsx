@@ -19,7 +19,7 @@ import { getSyncHostUrl } from "../../../lib/get-sync-host-url";
 import { useAccountStore } from "../stores";
 
 export function SignInOverlay() {
-  const { isLoaded, fetchAuthStatus } = useAuthStore();
+  const { isLoaded, fetchAuthStatus, isSignedIn } = useAuthStore();
   const { currentLinkedIn } = useAccountStore();
 
   const handleSignIn = () => {
