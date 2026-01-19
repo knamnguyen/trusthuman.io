@@ -26,9 +26,17 @@ export default defineConfig({
   },
 
   manifest: {
-    name: "EngageKit WXT Extension",
-    description: "AI-powered LinkedIn engagement with Clerk authentication",
-    version: "0.0.1",
+    name: "EngageKit",
+    description: "",
+    version: "1.0.0",
+    icons: {
+      16: "icon16.png",
+      19: "icon19.png",
+      32: "icon32.png",
+      38: "icon38.png",
+      48: "icon48.png",
+      128: "icon128.png",
+    },
     permissions: [
       "activeTab",
       "storage",
