@@ -54,6 +54,11 @@ export default defineConfig({
       ...(process.env.VITE_APP_URL ? [process.env.VITE_APP_URL + "/*"] : []),
       // Add localhost for development
       "http://localhost/*",
+      "https://*.clerk.accounts.dev/*",
+      "https://*.clerk.dev/*",
+      "https://engagekit.io/*",
+      "https://accounts.engagekit.io/*",
+      "https://clerk.engagekit.io/*",
     ],
     web_accessible_resources: [
       {

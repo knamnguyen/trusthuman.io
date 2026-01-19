@@ -1,10 +1,10 @@
 import { BarChart3, BookOpen, Feather, User, Users } from "lucide-react";
 
 import { detectDomVersion } from "@sassy/linkedin-automation/dom/detect";
+import { Button } from "@sassy/ui/button";
 import { useTour } from "@sassy/ui/components/tour";
 import { ExpandableTabs } from "@sassy/ui/expandable-tabs";
 import { SheetContent, SheetHeader } from "@sassy/ui/sheet";
-import { Button } from "@sassy/ui/button";
 
 import { useAuthStore } from "../../lib/auth-store";
 import { AccountMismatchOverlay } from "./_components/AccountMismatchOverlay";
@@ -50,11 +50,7 @@ export function LinkedInSidebar({ onClose }: LinkedInSidebarProps) {
   // Determine if we should show overlays
   const showSignInOverlay = isAuthLoaded && !isSignedIn;
 
-  const showNoAccountRegisteredOverlay =
-    isLoading === false && showSignInOverlay === false && accounts.length === 0;
-
   const showMismatchOverlay =
-    !showNoAccountRegisteredOverlay &&
     isSignedIn &&
     selectedTab !== SIDEBAR_TABS.ACCOUNT &&
     currentLinkedInStatus === "not_registered";
@@ -111,7 +107,7 @@ export function LinkedInSidebar({ onClose }: LinkedInSidebarProps) {
         {showSignInOverlay && <SignInOverlay />}
 
         {/* No account registered overlay - shows when no LinkedIn accounts */}
-        {showNoAccountRegisteredOverlay && <CreateLinkedInAccountOverlay />}
+        <CreateLinkedInAccountOverlay />
 
         {/* Account mismatch overlay - shows on non-Account tabs when LinkedIn not registered */}
         {showMismatchOverlay && <AccountMismatchOverlay />}
