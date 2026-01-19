@@ -1,8 +1,8 @@
 {
   "name": "@sassy/wxt-extension",
-  "description": "EngageKit WXT Extension POC - LinkedIn Sidebar",
+  "description": "EngageKit",
   "private": true,
-  "version": "0.0.1",
+  "version": "1.4.9",
   "type": "module",
   "scripts": {
     "dev": "pnpm with-env wxt",

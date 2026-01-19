@@ -7,6 +7,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   HistoryIcon,
+  UserRoundIcon,
   UsersIcon,
   UsersRoundIcon,
 } from "lucide-react";
@@ -62,7 +63,7 @@ function SidebarToggleButton() {
   const isExpanded = state === "expanded";
 
   return (
-    <div className="absolute -right-3 top-1/2 z-20 -translate-y-1/2">
+    <div className="absolute top-1/2 -right-3 z-20 -translate-y-1/2">
       <Button
         onClick={toggleSidebar}
         variant="outline"
@@ -84,27 +85,34 @@ export function DashboardSidebar() {
   const params = useParams<{ orgSlug?: string; accountSlug?: string }>();
   const { orgSlug, accountSlug } = params;
 
+  const items = [
+    {
+      title: "Accounts",
+      url: `/${orgSlug}/accounts`,
+      icon: UserRoundIcon,
+    },
+  ];
   // Build navigation items based on current context
   // Account-level navigation (only shown when an account is selected)
-  const accountItems = accountSlug
-    ? [
-        {
-          title: "History",
-          url: `/${orgSlug}/${accountSlug}/history`,
-          icon: HistoryIcon,
-        },
-        {
-          title: "Target List",
-          url: `/${orgSlug}/${accountSlug}/target-list`,
-          icon: UsersRoundIcon,
-        },
-        {
-          title: "Personas",
-          url: `/${orgSlug}/${accountSlug}/personas`,
-          icon: UsersIcon,
-        },
-      ]
-    : [];
+  if (accountSlug !== undefined) {
+    items.push(
+      {
+        title: "History",
+        url: `/${orgSlug}/${accountSlug}/history`,
+        icon: HistoryIcon,
+      },
+      {
+        title: "Target List",
+        url: `/${orgSlug}/${accountSlug}/target-list`,
+        icon: UsersRoundIcon,
+      },
+      {
+        title: "Personas",
+        url: `/${orgSlug}/${accountSlug}/personas`,
+        icon: UsersIcon,
+      },
+    );
+  }
 
   return (
     <Sidebar collapsible="icon" className="relative">
@@ -137,11 +145,11 @@ export function DashboardSidebar() {
 
       <SidebarContent>
         {/* Account-level navigation (only shown when an account is selected) */}
-        {accountItems.length > 0 && (
+        {items.length > 0 && (
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
-                {accountItems.map((item) => (
+                {items.map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
                       <Link href={item.url}>
