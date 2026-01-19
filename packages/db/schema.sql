@@ -130,7 +130,6 @@ CREATE TABLE "CommentStyle" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "maxWords" INTEGER DEFAULT 100,
     "creativity" DOUBLE PRECISION DEFAULT 1.0,
-    "userId" TEXT,
 
     CONSTRAINT "CommentStyle_pkey" PRIMARY KEY ("id")
 );
@@ -613,9 +612,6 @@ ALTER TABLE "CommentGenerateSetting" ADD CONSTRAINT "CommentGenerateSetting_acco
 
 -- AddForeignKey
 ALTER TABLE "CommentStyle" ADD CONSTRAINT "CommentStyle_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "CommentStyle" ADD CONSTRAINT "CommentStyle_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "PostLoadSetting" ADD CONSTRAINT "PostLoadSetting_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE CASCADE ON UPDATE CASCADE;

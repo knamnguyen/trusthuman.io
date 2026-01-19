@@ -37,7 +37,7 @@ export function PersonaCard({
     <Card
       className={cn(
         "cursor-pointer transition-all hover:shadow-md",
-        isSelected && "ring-primary ring-2"
+        isSelected && "ring-primary ring-2",
       )}
       onClick={onSelect}
     >
@@ -63,7 +63,7 @@ export function PersonaCard({
           </p>
         )}
         {persona.content && (
-          <p className="bg-muted line-clamp-2 rounded p-2 text-xs">
+          <p className="bg-muted line-clamp-2 rounded py-2 text-xs">
             {persona.content}
           </p>
         )}
