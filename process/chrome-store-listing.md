@@ -181,6 +181,22 @@ AI-assisted LinkedIn commenting tool with human review - generates comment draft
 **Code Reference**: Background script uses chrome.alarms for 55-second auth refresh intervals.
 ```
 
+#### webRequest justification
+
+```
+**Purpose**: Required to capture LinkedIn authentication headers for secure API communication.
+
+**Usage**:
+- Intercepts LinkedIn's realtime/connect requests to capture authentication tokens
+- Extracts cookies, CSRF tokens, and tracking headers needed for LinkedIn API calls
+- Enables the extension to make authenticated requests to LinkedIn on behalf of the user
+- Only monitors requests to https://*.linkedin.com/realtime/connect* - no other URLs
+
+**Code Reference**: Background script uses chrome.webRequest.onBeforeSendHeaders.addListener() to capture authentication headers from LinkedIn's WebSocket connection requests. These headers are stored locally and used for subsequent API calls to post comments.
+
+**Security Note**: This permission is scoped only to LinkedIn domains. No data is intercepted from other websites. Captured tokens are stored locally and used solely for LinkedIn engagement functionality.
+```
+
 #### Host permission justification
 
 ```
