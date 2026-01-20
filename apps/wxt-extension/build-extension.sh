@@ -33,7 +33,7 @@ else
 fi
 
 echo "🏗️  Building extension..."
-pnpm build
+NODE_OPTIONS="--max-old-space-size=8192" pnpm build
 
 echo "📦 Creating new zip file..."
 # Check if dist_chrome exists and zip it
