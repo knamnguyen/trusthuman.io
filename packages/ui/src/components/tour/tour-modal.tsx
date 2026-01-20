@@ -63,11 +63,15 @@ export function TourModal({
 
   // Helper to send postMessage commands to YouTube iframe
   const sendYouTubeCommand = (func: string, args: unknown[] = []) => {
-    if (iframeRef.current?.contentWindow) {
-      iframeRef.current.contentWindow.postMessage(
-        JSON.stringify({ event: "command", func, args }),
-        "https://www.youtube.com",
-      );
+    try {
+      if (iframeRef.current?.contentWindow) {
+        iframeRef.current.contentWindow.postMessage(
+          JSON.stringify({ event: "command", func, args }),
+          "https://www.youtube.com",
+        );
+      }
+    } catch {
+      // Ignore errors when iframe origin doesn't match (e.g., during load)
     }
   };
 
@@ -75,22 +79,7 @@ export function TourModal({
   useEffect(() => {
     if (!hasPreviewVideo || isWatchingTutorial) return;
 
-    console.log("[YT] Setting up postMessage listener for preview video");
-
     const handleMessage = (event: MessageEvent) => {
-      // Log all messages for debugging (comment out in production)
-      if (event.origin === "https://www.youtube.com") {
-        try {
-          const parsed =
-            typeof event.data === "string"
-              ? JSON.parse(event.data)
-              : event.data;
-          console.log("[YT postMessage] Received:", parsed);
-        } catch {
-          // Non-JSON message
-        }
-      }
-
       // Only accept messages from YouTube
       if (event.origin !== "https://www.youtube.com") return;
 
@@ -100,7 +89,6 @@ export function TourModal({
 
         // Check for state change event (info: 1 = PLAYING)
         if (data.event === "onStateChange" && data.info === 1) {
-          console.log("[YT postMessage] PLAYING state detected (onStateChange)");
           setIsPlaying(true);
         }
 
@@ -108,28 +96,13 @@ export function TourModal({
         if (data.event === "infoDelivery" && data.info) {
           const { playerState, duration, currentTime } = data.info;
 
-          // Log timing info periodically (every ~5 seconds to reduce spam)
-          if (
-            currentTime !== undefined &&
-            Math.floor(currentTime) % 5 === 0 &&
-            currentTime - Math.floor(currentTime) < 0.3
-          ) {
-            console.log(
-              `[YT postMessage] Time: ${currentTime?.toFixed(1)}s / ${videoDurationRef.current?.toFixed(1)}s, State: ${playerState}`,
-            );
-          }
-
           // Detect playing state
           if (playerState === 1 && !isPlaying) {
-            console.log(
-              "[YT postMessage] PLAYING state detected (infoDelivery)",
-            );
             setIsPlaying(true);
           }
 
           // Store duration when we receive it
           if (duration && duration > 0 && videoDurationRef.current === 0) {
-            console.log(`[YT postMessage] Video duration: ${duration}s`);
             videoDurationRef.current = duration;
           }
 
@@ -140,9 +113,6 @@ export function TourModal({
             const timeRemaining = videoDurationRef.current - currentTime;
             // When less than 0.5 seconds remain, seek back to start
             if (timeRemaining > 0 && timeRemaining < 0.5) {
-              console.log(
-                `[YT postMessage] Seamless loop triggered! Remaining: ${timeRemaining.toFixed(2)}s - seeking to start`,
-              );
               sendYouTubeCommand("seekTo", [0, true]);
             }
           }
@@ -156,12 +126,15 @@ export function TourModal({
 
     // Tell YouTube we want to listen for events
     const sendListening = () => {
-      console.log("[YT] Iframe loaded, sending 'listening' message");
-      if (iframeRef.current?.contentWindow) {
-        iframeRef.current.contentWindow.postMessage(
-          JSON.stringify({ event: "listening" }),
-          "https://www.youtube.com",
-        );
+      try {
+        if (iframeRef.current?.contentWindow) {
+          iframeRef.current.contentWindow.postMessage(
+            JSON.stringify({ event: "listening" }),
+            "https://www.youtube.com",
+          );
+        }
+      } catch {
+        // Ignore errors when iframe origin doesn't match (e.g., during load)
       }
     };
 
@@ -171,13 +144,11 @@ export function TourModal({
       iframe.addEventListener("load", sendListening);
       // Also try sending immediately in case iframe is already loaded
       if (iframe.contentWindow) {
-        console.log("[YT] Iframe may already be loaded, sending 'listening' message now");
         sendListening();
       }
     }
 
     return () => {
-      console.log("[YT] Cleaning up postMessage listener");
       window.removeEventListener("message", handleMessage);
       if (iframe) {
         iframe.removeEventListener("load", sendListening);
