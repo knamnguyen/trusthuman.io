@@ -8,10 +8,10 @@ import { TooltipProvider } from "@sassy/ui/tooltip";
 
 import { useMigrateLegacyStorage } from "../../lib/migrate-legacy-storage";
 import { ToggleButton } from "./_components/ToggleButton";
-import { PostNavigator } from "./compose-tab/PostNavigator";
 import { SpacebarEngageObserver } from "./compose-tab/engage-button/SpacebarEngageObserver";
 import { useAutoEngage } from "./compose-tab/engage-button/useAutoEngage";
 import { useEngageButtons } from "./compose-tab/engage-button/useEngageButtons";
+import { PostNavigator } from "./compose-tab/PostNavigator";
 import { LinkedInSidebar } from "./LinkedInSidebar";
 import { useProfilePageButton } from "./save-profile/useProfilePageButton";
 import { useSaveProfileButtons } from "./save-profile/useSaveProfileButtons";
@@ -37,7 +37,9 @@ function useAutoStartTour() {
     // Check if user has already seen the tour
     chrome.storage.local.get([TOUR_STORAGE_KEY], (result) => {
       if (!result[TOUR_STORAGE_KEY]) {
-        console.log("EngageKit: First time registered account, auto-starting tour");
+        console.log(
+          "EngageKit: First time registered account, auto-starting tour",
+        );
         hasTriggeredRef.current = true;
         // onBeforeTour in TourProvider will handle opening sidebar
         startTour("extension-intro");
@@ -123,9 +125,7 @@ export default function App({ shadowRoot }: AppProps) {
       flows={tourFlows}
       portalContainer={shadowRoot}
       onTourEnd={(flowId, completed) => {
-        console.log(
-          `EngageKit Tour: ${flowId} ended, completed: ${completed}`,
-        );
+        console.log(`EngageKit Tour: ${flowId} ended, completed: ${completed}`);
         // Mark tour as seen so it won't auto-start again
         if (flowId === "extension-intro") {
           chrome.storage.local.set({ [TOUR_STORAGE_KEY]: true });
