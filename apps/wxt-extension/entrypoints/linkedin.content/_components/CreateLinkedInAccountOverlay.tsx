@@ -64,7 +64,7 @@ export function CreateLinkedInAccountOverlay() {
             size="lg"
           >
             <UserPlus className="mr-2 h-4 w-4" />
-            Add Linked In Account
+            Add LinkedIn Account
           </Button>
 
           <p className="text-muted-foreground text-center text-xs">

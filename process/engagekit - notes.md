@@ -30,9 +30,13 @@
 
 [*] fix data analytics visualize - time filter week, month, year
 
+[] when an organization is deleted - their linkedin accounts should be set null
+
 [] comment style personas add more config options for ai to adjust length and language
 [] save comment style data on each comment generated
 [] dynamic ai generation flow
+
+[] refresh no linkedin account registered did not refresh auth (logged out but didn't take effect)
 
 //onboarding flow extensible design
 
