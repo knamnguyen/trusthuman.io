@@ -31,11 +31,7 @@ export default function AccountsPage() {
   const orgId = organization?.id;
 
   // Custom query keys scoped to orgId - prevents stale data when switching orgs
-  const {
-    data: currentOrg,
-    isLoading: isOrgLoading,
-    error: orgError,
-  } = useQuery({
+  const { data: currentOrg, error: orgError } = useQuery({
     ...trpc.organization.getCurrent.queryOptions(),
     enabled: !!orgId,
   });
@@ -88,7 +84,8 @@ export default function AccountsPage() {
   };
 
   // Show loading while Clerk org loads or org data fetches
-  if (!isOrgLoaded) {
+  // if currentOrg === undefined means still fetching
+  if (!isOrgLoaded || currentOrg === undefined) {
     return (
       <div className="min-h-dvh bg-gray-50 p-6">
         <div className="mx-auto max-w-4xl">
@@ -120,7 +117,8 @@ export default function AccountsPage() {
     );
   }
 
-  if (!currentOrg) {
+  // if currentOrg === null means user not in any orgs
+  if (currentOrg === null) {
     return (
       <div className="min-h-dvh bg-gray-50 p-6">
         <div className="mx-auto max-w-4xl">

@@ -30,3 +30,16 @@ export const useSidebarStore = create<SidebarStore>((set) => ({
   setSelectedTab: (selectedTab) => set({ selectedTab }),
   openToTab: (tab) => set({ isOpen: true, selectedTab: tab }),
 }));
+
+chrome.runtime.onMessage.addListener((message, _, sendResponse) => {
+  console.info("received message in sidebar store:", message);
+  if (message.type === "OPEN_SIDEBAR") {
+    useSidebarStore.setState({ isOpen: true });
+    sendResponse({ success: true });
+  }
+
+  if (message.type === "TOGGLE_SIDEBAR") {
+    useSidebarStore.setState((state) => ({ isOpen: !state.isOpen }));
+    sendResponse({ success: true });
+  }
+});

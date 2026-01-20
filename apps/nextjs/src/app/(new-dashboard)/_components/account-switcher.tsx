@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useOrganization } from "@clerk/nextjs";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronsUpDown, Plus } from "lucide-react";
+import { ChevronsUpDown, Loader2, Plus } from "lucide-react";
 
 import {
   DropdownMenu,
@@ -40,7 +40,8 @@ export function AccountSwitcher() {
   // Note: Auto-switch org logic is centralized in OrgLayout
   // Only check if org is ready (matches URL or no URL constraint)
   const orgId = organization?.id;
-  const isOrgReady = isOrgLoaded && (!urlOrgSlug || organization?.slug === urlOrgSlug);
+  const isOrgReady =
+    isOrgLoaded && (!urlOrgSlug || organization?.slug === urlOrgSlug);
 
   // Custom query key scoped to orgId - prevents stale data when switching orgs
   const accountsQuery = useQuery({
@@ -53,7 +54,9 @@ export function AccountSwitcher() {
   const currentAccountSlug = params.accountSlug;
 
   // Find the active account
-  const activeAccount = accounts.find((a) => a.profileSlug === currentAccountSlug);
+  const activeAccount = accounts.find(
+    (a) => a.profileSlug === currentAccountSlug,
+  );
 
   // Handle account selection - navigate to new URL
   const handleSelectAccount = (account: (typeof accounts)[number]) => {
@@ -66,7 +69,9 @@ export function AccountSwitcher() {
   if (!isOrgReady || accountsQuery.isLoading) {
     return (
       <SidebarHeader>
-        <Skeleton className="h-10 w-full" />
+        <Skeleton className="grid h-10 w-full place-items-center bg-gray-200">
+          <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+        </Skeleton>
       </SidebarHeader>
     );
   }
@@ -106,7 +111,9 @@ export function AccountSwitcher() {
               >
                 <div className="grid aspect-square size-8 shrink-0 place-items-center rounded-lg bg-blue-600 font-medium text-white">
                   {activeAccount
-                    ? (activeAccount.profileSlug ?? "?").slice(0, 2).toUpperCase()
+                    ? (activeAccount.profileSlug ?? "?")
+                        .slice(0, 2)
+                        .toUpperCase()
                     : "?"}
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">

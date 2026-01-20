@@ -15,10 +15,7 @@ import {
 } from "@sassy/ui/card";
 
 import { useAuthStore } from "../../../lib/auth-store";
-import {
-  getSyncHostUrl,
-  getWebAppDomain,
-} from "../../../lib/get-sync-host-url";
+import { getWebAppDomain } from "../../../lib/get-sync-host-url";
 import { useAccountStore } from "../stores";
 
 export function SignInOverlay() {
@@ -26,8 +23,8 @@ export function SignInOverlay() {
   const { currentLinkedIn } = useAccountStore();
 
   const handleSignIn = () => {
-    const webAppDomain = getWebAppDomain();
-    const authUrl = `${webAppDomain}/extension-auth`;
+    const syncHost = getWebAppDomain();
+    const authUrl = `${syncHost}/extension-auth`;
     window.open(authUrl, "_blank");
   };
 
