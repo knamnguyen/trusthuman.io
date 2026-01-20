@@ -21,7 +21,10 @@ import {
 } from "@sassy/ui/card";
 
 import { useAuthStore } from "../../../lib/auth-store";
-import { getSyncHostUrl } from "../../../lib/get-sync-host-url";
+import {
+  getSyncHostUrl,
+  getWebAppDomain,
+} from "../../../lib/get-sync-host-url";
 import { useAccountStore } from "../stores";
 
 export function AccountMismatchOverlay() {
@@ -41,9 +44,9 @@ export function AccountMismatchOverlay() {
   };
 
   const handleRegister = () => {
-    const syncHost = getSyncHostUrl();
+    const webAppDomain = getWebAppDomain();
     // TODO: Update to actual registration page when available
-    const registerUrl = `${syncHost}/${organization?.slug}/accounts`;
+    const registerUrl = `${webAppDomain}/${organization?.slug}/accounts`;
     window.open(registerUrl, "_blank");
   };
 

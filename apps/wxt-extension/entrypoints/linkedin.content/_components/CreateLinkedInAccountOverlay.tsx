@@ -14,7 +14,10 @@ import {
   CardTitle,
 } from "@sassy/ui/card";
 
-import { getSyncHostUrl } from "../../../lib/get-sync-host-url";
+import {
+  getSyncHostUrl,
+  getWebAppDomain,
+} from "../../../lib/get-sync-host-url";
 import { useAccountStore } from "../stores";
 
 export function CreateLinkedInAccountOverlay() {
@@ -22,8 +25,8 @@ export function CreateLinkedInAccountOverlay() {
     useAccountStore();
 
   const handleRegisterNewLinkedInAccount = () => {
-    const syncHost = getSyncHostUrl();
-    const registerUrl = `${syncHost}/${organization?.slug}/accounts`;
+    const webAppDomain = getWebAppDomain();
+    const registerUrl = `${webAppDomain}/${organization?.slug}/accounts`;
     window.open(registerUrl, "_blank");
   };
 

@@ -12,7 +12,7 @@ import { createClerkClient } from "@clerk/chrome-extension/background";
 import { storage } from "wxt/storage";
 
 import type { MessageRouterDependencies } from "./background-types";
-import { getSyncHostUrl } from "../../lib/get-sync-host-url";
+import { getSyncHostUrl, getWebAppDomain } from "../../lib/get-sync-host-url";
 import { MessageRouter } from "./message-router";
 
 export default defineBackground(() => {
@@ -25,12 +25,16 @@ export default defineBackground(() => {
    * This eliminates the cold-start delay when content scripts first request auth
    */
   const syncHost = getSyncHostUrl();
-  console.log("Background: Initializing Clerk client eagerly with syncHost:", syncHost);
-
-  let clerkClientPromise: ReturnType<typeof createClerkClient> = createClerkClient({
-    publishableKey: import.meta.env.VITE_CLERK_PUBLISHABLE_KEY!,
+  console.log(
+    "Background: Initializing Clerk client eagerly with syncHost:",
     syncHost,
-  });
+  );
+
+  let clerkClientPromise: ReturnType<typeof createClerkClient> =
+    createClerkClient({
+      publishableKey: import.meta.env.VITE_CLERK_PUBLISHABLE_KEY!,
+      syncHost,
+    });
 
   const getClerkClient = async () => {
     return await clerkClientPromise;
@@ -70,15 +74,14 @@ export default defineBackground(() => {
   chrome.tabs.onUpdated.addListener((_tabId, changeInfo, tab) => {
     if (changeInfo.status === "complete" && tab.url) {
       // Auth domains to monitor (syncHost + /extension-auth path)
-      const syncHost = getSyncHostUrl();
+      const webAppDomain = getWebAppDomain();
       const authDomains = [
-        `${syncHost}/extension-auth`,
-        `${syncHost}/sign-in`,
-        `${syncHost}/sign-up`,
-        `${syncHost}/org-accounts`,
+        `${webAppDomain}/extension-auth`,
+        `${webAppDomain}/sign-in`,
+        `${webAppDomain}/sign-up`,
       ];
 
-      const signOutUrls = [`${syncHost}/sign-out`];
+      const signOutUrls = [`${webAppDomain}/sign-out`];
 
       const isAuthUrl = authDomains.some((domain) => tab.url?.includes(domain));
 
@@ -116,13 +119,18 @@ export default defineBackground(() => {
 
           // Notify ALL LinkedIn content scripts of auth state change
           // Must use chrome.tabs.sendMessage to reach content scripts (not chrome.runtime.sendMessage)
-          console.log("Background: Broadcasting authStateChanged to LinkedIn tabs:", {
-            isSignedIn,
-          });
+          console.log(
+            "Background: Broadcasting authStateChanged to LinkedIn tabs:",
+            {
+              isSignedIn,
+            },
+          );
 
           // Query all LinkedIn tabs and send message to each
           chrome.tabs.query({ url: "https://*.linkedin.com/*" }, (tabs) => {
-            console.log(`Background: Found ${tabs.length} LinkedIn tabs to notify`);
+            console.log(
+              `Background: Found ${tabs.length} LinkedIn tabs to notify`,
+            );
             for (const tab of tabs) {
               if (tab.id) {
                 chrome.tabs
@@ -134,7 +142,7 @@ export default defineBackground(() => {
                     // Content script may not be loaded on this tab
                     console.log(
                       `Background: Failed to send to tab ${tab.id}:`,
-                      error
+                      error,
                     );
                   });
               }

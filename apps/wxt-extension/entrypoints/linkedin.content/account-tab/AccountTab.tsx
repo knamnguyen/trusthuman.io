@@ -21,7 +21,10 @@ import {
 import { useTour } from "@sassy/ui/components/tour";
 
 import { useAuthStore } from "../../../lib/auth-store";
-import { getSyncHostUrl } from "../../../lib/get-sync-host-url";
+import {
+  getSyncHostUrl,
+  getWebAppDomain,
+} from "../../../lib/get-sync-host-url";
 import { useAccountStore } from "../stores";
 
 /**
@@ -37,6 +40,16 @@ function OrgAccountsCard() {
     matchingAccount,
     isLoading,
   } = useAccountStore();
+  const authOrganization = useAuthStore.getState().organization;
+
+  const handleAccountDashboard = () => {
+    if (!authOrganization?.slug || !matchingAccount?.profileSlug) return;
+    const webAppDomain = getWebAppDomain();
+    window.open(
+      `${webAppDomain}/${authOrganization.slug}/${matchingAccount.profileSlug}`,
+      "_blank",
+    );
+  };
 
   if (isLoading) {
     return (
@@ -160,6 +173,22 @@ function OrgAccountsCard() {
               )}
             </div>
           )}
+
+          {/* Account Dashboard Button */}
+          {matchingAccount && authOrganization?.slug && (
+            <div className="border-t pt-3">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full"
+                onClick={handleAccountDashboard}
+                id="ek-account-dashboard-button"
+              >
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Account Dashboard
+              </Button>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
@@ -229,8 +258,8 @@ export function AccountTab() {
   };
 
   const handleManageAccount = () => {
-    const syncHost = getSyncHostUrl();
-    window.open(`${syncHost}/${organization?.slug}/accounts`, "_blank");
+    const webAppDomain = getWebAppDomain();
+    window.open(`${webAppDomain}/${organization?.slug}/accounts`, "_blank");
   };
 
   // Signed in - show features UI (SignInOverlay handles unauthenticated state)

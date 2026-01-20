@@ -23,3 +23,9 @@ export function getSyncHostUrl(): string {
   }
   return DEV_SYNC_HOST;
 }
+
+//get webapp domain
+
+export function getWebAppDomain(): string {
+  return import.meta.env.VITE_NEXTJS_URL ?? "http://localhost:3000";
+}
