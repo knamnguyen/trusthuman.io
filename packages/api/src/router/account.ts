@@ -23,6 +23,7 @@ import {
   BrowserSession,
   hyperbrowser,
 } from "../utils/browser-session/browser-session";
+import { normalizeLinkedInUrl } from "../utils/normalize-linkedin-url";
 import { paginate } from "../utils/pagination";
 
 /**
@@ -354,6 +355,7 @@ export const accountRouter = () =>
         }),
       )
       .mutation(async ({ ctx, input }) => {
+        const normalizedProfileUrl = normalizeLinkedInUrl(input.profileUrl);
         const profileSlug = extractProfileSlug(input.profileUrl);
 
         // 4. Check slot limit
@@ -432,7 +434,7 @@ export const accountRouter = () =>
           data: {
             id: accountId,
             organizationId: ctx.activeOrg.id,
-            profileUrl: input.profileUrl,
+            profileUrl: normalizedProfileUrl,
             profileSlug,
             registrationStatus: "registered",
             // Legacy required fields - fill with placeholders
@@ -702,4 +704,11 @@ export async function getOrInsertUser(
   }
 
   return newAccount;
+}
+
+function normalizeProfileUrl(url: string) {
+  const normalized = new URL(url);
+  normalized.search = "";
+  normalized.hash = "";
+  return normalized.toString();
 }
