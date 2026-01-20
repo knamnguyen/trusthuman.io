@@ -36,14 +36,14 @@ echo "🏗️  Building extension..."
 NODE_OPTIONS="--max-old-space-size=8192" pnpm build
 
 echo "📦 Creating new zip file..."
-# Check if dist_chrome exists and zip it
-if [ -d "dist" ]; then
-    cd dist
-    zip -r ../engagekit-extension.zip ./*
-    cd ..
+# Check if dist/chrome-mv3 exists and zip it
+if [ -d "dist/chrome-mv3" ]; then
+    cd dist/chrome-mv3
+    zip -r ../../engagekit-extension.zip ./*
+    cd ../..
     echo "✅ Created new engagekit-extension.zip"
 else
-    echo "❌ dist_chrome directory not found after build"
+    echo "❌ dist/chrome-mv3 directory not found after build"
     exit 1
 fi
 
