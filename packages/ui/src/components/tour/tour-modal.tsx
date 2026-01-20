@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   ChevronLeft,
@@ -46,25 +46,144 @@ export function TourModal({
   position = "center-center",
 }: TourModalProps) {
   const [isWatchingTutorial, setIsWatchingTutorial] = useState(false);
-  const [showPreviewVideo, setShowPreviewVideo] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const videoDurationRef = useRef<number>(0);
 
   // Reset video state when step changes
   useEffect(() => {
     setIsWatchingTutorial(false);
-    setShowPreviewVideo(false);
-
-    // Delay showing preview iframe to let it load behind the thumbnail
-    // This hides the black loading screen that appears before video plays
-    const timer = setTimeout(() => {
-      setShowPreviewVideo(true);
-    }, 1000);
-
-    return () => clearTimeout(timer);
+    setIsPlaying(false);
+    videoDurationRef.current = 0;
   }, [step.id]);
 
   const hasPreviewVideo = !!step.previewVideo;
   const hasTutorialVideo = !!step.tutorialVideo;
   const hasAnyVideo = hasPreviewVideo || hasTutorialVideo;
+
+  // Helper to send postMessage commands to YouTube iframe
+  const sendYouTubeCommand = (func: string, args: unknown[] = []) => {
+    if (iframeRef.current?.contentWindow) {
+      iframeRef.current.contentWindow.postMessage(
+        JSON.stringify({ event: "command", func, args }),
+        "https://www.youtube.com",
+      );
+    }
+  };
+
+  // Listen for YouTube postMessage events and handle seamless looping
+  useEffect(() => {
+    if (!hasPreviewVideo || isWatchingTutorial) return;
+
+    console.log("[YT] Setting up postMessage listener for preview video");
+
+    const handleMessage = (event: MessageEvent) => {
+      // Log all messages for debugging (comment out in production)
+      if (event.origin === "https://www.youtube.com") {
+        try {
+          const parsed =
+            typeof event.data === "string"
+              ? JSON.parse(event.data)
+              : event.data;
+          console.log("[YT postMessage] Received:", parsed);
+        } catch {
+          // Non-JSON message
+        }
+      }
+
+      // Only accept messages from YouTube
+      if (event.origin !== "https://www.youtube.com") return;
+
+      try {
+        const data =
+          typeof event.data === "string" ? JSON.parse(event.data) : event.data;
+
+        // Check for state change event (info: 1 = PLAYING)
+        if (data.event === "onStateChange" && data.info === 1) {
+          console.log("[YT postMessage] PLAYING state detected (onStateChange)");
+          setIsPlaying(true);
+        }
+
+        // Also check for infoDelivery which contains playerState and timing info
+        if (data.event === "infoDelivery" && data.info) {
+          const { playerState, duration, currentTime } = data.info;
+
+          // Log timing info periodically (every ~5 seconds to reduce spam)
+          if (
+            currentTime !== undefined &&
+            Math.floor(currentTime) % 5 === 0 &&
+            currentTime - Math.floor(currentTime) < 0.3
+          ) {
+            console.log(
+              `[YT postMessage] Time: ${currentTime?.toFixed(1)}s / ${videoDurationRef.current?.toFixed(1)}s, State: ${playerState}`,
+            );
+          }
+
+          // Detect playing state
+          if (playerState === 1 && !isPlaying) {
+            console.log(
+              "[YT postMessage] PLAYING state detected (infoDelivery)",
+            );
+            setIsPlaying(true);
+          }
+
+          // Store duration when we receive it
+          if (duration && duration > 0 && videoDurationRef.current === 0) {
+            console.log(`[YT postMessage] Video duration: ${duration}s`);
+            videoDurationRef.current = duration;
+          }
+
+          // Seamless loop: seek to beginning before video ends
+          // This avoids the black screen/loading wheel from YouTube's native loop
+          // Note: playerState may be undefined in some infoDelivery messages, so we don't require it
+          if (currentTime !== undefined && videoDurationRef.current > 0) {
+            const timeRemaining = videoDurationRef.current - currentTime;
+            // When less than 0.5 seconds remain, seek back to start
+            if (timeRemaining > 0 && timeRemaining < 0.5) {
+              console.log(
+                `[YT postMessage] Seamless loop triggered! Remaining: ${timeRemaining.toFixed(2)}s - seeking to start`,
+              );
+              sendYouTubeCommand("seekTo", [0, true]);
+            }
+          }
+        }
+      } catch {
+        // Ignore non-JSON messages
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+
+    // Tell YouTube we want to listen for events
+    const sendListening = () => {
+      console.log("[YT] Iframe loaded, sending 'listening' message");
+      if (iframeRef.current?.contentWindow) {
+        iframeRef.current.contentWindow.postMessage(
+          JSON.stringify({ event: "listening" }),
+          "https://www.youtube.com",
+        );
+      }
+    };
+
+    // Send listening message after iframe loads
+    const iframe = iframeRef.current;
+    if (iframe) {
+      iframe.addEventListener("load", sendListening);
+      // Also try sending immediately in case iframe is already loaded
+      if (iframe.contentWindow) {
+        console.log("[YT] Iframe may already be loaded, sending 'listening' message now");
+        sendListening();
+      }
+    }
+
+    return () => {
+      console.log("[YT] Cleaning up postMessage listener");
+      window.removeEventListener("message", handleMessage);
+      if (iframe) {
+        iframe.removeEventListener("load", sendListening);
+      }
+    };
+  }, [hasPreviewVideo, isWatchingTutorial, step.id, isPlaying]);
 
   // Get position transform for the modal
   const positionStyles = getPositionTransform(position);
@@ -109,20 +228,23 @@ export function TourModal({
             {!isWatchingTutorial && hasPreviewVideo ? (
               <>
                 {/* Scale 1.5x to crop YouTube UI (title bar, progress indicator) */}
-                {/* Fade in after delay to hide black loading screen */}
+                {/* Fade in only when video starts playing (detected via postMessage) */}
                 <iframe
+                  ref={iframeRef}
                   src={getYouTubeEmbedUrl(step.previewVideo!, {
                     autoplay: true,
-                    loop: true,
+                    loop: false, // We handle looping manually via seekTo to avoid black screen
                     muted: true,
                     controls: false,
                     minimal: true,
                   })}
                   className={cn(
                     "absolute inset-0 h-full w-full scale-150 transition-opacity duration-500",
-                    showPreviewVideo ? "opacity-100" : "opacity-0",
                   )}
-                  style={{ pointerEvents: "none" }}
+                  style={{
+                    opacity: isPlaying ? 1 : 0,
+                    pointerEvents: "none",
+                  }}
                   allow="autoplay; encrypted-media"
                   title={`${step.title} preview`}
                 />

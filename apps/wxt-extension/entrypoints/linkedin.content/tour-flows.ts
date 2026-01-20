@@ -46,9 +46,9 @@ export const extensionIntroFlow: TourFlow = {
     {
       id: "compose-tab",
       selector: ["#ek-compose-tab-button", "#ek-compose-tab"],
-      title: "Generate AI Comments",
+      title: "Engage 10x faster with Compose mode",
       subtitle:
-        "Load posts from your feed and let AI craft engaging comments for you.",
+        "Load posts from your feed/target lists in compose mode. Quickly navigate each post to engage. Write 100% human comments or with AI Assist. All submitted comments saved to history. Try clicking the load post button below",
       previewVideo: "https://youtu.be/2Ee0FnkDNnY",
       tutorialVideo: "https://youtu.be/J94jMmPrb5A",
       preferredView: "modal",
@@ -65,9 +65,9 @@ export const extensionIntroFlow: TourFlow = {
         "#ek-connect-tab",
         ".ek-save-profile-button",
       ],
-      title: "Save & Track Profiles",
+      title: "See engagement rate & Organize Lists ",
       subtitle:
-        "Build your network by saving profiles and tracking your engagement history.",
+        "View anyone's engagement rate, history, and network. Save them to your target lists or custom and in time engagement. Try clicking the save profile icon below",
       previewVideo: "https://youtu.be/llZWpYXt4_8",
       tutorialVideo: "https://youtu.be/-xVRXejvmMY",
       preferredView: "modal",
@@ -82,7 +82,7 @@ export const extensionIntroFlow: TourFlow = {
       selector: ["#ek-analytics-tab-button", "#ek-analytics-tab"],
       title: "View Your Stats",
       subtitle:
-        "See how many comments you've made, your engagement rate, and more.",
+        "All of the most important LinkedIn stats in one place. Watch your engagement brings real results in real time. Try clicking the change/total toggle below",
       previewVideo: "https://youtu.be/mnEa0UulI-c",
       tutorialVideo: "https://youtu.be/k1_8MJaBYHk",
       preferredView: "modal",
@@ -97,14 +97,18 @@ export const extensionIntroFlow: TourFlow = {
       selector: ["#ek-account-tab-button", "#ek-account-tab"],
       title: "Manage Your Accounts",
       subtitle:
-        "Add, switch, or remove LinkedIn accounts connected to the extension.",
+        "Add, switch, or remove LinkedIn accounts connected to the extension. View and manage your comemnt history, personas, and target list from the webapp. Try clicking the dashboard, refresh or manage account button below.",
       previewVideo: "https://youtu.be/UJ8Z-qSHns4",
       tutorialVideo: "https://youtu.be/J94jMmPrb5A",
       preferredView: "modal",
       onBeforeStep: ({ shadowRoot }) => {
         clickElement("#ek-account-tab-button", shadowRoot);
       },
-      simulateSelectors: ["#manage-account-button", "#refresh-account-button"],
+      simulateSelectors: [
+        "#ek-account-dashboard-button",
+        "#manage-account-button",
+        "#refresh-account-button",
+      ],
       simulateSelectorsAnimated: true,
     },
   ],

@@ -7,6 +7,8 @@ interface YouTubeEmbedOptions {
   minimal?: boolean;
 }
 
+export type { YouTubeEmbedOptions };
+
 export function extractYouTubeId(url: string): string | null {
   const patterns = [
     /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
@@ -70,9 +72,8 @@ export function getYouTubeEmbedUrl(
     params.set("disablekb", "1"); // Disable keyboard shortcuts
     params.set("cc_load_policy", "0"); // Hide closed captions
     params.set("color", "white"); // Use white progress bar (less visible)
-    params.set("enablejsapi", "0"); // Disable JS API
+    params.set("enablejsapi", "1"); // Enable JS API for postMessage communication
     params.set("origin", window.location.origin); // Set origin for security
-    params.set("pointer-events", "none"); // Disable pointer events
     params.set("modestbranding", "1"); // Disable hover events
     params.set("iv_load_policy", "3"); // Disable annotations
     params.set("rel", "0"); // Disable related videos
@@ -81,3 +82,4 @@ export function getYouTubeEmbedUrl(
 
   return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
 }
+
