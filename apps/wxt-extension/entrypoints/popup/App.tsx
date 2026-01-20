@@ -45,7 +45,7 @@ export default function App() {
           // If no response, the content script might not be loaded
           if (chrome.runtime.lastError || !response) {
             console.log("Content script not responding, refreshing page...");
-            // chrome.tabs.reload(currentTab.id!);
+            chrome.tabs.reload(currentTab.id!);
           } else {
             console.log("Sidebar toggled successfully");
             window.close(); // Close popup after toggling
