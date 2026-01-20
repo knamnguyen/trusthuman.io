@@ -705,10 +705,3 @@ export async function getOrInsertUser(
 
   return newAccount;
 }
-
-function normalizeProfileUrl(url: string) {
-  const normalized = new URL(url);
-  normalized.search = "";
-  normalized.hash = "";
-  return normalized.toString();
-}
