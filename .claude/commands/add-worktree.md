@@ -102,7 +102,7 @@ cd "$WORKTREE_PATH" && "$PROJECT_ROOT/process/scripts/sync-worktrees.sh"
 
 The sync script handles:
 - Copying `.env` from main repo
-- Creating `.env.local` with unique ports
+- Updating port values directly in `.env` (PORT, VITE_APP_URL, etc.)
 - Running `pnpm install`
 
 ### 7. Report Completion
@@ -129,7 +129,7 @@ Which branch would you like to link this worktree to?
 
 🔧 Setting up worktree: feature-payments
    ✅ .env copied
-   ✅ .env.local created (PORT=3020, API=8020)
+   ✅ Ports updated (PORT=3020, API=8020)
    ✅ Dependencies installed
 
 ╭─────────────────────────────────────────────────────────╮
@@ -146,8 +146,7 @@ Which branch would you like to link this worktree to?
 ## Safety Notes
 
 - Each worktree gets a **unique port range** automatically
-- `.env.local` is **git-ignored** - it won't be committed
-- `.env` is **copied** - worktree has all secrets/config from main repo
+- `.env` is **copied and modified** - ports are updated directly
 - Worktree names **match branch names** exactly
 
 ## Related

@@ -14,7 +14,7 @@
     "lint": "eslint",
     "preview": "pnpm with-env vite preview",
     "typecheck": "tsc --noEmit",
-    "with-env": "dotenv --override -e ../../.env -e ../../.env.local --"
+    "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^7.1.0",
