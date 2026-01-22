@@ -1,28 +1,13 @@
 "use client";
 
-/* eslint-disable react-refresh/only-export-components */
 import React, { useEffect, useRef, useState } from "react";
 
 import { cn } from "@sassy/ui/utils";
 
-export interface DropdownItem {
-  id: string;
-  title: string;
-  icon?: React.ComponentType<{ className?: string }>;
-  iconEmoji?: string; // Fallback emoji if no icon component
-  href: string;
-  description: string;
-  previewImage?: string; // Image URL for preview
-}
+import { NavTrigger } from "./NavTrigger";
+import type { DropdownItem, NavDropdownProps } from "./types";
 
-interface NavDropdownContainerProps {
-  trigger: React.ReactNode;
-  items: DropdownItem[];
-  renderPreview?: (item: DropdownItem | null) => React.ReactNode; // Optional - uses default if not provided
-  children?: React.ReactNode; // Optional fallback for custom content
-}
-
-// Unified preview component used by default
+// Default preview component when hovering over items
 function DefaultPreview({ item }: { item: DropdownItem | null }) {
   if (!item) {
     return (
@@ -45,7 +30,7 @@ function DefaultPreview({ item }: { item: DropdownItem | null }) {
           className={cn(
             "rounded-sm p-3",
             "border-[1.5px] border-black shadow-[2px_2px_0_#000]",
-            "bg-white",
+            "bg-card",
           )}
         >
           {Icon ? (
@@ -64,8 +49,8 @@ function DefaultPreview({ item }: { item: DropdownItem | null }) {
       <div
         className={cn(
           "flex-1 overflow-hidden",
-          "shadow-[2px_2px_0_#000]",
-          "bg-white",
+          "border-[1.5px] border-black shadow-[2px_2px_0_#000]",
+          "bg-card",
         )}
       >
         {item.previewImage ? (
@@ -86,12 +71,13 @@ function DefaultPreview({ item }: { item: DropdownItem | null }) {
   );
 }
 
-export function NavDropdownContainer({
-  trigger,
+export function NavDropdown({
+  label,
   items,
+  isLoading,
   renderPreview,
   children,
-}: NavDropdownContainerProps) {
+}: NavDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [hoveredItem, setHoveredItem] = useState<DropdownItem | null>(null);
   const [navHeight, setNavHeight] = useState(57);
@@ -104,7 +90,7 @@ export function NavDropdownContainer({
       clearTimeout(closeTimeoutRef.current);
       closeTimeoutRef.current = null;
     }
-    // Find the parent nav-blog's nav element
+    // Find the parent nav element
     if (triggerRef.current) {
       const parentNav = triggerRef.current.closest("nav");
       if (parentNav) {
@@ -122,7 +108,7 @@ export function NavDropdownContainer({
   const handleMouseLeave = () => {
     closeTimeoutRef.current = setTimeout(() => {
       setIsOpen(false);
-      setHoveredItem(null); // Reset hover state when closing
+      setHoveredItem(null);
     }, 150);
   };
 
@@ -156,7 +142,7 @@ export function NavDropdownContainer({
     };
   }, []);
 
-  // Measure parent nav-blog's nav height for dropdown positioning
+  // Measure parent nav height for dropdown positioning
   useEffect(() => {
     const updateNavHeight = () => {
       if (triggerRef.current) {
@@ -185,6 +171,15 @@ export function NavDropdownContainer({
     }
   }, [isOpen, items, hoveredItem]);
 
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="relative">
+        <NavTrigger label={label} />
+      </div>
+    );
+  }
+
   return (
     <>
       <div
@@ -193,12 +188,7 @@ export function NavDropdownContainer({
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        {React.isValidElement(trigger)
-          ? React.cloneElement(
-              trigger as React.ReactElement<{ isOpen?: boolean }>,
-              { isOpen },
-            )
-          : trigger}
+        <NavTrigger label={label} isOpen={isOpen} />
       </div>
 
       {/* Full-width dropdown - positioned outside nav to avoid overflow */}
@@ -210,7 +200,7 @@ export function NavDropdownContainer({
           onMouseLeave={handleMouseLeave}
           className={cn(
             "fixed right-0 left-0 z-[100] hidden md:block",
-            "border-[1.5px] border-black bg-white shadow-[4px_4px_0_#000]",
+            "border-[1.5px] border-black bg-background shadow-[4px_4px_0_#000]",
             "rounded-t-none rounded-b-sm",
             "animate-[slideDown_0.2s_ease-out]",
           )}
@@ -225,7 +215,7 @@ export function NavDropdownContainer({
               children
             ) : (
               <div className="flex gap-6">
-                {/* Left side - Tool list */}
+                {/* Left side - Item list */}
                 <div className="w-1/2 flex-shrink-0">
                   <div
                     className={cn(
@@ -245,11 +235,11 @@ export function NavDropdownContainer({
                           className={cn(
                             "flex items-center gap-3 rounded-sm px-4 py-7",
                             "border-[1.5px] border-black shadow-[2px_2px_0_#000]",
-                            "bg-white text-black no-underline",
+                            "bg-card text-black no-underline",
                             "hover:translate-y-[2px] hover:shadow-[1px_1px_0_#000]",
                             "transition-all duration-150",
                             "focus-visible:ring-2 focus-visible:ring-black focus-visible:outline-none",
-                            isHovered && "bg-gray-50",
+                            isHovered && "bg-accent",
                           )}
                         >
                           {Icon ? (

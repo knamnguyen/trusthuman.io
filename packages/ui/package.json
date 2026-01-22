@@ -8,6 +8,7 @@
     "./utils": "./src/utils.ts",
     "./components/*": "./src/components/*.tsx",
     "./components/tour": "./src/components/tour/index.ts",
+    "./components/nav": "./src/components/nav/index.ts",
     "./hooks/*": "./src/hooks/*.ts",
     "./schema-validators": "./src/schema-validators.ts",
     "./theme": "./src/ui/theme.tsx",
