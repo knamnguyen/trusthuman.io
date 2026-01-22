@@ -90,32 +90,32 @@ else
   exit 1
 fi
 
-# Step 3: Remove the worktree
-echo ""
-echo "🗑️  Removing worktree..."
-if git worktree remove "$WORKTREE_PATH" --force; then
-  echo "   ✅ Worktree removed"
-else
-  echo "   ⚠️  Could not remove worktree automatically"
-  echo "   Run manually: git worktree remove \"$WORKTREE_PATH\" --force"
-fi
+# Step 3: Remove the worktree (DISABLED - keeping worktrees for continued work)
+# echo ""
+# echo "🗑️  Removing worktree..."
+# if git worktree remove "$WORKTREE_PATH" --force; then
+#   echo "   ✅ Worktree removed"
+# else
+#   echo "   ⚠️  Could not remove worktree automatically"
+#   echo "   Run manually: git worktree remove \"$WORKTREE_PATH\" --force"
+# fi
 
-# Step 4: Delete the local branch
-echo ""
-echo "🗑️  Deleting local branch..."
-if git branch -d "$BRANCH_NAME" 2>/dev/null; then
-  echo "   ✅ Branch deleted"
-else
-  # Try force delete if safe delete fails
-  if git branch -D "$BRANCH_NAME" 2>/dev/null; then
-    echo "   ✅ Branch force-deleted"
-  else
-    echo "   ⚠️  Could not delete branch (may already be deleted)"
-  fi
-fi
+# Step 4: Delete the local branch (DISABLED - keeping branches for reference)
+# echo ""
+# echo "🗑️  Deleting local branch..."
+# if git branch -d "$BRANCH_NAME" 2>/dev/null; then
+#   echo "   ✅ Branch deleted"
+# else
+#   # Try force delete if safe delete fails
+#   if git branch -D "$BRANCH_NAME" 2>/dev/null; then
+#     echo "   ✅ Branch force-deleted"
+#   else
+#     echo "   ⚠️  Could not delete branch (may already be deleted)"
+#   fi
+# fi
 
-# Step 5: Prune worktree references
-git worktree prune
+# Step 5: Prune worktree references (DISABLED)
+# git worktree prune
 
 echo ""
 echo "╭─────────────────────────────────────────────────────────╮"
@@ -123,10 +123,15 @@ echo "│ ✨ Merge Complete!                                      │"
 echo "╰─────────────────────────────────────────────────────────╯"
 echo ""
 echo "   Merged: $BRANCH_NAME → main"
-echo "   Removed: $WORKTREE_PATH"
+echo "   Worktree kept: $WORKTREE_PATH"
+echo "   Branch kept: $BRANCH_NAME"
 echo ""
 echo "   You are now in: $MAIN_REPO (main branch)"
 echo ""
 echo "   To push to remote:"
 echo "     git push"
+echo ""
+echo "   To manually clean up later:"
+echo "     git worktree remove \"$WORKTREE_PATH\" --force"
+echo "     git branch -d $BRANCH_NAME"
 echo ""
