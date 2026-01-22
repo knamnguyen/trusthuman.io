@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import ReactDOM from "react-dom/client";
+import { Agentation } from "agentation";
 
 import { FooterComponent } from "@sassy/ui/components/footer-component";
 import { NavBlog } from "@sassy/ui/components/nav-blog";
@@ -69,5 +70,6 @@ function App() {
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <App />
+    <Agentation />
   </React.StrictMode>,
 );

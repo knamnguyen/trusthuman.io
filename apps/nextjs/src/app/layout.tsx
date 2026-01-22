@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
 import { SpeedInsights as VercelSpeedInsights } from "@vercel/speed-insights/next";
+import { Agentation } from "agentation";
 
 import { Toaster } from "@sassy/ui/toast";
 
@@ -90,6 +91,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
           <Toaster />
           {env.VERCEL_ENV === "production" && <VercelAnalytics />}
           {env.VERCEL_ENV === "production" && <VercelSpeedInsights />}
+          {env.VERCEL_ENV !== "production" && <Agentation />}
         </Providers>
       </body>
     </html>
