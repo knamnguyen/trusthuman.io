@@ -104,6 +104,7 @@ sed -i '' "s|^PORT=.*|PORT=$NEXT_PORT|" "$WORKTREE_PATH/.env"
 sed -i '' "s|^VITE_APP_URL=.*|VITE_APP_URL=\"http://localhost:$API_PORT\"|" "$WORKTREE_PATH/.env"
 sed -i '' "s|^NEXT_PUBLIC_API_URL=.*|NEXT_PUBLIC_API_URL=\"http://localhost:$API_PORT\"|" "$WORKTREE_PATH/.env"
 sed -i '' "s|^NEXTJS_URL=.*|NEXTJS_URL=\"http://localhost:$NEXT_PORT\"|" "$WORKTREE_PATH/.env"
+sed -i '' "s|^VITE_NEXTJS_URL=.*|VITE_NEXTJS_URL=\"http://localhost:$NEXT_PORT\"|" "$WORKTREE_PATH/.env"
 
 echo "   ✅ Ports updated (PORT=$NEXT_PORT, API=$API_PORT)"
 
