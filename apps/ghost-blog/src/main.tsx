@@ -63,6 +63,7 @@ function App() {
         <TableContentComponent />
       </main>
       <FooterComponent />
+      {import.meta.env.DEV && <Agentation />}
     </div>
   );
 }
@@ -70,6 +71,5 @@ function App() {
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <App />
-    <Agentation />
   </React.StrictMode>,
 );
