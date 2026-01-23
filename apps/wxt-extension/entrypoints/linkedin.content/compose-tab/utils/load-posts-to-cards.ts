@@ -9,17 +9,23 @@
  * Extracted from ComposeTab to reduce duplication between handleStart and runAutoResume.
  */
 
-import type { ReadyPost } from "@sassy/linkedin-automation/feed/collect-posts";
-import type { PostFilterConfig } from "@sassy/linkedin-automation/feed/collect-posts";
+import type {
+  PostFilterConfig,
+  ReadyPost,
+} from "@sassy/linkedin-automation/feed/collect-posts";
 import { collectPostsBatch } from "@sassy/linkedin-automation/feed/collect-posts";
 
-import type { PostLoadSettings } from "../../stores/target-list-queue";
 import type { ComposeCard } from "../../stores/compose-store";
+import type { PostLoadSettings } from "../../stores/target-list-queue";
+import type { CommentGenerateSettingsSnapshot } from "./generate-ai-comments";
+import {
+  getCachedBlacklist,
+  prefetchBlacklist,
+} from "../../stores/blacklist-cache";
 import { useComposeStore } from "../../stores/compose-store";
-import { getCachedBlacklist, prefetchBlacklist } from "../../stores/blacklist-cache";
 import { useSettingsLocalStore } from "../../stores/settings-local-store";
+import { generateSingleComment } from "./generate-ai-comments";
 import { isAuthorBlacklisted } from "./is-author-blacklisted";
-import { generateSingleComment, type CommentGenerateSettingsSnapshot } from "./generate-ai-comments";
 
 /**
  * Parameters for loadPostsToCards
@@ -39,6 +45,8 @@ export interface LoadPostsToCardsParams {
   shouldStop: () => boolean;
   /** Function to add a card to the store */
   addCard: (card: ComposeCard) => void;
+  /** Function to add multiple cards at once (batch operation) */
+  addBatchCards: (cards: ComposeCard[]) => void;
   /** Function to update a card's comment text */
   updateCardComment: (cardId: string, commentText: string) => void;
   /** Function to update a card's style info */
@@ -54,10 +62,22 @@ export interface LoadPostsToCardsParams {
       } | null;
     },
   ) => void;
+  /** Function to update a card's comment and style in one operation (batch operation) */
+  updateBatchCardCommentAndStyle: (
+    cardId: string,
+    comment: string,
+    styleInfo: {
+      commentStyleId: string | null;
+      styleSnapshot: {
+        name: string | null;
+        content: string;
+        maxWords: number;
+        creativity: number;
+      } | null;
+    },
+  ) => void;
   /** Callback when progress updates (posts loaded so far) */
   onProgress: (count: number) => void;
-  /** Callback to set the first card as preview */
-  setPreviewingCard: (cardId: string) => void;
 }
 
 /**
@@ -99,10 +119,11 @@ export async function loadPostsToCards(
     isUrnIgnored,
     shouldStop,
     addCard,
+    addBatchCards,
     updateCardComment,
     updateCardStyleInfo,
+    updateBatchCardCommentAndStyle,
     onProgress,
-    setPreviewingCard,
   } = params;
 
   // Get settings snapshots
@@ -166,12 +187,15 @@ export async function loadPostsToCards(
       `[loadPostsToCards] Batch received: ${posts.length} posts (humanMode: ${isHumanMode})`,
     );
 
+    // Build array of all cards first (no state updates yet)
+    const cardsToAdd: ComposeCard[] = [];
+
     // Process all posts in the batch
     for (const post of posts) {
       const cardId = crypto.randomUUID();
 
-      // Add card - generating state depends on mode
-      addCard({
+      // Build card object (no state update yet)
+      cardsToAdd.push({
         id: cardId,
         urn: post.urn,
         captionPreview: post.captionPreview,
@@ -201,14 +225,18 @@ export async function loadPostsToCards(
           settingsOverride: commentGenerateSettings,
         })
           .then((result) => {
-            console.log("[loadPostsToCards] AI result for card", cardId.slice(0, 8), {
-              commentLength: result.comment?.length,
-              styleId: result.styleId,
-              styleSnapshotName: result.styleSnapshot?.name,
-              hasStyleSnapshot: !!result.styleSnapshot,
-            });
-            updateCardComment(cardId, result.comment);
-            updateCardStyleInfo(cardId, {
+            console.log(
+              "[loadPostsToCards] AI result for card",
+              cardId.slice(0, 8),
+              {
+                commentLength: result.comment?.length,
+                styleId: result.styleId,
+                styleSnapshotName: result.styleSnapshot?.name,
+                hasStyleSnapshot: !!result.styleSnapshot,
+              },
+            );
+            // Use combined batch update - ONE state update instead of two
+            updateBatchCardCommentAndStyle(cardId, result.comment, {
               commentStyleId: result.styleId,
               styleSnapshot: result.styleSnapshot,
             });
@@ -219,10 +247,17 @@ export async function loadPostsToCards(
               cardId,
               err,
             );
-            updateCardComment(cardId, "");
+            // Use combined batch update even for error case
+            updateBatchCardCommentAndStyle(cardId, "", {
+              commentStyleId: null,
+              styleSnapshot: null,
+            });
           });
       }
     }
+
+    // Add ALL cards at once - SINGLE state update for entire batch
+    addBatchCards(cardsToAdd);
 
     // Update progress for the whole batch
     loadedCount += posts.length;
