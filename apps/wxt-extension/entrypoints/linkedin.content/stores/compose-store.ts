@@ -102,6 +102,22 @@ interface ComposeActions {
       } | null;
     },
   ) => void;
+  /** Update multiple cards' comments and styles in a single state update (true batch operation) */
+  updateManyCardsCommentAndStyle: (
+    updates: Array<{
+      cardId: string;
+      comment: string;
+      styleInfo: {
+        commentStyleId: string | null;
+        styleSnapshot: {
+          name: string | null;
+          content: string;
+          maxWords: number;
+          creativity: number;
+        } | null;
+      };
+    }>,
+  ) => void;
   /** Set a card's generating state (for regeneration) */
   setCardGenerating: (id: string, isGenerating: boolean) => void;
   /**
@@ -358,6 +374,47 @@ export const useComposeStore = create<ComposeStore>((set, get) => ({
             }
           : card,
       ),
+    }));
+  },
+
+  /** Update multiple cards' comments and styles in a single state update (true batch operation) */
+  updateManyCardsCommentAndStyle: (
+    updates: Array<{
+      cardId: string;
+      comment: string;
+      styleInfo: {
+        commentStyleId: string | null;
+        styleSnapshot: {
+          name: string | null;
+          content: string;
+          maxWords: number;
+          creativity: number;
+        } | null;
+      };
+    }>,
+  ) => {
+    console.log(
+      "[ComposeStore] updateManyCardsCommentAndStyle: batch of",
+      updates.length,
+    );
+    // Create a Map for O(1) lookup
+    const updateMap = new Map(updates.map((u) => [u.cardId, u]));
+
+    set((state) => ({
+      cards: state.cards.map((card) => {
+        const update = updateMap.get(card.id);
+        if (!update) return card;
+
+        return {
+          ...card,
+          commentText: update.comment,
+          originalCommentText: update.comment,
+          peakTouchScore: 0,
+          isGenerating: false,
+          commentStyleId: update.styleInfo.commentStyleId,
+          styleSnapshot: update.styleInfo.styleSnapshot,
+        };
+      }),
     }));
   },
 

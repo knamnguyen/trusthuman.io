@@ -340,6 +340,7 @@ export async function collectPostsBatch(
     }
 
     // Find ALL new posts that haven't been processed (with filters applied)
+    console.time(`⏱️ [EngageKit] findNewPosts`);
     const newPosts = findNewPosts(
       existingUrns,
       processedUrns,
@@ -347,6 +348,7 @@ export async function collectPostsBatch(
       filterConfig,
       isAuthorBlacklisted,
     );
+    console.timeEnd(`⏱️ [EngageKit] findNewPosts`);
 
     // Limit to remaining needed
     const postsToProcess = newPosts.slice(0, targetCount - emittedCount);
@@ -370,18 +372,23 @@ export async function collectPostsBatch(
       });
 
       // Step 2: Click ALL comment buttons at once (no delays)
+      console.time(`⏱️ [EngageKit] clickCommentButtons (${postsToProcess.length} posts)`);
       for (const { container } of postContexts) {
         commentUtils.clickCommentButton(container);
       }
+      console.timeEnd(`⏱️ [EngageKit] clickCommentButtons (${postsToProcess.length} posts)`);
 
       // Step 3: Wait for ALL comments to load in parallel
+      console.time(`⏱️ [EngageKit] waitForCommentsReady (${postsToProcess.length} posts)`);
       await Promise.all(
         postContexts.map(({ container, beforeCount }) =>
           commentUtils.waitForCommentsReady(container, beforeCount),
         ),
       );
+      console.timeEnd(`⏱️ [EngageKit] waitForCommentsReady (${postsToProcess.length} posts)`);
 
       // Step 4: Collect ALL post data
+      console.time(`⏱️ [EngageKit] extractPostData (${postsToProcess.length} posts)`);
       const readyPosts: ReadyPost[] = [];
       for (const { container } of postContexts) {
         if (shouldStop?.()) break;
@@ -390,6 +397,7 @@ export async function collectPostsBatch(
           readyPosts.push(postData);
         }
       }
+      console.timeEnd(`⏱️ [EngageKit] extractPostData (${postsToProcess.length} posts)`);
 
       // Step 5: Emit entire batch at once
       if (readyPosts.length > 0) {
@@ -424,7 +432,9 @@ export async function collectPostsBatch(
     await waitWhileEditing();
 
     // Scroll to load more posts
+    console.time(`⏱️ [EngageKit] loadMore (scroll cycle ${Math.floor(emittedCount / 10) + 1})`);
     await feedUtils.loadMore();
+    console.timeEnd(`⏱️ [EngageKit] loadMore (scroll cycle ${Math.floor(emittedCount / 10) + 1})`);
   }
 
   if (idleIterations >= MAX_IDLE_ITERATIONS) {
