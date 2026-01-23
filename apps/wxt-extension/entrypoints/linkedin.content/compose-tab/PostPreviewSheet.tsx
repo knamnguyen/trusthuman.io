@@ -150,8 +150,8 @@ export function PostPreviewSheet() {
 
       // Scroll to the post
       previewingCard.postContainer.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
+        behavior: "instant",
+        block: "start",
       });
 
       // Highlight effect

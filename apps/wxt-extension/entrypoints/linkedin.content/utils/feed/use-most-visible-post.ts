@@ -221,7 +221,7 @@ export function useMostVisiblePost(
   const scrollToPost = useCallback((index: number) => {
     const post = postsRef.current[index];
     if (post) {
-      post.scrollIntoView({ behavior: "smooth", block: "center" });
+      post.scrollIntoView({ behavior: "instant", block: "start" });
     }
   }, []);
 
