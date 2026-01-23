@@ -75,7 +75,6 @@ export function PostPreviewSheet() {
   const removeCard = useComposeStore((state) => state.removeCard);
   const isSubmitting = useComposeStore((state) => state.isSubmitting);
   const setIsUserEditing = useComposeStore((state) => state.setIsUserEditing);
-  const isCollecting = useComposeStore((state) => state.isCollecting);
   const updateCardStatus = useComposeStore((state) => state.updateCardStatus);
 
   // Get author info, caption, post time, and post URL from the card (already extracted during collection)
@@ -276,8 +275,8 @@ export function PostPreviewSheet() {
     ).toUpperCase();
   };
 
-  // Show panel when collecting (even before first card) or when a card is selected
-  const isOpen = isCollecting || !!previewingCardId;
+  // Show panel only when a card is selected (user can open/close freely)
+  const isOpen = !!previewingCardId;
 
   return (
     <AnimatePresence>
@@ -315,16 +314,6 @@ export function PostPreviewSheet() {
               <X className="h-4 w-4" />
             </Button>
           </div>
-
-          {/* Loading state - collecting but no card yet */}
-          {!previewingCard && isCollecting && (
-            <div className="flex flex-1 flex-col items-center justify-center gap-3 p-4">
-              <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
-              <p className="text-muted-foreground text-sm">
-                Collecting posts...
-              </p>
-            </div>
-          )}
 
           {/* Content */}
           {previewingCard && authorInfo && (

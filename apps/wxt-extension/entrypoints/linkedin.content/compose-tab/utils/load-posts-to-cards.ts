@@ -166,19 +166,9 @@ export async function loadPostsToCards(
       `[loadPostsToCards] Batch received: ${posts.length} posts (humanMode: ${isHumanMode})`,
     );
 
-    // Check if no card is being previewed yet - we'll set first card as preview
-    const needsFirstPreview =
-      useComposeStore.getState().previewingCardId === null;
-    let firstCardId: string | null = null;
-
     // Process all posts in the batch
     for (const post of posts) {
       const cardId = crypto.randomUUID();
-
-      // Track first card ID for setting preview
-      if (needsFirstPreview && !firstCardId) {
-        firstCardId = cardId;
-      }
 
       // Add card - generating state depends on mode
       addCard({
@@ -237,11 +227,6 @@ export async function loadPostsToCards(
     // Update progress for the whole batch
     loadedCount += posts.length;
     onProgress(loadedCount);
-
-    // Set first card as preview
-    if (firstCardId) {
-      setPreviewingCard(firstCardId);
-    }
   };
 
   // Build filter config from settings
