@@ -6,10 +6,10 @@ model SubmitCommentSetting {
 
   //provide a range from 5-300 seconds - 2 input box not slider
   //always forced randomization when submit delay
-  submitDelayRange            String @default("5-20")
-  likePostEnabled             Boolean @default(true)
-  likeCommentEnabled          Boolean @default(true)
-  tagPostAuthorEnabled        Boolean @default(true)
+  submitDelayRange            String @default("4-6")
+  likePostEnabled             Boolean @default(false)
+  likeCommentEnabled          Boolean @default(false)
+  tagPostAuthorEnabled        Boolean @default(false)
   attachPictureEnabled        Boolean @default(false)
   defaultPictureAttachUrl     String?
 
