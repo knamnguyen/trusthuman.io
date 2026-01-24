@@ -62,7 +62,7 @@ export default defineConfig({
     ],
     content_security_policy: {
       extension_pages:
-        "script-src 'self'; object-src 'self'; connect-src 'self' https://*.posthog.com;", // example CSP
+        "script-src 'self'; object-src 'self'; connect-src 'self' http://localhost:* ws://localhost:* https://*.posthog.com https://*.clerk.accounts.dev https://accounts.engagekit.io https://clerk.engagekit.io;",
     },
     web_accessible_resources: [
       {
@@ -95,6 +95,9 @@ export default defineConfig({
           require("autoprefixer"),
         ],
       },
+    },
+    esbuild: {
+      charset: "ascii",
     },
   }),
 });

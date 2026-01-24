@@ -8,15 +8,21 @@ import "posthog-js/dist/web-vitals"; // For web vitals tracking
 
 import { useEffect } from "react";
 
+import { useBackgroundAuth } from "../hooks/use-background-auth";
+
 export const posthog = new PostHog();
 
 export function useInitPosthog() {
   const { user } = useBackgroundAuth();
 
   useEffect(() => {
+    console.warn("useInitPosthog: Initializing PostHog");
     if (import.meta.env.DEV && !import.meta.env.VITE_ENABLE_POSTHOG) {
+      console.warn("retunring");
       return;
     }
+
+    console.warn("initializing posthog");
 
     if (import.meta.env.VITE_POSTHOG_API_KEY === undefined) {
       console.warn(
@@ -27,6 +33,8 @@ export function useInitPosthog() {
 
     posthog.init(import.meta.env.VITE_POSTHOG_API_KEY, {
       disable_session_recording: true,
+      api_host: "https://us.i.posthog.com",
+      disable_external_dependency_loading: true,
       autocapture: false,
       capture_pageview: false,
       capture_pageleave: false,
