@@ -103,12 +103,21 @@ export class AIService {
   async selectCommentStyles(input: StyleSelectorInput): Promise<string[]> {
     const MAX_RETRIES = 3;
     const validStyleIds = new Set(input.styles.map((s) => s.id));
+    const firstValidStyleId = input.styles[0]?.id;
 
     console.log("[AIService] selectCommentStyles: Starting style selection", {
       postContentLength: input.postContent.length,
       stylesCount: input.styles.length,
       styleIds: Array.from(validStyleIds),
     });
+
+    // Early return: if only 1 style available, skip AI call and return it 3 times
+    if (input.styles.length === 1 && firstValidStyleId) {
+      console.log(
+        "[AIService] selectCommentStyles: Only 1 style available, returning it 3 times",
+      );
+      return [firstValidStyleId, firstValidStyleId, firstValidStyleId];
+    }
 
     const prompt = getStyleSelectorPrompt(input);
 
@@ -143,9 +152,10 @@ export class AIService {
           ? parsed
           : (parsed.selectedStyleIds ?? []);
 
-        // Validate that the IDs are from our valid set
+        // Filter to only valid IDs (handles truncated/invalid IDs)
         const validIds = styleIds.filter((id) => validStyleIds.has(id));
 
+        // If we got exactly 3 valid IDs, success!
         if (validIds.length === 3) {
           console.log(
             "[AIService] selectCommentStyles: Successfully selected styles:",
@@ -154,8 +164,23 @@ export class AIService {
           return validIds;
         }
 
-        // If we got fewer than 3 valid IDs, the AI may have returned invalid IDs
-        // Retry to get a proper response
+        // If we got at least 1 valid ID, pad it to 3 by repeating
+        if (validIds.length > 0) {
+          const paddedIds: string[] = [...validIds];
+          while (paddedIds.length < 3) {
+            // Repeat the valid IDs in order to reach 3
+            paddedIds.push(validIds[paddedIds.length % validIds.length]!);
+          }
+          // Trim to exactly 3 in case we had 2 IDs (would give us 4)
+          const result = paddedIds.slice(0, 3);
+          console.log(
+            "[AIService] selectCommentStyles: Padded to 3 IDs:",
+            result,
+          );
+          return result;
+        }
+
+        // Got 0 valid IDs, retry
         console.warn(
           `[AIService] selectCommentStyles: Got ${validIds.length} valid IDs (expected 3), retrying...`,
           { returned: styleIds, valid: validIds },
@@ -166,16 +191,28 @@ export class AIService {
           error,
         );
 
-        if (attempt === MAX_RETRIES) {
-          throw new Error(
-            `Failed to select comment styles after ${MAX_RETRIES} attempts: ${error instanceof Error ? error.message : String(error)}`,
+        // On last attempt, use fallback if we have any valid style
+        if (attempt === MAX_RETRIES && firstValidStyleId) {
+          console.warn(
+            "[AIService] selectCommentStyles: All retries exhausted, using fallback (first style x3)",
           );
+          return [firstValidStyleId, firstValidStyleId, firstValidStyleId];
         }
       }
     }
 
-    // This should never be reached due to the throw above, but TypeScript needs it
-    throw new Error("Failed to select comment styles: exhausted retries");
+    // Final fallback: if we have any valid style, return it 3 times
+    if (firstValidStyleId) {
+      console.warn(
+        "[AIService] selectCommentStyles: Using final fallback (first style x3)",
+      );
+      return [firstValidStyleId, firstValidStyleId, firstValidStyleId];
+    }
+
+    // Should never reach here unless there are 0 styles available
+    throw new Error(
+      "Failed to select comment styles: no valid styles available",
+    );
   }
 
   /**
