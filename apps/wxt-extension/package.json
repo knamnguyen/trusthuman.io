@@ -28,6 +28,7 @@
     "clsx": "^2.1.1",
     "fast-levenshtein": "^3.0.0",
     "lucide-react": "^0.511.0",
+    "posthog-js": "^1.335.2",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
     "react-icons": "^5.5.0",

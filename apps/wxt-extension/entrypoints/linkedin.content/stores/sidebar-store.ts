@@ -1,5 +1,7 @@
 import { create } from "zustand";
 
+import { posthog } from "../../../lib/posthog";
+
 // Tab indices for the sidebar
 // Order: Compose, Connect, Analytics, Account (4 tabs)
 export const SIDEBAR_TABS = {
@@ -26,7 +28,17 @@ export const useSidebarStore = create<SidebarStore>((set) => ({
   isOpen: false,
   selectedTab: SIDEBAR_TABS.COMPOSE,
 
-  setIsOpen: (isOpen) => set({ isOpen }),
+  setIsOpen: (isOpen) => {
+    if (isOpen) {
+      posthog.startSessionRecording();
+      posthog.capture("sidebar:v1:opened");
+    } else {
+      posthog.stopSessionRecording();
+      posthog.capture("sidebar:v1:closed");
+    }
+
+    set({ isOpen });
+  },
   setSelectedTab: (selectedTab) => set({ selectedTab }),
   openToTab: (tab) => set({ isOpen: true, selectedTab: tab }),
 }));

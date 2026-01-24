@@ -106,6 +106,8 @@ export default function App({ shadowRoot }: AppProps) {
     return feedUtilities.watchAndRemoveNewPostsPill();
   }, []);
 
+  useInitPosthog();
+
   useMigrateLegacyStorage();
 
   // Watch for author profiles and inject save buttons (vanilla JS)

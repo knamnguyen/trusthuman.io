@@ -60,6 +60,10 @@ export default defineConfig({
       // Add localhost for development
       "http://localhost/*",
     ],
+    content_security_policy: {
+      extension_pages:
+        "script-src 'self'; object-src 'self'; connect-src 'self' https://*.posthog.com;", // example CSP
+    },
     web_accessible_resources: [
       {
         resources: [
