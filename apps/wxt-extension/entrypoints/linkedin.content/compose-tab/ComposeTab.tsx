@@ -355,6 +355,7 @@ export function ComposeTab() {
             skipSecondDegree: postLoadSettings.skipSecondDegree,
             skipThirdDegree: postLoadSettings.skipThirdDegree,
             skipFollowing: postLoadSettings.skipFollowing,
+            skipCommentsLoading: postLoadSettings.skipCommentsLoading,
           };
 
           // Build comment generate settings snapshot for dynamic style branching

@@ -96,7 +96,10 @@ export interface CommentGenerateSettingDB {
 // Used for optimistic updates when no settings exist yet
 // =============================================================================
 
-const DEFAULT_POST_LOAD: Omit<PostLoadSettingDB, "accountId" | "createdAt" | "updatedAt"> = {
+const DEFAULT_POST_LOAD: Omit<
+  PostLoadSettingDB,
+  "accountId" | "createdAt" | "updatedAt"
+> = {
   targetListEnabled: false,
   targetListIds: [],
   timeFilterEnabled: false,
@@ -113,7 +116,10 @@ const DEFAULT_POST_LOAD: Omit<PostLoadSettingDB, "accountId" | "createdAt" | "up
   skipCommentsLoading: true, // Default to true (50% faster, matches Prisma default)
 };
 
-const DEFAULT_SUBMIT_COMMENT: Omit<SubmitCommentSettingDB, "accountId" | "createdAt" | "updatedAt"> = {
+const DEFAULT_SUBMIT_COMMENT: Omit<
+  SubmitCommentSettingDB,
+  "accountId" | "createdAt" | "updatedAt"
+> = {
   submitDelayRange: "5-20",
   likePostEnabled: false,
   likeCommentEnabled: false,
@@ -122,7 +128,10 @@ const DEFAULT_SUBMIT_COMMENT: Omit<SubmitCommentSettingDB, "accountId" | "create
   defaultPictureAttachUrl: null,
 };
 
-const DEFAULT_COMMENT_GENERATE: Omit<CommentGenerateSettingDB, "accountId" | "createdAt" | "updatedAt"> = {
+const DEFAULT_COMMENT_GENERATE: Omit<
+  CommentGenerateSettingDB,
+  "accountId" | "createdAt" | "updatedAt"
+> = {
   commentStyleId: null,
   dynamicChooseStyleEnabled: false,
   adjacentCommentsEnabled: false,
@@ -157,17 +166,29 @@ interface SettingsDBActions {
   /**
    * Update PostLoadSetting (optimistic + sync to DB)
    */
-  updatePostLoad: (data: Partial<Omit<PostLoadSettingDB, "accountId" | "createdAt" | "updatedAt">>) => Promise<void>;
+  updatePostLoad: (
+    data: Partial<
+      Omit<PostLoadSettingDB, "accountId" | "createdAt" | "updatedAt">
+    >,
+  ) => Promise<void>;
 
   /**
    * Update SubmitCommentSetting (optimistic + sync to DB)
    */
-  updateSubmitComment: (data: Partial<Omit<SubmitCommentSettingDB, "accountId" | "createdAt" | "updatedAt">>) => Promise<void>;
+  updateSubmitComment: (
+    data: Partial<
+      Omit<SubmitCommentSettingDB, "accountId" | "createdAt" | "updatedAt">
+    >,
+  ) => Promise<void>;
 
   /**
    * Update CommentGenerateSetting (optimistic + sync to DB)
    */
-  updateCommentGenerate: (data: Partial<Omit<CommentGenerateSettingDB, "accountId" | "createdAt" | "updatedAt">>) => Promise<void>;
+  updateCommentGenerate: (
+    data: Partial<
+      Omit<CommentGenerateSettingDB, "accountId" | "createdAt" | "updatedAt">
+    >,
+  ) => Promise<void>;
 
   /**
    * Clear all settings (on sign out)
@@ -233,7 +254,9 @@ export const useSettingsDBStore = create<SettingsDBStore>((set, get) => ({
       // Pre-fetch URNs for selected target lists (fire-and-forget)
       // This warms the cache so "Load Posts" is instant
       if (postLoad?.targetListIds?.length) {
-        console.log("SettingsDBStore: Pre-fetching URNs for saved target lists...");
+        console.log(
+          "SettingsDBStore: Pre-fetching URNs for saved target lists...",
+        );
         void prefetchUrnsForLists(postLoad.targetListIds);
       }
 
@@ -257,9 +280,7 @@ export const useSettingsDBStore = create<SettingsDBStore>((set, get) => ({
         isLoading: false,
         isLoaded: true,
         error:
-          error instanceof Error
-            ? error.message
-            : "Failed to fetch settings",
+          error instanceof Error ? error.message : "Failed to fetch settings",
       });
     }
   },
@@ -283,12 +304,17 @@ export const useSettingsDBStore = create<SettingsDBStore>((set, get) => ({
 
     try {
       const trpc = getTrpcClient();
-      const updated = await trpc.settings.postLoad.upsert.mutate(data) as PostLoadSettingDB;
+      const updated = (await trpc.settings.postLoad.upsert.mutate(
+        data,
+      )) as PostLoadSettingDB;
 
       // Only update if the optimistic value hasn't been changed by another update
       // This prevents race conditions when user clicks rapidly
       const latestPostLoad = get().postLoad;
-      if (latestPostLoad?.updatedAt.getTime() === optimisticValue.updatedAt.getTime()) {
+      if (
+        latestPostLoad?.updatedAt.getTime() ===
+        optimisticValue.updatedAt.getTime()
+      ) {
         set({ postLoad: updated });
       }
 
@@ -298,7 +324,10 @@ export const useSettingsDBStore = create<SettingsDBStore>((set, get) => ({
 
       // Revert to previous value on error (only if not changed by another update)
       const latestPostLoad = get().postLoad;
-      if (latestPostLoad?.updatedAt.getTime() === optimisticValue.updatedAt.getTime()) {
+      if (
+        latestPostLoad?.updatedAt.getTime() ===
+        optimisticValue.updatedAt.getTime()
+      ) {
         set({ postLoad: currentPostLoad });
       }
 
@@ -325,11 +354,16 @@ export const useSettingsDBStore = create<SettingsDBStore>((set, get) => ({
 
     try {
       const trpc = getTrpcClient();
-      const updated = await trpc.settings.submitComment.upsert.mutate(data) as SubmitCommentSettingDB;
+      const updated = (await trpc.settings.submitComment.upsert.mutate(
+        data,
+      )) as SubmitCommentSettingDB;
 
       // Only update if the optimistic value hasn't been changed by another update
       const latestSubmitComment = get().submitComment;
-      if (latestSubmitComment?.updatedAt.getTime() === optimisticValue.updatedAt.getTime()) {
+      if (
+        latestSubmitComment?.updatedAt.getTime() ===
+        optimisticValue.updatedAt.getTime()
+      ) {
         set({ submitComment: updated });
       }
 
@@ -339,7 +373,10 @@ export const useSettingsDBStore = create<SettingsDBStore>((set, get) => ({
 
       // Revert to previous value on error (only if not changed by another update)
       const latestSubmitComment = get().submitComment;
-      if (latestSubmitComment?.updatedAt.getTime() === optimisticValue.updatedAt.getTime()) {
+      if (
+        latestSubmitComment?.updatedAt.getTime() ===
+        optimisticValue.updatedAt.getTime()
+      ) {
         set({ submitComment: currentSubmitComment });
       }
 
@@ -366,11 +403,16 @@ export const useSettingsDBStore = create<SettingsDBStore>((set, get) => ({
 
     try {
       const trpc = getTrpcClient();
-      const updated = await trpc.settings.commentGenerate.upsert.mutate(data) as CommentGenerateSettingDB;
+      const updated = (await trpc.settings.commentGenerate.upsert.mutate(
+        data,
+      )) as CommentGenerateSettingDB;
 
       // Only update if the optimistic value hasn't been changed by another update
       const latestCommentGenerate = get().commentGenerate;
-      if (latestCommentGenerate?.updatedAt.getTime() === optimisticValue.updatedAt.getTime()) {
+      if (
+        latestCommentGenerate?.updatedAt.getTime() ===
+        optimisticValue.updatedAt.getTime()
+      ) {
         set({ commentGenerate: updated });
       }
 
@@ -380,7 +422,10 @@ export const useSettingsDBStore = create<SettingsDBStore>((set, get) => ({
 
       // Revert to previous value on error (only if not changed by another update)
       const latestCommentGenerate = get().commentGenerate;
-      if (latestCommentGenerate?.updatedAt.getTime() === optimisticValue.updatedAt.getTime()) {
+      if (
+        latestCommentGenerate?.updatedAt.getTime() ===
+        optimisticValue.updatedAt.getTime()
+      ) {
         set({ commentGenerate: currentCommentGenerate });
       }
 
@@ -405,31 +450,53 @@ export const useSettingsDBStore = create<SettingsDBStore>((set, get) => ({
  * @param accountStore - Pass the account store to avoid circular dependency
  */
 export function initSettingsDBStoreListener(accountStore?: {
-  subscribe: (callback: (state: { matchingAccount: { id: string } | null; isLoaded: boolean }) => void) => () => void;
+  subscribe: (
+    callback: (state: {
+      matchingAccount: { id: string } | null;
+      isLoaded: boolean;
+    }) => void,
+  ) => () => void;
 }) {
   let unsubscribe: (() => void) | undefined;
 
   // Subscribe to account store changes if provided
   if (accountStore) {
     unsubscribe = accountStore.subscribe(
-      (state: { matchingAccount: { id: string } | null; isLoaded: boolean }) => {
+      (state: {
+        matchingAccount: { id: string } | null;
+        isLoaded: boolean;
+      }) => {
         const settingsStore = useSettingsDBStore.getState();
 
         // Only fetch if:
         // 1. Account store is loaded
         // 2. We have a matching account (user is on a registered LinkedIn)
         // 3. Settings haven't been fetched yet
-        if (state.isLoaded && state.matchingAccount && !settingsStore.isLoaded && !settingsStore.isLoading) {
-          console.log("SettingsDBStore: Account selected, fetching settings for", state.matchingAccount.id);
+        if (
+          state.isLoaded &&
+          state.matchingAccount &&
+          !settingsStore.isLoaded &&
+          !settingsStore.isLoading
+        ) {
+          console.log(
+            "SettingsDBStore: Account selected, fetching settings for",
+            state.matchingAccount.id,
+          );
           settingsStore.fetchSettings();
         }
 
         // Clear settings if no matching account (user signed out or on unregistered LinkedIn)
-        if (state.isLoaded && !state.matchingAccount && settingsStore.isLoaded) {
-          console.log("SettingsDBStore: No matching account, clearing settings");
+        if (
+          state.isLoaded &&
+          !state.matchingAccount &&
+          settingsStore.isLoaded
+        ) {
+          console.log(
+            "SettingsDBStore: No matching account, clearing settings",
+          );
           settingsStore.clear();
         }
-      }
+      },
     );
   }
 

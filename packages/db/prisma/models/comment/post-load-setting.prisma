@@ -14,7 +14,7 @@ model PostLoadSetting {
   skipFriendActivitiesEnabled Boolean @default(false)
   skipCompanyPagesEnabled     Boolean @default(true)
   skipPromotedPostsEnabled    Boolean @default(true)
-  skipblacklistEnabled        Boolean @default(false)
+  skipBlacklistEnabled        Boolean @default(false)
   blacklistId                 String? @unique
 
   skipFirstDegree  Boolean @default(false)

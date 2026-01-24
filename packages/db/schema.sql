@@ -144,7 +144,7 @@ CREATE TABLE "PostLoadSetting" (
     "skipFriendActivitiesEnabled" BOOLEAN NOT NULL DEFAULT false,
     "skipCompanyPagesEnabled" BOOLEAN NOT NULL DEFAULT true,
     "skipPromotedPostsEnabled" BOOLEAN NOT NULL DEFAULT true,
-    "skipblacklistEnabled" BOOLEAN NOT NULL DEFAULT false,
+    "skipBlacklistEnabled" BOOLEAN NOT NULL DEFAULT false,
     "blacklistId" TEXT,
     "skipFirstDegree" BOOLEAN NOT NULL DEFAULT false,
     "skipSecondDegree" BOOLEAN NOT NULL DEFAULT false,
