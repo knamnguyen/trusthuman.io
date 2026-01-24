@@ -21,6 +21,19 @@ import { tourFlows } from "./tour-flows";
 const TOUR_STORAGE_KEY = "hasSeenExtensionIntroTour";
 
 /**
+ * Module-level flag to prevent race condition when multiple tabs open simultaneously.
+ * This prevents the sidebar from auto-opening on every tab during:
+ * - Initial extension installation with multiple LinkedIn tabs open
+ * - Browser restart/session restore with multiple tabs
+ * - Extension reload/update with multiple tabs
+ *
+ * Without this, multiple tabs can read hasOpenedSidebar as undefined before
+ * any tab finishes writing it, causing all tabs to auto-open the sidebar.
+ */
+// eslint-disable-next-line prefer-const
+let hasAutoOpenedThisSession = false;
+
+/**
  * Hook to auto-start the tour when user first registers their account
  */
 function useAutoStartTour() {
@@ -73,9 +86,22 @@ export default function App({ shadowRoot }: AppProps) {
   }, [shadowRoot, setShadowRoot]);
 
   // Handle first install: auto-open sidebar
+  // Uses module-level flag to prevent race condition across multiple tabs
   useEffect(() => {
+    // Quick synchronous check first to prevent race condition
+    if (hasAutoOpenedThisSession) {
+      console.log(
+        "EngageKit WXT: Skipping auto-open, already opened in another tab this session",
+      );
+      return;
+    }
+
     chrome.storage.local.get(["hasOpenedSidebar"], (result) => {
-      if (!result.hasOpenedSidebar) {
+      // Double-check in case another tab set the flag while we were waiting
+      if (!result.hasOpenedSidebar && !hasAutoOpenedThisSession) {
+        // Set flag immediately (before async operations) to prevent other tabs from racing
+        hasAutoOpenedThisSession = true;
+
         // First install - auto-open sidebar
         console.log(
           "EngageKit WXT: First install detected, auto-opening sidebar",
