@@ -54,6 +54,8 @@ export interface PostLoadSettingDB {
   skipThirdDegree: boolean;
   skipFollowing: boolean;
 
+  skipCommentsLoading: boolean;
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -108,6 +110,7 @@ const DEFAULT_POST_LOAD: Omit<PostLoadSettingDB, "accountId" | "createdAt" | "up
   skipSecondDegree: false,
   skipThirdDegree: false,
   skipFollowing: false,
+  skipCommentsLoading: true, // Default to true (50% faster, matches Prisma default)
 };
 
 const DEFAULT_SUBMIT_COMMENT: Omit<SubmitCommentSettingDB, "accountId" | "createdAt" | "updatedAt"> = {

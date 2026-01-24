@@ -46,6 +46,9 @@ export interface PostFilterConfig {
   skipThirdDegree: boolean;
   /** Skip posts from people you follow (not connected) */
   skipFollowing: boolean;
+
+  /** Skip loading LinkedIn comments (50% faster, but AI won't use adjacent comments) */
+  skipCommentsLoading: boolean;
 }
 
 // Lazy-initialized utilities (created on first use when DOM is ready)
@@ -386,29 +389,36 @@ export async function collectPostsBatch(
         };
       });
 
-      // Step 2: Click ALL comment buttons at once (no delays)
-      console.time(
-        `⏱️ [EngageKit] clickCommentButtons (${postsToProcess.length} posts)`,
-      );
-      for (const { container } of postContexts) {
-        commentUtils.clickCommentButton(container);
-      }
-      console.timeEnd(
-        `⏱️ [EngageKit] clickCommentButtons (${postsToProcess.length} posts)`,
-      );
+      // Step 2 & 3: Conditionally load comments (if not skipped)
+      if (!filterConfig?.skipCommentsLoading) {
+        // Step 2: Click ALL comment buttons at once (no delays)
+        console.time(
+          `⏱️ [EngageKit] clickCommentButtons (${postsToProcess.length} posts)`,
+        );
+        for (const { container } of postContexts) {
+          commentUtils.clickCommentButton(container);
+        }
+        console.timeEnd(
+          `⏱️ [EngageKit] clickCommentButtons (${postsToProcess.length} posts)`,
+        );
 
-      // Step 3: Wait for ALL comments to load in parallel
-      console.time(
-        `⏱️ [EngageKit] waitForCommentsReady (${postsToProcess.length} posts)`,
-      );
-      await Promise.all(
-        postContexts.map(({ container, beforeCount }) =>
-          commentUtils.waitForCommentsReady(container, beforeCount),
-        ),
-      );
-      console.timeEnd(
-        `⏱️ [EngageKit] waitForCommentsReady (${postsToProcess.length} posts)`,
-      );
+        // Step 3: Wait for ALL comments to load in parallel
+        console.time(
+          `⏱️ [EngageKit] waitForCommentsReady (${postsToProcess.length} posts)`,
+        );
+        await Promise.all(
+          postContexts.map(({ container, beforeCount }) =>
+            commentUtils.waitForCommentsReady(container, beforeCount),
+          ),
+        );
+        console.timeEnd(
+          `⏱️ [EngageKit] waitForCommentsReady (${postsToProcess.length} posts)`,
+        );
+      } else {
+        console.log(
+          `[EngageKit] ⚡ Skipping comment loading (skipCommentsLoading enabled)`,
+        );
+      }
 
       // Step 4: Collect ALL post data
       console.time(

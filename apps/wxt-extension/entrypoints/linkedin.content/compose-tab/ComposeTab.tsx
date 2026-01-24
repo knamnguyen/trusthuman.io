@@ -70,6 +70,7 @@ export function ComposeTab() {
   );
   const clearAllCards = useComposeStore((state) => state.clearAllCards);
 
+
   // Use separate subscriptions for different concerns to minimize re-renders
   // Card IDs for rendering the list - only changes when cards are added/removed
   const cardIds = useComposeStore(
@@ -602,6 +603,7 @@ export function ComposeTab() {
             />
           </div>
         </div>
+
 
         {/* Row 3: Stats + Actions (only when cards exist) */}
         {cardIds.length > 0 && (

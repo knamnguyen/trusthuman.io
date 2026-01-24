@@ -97,6 +97,7 @@ export function buildFilterConfig(
     skipSecondDegree: settings?.skipSecondDegree ?? false,
     skipThirdDegree: settings?.skipThirdDegree ?? false,
     skipFollowing: settings?.skipFollowing ?? false,
+    skipCommentsLoading: settings?.skipCommentsLoading ?? false,
   };
 }
 

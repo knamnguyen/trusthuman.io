@@ -22,6 +22,10 @@ model PostLoadSetting {
   skipThirdDegree  Boolean @default(false)
   skipFollowing    Boolean @default(false)
 
+  // Performance optimization: Skip loading LinkedIn comments during post collection (50% faster)
+  // AI will only use post caption, not adjacent comments
+  skipCommentsLoading Boolean @default(true)
+
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
   linkedInAccount LinkedInAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)

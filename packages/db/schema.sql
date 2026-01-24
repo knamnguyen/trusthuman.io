@@ -150,6 +150,7 @@ CREATE TABLE "PostLoadSetting" (
     "skipSecondDegree" BOOLEAN NOT NULL DEFAULT false,
     "skipThirdDegree" BOOLEAN NOT NULL DEFAULT false,
     "skipFollowing" BOOLEAN NOT NULL DEFAULT false,
+    "skipCommentsLoading" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -159,10 +160,10 @@ CREATE TABLE "PostLoadSetting" (
 -- CreateTable
 CREATE TABLE "SubmitCommentSetting" (
     "accountId" TEXT NOT NULL,
-    "submitDelayRange" TEXT NOT NULL DEFAULT '5-20',
-    "likePostEnabled" BOOLEAN NOT NULL DEFAULT true,
-    "likeCommentEnabled" BOOLEAN NOT NULL DEFAULT true,
-    "tagPostAuthorEnabled" BOOLEAN NOT NULL DEFAULT true,
+    "submitDelayRange" TEXT NOT NULL DEFAULT '4-6',
+    "likePostEnabled" BOOLEAN NOT NULL DEFAULT false,
+    "likeCommentEnabled" BOOLEAN NOT NULL DEFAULT false,
+    "tagPostAuthorEnabled" BOOLEAN NOT NULL DEFAULT false,
     "attachPictureEnabled" BOOLEAN NOT NULL DEFAULT false,
     "defaultPictureAttachUrl" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,

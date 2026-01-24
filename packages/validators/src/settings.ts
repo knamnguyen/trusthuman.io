@@ -28,6 +28,8 @@ export const postLoadSettingSchema = z.object({
   skipThirdDegree: z.boolean(),
   skipFollowing: z.boolean(),
 
+  skipCommentsLoading: z.boolean(),
+
   createdAt: z.date(),
   updatedAt: z.date(),
 });
