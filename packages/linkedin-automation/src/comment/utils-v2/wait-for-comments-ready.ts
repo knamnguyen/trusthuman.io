@@ -9,7 +9,7 @@
  */
 
 /** Maximum time to wait for comments to load per post */
-const MAX_WAIT_MS = 3000;
+const MAX_WAIT_MS = 5000;
 
 /** How often to check for comment count changes */
 const POLL_INTERVAL_MS = 500;
@@ -21,12 +21,12 @@ const POLL_INTERVAL_MS = 500;
 function getCommentCount(postContainer: HTMLElement): number {
   // Count main comments
   const commentPictures = postContainer.querySelectorAll(
-    'a[data-view-name="comment-actor-picture"]'
+    'a[data-view-name="comment-actor-picture"]',
   );
 
   // Count replies
   const replyPictures = postContainer.querySelectorAll(
-    'a[data-view-name="reply-actor-picture"]'
+    'a[data-view-name="reply-actor-picture"]',
   );
 
   return commentPictures.length + replyPictures.length;
@@ -46,7 +46,7 @@ function getCommentCount(postContainer: HTMLElement): number {
  */
 export async function waitForCommentsReady(
   container: HTMLElement,
-  beforeCount: number
+  beforeCount: number,
 ): Promise<void> {
   const startTime = Date.now();
 
@@ -63,6 +63,6 @@ export async function waitForCommentsReady(
 
   // Timeout reached - treat as ready anyway (0 comments or slow load)
   console.log(
-    `[EngageKit] Comment load timeout for post, proceeding (before: ${beforeCount})`
+    `[EngageKit] Comment load timeout for post, proceeding (before: ${beforeCount})`,
   );
 }
