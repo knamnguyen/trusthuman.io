@@ -12,17 +12,24 @@ import { useBackgroundAuth } from "../hooks/use-background-auth";
 
 export const posthog = new PostHog();
 
+async function getDistinctId() {
+  const stored = await chrome.storage.local.get(["posthog_distinct_id"]);
+  if (stored.posthog_distinct_id) {
+    return stored.posthog_distinct_id;
+  } else {
+    const newId = crypto.randomUUID();
+    await chrome.storage.local.set({ posthog_distinct_id: newId });
+    return newId;
+  }
+}
+
 export function useInitPosthog() {
   const { user } = useBackgroundAuth();
 
   useEffect(() => {
-    console.warn("useInitPosthog: Initializing PostHog");
     if (import.meta.env.DEV && !import.meta.env.VITE_ENABLE_POSTHOG) {
-      console.warn("retunring");
       return;
     }
-
-    console.warn("initializing posthog");
 
     if (import.meta.env.VITE_POSTHOG_API_KEY === undefined) {
       console.warn(
@@ -31,17 +38,27 @@ export function useInitPosthog() {
       return;
     }
 
-    posthog.init(import.meta.env.VITE_POSTHOG_API_KEY, {
-      disable_session_recording: true,
-      api_host: "https://us.i.posthog.com",
-      disable_external_dependency_loading: true,
-      autocapture: false,
-      capture_pageview: false,
-      capture_pageleave: false,
-      error_tracking: {
-        captureExtensionExceptions: true,
-      },
-    });
+    async function init() {
+      posthog.init(import.meta.env.VITE_POSTHOG_API_KEY, {
+        bootstrap: {
+          distinctID: await getDistinctId(),
+        },
+        disable_session_recording: true,
+        api_host: "https://us.i.posthog.com",
+        disable_external_dependency_loading: true,
+        autocapture: false,
+        capture_pageview: false,
+        capture_pageleave: false,
+        capture_exceptions: true,
+        error_tracking: {
+          captureExtensionExceptions: true,
+        },
+      });
+
+      posthog.capture("extension:initialized:v1");
+    }
+
+    void init();
   }, []);
 
   useEffect(() => {

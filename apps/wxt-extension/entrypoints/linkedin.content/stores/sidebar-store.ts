@@ -28,20 +28,29 @@ export const useSidebarStore = create<SidebarStore>((set) => ({
   isOpen: false,
   selectedTab: SIDEBAR_TABS.COMPOSE,
 
-  setIsOpen: (isOpen) => {
-    if (isOpen) {
-      posthog.startSessionRecording();
-      posthog.capture("sidebar:v1:opened");
-    } else {
-      posthog.stopSessionRecording();
-      posthog.capture("sidebar:v1:closed");
-    }
-
-    set({ isOpen });
-  },
+  setIsOpen: (isOpen) => set({ isOpen }),
   setSelectedTab: (selectedTab) => set({ selectedTab }),
   openToTab: (tab) => set({ isOpen: true, selectedTab: tab }),
 }));
+
+useSidebarStore.subscribe((state, prev) => {
+  if (state.isOpen !== prev.isOpen) {
+    posthog.capture(`extension:sidebar:v1:toggled`, {
+      type: state.isOpen ? "open" : "close",
+    });
+    if (state.isOpen) {
+      posthog.startSessionRecording();
+    } else {
+      posthog.stopSessionRecording();
+    }
+  }
+
+  if (state.selectedTab !== prev.selectedTab) {
+    posthog.capture("extension:sidebar:v1:tab_changed", {
+      selectedTab: state.selectedTab,
+    });
+  }
+});
 
 chrome.runtime.onMessage.addListener((message, _, sendResponse) => {
   console.info("received message in sidebar store:", message);
