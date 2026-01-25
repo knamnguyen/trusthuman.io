@@ -7,6 +7,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   HistoryIcon,
+  LayoutDashboardIcon,
   UserRoundIcon,
   UsersIcon,
   UsersRoundIcon,
@@ -96,6 +97,11 @@ export function DashboardSidebar() {
   // Account-level navigation (only shown when an account is selected)
   if (accountSlug !== undefined) {
     items.push(
+      {
+        title: "Dashboard",
+        url: `/${orgSlug}/${accountSlug}`,
+        icon: LayoutDashboardIcon,
+      },
       {
         title: "History",
         url: `/${orgSlug}/${accountSlug}/history`,
