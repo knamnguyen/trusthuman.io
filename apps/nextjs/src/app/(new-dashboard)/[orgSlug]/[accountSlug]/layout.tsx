@@ -6,7 +6,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { Skeleton } from "@sassy/ui/skeleton";
 
-import { useAccountStore } from "~/stores/zustand-store";
+import { useAccountStore, useAchievementsStore } from "~/stores/zustand-store";
 import { useTRPC } from "~/trpc/react";
 
 export default function AccountLayout({ children }: { children: ReactNode }) {
@@ -18,6 +18,7 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const setAccount = useAccountStore((s) => s.setAccount);
+  const resetAchievements = useAchievementsStore((s) => s.reset);
   const prevAccountSlugRef = useRef<string | null>(null);
 
   const {
@@ -26,10 +27,14 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
     isError,
   } = useQuery(trpc.account.getBySlug.queryOptions({ slug: accountSlug }));
 
+  // Always reset achievements on mount (like OrgLayout's clearAccount pattern)
+  useEffect(() => {
+    resetAchievements();
+  }, [resetAchievements]);
+
   // Invalidate account-related queries when switching accounts
   useEffect(() => {
     if (prevAccountSlugRef.current !== null && prevAccountSlugRef.current !== accountSlug) {
-      // Account changed - invalidate queries that depend on account context
       void queryClient.invalidateQueries();
     }
     prevAccountSlugRef.current = accountSlug;
