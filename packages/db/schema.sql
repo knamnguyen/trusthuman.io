@@ -510,6 +510,15 @@ CREATE INDEX "Comment_status_idx" ON "Comment"("status");
 CREATE INDEX "Comment_postAlternateUrns_idx" ON "Comment" USING GIN ("postAlternateUrns");
 
 -- CreateIndex
+CREATE INDEX "Comment_accountId_status_peakTouchScore_idx" ON "Comment"("accountId", "status", "peakTouchScore");
+
+-- CreateIndex
+CREATE INDEX "Comment_accountId_status_commentedAt_idx" ON "Comment"("accountId", "status", "commentedAt");
+
+-- CreateIndex
+CREATE INDEX "Comment_accountId_status_authorProfileUrl_idx" ON "Comment"("accountId", "status", "authorProfileUrl");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "LinkedInAccount_profileUrl_key" ON "LinkedInAccount"("profileUrl");
 
 -- CreateIndex

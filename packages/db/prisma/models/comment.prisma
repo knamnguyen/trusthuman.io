@@ -43,6 +43,10 @@ model Comment {
   @@index([commentedAt])
   @@index([status])
   @@index([postAlternateUrns], type: Gin)
+  // Composite indexes for achievements queries
+  @@index([accountId, status, peakTouchScore])
+  @@index([accountId, status, commentedAt])
+  @@index([accountId, status, authorProfileUrl])
 }
 
 enum CommentStatus {
