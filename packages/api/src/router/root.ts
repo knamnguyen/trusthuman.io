@@ -1,5 +1,6 @@
 import { createTRPCRouter } from "../trpc";
 import { accountRouter } from "./account";
+import { achievementsRouter } from "./achievements";
 import { aiCommentsRouter } from "./ai-comments";
 import { autoCommentRouter } from "./autocomment";
 import { commentRouter } from "./comment";
@@ -37,6 +38,7 @@ export const appRouter = createTRPCRouter({
   commentAiDetector: commentAiDetectorRouter(),
   s3Upload: s3UploadRouter(),
   settings: settingsRouter(),
+  achievements: achievementsRouter(),
 });
 
 // export type definition of API
