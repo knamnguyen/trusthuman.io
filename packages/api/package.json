@@ -19,7 +19,8 @@
     "deploy-extension-hyperbrowser": "pnpm with-env pnpm tsx ./scripts/deploy-extension.ts",
     "apify:test": "pnpm with-env bun ./scripts/test-linkedin-scrape-apify.ts",
     "import:profiles": "pnpm with-env bun ./scripts/import-linkedin-profiles.ts",
-    "fetch:comment": "pnpm with-env bun ./scripts/fetch-comment.ts"
+    "fetch:comment": "pnpm with-env bun ./scripts/fetch-comment.ts",
+    "api:deploy": "./deploy.sh"
   },
   "dependencies": {
     "@clerk/backend": "^2.29.1",
