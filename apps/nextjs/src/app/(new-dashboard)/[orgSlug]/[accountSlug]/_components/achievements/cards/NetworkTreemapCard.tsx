@@ -218,10 +218,11 @@ export function NetworkTreemapCard() {
   const networkData = useAchievementsStore((s) => s.networkData);
   const isLoading = useAchievementsStore((s) => s.isLoading);
 
-  const treeData = useMemo(
-    () => transformNetworkDataForTreemap(networkData ?? []),
-    [networkData],
-  );
+  const treeData = useMemo(() => {
+    // Limit to top 15 profiles for better treemap visualization
+    const topProfiles = (networkData ?? []).slice(0, 15);
+    return transformNetworkDataForTreemap(topProfiles);
+  }, [networkData]);
 
   if (isLoading) {
     return (
@@ -256,7 +257,7 @@ export function NetworkTreemapCard() {
       <CardHeader>
         <CardTitle>Network Treemap</CardTitle>
         <p className="text-muted-foreground text-xs">
-          Top {networkData.length} most engaged profiles
+          Top 15 most engaged profiles
         </p>
       </CardHeader>
       <CardContent>
