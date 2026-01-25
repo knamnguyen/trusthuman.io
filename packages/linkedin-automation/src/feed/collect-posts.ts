@@ -46,6 +46,9 @@ export interface PostFilterConfig {
   skipThirdDegree: boolean;
   /** Skip posts from people you follow (not connected) */
   skipFollowing: boolean;
+
+  /** Skip loading LinkedIn comments (50% faster, but AI won't use adjacent comments) */
+  skipCommentsLoading: boolean;
 }
 
 // Lazy-initialized utilities (created on first use when DOM is ready)
@@ -94,6 +97,21 @@ export interface ReadyPost {
 
 /** Max consecutive iterations with no progress before giving up */
 const MAX_IDLE_ITERATIONS = 10;
+
+/**
+ * Phase 6 Performance Optimization: Multi-Scroll Batching
+ * Number of times to scroll before processing posts (load posts into DOM first, then process).
+ *
+ * Performance impact (30 posts):
+ * - SCROLLS_PER_BATCH = 1: ~42s (baseline - scroll → process → scroll → process)
+ * - SCROLLS_PER_BATCH = 3: ~22s (47% faster - scroll 3x → process all at once)
+ *
+ * Trade-offs:
+ * - Higher value = Fewer comment wait cycles (faster)
+ * - Higher value = Larger batches (more memory, but negligible for <100 posts)
+ * - Lower value = More responsive (posts appear sooner in sidebar)
+ */
+const SCROLLS_PER_BATCH = 4;
 
 /**
  * Extract URN from a post container (v1 and v2 compatible).
@@ -340,6 +358,7 @@ export async function collectPostsBatch(
     }
 
     // Find ALL new posts that haven't been processed (with filters applied)
+    console.time(`⏱️ [EngageKit] findNewPosts`);
     const newPosts = findNewPosts(
       existingUrns,
       processedUrns,
@@ -347,6 +366,7 @@ export async function collectPostsBatch(
       filterConfig,
       isAuthorBlacklisted,
     );
+    console.timeEnd(`⏱️ [EngageKit] findNewPosts`);
 
     // Limit to remaining needed
     const postsToProcess = newPosts.slice(0, targetCount - emittedCount);
@@ -369,19 +389,41 @@ export async function collectPostsBatch(
         };
       });
 
-      // Step 2: Click ALL comment buttons at once (no delays)
-      for (const { container } of postContexts) {
-        commentUtils.clickCommentButton(container);
+      // Step 2 & 3: Conditionally load comments (if not skipped)
+      if (!filterConfig?.skipCommentsLoading) {
+        // Step 2: Click ALL comment buttons at once (no delays)
+        console.time(
+          `⏱️ [EngageKit] clickCommentButtons (${postsToProcess.length} posts)`,
+        );
+        for (const { container } of postContexts) {
+          commentUtils.clickCommentButton(container);
+        }
+        console.timeEnd(
+          `⏱️ [EngageKit] clickCommentButtons (${postsToProcess.length} posts)`,
+        );
+
+        // Step 3: Wait for ALL comments to load in parallel
+        console.time(
+          `⏱️ [EngageKit] waitForCommentsReady (${postsToProcess.length} posts)`,
+        );
+        await Promise.all(
+          postContexts.map(({ container, beforeCount }) =>
+            commentUtils.waitForCommentsReady(container, beforeCount),
+          ),
+        );
+        console.timeEnd(
+          `⏱️ [EngageKit] waitForCommentsReady (${postsToProcess.length} posts)`,
+        );
+      } else {
+        console.log(
+          `[EngageKit] ⚡ Skipping comment loading (skipCommentsLoading enabled)`,
+        );
       }
 
-      // Step 3: Wait for ALL comments to load in parallel
-      await Promise.all(
-        postContexts.map(({ container, beforeCount }) =>
-          commentUtils.waitForCommentsReady(container, beforeCount),
-        ),
-      );
-
       // Step 4: Collect ALL post data
+      console.time(
+        `⏱️ [EngageKit] extractPostData (${postsToProcess.length} posts)`,
+      );
       const readyPosts: ReadyPost[] = [];
       for (const { container } of postContexts) {
         if (shouldStop?.()) break;
@@ -390,6 +432,9 @@ export async function collectPostsBatch(
           readyPosts.push(postData);
         }
       }
+      console.timeEnd(
+        `⏱️ [EngageKit] extractPostData (${postsToProcess.length} posts)`,
+      );
 
       // Step 5: Emit entire batch at once
       if (readyPosts.length > 0) {
@@ -423,8 +468,21 @@ export async function collectPostsBatch(
     // Wait for user to finish editing before scrolling
     await waitWhileEditing();
 
-    // Scroll to load more posts
-    await feedUtils.loadMore();
+    // Phase 6 Optimization: Multi-scroll batching
+    // Scroll multiple times BEFORE processing to reduce comment wait cycles
+    // Example: Instead of (scroll → wait 2s → scroll → wait 2s → scroll → wait 2s),
+    // we do (scroll → scroll → scroll → wait 2s once for all posts)
+    console.time(
+      `⏱️ [EngageKit] Multi-scroll phase (${SCROLLS_PER_BATCH} scrolls)`,
+    );
+    for (let i = 0; i < SCROLLS_PER_BATCH; i++) {
+      if (shouldStop?.()) break;
+      await waitWhileEditing(); // Check before each scroll
+      await feedUtils.loadMore();
+    }
+    console.timeEnd(
+      `⏱️ [EngageKit] Multi-scroll phase (${SCROLLS_PER_BATCH} scrolls)`,
+    );
   }
 
   if (idleIterations >= MAX_IDLE_ITERATIONS) {

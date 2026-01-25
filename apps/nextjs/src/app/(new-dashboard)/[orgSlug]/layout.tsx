@@ -82,6 +82,9 @@ export default function OrgLayout({ children }: { children: ReactNode }) {
     } else if (organization?.slug) {
       // User doesn't have access to this org, redirect to their current org
       router.replace(`/${organization.slug}/accounts`);
+    } else {
+      // User has no orgs or URL slug doesn't match any - redirect to home
+      router.replace("/home");
     }
   }, [
     isLoaded,

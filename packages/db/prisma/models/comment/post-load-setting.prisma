@@ -14,13 +14,17 @@ model PostLoadSetting {
   skipFriendActivitiesEnabled Boolean @default(false)
   skipCompanyPagesEnabled     Boolean @default(true)
   skipPromotedPostsEnabled    Boolean @default(true)
-  skipblacklistEnabled        Boolean @default(false)
+  skipBlacklistEnabled        Boolean @default(false)
   blacklistId                 String? @unique
 
   skipFirstDegree  Boolean @default(false)
   skipSecondDegree Boolean @default(false)
   skipThirdDegree  Boolean @default(false)
   skipFollowing    Boolean @default(false)
+
+  // Performance optimization: Skip loading LinkedIn comments during post collection (50% faster)
+  // AI will only use post caption, not adjacent comments
+  skipCommentsLoading Boolean @default(true)
 
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt

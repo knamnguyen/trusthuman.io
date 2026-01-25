@@ -71,6 +71,7 @@ export function ComposeTab() {
   );
   const clearAllCards = useComposeStore((state) => state.clearAllCards);
 
+
   // Use separate subscriptions for different concerns to minimize re-renders
   // Card IDs for rendering the list - only changes when cards are added/removed
   const cardIds = useComposeStore(
@@ -105,12 +106,16 @@ export function ComposeTab() {
   // Actions and other state
   const isSubmitting = useComposeStore((state) => state.isSubmitting);
   const addCard = useComposeStore((state) => state.addCard);
+  const addBatchCards = useComposeStore((state) => state.addBatchCards);
   const setIsSubmitting = useComposeStore((state) => state.setIsSubmitting);
   const setIsCollecting = useComposeStore((state) => state.setIsCollecting);
   const updateCardStatus = useComposeStore((state) => state.updateCardStatus);
   const updateCardComment = useComposeStore((state) => state.updateCardComment);
   const updateCardStyleInfo = useComposeStore(
     (state) => state.updateCardStyleInfo,
+  );
+  const updateBatchCardCommentAndStyle = useComposeStore(
+    (state) => state.updateBatchCardCommentAndStyle,
   );
   const isUrnIgnored = useComposeStore((state) => state.isUrnIgnored);
 
@@ -235,10 +240,11 @@ export function ComposeTab() {
           isUrnIgnored,
           shouldStop: () => stopRequestedRef.current,
           addCard,
+          addBatchCards,
           updateCardComment,
           updateCardStyleInfo,
+          updateBatchCardCommentAndStyle,
           onProgress: setLoadingProgress,
-          setPreviewingCard,
         });
         console.log(
           "[ComposeTab] runAutoResume: loadPostsToCards completed successfully",
@@ -270,12 +276,13 @@ export function ComposeTab() {
     void runAutoResume();
   }, [
     addCard,
+    addBatchCards,
     getCards,
     isUrnIgnored,
     setIsCollecting,
-    setPreviewingCard,
     updateCardComment,
     updateCardStyleInfo,
+    updateBatchCardCommentAndStyle,
   ]);
 
   // Handler to open settings (closes post preview first)
@@ -349,6 +356,7 @@ export function ComposeTab() {
             skipSecondDegree: postLoadSettings.skipSecondDegree,
             skipThirdDegree: postLoadSettings.skipThirdDegree,
             skipFollowing: postLoadSettings.skipFollowing,
+            skipCommentsLoading: postLoadSettings.skipCommentsLoading,
           };
 
           // Build comment generate settings snapshot for dynamic style branching
@@ -406,23 +414,25 @@ export function ComposeTab() {
       isUrnIgnored,
       shouldStop: () => stopRequestedRef.current,
       addCard,
+      addBatchCards,
       updateCardComment,
       updateCardStyleInfo,
+      updateBatchCardCommentAndStyle,
       onProgress: setLoadingProgress,
-      setPreviewingCard,
     });
 
     setIsLoading(false);
     setIsCollecting(false); // Done collecting, stop refocusing on blur
   }, [
     addCard,
+    addBatchCards,
     getCards,
     isUrnIgnored,
     setIsCollecting,
-    setPreviewingCard,
     targetDraftCount,
     updateCardComment,
     updateCardStyleInfo,
+    updateBatchCardCommentAndStyle,
   ]);
 
   /**
@@ -601,6 +611,7 @@ export function ComposeTab() {
             />
           </div>
         </div>
+
 
         {/* Row 3: Stats + Actions (only when cards exist) */}
         {cardIds.length > 0 && (

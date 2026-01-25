@@ -175,7 +175,7 @@ export const ComposeCard = memo(function ComposeCard({
     setPreviewingCard(null);
 
     // Scroll to the post and highlight it briefly
-    card.postContainer.scrollIntoView({ behavior: "smooth", block: "center" });
+    card.postContainer.scrollIntoView({ behavior: "instant", block: "start" });
 
     // Highlight effect
     const prevOutline = card.postContainer.style.outline;

@@ -1,5 +1,6 @@
 import tsconfigPaths from "vite-tsconfig-paths";
 import { defineConfig } from "wxt";
+import pkg from "./package.json";
 
 // Calculate port based on PORT env var (PORT + 2)
 // Main repo: PORT=3000 → WXT=3002
@@ -27,11 +28,11 @@ export default defineConfig({
 
   manifest: {
     // Key for consistent extension ID (required for Clerk production)
-    key: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAjJ8hFJ/0VNPdjWqURUdXdRQ/43ZJIiwCFu/74e/WSb2x2E6c9+VUl+Jvo3zBYMh8dlP6MBG2L3EVJ406bmj7r+sjZt66NFgdmTOb25725c2pJTIPU/V/3As1IGwgQ2dsxdg4zjsntaxsb1hPT5wVECWU11Y5EN5/aixPSUZ9Jj1+W7QtBUS2aS4B3lPrq6nMTwzLXeQ6Zm2FKwPX7LoR1o08gid3JgFoeWcv+PXn6vca0IGXaOxCSUKqYENKLbYxjucFEnYuErQESvNOOcFvSdWPorjI0pWDpMy0doIbWO4yvmvCA5D2FT2PkVP8IHWI/tyFhSQ0hitWUDBR3HX8NwIDAQAB",
+    key: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApqjDV0Jq4V1zQFSNFuMGftFrekQ6ZcLhgI0lXwCD1n6AuZtoaEQFGlyPWbVmdMP8RdjVZdotsCVUA+x9FtvztcMnYFD9Rh31v8EC76JWFl0TmIEsyHxrKKnQVyiGtLS6YdVHbsG5I/IyxueEBPJs45DWRESt9DnUdGfHWInOcwo9dDN2ZDfuEvHlRRmjXp4KF4y5pON8eVs9ZVbnHrxU5Q3PQjWR8DuI6OZJm72/HYcxOxXwuuyNq8pZSdISEpx3XMr5+bQ/u7BFr9xc1UVq1QVjX2DynPPXvyB7hQ2FkrjlqWx4USS5Pt4zQXxiGCQZ0MJvsnGbtEe31kl89slXiwIDAQAB",
     name: "EngageKit",
     description:
       "Engage Authentically on LinkedIn - Fast, Targeted, & without AI Slop",
-    version: "1.0.0",
+    version: pkg.version,
     icons: {
       16: "icon16.png",
       19: "icon19.png",

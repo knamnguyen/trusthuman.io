@@ -52,19 +52,27 @@ function fastScroll(): void {
  * @returns true if new posts were loaded, false if no new posts appeared
  */
 export async function loadMore(): Promise<boolean> {
+  console.time(`⏱️ [load-more] loadMore cycle`);
   const initialCount = countPosts();
 
   // Priority 1: Try clicking the "Load more" button (faster)
   if (tryClickLoadMoreButton()) {
+    console.time(`⏱️ [load-more] Button click wait (${BUTTON_WAIT_MS}ms)`);
     await new Promise((r) => setTimeout(r, BUTTON_WAIT_MS));
+    console.timeEnd(`⏱️ [load-more] Button click wait (${BUTTON_WAIT_MS}ms)`);
     if (countPosts() > initialCount) {
+      console.timeEnd(`⏱️ [load-more] loadMore cycle`);
       return true;
     }
   }
 
   // Priority 2: Fall back to scrolling (infinite scroll)
   fastScroll();
+  console.time(`⏱️ [load-more] Scroll wait (${SCROLL_WAIT_MS}ms)`);
   await new Promise((r) => setTimeout(r, SCROLL_WAIT_MS));
+  console.timeEnd(`⏱️ [load-more] Scroll wait (${SCROLL_WAIT_MS}ms)`);
 
-  return countPosts() > initialCount;
+  const hasNewPosts = countPosts() > initialCount;
+  console.timeEnd(`⏱️ [load-more] loadMore cycle`);
+  return hasNewPosts;
 }

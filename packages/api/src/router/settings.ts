@@ -1,9 +1,9 @@
 import { TRPCError } from "@trpc/server";
 
 import {
+  commentGenerateSettingUpsertSchema,
   postLoadSettingUpsertSchema,
   submitCommentSettingUpsertSchema,
-  commentGenerateSettingUpsertSchema,
 } from "@sassy/validators";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
@@ -37,11 +37,11 @@ export const settingsRouter = () =>
           where: { accountId: ctx.activeAccount.id },
         });
 
-        // Map DB casing to store casing (skipblacklistEnabled -> skipBlacklistEnabled)
+        // Map DB casing to store casing (skipBlacklistEnabled -> skipBlacklistEnabled)
         if (setting) {
           return {
             ...setting,
-            skipBlacklistEnabled: setting.skipblacklistEnabled,
+            skipBlacklistEnabled: setting.skipBlacklistEnabled,
           };
         }
 
@@ -62,27 +62,18 @@ export const settingsRouter = () =>
             });
           }
 
-          // Map store casing to DB casing (skipBlacklistEnabled -> skipblacklistEnabled)
-          // Must destructure to remove the camelCase field before adding lowercase version
-          const { skipBlacklistEnabled, ...restInput } = input;
-          const dbInput = skipBlacklistEnabled !== undefined
-            ? { ...restInput, skipblacklistEnabled: skipBlacklistEnabled }
-            : restInput;
+          console.log("Input", input);
 
           const setting = await ctx.db.postLoadSetting.upsert({
             where: { accountId: ctx.activeAccount.id },
-            update: dbInput,
+            update: input,
             create: {
               accountId: ctx.activeAccount.id,
-              ...dbInput,
+              ...input,
             },
           });
 
-          // Map DB casing back to store casing for response
-          return {
-            ...setting,
-            skipBlacklistEnabled: setting.skipblacklistEnabled,
-          };
+          return setting;
         }),
     }),
 

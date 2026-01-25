@@ -10,7 +10,7 @@ const DEV_SYNC_HOST =
  *
  * In development:
  * - Main repo: http://localhost:3000
- * - Worktrees: http://localhost:3010, 3020, etc. (from .env.local override)
+ * - Worktrees: http://localhost:3010, 3020, etc. (ports set in .env by sync script)
  *
  * In production:
  * - Uses clerk.engagekit.io (where Clerk sets cookies)

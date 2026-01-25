@@ -35,8 +35,6 @@ if (!VITE_APP_URL) {
 
 const url = new URL(VITE_APP_URL);
 
-console.log(`Starting server at port ${process.env.PORT ?? url.port}...`);
-
 let tls;
 
 // eslint-disable-next-line turbo/no-undeclared-env-vars

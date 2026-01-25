@@ -9,17 +9,23 @@
  * Extracted from ComposeTab to reduce duplication between handleStart and runAutoResume.
  */
 
-import type { ReadyPost } from "@sassy/linkedin-automation/feed/collect-posts";
-import type { PostFilterConfig } from "@sassy/linkedin-automation/feed/collect-posts";
+import type {
+  PostFilterConfig,
+  ReadyPost,
+} from "@sassy/linkedin-automation/feed/collect-posts";
 import { collectPostsBatch } from "@sassy/linkedin-automation/feed/collect-posts";
 
-import type { PostLoadSettings } from "../../stores/target-list-queue";
 import type { ComposeCard } from "../../stores/compose-store";
+import type { PostLoadSettings } from "../../stores/target-list-queue";
+import type { CommentGenerateSettingsSnapshot } from "./generate-ai-comments";
+import {
+  getCachedBlacklist,
+  prefetchBlacklist,
+} from "../../stores/blacklist-cache";
 import { useComposeStore } from "../../stores/compose-store";
-import { getCachedBlacklist, prefetchBlacklist } from "../../stores/blacklist-cache";
 import { useSettingsLocalStore } from "../../stores/settings-local-store";
+import { generateSingleComment } from "./generate-ai-comments";
 import { isAuthorBlacklisted } from "./is-author-blacklisted";
-import { generateSingleComment, type CommentGenerateSettingsSnapshot } from "./generate-ai-comments";
 
 /**
  * Parameters for loadPostsToCards
@@ -39,6 +45,8 @@ export interface LoadPostsToCardsParams {
   shouldStop: () => boolean;
   /** Function to add a card to the store */
   addCard: (card: ComposeCard) => void;
+  /** Function to add multiple cards at once (batch operation) */
+  addBatchCards: (cards: ComposeCard[]) => void;
   /** Function to update a card's comment text */
   updateCardComment: (cardId: string, commentText: string) => void;
   /** Function to update a card's style info */
@@ -54,10 +62,22 @@ export interface LoadPostsToCardsParams {
       } | null;
     },
   ) => void;
+  /** Function to update a card's comment and style in one operation (batch operation) */
+  updateBatchCardCommentAndStyle: (
+    cardId: string,
+    comment: string,
+    styleInfo: {
+      commentStyleId: string | null;
+      styleSnapshot: {
+        name: string | null;
+        content: string;
+        maxWords: number;
+        creativity: number;
+      } | null;
+    },
+  ) => void;
   /** Callback when progress updates (posts loaded so far) */
   onProgress: (count: number) => void;
-  /** Callback to set the first card as preview */
-  setPreviewingCard: (cardId: string) => void;
 }
 
 /**
@@ -77,6 +97,7 @@ export function buildFilterConfig(
     skipSecondDegree: settings?.skipSecondDegree ?? false,
     skipThirdDegree: settings?.skipThirdDegree ?? false,
     skipFollowing: settings?.skipFollowing ?? false,
+    skipCommentsLoading: settings?.skipCommentsLoading ?? false,
   };
 }
 
@@ -91,6 +112,7 @@ export function buildFilterConfig(
 export async function loadPostsToCards(
   params: LoadPostsToCardsParams,
 ): Promise<number> {
+  console.time(`⏱️ [loadPostsToCards] TOTAL (target: ${params.targetCount} posts)`);
   const {
     targetCount,
     postLoadSettings,
@@ -99,10 +121,11 @@ export async function loadPostsToCards(
     isUrnIgnored,
     shouldStop,
     addCard,
+    addBatchCards,
     updateCardComment,
     updateCardStyleInfo,
+    updateBatchCardCommentAndStyle,
     onProgress,
-    setPreviewingCard,
   } = params;
 
   // Get settings snapshots
@@ -159,29 +182,72 @@ export async function loadPostsToCards(
 
   let loadedCount = 0;
 
+  // === AI UPDATE BATCHING ===
+  // Buffer to collect AI results for batch updates (reduces state updates by ~60%)
+  const aiUpdateBuffer: Array<{
+    cardId: string;
+    comment: string;
+    styleInfo: {
+      commentStyleId: string | null;
+      styleSnapshot: {
+        name: string | null;
+        content: string;
+        maxWords: number;
+        creativity: number;
+      } | null;
+    };
+  }> = [];
+  let flushTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
+  // Flush buffer and update all cards at once
+  const flushAIUpdates = () => {
+    if (aiUpdateBuffer.length === 0) return;
+
+    console.log(
+      `[loadPostsToCards] 🔥 Flushing ${aiUpdateBuffer.length} AI updates`,
+    );
+
+    // Update all cards in ONE state update
+    console.time(`⏱️ [loadPostsToCards] updateManyCardsCommentAndStyle (${aiUpdateBuffer.length} cards)`);
+    useComposeStore.getState().updateManyCardsCommentAndStyle(aiUpdateBuffer);
+    console.timeEnd(`⏱️ [loadPostsToCards] updateManyCardsCommentAndStyle (${aiUpdateBuffer.length} cards)`);
+
+    // Clear buffer
+    aiUpdateBuffer.length = 0;
+    flushTimeoutId = null;
+  };
+
+  // Schedule flush if not already scheduled
+  const scheduleFlush = () => {
+    if (flushTimeoutId !== null) {
+      console.log("[loadPostsToCards] ⏭️ Flush already scheduled, skipping");
+      return; // Already scheduled
+    }
+
+    console.log(`[loadPostsToCards] ⏰ Scheduling flush (buffer has ${aiUpdateBuffer.length} items)`);
+    flushTimeoutId = setTimeout(() => {
+      flushAIUpdates();
+    }, 100); // Flush every 100ms
+  };
+
   // Batch callback - called when each batch of posts is ready
   // NOTE: Blacklist filtering happens in collectPostsBatch, so all posts here are valid
   const onBatchReady = async (posts: ReadyPost[]) => {
+    console.time(`⏱️ [loadPostsToCards] onBatchReady total (${posts.length} posts)`);
     console.log(
       `[loadPostsToCards] Batch received: ${posts.length} posts (humanMode: ${isHumanMode})`,
     );
 
-    // Check if no card is being previewed yet - we'll set first card as preview
-    const needsFirstPreview =
-      useComposeStore.getState().previewingCardId === null;
-    let firstCardId: string | null = null;
+    // Build array of all cards first (no state updates yet)
+    console.time(`⏱️ [loadPostsToCards] Build card objects (${posts.length} posts)`);
+    const cardsToAdd: ComposeCard[] = [];
 
     // Process all posts in the batch
     for (const post of posts) {
       const cardId = crypto.randomUUID();
 
-      // Track first card ID for setting preview
-      if (needsFirstPreview && !firstCardId) {
-        firstCardId = cardId;
-      }
-
-      // Add card - generating state depends on mode
-      addCard({
+      // Build card object (no state update yet)
+      cardsToAdd.push({
         id: cardId,
         urn: post.urn,
         captionPreview: post.captionPreview,
@@ -211,17 +277,27 @@ export async function loadPostsToCards(
           settingsOverride: commentGenerateSettings,
         })
           .then((result) => {
-            console.log("[loadPostsToCards] AI result for card", cardId.slice(0, 8), {
-              commentLength: result.comment?.length,
-              styleId: result.styleId,
-              styleSnapshotName: result.styleSnapshot?.name,
-              hasStyleSnapshot: !!result.styleSnapshot,
+            console.log(
+              "[loadPostsToCards] AI result for card",
+              cardId.slice(0, 8),
+              {
+                commentLength: result.comment?.length,
+                styleId: result.styleId,
+                styleSnapshotName: result.styleSnapshot?.name,
+                hasStyleSnapshot: !!result.styleSnapshot,
+              },
+            );
+            // Add to buffer instead of updating immediately
+            aiUpdateBuffer.push({
+              cardId,
+              comment: result.comment,
+              styleInfo: {
+                commentStyleId: result.styleId,
+                styleSnapshot: result.styleSnapshot,
+              },
             });
-            updateCardComment(cardId, result.comment);
-            updateCardStyleInfo(cardId, {
-              commentStyleId: result.styleId,
-              styleSnapshot: result.styleSnapshot,
-            });
+            // Schedule flush (will batch with other results arriving within 100ms)
+            scheduleFlush();
           })
           .catch((err) => {
             console.error(
@@ -229,19 +305,30 @@ export async function loadPostsToCards(
               cardId,
               err,
             );
-            updateCardComment(cardId, "");
+            // Add error case to buffer too
+            aiUpdateBuffer.push({
+              cardId,
+              comment: "",
+              styleInfo: {
+                commentStyleId: null,
+                styleSnapshot: null,
+              },
+            });
+            scheduleFlush();
           });
       }
     }
+    console.timeEnd(`⏱️ [loadPostsToCards] Build card objects (${posts.length} posts)`);
+
+    // Add ALL cards at once - SINGLE state update for entire batch
+    console.time(`⏱️ [loadPostsToCards] addBatchCards (${cardsToAdd.length} cards)`);
+    addBatchCards(cardsToAdd);
+    console.timeEnd(`⏱️ [loadPostsToCards] addBatchCards (${cardsToAdd.length} cards)`);
 
     // Update progress for the whole batch
     loadedCount += posts.length;
     onProgress(loadedCount);
-
-    // Set first card as preview
-    if (firstCardId) {
-      setPreviewingCard(firstCardId);
-    }
+    console.timeEnd(`⏱️ [loadPostsToCards] onBatchReady total (${posts.length} posts)`);
   };
 
   // Build filter config from settings
@@ -257,6 +344,7 @@ export async function loadPostsToCards(
       : undefined;
 
   // Run batch collection
+  console.time(`⏱️ [loadPostsToCards] collectPostsBatch (${targetCount} posts)`);
   await collectPostsBatch(
     targetCount,
     existingUrns,
@@ -267,9 +355,19 @@ export async function loadPostsToCards(
     filterConfig,
     blacklistFilter,
   );
+  console.timeEnd(`⏱️ [loadPostsToCards] collectPostsBatch (${targetCount} posts)`);
+
+  // Flush any remaining AI updates (in case loading finished before next flush cycle)
+  console.time(`⏱️ [loadPostsToCards] Final flush cleanup`);
+  if (flushTimeoutId !== null) {
+    clearTimeout(flushTimeoutId);
+  }
+  flushAIUpdates();
+  console.timeEnd(`⏱️ [loadPostsToCards] Final flush cleanup`);
 
   // Log summary
   console.log(`[loadPostsToCards] ✅ Complete: ${loadedCount} posts loaded`);
+  console.timeEnd(`⏱️ [loadPostsToCards] TOTAL (target: ${targetCount} posts)`);
 
   return loadedCount;
 }

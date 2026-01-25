@@ -241,10 +241,19 @@ export async function POST(req: NextRequest) {
         const orgId = data.id;
         console.log(`- Org ID: ${orgId}`);
 
+        // First, null out ownerId on LinkedIn accounts belonging to this org
+        // (organizationId will be set to NULL automatically via onDelete: SetNull)
+        const updateResult = await db.linkedInAccount.updateMany({
+          where: { organizationId: orgId },
+          data: { ownerId: null },
+        });
+        console.log(`🔗 Set ownerId to NULL on ${updateResult.count} LinkedIn account(s)`);
+
         console.log("🗑️ Deleting organization from database...");
 
         // Use deleteMany to gracefully handle case where org doesn't exist
         // Members will be cascade deleted due to onDelete: Cascade
+        // LinkedIn accounts will have organizationId set to NULL due to onDelete: SetNull
         const deleteResult = await db.organization.deleteMany({
           where: { id: orgId },
         });

@@ -11,7 +11,7 @@
     "lint": "eslint",
     "start": "pnpm with-env next start",
     "typecheck": "tsc --noEmit",
-    "with-env": "dotenv --override -e ../../.env -e ../../.env.local --"
+    "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.525.0",
@@ -58,6 +58,7 @@
     "@types/node": "^22.10.10",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
+    "agentation": "^1.1.0",
     "dotenv-cli": "^8.0.0",
     "eslint": "catalog:",
     "jiti": "^1.21.7",

@@ -33,10 +33,10 @@ export const { useTRPC, TRPCProvider } = createTRPCContext<AppRouter>();
  * Get the tRPC server URL based on environment
  */
 const getServerUrl = (): string => {
-  // Use getSyncHostUrl which reads VITE_APP_URL from .env/.env.local
+  // Use getSyncHostUrl which reads VITE_APP_URL from .env
   // Examples:
   // - Main repo: http://localhost:3000/api/trpc
-  // - Worktree: http://localhost:3010/api/trpc
+  // - Worktree: http://localhost:3010/api/trpc (ports set by sync script)
   // - Production: https://engagekit.io/api/trpc
   // const baseUrl = getSyncHostUrl();
   let baseUrl: string;

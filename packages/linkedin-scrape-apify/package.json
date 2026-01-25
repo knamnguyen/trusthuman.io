@@ -13,7 +13,7 @@
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
-    "with-env": "dotenv -e ../../.env -e ../../.env.local --"
+    "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
     "apify-client": "^2.12.0",

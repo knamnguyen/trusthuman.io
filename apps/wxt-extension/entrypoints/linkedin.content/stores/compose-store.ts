@@ -80,12 +80,44 @@ interface ComposeState {
 interface ComposeActions {
   /** Add a new card */
   addCard: (card: ComposeCard) => void;
+  /** Add multiple cards in a single state update (batch operation) */
+  addBatchCards: (cards: ComposeCard[]) => void;
   /** Update a card's comment text */
   updateCardText: (id: string, text: string) => void;
   /** Update a card's status */
   updateCardStatus: (id: string, status: "draft" | "sent") => void;
   /** Update a card's comment and mark generation complete */
   updateCardComment: (id: string, comment: string) => void;
+  /** Update a card's comment and style info in a single state update (batch operation) */
+  updateBatchCardCommentAndStyle: (
+    id: string,
+    comment: string,
+    styleInfo: {
+      commentStyleId: string | null;
+      styleSnapshot: {
+        name: string | null;
+        content: string;
+        maxWords: number;
+        creativity: number;
+      } | null;
+    },
+  ) => void;
+  /** Update multiple cards' comments and styles in a single state update (true batch operation) */
+  updateManyCardsCommentAndStyle: (
+    updates: Array<{
+      cardId: string;
+      comment: string;
+      styleInfo: {
+        commentStyleId: string | null;
+        styleSnapshot: {
+          name: string | null;
+          content: string;
+          maxWords: number;
+          creativity: number;
+        } | null;
+      };
+    }>,
+  ) => void;
   /** Set a card's generating state (for regeneration) */
   setCardGenerating: (id: string, isGenerating: boolean) => void;
   /**
@@ -155,6 +187,13 @@ export const useComposeStore = create<ComposeStore>((set, get) => ({
     console.log("[ComposeStore] addCard:", card.id.slice(0, 8));
     set((state) => ({
       cards: [...state.cards, card],
+    }));
+  },
+
+  addBatchCards: (cards) => {
+    console.log("[ComposeStore] addBatchCards: batch of", cards.length);
+    set((state) => ({
+      cards: [...state.cards, ...cards],
     }));
   },
 
@@ -309,6 +348,73 @@ export const useComposeStore = create<ComposeStore>((set, get) => ({
             }
           : card,
       ),
+    }));
+  },
+
+  updateBatchCardCommentAndStyle: (id, comment, styleInfo) => {
+    console.log(
+      "[ComposeStore] updateBatchCardCommentAndStyle:",
+      id.slice(0, 8),
+      "comment length:",
+      comment.length,
+      "styleId:",
+      styleInfo.commentStyleId,
+    );
+    set((state) => ({
+      cards: state.cards.map((card) =>
+        card.id === id
+          ? {
+              ...card,
+              commentText: comment,
+              originalCommentText: comment,
+              peakTouchScore: 0,
+              isGenerating: false,
+              commentStyleId: styleInfo.commentStyleId,
+              styleSnapshot: styleInfo.styleSnapshot,
+            }
+          : card,
+      ),
+    }));
+  },
+
+  /** Update multiple cards' comments and styles in a single state update (true batch operation) */
+  updateManyCardsCommentAndStyle: (
+    updates: Array<{
+      cardId: string;
+      comment: string;
+      styleInfo: {
+        commentStyleId: string | null;
+        styleSnapshot: {
+          name: string | null;
+          content: string;
+          maxWords: number;
+          creativity: number;
+        } | null;
+      };
+    }>,
+  ) => {
+    console.log(
+      "[ComposeStore] updateManyCardsCommentAndStyle: batch of",
+      updates.length,
+    );
+    // Create a Map for O(1) lookup
+    const updateMap = new Map(updates.map((u) => [u.cardId, u]));
+
+    set((state) => ({
+      cards: state.cards.map((card) => {
+        const update = updateMap.get(card.id);
+        if (!update) return card;
+
+        return {
+          ...card,
+          commentText: update.comment,
+          originalCommentText: update.comment,
+          peakTouchScore: 0,
+          isGenerating: false,
+          commentStyleId: update.styleInfo.commentStyleId,
+          styleSnapshot: update.styleInfo.styleSnapshot,
+        };
+      }),
     }));
   },
 
