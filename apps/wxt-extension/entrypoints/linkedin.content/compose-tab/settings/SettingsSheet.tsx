@@ -264,6 +264,15 @@ function SettingsBehaviorContent({
           onCheckedChange={(v) => updateBehavior("postNavigator", v)}
         />
       </SettingsSection>
+
+      <SettingsSection title="Auto-Submit">
+        <SettingToggle
+          label="Auto-Submit After Generate"
+          description="Automatically submit all comments after batch generation completes"
+          checked={behavior.autoSubmitAfterGenerate}
+          onCheckedChange={(v) => updateBehavior("autoSubmitAfterGenerate", v)}
+        />
+      </SettingsSection>
     </div>
   );
 }

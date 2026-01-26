@@ -30,6 +30,7 @@ export interface BehaviorSettings {
   autoEngageOnCommentClick: boolean;
   spacebarAutoEngage: boolean;
   postNavigator: boolean;
+  autoSubmitAfterGenerate: boolean;
 }
 
 const DEFAULT_BEHAVIOR: BehaviorSettings = {
@@ -37,6 +38,7 @@ const DEFAULT_BEHAVIOR: BehaviorSettings = {
   autoEngageOnCommentClick: false,
   spacebarAutoEngage: false,
   postNavigator: false,
+  autoSubmitAfterGenerate: false,
 };
 
 // =============================================================================

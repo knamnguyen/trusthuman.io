@@ -78,6 +78,12 @@ export interface LoadPostsToCardsParams {
   ) => void;
   /** Callback when progress updates (posts loaded so far) */
   onProgress: (count: number) => void;
+  /** Optional callback invoked after ALL AI generation completes (fires with metadata) */
+  onGenerationComplete?: (metadata: {
+    targetCount: number;
+    loadedCount: number;
+    generatedCount: number;
+  }) => void | Promise<void>;
 }
 
 /**
@@ -126,6 +132,7 @@ export async function loadPostsToCards(
     updateCardStyleInfo,
     updateBatchCardCommentAndStyle,
     onProgress,
+    onGenerationComplete,
   } = params;
 
   // Get settings snapshots
@@ -199,6 +206,9 @@ export async function loadPostsToCards(
   }> = [];
   let flushTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
+  // Track all AI generation promises so we can wait for them to complete
+  const aiPromises: Promise<void>[] = [];
+
   // Flush buffer and update all cards at once
   const flushAIUpdates = () => {
     if (aiUpdateBuffer.length === 0) return;
@@ -271,7 +281,7 @@ export async function loadPostsToCards(
         // Fire AI request using shared utility (don't await - run in parallel)
         // generateSingleComment handles dynamic vs static mode internally
         // Pass settingsOverride if provided (for auto-resume with snapshotted settings)
-        generateSingleComment({
+        const aiPromise = generateSingleComment({
           postContent: post.fullCaption,
           postContainer: post.postContainer,
           settingsOverride: commentGenerateSettings,
@@ -316,6 +326,9 @@ export async function loadPostsToCards(
             });
             scheduleFlush();
           });
+
+        // Track this promise so we can wait for all AI generation to complete
+        aiPromises.push(aiPromise);
       }
     }
     console.timeEnd(`⏱️ [loadPostsToCards] Build card objects (${posts.length} posts)`);
@@ -357,13 +370,42 @@ export async function loadPostsToCards(
   );
   console.timeEnd(`⏱️ [loadPostsToCards] collectPostsBatch (${targetCount} posts)`);
 
-  // Flush any remaining AI updates (in case loading finished before next flush cycle)
-  console.time(`⏱️ [loadPostsToCards] Final flush cleanup`);
+  // Wait for ALL AI generation promises to complete
+  if (aiPromises.length > 0) {
+    console.log(`[loadPostsToCards] ⏳ Waiting for ${aiPromises.length} AI generation promises to complete...`);
+    console.time(`⏱️ [loadPostsToCards] Wait for all AI promises`);
+    await Promise.allSettled(aiPromises);
+    console.timeEnd(`⏱️ [loadPostsToCards] Wait for all AI promises`);
+    console.log(`[loadPostsToCards] ✅ All AI promises resolved`);
+  }
+
+  // NOW flush any remaining AI updates (all promises have resolved and added to buffer)
+  console.time(`⏱️ [loadPostsToCards] Final flush after promises`);
   if (flushTimeoutId !== null) {
     clearTimeout(flushTimeoutId);
   }
   flushAIUpdates();
-  console.timeEnd(`⏱️ [loadPostsToCards] Final flush cleanup`);
+  console.timeEnd(`⏱️ [loadPostsToCards] Final flush after promises`);
+  console.log(`[loadPostsToCards] ✅ All cards updated with AI comments`);
+
+  // Notify caller that generation is complete (fires AFTER promises resolve AND buffer flushed)
+  if (onGenerationComplete) {
+    const generatedCount = useComposeStore.getState().cards.filter(
+      (c) => c.status === "draft" && !c.isGenerating && c.commentText.trim() !== ""
+    ).length;
+
+    console.log("[loadPostsToCards] 🔔 Invoking onGenerationComplete callback", {
+      targetCount,
+      loadedCount,
+      generatedCount,
+    });
+
+    await onGenerationComplete({
+      targetCount,
+      loadedCount,
+      generatedCount,
+    });
+  }
 
   // Log summary
   console.log(`[loadPostsToCards] ✅ Complete: ${loadedCount} posts loaded`);

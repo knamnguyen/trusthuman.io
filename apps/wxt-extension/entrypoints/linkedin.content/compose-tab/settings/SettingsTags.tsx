@@ -34,6 +34,9 @@ export function SettingsTags() {
     if (behavior.postNavigator) {
       result.push("Navigator");
     }
+    if (behavior.autoSubmitAfterGenerate) {
+      result.push("Auto-Submit");
+    }
 
     // Post load filters (DB)
     if (postLoad?.timeFilterEnabled && postLoad.minPostAge) {
