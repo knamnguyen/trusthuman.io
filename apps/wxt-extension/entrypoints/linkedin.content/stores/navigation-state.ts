@@ -42,6 +42,8 @@ export interface PendingNavigationState {
   queueState?: TargetListQueueState;
   /** Comment generation settings snapshot (for dynamic style branching) */
   commentGenerateSettings?: CommentGenerateSettings;
+  /** Account ID from the originating tab (for API requests in new tab before store loads) */
+  accountId?: string;
 }
 
 const STORAGE_KEY = "pendingTargetListNavigation";
@@ -57,6 +59,7 @@ export async function savePendingNavigation(
   targetDraftCount: number,
   queueState?: TargetListQueueState,
   commentGenerateSettings?: CommentGenerateSettings,
+  accountId?: string,
 ): Promise<void> {
   const state: PendingNavigationState = {
     type: queueState ? "queue" : "single",
@@ -65,12 +68,14 @@ export async function savePendingNavigation(
     savedAt: Date.now(),
     queueState,
     commentGenerateSettings,
+    accountId,
   };
 
   console.log("[NavigationState] Saving state:", {
     type: state.type,
     hasQueue: !!queueState,
     hasDynamicStyle: commentGenerateSettings?.dynamicChooseStyleEnabled,
+    accountId: accountId ? "present" : "missing",
   });
   console.log(
     "[NavigationState] browser.storage.local available:",

@@ -15,6 +15,7 @@
 
 import { buildListFeedUrl } from "@sassy/linkedin-automation/navigate/build-list-feed-url";
 
+import { useAccountStore } from "../stores/account-store";
 import { savePendingNavigation } from "../stores/navigation-state";
 import type {
   CommentGenerateSettings,
@@ -90,8 +91,22 @@ export async function processTargetListQueue(
     url: feedUrl,
   });
 
+  // Get account ID from store to pass to new tab (so API calls work before store loads)
+  const accountId = useAccountStore.getState().matchingAccount?.id;
+  if (!accountId) {
+    console.warn(
+      "[MultiTabNav] No account ID available - API calls in new tab may fail until store loads",
+    );
+  }
+
   // Save pending navigation state so auto-resume triggers in the new tab
-  await savePendingNavigation(settings, targetDraftCount, queueState, commentGenerateSettings);
+  await savePendingNavigation(
+    settings,
+    targetDraftCount,
+    queueState,
+    commentGenerateSettings,
+    accountId,
+  );
 
   // Open via background script (bypasses popup blocker)
   await openTabViaBackground(feedUrl);
@@ -135,6 +150,9 @@ export async function continueQueueProcessing(): Promise<boolean> {
     url: feedUrl,
   });
 
+  // Get account ID from store to pass to new tab
+  const accountId = useAccountStore.getState().matchingAccount?.id;
+
   // Save pending navigation state so auto-resume triggers in the new tab
   if (queueState) {
     await savePendingNavigation(
@@ -142,6 +160,7 @@ export async function continueQueueProcessing(): Promise<boolean> {
       queueState.targetDraftCount,
       queueState,
       queueState.commentGenerateSettings,
+      accountId,
     );
   }
 

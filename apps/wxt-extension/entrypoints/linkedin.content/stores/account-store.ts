@@ -98,6 +98,12 @@ interface AccountActions {
    * Get the matching account for a LinkedIn profile slug
    */
   getMatchingAccount: (profileSlug: string | null) => LinkedInAccount | null;
+
+  /**
+   * Pre-populate matching account from saved account ID (for auto-resume)
+   * This allows API calls to work before the full account store loads
+   */
+  restoreAccountFromId: (accountId: string) => void;
 }
 
 type AccountStore = AccountState & AccountActions;
@@ -304,6 +310,28 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
     if (!profileSlug) return null;
     return (
       get().accounts.find((acc) => acc.profileSlug === profileSlug) ?? null
+    );
+  },
+
+  restoreAccountFromId: (accountId) => {
+    console.log("[AccountStore] Restoring account from saved ID:", accountId);
+
+    // Create minimal account object with just the ID
+    // This allows tRPC client to add x-account-id header
+    const temporaryAccount: LinkedInAccount = {
+      id: accountId,
+      profileUrl: null,
+      profileSlug: null,
+      status: null,
+      createdAt: new Date(),
+    };
+
+    set({
+      matchingAccount: temporaryAccount,
+    });
+
+    console.log(
+      "[AccountStore] Temporary account set - API calls will work until full store loads",
     );
   },
 }));

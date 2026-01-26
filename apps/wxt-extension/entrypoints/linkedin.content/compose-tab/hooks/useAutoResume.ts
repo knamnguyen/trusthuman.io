@@ -13,6 +13,7 @@ import { useEffect, useRef, useState } from "react";
 
 import type { PendingNavigationState } from "../../stores/navigation-state";
 import type { GenerationCompleteMetadata } from "./useSubmitBatch";
+import { useAccountStore } from "../../stores/account-store";
 import { useComposeStore } from "../../stores/compose-store";
 import { continueQueueProcessing } from "../../utils/multi-tab-navigation";
 import { loadPostsToCards } from "../utils/load-posts-to-cards";
@@ -119,6 +120,20 @@ export function useAutoResume(
           totalLists: queueState.queue.length,
           currentListName: currentItem?.targetListName ?? "Unknown",
         });
+      }
+
+      // CRITICAL: Restore account ID before generation starts
+      // The account store hasn't loaded yet in the new tab, but we need the ID for API requests
+      if (pendingNav.accountId) {
+        console.log(
+          "[useAutoResume] Restoring account ID before generation:",
+          pendingNav.accountId,
+        );
+        useAccountStore.getState().restoreAccountFromId(pendingNav.accountId);
+      } else {
+        console.warn(
+          "[useAutoResume] No account ID in pending navigation - API calls may fail",
+        );
       }
 
       // Set up loading state (uses the same setIsCollecting from store as useLoadPosts)
