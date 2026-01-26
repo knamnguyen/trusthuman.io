@@ -78,6 +78,8 @@ export interface LoadPostsToCardsParams {
   ) => void;
   /** Callback when progress updates (posts loaded so far) */
   onProgress: (count: number) => void;
+  /** Callback when scrolling (reports feed post count during collection) */
+  onScrollProgress?: (feedPostCount: number) => void;
   /** Optional callback invoked after ALL AI generation completes (fires with metadata) */
   onGenerationComplete?: (metadata: {
     targetCount: number;
@@ -132,6 +134,7 @@ export async function loadPostsToCards(
     updateCardStyleInfo,
     updateBatchCardCommentAndStyle,
     onProgress,
+    onScrollProgress,
     onGenerationComplete,
   } = params;
 
@@ -367,6 +370,7 @@ export async function loadPostsToCards(
     () => useComposeStore.getState().isUserEditing,
     filterConfig,
     blacklistFilter,
+    onScrollProgress, // Pass scroll progress callback to show feed post count
   );
   console.timeEnd(`⏱️ [loadPostsToCards] collectPostsBatch (${targetCount} posts)`);
 

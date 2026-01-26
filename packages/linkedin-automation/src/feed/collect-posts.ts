@@ -307,6 +307,7 @@ function extractPostData(container: HTMLElement): ReadyPost | null {
  * @param isUserEditing - Function that returns true when user is editing (pauses collection)
  * @param filterConfig - Configuration for filtering posts (promoted, company, connection degree, etc.)
  * @param isAuthorBlacklisted - Optional function to check if a post author should be skipped (blacklist)
+ * @param onScrollProgress - Optional callback fired during scrolling with current feed post count
  * @returns Number of posts collected
  */
 export async function collectPostsBatch(
@@ -320,6 +321,7 @@ export async function collectPostsBatch(
   isAuthorBlacklisted?: (
     authorProfileUrl: string | null | undefined,
   ) => boolean,
+  onScrollProgress?: (feedPostCount: number) => void,
 ): Promise<ReadyPost[]> {
   const postUtils = getPostUtils();
   const commentUtils = getCommentUtils();
@@ -479,6 +481,12 @@ export async function collectPostsBatch(
       if (shouldStop?.()) break;
       await waitWhileEditing(); // Check before each scroll
       await feedUtils.loadMore();
+
+      // Report scroll progress to UI (feed post count during scrolling)
+      if (onScrollProgress) {
+        const feedPostCount = feedUtils.countPosts();
+        onScrollProgress(feedPostCount);
+      }
     }
     console.timeEnd(
       `⏱️ [EngageKit] Multi-scroll phase (${SCROLLS_PER_BATCH} scrolls)`,

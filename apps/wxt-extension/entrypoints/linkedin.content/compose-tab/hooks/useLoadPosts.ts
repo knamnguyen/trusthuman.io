@@ -28,6 +28,7 @@ export function useLoadPosts(
 ) {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
+  const [scrollProgress, setScrollProgress] = useState(0);
   const stopRequestedRef = useRef(false);
 
   // Store actions and selectors
@@ -53,6 +54,7 @@ export function useLoadPosts(
     setIsLoading(true);
     setIsCollecting(true); // Mark as collecting so ComposeCard can refocus on blur
     setLoadingProgress(0);
+    setScrollProgress(0); // Reset scroll progress
     stopRequestedRef.current = false;
 
     // Get settings from DB store (snapshot at start time)
@@ -161,11 +163,13 @@ export function useLoadPosts(
       updateCardStyleInfo,
       updateBatchCardCommentAndStyle,
       onProgress: setLoadingProgress,
+      onScrollProgress: setScrollProgress,
       onGenerationComplete,
     });
 
     setIsLoading(false);
     setIsCollecting(false); // Done collecting, stop refocusing on blur
+    setScrollProgress(0); // Reset scroll progress when done
   }, [
     targetDraftCount,
     onGenerationComplete,
@@ -185,6 +189,7 @@ export function useLoadPosts(
   const handleStop = useCallback(() => {
     stopRequestedRef.current = true;
     setIsCollecting(false); // Stop refocusing immediately when user stops
+    setScrollProgress(0); // Reset scroll progress when stopped
   }, [setIsCollecting]);
 
   return {
@@ -192,5 +197,6 @@ export function useLoadPosts(
     handleStop,
     isLoading,
     loadingProgress,
+    scrollProgress,
   };
 }
