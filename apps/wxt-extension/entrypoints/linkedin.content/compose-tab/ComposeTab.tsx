@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Edit3,
   Feather,
@@ -11,37 +11,18 @@ import {
 } from "lucide-react";
 import { useShallow } from "zustand/shallow";
 
-import { createCommentUtilities } from "@sassy/linkedin-automation/comment/create-comment-utilities";
 import { Button } from "@sassy/ui/button";
 import { TooltipWithDialog } from "@sassy/ui/components/tooltip-with-dialog";
 
-import type { PendingNavigationState } from "../stores/navigation-state";
-import type { PostLoadSettings } from "../stores/target-list-queue";
 import { useShadowRootStore } from "../stores";
 import { useComposeStore } from "../stores/compose-store";
-import { useSettingsDBStore } from "../stores/settings-db-store";
-import { useSettingsLocalStore } from "../stores/settings-local-store";
-import {
-  continueQueueProcessing,
-  processTargetListQueue,
-} from "../utils/multi-tab-navigation";
 import { ComposeCard } from "./ComposeCard";
+import { useAutoResume } from "./hooks/useAutoResume";
+import { useLoadPosts } from "./hooks/useLoadPosts";
+import { useSubmitBatch } from "./hooks/useSubmitBatch";
 import { PostPreviewSheet } from "./PostPreviewSheet";
 import { SettingsSheet } from "./settings/SettingsSheet";
 import { SettingsTags } from "./settings/SettingsTags";
-import { buildQueueItems } from "./utils/build-queue-items";
-import { loadPostsToCards } from "./utils/load-posts-to-cards";
-import { submitCommentFullFlow } from "./utils/submit-comment-full-flow";
-
-// Initialize utilities (auto-detects DOM version)
-const commentUtils = createCommentUtilities();
-
-/** Queue progress info for display */
-interface QueueProgressInfo {
-  currentIndex: number;
-  totalLists: number;
-  currentListName: string;
-}
 
 export function ComposeTab() {
   // DEBUG: Track renders
@@ -50,18 +31,18 @@ export function ComposeTab() {
   // Shadow root for tooltip/dialog portals
   const shadowRoot = useShadowRootStore((s) => s.shadowRoot);
 
-  const [isLoading, setIsLoading] = useState(false);
+  // Local UI state
   const [settingsOpen, setSettingsOpen] = useState(false);
-  /** Target number of drafts to collect (user configurable, max 100) */
   const [targetDraftCount, setTargetDraftCount] = useState<number>(10);
-  /** Live progress counter during loading */
-  const [loadingProgress, setLoadingProgress] = useState<number>(0);
-  /** Ref to signal stop request to the streaming loop */
-  const stopRequestedRef = useRef(false);
-  /** Queue progress info (only set during queue processing) */
-  const [queueProgress, setQueueProgress] = useState<QueueProgressInfo | null>(
-    null,
+
+  // Custom hooks for complex logic
+  const { handleSubmitAll, handleGenerationComplete, isSubmitting } =
+    useSubmitBatch();
+  const { handleStart, handleStop, isLoading, loadingProgress } = useLoadPosts(
+    targetDraftCount,
+    handleGenerationComplete,
   );
+  const { queueProgress } = useAutoResume(handleGenerationComplete);
 
   // Subscribe to isUserEditing for paused indicator
   const isUserEditing = useComposeStore((state) => state.isUserEditing);
@@ -103,24 +84,7 @@ export function ComposeTab() {
     })),
   );
 
-  // Actions and other state
-  const isSubmitting = useComposeStore((state) => state.isSubmitting);
-  const addCard = useComposeStore((state) => state.addCard);
-  const addBatchCards = useComposeStore((state) => state.addBatchCards);
-  const setIsSubmitting = useComposeStore((state) => state.setIsSubmitting);
-  const setIsCollecting = useComposeStore((state) => state.setIsCollecting);
-  const updateCardStatus = useComposeStore((state) => state.updateCardStatus);
-  const updateCardComment = useComposeStore((state) => state.updateCardComment);
-  const updateCardStyleInfo = useComposeStore(
-    (state) => state.updateCardStyleInfo,
-  );
-  const updateBatchCardCommentAndStyle = useComposeStore(
-    (state) => state.updateBatchCardCommentAndStyle,
-  );
-  const isUrnIgnored = useComposeStore((state) => state.isUrnIgnored);
-
-  // Get cards array only when needed for operations (not for rendering)
-  const getCards = useComposeStore((state) => state.cards);
+  // Actions
   const setPreviewingCard = useComposeStore((state) => state.setPreviewingCard);
   const previewingCardId = useComposeStore((state) => state.previewingCardId);
 
@@ -134,389 +98,17 @@ export function ComposeTab() {
     }
   }, [previewingCardId]);
 
-  // Track if we've checked for pending navigation (prevent double-trigger)
-  const checkedPendingNavRef = useRef(false);
-
-  // Auto-resume system: checks global variable set by content script
-  // Content script detects pending navigation and opens sidebar, ComposeTab triggers Load Posts
-  useEffect(() => {
-    if (checkedPendingNavRef.current) return;
-    checkedPendingNavRef.current = true;
-
-    console.log(
-      "[ComposeTab] Checking for pending navigation from content script...",
-    );
-
-    // Check for pending navigation set by content script
-    const pendingNav = (
-      window as unknown as {
-        __engagekit_pending_navigation?: PendingNavigationState;
-      }
-    ).__engagekit_pending_navigation;
-
-    if (!pendingNav) {
-      console.log("[ComposeTab] No pending navigation found");
-      return;
-    }
-
-    // Clear the global variable (one-time use)
-    delete (
-      window as unknown as {
-        __engagekit_pending_navigation?: PendingNavigationState;
-      }
-    ).__engagekit_pending_navigation;
-
-    console.log(
-      "[ComposeTab] Found pending navigation, triggering Load Posts",
-      {
-        type: pendingNav.type,
-        targetDraftCount: pendingNav.targetDraftCount,
-      },
-    );
-
-    // Trigger Load Posts with the saved settings
-    const runAutoResume = async () => {
-      console.log("[ComposeTab] runAutoResume started");
-      const {
-        postLoadSettings,
-        commentGenerateSettings,
-        targetDraftCount: savedTargetDraftCount,
-        queueState,
-      } = pendingNav;
-
-      console.log("[ComposeTab] runAutoResume settings:", {
-        targetDraftCount: savedTargetDraftCount,
-        postLoadSettings,
-        commentGenerateSettings,
-        queueState: queueState
-          ? {
-              currentIndex: queueState.currentIndex,
-              totalLists: queueState.queue.length,
-            }
-          : null,
-      });
-
-      // Update the target draft count in UI
-      setTargetDraftCount(savedTargetDraftCount);
-
-      // Set queue progress info if this is a queue
-      // NOTE: queueState.currentIndex is the NEXT index (already incremented by getNextQueueItem)
-      // So we use currentIndex - 1 to get the actual current item being processed
-      if (pendingNav.type === "queue" && queueState) {
-        const actualIndex = Math.max(0, queueState.currentIndex - 1);
-        const currentItem = queueState.queue[actualIndex];
-        setQueueProgress({
-          currentIndex: actualIndex + 1, // 1-indexed for display
-          totalLists: queueState.queue.length,
-          currentListName: currentItem?.targetListName ?? "Unknown",
-        });
-      }
-
-      // Set up loading state
-      setIsLoading(true);
-      setIsCollecting(true);
-      setLoadingProgress(0);
-      stopRequestedRef.current = false;
-
-      // NOTE: We skip restoring settings to DB store during auto-resume
-      // because the account store might not be loaded yet (we skipped waitForStoresReady).
-      // The postLoadSettings from pendingNavigation already has all the settings we need.
-      // The DB store will sync when the account loads in the background.
-      console.log(
-        "[ComposeTab] runAutoResume: Using settings from pendingNavigation (skipping DB update)",
-      );
-
-      // Get existing URNs to skip
-      const existingUrns = new Set(getCards.map((card) => card.urn));
-
-      // Run post collection using utility (blacklist is fetched internally)
-      console.log("[ComposeTab] runAutoResume: Starting loadPostsToCards...");
-      try {
-        await loadPostsToCards({
-          targetCount: savedTargetDraftCount,
-          postLoadSettings,
-          commentGenerateSettings,
-          existingUrns,
-          isUrnIgnored,
-          shouldStop: () => stopRequestedRef.current,
-          addCard,
-          addBatchCards,
-          updateCardComment,
-          updateCardStyleInfo,
-          updateBatchCardCommentAndStyle,
-          onProgress: setLoadingProgress,
-          onGenerationComplete: handleGenerationComplete,
-        });
-        console.log(
-          "[ComposeTab] runAutoResume: loadPostsToCards completed successfully",
-        );
-      } catch (error) {
-        console.error(
-          "[ComposeTab] runAutoResume: loadPostsToCards FAILED:",
-          error,
-        );
-      }
-
-      console.log("[ComposeTab] Auto-resume Load Posts completed");
-      setIsLoading(false);
-      setIsCollecting(false);
-
-      // If this was part of a queue, continue to next tab
-      if (pendingNav.type === "queue") {
-        console.log("[ComposeTab] Queue processing, checking for next tab");
-        const hasNext = await continueQueueProcessing();
-
-        if (hasNext) {
-          console.log("[ComposeTab] Opened next tab in queue");
-        } else {
-          console.log("[ComposeTab] Queue complete");
-        }
-      }
-    };
-
-    void runAutoResume();
-  }, [
-    addCard,
-    addBatchCards,
-    getCards,
-    isUrnIgnored,
-    setIsCollecting,
-    updateCardComment,
-    updateCardStyleInfo,
-    updateBatchCardCommentAndStyle,
-  ]);
-
   // Handler to open settings (closes post preview first)
   const handleOpenSettings = useCallback(() => {
     setPreviewingCard(null);
     setSettingsOpen(true);
   }, [setPreviewingCard]);
 
-  /**
-   * Submit all draft comments to LinkedIn
-   * Uses submitCommentFullFlow utility for each card with random delays between submissions.
-   */
-  const handleSubmitAll = useCallback(async () => {
-    // Read fresh state from store (not captured getCards which may be stale)
-    const cards = useComposeStore.getState().cards;
-
-    // Only submit cards that are drafts AND have finished generating
-    const cardsToSubmit = cards.filter(
-      (c) => c.status === "draft" && !c.isGenerating,
-    );
-
-    console.log("[ComposeTab] handleSubmitAll: Found", cardsToSubmit.length, "cards to submit");
-    if (cardsToSubmit.length === 0) return;
-
-    // Get submit delay settings (use defaults if not loaded yet)
-    const submitSettings = useSettingsDBStore.getState().submitComment;
-    const [minDelay = 5, maxDelay = 20] = (
-      submitSettings?.submitDelayRange ?? "5-20"
-    )
-      .split("-")
-      .map(Number);
-
-    setIsSubmitting(true);
-
-    for (const card of cardsToSubmit) {
-      // Skip empty comments
-      if (!card.commentText.trim()) {
-        continue;
-      }
-
-      const success = await submitCommentFullFlow(card, commentUtils);
-      if (success) {
-        updateCardStatus(card.id, "sent");
-      }
-
-      // Random delay between submissions (based on settings)
-      const delay = minDelay + Math.random() * (maxDelay - minDelay);
-      await new Promise((r) => setTimeout(r, delay * 1000));
-    }
-
-    setIsSubmitting(false);
-  }, [setIsSubmitting, updateCardStatus]);
-
-  /**
-   * Callback invoked when loadPostsToCards completes ALL AI generation
-   * Triggers auto-submit if enabled (handleSubmitAll does the rest of the checks)
-   */
-  const handleGenerationComplete = useCallback(
-    async (metadata: {
-      targetCount: number;
-      loadedCount: number;
-      generatedCount: number;
-    }) => {
-      console.log("[ComposeTab] 🔔 Generation complete", metadata);
-
-      // Only check auto-submit specific conditions (handleSubmitAll does the rest)
-      const { autoSubmitAfterGenerate, humanOnlyMode } =
-        useSettingsLocalStore.getState().behavior;
-
-      if (!autoSubmitAfterGenerate) {
-        console.log("[ComposeTab] Auto-submit disabled");
-        return;
-      }
-
-      if (humanOnlyMode) {
-        console.log("[ComposeTab] Auto-submit skipped (human mode)");
-        return;
-      }
-
-      console.log("[ComposeTab] 🚀 Triggering auto-submit");
-      await handleSubmitAll();
-      console.log("[ComposeTab] ✅ Auto-submit complete");
-    },
-    [handleSubmitAll],
-  );
-
-  /**
-   * Start batch collection:
-   * - Scrolls feed, clicks ALL comment buttons at once per batch
-   * - Waits for ALL comments to load in parallel
-   * - Adds all cards and fires all AI requests at once
-   * - Much faster than sequential processing
-   */
-  const handleStart = useCallback(async () => {
-    // Close settings sheet when starting load (post preview will open for first card)
+  // Close settings sheet when starting load
+  const handleStartWithCloseSettings = useCallback(() => {
     setSettingsOpen(false);
-
-    setIsLoading(true);
-    setIsCollecting(true); // Mark as collecting so ComposeCard can refocus on blur
-    setLoadingProgress(0);
-    stopRequestedRef.current = false;
-
-    // Get settings from DB store (snapshot at start time)
-    const postLoadSettings = useSettingsDBStore.getState().postLoad;
-    const commentGenerateSettingsDB =
-      useSettingsDBStore.getState().commentGenerate;
-
-    // If target list is enabled with list IDs, use queue system to process lists
-    // Only use queue if we're not already on a search/content page (already navigated)
-    const isOnSearchPage = window.location.pathname.startsWith(
-      "/search/results/content",
-    );
-
-    const targetListIds = postLoadSettings?.targetListIds ?? [];
-    if (
-      postLoadSettings?.targetListEnabled &&
-      targetListIds.length > 0 &&
-      !isOnSearchPage
-    ) {
-      // Build queue from cached URNs (pre-fetched when target list selector closed)
-      console.log(
-        `[EngageKit] Building queue for ${targetListIds.length} target lists...`,
-      );
-
-      try {
-        const queueItems = await buildQueueItems(targetListIds);
-
-        if (queueItems.length > 0) {
-          console.log(
-            `[EngageKit] Starting queue with ${queueItems.length} lists`,
-            {
-              queueItems: JSON.stringify(queueItems),
-            },
-          );
-
-          // Build settings snapshot for queue
-          const settingsForQueue: PostLoadSettings = {
-            targetListEnabled: postLoadSettings.targetListEnabled,
-            targetListIds: postLoadSettings.targetListIds,
-            timeFilterEnabled: postLoadSettings.timeFilterEnabled,
-            minPostAge: postLoadSettings.minPostAge,
-            skipFriendActivitiesEnabled:
-              postLoadSettings.skipFriendActivitiesEnabled,
-            skipCompanyPagesEnabled: postLoadSettings.skipCompanyPagesEnabled,
-            skipPromotedPostsEnabled: postLoadSettings.skipPromotedPostsEnabled,
-            skipBlacklistEnabled: postLoadSettings.skipBlacklistEnabled,
-            blacklistId: postLoadSettings.blacklistId,
-            skipFirstDegree: postLoadSettings.skipFirstDegree,
-            skipSecondDegree: postLoadSettings.skipSecondDegree,
-            skipThirdDegree: postLoadSettings.skipThirdDegree,
-            skipFollowing: postLoadSettings.skipFollowing,
-            skipCommentsLoading: postLoadSettings.skipCommentsLoading,
-          };
-
-          // Build comment generate settings snapshot for dynamic style branching
-          const commentGenerateSettings = commentGenerateSettingsDB
-            ? {
-                dynamicChooseStyleEnabled:
-                  commentGenerateSettingsDB.dynamicChooseStyleEnabled,
-                adjacentCommentsEnabled:
-                  commentGenerateSettingsDB.adjacentCommentsEnabled,
-              }
-            : undefined;
-
-          // Start queue processing - this opens first tab via background script
-          await processTargetListQueue(
-            queueItems,
-            settingsForQueue,
-            targetDraftCount,
-            commentGenerateSettings,
-          );
-
-          // Reset loading state - the new tab will handle Load Posts via auto-resume
-          setIsLoading(false);
-          setIsCollecting(false);
-          return;
-        } else {
-          // No valid URNs in any target list - show error and stop
-          console.error(`[EngageKit] No valid target lists with URNs`);
-          setIsLoading(false);
-          setIsCollecting(false);
-          return;
-        }
-      } catch (err) {
-        // Target list enabled but failed - stop, don't fall through to feed collection
-        console.error(`[EngageKit] Failed to build queue:`, err);
-        setIsLoading(false);
-        setIsCollecting(false);
-        return;
-      }
-    }
-
-    // Get current cards to find existing URNs (snapshot at start time)
-    const existingUrns = new Set(getCards.map((card) => card.urn));
-
-    // Run post collection using utility (blacklist is fetched internally)
-    await loadPostsToCards({
-      targetCount: targetDraftCount,
-      postLoadSettings,
-      existingUrns,
-      isUrnIgnored,
-      shouldStop: () => stopRequestedRef.current,
-      addCard,
-      addBatchCards,
-      updateCardComment,
-      updateCardStyleInfo,
-      updateBatchCardCommentAndStyle,
-      onProgress: setLoadingProgress,
-      onGenerationComplete: handleGenerationComplete,
-    });
-
-    setIsLoading(false);
-    setIsCollecting(false); // Done collecting, stop refocusing on blur
-  }, [
-    addCard,
-    addBatchCards,
-    getCards,
-    handleGenerationComplete,
-    isUrnIgnored,
-    setIsCollecting,
-    targetDraftCount,
-    updateCardComment,
-    updateCardStyleInfo,
-    updateBatchCardCommentAndStyle,
-  ]);
-
-  /**
-   * Stop the batch collection
-   */
-  const handleStop = useCallback(() => {
-    stopRequestedRef.current = true;
-    setIsCollecting(false); // Stop refocusing immediately when user stops
-  }, [setIsCollecting]);
+    handleStart();
+  }, [handleStart]);
 
   return (
     <div id="ek-compose-tab" className="bg-background flex flex-col gap-3 px-4">
@@ -613,7 +205,7 @@ export function ComposeTab() {
           ) : (
             <Button
               id="ek-load-posts-button"
-              onClick={handleStart}
+              onClick={handleStartWithCloseSettings}
               disabled={
                 isSubmitting || isEngageButtonGenerating || hasEngageButtonCards
               }
