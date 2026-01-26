@@ -7,6 +7,7 @@ import { ToasterSimple } from "@sassy/ui/toast";
 import { TooltipProvider } from "@sassy/ui/tooltip";
 
 import { useMigrateLegacyStorage } from "../../lib/migrate-legacy-storage";
+import { useInitPosthog } from "../../lib/posthog";
 import { ToggleButton } from "./_components/ToggleButton";
 import { SpacebarEngageObserver } from "./compose-tab/engage-button/SpacebarEngageObserver";
 import { useAutoEngage } from "./compose-tab/engage-button/useAutoEngage";
@@ -131,6 +132,8 @@ export default function App({ shadowRoot }: AppProps) {
     const feedUtilities = createFeedUtilities();
     return feedUtilities.watchAndRemoveNewPostsPill();
   }, []);
+
+  useInitPosthog();
 
   useMigrateLegacyStorage();
 

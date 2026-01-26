@@ -1,5 +1,7 @@
 import { create } from "zustand";
 
+import { posthog } from "../../../lib/posthog";
+
 // Tab indices for the sidebar
 // Order: Compose, Connect, Analytics, Account (4 tabs)
 export const SIDEBAR_TABS = {
@@ -30,6 +32,25 @@ export const useSidebarStore = create<SidebarStore>((set) => ({
   setSelectedTab: (selectedTab) => set({ selectedTab }),
   openToTab: (tab) => set({ isOpen: true, selectedTab: tab }),
 }));
+
+useSidebarStore.subscribe((state, prev) => {
+  if (state.isOpen !== prev.isOpen) {
+    posthog.capture(`extension:sidebar:v1:toggled`, {
+      type: state.isOpen ? "open" : "close",
+    });
+    if (state.isOpen) {
+      posthog.startSessionRecording();
+    } else {
+      posthog.stopSessionRecording();
+    }
+  }
+
+  if (state.selectedTab !== prev.selectedTab) {
+    posthog.capture("extension:sidebar:v1:tab_changed", {
+      selectedTab: state.selectedTab,
+    });
+  }
+});
 
 chrome.runtime.onMessage.addListener((message, _, sendResponse) => {
   console.info("received message in sidebar store:", message);

@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useShallow } from "zustand/shallow";
 
+import { posthog } from "@/lib/posthog";
 import { Button } from "@sassy/ui/button";
 import { TooltipWithDialog } from "@sassy/ui/components/tooltip-with-dialog";
 
@@ -38,8 +39,10 @@ export function ComposeTab() {
   // Custom hooks for complex logic
   const { handleSubmitAll, handleGenerationComplete, isSubmitting } =
     useSubmitBatch();
-  const { handleStart, handleStop, isLoading, loadingProgress, scrollProgress } =
-    useLoadPosts(targetDraftCount, handleGenerationComplete);
+  const { handleStart, handleStop, isLoading, loadingProgress } = useLoadPosts(
+    targetDraftCount,
+    handleGenerationComplete,
+  );
   const { queueProgress } = useAutoResume(handleGenerationComplete);
 
   // Subscribe to isUserEditing for paused indicator
@@ -105,8 +108,16 @@ export function ComposeTab() {
   // Close settings sheet when starting load
   const handleStartWithCloseSettings = useCallback(() => {
     setSettingsOpen(false);
+
+    // Track Load Posts start
+    posthog.capture("extension:load_posts:v1:begin", {
+      target_draft_count: targetDraftCount,
+      has_load_posts_cards: hasLoadPostsCards,
+      has_engage_button_cards: hasEngageButtonCards,
+    });
+
     handleStart();
-  }, [handleStart]);
+  }, [handleStart, targetDraftCount, hasLoadPostsCards, hasEngageButtonCards]);
 
   return (
     <div id="ek-compose-tab" className="bg-background flex flex-col gap-3 px-4">
@@ -242,12 +253,6 @@ export function ComposeTab() {
         {cardIds.length > 0 && (
           <div className="flex items-center justify-between border-t pt-2">
             <div className="flex items-center gap-2 text-xs font-medium">
-              {scrollProgress > 0 && isLoading && (
-                <span className="flex items-center gap-1 text-blue-600">
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  {scrollProgress} scrolling
-                </span>
-              )}
               {isLoading && isUserEditing && (
                 <span
                   className="flex items-center gap-1 text-amber-600"
