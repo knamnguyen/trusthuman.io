@@ -26,6 +26,15 @@ async function getDistinctId() {
 export function useInitPosthog() {
   const { user } = useBackgroundAuth();
 
+  const [ready] = useState(() => {
+    let resolver!: () => void;
+    const promise = new Promise<void>((resolve) => {
+      resolver = resolve;
+    });
+
+    return { promise, resolver };
+  });
+
   useEffect(() => {
     if (import.meta.env.DEV && !import.meta.env.VITE_ENABLE_POSTHOG) {
       return;
@@ -59,7 +68,7 @@ export function useInitPosthog() {
       posthog.capture("extension:initialized:v1");
     }
 
-    void init();
+    void init().then(() => ready.resolver());
   }, []);
 
   useEffect(() => {
@@ -67,12 +76,20 @@ export function useInitPosthog() {
       return;
     }
 
-    if (user === null) {
-      return;
+    if (user === null) return;
+
+    async function identify() {
+      if (user === null) {
+        return;
+      }
+
+      await ready.promise;
+
+      posthog.identify(user.id, {
+        email: user.emailAddress,
+      });
     }
 
-    posthog.identify(user.id, {
-      email: user.emailAddress,
-    });
+    void identify();
   }, [user]);
 }
