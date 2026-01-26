@@ -98,7 +98,17 @@ Before generating, review `process/context/example-complex-prd.md` to calibrate 
    - Group implementation into logical phase groups (e.g., "Phase 1-4: Foundation")
    - For each phase group: "What happens" (1-2 sentences) + "Test" (how to verify)
    - End with "Expected Outcome" (bullet list of final state)
-3. Non-Goals and Constraints
+3. **Phased Execution Workflow** (NEW - required section)
+   - **IMPORTANT**: This plan uses a phase-by-phase execution model with built-in approval gates
+   - For each RFC, follow this workflow:
+     - **Step 1: Pre-Phase Research** - Read existing code patterns, analyze similar implementations, identify blockers, present findings to user
+     - **Step 2: Detailed Planning** - Create detailed implementation steps, specify exact files, define success criteria, get user approval
+     - **Step 3: Implementation** - Execute approved plan exactly as specified, no deviations
+     - **Step 4: Testing** - Execute specific test scenarios, verify acceptance criteria, document issues, show results to user
+     - **Step 5: Phase Approval** - User reviews implementation and test results, approves to proceed or requests changes
+   - Include example phase execution showing the complete workflow
+   - Document benefits: user control, early feedback, visibility, quality, flexibility
+4. Non-Goals and Constraints
 4. Architecture Decisions (Final)
    - Numbered decisions with Rationale and Implications
 5. Architecture Clarification (Service Separation if any)
@@ -125,7 +135,16 @@ Before generating, review `process/context/example-complex-prd.md` to calibrate 
 - RFC-001 ... RFC-00N
 - For each RFC:
   - Title, Summary, Dependencies
+  - **Stage 0: Pre-Phase Research** (if applicable)
+    - Read existing code patterns
+    - Analyze similar implementations
+    - Identify potential blockers
+    - Present findings to user for review
   - Stages (3–8), Steps (2–6 each)
+  - **Post-Phase Testing** (specific test scenarios)
+    - What to test
+    - How to verify
+    - Expected results
   - Acceptance Criteria
   - API contracts / Data models
   - What's Functional Now / Ready For

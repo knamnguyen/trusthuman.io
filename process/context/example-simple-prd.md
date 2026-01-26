@@ -41,30 +41,33 @@ Rebuild the Duma social activity discovery app with identical features and mock 
 
 ## Execution Brief
 
+**IMPORTANT:** This is a SIMPLE (one-session) plan - implement continuously without approval gates. The phases below are logical groupings for understanding flow, NOT stop points.
+
 ### Phase 1: Project Setup
 **What happens:** Initialize Next.js with pnpm, upgrade to Tailwind CSS 4, install dependencies (React Query, shadcn/ui, lucide-react).
-
-**Test:** `pnpm dev` runs without errors, Tailwind classes work.
 
 ### Phase 2: Design System
 **What happens:** Create neobrutalist color palette, CSS variables, typography scale in `globals.css`.
 
-**Test:** Sample component renders with bold borders, rounded corners, playful colors.
-
 ### Phase 3: Data Layer
 **What happens:** Create `lib/mockData.ts` with all interfaces and mock data, set up React Query provider.
-
-**Test:** Custom hooks return mock data correctly.
 
 ### Phase 4: Core Components
 **What happens:** Build neobrutalist-styled UI components (Button, Card, Badge, Avatar, Drawer), Bottom Navigation, tab routing.
 
-**Test:** Components render with correct styling, navigation switches tabs.
-
 ### Phase 5: Feature Implementation
 **What happens:** Build SwipeFeed, ActivityCard, Drawers, MyActivities, HostedActivities, Profile, Chat components.
 
-**Test:** All 9 features work, mock data displays, animations smooth.
+### Post-Implementation Testing
+
+After completing all implementation steps, verify the following:
+
+1. **Smoke Test:** Run `pnpm dev` - app loads without errors
+2. **Navigation Test:** Click through all tabs (Profile, Create, Discover, Activities, Chat) - all routes work
+3. **Data Test:** Check that all mock data displays (30 users, 57 activities, 5 conversations)
+4. **Interaction Test:** Test swipe animations, drawer open/close, chat input
+5. **Visual Test:** Verify neobrutalist styling (rounded corners, bold borders, playful colors)
+6. **Console Test:** Check browser console - no errors or warnings
 
 ### Expected Outcome
 - Fully functional Duma clone with neobrutalist design
@@ -355,16 +358,22 @@ Rebuild the Duma social activity discovery app with identical features and mock 
 
 **Cursor Plan Mode:**
 - Import this checklist into Cursor Plan mode
-- Execute steps sequentially (1-17)
+- Execute all steps continuously (1-17) in one session
+- No approval gates between steps - maintain momentum
 - Check off items as completed
-- Update status markers as progress is made
+- Run Post-Implementation Testing (Section 3) after all steps complete
 
-**RIPER-5 Mode:**
+**RIPER-5 Mode (SIMPLE - Fast Track):**
 - **RESEARCH:** ✅ Complete - Reviewed original app structure, data, and tech stack
 - **INNOVATE:** ✅ Complete - Decided on neobrutalist design approach and tech stack migration
 - **PLAN:** ✅ Current - This plan document
-- **EXECUTE:** Next - Implement following checklist exactly
-- **REVIEW:** After execution - Validate against acceptance criteria
+- **EXECUTE:** Next - Implement all 17 steps continuously without pausing for approval
+- **REVIEW:** After execution - Run Post-Implementation Testing, validate against acceptance criteria
+
+**Key Difference from COMPLEX Plans:**
+- SIMPLE plans = continuous one-session implementation
+- COMPLEX plans = phase-by-phase with approval gates
+- For this SIMPLE plan: implement all steps → test at end → done
 
 **Next Step:** Begin implementation with Step 1: Initialize Next.js Project with pnpm
 
