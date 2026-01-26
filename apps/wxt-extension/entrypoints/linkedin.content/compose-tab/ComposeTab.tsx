@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { posthog } from "@/lib/posthog";
 import {
   Edit3,
   Feather,
@@ -398,6 +399,12 @@ export function ComposeTab() {
 
     // Get current cards to find existing URNs (snapshot at start time)
     const existingUrns = new Set(getCards.map((card) => card.urn));
+
+    posthog.capture("extension:load_posts:v1:begin", {
+      target_draft_count: targetDraftCount,
+      has_load_posts_cards: hasLoadPostsCards,
+      has_engage_button_cards: hasEngageButtonCards,
+    });
 
     // Run post collection using utility (blacklist is fetched internally)
     await loadPostsToCards({

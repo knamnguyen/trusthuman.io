@@ -21,6 +21,7 @@ export const useBackgroundAuth = () => {
     isSignedIn: false,
     user: null,
     session: null,
+    organization: null,
   });
   const [isLoaded, setIsLoaded] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
