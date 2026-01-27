@@ -23,7 +23,7 @@ CREATE TYPE "ImportStatus" AS ENUM ('NOT_STARTED', 'RUNNING', 'FINISHED');
 CREATE TYPE "SocialPlatform" AS ENUM ('X', 'LINKEDIN', 'THREADS', 'FACEBOOK');
 
 -- CreateEnum
-CREATE TYPE "SubmissionStatus" AS ENUM ('PENDING', 'VERIFIED', 'FAILED', 'REVOKED');
+CREATE TYPE "SubmissionStatus" AS ENUM ('VERIFYING', 'VERIFIED', 'FAILED', 'REVOKED');
 
 -- CreateEnum
 CREATE TYPE "TargetListStatus" AS ENUM ('BUILDING', 'COMPLETED');
@@ -375,7 +375,7 @@ CREATE TABLE "SocialSubmission" (
     "organizationId" TEXT NOT NULL,
     "platform" "SocialPlatform" NOT NULL,
     "postUrl" TEXT NOT NULL,
-    "status" "SubmissionStatus" NOT NULL DEFAULT 'PENDING',
+    "status" "SubmissionStatus" NOT NULL DEFAULT 'VERIFYING',
     "submittedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "verifiedAt" TIMESTAMP(3),
     "lastScannedAt" TIMESTAMP(3),

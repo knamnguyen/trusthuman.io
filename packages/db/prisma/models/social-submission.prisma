@@ -3,7 +3,7 @@ model SocialSubmission {
   organizationId String
   platform       SocialPlatform
   postUrl        String
-  status         SubmissionStatus @default(PENDING)
+  status         SubmissionStatus @default(VERIFYING)
   submittedAt    DateTime         @default(now())
   verifiedAt     DateTime?
   lastScannedAt  DateTime?
@@ -34,7 +34,7 @@ enum SocialPlatform {
 }
 
 enum SubmissionStatus {
-  PENDING
+  VERIFYING
   VERIFIED
   FAILED
   REVOKED
