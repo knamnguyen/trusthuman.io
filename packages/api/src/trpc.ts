@@ -156,8 +156,14 @@ const clerkClient = createClerkClient({
  * Uses auth cache (60s TTL) to deduplicate parallel DB queries
  */
 const isAuthed = t.middleware(async ({ ctx, next }) => {
+<<<<<<< Updated upstream
   // Get account id from header (sent by Next.js AccountLayout or Chrome extension)
   const activeAccountId = ctx.headers.get("x-account-id") ?? null;
+=======
+  // Get account id and source for logging
+  const activeAccountId = ctx.headers.get("x-account-id") ?? null;
+  // const activeAccountId = "01KFFVP3A0QPSZX9M0ZRS2P8NY";
+>>>>>>> Stashed changes
 
   // Unified auth: authenticateRequest works for both NextJS and Chrome extension
   // Returns full Auth object with orgId from active organization
@@ -193,12 +199,12 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
 
   // comment out for assumed access in dev environment
   // Only check permission if an account is selected
-  // if (result.activeAccount?.permitted === false) {
-  //   throw new TRPCError({
-  //     code: "FORBIDDEN",
-  //     message: "Access to this account is forbidden",
-  //   });
-  // }
+  if (result.activeAccount?.permitted === false) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Access to this account is forbidden",
+    });
+  }
 
   return next({
     ctx: {
