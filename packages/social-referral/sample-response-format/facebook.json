@@ -1,0 +1,37 @@
+[
+  {
+    "url": "https://www.facebook.com/groups/indiehackervn/permalink/2065106077610287/",
+    "text": "Giới thiệu PhoneCleanKit \n\nChào mọi người! Em quay lại với sản phẩm thứ 2.\n\nSau DiskCleanKit (dọn rác Mac) giới thiệu vào năm ngoái, em vừa ship xong PhoneCleanKit — app dọn dẹp bộ nhớ cho iPhone và iPad.\n\nÝ tưởng xuất phát từ chính user DiskCleanKit. Nhiều bạn hỏi \"có bản cho iPhone không?\" nên em làm luôn. Cùng hệ sinh thái Apple nên chuyển đổi cũng khá tự nhiên.\n\nVấn đề em giải quyết đơn giản thôi: ai xài iPhone lâu cũng gặp tình trạng bộ nhớ đầy mà không biết xóa gì. Ảnh trùng, video nặng, screenshot cũ cứ nằm im chiếm chỗ. PhoneCleanKit giúp tìm ra mấy thứ đó, gợi ý cho user xóa. Ngoài ra còn có tính năng nén video giúp giảm dung lượng mà vẫn giữ chất lượng ổn.\n\nApp chạy 100% trên máy. Em dùng Swift thuần với Vision framework của Apple để phân tích ảnh.\n\nNgoài tính năng chính, em còn làm kèm một bộ **widgets** khá thú vị: Storage Widget để theo dõi bộ nhớ ngay trên home screen, Countdown Event để đếm ngược sự kiện quan trọng, Pomodoro Timer cho ai cần focus làm việc, Flip Clock cho ai thích phong cách retro, Internet Speed Test để đo tốc độ mạng nhanh, và Charging Animation cho màn hình sạc sinh động hơn.\n\nEm nghĩ mấy cái widget này làm app có thêm giá trị sử dụng hàng ngày, không chỉ mở lên khi cần dọn rác. Và sẽ mở rộng thêm vài Widget mới trong các phiên bản sau.\n\nHiện tại app đang launch Product Hunt và đẩy marketing. Bác nào xài iPhone/iPad thử giúp em nhé!\n\nWebsite: [[[[[[[[https://phonecleankit.com](https://phonecleankit.com)](https://phonecleankit.com/)](https://phonecleankit.com/)](https://phonecleankit.com/)](https://phonecleankit.com/)](https://phonecleankit.com/)](https://phonecleankit.com/)](https://phonecleankit.com/)\n\nProduct Hunt: [[[[[[[[https://www.producthunt.com/products/phonecleankit](https://www.producthunt.com/products/phonecleankit)](https://www.producthunt.com/products/phonecleankit)](https://www.producthunt.com/products/phonecleankit)](https://www.producthunt.com/products/phonecleankit)](https://www.producthunt.com/products/phonecleankit)](https://www.producthunt.com/products/phonecleankit)](https://www.producthunt.com/products/phonecleankit)](https://www.producthunt.com/products/phonecleankit)\n\nEm xin gửi mã giảm giá 95% gói trọn đời ạ!\n\nCách 1: Truy cập [https://phonecleankit.com/#redeem](https://phonecleankit.com/#redeem) và nhập mã khuyến mãi\n\nCách 2: Mở app -> More -> Manage Plan -> FAQ -> How to Redeem -> Redeem code\n\nMã khuyến mãi: PHONECLEANKIT1USD\n\nCảm ơn bác Duy đã tạo ra cộng đồng build in public thật tuyệt vời, giúp các dev bơ vơ có chỗ dựa, và cảm ơn mọi người đã theo dõi từ sản phẩm đầu.\n\nChia sẻ thêm một chút về quyết định không làm universal app: ban đầu em định làm Universal app, gộp cả Mac và iPhone vào một app luôn cho tiện. \n\nLúc đó user mua app trên iPhone/iPad thì cũng sẽ có giá trị trên Mac và ngược lại.\n\nApple hỗ trợ dev làm Universal app cũng nhanh và dễ dàng, chỉ cần thêm platform iOS trên app Mac có sẵn là được.\n\nNhưng cân nhắc kỹ thì thấy không ổn. Universal app khó tách sản phẩm, khó marketing riêng, và khá thiệt thòi cho dev khi muốn scale từng platform.\n\nNên cuối cùng em chọn tách riêng làm 2 app độc lập.\n\n#bip #buildinpublicvn  #buildinpublic #indiehackers #bipvn_share"
+  },
+  {
+    "media": [
+      {
+        "thumbnail": "https://scontent-ord5-3.xx.fbcdn.net/v/t39.30808-6/619279002_4387228371494658_1799818767906441131_n.jpg?_nc_cat=107&ccb=1-7&_nc_sid=127cfc&_nc_ohc=uLf1tp8PySsQ7kNvwE39NLx&_nc_oc=Adn7mb5jYdVb75c7F00PsfZYuMWGkjF2NAk7QpNEyy885FGr5P87wxvtPZvOhqYIA7xRFjm6Ur2PpYbynuC5obbp&_nc_zt=23&_nc_ht=scontent-ord5-3.xx&_nc_gid=t6Ac9phiRWdh1EbiK2YHyw&oh=00_AfoQB0juneVKWhUitaPhsdWX75aMXEoxu-gB7Z9VlTWoxQ&oe=697E4977",
+        "__typename": "Photo",
+        "__isMedia": "Photo",
+        "accent_color": "FF3D5F4A",
+        "photo_product_tags": [],
+        "photo_image": {
+          "uri": "https://scontent-ord5-3.xx.fbcdn.net/v/t39.30808-6/619279002_4387228371494658_1799818767906441131_n.jpg?_nc_cat=107&ccb=1-7&_nc_sid=127cfc&_nc_ohc=uLf1tp8PySsQ7kNvwE39NLx&_nc_oc=Adn7mb5jYdVb75c7F00PsfZYuMWGkjF2NAk7QpNEyy885FGr5P87wxvtPZvOhqYIA7xRFjm6Ur2PpYbynuC5obbp&_nc_zt=23&_nc_ht=scontent-ord5-3.xx&_nc_gid=t6Ac9phiRWdh1EbiK2YHyw&oh=00_AfoQB0juneVKWhUitaPhsdWX75aMXEoxu-gB7Z9VlTWoxQ&oe=697E4977",
+          "height": 1365,
+          "width": 2048
+        },
+        "url": "https://www.facebook.com/photo/?fbid=4387228368161325&set=a.1440091449541713",
+        "id": "4387228368161325",
+        "feedback": {
+          "can_viewer_comment": false,
+          "id": "ZmVlZGJhY2s6NDM4NzIyOTQ2NDgyNzg4Mg=="
+        },
+        "container_story": {
+          "id": "UzpfSTEwMDAwNjIyNjE0NzAzNjo0Mzg3MjI5NDY0ODI3ODgyOjQzODcyMjk0NjQ4Mjc4ODI="
+        },
+        "ocrText": "May be an image of one or more people and text that says 'OV OVPODCAST. THE PODCAST.'"
+      }
+    ],
+    "url": "https://www.facebook.com/ovquang/posts/pfbid02hya87AAnxB9p9dqjQMcnW8diqMnYFY1JPrw2UkzFk1Y8KomEc82LgqzRbtV3vRxWl",
+    "text": "One of the most special conversations I’ve had.\n\nI sat down with Bùi Kiến Thành (94 years old), one of the key thinkers behind Vietnam’s economic transformation - including the ideas that later shaped Đổi Mới.\n\nFor decades, he advised leaders and institutions when Vietnam’s future was genuinely uncertain.\n\nMuch of his influence happened quietly, behind the scenes, across policy, finance and long-term national thinking.\n\nThis episode feels less like an interview and more like a living history lesson: first-hand thinking from someone who helped move Vietnam from scarcity toward growth.\n\nIf you want to understand how modern Vietnam was actually built, this is a must-watch → watchov.com",
+    "likes": 11,
+    "comments": 1,
+    "shares": 3
+  }
+]

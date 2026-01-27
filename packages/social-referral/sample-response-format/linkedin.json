@@ -1,0 +1,594 @@
+[
+  {
+    "type": "linkedinVideo",
+    "linkedinVideo": {
+      "videoPlayMetadata": {
+        "duration": 30333,
+        "thumbnail": {
+          "artifacts": [
+            {
+              "width": 1280,
+              "digitalmediaAsset": "urn:li:digitalmediaAsset:urn:li:digitalmediaAsset:D5605AQF6aM3IWS2Q2Q",
+              "fileIdentifyingUrlPathSegment": "high/B56Zo1pnVAG4BU-/0/1761836694789?e=1763121600&v=beta&t=m2vykAGL-ywAF9vkUosu3yr9eSWpIN-jzZZzV7RFhps",
+              "expiresAt": 1763121600000,
+              "height": 720
+            },
+            {
+              "width": 640,
+              "digitalmediaAsset": "urn:li:digitalmediaAsset:urn:li:digitalmediaAsset:D5605AQF6aM3IWS2Q2Q",
+              "fileIdentifyingUrlPathSegment": "low/B56Zo1pnVAG4BQ-/0/1761836694790?e=1763121600&v=beta&t=nYam24N4oQfpjv2ASaRs72gwptNYZYiFBYaGXquMJME",
+              "expiresAt": 1763121600000,
+              "height": 360
+            }
+          ],
+          "rootUrl": "https://media.licdn.com/dms/image/v2/D5605AQF6aM3IWS2Q2Q/videocover-"
+        },
+        "progressiveStreams": [
+          {
+            "streamingLocations": [
+              {
+                "url": "https://dms.licdn.com/playlist/vid/v2/D5605AQF6aM3IWS2Q2Q/mp4-720p-30fp-crf28/B56Zo1pnVAG4CI-/0/1761836698085?e=1763121600&v=beta&t=XR8RcH_5H_B7k3xHiu1P7IIjqxKu0VAdl-Alc7MXeQE",
+                "expiresAt": 1763121600000
+              }
+            ],
+            "size": 0,
+            "bitRate": 1433623,
+            "width": 1280,
+            "mediaType": "video/mp4",
+            "height": 720
+          },
+          {
+            "streamingLocations": [
+              {
+                "url": "https://dms.licdn.com/playlist/vid/v2/D5605AQF6aM3IWS2Q2Q/mp4-640p-30fp-crf28/B56Zo1pnVAG4Bw-/0/1761836698084?e=1763121600&v=beta&t=U0P-MFU0o7ql0nJe5FZFVEWpPbKkTuDZxYXEBcMBWks",
+                "expiresAt": 1763121600000
+              }
+            ],
+            "size": 0,
+            "bitRate": 1121199,
+            "width": 1138,
+            "mediaType": "video/mp4",
+            "height": 640
+          }
+        ],
+        "transcripts": [],
+        "entityUrn": "urn:li:digitalmediaAsset:D5605AQF6aM3IWS2Q2Q",
+        "provider": "UGC",
+        "aspectRatio": 1.7777778,
+        "media": "urn:li:digitalmediaAsset:D5605AQF6aM3IWS2Q2Q",
+        "adaptiveStreams": [
+          {
+            "initialBitRate": 614994,
+            "protocol": "HLS",
+            "mediaType": "application/vnd.apple.mpegURL",
+            "masterPlaylists": [
+              {
+                "url": "https://dms.licdn.com/playlist/vid/dynamic/D5605AQF6aM3IWS2Q2Q/BAQZnZKI9SXjQ?e=1763121600&v=beta&t=aESecadxfK6ZHRcOS025Q8NnDWsZvBfPEZYqGeZ33fY",
+                "expiresAt": 1763121600000
+              }
+            ]
+          },
+          {
+            "initialBitRate": 614994,
+            "protocol": "DASH",
+            "mediaType": "application/dash+xml",
+            "masterPlaylists": [
+              {
+                "url": "https://dms.licdn.com/playlist/vid/dash/D5605AQF6aM3IWS2Q2Q/BAQZnZKI9SXjQ?e=1763121600&v=beta&t=Nob2NzmO2mJ0w2otkEPDHlnjsqXypEEIAfSL8nhh7mg",
+                "expiresAt": 1763121600000
+              }
+            ]
+          }
+        ],
+        "trackingId": "kcXkWvTER9mtQp/H30j/EA=="
+      }
+    },
+    "isActivity": false,
+    "urn": "urn:li:activity:7389678728915795969",
+    "url": "https://www.linkedin.com/posts/withkynam_if-you-dont-grind-on-a-saturday-you-have-activity-7389678728915795969-SvPl?utm_source=combined_share_message&utm_medium=member_desktop&rcm=ACoAAD0I0qgBC_ob3spBi0gOcg7LEDgj2HKVHDE",
+    "timeSincePosted": "1w",
+    "shareUrn": "urn:li:ugcPost:7389677456439480320",
+    "text": "if you don't grind on a Saturday - you have already lost.\n\nmost young people spend their weekends at parties. \n\nor worse, \"networking events.\"\n\nsales guys talking. marketing girls taking photos. founders promoting themselves.\n\nno real shit gets done.\n\nso I started a labor camp - hosted this week by Kiet Le and Chris Nguyen, CFA\n\nyou show up. you ship. you don't go home until you have a working demo.\n\nthe folks who were enslaved this weeks include:\n\nBao Bui Le Chi: Completed 90% of a landing page. 90% is a failing grade. We're still waiting for you, comrade.\n\nChris Nguyen, CFA: Built an internal data pipeline for the Vietnamese stock market. Useful infrastructure for the new regime.\n\nKiet Le: Built a frontend for an AI voice agent. Automating the labor of the masses. Good.\n\nDavid Tran: Tested a photo restoration app. Erasing the imperfect past.\n\nAnh Duy: Built a personal task tracker. A tool for self-surveillance. Approved.\n\nKy-Nam 🧑. (afar): shipped demo prototype for group chat analytics app\n\ni don't care about your feelings. i care about your output.\n\nhappiness is a distraction.\n\nsuffer for progress.\n\nand you will be surprised how much fun it actually is :D\n\nwanna learn more about our grind sessions? check it out in the comment below 💪",
+    "attributes": [
+      {
+        "start": 300,
+        "length": 7,
+        "type": "PROFILE_MENTION",
+        "profile": {
+          "firstName": "Kiet",
+          "lastName": "Le",
+          "occupation": "I develop and launch online products. Fashine is my current product",
+          "id": "1060959631",
+          "publicId": "anhluom",
+          "trackingId": "fGl2CJUpRtGCGeYZrqOdMA==",
+          "profileId": "ACoAAD889Y8Bu1TrPoVleIRIqyhImqOX5UPjxOE",
+          "picture": "https://media.licdn.com/dms/image/v2/D5603AQFWfsQTS4lGcg/profile-displayphoto-shrink_400_400/B56ZUpG1buHQAg-/0/1740151412939?e=1764201600&v=beta&t=qZTpjsu--icLprbCyOi0hMwX-E1KCQGdFp6eJ0Zqw4E"
+        }
+      },
+      {
+        "start": 312,
+        "length": 17,
+        "type": "PROFILE_MENTION",
+        "profile": {
+          "firstName": "Chris",
+          "lastName": "Nguyen, CFA",
+          "occupation": "Researcher | Innovation Enthusiast | Forbes 1B under 100 | vibe colder",
+          "id": "877013940",
+          "publicId": "chris-nguyen-cfa-270863205",
+          "trackingId": "Z4Llhx/xT2CiNv93mhn8KQ==",
+          "profileId": "ACoAADRGK7QBZyfbIUv5VsaWZT5XEpdnx7bPhaM",
+          "picture": "https://media.licdn.com/dms/image/v2/D5603AQG2PaT25_PiJQ/profile-displayphoto-shrink_100_100/profile-displayphoto-shrink_100_100/0/1692345500609?e=1764201600&v=beta&t=rRkn6LK2MUvGnCCRhvqgQUxP02n8RBsPP7eWfogSe00",
+          "backgroundImage": "https://media.licdn.com/dms/image/v2/D5616AQHS0X7D1E56FQ/profile-displaybackgroundimage-shrink_200_800/profile-displaybackgroundimage-shrink_200_800/0/1728902410781?e=1764201600&v=beta&t=gZhw0FYMbGlH6H4a59T4GI9FG4YxqtgPDtZE6AeUjSM"
+        }
+      },
+      {
+        "start": 453,
+        "length": 14,
+        "type": "PROFILE_MENTION",
+        "profile": {
+          "firstName": "Bao",
+          "lastName": "Bui Le Chi",
+          "occupation": "Co-Founder @ Selfomy",
+          "id": "360799189",
+          "publicId": "builechibao",
+          "trackingId": "cdQoQ+AeQHacUws8ypymnA==",
+          "profileId": "ACoAABWBW9UBQtDA64ZBg_mTF-joiv-SPfybGUA",
+          "picture": "https://media.licdn.com/dms/image/v2/C5603AQG79LrW1hopNg/profile-displayphoto-shrink_100_100/profile-displayphoto-shrink_100_100/0/1619278269029?e=1764201600&v=beta&t=YrFejJf3tLSp0Y9zLnC8Vij7EM7qJpfDAxn9COciTdE",
+          "backgroundImage": "https://media.licdn.com/dms/image/v2/C5616AQGH28hPTbPh9Q/profile-displaybackgroundimage-shrink_200_800/profile-displaybackgroundimage-shrink_200_800/0/1619278572470?e=1764201600&v=beta&t=Uug9bZ0AN-yWpgnNMkFYsnVuw4Bnq0bhLK-pI0hywkU"
+        }
+      },
+      {
+        "start": 565,
+        "length": 17,
+        "type": "PROFILE_MENTION",
+        "profile": {
+          "firstName": "Chris",
+          "lastName": "Nguyen, CFA",
+          "occupation": "Researcher | Innovation Enthusiast | Forbes 1B under 100 | vibe colder",
+          "id": "877013940",
+          "publicId": "chris-nguyen-cfa-270863205",
+          "trackingId": "Z4Llhx/xT2CiNv93mhn8KQ==",
+          "profileId": "ACoAADRGK7QBZyfbIUv5VsaWZT5XEpdnx7bPhaM",
+          "picture": "https://media.licdn.com/dms/image/v2/D5603AQG2PaT25_PiJQ/profile-displayphoto-shrink_100_100/profile-displayphoto-shrink_100_100/0/1692345500609?e=1764201600&v=beta&t=rRkn6LK2MUvGnCCRhvqgQUxP02n8RBsPP7eWfogSe00",
+          "backgroundImage": "https://media.licdn.com/dms/image/v2/D5616AQHS0X7D1E56FQ/profile-displaybackgroundimage-shrink_200_800/profile-displaybackgroundimage-shrink_200_800/0/1728902410781?e=1764201600&v=beta&t=gZhw0FYMbGlH6H4a59T4GI9FG4YxqtgPDtZE6AeUjSM"
+        }
+      },
+      {
+        "start": 692,
+        "length": 7,
+        "type": "PROFILE_MENTION",
+        "profile": {
+          "firstName": "Kiet",
+          "lastName": "Le",
+          "occupation": "I develop and launch online products. Fashine is my current product",
+          "id": "1060959631",
+          "publicId": "anhluom",
+          "trackingId": "fGl2CJUpRtGCGeYZrqOdMA==",
+          "profileId": "ACoAAD889Y8Bu1TrPoVleIRIqyhImqOX5UPjxOE",
+          "picture": "https://media.licdn.com/dms/image/v2/D5603AQFWfsQTS4lGcg/profile-displayphoto-shrink_400_400/B56ZUpG1buHQAg-/0/1740151412939?e=1764201600&v=beta&t=qZTpjsu--icLprbCyOi0hMwX-E1KCQGdFp6eJ0Zqw4E"
+        }
+      },
+      {
+        "start": 784,
+        "length": 10,
+        "type": "PROFILE_MENTION",
+        "profile": {
+          "firstName": "David",
+          "lastName": "Tran",
+          "occupation": "Full-stack developer",
+          "id": "130408385",
+          "publicId": "david-tran-99580b37",
+          "trackingId": "DNe5PPcLT1aKqTjukAOiEQ==",
+          "profileId": "ACoAAAfF38EBGcQwGjqeNjRqcwrzvqKfjTxnLXE",
+          "picture": "https://media.licdn.com/dms/image/v2/D4E03AQHwLjak7e9XMw/profile-displayphoto-shrink_100_100/profile-displayphoto-shrink_100_100/0/1702527172025?e=1764201600&v=beta&t=9rXkSCeoxVhjFiFbxa1G49ofJy5zvU5ac4T9GRGIdSM"
+        }
+      }
+    ],
+    "comments": [
+      {
+        "time": 1762422620436,
+        "link": "https://www.linkedin.com/feed/update/urn:li:ugcPost:7389677456439480320?commentUrn=urn%3Ali%3Acomment%3A%28ugcPost%3A7389677456439480320%2C7392136246581665792%29&dashCommentUrn=urn%3Ali%3Afsd_comment%3A%287392136246581665792%2Curn%3Ali%3AugcPost%3A7389677456439480320%29",
+        "text": "I grind all week long, even when my kids are bugging me. \"Dad can I play Smash Bros.?\"\n\n\"Yeah sure let me get past this compiler error and I'll be right there!\"\n\nIsn't that the way it was meant to be?",
+        "entities": [],
+        "pinned": false,
+        "originalLanguage": "English",
+        "author": {
+          "firstName": "Brinn",
+          "lastName": "Heseltine",
+          "occupation": "Founder & Systems Architect at RiftForged | Real-Time MMO & AI Cognition Engine Developer | Fabricator Turned Systems Architect",
+          "id": "521332338",
+          "publicId": "brinn-heseltine-b56714126",
+          "trackingId": "70I3bCoASjaUESQlYiN1Dw==",
+          "profileId": "ACoAAB8S5nIBmDJMJeHNZVBaKllY96FdJ01hdzk",
+          "picture": "https://media.licdn.com/dms/image/v2/D5603AQHyGI9yy7SsQQ/profile-displayphoto-scale_100_100/B56ZiaQextHcAc-/0/1754934669866?e=1764201600&v=beta&t=6VriQ5yRl757ruod57fJJeAlMeD3l4b30JsFEampIyo",
+          "backgroundImage": "https://media.licdn.com/dms/image/v2/D5616AQFX42MVe3UpGQ/profile-displaybackgroundimage-shrink_350_1400/B56ZjWusWEHcAY-/0/1755949223750?e=1764201600&v=beta&t=5ec-APMF1IUZqWjRjbzgI95HxDuj-YqMDsZyyBKsfdg",
+          "distance": "OUT_OF_NETWORK"
+        }
+      },
+      {
+        "time": 1762354364790,
+        "link": "https://www.linkedin.com/feed/update/urn:li:ugcPost:7389677456439480320?commentUrn=urn%3Ali%3Acomment%3A%28ugcPost%3A7389677456439480320%2C7391849961652559874%29&dashCommentUrn=urn%3Ali%3Afsd_comment%3A%287391849961652559874%2Curn%3Ali%3AugcPost%3A7389677456439480320%29",
+        "text": "The death of internet is real.",
+        "entities": [],
+        "pinned": false,
+        "originalLanguage": "English",
+        "author": {
+          "firstName": "Jurek",
+          "lastName": "Wianecki",
+          "occupation": "Planungsleiter Architektur @ Drees & Sommer",
+          "id": "261407958",
+          "publicId": "jerzy-wianecki",
+          "trackingId": "3/vXwslQTE+BBQKBjMLeNQ==",
+          "profileId": "ACoAAA-UxNYB2PmzppJ0ZAHhOxxZGjLnwYcCfik",
+          "picture": "https://media.licdn.com/dms/image/v2/D4D03AQGzA9lnojGNEg/profile-displayphoto-shrink_100_100/profile-displayphoto-shrink_100_100/0/1710548444389?e=1764201600&v=beta&t=o_zWPfzIVNN0dGf_QCxRCZb7OQobGcVSnh8uWz0kCVY",
+          "backgroundImage": "https://media.licdn.com/dms/image/v2/D4D16AQH8AGnVP5EUig/profile-displaybackgroundimage-shrink_200_800/B4DZcRGzBLGgAc-/0/1748338684755?e=1764201600&v=beta&t=0n6DwBHycnkDSRkovo4EOVX4NTxKskbpbXqFRSH5ASE",
+          "distance": "OUT_OF_NETWORK"
+        }
+      },
+      {
+        "time": 1762168054627,
+        "link": "https://www.linkedin.com/feed/update/urn:li:ugcPost:7389677456439480320?commentUrn=urn%3Ali%3Acomment%3A%28ugcPost%3A7389677456439480320%2C7391068520190562304%29&dashCommentUrn=urn%3Ali%3Afsd_comment%3A%287391068520190562304%2Curn%3Ali%3AugcPost%3A7389677456439480320%29",
+        "text": "The pain is worth it when you enjoy what you do Ky-Nam 🧑‍🚀",
+        "entities": [
+          {
+            "start": 48,
+            "length": 10,
+            "type": "PROFILE_MENTION",
+            "profile": {
+              "firstName": "Ky-Nam",
+              "lastName": "🧑‍🚀",
+              "occupation": "24 y/o tech founder | 1m view/week | 3x Majors CS, Econ, Politic | 30 startup comp wins | Creator of engagekit.io to 10x your LinkedIn traffic and outbound ⬇️",
+              "id": "579569865",
+              "publicId": "withkynam",
+              "trackingId": "CxW9FY7BQV+6d8CbsqcIGA==",
+              "profileId": "ACoAACKLiMkBB9IZ0nk3kwW5fshixJ4Hl799tPs",
+              "picture": "https://media.licdn.com/dms/image/v2/D5603AQHW5qAnwgnC9w/profile-displayphoto-scale_200_200/B56ZlGgWCgHAAY-/0/1757824509046?e=1764201600&v=beta&t=Z2ipCnNCE8CCqiSGfXOj6HOzTF3v9hoQgdq1N28mYDc",
+              "backgroundImage": "https://media.licdn.com/dms/image/v2/D5616AQG6vOfvKBfqtQ/profile-displaybackgroundimage-shrink_350_1400/B56ZlGhIwFIsAY-/0/1757824716301?e=1764201600&v=beta&t=X4wq0GAKNn5t4WtclnEsw2aSEguf0yQSUWekpmIpme0"
+            }
+          }
+        ],
+        "pinned": false,
+        "originalLanguage": "English",
+        "author": {
+          "firstName": "Eseoghene",
+          "lastName": "Abushe",
+          "occupation": "Ghostwriter for Founders, Creators & Brands | Sharp Copy, Zero Fluff | Stories That Sell",
+          "id": "857950047",
+          "publicId": "eseoghene-abushe",
+          "trackingId": "Ql5r1pUmQLecUhQqnMKN4g==",
+          "profileId": "ACoAADMjR18B0RaBZzKEqBIP8FkkqnVsOZ8hHSg",
+          "picture": "https://media.licdn.com/dms/image/v2/D4D03AQHYt-yuYI3YHA/profile-displayphoto-shrink_100_100/profile-displayphoto-shrink_100_100/0/1707012360567?e=1764201600&v=beta&t=Ul95Lyq69PDAvVUugzhPyyS4ux0n6gmyZH3OixfxJDk",
+          "backgroundImage": "https://media.licdn.com/dms/image/v2/D4D16AQHAZZkQj6Aptw/profile-displaybackgroundimage-shrink_200_800/profile-displaybackgroundimage-shrink_200_800/0/1707012059574?e=1764201600&v=beta&t=I1-FaPJLrQrf8-w1lCqUV7lzh2fhxVVWbqyp2wgc8-U",
+          "distance": "OUT_OF_NETWORK"
+        }
+      },
+      {
+        "time": 1762139116461,
+        "link": "https://www.linkedin.com/feed/update/urn:li:ugcPost:7389677456439480320?commentUrn=urn%3Ali%3Acomment%3A%28ugcPost%3A7389677456439480320%2C7390947144729497600%29&dashCommentUrn=urn%3Ali%3Afsd_comment%3A%287390947144729497600%2Curn%3Ali%3AugcPost%3A7389677456439480320%29",
+        "text": "The labor camp idea is wild. How do you even keep up the energy for a full weekend of shipping? Kudos to Chris for that data pipeline.",
+        "entities": [],
+        "pinned": false,
+        "originalLanguage": "English",
+        "author": {
+          "firstName": "Anh",
+          "lastName": "Nguyen",
+          "occupation": "I helped 50+ founders build and scale apps/platforms. Co-Founder at Politetech. Looking for instant developers to build software? Let’s chat | Grab FREE tools in my Featured.",
+          "id": "487981328",
+          "publicId": "ngocanhnguyen0908",
+          "trackingId": "KqyEVYo5Thy18u1Ha4Y85w==",
+          "profileId": "ACoAAB0WARABdoV1BVnCUGDRF65xJoOfDtiZwhE",
+          "picture": "https://media.licdn.com/dms/image/v2/D4D03AQHk0L66rtDb7w/profile-displayphoto-shrink_100_100/profile-displayphoto-shrink_100_100/0/1714021271369?e=1764201600&v=beta&t=fVkyqnLnZTd1DmewZ2JRZypN-zpJC61cESXCgpE1fug",
+          "backgroundImage": "https://media.licdn.com/dms/image/v2/D5616AQEVcUks6RfdYg/profile-displaybackgroundimage-shrink_350_1400/B56ZXiHTg5GQAY-/0/1743255321572?e=1764201600&v=beta&t=LBnTgJ8Y1PI2ofNjFA2Zu1oh8-E7Oc6ejN8fnqcZxFk",
+          "distance": "OUT_OF_NETWORK"
+        }
+      },
+      {
+        "time": 1762099656107,
+        "link": "https://www.linkedin.com/feed/update/urn:li:ugcPost:7389677456439480320?commentUrn=urn%3Ali%3Acomment%3A%28ugcPost%3A7389677456439480320%2C7390781636008882176%29&dashCommentUrn=urn%3Ali%3Afsd_comment%3A%287390781636008882176%2Curn%3Ali%3AugcPost%3A7389677456439480320%29",
+        "text": "Ky-Nam 🧑‍🚀 Grinding on weekends is where real progress happens.",
+        "entities": [],
+        "pinned": false,
+        "originalLanguage": "English",
+        "author": {
+          "firstName": "Simon",
+          "lastName": "Efokoa",
+          "occupation": "Your content might be one tweak away from converting. Turn engagement into booked calls with content that sells for you.",
+          "id": "1018029023",
+          "publicId": "simon-efokoa",
+          "trackingId": "4r1RFXStRceclBx8ojdVAQ==",
+          "profileId": "ACoAADyt498BXf3BUPMrbmzVYIRI99k4AXzSm5s",
+          "picture": "https://media.licdn.com/dms/image/v2/D4E03AQGB3J70hv4Xpw/profile-displayphoto-shrink_800_800/B4EZdQ7xbnHQAk-/0/1749409536078?e=1764201600&v=beta&t=VHwMgfz4TJqV0_9Z93S6l6NdeHezKKNro5ENcI5HoLQ",
+          "backgroundImage": "https://media.licdn.com/dms/image/v2/D4E16AQHR9aTD6q04Ng/profile-displaybackgroundimage-shrink_200_800/B4EZoRPcRjHcAU-/0/1761225852485?e=1764201600&v=beta&t=We-mRgkLOwVnJD-tZzxuQDZju3rKPQrfvIT6NfshA6Y",
+          "distance": "OUT_OF_NETWORK"
+        }
+      },
+      {
+        "time": 1762099531895,
+        "link": "https://www.linkedin.com/feed/update/urn:li:ugcPost:7389677456439480320?commentUrn=urn%3Ali%3Acomment%3A%28ugcPost%3A7389677456439480320%2C7390781115021758464%29&dashCommentUrn=urn%3Ali%3Afsd_comment%3A%287390781115021758464%2Curn%3Ali%3AugcPost%3A7389677456439480320%29",
+        "text": "So true. Discipline creates momentum, but balance preserves creativity.",
+        "entities": [],
+        "pinned": false,
+        "originalLanguage": "English",
+        "author": {
+          "firstName": "Uma",
+          "lastName": "Subramanian",
+          "occupation": "🧡 Helping Tech Professionals Build Influence, Visibility & Become Sought-After Leaders | Ex-Microsoft | Author of The Sought-After Leader (Coming May 2026) | Leadership Coach",
+          "id": "36465336",
+          "publicId": "uma-subramanian-limitless",
+          "trackingId": "yuRUGoyuQSaFrv1ijbWhxg==",
+          "profileId": "ACoAAAIsargBi6mOYEj8gfDdw2cen6EZKkuKabA",
+          "picture": "https://media.licdn.com/dms/image/v2/D5603AQERztOkjsf3KA/profile-displayphoto-scale_100_100/B56ZgfD4_CHQAg-/0/1752867771196?e=1764201600&v=beta&t=PD6ZHXnJACPDhw6Nc21WCcMDRD2cN0J-JT0T_V3ornw",
+          "backgroundImage": "https://media.licdn.com/dms/image/v2/D5616AQFhHzF7PBSbtA/profile-displaybackgroundimage-shrink_350_1400/B56Zk0mtovJ0AY-/0/1757524188267?e=1764201600&v=beta&t=g-47bFLumQLjq5VjSS-MSVjwxqd4gbmcrS3B1RKGncg",
+          "distance": "OUT_OF_NETWORK"
+        }
+      },
+      {
+        "time": 1762093918825,
+        "link": "https://www.linkedin.com/feed/update/urn:li:ugcPost:7389677456439480320?commentUrn=urn%3Ali%3Acomment%3A%28ugcPost%3A7389677456439480320%2C7390757572099629056%29&dashCommentUrn=urn%3Ali%3Afsd_comment%3A%287390757572099629056%2Curn%3Ali%3AugcPost%3A7389677456439480320%29",
+        "text": "Grind never stops! ",
+        "entities": [],
+        "pinned": false,
+        "author": {
+          "firstName": "Sanchit",
+          "lastName": "Shangari",
+          "occupation": "I make AI easy for everyone",
+          "id": "522417173",
+          "publicId": "sanchit-shangari",
+          "trackingId": "9VTCOLgIRMi5wrQVjiLY9g==",
+          "profileId": "ACoAAB8jdBUBf-azWKLYNjGtUBIGRVej-qlc68k",
+          "picture": "https://media.licdn.com/dms/image/v2/D5603AQF0YlQfM64IHQ/profile-displayphoto-shrink_200_200/B56Zb.OVaQHoAY-/0/1748021893141?e=1764201600&v=beta&t=cmGO7-VtugsnuGxPnLm1c9So8mz-9oRT7Y4ixs-XZMQ",
+          "backgroundImage": "https://media.licdn.com/dms/image/v2/D5616AQH2vOHTnKag1Q/profile-displaybackgroundimage-shrink_350_1400/B56ZWNZHzlGoAc-/0/1741833930198?e=1764201600&v=beta&t=aNZm6jZISVQf3vfTPsizN2ysMCeTvuBoh7pf2gcCrX4",
+          "distance": "OUT_OF_NETWORK"
+        }
+      },
+      {
+        "time": 1762070920322,
+        "link": "https://www.linkedin.com/feed/update/urn:li:ugcPost:7389677456439480320?commentUrn=urn%3Ali%3Acomment%3A%28ugcPost%3A7389677456439480320%2C7390661109386727424%29&dashCommentUrn=urn%3Ali%3Afsd_comment%3A%287390661109386727424%2Curn%3Ali%3AugcPost%3A7389677456439480320%29",
+        "text": "Yo this is fun ky....... i never personally cared about big talk events and places where we got to buzz talk just to keep ourselves from dozing.....this is a great idea, #grindon bro",
+        "entities": [],
+        "pinned": false,
+        "originalLanguage": "English",
+        "author": {
+          "firstName": "Shan",
+          "lastName": "Mukherjee",
+          "occupation": "JS||C++||frontend||web dev enthusiast||interested in problem solving||game dev enthusiast||ML||backend||mongoDB||auth management",
+          "id": "1397901352",
+          "publicId": "shan-mukherjee-8341a2330",
+          "trackingId": "mmMYp5p+RRuMRKVDvHEGYQ==",
+          "profileId": "ACoAAFNSSCgBzYfZmSJWQghZXO3ckV9Mbh9neJ4",
+          "picture": "https://media.licdn.com/dms/image/v2/D4D03AQESFDCv5VhB1w/profile-displayphoto-scale_400_400/B4DZob597kIgAg-/0/1761404775145?e=1764201600&v=beta&t=V2ws8mji6LIWgzklYS6oFcDyPDjbpnx-hq9I2le3LQ0",
+          "backgroundImage": "https://media.licdn.com/dms/image/v2/D4D16AQFSp9nac_aFLQ/profile-displaybackgroundimage-shrink_350_1400/B4DZlDfYF5IgAY-/0/1757773924343?e=1764201600&v=beta&t=5HYxK8raDGQXZX9vmuFvX2Xl-LOTBIvNZ4NuOg909lk",
+          "distance": "OUT_OF_NETWORK"
+        }
+      },
+      {
+        "time": 1762067523838,
+        "link": "https://www.linkedin.com/feed/update/urn:li:ugcPost:7389677456439480320?commentUrn=urn%3Ali%3Acomment%3A%28ugcPost%3A7389677456439480320%2C7390646863500238848%29&dashCommentUrn=urn%3Ali%3Afsd_comment%3A%287390646863500238848%2Curn%3Ali%3AugcPost%3A7389677456439480320%29",
+        "text": "Ky nam going hard",
+        "entities": [],
+        "pinned": false,
+        "originalLanguage": "English",
+        "author": {
+          "firstName": "Nahfid",
+          "lastName": "Nissar",
+          "occupation": "SDE Intern @Nbyula | Prev Intern @CreditMitra | KL 25' | FinTech | AWS Certified | Full Stack - MERN, Django, Spring, React Native | Cybersec | LLM - RAG, Agents | Red Hat Cert Enterprise App Dev",
+          "id": "951409227",
+          "publicId": "nahfid",
+          "trackingId": "NkTt+A8SQgiX/vnd6J1RuA==",
+          "profileId": "ACoAADi1WksB2fpFa5WGW46r21NHokgDrYcM57I",
+          "picture": "https://media.licdn.com/dms/image/v2/C5603AQEIZGcZ31-BKw/profile-displayphoto-shrink_100_100/profile-displayphoto-shrink_100_100/0/1662401025715?e=1764201600&v=beta&t=tsoRZEemjeZiraJsNv08EaJeywsoD4_XhZ8Jxxwz6QQ",
+          "backgroundImage": "https://media.licdn.com/dms/image/v2/D5616AQEG8G4iUe1bOA/profile-displaybackgroundimage-shrink_200_800/profile-displaybackgroundimage-shrink_200_800/0/1710323686930?e=1764201600&v=beta&t=NtfGNAiVFOjYFAI18sp_FJD6W0gx2LgKb62DTkO_WWI",
+          "distance": "OUT_OF_NETWORK"
+        }
+      },
+      {
+        "time": 1761920427282,
+        "link": "https://www.linkedin.com/feed/update/urn:li:ugcPost:7389677456439480320?commentUrn=urn%3Ali%3Acomment%3A%28ugcPost%3A7389677456439480320%2C7390029895827075073%29&dashCommentUrn=urn%3Ali%3Afsd_comment%3A%287390029895827075073%2Curn%3Ali%3AugcPost%3A7389677456439480320%29",
+        "text": "Ky-Nam, this kind of environment sets a different standard. Not just about working weekends but about showing up to build with people who hold the bar high.",
+        "entities": [
+          {
+            "start": 0,
+            "length": 6,
+            "type": "PROFILE_MENTION",
+            "profile": {
+              "firstName": "Ky-Nam",
+              "lastName": "🧑‍🚀",
+              "occupation": "24 y/o tech founder | 1m view/week | 3x Majors CS, Econ, Politic | 30 startup comp wins | Creator of engagekit.io to 10x your LinkedIn traffic and outbound ⬇️",
+              "id": "579569865",
+              "publicId": "withkynam",
+              "trackingId": "CxW9FY7BQV+6d8CbsqcIGA==",
+              "profileId": "ACoAACKLiMkBB9IZ0nk3kwW5fshixJ4Hl799tPs",
+              "picture": "https://media.licdn.com/dms/image/v2/D5603AQHW5qAnwgnC9w/profile-displayphoto-scale_200_200/B56ZlGgWCgHAAY-/0/1757824509046?e=1764201600&v=beta&t=Z2ipCnNCE8CCqiSGfXOj6HOzTF3v9hoQgdq1N28mYDc",
+              "backgroundImage": "https://media.licdn.com/dms/image/v2/D5616AQG6vOfvKBfqtQ/profile-displaybackgroundimage-shrink_350_1400/B56ZlGhIwFIsAY-/0/1757824716301?e=1764201600&v=beta&t=X4wq0GAKNn5t4WtclnEsw2aSEguf0yQSUWekpmIpme0"
+            }
+          }
+        ],
+        "pinned": false,
+        "originalLanguage": "English",
+        "author": {
+          "firstName": "Mariya",
+          "lastName": "Valeva",
+          "occupation": "Fractional CFO | Helping Founders Scale Beyond $2M ARR with Strategic Finance & OKRs | Founder @ FounderFirst",
+          "id": "185531341",
+          "publicId": "mariyavaleva-yourscalingpartner",
+          "trackingId": "lBCKFpyNTgOb4ExeE06n2A==",
+          "profileId": "ACoAAAsO-80BwYPkkHjTQAL4NNGqir1Lqif3KCE",
+          "picture": "https://media.licdn.com/dms/image/v2/D4E03AQGKzCPLEWjiSw/profile-displayphoto-shrink_100_100/B4EZYMecX9HcAU-/0/1743966029701?e=1764201600&v=beta&t=CU2isez2HeDGVHhOT-EijbN_NntUeqAHsaYYO-B5Vr4",
+          "backgroundImage": "https://media.licdn.com/dms/image/v2/D4E16AQHaicudvttRuQ/profile-displaybackgroundimage-shrink_200_800/B4EZYMh9asG0AU-/0/1743966951501?e=1764201600&v=beta&t=hEHenTzXfcq3PVj0SMZGz2im6YB5OHbwFtQSj-I23GM",
+          "distance": "OUT_OF_NETWORK"
+        }
+      }
+    ],
+    "reactions": [
+      {
+        "type": "EMPATHY",
+        "profile": {
+          "firstName": "Brinn",
+          "lastName": "Heseltine",
+          "occupation": "Founder & Systems Architect at RiftForged | Real-Time MMO & AI Cognition Engine Developer | Fabricator Turned Systems Architect",
+          "id": "521332338",
+          "publicId": "brinn-heseltine-b56714126",
+          "trackingId": "RsxtnUDzS6GZV2+k8YlNAg==",
+          "profileId": "ACoAAB8S5nIBmDJMJeHNZVBaKllY96FdJ01hdzk",
+          "picture": "https://media.licdn.com/dms/image/v2/D5603AQHyGI9yy7SsQQ/profile-displayphoto-scale_100_100/B56ZiaQextHcAc-/0/1754934669866?e=1764201600&v=beta&t=6VriQ5yRl757ruod57fJJeAlMeD3l4b30JsFEampIyo",
+          "backgroundImage": "https://media.licdn.com/dms/image/v2/D5616AQFX42MVe3UpGQ/profile-displaybackgroundimage-shrink_350_1400/B56ZjWusWEHcAY-/0/1755949223750?e=1764201600&v=beta&t=5ec-APMF1IUZqWjRjbzgI95HxDuj-YqMDsZyyBKsfdg"
+        }
+      },
+      {
+        "type": "EMPATHY",
+        "profile": {
+          "firstName": "Duy Thanh ",
+          "lastName": "Pham Dinh ",
+          "occupation": "(PMP)® | Product Owner",
+          "id": "277245842",
+          "publicId": "duy-thanh-pham-dinh-242a2378",
+          "trackingId": "xwO27vpFRVmQnU8cOINpQw==",
+          "profileId": "ACoAABCGb5IBpO-7-XBE9GRB41eWOzmJ6LCCM8c",
+          "picture": "https://media.licdn.com/dms/image/v2/C5103AQGzzbguwoT0Ew/profile-displayphoto-shrink_100_100/profile-displayphoto-shrink_100_100/0/1550639299269?e=1764201600&v=beta&t=ip_r0y4H7hbvckcjHv0gKj_LSkRim2aQ3ZC69u4kEyw"
+        }
+      },
+      {
+        "type": "LIKE",
+        "profile": {
+          "firstName": "Anthony",
+          "lastName": "Albit",
+          "occupation": "Turnkey Business Setup for Professionals, SMB Owners & Entrepreneurs | Digital Presentations, Workflows, Leads, Orders, Bookings, Website & Mobile-App — All Together.",
+          "id": "360933025",
+          "publicId": "anthonyalbit",
+          "trackingId": "TiHbj8gHTXSwRyeCFwdZWw==",
+          "profileId": "ACoAABWDZqEBrN2Yy2XSXGP58R1WFcPVUQq1k5w",
+          "picture": "https://media.licdn.com/dms/image/v2/D5635AQGIs7Oqm8VVtQ/profile-framedphoto-shrink_800_800/B56ZoFO2aIHQAg-/0/1761024370546?e=1763121600&v=beta&t=jaB5X0JwFcrZvq2Rbik-Qe1VG4Slv_MWnIKBuGUyxn8",
+          "backgroundImage": "https://media.licdn.com/dms/image/v2/D5616AQG6Xh0EAZMC8Q/profile-displaybackgroundimage-shrink_200_800/profile-displaybackgroundimage-shrink_200_800/0/1691087323417?e=1764201600&v=beta&t=zi6sKDx4YtJr71BfxBwqAxhRM9r4USpDw_AZgnAj3yA"
+        }
+      },
+      {
+        "type": "LIKE",
+        "profile": {
+          "firstName": "Nghi",
+          "lastName": "Nguyen",
+          "occupation": "Engineering Manager",
+          "id": "35584657",
+          "publicId": "andynghi",
+          "trackingId": "l2noMoORQUa6iUPpRcTLXA==",
+          "profileId": "ACoAAAIe-pEBdcbj8kEmHyzEVgWQ8EfwmSh9tsA",
+          "picture": "https://media.licdn.com/dms/image/v2/C4E03AQHtIXc5J6k0Xw/profile-displayphoto-shrink_100_100/profile-displayphoto-shrink_100_100/0/1578969637790?e=1764201600&v=beta&t=i4pd6wKJim7KoPhRFp2QbCxo4jp7nLJkZJqKVvCopKA"
+        }
+      },
+      {
+        "type": "LIKE",
+        "profile": {
+          "firstName": "Eseoghene",
+          "lastName": "Abushe",
+          "occupation": "Ghostwriter for Founders, Creators & Brands | Sharp Copy, Zero Fluff | Stories That Sell",
+          "id": "857950047",
+          "publicId": "eseoghene-abushe",
+          "trackingId": "T9W5SWmwTESZtcbo9/l33Q==",
+          "profileId": "ACoAADMjR18B0RaBZzKEqBIP8FkkqnVsOZ8hHSg",
+          "picture": "https://media.licdn.com/dms/image/v2/D4D03AQHYt-yuYI3YHA/profile-displayphoto-shrink_100_100/profile-displayphoto-shrink_100_100/0/1707012360567?e=1764201600&v=beta&t=Ul95Lyq69PDAvVUugzhPyyS4ux0n6gmyZH3OixfxJDk",
+          "backgroundImage": "https://media.licdn.com/dms/image/v2/D4D16AQHAZZkQj6Aptw/profile-displaybackgroundimage-shrink_200_800/profile-displaybackgroundimage-shrink_200_800/0/1707012059574?e=1764201600&v=beta&t=I1-FaPJLrQrf8-w1lCqUV7lzh2fhxVVWbqyp2wgc8-U"
+        }
+      },
+      {
+        "type": "LIKE",
+        "profile": {
+          "firstName": "Terrence",
+          "lastName": "H.",
+          "occupation": "Experience Designer | BDes in Interaction Design",
+          "id": "1218270308",
+          "publicId": "terrence-h-658bb529b",
+          "trackingId": "3WKXR7p6RJus4ysfAKUbxQ==",
+          "profileId": "ACoAAEidVGQBWOwHRz9ncTvyObX16qzOY6KVWtc",
+          "picture": "https://media.licdn.com/dms/image/v2/D5603AQEUeFR3dVZxNQ/profile-displayphoto-shrink_100_100/profile-displayphoto-shrink_100_100/0/1719345387222?e=1764201600&v=beta&t=REMQEZ0KK1zao0YjRuuHt9qpTCUJvYcqfArcIk5yZB4",
+          "backgroundImage": "https://media.licdn.com/dms/image/v2/D5616AQHfilxx1UD8Nw/profile-displaybackgroundimage-shrink_350_1400/B56ZWr_TOYHQAY-/0/1742347253724?e=1764201600&v=beta&t=TIWsuFbwWETCzSn1uw473h1PfTZGVYZF5qQCghigBBM"
+        }
+      },
+      {
+        "type": "LIKE",
+        "profile": {
+          "firstName": "Allison",
+          "lastName": "Wong",
+          "occupation": "HS Junior & World Dominator",
+          "id": "1497416371",
+          "publicId": "allison-wong-497594359",
+          "trackingId": "Yq60Rs8IQhGxBXekb9b3kw==",
+          "profileId": "ACoAAFlAwrMB8uJ5Jkjr9lHe_Vbde2A2sNGEK9k",
+          "picture": "https://media.licdn.com/dms/image/v2/D5603AQGVZyzS9IpY1g/profile-displayphoto-scale_200_200/B56ZefID_IHoAY-/0/1750721381781?e=1764201600&v=beta&t=ceK8dflg7jnViyqRwU2NhulYDd06F7c06hUR1cNub5s",
+          "backgroundImage": "https://media.licdn.com/dms/image/v2/D5616AQEOYxq5AitUsQ/profile-displaybackgroundimage-shrink_350_1400/B56ZefPMOnHEAY-/0/1750723249665?e=1764201600&v=beta&t=BzdIZ_rKrBdRxWR1rNEdT61e98V9VAfnhsANaXAzO7M"
+        }
+      },
+      {
+        "type": "LIKE",
+        "profile": {
+          "firstName": "Melody",
+          "lastName": "Gwon",
+          "occupation": "Full Stack Product Designer 🖤 UI∙UX + BX",
+          "id": "1023787717",
+          "publicId": "artistlody",
+          "trackingId": "oPMtXMnzSs+k6TKF45gnng==",
+          "profileId": "ACoAAD0FwsUBo_LsgNuLuhHAggT9q6V2VH0OZCw",
+          "picture": "https://media.licdn.com/dms/image/v2/D5603AQG-lfVqnsP2hg/profile-displayphoto-shrink_800_800/B56ZTzVucKHEAk-/0/1739249347923?e=1764201600&v=beta&t=CeQKboWSW5uuPtlGqUxVKkDDoEcZnxYIDZkyNc-kPyk",
+          "backgroundImage": "https://media.licdn.com/dms/image/v2/C5616AQHb7UaEGEYgVg/profile-displaybackgroundimage-shrink_200_800/profile-displaybackgroundimage-shrink_200_800/0/1661661276361?e=1764201600&v=beta&t=fr8bcXwAB8x2hSDJRVzQondfYOzYKEjp9tlbafKU-c8"
+        }
+      },
+      {
+        "type": "LIKE",
+        "profile": {
+          "firstName": "Sabiq",
+          "lastName": "Moolji",
+          "occupation": "Architectural Intern",
+          "id": "1166120706",
+          "publicId": "sabiqmoolji",
+          "trackingId": "WSJbWrHJT1agBuAVkmShlA==",
+          "profileId": "ACoAAEWBlwIBtWXGpP0ij5Hr09cNAj3KFi86Lj8",
+          "picture": "https://media.licdn.com/dms/image/v2/D5603AQGaVlPMS3vL-Q/profile-displayphoto-shrink_800_800/B56ZUgFujnGsAc-/0/1740000127616?e=1764201600&v=beta&t=w3tdxbQ792iEHUBrXY6ebF1Hn55D9jAb67-qkQUk584",
+          "backgroundImage": "https://media.licdn.com/dms/image/v2/D5616AQHxs271Ymqa1g/profile-displaybackgroundimage-shrink_200_800/profile-displaybackgroundimage-shrink_200_800/0/1736264438795?e=1764201600&v=beta&t=o1rO-IadRWgBuKOlYCF6RevXyUIYnaF4_-L6tqn_n2w"
+        }
+      },
+      {
+        "type": "LIKE",
+        "profile": {
+          "firstName": "Anh",
+          "lastName": "Nguyen",
+          "occupation": "I helped 50+ founders build and scale apps/platforms. Co-Founder at Politetech. Looking for instant developers to build software? Let’s chat | Grab FREE tools in my Featured.",
+          "id": "487981328",
+          "publicId": "ngocanhnguyen0908",
+          "trackingId": "WsRfJXWNQ4aG2F0NTj9XZw==",
+          "profileId": "ACoAAB0WARABdoV1BVnCUGDRF65xJoOfDtiZwhE",
+          "picture": "https://media.licdn.com/dms/image/v2/D4D03AQHk0L66rtDb7w/profile-displayphoto-shrink_100_100/profile-displayphoto-shrink_100_100/0/1714021271369?e=1764201600&v=beta&t=fVkyqnLnZTd1DmewZ2JRZypN-zpJC61cESXCgpE1fug",
+          "backgroundImage": "https://media.licdn.com/dms/image/v2/D5616AQEVcUks6RfdYg/profile-displaybackgroundimage-shrink_350_1400/B56ZXiHTg5GQAY-/0/1743255321572?e=1764201600&v=beta&t=LBnTgJ8Y1PI2ofNjFA2Zu1oh8-E7Oc6ejN8fnqcZxFk"
+        }
+      }
+    ],
+    "numShares": 2,
+    "numLikes": 79,
+    "numComments": 50,
+    "canReact": true,
+    "canPostComments": true,
+    "canShare": true,
+    "commentingDisabled": false,
+    "allowedCommentersScope": "ALL",
+    "rootShare": true,
+    "shareAudience": "PUBLIC",
+    "author": {
+      "firstName": "Ky-Nam",
+      "lastName": "🧑‍🚀",
+      "occupation": "24 y/o tech founder | 1m view/week | 3x Majors CS, Econ, Politic | 30 startup comp wins | Creator of engagekit.io to 10x your LinkedIn traffic and outbound ⬇️",
+      "id": "579569865",
+      "publicId": "withkynam",
+      "trackingId": "HDZWhXlcQGScBeV0BZKkCQ==",
+      "profileId": "ACoAACKLiMkBB9IZ0nk3kwW5fshixJ4Hl799tPs",
+      "picture": "https://media.licdn.com/dms/image/v2/D5603AQHW5qAnwgnC9w/profile-displayphoto-scale_200_200/B56ZlGgWCgHAAY-/0/1757824509046?e=1764201600&v=beta&t=Z2ipCnNCE8CCqiSGfXOj6HOzTF3v9hoQgdq1N28mYDc",
+      "backgroundImage": "https://media.licdn.com/dms/image/v2/D5616AQG6vOfvKBfqtQ/profile-displaybackgroundimage-shrink_350_1400/B56ZlGhIwFIsAY-/0/1757824716301?e=1764201600&v=beta&t=X4wq0GAKNn5t4WtclnEsw2aSEguf0yQSUWekpmIpme0"
+    },
+    "authorProfileId": "withkynam",
+    "authorProfilePicture": "https://media.licdn.com/dms/image/v2/D5603AQHW5qAnwgnC9w/profile-displayphoto-scale_200_200/B56ZlGgWCgHAAY-/0/1757824509046?e=1764201600&v=beta&t=Z2ipCnNCE8CCqiSGfXOj6HOzTF3v9hoQgdq1N28mYDc",
+    "authorType": "Person",
+    "authorHeadline": "24 y/o tech founder | 1m view/week | 3x Majors CS, Econ, Politic | 30 startup comp wins | Creator of engagekit.io to 10x your LinkedIn traffic and outbound ⬇️",
+    "authorName": "Ky-Nam 🧑‍🚀",
+    "authorProfileUrl": "https://www.linkedin.com/in/withkynam?miniProfileUrn=urn%3Ali%3Afs_miniProfile%3AACoAACKLiMkBB9IZ0nk3kwW5fshixJ4Hl799tPs",
+    "authorUrn": "urn:li:member:579569865",
+    "postedAtTimestamp": 1761836702565,
+    "postedAtISO": "2025-10-30T15:05:02.565Z",
+    "inputUrl": "https://www.linkedin.com/posts/withkynam_if-you-dont-grind-on-a-saturday-you-have-ugcPost-7389677456439480320-FZzB?utm_source=share&utm_medium=member_desktop&rcm=ACoAACKLiMkBB9IZ0nk3kwW5fshixJ4Hl799tPs"
+  }
+]

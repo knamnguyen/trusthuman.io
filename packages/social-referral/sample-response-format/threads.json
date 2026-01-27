@@ -1,0 +1,43 @@
+[
+  {
+    "thread": {
+      "text": "i just built my first ai app in 15 min with claude code and now i'm technically a founder :D\n\nwithout ever touching VS Code\n\nasked grok for ideas → picked one → told claude \"build this\" → shipped v1\n\nmost people will scroll past this thinking it's fake\n\nbe the 1% who actually opens vs code and tries it\n\nshipping > planning 🚀",
+      "published_on": 1769504425,
+      "id": "3819202373521356950_64779198523",
+      "pk": "3819202373521356950",
+      "code": "DUAiFLfEbiW",
+      "username": "withkynam",
+      "user_pic": "https://scontent-lax3-1.cdninstagram.com/v/t51.2885-19/545361498_17920102176158524_4093749138655216713_n.jpg?stp=dst-jpg_s150x150_tt6&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby44NzkuYzIifQ&_nc_ht=scontent-lax3-1.cdninstagram.com&_nc_cat=104&_nc_oc=Q6cZ2QFvMNRKMIp2YY-OKGS0FgBl3aS70EHZ64cao03_YPf1GInbqUj7Lm5OMxHIAJWErlY&_nc_ohc=zAYZCwgKYbcQ7kNvwEMLLE4&_nc_gid=zwHtFfen3zfZKDSAQDRl2Q&edm=APs17CUBAAAA&ccb=7-5&oh=00_Afono6olSzJnHuCYPQJLuUL6toTOY4otbaqEwqNrjGNkrg&oe=697E4B09&_nc_sid=10d13b",
+      "user_verified": false,
+      "user_pk": "64779198523",
+      "user_id": "64779198523",
+      "has_audio": null,
+      "reply_count": 1,
+      "like_count": 0,
+      "images": [],
+      "image_count": 0,
+      "videos": [],
+      "url": "https://www.threads.net/@withkynam/post/DUAiFLfEbiW"
+    },
+    "replies": [
+      {
+        "published_on": 1769505879,
+        "id": "3819214585027845586_76573017575",
+        "pk": "3819214585027845586",
+        "code": "DUAk24Vk13S",
+        "username": "faezen.dev",
+        "user_pic": "https://scontent-lax3-1.cdninstagram.com/v/t51.2885-19/569899809_17855769624553576_6796848384245420630_n.jpg?stp=dst-jpg_s150x150_tt6&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby4xMDgwLmMyIn0&_nc_ht=scontent-lax3-1.cdninstagram.com&_nc_cat=104&_nc_oc=Q6cZ2QFvMNRKMIp2YY-OKGS0FgBl3aS70EHZ64cao03_YPf1GInbqUj7Lm5OMxHIAJWErlY&_nc_ohc=CoXrTeIFt8AQ7kNvwFff1Xw&_nc_gid=zwHtFfen3zfZKDSAQDRl2Q&edm=APs17CUBAAAA&ccb=7-5&oh=00_Afo4VLa2-0-F4ntpVwWMB4wknw8TG6-MxQpw6SD2_SSqwg&oe=697E62B2&_nc_sid=10d13b",
+        "user_verified": false,
+        "user_pk": "76573017575",
+        "user_id": "76573017575",
+        "has_audio": null,
+        "reply_count": 0,
+        "like_count": 0,
+        "images": [],
+        "image_count": 0,
+        "videos": [],
+        "url": "https://www.threads.net/@faezen.dev/post/DUAk24Vk13S"
+      }
+    ]
+  }
+]
