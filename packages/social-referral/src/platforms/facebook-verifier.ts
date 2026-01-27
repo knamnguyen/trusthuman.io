@@ -2,8 +2,7 @@ import { ApifyClient } from "apify-client";
 
 import type { SocialVerifier, VerifyKeywordsResult } from "../types";
 
-// TODO: Replace with actual Facebook actor ID once determined
-const DEFAULT_ACTOR_ID = "TBD_FACEBOOK_ACTOR";
+const DEFAULT_ACTOR_ID = "KoJrdxJCTtpon81KY";
 
 const FACEBOOK_REGEX = /^https?:\/\/(?:www\.)?facebook\.com\/?.*/i;
 
@@ -97,7 +96,13 @@ export class FacebookVerifier implements SocialVerifier {
     validateFacebookUrl(url);
     const client = this.getClient();
     const run = await this.callActor(client, {
-      url,
+      startUrls: [
+        {
+          url,
+        },
+      ],
+      resultsLimit: 20,
+      captionText: false,
     });
     if (!run.defaultDatasetId) {
       throw new Error("Apify run did not return a dataset ID");

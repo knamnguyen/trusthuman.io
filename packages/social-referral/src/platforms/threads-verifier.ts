@@ -4,7 +4,7 @@ import type { SocialVerifier, VerifyKeywordsResult } from "../types";
 
 const DEFAULT_ACTOR_ID = "7xFgGDhba8W5ZvOke";
 
-const THREADS_REGEX = /^https?:\/\/(?:www\.)?threads\.net\/?.*/i;
+const THREADS_REGEX = /^https?:\/\/(?:www\.)?threads\.(?:net|com)\/?.*/i;
 
 type ThreadsVerifierConfig = {
   apiToken?: string;
@@ -95,7 +95,14 @@ export class ThreadsVerifier implements SocialVerifier {
     validateThreadsUrl(url);
     const client = this.getClient();
     const run = await this.callActor(client, {
-      urls: [url],
+      startUrls: [
+        {
+          url,
+        },
+      ],
+      proxyConfiguration: {
+        useApifyProxy: true,
+      },
     });
     if (!run.defaultDatasetId) {
       throw new Error("Apify run did not return a dataset ID");
