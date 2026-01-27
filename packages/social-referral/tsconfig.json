@@ -1,7 +1,9 @@
 {
-  "extends": "@sassy/tsconfig/base.json",
+  "extends": "@sassy/tsconfig/internal-package.json",
+  "include": ["src"],
+  "exclude": ["dist", "build", "node_modules"],
   "compilerOptions": {
-    "outDir": "./dist"
-  },
-  "include": ["src/**/*"]
+    "strict": true,
+    "strictNullChecks": true
+  }
 }
