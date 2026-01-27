@@ -105,7 +105,7 @@ export const stripeWebhookRoutes = new Hono().post("/", async (c) => {
           break;
         }
 
-        const quantity = Math.max(1, subscription.items.data[0]?.quantity ?? 1);
+        const quantity = getPurchasedSlots(subscription);
 
         await db.organization.update({
           where: { id: orgId },
@@ -139,7 +139,7 @@ export const stripeWebhookRoutes = new Hono().post("/", async (c) => {
         }
 
         // Org-centric: update organization
-        const slots = Math.max(1, subscription.items.data[0]?.quantity ?? 1);
+        const slots = getPurchasedSlots(subscription);
         const expiresAt = new Date(subscription.current_period_end * 1000);
 
         await db.organization.update({
@@ -227,6 +227,10 @@ export const stripeWebhookRoutes = new Hono().post("/", async (c) => {
     );
   }
 });
+
+function getPurchasedSlots(subscription: Stripe.Subscription): number {
+  return Math.max(1, subscription.items.data[0]?.quantity ?? 1);
+}
 
 // ============================================================================
 // LEGACY USER-CENTRIC HANDLERS (to be deprecated)
