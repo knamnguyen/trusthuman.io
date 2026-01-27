@@ -2,11 +2,19 @@ model Organization {
   id               String   @id
   name             String
   orgSlug          String?
-  stripeCustomerId String?  @unique
+  stripeCustomerId String?  @unique // TODO: Remove in Phase 6 (org isn't a Stripe customer, User is)
   purchasedSlots   Int      @default(1)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
+  // Payment fields (org-centric billing) - Phase 1
+  payerId               String?   // WHO is paying (for billing portal access)
+  stripeSubscriptionId  String?   @unique // Subscription ID (for cancellation)
+  subscriptionTier      String    @default("FREE") // "FREE" | "PREMIUM"
+  subscriptionExpiresAt DateTime? // When subscription expires
+
+  // Relations
+  payer            User?                @relation("OrgPayer", fields: [payerId], references: [id], onDelete: SetNull)
   members          OrganizationMember[]
   linkedInAccounts LinkedInAccount[]
 }

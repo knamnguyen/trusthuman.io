@@ -331,6 +331,10 @@ CREATE TABLE "Organization" (
     "purchasedSlots" INTEGER NOT NULL DEFAULT 1,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "payerId" TEXT,
+    "stripeSubscriptionId" TEXT,
+    "subscriptionTier" TEXT NOT NULL DEFAULT 'FREE',
+    "subscriptionExpiresAt" TIMESTAMP(3),
 
     CONSTRAINT "Organization_pkey" PRIMARY KEY ("id")
 );
@@ -543,6 +547,9 @@ CREATE INDEX "LinkedInProfile_linkedinUrl_idx" ON "LinkedInProfile"("linkedinUrl
 CREATE UNIQUE INDEX "Organization_stripeCustomerId_key" ON "Organization"("stripeCustomerId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Organization_stripeSubscriptionId_key" ON "Organization"("stripeSubscriptionId");
+
+-- CreateIndex
 CREATE INDEX "OrganizationMember_userId_idx" ON "OrganizationMember"("userId");
 
 -- CreateIndex
@@ -646,6 +653,9 @@ ALTER TABLE "LinkedInAccount" ADD CONSTRAINT "LinkedInAccount_ownerId_fkey" FORE
 
 -- AddForeignKey
 ALTER TABLE "LinkedInAccount" ADD CONSTRAINT "LinkedInAccount_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Organization" ADD CONSTRAINT "Organization_payerId_fkey" FOREIGN KEY ("payerId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "OrganizationMember" ADD CONSTRAINT "OrganizationMember_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;

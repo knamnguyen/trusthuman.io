@@ -1,8 +1,8 @@
 # Organization Payment System Redesign
 
 **Date:** 2026-01-19
-**Updated:** 2026-01-27 (Version 2.2 - Final Pricing Model)
-**Status:** 🚧 Planning
+**Updated:** 2026-01-28 (Version 2.4 - Phase 1, 2 & 3 Complete)
+**Status:** 🚧 In Progress (Phase 1, 2 & 3 Complete)
 **Complexity:** Complex (Multi-phase migration)
 
 ---
@@ -26,6 +26,7 @@
 **Goal:** Restructure payment handling from user-centric to organization-centric billing.
 
 **Current State:**
+
 - `User` has `stripeCustomerId`, `accessType`, `stripeUserProperties` (user-level subscriptions)
 - `Organization` has `stripeCustomerId` and `purchasedSlots` (unused, never updated by webhooks)
 - Webhooks update User table only
@@ -33,6 +34,7 @@
 - Inconsistent: payment fields exist in both tables but aren't connected
 
 **Target State:**
+
 - `Organization` owns subscription data (payerId, stripeSubscriptionId, purchasedSlots, subscriptionTier, subscriptionExpiresAt)
 - `User` owns Stripe customer identity (stripeCustomerId only)
 - Webhooks update Organization based on metadata
@@ -41,6 +43,7 @@
 - **Slot enforcement:** Already works via `purchasedSlots` (webhooks maintain it)
 
 **Why This Matters:**
+
 - Aligns with multi-tenant architecture (users belong to orgs, orgs have subscriptions)
 - Enables team billing (admin pays, all members benefit)
 - Simplifies slot enforcement (org.purchasedSlots already enforced in `account.ts`)
@@ -55,6 +58,7 @@
 **Decision:** Enforce maximum 1 active subscription per user at any time.
 
 **Rationale:**
+
 - Simplifies UX: Users understand "you're the payer" or "you're not"
 - Reduces billing confusion: One charge per month, not multiple
 - Prevents accidental double-subscriptions when user leaves one org and joins another
@@ -62,6 +66,7 @@
 - Simpler to implement and test
 
 **Implementation:**
+
 - Block checkout if user has any active subscription (via DB + Stripe check)
 - When user leaves org as payer, they cannot subscribe to new org until period expires
 - Error message: "You have an active subscription for 'Acme Corp' until Feb 27. Please wait or cancel first."
@@ -75,6 +80,7 @@
 **Decision:** Use Stripe's hosted Customer Portal for cancel/upgrade/downgrade, not custom UI.
 
 **Rationale:**
+
 - **Zero code for subscription changes:** Stripe handles quantity changes, billing cycle switches, payment method updates
 - **Webhooks keep DB in sync:** customer.subscription.updated fires automatically
 - **Best UX:** Users get Stripe's polished portal with invoice history, payment method manager
@@ -82,6 +88,7 @@
 - **Prorated billing:** Stripe calculates prorations automatically
 
 **What Portal Enables:**
+
 - Change quantity (add/remove slots) → webhook updates `purchasedSlots`
 - Switch monthly ↔ yearly → webhook updates subscription
 - Update payment method → no DB changes needed
@@ -89,6 +96,7 @@
 - View invoices → no custom invoice UI needed
 
 **Configuration:**
+
 ```
 Stripe Dashboard → Customer Portal Settings:
 
@@ -117,12 +125,14 @@ Payment Methods:
 **Decision:** Store 4 subscription fields directly on Organization, no separate Subscription table.
 
 **Rationale:**
+
 - **1:1 relationship:** One org = one subscription (no benefit from separate table)
 - **Fast queries:** No joins needed for slot enforcement (runs on every LinkedIn account add)
 - **Stripe is source of truth:** Webhooks keep denormalized fields in sync
 - **Simpler than sync table:** Avoids join complexity, race conditions, duplicate data issues
 
 **What We Store (Performance Cache):**
+
 ```prisma
 Organization {
   payerId               String?   // WHO is paying (for billing portal access)
@@ -134,12 +144,14 @@ Organization {
 ```
 
 **What We DON'T Store (Query Stripe When Needed):**
+
 - ❌ Billing cycle (monthly/yearly) - Query Stripe when showing billing page (~300ms, rare)
 - ❌ Payment method details - Security risk, Stripe portal shows it
 - ❌ Invoice history - Query Stripe API when user opens billing
 - ❌ Full subscription object - Gets stale, too much data
 
 **Performance:**
+
 - Slot enforcement: ~5ms (DB query, already implemented)
 - Billing page details: ~300ms (one-time Stripe API call per page load)
 
@@ -150,28 +162,32 @@ Organization {
 **Decision:** Check database first (fast path), fall back to Stripe (edge cases).
 
 **Rationale:**
+
 - **99% of cases:** User currently pays for an org → DB query finds it (~5ms)
 - **1% edge case:** User left org as payer but subscription still active until period end → Stripe API needed (~300ms)
 - **Always accurate:** Stripe is source of truth for active subscriptions
 - **Balances performance vs correctness:** Fast common path, thorough edge case handling
 
 **Implementation:**
+
 ```typescript
 // Step 1: Fast DB check
 const currentPaidOrg = await db.organization.findFirst({
   where: {
     payerId: userId,
-    subscriptionExpiresAt: { gt: new Date() }
-  }
+    subscriptionExpiresAt: { gt: new Date() },
+  },
 });
-if (currentPaidOrg) return { blocked: true, reason: "Currently paying for org" };
+if (currentPaidOrg)
+  return { blocked: true, reason: "Currently paying for org" };
 
 // Step 2: Stripe check (handles user-left-org-but-sub-still-active)
 const subs = await stripe.subscriptions.list({
   customer: user.stripeCustomerId,
-  status: 'active'
+  status: "active",
 });
-if (subs.data.length > 0) return { blocked: true, reason: "Active subscription exists" };
+if (subs.data.length > 0)
+  return { blocked: true, reason: "Active subscription exists" };
 
 return { blocked: false };
 ```
@@ -183,18 +199,20 @@ return { blocked: false };
 **Decision:** Only organization admins can create subscriptions.
 
 **Rationale:**
+
 - **Clearer permission model:** Billing is an admin responsibility
 - **Prevents confusion:** Regular members shouldn't accidentally pay
 - **Matches expectations:** Most SaaS tools restrict billing to admins
 - **Simpler UI logic:** One less state to handle
 
 **Implementation:**
+
 ```typescript
 // In createOrgCheckout
-if (membership.role !== 'ADMIN') {
+if (membership.role !== "ADMIN") {
   throw new TRPCError({
-    code: 'FORBIDDEN',
-    message: 'Only organization admins can subscribe'
+    code: "FORBIDDEN",
+    message: "Only organization admins can subscribe",
   });
 }
 ```
@@ -208,34 +226,37 @@ if (membership.role !== 'ADMIN') {
 **Decision:** Two tiers only: `FREE` and `PREMIUM`.
 
 **Rationale:**
+
 - **Simple to understand:** Free = 1 slot, no AI. Premium = AI features enabled, slots based on quantity purchased.
 - **Easy to gate features:** Single check: `isPremiumOrg(org)`
 - **Room to grow:** Can add "ENTERPRISE" later if needed
 - **No complex feature matrix:** All premium features unlocked together
 
 **IMPORTANT CLARIFICATION:**
+
 - `subscriptionTier = "PREMIUM"` means **"has AI features"**, NOT **"has multiple slots"**
 - `purchasedSlots` field determines slot count (mirrors Stripe subscription quantity)
 - User can buy Premium with quantity=1 → gets 1 slot WITH AI features
 - User can buy Premium with quantity=5 → gets 5 slots WITH AI features
 
 **Examples:**
+
 - Free org: `purchasedSlots = 1`, `subscriptionTier = "FREE"` → 1 slot, no AI
 - Premium (qty=1): `purchasedSlots = 1`, `subscriptionTier = "PREMIUM"` → 1 slot, WITH AI
 - Premium (qty=5): `purchasedSlots = 5`, `subscriptionTier = "PREMIUM"` → 5 slots, WITH AI
 
 **Feature Matrix:**
 
-| Feature | Free | Premium (any quantity) |
-|---------|------|---------|
-| Manual LinkedIn account management | ✅ | ✅ |
-| 1+ LinkedIn account slots | 1 slot only | 1-unlimited slots |
-| Target list collection | ✅ | ✅ |
-| Comment history tracking | ✅ | ✅ |
-| Manual comment mode | ✅ | ✅ |
-| **AI-powered comments** | ❌ | ✅ |
-| **Hyperbrowser virtual runs** | ❌ | ✅ |
-| **Auto-engagement campaigns** | ❌ | ✅ |
+| Feature                            | Free        | Premium (any quantity) |
+| ---------------------------------- | ----------- | ---------------------- |
+| Manual LinkedIn account management | ✅          | ✅                     |
+| 1+ LinkedIn account slots          | 1 slot only | 1-unlimited slots      |
+| Target list collection             | ✅          | ✅                     |
+| Comment history tracking           | ✅          | ✅                     |
+| Manual comment mode                | ✅          | ✅                     |
+| **AI-powered comments**            | ❌          | ✅                     |
+| **Hyperbrowser virtual runs**      | ❌          | ✅                     |
+| **Auto-engagement campaigns**      | ❌          | ✅                     |
 
 ---
 
@@ -244,6 +265,7 @@ if (membership.role !== 'ADMIN') {
 **Decision:** Use client-side checks only for feature gating (no server enforcement for AI/hyperbrowser features). Include quota compliance check in premium helper.
 
 **Rationale:**
+
 - **Good enough for MVP:** 95% of users won't bypass
 - **Server enforces slots:** They can't add unlimited accounts (already implemented)
 - **Easy to add later:** When needed, add server checks to AI/hyperbrowser endpoints
@@ -252,11 +274,13 @@ if (membership.role !== 'ADMIN') {
 - **Quota enforcement:** If org over quota (8 accounts, 5 slots) → revoke premium for ALL accounts
 
 **What's Server-Enforced:**
+
 - ✅ Slot limits (already in `account.ts`)
 - ❌ AI features (client-side only for now)
 - ❌ Hyperbrowser features (client-side only for now)
 
 **Implementation:**
+
 ```typescript
 // Shared helper (client-side only)
 export function isPremiumOrg(org: {
@@ -295,6 +319,7 @@ const isPremium = isPremiumOrg({ ...org, accountCount });
 ```
 
 **Downgrade Scenario:**
+
 1. User reduces from 10 to 5 slots (via Customer Portal)
 2. Stripe applies immediately, webhook updates `purchasedSlots = 5`
 3. Org has 8 accounts, 5 slots → over quota
@@ -304,6 +329,7 @@ const isPremium = isPremiumOrg({ ...org, accountCount });
 7. Client-side check passes → `isPremium = true` → premium restored
 
 **Benefits:**
+
 - Simple downgrade handling (no scheduling needed)
 - Fair enforcement (all accounts treated equally)
 - Self-service resolution (user removes accounts at their pace)
@@ -318,11 +344,13 @@ const isPremium = isPremiumOrg({ ...org, accountCount });
 **Decision:** Place billing directly at `/orgSlug/settings` (not `/orgSlug/settings/billing`).
 
 **Rationale:**
+
 - **No other settings yet:** Don't create nested routes prematurely
 - **Easy to refactor later:** Can add tabs when needed (members, integrations, etc.)
 - **Simpler routing:** One page to manage
 
 **Future Structure:**
+
 ```
 Current: /acme-corp/settings (shows billing)
 Future:  /acme-corp/settings?tab=billing
@@ -337,19 +365,21 @@ Future:  /acme-corp/settings?tab=billing
 **Decision:** Use immutable org ID in return URL, not org slug.
 
 **Rationale:**
+
 - **Org slug is mutable:** Admin can change it while user is in portal
 - **Org ID is immutable:** Always works, no 404 risk
 - **5 lines of code:** Minimal complexity for 100% reliability
 
 **Implementation:**
+
 ```typescript
 // Create portal session
-return_url: `${baseUrl}/billing-return?orgId=${org.id}` // Use ID
+return_url: `${baseUrl}/billing-return?orgId=${org.id}`; // Use ID
 
 // Billing return page
 const org = await db.organization.findUnique({
   where: { id: searchParams.orgId },
-  select: { orgSlug: true }
+  select: { orgSlug: true },
 });
 redirect(`/${org.orgSlug}/settings?success=true`); // Use current slug
 ```
@@ -363,11 +393,13 @@ redirect(`/${org.orgSlug}/settings?success=true`); // Use current slug
 **Decision:** No changes needed to slot enforcement logic.
 
 **Rationale:**
+
 - **Already implemented:** `account.ts` line 362-378 checks `currentCount >= org.purchasedSlots`
 - **Webhooks maintain it:** `purchasedSlots` updated automatically on subscription changes
 - **Expired subs handled:** When subscription expires, webhook sets `purchasedSlots: 1`
 
 **Current Implementation (No Changes Needed):**
+
 ```typescript
 // packages/api/src/router/account.ts - registerByUrl
 const org = await ctx.db.organization.findUnique({
@@ -388,6 +420,7 @@ if (org && currentAccountCount >= org.purchasedSlots) {
 ```
 
 **Why This Works:**
+
 - Active subscription: `purchasedSlots = 5` (set by checkout webhook)
 - Expired subscription: `purchasedSlots = 1` (reset by deletion webhook)
 - User can't bypass: Server-side check before account creation
@@ -401,6 +434,7 @@ if (org && currentAccountCount >= org.purchasedSlots) {
 ### Actual Products & Prices
 
 **Monthly Plan:**
+
 - Product: `LinkedIn Accounts - Monthly` (`prod_quantity_monthly`)
 - Price: **$29.99 USD per slot/month**
 - Price ID: (fetch from Stripe API dynamically)
@@ -408,6 +442,7 @@ if (org && currentAccountCount >= org.purchasedSlots) {
 - Quantity-based: 1-unlimited slots
 
 **Yearly Plan:**
+
 - Product: `LinkedIn Accounts - Yearly` (`prod_quantity_yearly`)
 - Price: **$299.99 USD per slot/year**
 - Price ID: (fetch from Stripe API dynamically)
@@ -419,40 +454,41 @@ if (org && currentAccountCount >= org.purchasedSlots) {
 **Examples:**
 
 | Quantity | Monthly Total | Yearly Total | Yearly Savings |
-|----------|--------------|--------------|----------------|
-| 1 slot | $29.99/mo | $299.99/yr | $59.89/yr |
-| 5 slots | $149.95/mo | $1,499.95/yr | $299.45/yr |
-| 10 slots | $299.90/mo | $2,999.90/yr | $598.90/yr |
-| 24 slots | $719.76/mo | $7,199.76/yr | $1,437.24/yr |
+| -------- | ------------- | ------------ | -------------- |
+| 1 slot   | $29.99/mo     | $299.99/yr   | $59.89/yr      |
+| 5 slots  | $149.95/mo    | $1,499.95/yr | $299.45/yr     |
+| 10 slots | $299.90/mo    | $2,999.90/yr | $598.90/yr     |
+| 24 slots | $719.76/mo    | $7,199.76/yr | $1,437.24/yr   |
 
 ### Price Fetching Strategy
 
 **Decision:** Fetch live from Stripe API on settings page load (always up-to-date, no cache needed).
 
 **Implementation:**
+
 ```typescript
 // packages/api/src/router/stripe.ts
 
 export const stripeRouter = createTRPCRouter({
   getPricing: publicProcedure.query(async () => {
     const prices = await stripe.prices.list({
-      product: env.STRIPE_PRODUCT_ID_MONTHLY,  // Or list all and filter
+      product: env.STRIPE_PRODUCT_ID_MONTHLY, // Or list all and filter
       active: true,
     });
 
-    const monthly = prices.data.find(p => p.recurring?.interval === "month");
-    const yearly = prices.data.find(p => p.recurring?.interval === "year");
+    const monthly = prices.data.find((p) => p.recurring?.interval === "month");
+    const yearly = prices.data.find((p) => p.recurring?.interval === "year");
 
     return {
       monthly: {
         id: monthly?.id,
-        amount: monthly?.unit_amount,  // Amount in cents (2999)
+        amount: monthly?.unit_amount, // Amount in cents (2999)
         interval: "month",
         displayAmount: "$29.99",
       },
       yearly: {
         id: yearly?.id,
-        amount: yearly?.unit_amount,  // Amount in cents (29999)
+        amount: yearly?.unit_amount, // Amount in cents (29999)
         interval: "year",
         displayAmount: "$299.99",
       },
@@ -462,6 +498,7 @@ export const stripeRouter = createTRPCRouter({
 ```
 
 **Benefits:**
+
 - Always reflects current Stripe pricing
 - No manual sync needed when prices change
 - ~300ms load time (acceptable for settings page)
@@ -473,6 +510,7 @@ export const stripeRouter = createTRPCRouter({
 ### Organization Table
 
 **ADD:**
+
 ```prisma
 payerId               String?   // User who pays for this org
 stripeSubscriptionId  String?   @unique  // To cancel when payer leaves
@@ -481,11 +519,13 @@ subscriptionTier      String    @default("FREE")  // "FREE" | "PREMIUM"
 ```
 
 **REMOVE (after migration):**
+
 ```prisma
 stripeCustomerId      String?   // WRONG - Org isn't a Stripe customer, User is
 ```
 
 **KEEP:**
+
 ```prisma
 purchasedSlots        Int       @default(1)  // Already exists, webhooks maintain it
 ```
@@ -493,17 +533,20 @@ purchasedSlots        Int       @default(1)  // Already exists, webhooks maintai
 ### User Table
 
 **KEEP:**
+
 ```prisma
 stripeCustomerId      String?   @unique  // User IS the Stripe customer
 ```
 
 **REMOVE (after migration):**
+
 ```prisma
 accessType            AccessType  // Moving to org-level (subscriptionTier)
 stripeUserProperties  Json?       // Redundant, Stripe is source of truth
 ```
 
 **REMOVE ENUM (after migration):**
+
 ```prisma
 enum AccessType {
   FREE
@@ -514,6 +557,7 @@ enum AccessType {
 ```
 
 **ALSO REMOVE (found during analysis):**
+
 ```prisma
 // In LinkedInAccount model
 accessType            AccessType  // Duplicate field, no longer needed
@@ -574,9 +618,12 @@ model User {
 **Purpose:** Initialize organization with subscription data
 
 **Action:**
+
 ```typescript
 const session = event.data.object as Stripe.Checkout.Session;
-const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
+const subscription = await stripe.subscriptions.retrieve(
+  session.subscription as string,
+);
 
 const orgId = session.metadata?.organizationId;
 const payerId = session.metadata?.payerId;
@@ -589,7 +636,7 @@ if (!orgId || !payerId) {
 // Idempotency check
 const existing = await db.organization.findUnique({
   where: { id: orgId },
-  select: { stripeSubscriptionId: true }
+  select: { stripeSubscriptionId: true },
 });
 
 if (existing?.stripeSubscriptionId === subscription.id) {
@@ -600,8 +647,8 @@ if (existing?.stripeSubscriptionId === subscription.id) {
 // Verify payer is still in org (race condition check)
 const membership = await db.organizationMember.findUnique({
   where: {
-    orgId_userId: { orgId, userId: payerId }
-  }
+    orgId_userId: { orgId, userId: payerId },
+  },
 });
 
 if (!membership) {
@@ -611,10 +658,12 @@ if (!membership) {
   await stripe.subscriptions.cancel(subscription.id);
 
   // Refund payment
-  const invoice = await stripe.invoices.retrieve(subscription.latest_invoice as string);
+  const invoice = await stripe.invoices.retrieve(
+    subscription.latest_invoice as string,
+  );
   await stripe.refunds.create({
     payment_intent: invoice.payment_intent as string,
-    reason: 'requested_by_customer'
+    reason: "requested_by_customer",
   });
 
   console.log("Subscription canceled and refunded");
@@ -630,15 +679,16 @@ await db.organization.update({
     payerId,
     stripeSubscriptionId: subscription.id,
     purchasedSlots: quantity,
-    subscriptionTier: 'PREMIUM',
+    subscriptionTier: "PREMIUM",
     subscriptionExpiresAt: new Date(subscription.current_period_end * 1000),
-  }
+  },
 });
 
 console.log(`✅ Org ${orgId} subscribed: ${quantity} slots`);
 ```
 
 **Edge Cases Handled:**
+
 - Idempotency: Check if subscription already recorded
 - Missing metadata: Skip gracefully (old checkout sessions)
 - User left org during checkout: Cancel subscription and refund
@@ -653,12 +703,15 @@ console.log(`✅ Org ${orgId} subscribed: ${quantity} slots`);
 **Purpose:** Keep organization slot count and expiry date in sync
 
 **Action:**
+
 ```typescript
 const subscription = event.data.object as Stripe.Subscription;
 const orgId = subscription.metadata?.organizationId;
 
 if (!orgId) {
-  console.log("No organizationId in metadata, skipping (not an org subscription)");
+  console.log(
+    "No organizationId in metadata, skipping (not an org subscription)",
+  );
   return; // User-level subscription (old system) or non-org subscription
 }
 
@@ -672,20 +725,22 @@ await db.organization.update({
   data: {
     purchasedSlots: slots,
     subscriptionExpiresAt: expiresAt,
-    subscriptionTier: 'PREMIUM', // Keep as premium
-  }
+    subscriptionTier: "PREMIUM", // Keep as premium
+  },
 });
 
 console.log(`✅ Org ${orgId} updated: ${slots} slots, expires ${expiresAt}`);
 ```
 
 **What Triggers This:**
+
 - Subscription renewal (Stripe charges card, extends period)
 - User changes quantity in Customer Portal (5 slots → 10 slots)
 - User switches billing cycle (monthly → yearly via Customer Portal)
 - Payment succeeds after retry (failed payment recovered)
 
 **Edge Cases Handled:**
+
 - Missing organizationId: Skip gracefully
 - Idempotency: Update is idempotent
 - Quantity = 0: Guard sets minimum to 1
@@ -699,6 +754,7 @@ console.log(`✅ Org ${orgId} updated: ${slots} slots, expires ${expiresAt}`);
 **Purpose:** Reset organization to free tier with grace period
 
 **Action:**
+
 ```typescript
 const subscription = event.data.object as Stripe.Subscription;
 const orgId = subscription.metadata?.organizationId;
@@ -708,7 +764,7 @@ if (!orgId) return; // Not an org subscription
 // Idempotency check
 const org = await db.organization.findUnique({
   where: { id: orgId },
-  select: { stripeSubscriptionId: true }
+  select: { stripeSubscriptionId: true },
 });
 
 if (org?.stripeSubscriptionId !== subscription.id) {
@@ -725,11 +781,11 @@ await db.organization.update({
   where: { id: orgId },
   data: {
     payerId: null,
-    stripeSubscriptionId: null,  // Clear sub ID
-    purchasedSlots: 1,  // Free tier default
-    subscriptionTier: 'FREE', // Reset to free
-    subscriptionExpiresAt: endDate,  // Still valid until period ends (grace period)
-  }
+    stripeSubscriptionId: null, // Clear sub ID
+    purchasedSlots: 1, // Free tier default
+    subscriptionTier: "FREE", // Reset to free
+    subscriptionExpiresAt: endDate, // Still valid until period ends (grace period)
+  },
 });
 
 console.log(`✅ Org ${orgId} subscription ended, valid until ${endDate}`);
@@ -740,6 +796,7 @@ console.log(`✅ Org ${orgId} subscription ended, valid until ${endDate}`);
 ```
 
 **What Triggers This:**
+
 - User cancels in Customer Portal → period expires → deleted event
 - Payer leaves org → our code sets `cancel_at_period_end: true` → period expires → deleted event
 - Admin cancels immediately via Stripe Dashboard
@@ -747,6 +804,7 @@ console.log(`✅ Org ${orgId} subscription ended, valid until ${endDate}`);
 - **Billing cycle switch:** User switches monthly → yearly via portal → creates new subscription → deletes old one
 
 **Edge Cases Handled:**
+
 - Idempotency: Check if subscription ID matches before clearing
 - LinkedIn accounts over limit: Don't auto-delete (preserve data), enforce on next add attempt
 - **Grace period:** Set expiry to period end (not immediate), allows seamless plan switches
@@ -761,6 +819,7 @@ console.log(`✅ Org ${orgId} subscription ended, valid until ${endDate}`);
 **Purpose:** Cancel subscription if the leaving user is the payer
 
 **Action:**
+
 ```typescript
 const { organization, public_user_data } = event.data;
 const orgId = organization.id;
@@ -775,8 +834,8 @@ const org = await db.organization.findUnique({
     payerId: true,
     stripeSubscriptionId: true,
     name: true,
-    subscriptionExpiresAt: true
-  }
+    subscriptionExpiresAt: true,
+  },
 });
 
 if (org?.payerId !== userId) {
@@ -791,31 +850,33 @@ if (!org.stripeSubscriptionId) {
 
 // Payer is leaving! Cancel subscription at period end
 await stripe.subscriptions.update(org.stripeSubscriptionId, {
-  cancel_at_period_end: true
+  cancel_at_period_end: true,
 });
 
 // Clear payer immediately (org has no payer now, but subscription still active until period end)
 await db.organization.update({
   where: { id: orgId },
-  data: { payerId: null }
+  data: { payerId: null },
 });
 
 // Notify remaining admins
 await notifyOrgAdmins(orgId, {
   title: "Billing Admin Left Organization",
-  message: `Your billing admin has left ${org.name}. The subscription will remain active until ${org.subscriptionExpiresAt?.toLocaleDateString()}, then cancel automatically. Subscribe again to maintain access.`
+  message: `Your billing admin has left ${org.name}. The subscription will remain active until ${org.subscriptionExpiresAt?.toLocaleDateString()}, then cancel automatically. Subscribe again to maintain access.`,
 });
 
 console.log(`✅ Subscription for org ${orgId} set to cancel at period end`);
 ```
 
 **Why Cancel at Period End (Not Immediately)?**
+
 - User already paid for the current period
 - Gives org time to find new payer
 - Better UX (no surprise service interruption)
 - Stripe doesn't auto-refund partial periods
 
 **Edge Cases Handled:**
+
 - Regular member leaves: No action
 - Org has no active subscription: No action
 - Payer leaves: Cancel at period end, clear payerId
@@ -829,23 +890,26 @@ console.log(`✅ Subscription for org ${orgId} set to cancel at period end`);
 **Purpose:** Notify org admins, give grace period before cancellation
 
 **Action:**
+
 ```typescript
 const invoice = event.data.object as Stripe.Invoice;
-const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string);
+const subscription = await stripe.subscriptions.retrieve(
+  invoice.subscription as string,
+);
 const orgId = subscription.metadata?.organizationId;
 
 if (!orgId) return; // Not an org subscription
 
 const org = await db.organization.findUnique({
   where: { id: orgId },
-  include: { payer: true }
+  include: { payer: true },
 });
 
 // Notify payer and admins
 await notifyOrgAdmins(orgId, {
   title: "Payment Failed",
   message: `Payment for ${org.name} failed. Please update your payment method in billing settings. Stripe will retry automatically.`,
-  severity: "error"
+  severity: "error",
 });
 
 // Send email to payer
@@ -853,7 +917,7 @@ if (org.payer?.primaryEmailAddress) {
   await sendEmail({
     to: org.payer.primaryEmailAddress,
     subject: "Payment Failed - Update Required",
-    body: `Your payment for ${org.name} failed. Update your payment method at: ${baseUrl}/${org.orgSlug}/settings`
+    body: `Your payment for ${org.name} failed. Update your payment method at: ${baseUrl}/${org.orgSlug}/settings`,
   });
 }
 
@@ -861,10 +925,12 @@ console.log(`⚠️ Payment failed for org ${orgId}, notifications sent`);
 ```
 
 **What Stripe Does Automatically:**
+
 - Retries payment 3 times over 2 weeks
 - If all retries fail → cancels subscription → fires `customer.subscription.deleted`
 
 **Our Role:**
+
 - Notify users immediately on first failure
 - Don't disable access during grace period
 
@@ -877,6 +943,7 @@ console.log(`⚠️ Payment failed for org ${orgId}, notifications sent`);
 **Purpose:** Clean up stripeCustomerId in User table
 
 **Action:**
+
 ```typescript
 const customer = event.data.object as Stripe.Customer;
 const customerId = customer.id;
@@ -884,7 +951,7 @@ const customerId = customer.id;
 // Clear stripeCustomerId from user
 await db.user.updateMany({
   where: { stripeCustomerId: customerId },
-  data: { stripeCustomerId: null }
+  data: { stripeCustomerId: null },
 });
 
 console.log(`✅ Cleared stripeCustomerId ${customerId} from users`);
@@ -902,6 +969,7 @@ console.log(`✅ Cleared stripeCustomerId ${customerId} from users`);
 **Purpose:** Cancel any subscriptions they're paying for
 
 **Action (ADD TO EXISTING HANDLER):**
+
 ```typescript
 case "user.deleted": {
   const userId = data.id;
@@ -947,37 +1015,41 @@ case "user.deleted": {
 **Purpose:** Create Stripe checkout session for org subscription
 
 **Input:**
+
 ```typescript
 {
-  organizationId: string
-  slots: number        // 1-unlimited (no max limit)
-  interval: 'monthly' | 'yearly'
+  organizationId: string;
+  slots: number; // 1-unlimited (no max limit)
+  interval: "monthly" | "yearly";
 }
 ```
 
 **Logic:**
+
 ```typescript
 export const createOrgCheckout = protectedProcedure
-  .input(z.object({
-    organizationId: z.string(),
-    slots: z.number().min(1),  // No max limit
-    interval: z.enum(['monthly', 'yearly'])
-  }))
+  .input(
+    z.object({
+      organizationId: z.string(),
+      slots: z.number().min(1), // No max limit
+      interval: z.enum(["monthly", "yearly"]),
+    }),
+  )
   .mutation(async ({ ctx, input }) => {
     // 1. Verify user is admin of org
     const membership = await ctx.db.organizationMember.findUnique({
       where: {
         orgId_userId: {
           orgId: input.organizationId,
-          userId: ctx.user.id
-        }
-      }
+          userId: ctx.user.id,
+        },
+      },
     });
 
-    if (!membership || membership.role !== 'ADMIN') {
+    if (!membership || membership.role !== "ADMIN") {
       throw new TRPCError({
-        code: 'FORBIDDEN',
-        message: 'Only organization admins can subscribe'
+        code: "FORBIDDEN",
+        message: "Only organization admins can subscribe",
       });
     }
 
@@ -985,55 +1057,58 @@ export const createOrgCheckout = protectedProcedure
     const canSubscribe = await canUserCreateNewSubscription(ctx.user.id);
     if (!canSubscribe.allowed) {
       throw new TRPCError({
-        code: 'FORBIDDEN',
-        message: canSubscribe.reason
+        code: "FORBIDDEN",
+        message: canSubscribe.reason,
       });
     }
 
     // 3. Get or create Stripe customer for user
     const user = await ctx.db.user.findUnique({
       where: { id: ctx.user.id },
-      select: { stripeCustomerId: true, primaryEmailAddress: true }
+      select: { stripeCustomerId: true, primaryEmailAddress: true },
     });
 
     let customerId = user?.stripeCustomerId;
     if (!customerId) {
       const customer = await stripe.customers.create({
         email: user.primaryEmailAddress,
-        metadata: { clerkUserId: ctx.user.id }
+        metadata: { clerkUserId: ctx.user.id },
       });
       customerId = customer.id;
 
       await ctx.db.user.update({
         where: { id: ctx.user.id },
-        data: { stripeCustomerId: customerId }
+        data: { stripeCustomerId: customerId },
       });
     }
 
     // 4. Get org for return URL
     const org = await ctx.db.organization.findUnique({
       where: { id: input.organizationId },
-      select: { orgSlug: true }
+      select: { orgSlug: true },
     });
 
     // 5. Create checkout session with org metadata
-    const priceId = input.interval === 'yearly'
-      ? STRIPE_QUANTITY_PRICES.YEARLY
-      : STRIPE_QUANTITY_PRICES.MONTHLY;
+    const priceId =
+      input.interval === "yearly"
+        ? STRIPE_QUANTITY_PRICES.YEARLY
+        : STRIPE_QUANTITY_PRICES.MONTHLY;
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
-      payment_method_types: ['card'],
-      line_items: [{
-        price: priceId,
-        quantity: input.slots,
-        adjustable_quantity: {
-          enabled: true,
-          minimum: 1,
-          // No maximum - allow unlimited slots
+      payment_method_types: ["card"],
+      line_items: [
+        {
+          price: priceId,
+          quantity: input.slots,
+          adjustable_quantity: {
+            enabled: true,
+            minimum: 1,
+            // No maximum - allow unlimited slots
+          },
         },
-      }],
-      mode: 'subscription',
+      ],
+      mode: "subscription",
       success_url: `${baseUrl}/billing-return?orgId=${input.organizationId}&success=true`,
       cancel_url: `${baseUrl}/${org.orgSlug}/settings?canceled=true`,
       allow_promotion_codes: true,
@@ -1041,14 +1116,14 @@ export const createOrgCheckout = protectedProcedure
       proration_behavior: "create_prorations", // Immediate proration for all changes
       subscription_data: {
         metadata: {
-          organizationId: input.organizationId,  // KEY: Webhooks use this
+          organizationId: input.organizationId, // KEY: Webhooks use this
           payerId: ctx.user.id,
-        }
+        },
       },
       metadata: {
         organizationId: input.organizationId,
         payerId: ctx.user.id,
-      }
+      },
     });
 
     return { url: session.url };
@@ -1056,6 +1131,7 @@ export const createOrgCheckout = protectedProcedure
 ```
 
 **Helper Function:**
+
 ```typescript
 async function canUserCreateNewSubscription(userId: string): Promise<{
   allowed: boolean;
@@ -1065,22 +1141,22 @@ async function canUserCreateNewSubscription(userId: string): Promise<{
   const currentPaidOrg = await db.organization.findFirst({
     where: {
       payerId: userId,
-      subscriptionExpiresAt: { gt: new Date() }
+      subscriptionExpiresAt: { gt: new Date() },
     },
-    select: { name: true, subscriptionExpiresAt: true }
+    select: { name: true, subscriptionExpiresAt: true },
   });
 
   if (currentPaidOrg) {
     return {
       allowed: false,
-      reason: `You're already paying for "${currentPaidOrg.name}" until ${currentPaidOrg.subscriptionExpiresAt.toLocaleDateString()}. Cancel that subscription first or wait for it to expire.`
+      reason: `You're already paying for "${currentPaidOrg.name}" until ${currentPaidOrg.subscriptionExpiresAt.toLocaleDateString()}. Cancel that subscription first or wait for it to expire.`,
     };
   }
 
   // Step 2: Stripe check - Did user leave an org but subscription still active?
   const user = await db.user.findUnique({
     where: { id: userId },
-    select: { stripeCustomerId: true }
+    select: { stripeCustomerId: true },
   });
 
   if (!user?.stripeCustomerId) {
@@ -1089,23 +1165,26 @@ async function canUserCreateNewSubscription(userId: string): Promise<{
 
   const subscriptions = await stripe.subscriptions.list({
     customer: user.stripeCustomerId,
-    status: 'active',
-    limit: 10
+    status: "active",
+    limit: 10,
   });
 
   // Check for any active subscription (including ones marked for cancellation but still active)
-  const activeSubscription = subscriptions.data.find(sub => {
+  const activeSubscription = subscriptions.data.find((sub) => {
     const isStillActive = new Date(sub.current_period_end * 1000) > new Date();
     return isStillActive;
   });
 
   if (activeSubscription) {
-    const expiryDate = new Date(activeSubscription.current_period_end * 1000).toLocaleDateString();
-    const orgName = activeSubscription.metadata.organizationName || 'a previous organization';
+    const expiryDate = new Date(
+      activeSubscription.current_period_end * 1000,
+    ).toLocaleDateString();
+    const orgName =
+      activeSubscription.metadata.organizationName || "a previous organization";
 
     return {
       allowed: false,
-      reason: `You have an active subscription for "${orgName}" until ${expiryDate}. Please wait for it to expire or contact support to cancel it immediately.`
+      reason: `You have an active subscription for "${orgName}" until ${expiryDate}. Please wait for it to expire or contact support to cancel it immediately.`,
     };
   }
 
@@ -1116,17 +1195,20 @@ async function canUserCreateNewSubscription(userId: string): Promise<{
 **How Stripe Handles Changes:**
 
 **Quantity Increase (e.g., 5 → 10 slots):**
+
 - Same subscription ID, updates line item quantity
 - Immediate proration charge for additional slots
 - Webhook: `customer.subscription.updated`
 
 **Quantity Decrease (e.g., 10 → 5 slots):**
+
 - Same subscription ID, updates line item quantity
 - Immediate proration credit (applied to next invoice)
 - Webhook: `customer.subscription.updated`
 - **Over-quota handling:** If org has 8 accounts but reduces to 5 slots, client-side check disables premium until user removes 3 accounts
 
 **Billing Cycle Switch (e.g., monthly → yearly):**
+
 - Creates **NEW subscription** (new ID) with yearly product
 - Cancels **OLD subscription** (monthly)
 - Applies proration credit from unused monthly time
@@ -1140,29 +1222,33 @@ async function canUserCreateNewSubscription(userId: string): Promise<{
 **Purpose:** Create Stripe customer portal session for managing subscription
 
 **Input:**
+
 ```typescript
 {
-  organizationId: string
+  organizationId: string;
 }
 ```
 
 **Logic:**
+
 ```typescript
 export const createOrgPortal = protectedProcedure
-  .input(z.object({
-    organizationId: z.string()
-  }))
+  .input(
+    z.object({
+      organizationId: z.string(),
+    }),
+  )
   .mutation(async ({ ctx, input }) => {
     // Get org with payer info
     const org = await ctx.db.organization.findUnique({
       where: { id: input.organizationId },
-      include: { payer: true }
+      include: { payer: true },
     });
 
     if (!org?.payer?.stripeCustomerId) {
       throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: 'No active subscription found'
+        code: "NOT_FOUND",
+        message: "No active subscription found",
       });
     }
 
@@ -1171,22 +1257,25 @@ export const createOrgPortal = protectedProcedure
       where: {
         orgId_userId: {
           orgId: input.organizationId,
-          userId: ctx.user.id
-        }
-      }
+          userId: ctx.user.id,
+        },
+      },
     });
 
-    if (!membership || (ctx.user.id !== org.payerId && membership.role !== 'ADMIN')) {
+    if (
+      !membership ||
+      (ctx.user.id !== org.payerId && membership.role !== "ADMIN")
+    ) {
       throw new TRPCError({
-        code: 'FORBIDDEN',
-        message: 'Only the payer or admins can access billing settings'
+        code: "FORBIDDEN",
+        message: "Only the payer or admins can access billing settings",
       });
     }
 
     // Create customer portal session (uses payer's Stripe customer)
     const session = await stripe.billingPortal.sessions.create({
       customer: org.payer.stripeCustomerId,
-      return_url: `${baseUrl}/billing-return?orgId=${input.organizationId}` // Use org ID (immutable)
+      return_url: `${baseUrl}/billing-return?orgId=${input.organizationId}`, // Use org ID (immutable)
     });
 
     return { url: session.url };
@@ -1200,6 +1289,7 @@ export const createOrgPortal = protectedProcedure
 **Purpose:** Get org's subscription status for UI (billing page, settings, dashboard banners)
 
 **Input:**
+
 ```typescript
 {
   organizationId: string
@@ -1208,6 +1298,7 @@ export const createOrgPortal = protectedProcedure
 ```
 
 **Output:**
+
 ```typescript
 {
   isActive: boolean
@@ -1223,27 +1314,30 @@ export const createOrgPortal = protectedProcedure
 ```
 
 **Logic:**
+
 ```typescript
 export const getSubscriptionStatus = protectedProcedure
-  .input(z.object({
-    organizationId: z.string(),
-    includeDetails: z.boolean().optional().default(false)
-  }))
+  .input(
+    z.object({
+      organizationId: z.string(),
+      includeDetails: z.boolean().optional().default(false),
+    }),
+  )
   .query(async ({ ctx, input }) => {
     // Verify user is member
     const membership = await ctx.db.organizationMember.findUnique({
       where: {
         orgId_userId: {
           orgId: input.organizationId,
-          userId: ctx.user.id
-        }
-      }
+          userId: ctx.user.id,
+        },
+      },
     });
 
     if (!membership) {
       throw new TRPCError({
-        code: 'FORBIDDEN',
-        message: 'You are not a member of this organization'
+        code: "FORBIDDEN",
+        message: "You are not a member of this organization",
       });
     }
 
@@ -1255,25 +1349,27 @@ export const getSubscriptionStatus = protectedProcedure
           select: {
             firstName: true,
             lastName: true,
-            primaryEmailAddress: true
-          }
+            primaryEmailAddress: true,
+          },
         },
         linkedInAccounts: {
           where: { organizationId: input.organizationId },
-          select: { id: true }
-        }
-      }
+          select: { id: true },
+        },
+      },
     });
 
     if (!org) {
       throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: 'Organization not found'
+        code: "NOT_FOUND",
+        message: "Organization not found",
       });
     }
 
     // Fast data from DB
-    const isActive = org.subscriptionExpiresAt ? org.subscriptionExpiresAt > new Date() : false;
+    const isActive = org.subscriptionExpiresAt
+      ? org.subscriptionExpiresAt > new Date()
+      : false;
     const usedSlots = org.linkedInAccounts.length;
 
     const baseStatus = {
@@ -1281,18 +1377,23 @@ export const getSubscriptionStatus = protectedProcedure
       purchasedSlots: org.purchasedSlots,
       usedSlots,
       expiresAt: org.subscriptionExpiresAt,
-      subscriptionTier: org.subscriptionTier as 'FREE' | 'PREMIUM',
+      subscriptionTier: org.subscriptionTier as "FREE" | "PREMIUM",
       payer: org.payer,
       isPayer: ctx.user.id === org.payerId,
     };
 
     // If details requested (billing page), query Stripe
     if (input.includeDetails && org.stripeSubscriptionId) {
-      const subscription = await stripe.subscriptions.retrieve(org.stripeSubscriptionId);
+      const subscription = await stripe.subscriptions.retrieve(
+        org.stripeSubscriptionId,
+      );
 
       return {
         ...baseStatus,
-        billingCycle: subscription.items.data[0].price.recurring.interval === 'year' ? 'yearly' : 'monthly',
+        billingCycle:
+          subscription.items.data[0].price.recurring.interval === "year"
+            ? "yearly"
+            : "monthly",
         cancelAtPeriodEnd: subscription.cancel_at_period_end,
       };
     }
@@ -1310,6 +1411,7 @@ export const getSubscriptionStatus = protectedProcedure
 **Location:** `apps/nextjs/src/app/billing-return/page.tsx`
 
 **Logic:**
+
 ```typescript
 export default async function BillingReturnPage({
   searchParams
@@ -1340,6 +1442,7 @@ export default async function BillingReturnPage({
 **Location:** `apps/nextjs/src/app/(new-dashboard)/[orgSlug]/settings/page.tsx`
 
 **Full Implementation:**
+
 ```typescript
 "use client";
 
@@ -1645,7 +1748,7 @@ export function isPremiumOrg(org: {
   // Check subscription active
   if (!org.subscriptionExpiresAt) return false;
   if (org.subscriptionExpiresAt < new Date()) return false;
-  if (org.subscriptionTier !== 'PREMIUM') return false;
+  if (org.subscriptionTier !== "PREMIUM") return false;
 
   // Check quota compliance
   if (org.accountCount > org.purchasedSlots) {
@@ -1739,16 +1842,16 @@ return (
 
 ### Feature Matrix (Simple)
 
-| Feature | Free | Premium (any quantity) |
-|---------|------|---------|
-| Manual LinkedIn management | ✅ | ✅ |
-| LinkedIn account slots | 1 slot only | 1-unlimited slots |
-| Target lists | ✅ | ✅ |
-| Comment history | ✅ | ✅ |
-| **AI-powered comments** | ❌ | ✅ |
-| **Hyperbrowser virtual runs** | ❌ | ✅ |
-| **Auto-engagement campaigns** | ❌ | ✅ |
-| **Priority support** | ❌ | ✅ |
+| Feature                       | Free        | Premium (any quantity) |
+| ----------------------------- | ----------- | ---------------------- |
+| Manual LinkedIn management    | ✅          | ✅                     |
+| LinkedIn account slots        | 1 slot only | 1-unlimited slots      |
+| Target lists                  | ✅          | ✅                     |
+| Comment history               | ✅          | ✅                     |
+| **AI-powered comments**       | ❌          | ✅                     |
+| **Hyperbrowser virtual runs** | ❌          | ✅                     |
+| **Auto-engagement campaigns** | ❌          | ✅                     |
+| **Priority support**          | ❌          | ✅                     |
 
 **Note:** Premium tier unlocks AI features regardless of slot count. User can purchase Premium with quantity=1 to get AI features with just 1 slot.
 
@@ -1761,18 +1864,19 @@ return (
 **Problem:** Stripe may send duplicate webhooks.
 
 **Solution:**
+
 ```typescript
 // checkout.session.completed
 const existing = await db.organization.findUnique({
   where: { id: orgId },
-  select: { stripeSubscriptionId: true }
+  select: { stripeSubscriptionId: true },
 });
 if (existing?.stripeSubscriptionId === subscription.id) return; // Skip
 
 // customer.subscription.deleted
 const org = await db.organization.findUnique({
   where: { id: orgId },
-  select: { stripeSubscriptionId: true }
+  select: { stripeSubscriptionId: true },
 });
 if (org?.stripeSubscriptionId !== subscription.id) return; // Skip
 ```
@@ -1824,6 +1928,7 @@ export async function POST(req: Request) {
 ### 7. Org Has 5 Accounts, Subscription Expires
 
 **Behavior:**
+
 - Webhook resets `purchasedSlots: 1`
 - Existing 5 accounts remain (no data loss)
 - Slot enforcement prevents adding 6th account
@@ -1838,6 +1943,7 @@ export async function POST(req: Request) {
 **Scenario:** Org has 10 slots with 8 accounts. User reduces to 5 slots via Customer Portal.
 
 **Behavior:**
+
 1. Stripe applies reduction immediately (with proration credit)
 2. Webhook updates `purchasedSlots: 5`
 3. Org now has 8 accounts, 5 slots → **over quota**
@@ -1849,6 +1955,7 @@ export async function POST(req: Request) {
 9. Client-side check passes → premium restored
 
 **Why This Works:**
+
 - Simple (no scheduling, no scheduled changes)
 - Fair (all accounts treated equally, no picking which ones lose access)
 - Self-service (user resolves at their pace)
@@ -1870,11 +1977,13 @@ export async function POST(req: Request) {
 **Goal:** Add new fields without breaking existing functionality.
 
 **Steps:**
+
 1. Add fields to Organization: `payerId`, `stripeSubscriptionId`, `subscriptionExpiresAt`, `subscriptionTier`
 2. Add relation: `Organization.payer` → `User`
 3. Deploy schema migration (no data changes yet)
 
 **SQL:**
+
 ```sql
 -- Add new fields
 ALTER TABLE "Organization" ADD COLUMN "payerId" TEXT;
@@ -1891,6 +2000,7 @@ ALTER TABLE "Organization" ADD CONSTRAINT "Organization_payerId_fkey"
 ```
 
 **Verification:**
+
 ```bash
 pnpm db:push
 psql $DATABASE_URL -c "\d \"Organization\""
@@ -1905,25 +2015,26 @@ psql $DATABASE_URL -c "\d \"Organization\""
 **Script:** `scripts/migrate-subscriptions.ts`
 
 ```typescript
-import { db } from '@sassy/db';
-import Stripe from 'stripe';
+import Stripe from "stripe";
+
+import { db } from "@sassy/db";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2023-08-16'
+  apiVersion: "2023-08-16",
 });
 
 async function migrateSubscriptions() {
   const users = await db.user.findMany({
     where: {
-      accessType: { not: 'FREE' },
-      stripeCustomerId: { not: null }
+      accessType: { not: "FREE" },
+      stripeCustomerId: { not: null },
     },
     include: {
       organizationMemberships: {
         include: { organization: true },
-        where: { role: 'ADMIN' }
-      }
-    }
+        where: { role: "ADMIN" },
+      },
+    },
   });
 
   console.log(`Found ${users.length} users with subscriptions`);
@@ -1932,7 +2043,7 @@ async function migrateSubscriptions() {
     migrated: 0,
     noAdminOrg: 0,
     noStripeSubscription: 0,
-    errors: 0
+    errors: 0,
   };
 
   for (const user of users) {
@@ -1947,12 +2058,14 @@ async function migrateSubscriptions() {
 
       const subscriptions = await stripe.subscriptions.list({
         customer: user.stripeCustomerId!,
-        status: 'active',
-        limit: 1
+        status: "active",
+        limit: 1,
       });
 
       if (subscriptions.data.length === 0) {
-        console.warn(`User ${user.id} has accessType but no active Stripe subscription`);
+        console.warn(
+          `User ${user.id} has accessType but no active Stripe subscription`,
+        );
         results.noStripeSubscription++;
         continue;
       }
@@ -1964,8 +2077,8 @@ async function migrateSubscriptions() {
         metadata: {
           organizationId: primaryOrg.id,
           payerId: user.id,
-          migratedAt: new Date().toISOString()
-        }
+          migratedAt: new Date().toISOString(),
+        },
       });
 
       // Update organization
@@ -1975,21 +2088,22 @@ async function migrateSubscriptions() {
           payerId: user.id,
           stripeSubscriptionId: subscription.id,
           purchasedSlots: subscription.items.data[0].quantity || 1,
-          subscriptionTier: 'PREMIUM',
-          subscriptionExpiresAt: new Date(subscription.current_period_end * 1000)
-        }
+          subscriptionTier: "PREMIUM",
+          subscriptionExpiresAt: new Date(
+            subscription.current_period_end * 1000,
+          ),
+        },
       });
 
       console.log(`✅ Migrated user ${user.id} to org ${primaryOrg.id}`);
       results.migrated++;
-
     } catch (error) {
       console.error(`Error migrating user ${user.id}:`, error);
       results.errors++;
     }
   }
 
-  console.log('\n=== Migration Results ===');
+  console.log("\n=== Migration Results ===");
   console.log(`Migrated: ${results.migrated}`);
   console.log(`No admin org: ${results.noAdminOrg}`);
   console.log(`No Stripe subscription: ${results.noStripeSubscription}`);
@@ -2018,7 +2132,10 @@ if (eventType === "customer.subscription.updated") {
   if (clerkUserId) {
     await db.user.update({
       where: { id: clerkUserId },
-      data: { accessType: mappedAccessType, stripeUserProperties: subscription }
+      data: {
+        accessType: mappedAccessType,
+        stripeUserProperties: subscription,
+      },
     });
   }
 
@@ -2028,9 +2145,9 @@ if (eventType === "customer.subscription.updated") {
       where: { id: orgId },
       data: {
         purchasedSlots: subscription.items.data[0].quantity,
-        subscriptionTier: 'PREMIUM',
-        subscriptionExpiresAt: new Date(subscription.current_period_end * 1000)
-      }
+        subscriptionTier: "PREMIUM",
+        subscriptionExpiresAt: new Date(subscription.current_period_end * 1000),
+      },
     });
   }
 }
@@ -2041,25 +2158,29 @@ if (eventType === "customer.subscription.updated") {
 ### Phase 4: Update API Endpoints & UI
 
 **New Endpoints:**
+
 - `createOrgCheckout`
 - `createOrgPortal`
 - `getSubscriptionStatus`
 
 **Old Endpoints (Deprecate):**
+
 - `createCheckout`
 - `createCustomerPortal`
 - `checkAccess`
 
 **UI Updates:**
+
 ```typescript
 // OLD
-const hasAccess = user?.accessType !== 'FREE';
+const hasAccess = user?.accessType !== "FREE";
 
 // NEW
 const isPremium = isPremiumOrg(org);
 ```
 
 **Files to Update (~18 files):**
+
 - `use-premium-status.ts`
 - `use-subscription.ts`
 - `subscription-status.tsx`
@@ -2072,6 +2193,7 @@ const isPremium = isPremiumOrg(org);
 ### Phase 5: Enhance Webhooks
 
 **Add new logic:**
+
 - `user.deleted`: Cancel subscriptions user is paying for
 - `customer.deleted`: Clear stripeCustomerId
 - `invoice.payment_failed`: Send notifications
@@ -2083,6 +2205,7 @@ const isPremium = isPremiumOrg(org);
 **Wait Period:** 30 days after Phase 4 deployed.
 
 **SQL:**
+
 ```sql
 ALTER TABLE "Organization" DROP COLUMN "stripeCustomerId";
 ALTER TABLE "User" DROP COLUMN "accessType";
@@ -2092,6 +2215,7 @@ DROP TYPE "AccessType";
 ```
 
 **Remove Code:**
+
 - Old endpoints
 - Dual-write logic
 - Old hooks
@@ -2166,25 +2290,63 @@ DROP TYPE "AccessType";
 
 ## Files to Modify
 
-### Schema (Phase 1)
-- [ ] `packages/db/prisma/models/organization.prisma` - Add 4 fields + relation
-- [ ] `packages/db/prisma/models/user.prisma` - Add paidOrganizations relation
-- [ ] Run: `pnpm db:push`
+### Schema (Phase 1) ✅ COMPLETE
 
-### Webhooks (Phase 3 & 5)
-- [ ] `apps/nextjs/src/app/api/webhooks/stripe/route.ts` - Add org-centric handlers
-- [ ] `packages/api/src/api/webhooks/clerk.webhook.ts` - Enhance user.deleted, add payer-leaves logic to organizationMembership.deleted
+- [x] `packages/db/prisma/models/organization.prisma` - Added 4 fields + relation
+  - `payerId String?`
+  - `stripeSubscriptionId String? @unique`
+  - `subscriptionTier String @default("FREE")`
+  - `subscriptionExpiresAt DateTime?`
+  - `payer User? @relation("OrgPayer", ...)`
+- [x] `packages/db/prisma/models/user.prisma` - Added paidOrganizations relation
+  - `paidOrganizations Organization[] @relation("OrgPayer")`
+- [ ] Run: `pnpm db:push` (user to run manually)
 
-### API Routes (Phase 4)
-- [ ] `packages/api/src/router/stripe.ts` - Add createOrgCheckout, createOrgPortal, getPricing
-- [ ] `packages/api/src/router/organization.ts` - Add getSubscriptionStatus (with includeDetails option)
-- [ ] `packages/api/src/utils/check-premium.ts` - Add isPremiumOrg helper (with quota check)
+### API Routes (Phase 2) ✅ COMPLETE
 
-### New Pages (Phase 4)
+- [x] `packages/api/src/router/organization.ts` - Added subscription sub-router
+  - `trpc.organization.subscription.status()` - Get org subscription status
+  - `trpc.organization.subscription.pricing()` - Get pricing from QUANTITY_PRICING_CONFIG
+  - `trpc.organization.subscription.checkout()` - Create Stripe checkout for org
+  - `trpc.organization.subscription.portal()` - Create Stripe customer portal
+- [x] `packages/feature-flags/src/premium.ts` - Added isPremiumOrg and getPremiumStatus helpers
+- [x] `packages/feature-flags/src/index.ts` - Exported new helpers
+
+**Implementation Notes:**
+
+- Subscription endpoints use `ctx.activeOrg.id` from Clerk context
+- Checkout blocks if user already has active subscription (DB check only, webhooks keep in sync)
+- Get-or-create Stripe customer wrapped in transaction
+- `NEXTJS_URL` env var required (throws if missing)
+- Pricing uses `QUANTITY_PRICING_CONFIG` instead of Stripe API
+
+### Webhooks (Phase 3) ✅ COMPLETE
+
+- [x] `packages/api/src/api/webhooks/stripe.webhook.ts` - Added org-centric handlers:
+  - `checkout.session.completed` - Initialize org subscription from checkout
+  - `customer.subscription.created/updated` - Sync slots and expiry to org
+  - `customer.subscription.deleted/paused` - Reset org to free tier with grace period
+  - `customer.deleted` - Clear stripeCustomerId from user
+  - Legacy user-centric handlers preserved for backwards compatibility
+- [x] `packages/api/src/api/webhooks/clerk.webhook.ts` - Enhanced:
+  - `user.deleted` - Cancel subscriptions user is paying for
+  - `organizationMembership.deleted` - Cancel subscription if payer leaves org
+
+**Implementation Notes:**
+
+- Uses switch/case for cleaner event handling
+- Idempotency checks prevent duplicate processing
+- Race condition handled: If user leaves org during checkout, subscription is canceled and refunded
+- Grace period on deletion: subscriptionExpiresAt set to period end (not immediate revocation)
+- Legacy handlers fall through when no org metadata present
+
+### New Pages (Phase 4) - PENDING
+
 - [ ] `apps/nextjs/src/app/billing-return/page.tsx` - Create return handler
 - [ ] `apps/nextjs/src/app/(new-dashboard)/[orgSlug]/settings/page.tsx` - Create or update billing page
 
-### UI (Phase 4) - ~18 files
+### UI (Phase 5) - ~18 files - PENDING
+
 - [ ] `apps/nextjs/src/hooks/use-subscription.ts` - Switch to org endpoints
 - [ ] `apps/nextjs/src/hooks/use-premium-status.ts` - Switch to org endpoints
 - [ ] `apps/nextjs/src/_components/subscription-status.tsx` - Use getSubscriptionStatus
@@ -2192,11 +2354,13 @@ DROP TYPE "AccessType";
 - [ ] `packages/api/src/utils/check-premium-access.ts` - Use isPremiumOrg
 - [ ] `apps/wxt-extension/entrypoints/*` - Add premium checks with isPremiumOrg
 
-### Data Migration (Phase 2)
+### Data Migration (Phase 6) - PENDING
+
 - [ ] `scripts/migrate-subscriptions.ts` - Create migration script
 - [ ] `scripts/verify-migration.ts` - Create verification script
 
-### Cleanup (Phase 6)
+### Cleanup (Phase 7) - PENDING
+
 - [ ] Remove `User.accessType`, `stripeUserProperties`, `LinkedInAccount.accessType`
 - [ ] Remove `AccessType` enum
 - [ ] Remove `Organization.stripeCustomerId`
@@ -2209,26 +2373,28 @@ DROP TYPE "AccessType";
 
 ### Version 2.2 Updates (Final Pricing Model)
 
-| Aspect | Previous Version | Version 2.2 |
-|--------|-----------------|-------------|
-| **Pricing model** | "Premium = multiple slots" | "Premium = AI features enabled, slots = quantity" |
-| **Slot count** | Fixed 2-24 for premium | 1-unlimited based on quantity purchased |
-| **Monthly price** | $24.99/slot/month | **$29.99/slot/month** (actual Stripe price) |
-| **Yearly price** | Not specified | **$299.99/slot/year** (16.7% discount) |
-| **Price fetching** | Hardcoded | Live from Stripe API |
-| **Feature gating** | Simple expiry check | Includes quota compliance check |
-| **Downgrade handling** | Not specified | Immediate with over-quota enforcement |
-| **Settings page UI** | Basic specification | Complete implementation with live pricing |
-| **Quantity limits** | 1-24 slots | 1-unlimited (no max) |
-| **Stripe portal config** | Plan switches unclear | Allow both quantity changes and billing cycle switches |
+| Aspect                   | Previous Version           | Version 2.2                                            |
+| ------------------------ | -------------------------- | ------------------------------------------------------ |
+| **Pricing model**        | "Premium = multiple slots" | "Premium = AI features enabled, slots = quantity"      |
+| **Slot count**           | Fixed 2-24 for premium     | 1-unlimited based on quantity purchased                |
+| **Monthly price**        | $24.99/slot/month          | **$29.99/slot/month** (actual Stripe price)            |
+| **Yearly price**         | Not specified              | **$299.99/slot/year** (16.7% discount)                 |
+| **Price fetching**       | Hardcoded                  | Live from Stripe API                                   |
+| **Feature gating**       | Simple expiry check        | Includes quota compliance check                        |
+| **Downgrade handling**   | Not specified              | Immediate with over-quota enforcement                  |
+| **Settings page UI**     | Basic specification        | Complete implementation with live pricing              |
+| **Quantity limits**      | 1-24 slots                 | 1-unlimited (no max)                                   |
+| **Stripe portal config** | Plan switches unclear      | Allow both quantity changes and billing cycle switches |
 
 ### Clarified Pricing Logic
 
 **Previous Understanding (WRONG):**
+
 - Free = 1 slot
 - Premium = 2-24 slots (premium implies multiple slots)
 
 **Corrected Understanding (CORRECT):**
+
 - `subscriptionTier = "PREMIUM"` means **"has AI features"**
 - `purchasedSlots` determines slot count (independent of tier)
 - Examples:
@@ -2241,6 +2407,7 @@ DROP TYPE "AccessType";
 **Scenario:** User reduces from 10 to 5 slots while having 8 accounts connected.
 
 **Behavior:**
+
 1. Stripe applies reduction immediately (with proration credit)
 2. Webhook updates `purchasedSlots = 5`
 3. Org has 8 accounts, 5 slots → **over quota**
@@ -2250,6 +2417,7 @@ DROP TYPE "AccessType";
 7. User removes 3 accounts → quota OK → premium restored
 
 **Why This Works:**
+
 - ✅ Simple (no scheduled changes)
 - ✅ Fair (all accounts treated equally)
 - ✅ Self-service (user fixes at their pace)
@@ -2271,18 +2439,23 @@ DROP TYPE "AccessType";
 
 **Next Steps:**
 
-1. Review this simplified plan
-2. Begin Phase 1: Schema migration (non-breaking)
-3. Write data migration script (Phase 2)
-4. Test on staging environment
+1. ~~Review this simplified plan~~ ✅
+2. ~~Begin Phase 1: Schema migration (non-breaking)~~ ✅
+3. ~~Phase 2: API endpoints~~ ✅
+4. ~~Phase 3: Webhook handlers~~ ✅
+5. **Phase 4: New pages (billing-return, settings)** ← NEXT
+6. Phase 5: UI updates (~18 files)
+7. Phase 6: Data migration script
+8. Test on staging environment
 
 ---
 
-**Plan Version:** 2.2 (Final Pricing Model)
-**Last Updated:** 2026-01-27
+**Plan Version:** 2.4 (Phase 1, 2 & 3 Complete)
+**Last Updated:** 2026-01-28
 **Author:** Architecture discussion with user
 
 **Key Updates in v2.2:**
+
 - ✅ Corrected pricing model: Premium = AI features (not multiple slots)
 - ✅ Actual Stripe pricing: $29.99/mo, $299.99/yr (16.7% discount)
 - ✅ Live price fetching from Stripe API

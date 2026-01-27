@@ -158,4 +158,4 @@ export const stripeRouter = () =>
       }),
   });
 
-//prevent type leakage issues across your entire Turborepo while maintaining proper type checking during development
+// Prevent type leakage issues across your entire Turborepo while maintaining proper type checking during development

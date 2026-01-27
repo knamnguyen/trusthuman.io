@@ -11,6 +11,7 @@ model User {
 
   linkedInAccounts        LinkedInAccount[]
   organizationMemberships OrganizationMember[]
+  paidOrganizations       Organization[]       @relation("OrgPayer") // Orgs this user pays for
 
   //to be deprecated move to linkedin account - leave for now since in prod
   // except stripe customer id will be moved to org table

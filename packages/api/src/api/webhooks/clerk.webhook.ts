@@ -1,10 +1,15 @@
 import { verifyWebhook } from "@clerk/backend/webhooks";
 import { Hono } from "hono";
+import Stripe from "stripe";
 
 import type { Prisma } from "@sassy/db";
 import { db } from "@sassy/db";
 
 import { env } from "../../utils/env";
+
+const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
+  apiVersion: "2023-08-16",
+});
 
 /**
  * Clerk webhook handler
@@ -121,9 +126,32 @@ export const clerkWebhookRoutes = new Hono().post("/", async (c) => {
       case "user.deleted": {
         console.log("👤 Processing user.deleted event");
 
-        // Extract user ID from Clerk webhook
         const userId = data.id;
         console.log(`- User ID: ${userId}`);
+
+        // Cancel any subscriptions this user is paying for (org-centric billing)
+        const paidOrgs = await db.organization.findMany({
+          where: { payerId: userId },
+          select: { id: true, stripeSubscriptionId: true, name: true },
+        });
+
+        for (const org of paidOrgs) {
+          if (org.stripeSubscriptionId) {
+            try {
+              await stripe.subscriptions.update(org.stripeSubscriptionId, {
+                cancel_at_period_end: true,
+              });
+              console.log(
+                `📧 Subscription ${org.stripeSubscriptionId} for org ${org.name} set to cancel (user deleted)`,
+              );
+            } catch (e) {
+              console.error(
+                `Failed to cancel subscription for org ${org.id}:`,
+                e,
+              );
+            }
+          }
+        }
 
         console.log("🗑️ Deleting user from database...");
 
@@ -212,7 +240,9 @@ export const clerkWebhookRoutes = new Hono().post("/", async (c) => {
           where: { organizationId: orgId },
           data: { ownerId: null },
         });
-        console.log(`🔗 Set ownerId to NULL on ${updateResult.count} LinkedIn account(s)`);
+        console.log(
+          `🔗 Set ownerId to NULL on ${updateResult.count} LinkedIn account(s)`,
+        );
 
         console.log("🗑️ Deleting organization from database...");
 
@@ -339,6 +369,44 @@ export const clerkWebhookRoutes = new Hono().post("/", async (c) => {
 
         console.log(`- Org ID: ${orgId}`);
         console.log(`- User ID: ${userId}`);
+
+        // Check if this user was the payer for the org (org-centric billing)
+        const org = await db.organization.findUnique({
+          where: { id: orgId },
+          select: {
+            payerId: true,
+            stripeSubscriptionId: true,
+            name: true,
+            subscriptionExpiresAt: true,
+          },
+        });
+
+        if (org?.payerId === userId && org.stripeSubscriptionId) {
+          console.log(
+            `💳 Payer ${userId} is leaving org ${orgId}, canceling subscription`,
+          );
+
+          try {
+            // Cancel subscription at period end (user already paid for current period)
+            await stripe.subscriptions.update(org.stripeSubscriptionId, {
+              cancel_at_period_end: true,
+            });
+
+            // Clear payer immediately (org has no payer now, but subscription still active until period end)
+            await db.organization.update({
+              where: { id: orgId },
+              data: { payerId: null },
+            });
+
+            console.log(
+              `✅ Subscription for org ${org.name} set to cancel at period end`,
+            );
+
+            // TODO: Notify remaining admins about billing admin leaving
+          } catch (e) {
+            console.error(`Failed to cancel subscription for org ${orgId}:`, e);
+          }
+        }
 
         console.log("🗑️ Deleting organization membership from database...");
 
