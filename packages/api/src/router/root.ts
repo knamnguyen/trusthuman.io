@@ -13,6 +13,7 @@ import { personaRouter } from "./persona";
 import { profileImportRouter } from "./profile-import";
 import { s3UploadRouter } from "./s3-upload";
 import { settingsRouter } from "./settings";
+import { socialReferralRouter } from "./social-referral";
 import { stripeRouter } from "./stripe";
 import { targetListRouter } from "./target-list";
 import { commentAiDetectorRouter } from "./tools/comment-ai-detector";
@@ -39,6 +40,7 @@ export const appRouter = createTRPCRouter({
   s3Upload: s3UploadRouter(),
   settings: settingsRouter(),
   achievements: achievementsRouter(),
+  socialReferral: socialReferralRouter(),
 });
 
 // export type definition of API
