@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { faLinkedin } from "@fortawesome/free-brands-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Copy } from "lucide-react";
-import { siFacebook, siX } from "simple-icons";
+import { siFacebook, siThreads, siX } from "simple-icons";
 
 import { cn } from "../utils";
 
@@ -264,6 +264,13 @@ export function TableContentComponent() {
     window.open(shareUrl, "_blank", "width=550,height=420");
   };
 
+  const handleShareThreads = () => {
+    const url = encodeURIComponent(getCurrentUrl());
+    const title = encodeURIComponent(getCurrentTitle());
+    const shareUrl = `https://www.threads.net/intent/post?text=${title}%20${url}`;
+    window.open(shareUrl, "_blank", "width=550,height=420");
+  };
+
   // Early return if article not found, title not found, or no headings
   if (!articleFound || !titleFound || headings.length === 0) {
     return null;
@@ -415,6 +422,28 @@ export function TableContentComponent() {
             aria-label="Share on LinkedIn"
           >
             <FontAwesomeIcon icon={faLinkedin} className="h-4 w-4 text-black" />
+          </button>
+          <button
+            type="button"
+            onClick={handleShareThreads}
+            className={cn(
+              "h-8 w-8 rounded-full border-[1.5px] border-black",
+              "flex items-center justify-center",
+              "hover:bg-muted transition-colors",
+              "focus-visible:ring-2 focus-visible:ring-black focus-visible:outline-none",
+            )}
+            aria-label="Share on Threads"
+          >
+            <svg
+              role="img"
+              viewBox="0 0 24 24"
+              className="h-4 w-4"
+              fill="currentColor"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <title>{siThreads.title}</title>
+              <path d={siThreads.path} />
+            </svg>
           </button>
         </div>
       </div>
