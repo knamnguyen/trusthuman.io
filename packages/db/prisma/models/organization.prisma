@@ -7,8 +7,12 @@ model Organization {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  members          OrganizationMember[]
-  linkedInAccounts LinkedInAccount[]
+  // Social referral earned premium (for FREE users)
+  earnedPremiumExpiresAt DateTime?
+
+  members            OrganizationMember[]
+  linkedInAccounts   LinkedInAccount[]
+  socialSubmissions  SocialSubmission[]
 }
 
 model OrganizationMember {
