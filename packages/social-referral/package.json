@@ -1,0 +1,24 @@
+{
+  "name": "@sassy/social-referral",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema-validators": "./src/schema-validators.ts"
+  },
+  "scripts": {
+    "clean": "rm -rf node_modules",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "apify-client": "^2.10.4",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@sassy/eslint-config": "workspace:*",
+    "@sassy/prettier-config": "workspace:*",
+    "@sassy/tsconfig": "workspace:*",
+    "typescript": "catalog:"
+  }
+}

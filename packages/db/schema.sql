@@ -20,6 +20,12 @@ CREATE TYPE "LinkedInAccountStatus" AS ENUM ('REGISTERED', 'CONNECTING', 'CONNEC
 CREATE TYPE "ImportStatus" AS ENUM ('NOT_STARTED', 'RUNNING', 'FINISHED');
 
 -- CreateEnum
+CREATE TYPE "SocialPlatform" AS ENUM ('X', 'LINKEDIN', 'THREADS', 'FACEBOOK');
+
+-- CreateEnum
+CREATE TYPE "SubmissionStatus" AS ENUM ('PENDING', 'VERIFIED', 'FAILED', 'REVOKED');
+
+-- CreateEnum
 CREATE TYPE "TargetListStatus" AS ENUM ('BUILDING', 'COMPLETED');
 
 -- CreateEnum
@@ -331,6 +337,7 @@ CREATE TABLE "Organization" (
     "purchasedSlots" INTEGER NOT NULL DEFAULT 1,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "earnedPremiumExpiresAt" TIMESTAMP(3),
 
     CONSTRAINT "Organization_pkey" PRIMARY KEY ("id")
 );
@@ -360,6 +367,27 @@ CREATE TABLE "ProfileImportRun" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "ProfileImportRun_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "SocialSubmission" (
+    "id" TEXT NOT NULL,
+    "organizationId" TEXT NOT NULL,
+    "platform" "SocialPlatform" NOT NULL,
+    "postUrl" TEXT NOT NULL,
+    "status" "SubmissionStatus" NOT NULL DEFAULT 'PENDING',
+    "submittedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "verifiedAt" TIMESTAMP(3),
+    "lastScannedAt" TIMESTAMP(3),
+    "nextScanAt" TIMESTAMP(3),
+    "containsKeyword" BOOLEAN NOT NULL DEFAULT false,
+    "postText" TEXT,
+    "likes" INTEGER NOT NULL DEFAULT 0,
+    "comments" INTEGER NOT NULL DEFAULT 0,
+    "shares" INTEGER NOT NULL DEFAULT 0,
+    "daysAwarded" INTEGER NOT NULL DEFAULT 0,
+
+    CONSTRAINT "SocialSubmission_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -549,6 +577,15 @@ CREATE INDEX "OrganizationMember_userId_idx" ON "OrganizationMember"("userId");
 CREATE UNIQUE INDEX "OrganizationMember_orgId_userId_key" ON "OrganizationMember"("orgId", "userId");
 
 -- CreateIndex
+CREATE INDEX "SocialSubmission_organizationId_idx" ON "SocialSubmission"("organizationId");
+
+-- CreateIndex
+CREATE INDEX "SocialSubmission_status_idx" ON "SocialSubmission"("status");
+
+-- CreateIndex
+CREATE INDEX "SocialSubmission_platform_idx" ON "SocialSubmission"("platform");
+
+-- CreateIndex
 CREATE INDEX "TargetList_accountId_idx" ON "TargetList"("accountId");
 
 -- CreateIndex
@@ -658,6 +695,9 @@ ALTER TABLE "OrganizationMember" ADD CONSTRAINT "OrganizationMember_linkedInAcco
 
 -- AddForeignKey
 ALTER TABLE "ProfileImportRun" ADD CONSTRAINT "ProfileImportRun_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "SocialSubmission" ADD CONSTRAINT "SocialSubmission_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "TargetList" ADD CONSTRAINT "TargetList_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE CASCADE ON UPDATE CASCADE;
