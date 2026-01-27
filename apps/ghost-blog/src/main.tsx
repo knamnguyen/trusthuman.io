@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
-import ReactDOM from "react-dom/client";
 import { Agentation } from "agentation";
+import ReactDOM from "react-dom/client";
 
 import { FooterComponent } from "@sassy/ui/components/footer-component";
 import { NavBlog } from "@sassy/ui/components/nav-blog";
@@ -63,7 +63,7 @@ function App() {
         <TableContentComponent />
       </main>
       <FooterComponent />
-      {import.meta.env.DEV && <Agentation />}
+      {/* {import.meta.env.DEV && <Agentation />} */}
     </div>
   );
 }
