@@ -264,13 +264,29 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
   refreshCurrentLinkedIn: async () => {
     const currentLinkedIn =
       await createAccountUtilities().extractCurrentProfileAsync();
-    const { accounts, organization, isLoading } = get();
+    const {
+      accounts,
+      organization,
+      isLoading,
+      matchingAccount: currentMatchingAccount,
+    } = get();
 
     const matchingAccount = currentLinkedIn.profileSlug
       ? (accounts.find(
           (acc) => acc.profileSlug === currentLinkedIn.profileSlug,
         ) ?? null)
       : null;
+
+    // CRITICAL: If we have a temporary account from restoreAccountFromId (has no profileSlug)
+    // and accounts array is empty (full fetch hasn't completed), preserve the temporary account.
+    // This prevents auto-resume API calls from failing due to race condition.
+    const finalMatchingAccount =
+      !matchingAccount &&
+      currentMatchingAccount &&
+      !currentMatchingAccount.profileSlug &&
+      accounts.length === 0
+        ? currentMatchingAccount // Preserve temporary account
+        : matchingAccount; // Use newly computed account
 
     // Determine if signed in based on whether we have org data
     const isSignedIn = organization !== null;
@@ -279,18 +295,19 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
       isSignedIn,
       organization,
       currentLinkedIn,
-      matchingAccount,
+      finalMatchingAccount,
     );
 
     set({
       currentLinkedIn,
       currentLinkedInStatus: status,
-      matchingAccount,
+      matchingAccount: finalMatchingAccount,
     });
 
     console.log("AccountStore: Refreshed current LinkedIn", {
       profileSlug: currentLinkedIn.profileSlug,
       status,
+      preservedTemporaryAccount: finalMatchingAccount !== matchingAccount,
     });
   },
 

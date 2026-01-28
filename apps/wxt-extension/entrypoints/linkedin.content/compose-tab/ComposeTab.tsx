@@ -41,7 +41,7 @@ export function ComposeTab() {
     useSubmitBatch();
   const { handleStart, handleStop, isLoading, loadingProgress, scrollProgress } =
     useLoadPosts(targetDraftCount, handleGenerationComplete);
-  const { queueProgress } = useAutoResume(handleGenerationComplete);
+  const { queueProgress, isAutoResumeLoading, autoResumeScrollProgress } = useAutoResume(handleGenerationComplete);
 
   // Subscribe to isUserEditing for paused indicator
   const isUserEditing = useComposeStore((state) => state.isUserEditing);
@@ -88,7 +88,7 @@ export function ComposeTab() {
   const previewingCardId = useComposeStore((state) => state.previewingCardId);
 
   // Conflict flags - disable certain actions when others are running
-  const isAnyGenerating = isLoading || isEngageButtonGenerating;
+  const isAnyGenerating = isLoading || isEngageButtonGenerating || isAutoResumeLoading;
 
   // Ensure only one sub-sidebar open at a time: close settings when post preview opens
   useEffect(() => {
@@ -214,7 +214,7 @@ export function ComposeTab() {
               id="ek-load-posts-button"
               onClick={handleStartWithCloseSettings}
               disabled={
-                isSubmitting || isEngageButtonGenerating || hasEngageButtonCards
+                isSubmitting || isEngageButtonGenerating || hasEngageButtonCards || isAutoResumeLoading
               }
               size="sm"
               className="h-7 flex-1 text-xs"
@@ -241,7 +241,7 @@ export function ComposeTab() {
                 )
               }
               className="border-input bg-background h-6 w-12 rounded border px-1 text-center text-xs"
-              disabled={isLoading}
+              disabled={isLoading || isAutoResumeLoading}
             />
           </div>
         </div>
@@ -251,13 +251,13 @@ export function ComposeTab() {
         {cardIds.length > 0 && (
           <div className="flex items-center justify-between border-t pt-2">
             <div className="flex items-center gap-2 text-xs font-medium">
-              {scrollProgress > 0 && isLoading && (
+              {((scrollProgress > 0 && isLoading) || (autoResumeScrollProgress > 0 && isAutoResumeLoading)) && (
                 <span className="flex items-center gap-1 text-blue-600">
                   <Loader2 className="h-3 w-3 animate-spin" />
-                  {scrollProgress} scrolling
+                  {scrollProgress || autoResumeScrollProgress} scrolling
                 </span>
               )}
-              {isLoading && isUserEditing && (
+              {(isLoading || isAutoResumeLoading) && isUserEditing && (
                 <span
                   className="flex items-center gap-1 text-amber-600"
                   title="Click outside edit box to continue"
