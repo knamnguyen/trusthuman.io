@@ -4,6 +4,7 @@ import { use, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
+import posthog from "posthog-js";
 
 import { useTRPC } from "~/trpc/react";
 
@@ -49,6 +50,9 @@ export default function BillingReturnPage({
       organization.data === undefined ||
       (capture.data === undefined && capture.error === null)
     ) {
+      if (capture.error !== null) {
+        posthog.captureException(new Error(JSON.stringify(capture.error.data)));
+      }
       return;
     }
 
