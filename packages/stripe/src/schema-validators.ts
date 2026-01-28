@@ -61,10 +61,16 @@ export enum STRIPE_QUANTITY_PRODUCTS {
  * IMPORTANT: After running the script, update these values with
  * the actual Stripe price IDs from the output.
  */
-export enum STRIPE_QUANTITY_PRICES {
-  MONTHLY = "price_1SfwifIeOImcBhu6UuKoAjXp",
-  YEARLY = "price_1SfwigIeOImcBhu6o7PnYLCy",
-}
+export const STRIPE_QUANTITY_PRICES = {
+  MONTHLY:
+    process.env.NODE_ENV === "production"
+      ? "price_1SfwifIeOImcBhu6UuKoAjXp"
+      : "price_1SucpbIeOImcBhu6h87mFCaa",
+  YEARLY:
+    process.env.NODE_ENV === "production"
+      ? "price_1SfwigIeOImcBhu6o7PnYLCy"
+      : "price_1SucpcIeOImcBhu6IM5hqKzE",
+};
 
 /**
  * Quantity pricing configuration

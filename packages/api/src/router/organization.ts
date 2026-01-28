@@ -2,6 +2,7 @@ import { TRPCError } from "@trpc/server";
 import Stripe from "stripe";
 import { z } from "zod";
 
+import type { PrismaClient } from "@sassy/db";
 import {
   QUANTITY_PRICING_CONFIG,
   STRIPE_QUANTITY_PRICES,
@@ -18,289 +19,6 @@ const baseUrl = process.env.NEXTJS_URL;
 if (!baseUrl) {
   throw new Error("NEXTJS_URL environment variable is required");
 }
-
-/**
- * Subscription sub-router for organization billing
- * Access via: trpc.organization.subscription.status(), .checkout(), .portal(), .pricing()
- */
-const subscriptionRouter = createTRPCRouter({
-  /**
-   * Get subscription status for the active organization
-   */
-  status: protectedProcedure.query(async ({ ctx }) => {
-    if (!ctx.activeOrg?.id) {
-      throw new TRPCError({
-        code: "BAD_REQUEST",
-        message: "No active organization selected",
-      });
-    }
-
-    const organizationId = ctx.activeOrg.id;
-
-    // Verify user is member
-    const membership = await ctx.db.organizationMember.findUnique({
-      where: {
-        orgId_userId: {
-          orgId: organizationId,
-          userId: ctx.user.id,
-        },
-      },
-    });
-
-    if (!membership) {
-      throw new TRPCError({
-        code: "FORBIDDEN",
-        message: "You are not a member of this organization",
-      });
-    }
-
-    // Get org with payer and LinkedIn account count
-    const org = await ctx.db.organization.findUnique({
-      where: { id: organizationId },
-      include: {
-        payer: {
-          select: {
-            firstName: true,
-            lastName: true,
-            primaryEmailAddress: true,
-          },
-        },
-        _count: {
-          select: { linkedInAccounts: true },
-        },
-      },
-    });
-
-    if (!org) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "Organization not found",
-      });
-    }
-
-    const isActive = org.subscriptionExpiresAt
-      ? org.subscriptionExpiresAt > new Date()
-      : false;
-
-    return {
-      isActive,
-      purchasedSlots: org.purchasedSlots,
-      usedSlots: org._count.linkedInAccounts,
-      expiresAt: org.subscriptionExpiresAt,
-      subscriptionTier: org.subscriptionTier as "FREE" | "PREMIUM",
-      payer: org.payer,
-      isPayer: ctx.user.id === org.payerId,
-      role: membership.role,
-    };
-  }),
-
-  /**
-   * Get pricing from config (manually maintained)
-   */
-  pricing: publicProcedure.query(() => {
-    const { monthly, yearly } = QUANTITY_PRICING_CONFIG;
-
-    return {
-      monthly: {
-        id: STRIPE_QUANTITY_PRICES.MONTHLY,
-        amount: Math.round(monthly.pricePerSlot * 100),
-        currency: "usd",
-        interval: "month" as const,
-        displayAmount: `$${monthly.pricePerSlot.toFixed(2)}`,
-      },
-      yearly: {
-        id: STRIPE_QUANTITY_PRICES.YEARLY,
-        amount: Math.round(yearly.pricePerSlot * 100),
-        currency: "usd",
-        interval: "year" as const,
-        displayAmount: `$${yearly.pricePerSlot.toFixed(2)}`,
-        monthlyEquivalent: `$${(yearly.pricePerSlot / 12).toFixed(2)}`,
-      },
-    };
-  }),
-
-  /**
-   * Create a checkout session for org subscription
-   * Only admins can subscribe. One user can only have one active subscription.
-   */
-  checkout: protectedProcedure
-    .input(
-      z.object({
-        slots: z.number().min(1),
-        interval: z.enum(["monthly", "yearly"]),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      if (!ctx.activeOrg?.id) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "No active organization selected",
-        });
-      }
-
-      const organizationId = ctx.activeOrg.id;
-
-      // 1. Verify user is admin of org
-      const membership = await ctx.db.organizationMember.findUnique({
-        where: {
-          orgId_userId: {
-            orgId: organizationId,
-            userId: ctx.user.id,
-          },
-        },
-      });
-
-      if (!membership || membership.role !== "ADMIN") {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Only organization admins can subscribe",
-        });
-      }
-
-      // 2. Check if user already has an active subscription (DB only - webhooks keep this in sync)
-      const existingPaidOrg = await ctx.db.organization.findFirst({
-        where: {
-          payerId: ctx.user.id,
-          subscriptionExpiresAt: { gt: new Date() },
-        },
-        select: { name: true, subscriptionExpiresAt: true },
-      });
-
-      if (existingPaidOrg) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: `You're already paying for "${existingPaidOrg.name}" until ${existingPaidOrg.subscriptionExpiresAt?.toLocaleDateString()}. Cancel that subscription first or wait for it to expire.`,
-        });
-      }
-
-      // 3. Get or create Stripe customer for user (in transaction)
-      const { customerId, org } = await ctx.db.$transaction(async (tx) => {
-        const user = await tx.user.findUnique({
-          where: { id: ctx.user.id },
-          select: { stripeCustomerId: true, primaryEmailAddress: true },
-        });
-
-        let stripeCustomerId = user?.stripeCustomerId;
-        if (!stripeCustomerId) {
-          const customer = await stripe.customers.create({
-            email: user?.primaryEmailAddress,
-            metadata: { clerkUserId: ctx.user.id },
-          });
-          stripeCustomerId = customer.id;
-
-          await tx.user.update({
-            where: { id: ctx.user.id },
-            data: { stripeCustomerId },
-          });
-        }
-
-        const organization = await tx.organization.findUnique({
-          where: { id: organizationId },
-          select: { orgSlug: true, name: true },
-        });
-
-        return { customerId: stripeCustomerId, org: organization };
-      });
-
-      // 4. Create checkout session with org metadata
-      const priceId =
-        input.interval === "yearly"
-          ? STRIPE_QUANTITY_PRICES.YEARLY
-          : STRIPE_QUANTITY_PRICES.MONTHLY;
-
-      const session = await stripe.checkout.sessions.create({
-        customer: customerId,
-        payment_method_types: ["card"],
-        line_items: [
-          {
-            price: priceId,
-            quantity: input.slots,
-            adjustable_quantity: {
-              enabled: true,
-              minimum: 1,
-            },
-          },
-        ],
-        mode: "subscription",
-        success_url: `${baseUrl}/billing-return?orgId=${organizationId}&success=true`,
-        cancel_url: `${baseUrl}/${org?.orgSlug ?? ""}/settings?canceled=true`,
-        allow_promotion_codes: true,
-        subscription_data: {
-          metadata: {
-            organizationId,
-            organizationName: org?.name ?? "",
-            payerId: ctx.user.id,
-          },
-        },
-        metadata: {
-          organizationId,
-          payerId: ctx.user.id,
-        },
-      });
-
-      return { url: session.url };
-    }),
-
-  /**
-   * Create a Stripe customer portal session for managing org subscription
-   * Only payer or admins can access
-   */
-  portal: protectedProcedure.mutation(async ({ ctx }) => {
-    if (!ctx.activeOrg?.id) {
-      throw new TRPCError({
-        code: "BAD_REQUEST",
-        message: "No active organization selected",
-      });
-    }
-
-    const organizationId = ctx.activeOrg.id;
-
-    // Get org with payer info
-    const org = await ctx.db.organization.findUnique({
-      where: { id: organizationId },
-      include: {
-        payer: {
-          select: { stripeCustomerId: true },
-        },
-      },
-    });
-
-    if (!org?.payer?.stripeCustomerId) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "No active subscription found",
-      });
-    }
-
-    // Verify user is payer or admin
-    const membership = await ctx.db.organizationMember.findUnique({
-      where: {
-        orgId_userId: {
-          orgId: organizationId,
-          userId: ctx.user.id,
-        },
-      },
-    });
-
-    if (
-      !membership ||
-      (ctx.user.id !== org.payerId && membership.role !== "ADMIN")
-    ) {
-      throw new TRPCError({
-        code: "FORBIDDEN",
-        message: "Only the payer or admins can access billing settings",
-      });
-    }
-
-    // Create customer portal session (uses payer's Stripe customer)
-    const session = await stripe.billingPortal.sessions.create({
-      customer: org.payer.stripeCustomerId,
-      return_url: `${baseUrl}/billing-return?orgId=${organizationId}`,
-    });
-
-    return { url: session.url };
-  }),
-});
 
 export const organizationRouter = () =>
   createTRPCRouter({
@@ -333,7 +51,10 @@ export const organizationRouter = () =>
       });
 
       if (!membership) {
-        return null;
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "No organization membership found for the user",
+        });
       }
 
       return {
@@ -341,6 +62,61 @@ export const organizationRouter = () =>
         role: membership.role,
       };
     }),
+
+    /**
+     * Get a specific organization by ID
+     * Only accessible if user is a member of the organization
+     * Uses embedded permission clause for single-query access control
+     */
+    get: protectedProcedure
+      .input(z.object({ id: z.string() }))
+      .query(async ({ ctx, input }) => {
+        // Single query: permission check + data fetch + membership role
+        const org = await ctx.db.organization.findFirst({
+          where: {
+            id: input.id,
+            ...hasPermissionToAccessOrgClause(ctx.user.id),
+          },
+          select: {
+            id: true,
+            name: true,
+            orgSlug: true,
+            purchasedSlots: true,
+            subscriptionTier: true,
+            subscriptionExpiresAt: true,
+            createdAt: true,
+            updatedAt: true,
+            _count: {
+              select: {
+                linkedInAccounts: true,
+                members: true,
+              },
+            },
+            // Include user's membership to get their role
+            members: {
+              where: { userId: ctx.user.id },
+              select: { role: true },
+              take: 1,
+            },
+          },
+        });
+
+        if (!org) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Organization not found",
+          });
+        }
+
+        const { members, _count, ...orgData } = org;
+
+        return {
+          ...orgData,
+          role: members[0]?.role ?? "MEMBER",
+          linkedInAccountCount: _count.linkedInAccounts,
+          memberCount: _count.members,
+        };
+      }),
 
     /**
      * List all organizations the user is a member of
@@ -373,3 +149,512 @@ export const organizationRouter = () =>
      */
     subscription: subscriptionRouter,
   });
+
+/**
+ * Subscription sub-router for organization billing
+ * Access via: trpc.organization.subscription.status(), .checkout(), .portal(), .pricing()
+ */
+const subscriptionRouter = createTRPCRouter({
+  /**
+   * Get subscription status for the active organization
+   * Uses embedded permission clause for single-query access control
+   */
+  status: protectedProcedure.query(async ({ ctx }) => {
+    if (!ctx.activeOrg?.id) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "No active organization selected",
+      });
+    }
+
+    // Single query: permission check + data fetch + membership role
+    const org = await ctx.db.organization.findFirst({
+      where: {
+        id: ctx.activeOrg.id,
+        ...hasPermissionToAccessOrgClause(ctx.user.id),
+      },
+      include: {
+        payer: {
+          select: {
+            firstName: true,
+            lastName: true,
+            primaryEmailAddress: true,
+          },
+        },
+        _count: {
+          select: { linkedInAccounts: true },
+        },
+        // Include user's membership to get their role
+        members: {
+          where: { userId: ctx.user.id },
+          select: { role: true },
+          take: 1,
+        },
+      },
+    });
+
+    if (!org) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Organization not found",
+      });
+    }
+
+    const isActive = org.subscriptionExpiresAt
+      ? org.subscriptionExpiresAt > new Date()
+      : false;
+
+    return {
+      isActive,
+      purchasedSlots: org.purchasedSlots,
+      usedSlots: org._count.linkedInAccounts,
+      expiresAt: org.subscriptionExpiresAt,
+      subscriptionTier: org.subscriptionTier as "FREE" | "PREMIUM",
+      payer: org.payer,
+      isPayer: ctx.user.id === org.payerId,
+      role: org.members[0]?.role ?? "MEMBER",
+    };
+  }),
+
+  /**
+   * Get pricing from config (manually maintained)
+   */
+  pricing: publicProcedure.query(() => {
+    const { monthly, yearly } = QUANTITY_PRICING_CONFIG;
+
+    return {
+      monthly: {
+        id: STRIPE_QUANTITY_PRICES.MONTHLY,
+        amount: Math.round(monthly.pricePerSlot * 100),
+        currency: "usd",
+        interval: "month" as const,
+        displayAmount: `$${monthly.pricePerSlot.toFixed(2)}`,
+      },
+      yearly: {
+        id: STRIPE_QUANTITY_PRICES.YEARLY,
+        amount: Math.round(yearly.pricePerSlot * 100),
+        currency: "usd",
+        interval: "year" as const,
+        displayAmount: `$${yearly.pricePerSlot.toFixed(2)}`,
+        monthlyEquivalent: `$${(yearly.pricePerSlot / 12).toFixed(2)}`,
+      },
+    };
+  }),
+
+  /**
+   * Create a checkout session for org subscription
+   * Only admins can subscribe. One user can only have one active subscription.
+   * Uses embedded permission clause for single-query access control
+   */
+  checkout: protectedProcedure
+    .input(
+      z.object({
+        slots: z.number().min(1),
+        interval: z.enum(["monthly", "yearly"]),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      console.info({ ctx });
+      if (!ctx.activeOrg?.id) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "No active organization selected",
+        });
+      }
+
+      const organizationId = ctx.activeOrg.id;
+
+      // 1. Verify user is admin + check existing subscription in parallel queries
+      const [adminOrg, existingPaidOrg] = await Promise.all([
+        // Check admin access (single query with embedded clause)
+        ctx.db.organization.findFirst({
+          where: {
+            id: organizationId,
+            ...hasOrgAdminPermissionClause(ctx.user.id),
+          },
+          select: { id: true, orgSlug: true, name: true },
+        }),
+        // Check if user already has an active subscription
+        ctx.db.organization.findFirst({
+          where: {
+            payerId: ctx.user.id,
+            subscriptionExpiresAt: { gt: new Date() },
+          },
+          select: { name: true, subscriptionExpiresAt: true },
+        }),
+      ]);
+
+      if (!adminOrg) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only organization admins can subscribe",
+        });
+      }
+
+      if (existingPaidOrg) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: `You're already paying for "${existingPaidOrg.name}" until ${existingPaidOrg.subscriptionExpiresAt?.toLocaleDateString()}. Cancel that subscription first or wait for it to expire.`,
+        });
+      }
+
+      // 2. Get or create Stripe customer for user (in transaction)
+      const customerId = await ctx.db.$transaction(async (tx) => {
+        const user = await tx.user.findUnique({
+          where: { id: ctx.user.id },
+          select: { stripeCustomerId: true, primaryEmailAddress: true },
+        });
+
+        let stripeCustomerId = user?.stripeCustomerId;
+        if (!stripeCustomerId) {
+          const customer = await stripe.customers.create({
+            email: user?.primaryEmailAddress,
+            metadata: { clerkUserId: ctx.user.id },
+          });
+          stripeCustomerId = customer.id;
+
+          await tx.user.update({
+            where: { id: ctx.user.id },
+            data: { stripeCustomerId },
+          });
+        }
+
+        return stripeCustomerId;
+      });
+
+      // 3. Create checkout session with org metadata
+      const priceId =
+        input.interval === "yearly"
+          ? STRIPE_QUANTITY_PRICES.YEARLY
+          : STRIPE_QUANTITY_PRICES.MONTHLY;
+
+      const session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        payment_method_types: ["card"],
+        line_items: [
+          {
+            price: priceId,
+            quantity: input.slots,
+            adjustable_quantity: {
+              enabled: true,
+              minimum: 1,
+            },
+          },
+        ],
+        mode: "subscription",
+        success_url: `${baseUrl}/billing-return?orgId=${organizationId}&success=true&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${baseUrl}/${adminOrg.orgSlug ?? ""}/settings?canceled=true`,
+        allow_promotion_codes: true,
+        subscription_data: {
+          metadata: {
+            organizationId,
+            organizationName: adminOrg.name,
+            payerId: ctx.user.id,
+          },
+        },
+        metadata: {
+          organizationId,
+          payerId: ctx.user.id,
+        },
+      });
+
+      return { url: session.url };
+    }),
+
+  // in addition to webhooks, we have this manual capture endpoint so that redirects will also idempotently capture and update organization stuff
+  capture: protectedProcedure
+    .input(
+      z.object({
+        sessionId: z.string(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      const session = await stripe.checkout.sessions.retrieve(input.sessionId, {
+        expand: ["subscription"],
+      });
+
+      const organizationId = session.metadata?.organizationId;
+
+      if (!organizationId) {
+        return {
+          status: "error",
+          message: "invalid session metadata",
+        } as const;
+      }
+
+      // Verify user is admin of the organization
+      const organization = await ctx.db.organization.findFirst({
+        where: {
+          id: organizationId,
+          ...hasOrgAdminPermissionClause(ctx.user.id),
+        },
+      });
+
+      if (!organization) {
+        return {
+          status: "error",
+          message: "organization not found",
+        } as const;
+      }
+
+      if (!session.subscription || session.status !== "complete") {
+        return {
+          status: "error",
+          message: "subscription not found or session not complete",
+        } as const;
+      }
+
+      const subscription = session.subscription;
+
+      if (typeof subscription === "string") {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Unexpected subscription type",
+        });
+      }
+
+      const quantity = subscription.items.data[0]?.quantity ?? 1;
+      const currentPeriodEnd = new Date(subscription.current_period_end * 1000);
+
+      await captureSubscriptionPaid(ctx.db, {
+        orgId: organizationId,
+        purchasedSlots: quantity,
+        stripeSubscriptionId: subscription.id,
+        payerId: ctx.user.id,
+        subscriptionExpiresAt: currentPeriodEnd,
+      });
+
+      return {
+        status: "success",
+      } as const;
+    }),
+
+  /**
+   * Create a Stripe customer portal session for managing org subscription
+   * Only payer or admins can access
+   * Uses embedded permission clause for single-query access control
+   */
+  portal: protectedProcedure.mutation(async ({ ctx }) => {
+    if (!ctx.activeOrg?.id) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "No active organization selected",
+      });
+    }
+
+    const organizationId = ctx.activeOrg.id;
+
+    // Single query: get org with payer info + user's membership
+    const org = await ctx.db.organization.findFirst({
+      where: {
+        id: organizationId,
+        ...hasPermissionToAccessOrgClause(ctx.user.id),
+      },
+      include: {
+        payer: {
+          select: { stripeCustomerId: true },
+        },
+        members: {
+          where: { userId: ctx.user.id },
+          select: { role: true },
+          take: 1,
+        },
+      },
+    });
+
+    if (!org) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Organization not found",
+      });
+    }
+
+    if (!org.payer?.stripeCustomerId) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "No active subscription found",
+      });
+    }
+
+    // Verify user is payer or admin
+    const isPayer = ctx.user.id === org.payerId;
+    const isAdmin = org.members[0]?.role === "admin";
+
+    if (!isPayer && !isAdmin) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Only the payer or admins can access billing settings",
+      });
+    }
+
+    // Create customer portal session (uses payer's Stripe customer)
+    const session = await stripe.billingPortal.sessions.create({
+      customer: org.payer.stripeCustomerId,
+      return_url: `${baseUrl}/billing-return?orgId=${organizationId}`,
+    });
+
+    return { url: session.url };
+  }),
+});
+
+/**
+ * Prisma where clause to filter organizations where user is an admin.
+ * Use for admin-only operations like billing, member management.
+ *
+ * @example
+ * const adminOrgs = await db.organization.findMany({
+ *   where: isOrgAdminClause(userId),
+ * });
+ */
+export function hasOrgAdminPermissionClause(userId: string) {
+  return {
+    members: {
+      some: {
+        userId,
+        role: "admin",
+      },
+    },
+  };
+}
+
+/**
+ * Async function to check if a user is an admin of an organization.
+ *
+ * @example
+ * const isAdmin = await isOrgAdmin(db, { actorUserId, orgId });
+ * if (!isAdmin) return { success: false, error: "Admin only" };
+ */
+export async function hasOrgAdminPermission(
+  db: PrismaClient,
+  { actorUserId, orgId }: { actorUserId: string; orgId: string },
+): Promise<boolean> {
+  const exists = await db.organization.count({
+    where: {
+      AND: [{ id: orgId }, hasOrgAdminPermissionClause(actorUserId)],
+    },
+  });
+
+  return exists > 0;
+}
+
+export function hasPermissionToAccessOrgClause(userId: string) {
+  return {
+    members: {
+      some: {
+        userId,
+      },
+    },
+  };
+}
+
+/**
+ * Async function to check if a user has permission to access an organization.
+ * Use when you need a boolean check before performing an action.
+ *
+ * @example
+ * const canAccess = await hasPermissionToAccessOrg(db, { actorUserId, orgId });
+ * if (!canAccess) return { success: false, error: "No access" };
+ */
+export async function hasPermissionToAccessOrg(
+  db: PrismaClient,
+  { actorUserId, orgId }: { actorUserId: string; orgId: string },
+): Promise<boolean> {
+  const exists = await db.organization.count({
+    where: {
+      AND: [{ id: orgId }, hasPermissionToAccessOrgClause(actorUserId)],
+    },
+  });
+
+  return exists > 0;
+}
+
+export async function captureSubscriptionPaid(
+  db: PrismaClient,
+  {
+    orgId,
+    purchasedSlots,
+    stripeSubscriptionId,
+    payerId,
+    subscriptionExpiresAt,
+  }: {
+    orgId: string;
+    payerId: string;
+    purchasedSlots: number;
+    stripeSubscriptionId: string;
+    subscriptionExpiresAt: Date;
+  },
+) {
+  return db.$transaction(async (tx) => {
+    await tx.organization.update({
+      where: {
+        id: orgId,
+        ...hasOrgAdminPermissionClause(payerId),
+      },
+      data: {
+        subscriptionTier: "PREMIUM",
+        stripeSubscriptionId,
+        purchasedSlots,
+        subscriptionExpiresAt,
+        payerId,
+      },
+    });
+    // Count only non-disabled accounts
+    const activeAccountCount = await tx.linkedInAccount.count({
+      where: {
+        organizationId: orgId,
+        status: { not: "DISABLED" },
+      },
+    });
+
+    if (activeAccountCount <= purchasedSlots) {
+      return {
+        status: "noop",
+      } as const;
+    }
+
+    const numToDisable = activeAccountCount - purchasedSlots;
+
+    // Get accounts to disable, prioritizing:
+    // 1. REGISTERED (not yet connected)
+    // 2. CONNECTING (in progress)
+    // 3. CONNECTED (oldest first to keep most recent active)
+    const accountsToDisable = await tx.linkedInAccount.findMany({
+      where: {
+        organizationId: orgId,
+        status: { not: "DISABLED" },
+      },
+      orderBy: [{ createdAt: "asc" }],
+      select: { id: true, status: true },
+    });
+
+    // Sort by priority to disable: REGISTERED first, CONNECTING second, CONNECTED last (kept)
+    const priorityOrder = { REGISTERED: 0, CONNECTING: 1, CONNECTED: 2 };
+    const sortedAccounts = accountsToDisable.sort((a, b) => {
+      const priorityA =
+        priorityOrder[
+          a.status as Exclude<keyof typeof priorityOrder, "DISABLED">
+        ];
+      const priorityB =
+        priorityOrder[
+          b.status as Exclude<keyof typeof priorityOrder, "DISABLED">
+        ];
+      return priorityA - priorityB;
+    });
+
+    const idsToDisable = sortedAccounts.slice(0, numToDisable).map((a) => a.id);
+
+    await tx.linkedInAccount.updateMany({
+      where: {
+        id: { in: idsToDisable },
+      },
+      data: {
+        status: "DISABLED",
+      },
+    });
+
+    return {
+      status: "disabled",
+      numAccountsDisabled: idsToDisable.length,
+    } as const;
+  });
+}

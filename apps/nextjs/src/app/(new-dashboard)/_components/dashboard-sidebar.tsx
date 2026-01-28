@@ -99,6 +99,11 @@ export function DashboardSidebar() {
       url: `/${orgSlug}/earn-premium`,
       icon: GiftIcon,
     },
+    {
+      title: "Settings",
+      url: `/${orgSlug}/settings`,
+      icon: SettingsIcon,
+    },
   ];
   // Build navigation items based on current context
   // Account-level navigation (only shown when an account is selected)
@@ -176,23 +181,6 @@ export function DashboardSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
         )}
-
-        {/* Settings - Coming Soon */}
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton disabled className="opacity-50">
-                  <SettingsIcon />
-                  <span className="font-medium">Settings</span>
-                  <span className="ml-auto text-xs text-muted-foreground">
-                    Soon
-                  </span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter>

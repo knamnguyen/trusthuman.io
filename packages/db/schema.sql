@@ -14,7 +14,7 @@ CREATE TYPE "BrowserJobStatus" AS ENUM ('QUEUED', 'RUNNING', 'TERMINATED', 'COMP
 CREATE TYPE "CommentStatus" AS ENUM ('DRAFT', 'SCHEDULED', 'QUEUED', 'POSTING', 'POSTED', 'FAILED', 'CANCELLED');
 
 -- CreateEnum
-CREATE TYPE "LinkedInAccountStatus" AS ENUM ('REGISTERED', 'CONNECTING', 'CONNECTED');
+CREATE TYPE "LinkedInAccountStatus" AS ENUM ('DISABLED', 'REGISTERED', 'CONNECTING', 'CONNECTED');
 
 -- CreateEnum
 CREATE TYPE "ImportStatus" AS ENUM ('NOT_STARTED', 'RUNNING', 'FINISHED');
@@ -214,7 +214,7 @@ CREATE TABLE "LinkedInAccount" (
     "id" TEXT NOT NULL,
     "ownerId" TEXT,
     "organizationId" TEXT,
-    "status" "LinkedInAccountStatus",
+    "status" "LinkedInAccountStatus" NOT NULL DEFAULT 'DISABLED',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "staticIpId" TEXT,
     "browserProfileId" TEXT NOT NULL,
