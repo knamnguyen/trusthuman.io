@@ -35,6 +35,7 @@
     "@sassy/linkedin-automation": "workspace:*",
     "@sassy/linkedin-scrape-apify": "workspace:*",
     "@sassy/s3": "workspace:*",
+    "@sassy/social-referral": "workspace:*",
     "@sassy/stripe": "workspace:*",
     "@sassy/validators": "workspace:*",
     "@trpc/server": "catalog:",

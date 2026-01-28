@@ -33,7 +33,7 @@ export const env = createEnv({
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string(),
     NEXT_PUBLIC_CLERK_FRONTEND_API: z.string(),
     NEXT_PUBLIC_API_URL: z.string().url(),
-    NEXT_PUBLIC_POSTHOG_API_KEY: z.string(),
+    NEXT_PUBLIC_POSTHOG_API_KEY: z.string().optional(),
   },
   /**
    * Destructure all variables from `process.env` to make sure they aren't tree-shaken away.

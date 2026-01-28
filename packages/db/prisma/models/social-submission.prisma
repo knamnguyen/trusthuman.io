@@ -1,0 +1,41 @@
+model SocialSubmission {
+  id             String   @id @default(uuid())
+  organizationId String
+  platform       SocialPlatform
+  postUrl        String
+  status         SubmissionStatus @default(VERIFYING)
+  submittedAt    DateTime         @default(now())
+  verifiedAt     DateTime?
+  lastScannedAt  DateTime?
+  nextScanAt     DateTime?
+
+  // Verification results
+  containsKeyword Boolean  @default(false)
+  postText        String?
+  likes           Int      @default(0)
+  comments        Int      @default(0)
+  shares          Int      @default(0)
+
+  // Reward tracking
+  daysAwarded     Int      @default(0)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([platform])
+}
+
+enum SocialPlatform {
+  X
+  LINKEDIN
+  THREADS
+  FACEBOOK
+}
+
+enum SubmissionStatus {
+  VERIFYING
+  VERIFIED
+  FAILED
+  REVOKED
+}

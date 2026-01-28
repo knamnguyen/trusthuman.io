@@ -1,9 +1,62 @@
 # Social Referral System
 
 **Date:** 2026-01-27
-**Updated:** 2026-01-27 (Version 1.1 - Independent Development Scope)
+**Updated:** 2026-01-28 (Version 1.2 - UI Complete, Rewards Updated)
 **Complexity:** Complex (Multi-phase implementation)
-**Status:** 🚧 Planning → Independent Development
+**Status:** ✅ Phase 1 UI Complete → Ready for Backend Integration
+
+---
+
+## 🎉 Phase 1 UI Completion Summary (2026-01-28)
+
+### ✅ What's Complete
+
+**UI Implementation (RFC-005):**
+- Full earn-premium page with professional, production-ready design
+- Collapsible "How It Works" card with 2-column responsive layout
+- Premium status badge in top-right corner
+- 2-step submission flow (caption editor + URL submission)
+- Submissions history table with real-time status updates
+- Platform-specific keywords (@engagekit_io for X/Threads, #engagekit_io for LinkedIn/Facebook)
+- Auto-detection of platform from URL
+- Independent page scrolling (fixed sidebar scroll issue)
+- Copy caption with toast notifications
+- Responsive design (mobile + desktop)
+
+**Reward Structure Updated:**
+- 1 verified post = **7 days** (updated from 3 days)
+- +1 day per **3 likes** (updated from 5 likes)
+- +1 day per **1 comment** (updated from 2 comments)
+- Posts rescanned every 24 hours for 2 more times (3 total scans)
+
+**Files Modified:**
+- `apps/nextjs/src/app/(new-dashboard)/[orgSlug]/earn-premium/page.tsx` ✅
+- `packages/api/src/services/social-referral-verification.ts` (DAYS_PER_VERIFIED_POST = 7) ✅
+
+### 🚀 What's Next (Phase 2)
+
+**Backend Integration Needed:**
+1. RFC-001: Database Schema (SocialSubmission table, Organization fields)
+2. RFC-002: Package Migration (Gifavatar social-referral package)
+3. RFC-003: Core API Routes (tRPC submit/status/list endpoints)
+4. RFC-004: Verification Service (immediate verification + rewards)
+5. RFC-006: Cron Job (daily rescans, engagement bonuses, post deletion detection)
+
+**Deferred UI Features:**
+- Settings page earned premium section
+- Sidebar "Organization Tools" section
+- Eligibility banner (when backend validation ready)
+
+### 📋 Implementation Status
+
+| RFC | Status | Notes |
+|-----|--------|-------|
+| RFC-001 | ⏳ TODO | Database schema design |
+| RFC-002 | ⏳ TODO | Package migration from Gifavatar |
+| RFC-003 | ⏳ TODO | tRPC API routes |
+| RFC-004 | ⏳ TODO | Verification service (FREE tier functional, PREMIUM stubbed) |
+| **RFC-005** | **✅ COMPLETE** | **UI fully implemented** |
+| RFC-006 | 🔌 DEFERRED | Phase 2: Cron job + rescans |
 
 ---
 
@@ -30,8 +83,8 @@
 **Key Features:**
 - Both FREE and PREMIUM users with exactly 1 account can participate
 - Immediate rewards upon post verification (+3 days)
-- ~~Daily engagement-based bonuses (5 likes = +1 day, 2 comments = +1 day)~~ **[DEFERRED - Phase 2]**
-- ~~3-day rescan window (unlimited earning during this period)~~ **[DEFERRED - Phase 2]**
+- ~~Rescan feature (up to 3 scans per post with bonus days for engagement growth)~~ **[DEFERRED - Phase 2]**
+- ~~Daily engagement-based bonuses~~ **[DEFERRED - Phase 2]**
 - Credits apply to org determined by URL (`/[orgSlug]/earn-premium`)
 - ~~Stripe customer balance credits for premium users~~ **[STUBBED - Phase 2 Integration]**
 - Extended premium access for free users **[FULLY FUNCTIONAL - Phase 1]**
@@ -72,21 +125,27 @@
 - Full UI experience
 - All 4 social platforms supported
 
-**What's Stubbed:**
+**What's Stubbed/Deferred:**
 - Stripe customer balance credits (console.log only)
-- Cron job for daily rescanning
-- Engagement bonuses
+- Rescan feature (up to 3 scans per post)
+- Engagement bonuses based on likes/comments growth
 - Post deletion detection
 
 ### Phase 2: Payment Integration (Later - With Cofounder)
 
 **Scope:**
 - 🔌 Connect Stripe credit system for PREMIUM users
-- 🔌 Implement daily cron job for rescanning
-- 🔌 Add engagement bonus logic (5 likes = +1 day, 2 comments = +1 day)
+- 🔌 Implement rescan feature (up to 3 total scans per post, award bonus days based on engagement growth)
+- 🔌 Add rescan triggers (manual user action or scheduled cron)
+- 🔌 Add engagement bonus logic (10 credits per 10 additional interactions in Gifavatar model)
 - 🔌 Add post deletion detection with credit revocation
 - 🔌 Calculate daily rate from Stripe subscription
 - 🔌 Convert earned days to dollar credits
+
+**Database Schema Prepared for Phase 2:**
+- `lastScannedAt` - Tracks when last scan occurred
+- `nextScanAt` - Controls when next rescan is allowed
+- These fields are ready but unused in Phase 1
 
 **Integration Points (Clearly Marked in Code):**
 ```typescript
@@ -95,6 +154,10 @@ if (org.subscriptionTier === "PREMIUM") {
   console.log(`[STUB] Would credit ${daysToAward} days to Stripe customer`);
   // await stripe.customers.createBalanceTransaction(...)
 }
+
+// TODO: Phase 2 - Rescan feature
+// Will use lastScannedAt and nextScanAt fields
+// Award bonus days based on engagement delta
 ```
 
 ---
@@ -323,19 +386,21 @@ async function awardDaysToPremiumUser(orgId: string, daysEarned: number) {
 
 ---
 
-### ADR 3: Simplified Reward Structure
+### ADR 3: Simplified Reward Structure (UPDATED 2026-01-28)
 
 **Decision:**
-- Verified post: +3 days
-- Every 5 likes: +1 day
-- Every 2 comments: +1 day
+- Verified post: +7 days (UPDATED from 3 days)
+- Every 3 likes: +1 day (UPDATED from 5 likes)
+- Every 1 comment: +1 day (UPDATED from 2 comments)
+- Posts rescanned every 24 hours for 2 more times (3 total scans)
 - No shares (not supported across all platforms)
-- No per-post cap (unlimited earning during 3-day window)
+- No per-post cap (unlimited earning during 3-day rescan window)
 - No global cap (unlimited viral potential)
 
 **Rationale:**
-- Conservative initial reward (3 days vs 7)
-- Lower comment threshold (2 vs 5) for higher engagement quality
+- More generous initial reward (7 days) to incentivize participation
+- Lower like threshold (3 vs 5) for faster reward accumulation
+- Lower comment threshold (1 vs 2) to maximize engagement quality
 - Remove shares for platform parity
 - No caps = maximum viral potential
 
@@ -797,33 +862,52 @@ if (org.subscriptionTier === "PREMIUM") {
 
 ---
 
-### RFC-005: UI Implementation **[PHASE 1 - INDEPENDENT]**
+### RFC-005: UI Implementation **[PHASE 1 - COMPLETE ✅]**
 
 **Overview:** Build complete UI for social referral system.
 
+**Completed:** 2026-01-28
+
 **Files/Modules:**
-- `apps/nextjs/src/app/(new-dashboard)/[orgSlug]/earn-premium/page.tsx` (NEW)
-- `apps/nextjs/src/app/(new-dashboard)/[orgSlug]/settings/page.tsx` (UPDATE)
-- `apps/nextjs/src/components/sidebar/sidebar.tsx` (UPDATE)
-- `apps/nextjs/src/components/social-referral/` (NEW - reusable components)
+- `apps/nextjs/src/app/(new-dashboard)/[orgSlug]/earn-premium/page.tsx` ✅ COMPLETE
+- `apps/nextjs/src/app/(new-dashboard)/[orgSlug]/settings/page.tsx` (DEFERRED)
+- `apps/nextjs/src/components/sidebar/sidebar.tsx` (DEFERRED)
+- `packages/api/src/services/social-referral-verification.ts` ✅ UPDATED (7 days reward)
 
-**What's Functional:**
-- ✅ Full earn-premium page with submission form
-- ✅ Eligibility banner (shows if not eligible)
-- ✅ Stats cards (earned days, expiration, active posts)
-- ✅ 2-step submission flow (copy caption → submit URL)
-- ✅ Submissions table with real-time status
-- ✅ Settings page earned premium section
-- ✅ Sidebar "Organization Tools" section
-- ✅ Responsive design
-- ✅ Works for both FREE and PREMIUM (shows stub message for PREMIUM)
+**What's Implemented (2026-01-28):**
+- ✅ **Full earn-premium page** with professional, production-ready UI
+- ✅ **Collapsible "How It Works" card** (2-column responsive layout):
+  - 🎁 Rewards: 7 days per verified post, +1 day per 3 likes, +1 day per 1 comment, 3 total rescans
+  - ⚖️ Limits: 1 post/platform/day, 1 account eligibility required
+  - ✅ Verification Rules: Platform-specific keywords (@engagekit_io for X/Threads, #engagekit_io for LinkedIn/Facebook)
+  - ❌ Why Posts Fail: Comprehensive list of failure reasons
+  - 🚀 Phase 2 Preview: Coming features section
+- ✅ **Premium status badge** - Compact green pill in top-right corner showing days remaining
+- ✅ **2-step submission flow:**
+  - Step 1: Editable caption textarea with vertical social share buttons (Copy, X, LinkedIn, Threads, Facebook)
+  - Step 2: URL input with automatic platform detection from pasted link
+- ✅ **Submissions history table** with columns:
+  - Platform | Link (truncated) | Status (with badges) | Days Earned | Likes | Comments | Submitted Date
+- ✅ **Platform-specific keywords enforced:**
+  - X/Threads: @engagekit_io
+  - LinkedIn/Facebook: #engagekit_io
+- ✅ **Auto-detection** of platform from URL (no manual dropdown needed)
+- ✅ **Copy caption button** with toast success notification
+- ✅ **Independent page scrolling** (fixed h-screen overflow issue)
+- ✅ **Responsive design** (2-column on md+, stacks on mobile)
+- ✅ **Real-time status updates** with 3-second auto-refresh for VERIFYING submissions
 
-**PREMIUM User Experience (Stubbed):**
-- Can submit posts and see verification
-- See message: "Credits will be applied to your subscription once payment integration is complete"
-- Days still tracked in `earnedPremiumDays`
+**NOT Yet Implemented (Deferred to Future Phases):**
+- ❌ Settings page earned premium section
+- ❌ Sidebar "Organization Tools" section with "Earn Premium" link
+- ❌ Eligibility banner (will add when backend validation is ready)
+- ❌ Stats cards (Total Earned, Premium Until, Active Posts, Verifying) - can add later if needed
 
-**Ready For:** Phase 1 Complete - Handoff to cofounder for Phase 2 integration
+**PREMIUM User Experience (Stubbed in Phase 2 section):**
+- Phase 2 callout in "How It Works" explains PREMIUM Stripe credit system
+- Days tracked in `earnedPremiumDays` for analytics
+
+**Ready For:** Backend Integration (RFC-001 to RFC-004) or Direct Production Launch
 
 ---
 
@@ -846,8 +930,8 @@ if (org.subscriptionTier === "PREMIUM") {
 
 **What Will Be Added:**
 - Daily cron at 2 AM
-- Rescan posts < 3 days old
-- Award engagement bonuses (5 likes = +1 day, 2 comments = +1 day)
+- Rescan posts < 3 days old (2 additional scans after initial verification)
+- Award engagement bonuses (UPDATED: 3 likes = +1 day, 1 comment = +1 day)
 - Detect deleted posts
 - Revoke credits (Stripe debit for PREMIUM, reduce earnedPremiumExpiresAt for FREE)
 
@@ -855,9 +939,10 @@ if (org.subscriptionTier === "PREMIUM") {
 ```typescript
 // Phase 2 - Connect this to existing verification service
 export async function rescanSubmission(submissionId: string) {
-  // Calculate new rewards
+  // Calculate new rewards (UPDATED THRESHOLDS)
   const newLikes = result.likes - submission.lastRewardedLikes;
-  const newDaysToAward = Math.floor(newLikes / 5) * 1 + ...;
+  const newComments = result.comments - submission.lastRewardedComments;
+  const newDaysToAward = Math.floor(newLikes / 3) * 1 + Math.floor(newComments / 1) * 1;
 
   // Award using existing awardPremiumDays (just needs Stripe stub removed)
   await awardPremiumDays(submission.orgId, newDaysToAward);

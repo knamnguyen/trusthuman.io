@@ -1,0 +1,157 @@
+import type { PrismaClient } from "@sassy/db";
+import { SocialReferralService } from "@sassy/social-referral";
+
+const DAYS_PER_VERIFIED_POST = 7;
+
+/**
+ * Get platform-specific required keyword
+ * - X/Threads: @engagekit_io
+ * - LinkedIn/Facebook: #engagekit_io
+ */
+const getRequiredKeyword = (
+  platform: "x" | "linkedin" | "threads" | "facebook",
+): string => {
+  if (platform === "x" || platform === "threads") {
+    return "@engagekit_io";
+  }
+  // LinkedIn and Facebook
+  return "#engagekit_io";
+};
+
+interface VerificationResult {
+  success: boolean;
+  containsKeyword: boolean;
+  daysAwarded: number;
+  message: string;
+}
+
+/**
+ * Verify a social submission and award premium days
+ * Phase 1: Synchronous verification with immediate rewards
+ */
+export async function verifySocialSubmission(
+  db: PrismaClient,
+  submissionId: string,
+): Promise<VerificationResult> {
+  // Get submission
+  const submission = await db.socialSubmission.findUnique({
+    where: { id: submissionId },
+    include: {
+      organization: {
+        select: {
+          id: true,
+          stripeCustomerId: true,
+          earnedPremiumExpiresAt: true,
+        },
+      },
+    },
+  });
+
+  if (!submission) {
+    throw new Error("Submission not found");
+  }
+
+  if (submission.status !== "VERIFYING") {
+    throw new Error("Submission already processed");
+  }
+
+  try {
+    // Initialize verification service
+    const verificationService = new SocialReferralService();
+
+    // Determine platform and required keyword
+    const platform = submission.platform.toLowerCase() as
+      | "x"
+      | "linkedin"
+      | "threads"
+      | "facebook";
+    const requiredKeyword = getRequiredKeyword(platform);
+
+    // Verify keywords
+    const result = await verificationService.verifyKeywords({
+      url: submission.postUrl,
+      keywords: [requiredKeyword],
+      platform,
+    });
+
+    // Update submission with results
+    await db.socialSubmission.update({
+      where: { id: submissionId },
+      data: {
+        status: result.containsAll ? "VERIFIED" : "FAILED",
+        verifiedAt: new Date(),
+        containsKeyword: result.containsAll,
+        postText: result.text,
+        likes: result.likes,
+        comments: result.comments,
+        shares: result.shares,
+        daysAwarded: result.containsAll ? DAYS_PER_VERIFIED_POST : 0,
+      },
+    });
+
+    // Award premium days if verified
+    if (result.containsAll) {
+      const isPremium = !!submission.organization.stripeCustomerId;
+
+      if (isPremium) {
+        // Phase 1 STUB: Console log for PREMIUM users
+        console.log(
+          `[STUB - Phase 2] Would credit ${DAYS_PER_VERIFIED_POST} days to Stripe customer`,
+        );
+        console.log(`Organization ID: ${submission.organization.id}`);
+        console.log(
+          `Stripe Customer ID: ${submission.organization.stripeCustomerId}`,
+        );
+        // Phase 2: await stripeService.createCustomerBalance(...)
+      } else {
+        // FREE tier: Extend earnedPremiumExpiresAt
+        const now = new Date();
+        const currentExpiry = submission.organization.earnedPremiumExpiresAt;
+        const baseDate =
+          currentExpiry && currentExpiry > now ? currentExpiry : now;
+        const newExpiry = new Date(baseDate);
+        newExpiry.setDate(newExpiry.getDate() + DAYS_PER_VERIFIED_POST);
+
+        await db.organization.update({
+          where: { id: submission.organization.id },
+          data: {
+            earnedPremiumExpiresAt: newExpiry,
+          },
+        });
+      }
+
+      return {
+        success: true,
+        containsKeyword: true,
+        daysAwarded: DAYS_PER_VERIFIED_POST,
+        message: `Post verified! Awarded ${DAYS_PER_VERIFIED_POST} days of premium access`,
+      };
+    }
+
+    return {
+      success: false,
+      containsKeyword: false,
+      daysAwarded: 0,
+      message: `Post does not contain required keyword: "${requiredKeyword}"`,
+    };
+  } catch (error) {
+    // Mark as failed
+    await db.socialSubmission.update({
+      where: { id: submissionId },
+      data: {
+        status: "FAILED",
+        verifiedAt: new Date(),
+      },
+    });
+
+    // Log detailed error for debugging
+    console.error("[Social Referral Verification Error]", {
+      submissionId,
+      platform: submission.platform,
+      errorMessage: error instanceof Error ? error.message : String(error),
+      errorStack: error instanceof Error ? error.stack : undefined,
+    });
+
+    throw error;
+  }
+}

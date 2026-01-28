@@ -6,8 +6,10 @@ import { OrganizationSwitcher, UserButton } from "@clerk/nextjs";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
+  GiftIcon,
   HistoryIcon,
   LayoutDashboardIcon,
+  SettingsIcon,
   UserRoundIcon,
   UsersIcon,
   UsersRoundIcon,
@@ -92,6 +94,11 @@ export function DashboardSidebar() {
       url: `/${orgSlug}/accounts`,
       icon: UserRoundIcon,
     },
+    {
+      title: "Earn Premium",
+      url: `/${orgSlug}/earn-premium`,
+      icon: GiftIcon,
+    },
   ];
   // Build navigation items based on current context
   // Account-level navigation (only shown when an account is selected)
@@ -169,6 +176,23 @@ export function DashboardSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
         )}
+
+        {/* Settings - Coming Soon */}
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton disabled className="opacity-50">
+                  <SettingsIcon />
+                  <span className="font-medium">Settings</span>
+                  <span className="ml-auto text-xs text-muted-foreground">
+                    Soon
+                  </span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter>

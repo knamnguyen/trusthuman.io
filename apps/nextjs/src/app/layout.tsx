@@ -91,7 +91,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
           <Toaster />
           {env.VERCEL_ENV === "production" && <VercelAnalytics />}
           {env.VERCEL_ENV === "production" && <VercelSpeedInsights />}
-          {env.VERCEL_ENV !== "production" && <Agentation />}
+          {/* {env.VERCEL_ENV !== "production" && <Agentation />} */}
         </Providers>
       </body>
     </html>
