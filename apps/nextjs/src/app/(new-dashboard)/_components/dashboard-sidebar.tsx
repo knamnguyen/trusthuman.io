@@ -88,22 +88,10 @@ export function DashboardSidebar() {
   const params = useParams<{ orgSlug?: string; accountSlug?: string }>();
   const { orgSlug, accountSlug } = params;
 
-  const items = [
-    {
-      title: "Accounts",
-      url: `/${orgSlug}/accounts`,
-      icon: UserRoundIcon,
-    },
-    {
-      title: "Earn Premium",
-      url: `/${orgSlug}/earn-premium`,
-      icon: GiftIcon,
-    },
-  ];
-  // Build navigation items based on current context
-  // Account-level navigation (only shown when an account is selected)
+  // Account-level navigation items (only shown when an account is selected)
+  const accountItems = [];
   if (accountSlug !== undefined) {
-    items.push(
+    accountItems.push(
       {
         title: "Dashboard",
         url: `/${orgSlug}/${accountSlug}`,
@@ -126,6 +114,21 @@ export function DashboardSidebar() {
       },
     );
   }
+
+  // Organization-level items (always shown)
+  const orgItems = [
+    {
+      title: "Accounts",
+      url: `/${orgSlug}/accounts`,
+      icon: UserRoundIcon,
+    },
+    {
+      title: "Earn Premium",
+      url: `/${orgSlug}/earn-premium`,
+      icon: GiftIcon,
+      disabled: true, // Greyed out but still navigable
+    },
+  ];
 
   return (
     <Sidebar collapsible="icon" className="relative">
@@ -158,11 +161,11 @@ export function DashboardSidebar() {
 
       <SidebarContent>
         {/* Account-level navigation (only shown when an account is selected) */}
-        {items.length > 0 && (
+        {accountItems.length > 0 && (
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
-                {items.map((item) => (
+                {accountItems.map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
                       <Link href={item.url}>
@@ -177,10 +180,25 @@ export function DashboardSidebar() {
           </SidebarGroup>
         )}
 
-        {/* Settings - Coming Soon */}
+        {/* Organization-level navigation */}
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
+              {orgItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild disabled={item.disabled}>
+                    <Link
+                      href={item.url}
+                      className={item.disabled ? "opacity-50" : ""}
+                    >
+                      <item.icon />
+                      <span className="font-medium">{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+
+              {/* Settings - Coming Soon */}
               <SidebarMenuItem>
                 <SidebarMenuButton disabled className="opacity-50">
                   <SettingsIcon />
