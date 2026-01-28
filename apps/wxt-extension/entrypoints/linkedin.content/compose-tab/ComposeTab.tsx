@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   Edit3,
+  ExternalLink,
   Feather,
   Loader2,
   Send,
@@ -15,7 +16,9 @@ import { posthog } from "@/lib/posthog";
 import { Button } from "@sassy/ui/button";
 import { TooltipWithDialog } from "@sassy/ui/components/tooltip-with-dialog";
 
-import { useShadowRootStore } from "../stores";
+import { useAuthStore } from "../../../lib/auth-store";
+import { getWebAppDomain } from "../../../lib/get-sync-host-url";
+import { useAccountStore, useShadowRootStore } from "../stores";
 import { useComposeStore } from "../stores/compose-store";
 import { ComposeCard } from "./ComposeCard";
 import { useAutoResume } from "./hooks/useAutoResume";
@@ -90,6 +93,16 @@ export function ComposeTab() {
   // Conflict flags - disable certain actions when others are running
   const isAnyGenerating = isLoading || isEngageButtonGenerating || isAutoResumeLoading;
 
+  // Get account data for quick link
+  const authOrganization = useAuthStore((state) => state.organization);
+  const matchingAccount = useAccountStore((state) => state.matchingAccount);
+
+  // Build history link
+  const historyLink =
+    authOrganization?.slug && matchingAccount?.profileSlug
+      ? `${getWebAppDomain()}/${authOrganization.slug}/${matchingAccount.profileSlug}/history`
+      : undefined;
+
   // Ensure only one sub-sidebar open at a time: close settings when post preview opens
   useEffect(() => {
     if (previewingCardId) {
@@ -121,7 +134,7 @@ export function ComposeTab() {
     <div id="ek-compose-tab" className="bg-background flex flex-col gap-3 px-4">
       {/* Sticky Compact Header */}
       <div className="bg-background sticky top-0 z-10 -mx-4 border-b px-4 py-2">
-        {/* Row 1: Title + Settings Icon */}
+        {/* Row 1: Title + History Link + Settings Icon */}
         <div className="mb-2 flex items-center justify-between border-b pb-2">
           <TooltipWithDialog
             tooltipContent={
@@ -168,15 +181,29 @@ export function ComposeTab() {
               <span className="text-sm font-medium">Compose</span>
             </div>
           </TooltipWithDialog>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-6 w-6 shrink-0 p-0"
-            onClick={handleOpenSettings}
-            title="Open settings"
-          >
-            <Settings className="h-3.5 w-3.5" />
-          </Button>
+          <div className="flex items-center gap-2">
+            {historyLink && (
+              <a
+                href={historyLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:text-primary/80 transition-colors flex items-center gap-1 text-xs font-medium whitespace-nowrap"
+                title="Open in dashboard"
+              >
+                View Comment History
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 shrink-0 p-0"
+              onClick={handleOpenSettings}
+              title="Open settings"
+            >
+              <Settings className="h-3.5 w-3.5" />
+            </Button>
+          </div>
         </div>
 
         {/* Queue Progress Banner (only shown during queue processing) */}

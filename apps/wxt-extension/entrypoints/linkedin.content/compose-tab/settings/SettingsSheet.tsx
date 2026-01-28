@@ -1,13 +1,16 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
-import { Brain, Cog, Filter, Send, Settings, X } from "lucide-react";
+import { Brain, Cog, ExternalLink, Filter, Send, Settings, X } from "lucide-react";
 
 import { Button } from "@sassy/ui/button";
 import { ExpandableTabs } from "@sassy/ui/expandable-tabs";
 import { ScrollArea } from "@sassy/ui/scroll-area";
 
+import { useAuthStore } from "../../../../lib/auth-store";
+import { getWebAppDomain } from "../../../../lib/get-sync-host-url";
 import { useTRPC } from "../../../../lib/trpc/client";
+import { useAccountStore } from "../../stores/account-store";
 import { useSettingsDBStore } from "../../stores/settings-db-store";
 import { useSettingsLocalStore } from "../../stores/settings-local-store";
 
@@ -65,6 +68,10 @@ export function SettingsSheet({ isOpen, onClose }: SettingsSheetProps) {
     (state) => state.updateCommentGenerate,
   );
 
+  // Get account data for quick links
+  const authOrganization = useAuthStore((state) => state.organization);
+  const matchingAccount = useAccountStore((state) => state.matchingAccount);
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -114,6 +121,8 @@ export function SettingsSheet({ isOpen, onClose }: SettingsSheetProps) {
                   postLoad={postLoad}
                   updatePostLoad={updatePostLoad}
                   isLoaded={isDBLoaded}
+                  orgSlug={authOrganization?.slug}
+                  accountSlug={matchingAccount?.profileSlug}
                 />
               )}
               {selectedTab === 2 && (
@@ -121,6 +130,8 @@ export function SettingsSheet({ isOpen, onClose }: SettingsSheetProps) {
                   submitComment={submitComment}
                   updateSubmitComment={updateSubmitComment}
                   isLoaded={isDBLoaded}
+                  orgSlug={authOrganization?.slug}
+                  accountSlug={matchingAccount?.profileSlug}
                 />
               )}
               {selectedTab === 3 && (
@@ -128,6 +139,8 @@ export function SettingsSheet({ isOpen, onClose }: SettingsSheetProps) {
                   commentGenerate={commentGenerate}
                   updateCommentGenerate={updateCommentGenerate}
                   isLoaded={isDBLoaded}
+                  orgSlug={authOrganization?.slug}
+                  accountSlug={matchingAccount?.profileSlug}
                 />
               )}
             </div>
@@ -164,15 +177,33 @@ import { TargetListSelector } from "./TargetListSelector";
 function SettingsSection({
   title,
   children,
+  quickLink,
+  quickLinkLabel,
 }: {
   title: string;
   children: React.ReactNode;
+  quickLink?: string;
+  quickLinkLabel?: string;
 }) {
   return (
     <div className="space-y-3">
-      <h3 className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
-        {title}
-      </h3>
+      <div className="flex items-center justify-between">
+        <h3 className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+          {title}
+        </h3>
+        {quickLink && quickLinkLabel && (
+          <a
+            href={quickLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:text-primary/80 transition-colors flex items-center gap-1.5 text-xs font-medium"
+            title="Open in dashboard"
+          >
+            {quickLinkLabel}
+            <ExternalLink className="h-3 w-3" />
+          </a>
+        )}
+      </div>
       {children}
     </div>
   );
@@ -302,12 +333,16 @@ function SettingsFiltersContent({
   postLoad,
   updatePostLoad,
   isLoaded,
+  orgSlug,
+  accountSlug,
 }: {
   postLoad: PostLoadSettingDB | null;
   updatePostLoad: (
     data: Partial<Omit<PostLoadSettingDB, "accountId" | "createdAt" | "updatedAt">>
   ) => Promise<void>;
   isLoaded: boolean;
+  orgSlug: string | null | undefined;
+  accountSlug: string | null | undefined;
 }) {
   // Show loading only if fetch hasn't completed
   if (!isLoaded) {
@@ -321,9 +356,18 @@ function SettingsFiltersContent({
   // Use saved settings or defaults (null means no settings saved yet)
   const settings = postLoad ?? DEFAULT_POST_LOAD as PostLoadSettingDB;
 
+  // Build quick links
+  const targetListLink = orgSlug && accountSlug
+    ? `${getWebAppDomain()}/${orgSlug}/${accountSlug}/target-list`
+    : undefined;
+
   return (
     <div className="space-y-6">
-      <SettingsSection title="Target List">
+      <SettingsSection
+        title="Target List"
+        quickLink={targetListLink}
+        quickLinkLabel="Manage Target Lists"
+      >
         <SettingToggle
           label="Use Target List"
           description="Only engage with people on your target list"
@@ -475,12 +519,16 @@ function SettingsSubmitContent({
   submitComment,
   updateSubmitComment,
   isLoaded,
+  orgSlug,
+  accountSlug,
 }: {
   submitComment: SubmitCommentSettingDB | null;
   updateSubmitComment: (
     data: Partial<Omit<SubmitCommentSettingDB, "accountId" | "createdAt" | "updatedAt">>
   ) => Promise<void>;
   isLoaded: boolean;
+  orgSlug: string | null | undefined;
+  accountSlug: string | null | undefined;
 }) {
   // Show loading only if fetch hasn't completed
   if (!isLoaded) {
@@ -503,9 +551,18 @@ function SettingsSubmitContent({
     void updateSubmitComment({ submitDelayRange: `${min}-${max}` });
   };
 
+  // Build quick link to history
+  const historyLink = orgSlug && accountSlug
+    ? `${getWebAppDomain()}/${orgSlug}/${accountSlug}/history`
+    : undefined;
+
   return (
     <div className="space-y-6">
-      <SettingsSection title="Delay Between Submissions">
+      <SettingsSection
+        title="Delay Between Submissions"
+        quickLink={historyLink}
+        quickLinkLabel="View Comment History"
+      >
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1">
             <Label className="text-xs">Min:</Label>
@@ -600,12 +657,16 @@ function SettingsAIContent({
   commentGenerate,
   updateCommentGenerate,
   isLoaded,
+  orgSlug,
+  accountSlug,
 }: {
   commentGenerate: CommentGenerateSettingDB | null;
   updateCommentGenerate: (
     data: Partial<Omit<CommentGenerateSettingDB, "accountId" | "createdAt" | "updatedAt">>
   ) => Promise<void>;
   isLoaded: boolean;
+  orgSlug: string | null | undefined;
+  accountSlug: string | null | undefined;
 }) {
   // Show loading only if fetch hasn't completed
   if (!isLoaded) {
@@ -619,9 +680,18 @@ function SettingsAIContent({
   // Use saved settings or defaults (null means no settings saved yet)
   const settings = commentGenerate ?? DEFAULT_COMMENT_GENERATE as CommentGenerateSettingDB;
 
+  // Build quick link to personas
+  const personasLink = orgSlug && accountSlug
+    ? `${getWebAppDomain()}/${orgSlug}/${accountSlug}/personas`
+    : undefined;
+
   return (
     <div className="space-y-6">
-      <SettingsSection title="Comment Style">
+      <SettingsSection
+        title="Comment Style"
+        quickLink={personasLink}
+        quickLinkLabel="Manage Personas"
+      >
         <div className="space-y-4">
           <SettingToggle
             label="Dynamic Style Selection"

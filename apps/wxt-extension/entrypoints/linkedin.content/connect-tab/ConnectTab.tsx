@@ -19,7 +19,10 @@ import {
   CardTitle,
 } from "@sassy/ui/card";
 
+import { useAuthStore } from "../../../lib/auth-store";
+import { getWebAppDomain } from "../../../lib/get-sync-host-url";
 import type { PostAuthorRanking } from "../save-profile/saved-profile-store";
+import { useAccountStore } from "../stores/account-store";
 import { LinkedInLink } from "../_components/LinkedInLink";
 import { ManageListButton } from "../manage-list";
 import { useSavedProfileStore } from "../save-profile/saved-profile-store";
@@ -124,6 +127,16 @@ function ProfileCard() {
     isLoadingComments,
   } = useSavedProfileStore();
 
+  // Get account data for quick link
+  const authOrganization = useAuthStore((state) => state.organization);
+  const matchingAccount = useAccountStore((state) => state.matchingAccount);
+
+  // Build target list link
+  const targetListLink =
+    authOrganization?.slug && matchingAccount?.profileSlug
+      ? `${getWebAppDomain()}/${authOrganization.slug}/${matchingAccount.profileSlug}/target-list`
+      : undefined;
+
   if (!selectedProfile) return null;
 
   // URN fetch completed (not loading) and no URN found
@@ -133,10 +146,24 @@ function ProfileCard() {
     <Card>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <User className="h-4 w-4" />
-            Profile
-          </CardTitle>
+          <div className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <User className="h-4 w-4" />
+              Profile
+            </CardTitle>
+            {targetListLink && (
+              <a
+                href={targetListLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:text-primary/80 transition-colors flex items-center gap-1 text-xs font-medium whitespace-nowrap"
+                title="Open in dashboard"
+              >
+                Manage Target Lists
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            )}
+          </div>
           <Button variant="ghost" size="sm" onClick={clearAll}>
             Clear
           </Button>
@@ -298,6 +325,16 @@ function ProfileCard() {
 export function ConnectTab() {
   const { selectedProfile } = useSavedProfileStore();
 
+  // Get account data for quick link
+  const authOrganization = useAuthStore((state) => state.organization);
+  const matchingAccount = useAccountStore((state) => state.matchingAccount);
+
+  // Build target list link
+  const targetListLink =
+    authOrganization?.slug && matchingAccount?.profileSlug
+      ? `${getWebAppDomain()}/${authOrganization.slug}/${matchingAccount.profileSlug}/target-list`
+      : undefined;
+
   // Empty state
   if (!selectedProfile) {
     return (
@@ -313,6 +350,18 @@ export function ConnectTab() {
               it
             </p>
           </div>
+          {targetListLink && (
+            <a
+              href={targetListLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:text-primary/80 transition-colors flex items-center gap-1.5 text-sm font-medium mt-2"
+              title="Open in dashboard"
+            >
+              Manage Target Lists
+              <ExternalLink className="h-4 w-4" />
+            </a>
+          )}
         </div>
       </div>
     );
