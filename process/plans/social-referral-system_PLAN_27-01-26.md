@@ -1,9 +1,9 @@
 # Social Referral System
 
 **Date:** 2026-01-27
-**Updated:** 2026-01-28 (Version 1.2 - UI Complete, Rewards Updated)
+**Updated:** 2026-01-28 (Version 1.3 - UI Complete, Anti-Gaming Features Added)
 **Complexity:** Complex (Multi-phase implementation)
-**Status:** ✅ Phase 1 UI Complete → Ready for Backend Integration
+**Status:** ✅ Phase 1 UI Complete + Anti-Gaming → Ready for Backend Integration
 
 ---
 
@@ -29,9 +29,19 @@
 - +1 day per **1 comment** (updated from 2 comments)
 - Posts rescanned every 24 hours for 2 more times (3 total scans)
 
+**Anti-Gaming Features Added:**
+- ✅ Caption similarity detection (>95% threshold)
+- ✅ Checks last 7 days of validated posts on different platforms
+- ✅ Uses Levenshtein distance algorithm via `string-similarity` library
+- ✅ Prevents users from reusing same caption with minor tweaks
+- ✅ Documented in "How It Works" section
+
 **Files Modified:**
 - `apps/nextjs/src/app/(new-dashboard)/[orgSlug]/earn-premium/page.tsx` ✅
-- `packages/api/src/services/social-referral-verification.ts` (DAYS_PER_VERIFIED_POST = 7) ✅
+- `packages/api/src/services/social-referral-verification.ts` ✅
+  - DAYS_PER_VERIFIED_POST = 7
+  - Added similarity check in verification flow
+- `packages/api/package.json` ✅ (added string-similarity + @types)
 
 ### 🚀 What's Next (Phase 2)
 
@@ -40,7 +50,8 @@
 2. RFC-002: Package Migration (Gifavatar social-referral package)
 3. RFC-003: Core API Routes (tRPC submit/status/list endpoints)
 4. RFC-004: Verification Service (immediate verification + rewards)
-5. RFC-006: Cron Job (daily rescans, engagement bonuses, post deletion detection)
+5. **RFC-007: Loops Email Notification** (NEW - notify team when user submits post)
+6. RFC-006: Cron Job (daily rescans, engagement bonuses, post deletion detection)
 
 **Deferred UI Features:**
 - Settings page earned premium section
@@ -950,6 +961,169 @@ export async function rescanSubmission(submissionId: string) {
 ```
 
 **Ready For:** Production launch after Phase 2 integration complete
+
+---
+
+### RFC-007: Loops Email Notification for Team **[NEW - PRIORITY]**
+
+**⚠️ NEW FEATURE - Notify team when users submit posts so we can help amplify**
+
+**Overview:** Send email notification to `engagekit.io@gmail.com` when a user submits a post for verification, so the EngageKit team can comment and reshare to help boost engagement.
+
+**Why This Matters:**
+- Helps users get initial engagement (likes/comments) faster
+- Increases likelihood of reaching reward thresholds (+1 day per 3 likes, +1 day per 1 comment)
+- Shows users we're supporting them
+- Builds community and goodwill
+- Team can monitor submission quality
+
+**Dependencies:** RFC-004 (Verification Service)
+
+**Stage 0: Pre-Implementation Research**
+- Review Loops.so documentation (✅ Done - using `/loops-so/loops-js` SDK)
+- Determine what data to include in notification email
+- Decide: Send on submission or after verification?
+- Check if we need Loops transactional email template ID
+
+**Stage 1: Loops Setup (3 steps)**
+
+**Step 1.1:** Install Loops SDK
+```bash
+pnpm add loops --filter @sassy/api
+```
+
+**Step 1.2:** Add environment variable
+- Add `LOOPS_API_KEY` to `.env` and production environment
+- Get API key from Loops.so dashboard
+
+**Step 1.3:** Create transactional email template in Loops dashboard
+- Template name: "Social Referral Post Submitted"
+- Design email with data variables:
+  - `{{userName}}` - User's full name
+  - `{{userEmail}}` - User's email for coordination
+  - `{{orgName}}` - Organization name
+  - `{{platform}}` - X, LinkedIn, Threads, or Facebook
+  - `{{postUrl}}` - Direct link to the post
+  - `{{postText}}` - Caption text (if available)
+  - `{{submittedAt}}` - Timestamp
+- Save template and copy the `transactionalId`
+
+**Stage 2: Email Service Implementation (2 steps)**
+
+**Step 2.1:** Create email notification service
+- Create `packages/api/src/services/send-social-referral-notification.ts`
+- Initialize Loops client with API key
+- Implement `sendTeamNotification()` function
+
+```typescript
+import { LoopsClient } from "loops";
+
+const loops = new LoopsClient(process.env.LOOPS_API_KEY);
+
+interface NotificationData {
+  userName: string;
+  userEmail: string;
+  orgName: string;
+  platform: string;
+  postUrl: string;
+  postText?: string;
+  submittedAt: Date;
+}
+
+export async function sendTeamNotification(data: NotificationData) {
+  try {
+    await loops.sendTransactionalEmail({
+      transactionalId: process.env.LOOPS_SOCIAL_REFERRAL_TEMPLATE_ID!,
+      email: "engagekit.io@gmail.com",
+      dataVariables: {
+        userName: data.userName,
+        userEmail: data.userEmail,
+        orgName: data.orgName,
+        platform: data.platform,
+        postUrl: data.postUrl,
+        postText: data.postText || "Caption will be available after verification",
+        submittedAt: data.submittedAt.toISOString(),
+      },
+    });
+
+    console.log(`[Loops] Team notification sent for ${data.platform} post by ${data.userName}`);
+  } catch (error) {
+    // Log error but don't fail the submission
+    console.error("[Loops] Failed to send team notification:", error);
+  }
+}
+```
+
+**Step 2.2:** Integrate into verification service
+- Update `packages/api/src/services/social-referral-verification.ts`
+- Call `sendTeamNotification()` after verification succeeds (when post contains keyword)
+- **Decision:** Send AFTER verification (not on submission) so we only notify for valid posts
+- Fire-and-forget (don't block verification on email send)
+
+```typescript
+// In verifySocialSubmission(), after marking submission as VERIFIED
+if (result.containsAll) {
+  // ... existing reward logic ...
+
+  // Notify team (fire-and-forget)
+  void sendTeamNotification({
+    userName: `${submission.user.firstName} ${submission.user.lastName}`,
+    userEmail: submission.user.email,
+    orgName: submission.organization.name,
+    platform: submission.platform,
+    postUrl: submission.postUrl,
+    postText: result.text,
+    submittedAt: submission.submittedAt,
+  }).catch((error) => {
+    console.error("[Loops] Team notification failed:", error);
+  });
+}
+```
+
+**Stage 3: Testing (2 steps)**
+
+**Step 3.1:** Test email sending locally
+- Set `LOOPS_API_KEY` in `.env.local`
+- Create test transactional email template in Loops
+- Submit test post through UI
+- Verify email received at engagekit.io@gmail.com
+- Check email formatting and data variables
+
+**Step 3.2:** Test error handling
+- Test with invalid API key → should log error but not fail verification
+- Test with missing template ID → should log error
+- Verify submission still completes successfully even if email fails
+
+**Post-Phase Testing:**
+- Submit post on X → verify team email received
+- Submit post on LinkedIn → verify team email received
+- Check email contains: platform, post URL, user info, caption
+- Verify clicking post URL opens correct social media post
+- Test with multiple submissions in quick succession
+
+**Acceptance Criteria:**
+- [ ] Loops SDK installed and initialized with API key
+- [ ] Transactional email template created in Loops dashboard
+- [ ] Email service sends notifications after successful verification
+- [ ] Email contains all necessary data (platform, URL, user info, caption)
+- [ ] Email failures don't block user submission flow
+- [ ] Team receives emails at engagekit.io@gmail.com
+- [ ] Email formatting is professional and actionable
+
+**What's Functional Now:**
+- Team gets notified immediately when users submit valid posts
+- Team can click through to like/comment/reshare
+- Helps users reach engagement thresholds faster
+- Builds community engagement
+
+**Ready For:** RFC-006 (Cron Job Implementation) - can be implemented independently
+
+**Environment Variables Needed:**
+```bash
+# .env
+LOOPS_API_KEY="your_loops_api_key_here"
+LOOPS_SOCIAL_REFERRAL_TEMPLATE_ID="clm8e5j9903c9ly2qnmuf4p6w" # from Loops dashboard
+```
 
 ---
 
@@ -2318,34 +2492,54 @@ curl -X GET http://localhost:3000/api/cron/rescan-social-submissions \
   - [ ] Submit invalid post → status = INVALID
   - [ ] Test all 4 platforms
 
-#### RFC-005: UI Implementation
-- [ ] Create `apps/nextjs/src/app/(new-dashboard)/[orgSlug]/earn-premium/page.tsx`
-- [ ] Build eligibility banner (shows reasons if not eligible)
-- [ ] Build stats cards (total earned, premium until, active posts, verifying)
-- [ ] Build 2-step submission form:
-  - [ ] Step 1: Copy suggested caption
-  - [ ] Step 2: Select platform + submit URL
-- [ ] Build submissions data table (platform, status, days earned, engagement, last scanned)
-- [ ] Update `apps/nextjs/src/app/(new-dashboard)/[orgSlug]/settings/page.tsx`:
-  - [ ] Add "Earned Premium" card
-  - [ ] Show different content for FREE vs PREMIUM
-  - [ ] Add "Earn More" button linking to earn-premium page
-- [ ] Update `apps/nextjs/src/components/sidebar/sidebar.tsx`:
-  - [ ] Add "Organization Tools" section
-  - [ ] Add links: Accounts, Settings, Earn Premium
-- [ ] Test responsive design on mobile
-- [ ] Test FREE user end-to-end flow in UI
-- [ ] Test PREMIUM user flow (verify stub message appears)
+#### RFC-005: UI Implementation ✅ COMPLETE (2026-01-28)
+- [x] Create `apps/nextjs/src/app/(new-dashboard)/[orgSlug]/earn-premium/page.tsx`
+- [x] Build collapsible "How It Works" card with 2-column layout
+- [x] Build premium status badge (top-right corner)
+- [x] Build 2-step submission form:
+  - [x] Step 1: Editable caption textarea with vertical share buttons
+  - [x] Step 2: Auto-detect platform from URL + submit
+- [x] Build submissions data table (platform, URL, status, days earned, likes, comments, submitted)
+- [x] Add caption similarity check (>95% threshold, last 7 days, different platforms)
+- [x] Update reward values (7 days per post, +1 day per 3 likes, +1 day per 1 comment)
+- [x] Add `string-similarity` library for anti-gaming
+- [x] Fix independent page scrolling
+- [x] Test responsive design on mobile
+- [ ] Update `apps/nextjs/src/app/(new-dashboard)/[orgSlug]/settings/page.tsx` (DEFERRED)
+- [ ] Update `apps/nextjs/src/components/sidebar/sidebar.tsx` (DEFERRED)
+
+#### RFC-007: Loops Email Notification (NEW - PRIORITY)
+- [ ] Install Loops SDK: `pnpm add loops --filter @sassy/api`
+- [ ] Add `LOOPS_API_KEY` to environment variables
+- [ ] Create transactional email template in Loops dashboard
+  - [ ] Design template with data variables (userName, userEmail, orgName, platform, postUrl, postText, submittedAt)
+  - [ ] Copy `transactionalId` from Loops dashboard
+  - [ ] Add `LOOPS_SOCIAL_REFERRAL_TEMPLATE_ID` to environment
+- [ ] Create `packages/api/src/services/send-social-referral-notification.ts`
+  - [ ] Initialize Loops client
+  - [ ] Implement `sendTeamNotification()` function
+  - [ ] Add error handling (log errors, don't fail verification)
+- [ ] Integrate into verification service
+  - [ ] Import notification service in `social-referral-verification.ts`
+  - [ ] Call `sendTeamNotification()` after successful verification
+  - [ ] Fire-and-forget pattern (don't block verification)
+  - [ ] Include user info, org name, platform, post URL, caption
+- [ ] Test email sending
+  - [ ] Submit test post → verify email received at engagekit.io@gmail.com
+  - [ ] Check email formatting and data variables
+  - [ ] Test error handling (invalid API key, missing template)
+  - [ ] Verify submission succeeds even if email fails
 
 #### Phase 1 Testing
-- [ ] End-to-end test: FREE user submits post → verified → +3 days premium
+- [x] End-to-end test: FREE user submits post → verified → +7 days premium
 - [ ] Verify eligibility enforcement (1 account only)
 - [ ] Verify rate limiting (1 post/platform/day)
 - [ ] Test all 4 platforms through UI
 - [ ] Verify UI shows correct stats and status
-- [ ] Check settings page displays earned premium correctly
-- [ ] Verify sidebar navigation works
-- [ ] Test on mobile viewport
+- [ ] Test caption similarity rejection (>95% match)
+- [ ] Check settings page displays earned premium correctly (DEFERRED)
+- [ ] Verify sidebar navigation works (DEFERRED)
+- [x] Test on mobile viewport
 
 ---
 
