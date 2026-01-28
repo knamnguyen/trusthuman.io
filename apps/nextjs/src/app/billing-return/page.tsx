@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { use, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
@@ -10,46 +10,55 @@ import { useTRPC } from "~/trpc/react";
 export default function BillingReturnPage({
   searchParams,
 }: {
-  searchParams: { orgId?: string; success?: string; session_id?: string };
+  searchParams: Promise<{
+    orgId?: string;
+    success?: string;
+    session_id?: string;
+  }>;
 }) {
+  const params = use(searchParams);
   const trpc = useTRPC();
 
   const organization = useQuery(
     trpc.organization.get.queryOptions(
       {
-        id: searchParams.orgId ?? "",
+        id: params.orgId ?? "",
       },
       {
-        enabled: !!searchParams.orgId,
+        enabled: !!params.orgId,
       },
     ),
   );
 
   const router = useRouter();
 
-  useQuery(
+  const capture = useQuery(
     trpc.organization.subscription.capture.queryOptions(
       {
-        sessionId: searchParams.session_id ?? "",
+        sessionId: params.session_id ?? "",
       },
       {
-        enabled: !!searchParams.session_id,
+        enabled: !!params.session_id,
       },
     ),
   );
 
   useEffect(() => {
-    if (organization.data === undefined) {
+    // wait till capture either succeeds or fails and org is loaded
+    if (
+      organization.data === undefined ||
+      (capture.data === undefined && capture.error === null)
+    ) {
       return;
     }
 
     // Redirect to current slug (handles org slug changes)
     router.replace(
-      `/${organization.data.orgSlug}/settings${searchParams.success ? "?success=true" : ""}`,
+      `/${organization.data.orgSlug}/settings${params.success ? "?success=true" : ""}`,
     );
-  }, [organization.data, router, searchParams.success]);
+  }, [organization.data, router, params.success, capture.data, capture.error]);
 
-  if (!searchParams.orgId) {
+  if (!params.orgId) {
     return (
       <div className="flex min-h-screen items-center justify-center p-6">
         <div className="text-center">

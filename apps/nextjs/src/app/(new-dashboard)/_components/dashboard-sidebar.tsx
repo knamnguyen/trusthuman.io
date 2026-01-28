@@ -100,7 +100,7 @@ export function DashboardSidebar() {
       icon: GiftIcon,
     },
     {
-      title: "Settings",
+      title: "Subscription",
       url: `/${orgSlug}/settings`,
       icon: SettingsIcon,
     },
