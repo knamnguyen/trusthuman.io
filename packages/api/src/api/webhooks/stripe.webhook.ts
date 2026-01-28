@@ -7,6 +7,10 @@ import { db } from "@sassy/db";
 import { StripeService } from "@sassy/stripe";
 import { STRIPE_ID_TO_ACCESS_TYPE } from "@sassy/stripe/schema-validators";
 
+import {
+  convertOrgSubscriptionToFree,
+  convertOrgSubscriptionToPremium,
+} from "../../router/organization";
 import { env } from "../../utils/env";
 
 /**
@@ -107,17 +111,14 @@ export const stripeWebhookRoutes = new Hono().post("/", async (c) => {
 
         const quantity = getPurchasedSlots(subscription);
 
-        await db.organization.update({
-          where: { id: orgId },
-          data: {
-            payerId,
-            stripeSubscriptionId: subscription.id,
-            purchasedSlots: quantity,
-            subscriptionTier: "PREMIUM",
-            subscriptionExpiresAt: new Date(
-              subscription.current_period_end * 1000,
-            ),
-          },
+        await convertOrgSubscriptionToPremium(db, {
+          orgId,
+          payerId,
+          purchasedSlots: quantity,
+          stripeSubscriptionId: subscription.id,
+          subscriptionExpiresAt: new Date(
+            subscription.current_period_end * 1000,
+          ),
         });
 
         console.log(
@@ -130,10 +131,11 @@ export const stripeWebhookRoutes = new Hono().post("/", async (c) => {
       case "customer.subscription.updated": {
         const subscription = data.object;
         const orgId = subscription.metadata.organizationId;
+        const payerId = subscription.metadata.payerId;
 
-        if (orgId === undefined) {
+        if (orgId === undefined || payerId === undefined) {
           console.error(
-            `${eventType}: Missing organizationId in metadata, skipping`,
+            `${eventType}: Missing organizationId or payerId in metadata, skipping`,
           );
           break;
         }
@@ -142,13 +144,12 @@ export const stripeWebhookRoutes = new Hono().post("/", async (c) => {
         const slots = getPurchasedSlots(subscription);
         const expiresAt = new Date(subscription.current_period_end * 1000);
 
-        await db.organization.update({
-          where: { id: orgId },
-          data: {
-            purchasedSlots: slots,
-            subscriptionExpiresAt: expiresAt,
-            subscriptionTier: "PREMIUM",
-          },
+        await convertOrgSubscriptionToPremium(db, {
+          orgId,
+          payerId,
+          purchasedSlots: slots,
+          stripeSubscriptionId: subscription.id,
+          subscriptionExpiresAt: expiresAt,
         });
 
         console.log(`✅ ${eventType}: Org ${orgId} updated to ${slots} slots`);
@@ -182,16 +183,7 @@ export const stripeWebhookRoutes = new Hono().post("/", async (c) => {
 
         const endDate = new Date(subscription.current_period_end * 1000);
 
-        await db.organization.update({
-          where: { id: orgId },
-          data: {
-            payerId: null,
-            stripeSubscriptionId: null,
-            purchasedSlots: 1,
-            subscriptionTier: "FREE",
-            subscriptionExpiresAt: endDate, // Grace period
-          },
-        });
+        await convertOrgSubscriptionToFree(db, { orgId, expiresAt: endDate });
 
         console.log(`✅ ${eventType}: Org ${orgId} reset to free tier`);
 

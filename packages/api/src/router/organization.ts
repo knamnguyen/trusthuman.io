@@ -2,7 +2,7 @@ import { TRPCError } from "@trpc/server";
 import Stripe from "stripe";
 import { z } from "zod";
 
-import type { PrismaClient } from "@sassy/db";
+import type { PrismaClient, PrismaTransactionalClient } from "@sassy/db";
 import {
   QUANTITY_PRICING_CONFIG,
   STRIPE_QUANTITY_PRICES,
@@ -416,7 +416,7 @@ const subscriptionRouter = createTRPCRouter({
       const quantity = subscription.items.data[0]?.quantity ?? 1;
       const currentPeriodEnd = new Date(subscription.current_period_end * 1000);
 
-      await captureSubscriptionPaid(ctx.db, {
+      await convertOrgSubscriptionToPremium(ctx.db, {
         orgId: organizationId,
         purchasedSlots: quantity,
         stripeSubscriptionId: subscription.id,
@@ -568,7 +568,7 @@ export async function hasPermissionToAccessOrg(
   return exists > 0;
 }
 
-export async function captureSubscriptionPaid(
+export async function convertOrgSubscriptionToPremium(
   db: PrismaClient,
   {
     orgId,
@@ -584,7 +584,7 @@ export async function captureSubscriptionPaid(
     subscriptionExpiresAt: Date;
   },
 ) {
-  return db.$transaction(async (tx) => {
+  return await db.$transaction(async (tx) => {
     await tx.organization.update({
       where: {
         id: orgId,
@@ -598,63 +598,103 @@ export async function captureSubscriptionPaid(
         payerId,
       },
     });
-    // Count only non-disabled accounts
-    const activeAccountCount = await tx.linkedInAccount.count({
-      where: {
-        organizationId: orgId,
-        status: { not: "DISABLED" },
-      },
+
+    return await disableAccountsExceedingSlots(tx, {
+      orgId,
+      purchasedSlots,
     });
-
-    if (activeAccountCount <= purchasedSlots) {
-      return {
-        status: "noop",
-      } as const;
-    }
-
-    const numToDisable = activeAccountCount - purchasedSlots;
-
-    // Get accounts to disable, prioritizing:
-    // 1. REGISTERED (not yet connected)
-    // 2. CONNECTING (in progress)
-    // 3. CONNECTED (oldest first to keep most recent active)
-    const accountsToDisable = await tx.linkedInAccount.findMany({
-      where: {
-        organizationId: orgId,
-        status: { not: "DISABLED" },
-      },
-      orderBy: [{ createdAt: "asc" }],
-      select: { id: true, status: true },
-    });
-
-    // Sort by priority to disable: REGISTERED first, CONNECTING second, CONNECTED last (kept)
-    const priorityOrder = { REGISTERED: 0, CONNECTING: 1, CONNECTED: 2 };
-    const sortedAccounts = accountsToDisable.sort((a, b) => {
-      const priorityA =
-        priorityOrder[
-          a.status as Exclude<keyof typeof priorityOrder, "DISABLED">
-        ];
-      const priorityB =
-        priorityOrder[
-          b.status as Exclude<keyof typeof priorityOrder, "DISABLED">
-        ];
-      return priorityA - priorityB;
-    });
-
-    const idsToDisable = sortedAccounts.slice(0, numToDisable).map((a) => a.id);
-
-    await tx.linkedInAccount.updateMany({
-      where: {
-        id: { in: idsToDisable },
-      },
-      data: {
-        status: "DISABLED",
-      },
-    });
-
-    return {
-      status: "disabled",
-      numAccountsDisabled: idsToDisable.length,
-    } as const;
   });
+}
+
+export async function convertOrgSubscriptionToFree(
+  db: PrismaClient,
+  { orgId, expiresAt }: { orgId: string; expiresAt: Date },
+) {
+  return await db.$transaction(async (tx) => {
+    await tx.organization.update({
+      where: { id: orgId },
+      data: {
+        payerId: null,
+        stripeSubscriptionId: null,
+        purchasedSlots: 1,
+        subscriptionTier: "FREE",
+        subscriptionExpiresAt: expiresAt, // Grace period
+      },
+    });
+
+    return await disableAccountsExceedingSlots(tx, {
+      orgId,
+      purchasedSlots: 1,
+    });
+  });
+}
+
+async function disableAccountsExceedingSlots(
+  tx: PrismaTransactionalClient,
+  {
+    orgId,
+    purchasedSlots,
+  }: {
+    orgId: string;
+    purchasedSlots: number;
+  },
+) {
+  // Count only non-disabled accounts
+  const activeAccountCount = await tx.linkedInAccount.count({
+    where: {
+      organizationId: orgId,
+      status: { not: "DISABLED" },
+    },
+  });
+
+  if (activeAccountCount <= purchasedSlots) {
+    return {
+      status: "noop",
+    } as const;
+  }
+
+  const numToDisable = activeAccountCount - purchasedSlots;
+
+  // Get accounts to disable, prioritizing:
+  // 1. REGISTERED (not yet connected)
+  // 2. CONNECTING (in progress)
+  // 3. CONNECTED (oldest first to keep most recent active)
+  const accountsToDisable = await tx.linkedInAccount.findMany({
+    where: {
+      organizationId: orgId,
+      status: { not: "DISABLED" },
+    },
+    orderBy: [{ createdAt: "asc" }],
+    select: { id: true, status: true },
+  });
+
+  // Sort by priority to disable: REGISTERED first, CONNECTING second, CONNECTED last (kept)
+  const priorityOrder = { REGISTERED: 0, CONNECTING: 1, CONNECTED: 2 };
+  const sortedAccounts = accountsToDisable.sort((a, b) => {
+    const priorityA =
+      priorityOrder[
+        a.status as Exclude<keyof typeof priorityOrder, "DISABLED">
+      ];
+    const priorityB =
+      priorityOrder[
+        b.status as Exclude<keyof typeof priorityOrder, "DISABLED">
+      ];
+    return priorityA - priorityB;
+  });
+
+  const idsToDisable = sortedAccounts.slice(0, numToDisable).map((a) => a.id);
+
+  await tx.linkedInAccount.updateMany({
+    where: {
+      id: { in: idsToDisable },
+    },
+    data: {
+      status: "DISABLED",
+    },
+  });
+
+  return {
+    status: "disabled",
+    numAccountsDisabled: idsToDisable.length,
+  } as const;
 }
