@@ -314,6 +314,10 @@ export default function EarnPremiumPage() {
                           • Missing required keyword (@engagekit_io or
                           #engagekit_io)
                         </li>
+                        <li>
+                          • Caption too similar (&gt;95%) to recent post (last 7
+                          days, different platform)
+                        </li>
                         <li>• Post deleted or made private</li>
                         <li>
                           • Duplicate submission (already submitted this URL)
