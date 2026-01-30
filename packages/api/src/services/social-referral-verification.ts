@@ -76,7 +76,7 @@ export async function verifySocialSubmission(
       platform,
     });
 
-    // Check caption similarity against recent validated posts (last 7 days, different platforms)
+    // Check caption similarity against recent validated posts (last 7 days, same platform)
     if (result.containsAll && result.text) {
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -84,7 +84,7 @@ export async function verifySocialSubmission(
       const recentValidatedPosts = await db.socialSubmission.findMany({
         where: {
           organizationId: submission.organizationId,
-          platform: { not: submission.platform },
+          platform: submission.platform,
           status: "VERIFIED",
           submittedAt: { gte: sevenDaysAgo },
           postText: { not: null },
