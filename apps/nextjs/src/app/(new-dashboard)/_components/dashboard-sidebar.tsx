@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { OrganizationSwitcher, UserButton } from "@clerk/nextjs";
@@ -88,49 +89,59 @@ export function DashboardSidebar() {
   const params = useParams<{ orgSlug?: string; accountSlug?: string }>();
   const { orgSlug, accountSlug } = params;
 
-  const items = [
-    {
-      title: "Accounts",
-      url: `/${orgSlug}/accounts`,
-      icon: UserRoundIcon,
-    },
-    {
-      title: "Earn Premium",
-      url: `/${orgSlug}/earn-premium`,
-      icon: GiftIcon,
-    },
-    {
-      title: "Subscription",
-      url: `/${orgSlug}/settings`,
-      icon: SettingsIcon,
-    },
-  ];
-  // Build navigation items based on current context
-  // Account-level navigation (only shown when an account is selected)
-  if (accountSlug !== undefined) {
-    items.push(
+  const items = useMemo(() => {
+    let prefix = `/${orgSlug}`;
+
+    if (accountSlug !== undefined) {
+      prefix += `/${accountSlug}`;
+    }
+
+    const items = [
       {
-        title: "Dashboard",
-        url: `/${orgSlug}/${accountSlug}`,
-        icon: LayoutDashboardIcon,
+        title: "Accounts",
+        url: `${prefix}/accounts`,
+        icon: UserRoundIcon,
       },
       {
-        title: "History",
-        url: `/${orgSlug}/${accountSlug}/history`,
-        icon: HistoryIcon,
+        title: "Earn Premium",
+        url: `${prefix}/earn-premium`,
+        icon: GiftIcon,
       },
       {
-        title: "Target List",
-        url: `/${orgSlug}/${accountSlug}/target-list`,
-        icon: UsersRoundIcon,
+        title: "Subscription",
+        url: `${prefix}/settings`,
+        icon: SettingsIcon,
       },
-      {
-        title: "Personas",
-        url: `/${orgSlug}/${accountSlug}/personas`,
-        icon: UsersIcon,
-      },
-    );
-  }
+    ];
+    // Build navigation items based on current context
+    // Account-level navigation (only shown when an account is selected)
+    if (accountSlug !== undefined) {
+      items.push(
+        {
+          title: "Dashboard",
+          url: `/${orgSlug}/${accountSlug}`,
+          icon: LayoutDashboardIcon,
+        },
+        {
+          title: "History",
+          url: `/${orgSlug}/${accountSlug}/history`,
+          icon: HistoryIcon,
+        },
+        {
+          title: "Target List",
+          url: `/${orgSlug}/${accountSlug}/target-list`,
+          icon: UsersRoundIcon,
+        },
+        {
+          title: "Personas",
+          url: `/${orgSlug}/${accountSlug}/personas`,
+          icon: UsersIcon,
+        },
+      );
+    }
+
+    return items;
+  }, [orgSlug, accountSlug]);
 
   return (
     <Sidebar collapsible="icon" className="relative">
