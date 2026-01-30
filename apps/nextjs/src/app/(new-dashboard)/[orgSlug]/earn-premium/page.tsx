@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useParams } from "next/navigation";
 import { useOrganization } from "@clerk/nextjs";
 import { faLinkedin } from "@fortawesome/free-brands-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { ChevronDown, Copy, Loader2 } from "lucide-react";
+import { ChevronDown, Copy, Loader2, RefreshCw } from "lucide-react";
 import { siFacebook, siThreads, siX } from "simple-icons";
 import { toast } from "sonner";
 
@@ -37,15 +37,13 @@ import { Textarea } from "@sassy/ui/textarea";
 
 import { useTRPC } from "~/trpc/react";
 
-const DEFAULT_CAPTION = `I found out about @engagekit_io today and it's the best way to engage to grow authentically on LinkedIn without spam. Such a nice product to connect deeply with people in your network and support them! Go #engagekit_io!!!`;
-
 export default function EarnPremiumPage() {
   const { orgSlug } = useParams<{ orgSlug: string }>();
   const { organization } = useOrganization();
   const trpc = useTRPC();
 
   // State
-  const [caption, setCaption] = useState(DEFAULT_CAPTION);
+  const [caption, setCaption] = useState("");
   const [postUrl, setPostUrl] = useState("");
   const [selectedPlatform, setSelectedPlatform] = useState<
     "x" | "linkedin" | "threads" | "facebook"
@@ -55,6 +53,10 @@ export default function EarnPremiumPage() {
   // Mutations
   const submitMutation = useMutation(
     trpc.socialReferral.submit.mutationOptions({}),
+  );
+
+  const generateCaptionMutation = useMutation(
+    trpc.socialReferral.generateCaption.mutationOptions({}),
   );
 
   // Queries
@@ -75,27 +77,43 @@ export default function EarnPremiumPage() {
     },
   });
 
+  /**
+   * Copy caption to clipboard
+   */
+  const handleCopyCaption = async () => {
+    try {
+      await navigator.clipboard.writeText(caption);
+      toast.success("Caption copied to clipboard!");
+    } catch (error) {
+      toast.error("Failed to copy caption");
+    }
+  };
+
   // Share handlers
-  const handleShareX = () => {
+  const handleShareX = async () => {
+    await handleCopyCaption();
     const encodedText = encodeURIComponent(caption);
     const shareUrl = `https://x.com/intent/tweet?text=${encodedText}`;
     window.open(shareUrl, "_blank", "width=550,height=420");
   };
 
-  const handleShareLinkedIn = () => {
+  const handleShareLinkedIn = async () => {
+    await handleCopyCaption();
     const url = encodeURIComponent(window.location.origin);
     const shareUrl = `https://www.linkedin.com/sharing/share-offsite?mini=true&url=${url}`;
     window.open(shareUrl, "_blank", "width=550,height=420");
     toast.info("Paste your caption in the LinkedIn share dialog");
   };
 
-  const handleShareThreads = () => {
+  const handleShareThreads = async () => {
+    await handleCopyCaption();
     const encodedText = encodeURIComponent(caption);
     const shareUrl = `https://www.threads.net/intent/post?text=${encodedText}`;
     window.open(shareUrl, "_blank", "width=550,height=420");
   };
 
-  const handleShareFacebook = () => {
+  const handleShareFacebook = async () => {
+    await handleCopyCaption();
     const url = encodeURIComponent(window.location.origin);
     const shareUrl = `https://www.facebook.com/share_channel/?type=reshare&link=${url}&app_id=542599432471018&source_surface=external_reshare&display=page`;
     window.open(shareUrl, "_blank", "width=550,height=420");
@@ -165,16 +183,50 @@ export default function EarnPremiumPage() {
   };
 
   /**
-   * Copy caption to clipboard
+   * Generate a new caption
    */
-  const handleCopyCaption = async () => {
+  const handleGenerateCaption = async () => {
     try {
-      await navigator.clipboard.writeText(caption);
-      toast.success("Caption copied to clipboard!");
+      const result = await generateCaptionMutation.mutateAsync();
+      setCaption(result.caption);
+      if (result.success) {
+        toast.success("New caption generated!");
+      } else {
+        toast.warning("Used fallback caption");
+      }
     } catch (error) {
-      toast.error("Failed to copy caption");
+      toast.error("Failed to generate caption");
     }
   };
+
+  /**
+   * Check if caption has required keywords
+   */
+  const getCaptionWarning = (): string | null => {
+    if (!caption.trim()) return null;
+
+    const hasAtKeyword = caption.includes("@engagekit_io");
+    const hasHashKeyword = caption.includes("#engagekit_io");
+
+    if (!hasAtKeyword && !hasHashKeyword) {
+      return "⚠️ Caption must include @engagekit_io or #engagekit_io";
+    }
+    if (!hasAtKeyword) {
+      return "⚠️ Caption should include @engagekit_io for X/Threads posts";
+    }
+    if (!hasHashKeyword) {
+      return "⚠️ Caption should include #engagekit_io for LinkedIn/Facebook posts";
+    }
+    return null;
+  };
+
+  // Generate caption on mount
+  React.useEffect(() => {
+    if (organization?.id && !caption) {
+      void handleGenerateCaption();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [organization?.id]);
 
   return (
     <div className="flex h-screen flex-col overflow-y-auto bg-gray-50 p-6">
@@ -316,7 +368,7 @@ export default function EarnPremiumPage() {
                         </li>
                         <li>
                           • Caption too similar (&gt;95%) to recent post (last 7
-                          days, different platform)
+                          days, same platform)
                         </li>
                         <li>• Post deleted or made private</li>
                         <li>
@@ -365,13 +417,34 @@ export default function EarnPremiumPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <Label>Sample caption (you can edit this)</Label>
+                    <div className="mb-2 flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={handleGenerateCaption}
+                        disabled={generateCaptionMutation.isPending}
+                        title="Regenerate caption"
+                      >
+                        <RefreshCw
+                          className={`h-3.5 w-3.5 ${generateCaptionMutation.isPending ? "animate-spin" : ""}`}
+                        />
+                      </Button>
+                      <Label>Sample caption (you can edit this)</Label>
+                    </div>
                     <Textarea
                       value={caption}
                       onChange={(e) => setCaption(e.target.value)}
                       rows={6}
                       className="mt-2 font-mono text-sm"
+                      placeholder="Generating caption..."
                     />
+                    {getCaptionWarning() && (
+                      <p className="mt-2 text-sm text-amber-600">
+                        {getCaptionWarning()}
+                      </p>
+                    )}
                   </div>
                 </CardContent>
               </div>
@@ -524,12 +597,12 @@ export default function EarnPremiumPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Platform</TableHead>
-                    <TableHead>Link</TableHead>
+                    <TableHead className="w-24">URL</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Days Earned</TableHead>
                     <TableHead>Likes</TableHead>
                     <TableHead>Comments</TableHead>
+                    <TableHead className="min-w-[200px]">Post Content</TableHead>
                     <TableHead>Submitted</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -546,17 +619,14 @@ export default function EarnPremiumPage() {
                   ) : (
                     submissions.map((submission) => (
                       <TableRow key={submission.id}>
-                        <TableCell className="font-medium capitalize">
-                          {submission.platform.toLowerCase()}
-                        </TableCell>
                         <TableCell>
                           <a
                             href={submission.postUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-blue-600 hover:underline"
+                            className="font-medium capitalize text-blue-600 hover:underline"
                           >
-                            {truncateUrl(submission.postUrl)}
+                            {submission.platform.toLowerCase()}
                           </a>
                         </TableCell>
                         <TableCell>
@@ -578,6 +648,11 @@ export default function EarnPremiumPage() {
                         <TableCell>{submission.daysAwarded}</TableCell>
                         <TableCell>{submission.likes}</TableCell>
                         <TableCell>{submission.comments}</TableCell>
+                        <TableCell>
+                          <div className="max-h-12 max-w-xs overflow-y-auto text-xs text-gray-600">
+                            {submission.postText || "—"}
+                          </div>
+                        </TableCell>
                         <TableCell>
                           {new Date(
                             submission.submittedAt,

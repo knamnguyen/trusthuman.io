@@ -731,6 +731,9 @@ importers:
       puppeteer-core:
         specifier: ^24.22.3
         version: 24.22.3(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+      string-similarity:
+        specifier: ^4.0.4
+        version: 4.0.4
       superjson:
         specifier: 2.2.2
         version: 2.2.2
@@ -759,6 +762,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 22.15.34
+      '@types/string-similarity':
+        specifier: ^4.0.2
+        version: 4.0.2
       bun:
         specifier: ^1.3.5
         version: 1.3.5
@@ -5094,6 +5100,9 @@ packages:
 
   '@types/sax@1.2.7':
     resolution: {integrity: sha512-rO73L89PJxeYM3s3pPPjiPgVVcymqU490g0YO5n5By0k2Erzj6tay/4lr1CHAAU4JyOWd1rpQ8bCf6cZfHU96A==}
+
+  '@types/string-similarity@4.0.2':
+    resolution: {integrity: sha512-LkJQ/jsXtCVMK+sKYAmX/8zEq+/46f1PTQw7YtmQwb74jemS1SlNLmARM2Zml9DgdDTWKAtc5L13WorpHPDjDA==}
 
   '@types/through@0.0.33':
     resolution: {integrity: sha512-HsJ+z3QuETzP3cswwtzt2vEIiHBk/dCcHGhbmG5X3ecnwFD/lPrMpliGXxSCg03L9AhrdwA4Oz/qfspkDW+xGQ==}
@@ -9870,6 +9879,10 @@ packages:
 
   streamx@2.23.0:
     resolution: {integrity: sha512-kn+e44esVfn2Fa/O0CPFcex27fjIL6MkVae0Mm6q+E6f0hWv578YCERbv+4m02cjxvDsPKLnmxral/rR6lBMAg==}
+
+  string-similarity@4.0.4:
+    resolution: {integrity: sha512-/q/8Q4Bl4ZKAPjj8WerIBJWALKkaPRfrvhfF8k/B23i4nzrlRj2/go1m90In7nG/3XDSbOo0+pu6RvCTM9RGMQ==}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   string-width@4.2.3:
     resolution: {integrity: sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==}
@@ -15204,6 +15217,8 @@ snapshots:
     dependencies:
       '@types/node': 22.15.34
 
+  '@types/string-similarity@4.0.2': {}
+
   '@types/through@0.0.33':
     dependencies:
       '@types/node': 22.15.34
@@ -17209,7 +17224,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 9.30.0(jiti@2.6.1)
       eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.12.1(@typescript-eslint/parser@8.35.0(eslint@9.30.0(jiti@2.6.1))(typescript@5.8.3))(eslint-import-resolver-node@0.3.9)(eslint@9.30.0(jiti@2.6.1))
+      eslint-module-utils: 2.12.1(@typescript-eslint/parser@7.18.0(eslint@9.30.0(jiti@2.6.1))(typescript@5.8.3))(eslint-import-resolver-node@0.3.9)(eslint@9.30.0(jiti@2.6.1))
       hasown: 2.0.2
       is-core-module: 2.16.1
       is-glob: 4.0.3
@@ -20787,6 +20802,8 @@ snapshots:
       text-decoder: 1.2.3
     transitivePeerDependencies:
       - react-native-b4a
+
+  string-similarity@4.0.4: {}
 
   string-width@4.2.3:
     dependencies:
