@@ -142,6 +142,7 @@ export const stripeWebhookRoutes = new Hono().post("/", async (c) => {
         }
 
         const slots = getPurchasedSlots(subscription);
+        const newExpiresAt = new Date(subscription.current_period_end * 1000);
 
         const org = await db.organization.findUnique({
           where: { id: orgId },
@@ -157,20 +158,19 @@ export const stripeWebhookRoutes = new Hono().post("/", async (c) => {
           break;
         }
 
-        // handle pending downgrade, 24 hours safety window check to avoid race conditions
-        if (
-          slots < org.purchasedSlots &&
+        // Apply downgrade only when new period has started (renewal detected)
+        // Compare Stripe's new expiry against DB's old expiry
+        const isDowngrade = slots < org.purchasedSlots;
+        const periodAdvanced =
           org.subscriptionExpiresAt !== null &&
-          org.subscriptionExpiresAt > new Date(Date.now() - 24 * 60 * 1000)
-        ) {
+          newExpiresAt >= org.subscriptionExpiresAt;
+
+        if (isDowngrade && periodAdvanced) {
           // Apply pending downgrade to DB (Stripe already updated during downgrade action)
-          // This runs at renewal when subscriptionExpiresAt changes
           await applyPendingDowngrade(db, {
             orgId,
             newPurchasedSlots: slots,
-            subscriptionExpiresAt: new Date(
-              subscription.current_period_end * 1000,
-            ),
+            subscriptionExpiresAt: newExpiresAt,
           });
 
           console.log(
@@ -183,14 +183,13 @@ export const stripeWebhookRoutes = new Hono().post("/", async (c) => {
         }
 
         // No pending downgrade - normal update (upgrades, renewals without pending)
-        const expiresAt = new Date(subscription.current_period_end * 1000);
 
         await convertOrgSubscriptionToPremium(db, {
           orgId,
           payerId,
           purchasedSlots: slots,
           stripeSubscriptionId: subscription.id,
-          subscriptionExpiresAt: expiresAt,
+          subscriptionExpiresAt: newExpiresAt,
         });
 
         console.log(`✅ ${eventType}: Org ${orgId} updated to ${slots} slots`);

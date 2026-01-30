@@ -1,7 +1,7 @@
 # Organization Payment System Redesign
 
 **Date:** 2026-01-19
-**Updated:** 2026-01-31 (Version 2.7 - Slot Update Flow Complete)
+**Updated:** 2026-01-31 (Version 2.8 - Deferred Downgrade Flow)
 **Status:** 🚧 In Progress (Phase 1-5 Complete, Slot Update UI Complete)
 **Complexity:** Complex (Multi-phase migration)
 
@@ -700,50 +700,77 @@ console.log(`✅ Org ${orgId} subscribed: ${quantity} slots`);
 
 **When:** Subscription renews, slots changed (via Customer Portal), billing cycle switched
 
-**Purpose:** Keep organization slot count and expiry date in sync
+**Purpose:** Keep organization slot count and expiry date in sync. Handle deferred downgrades.
 
 **Action:**
 
 ```typescript
 const subscription = event.data.object as Stripe.Subscription;
 const orgId = subscription.metadata?.organizationId;
+const payerId = subscription.metadata?.payerId;
 
-if (!orgId) {
-  console.log(
-    "No organizationId in metadata, skipping (not an org subscription)",
-  );
-  return; // User-level subscription (old system) or non-org subscription
+if (!orgId || !payerId) {
+  console.log("Missing organizationId or payerId in metadata, skipping");
+  return;
 }
 
-// Guard: Ensure quantity > 0
-const slots = Math.max(1, subscription.items.data[0].quantity || 1);
-const expiresAt = new Date(subscription.current_period_end * 1000);
+const slots = getPurchasedSlots(subscription); // Math.max(1, quantity)
+const newExpiresAt = new Date(subscription.current_period_end * 1000);
 
-// Idempotency: upsert is naturally idempotent (same data = no change)
-await db.organization.update({
+const org = await db.organization.findUnique({
   where: { id: orgId },
-  data: {
-    purchasedSlots: slots,
-    subscriptionExpiresAt: expiresAt,
-    subscriptionTier: "PREMIUM", // Keep as premium
-  },
+  select: { stripeSubscriptionId: true, purchasedSlots: true, subscriptionExpiresAt: true },
 });
 
-console.log(`✅ Org ${orgId} updated: ${slots} slots, expires ${expiresAt}`);
+if (org?.stripeSubscriptionId !== subscription.id) {
+  console.log("Subscription ID mismatch, skipping");
+  return;
+}
+
+// Apply downgrade only when new period has started (renewal detected)
+const isDowngrade = slots < org.purchasedSlots;
+const periodAdvanced =
+  org.subscriptionExpiresAt !== null &&
+  newExpiresAt >= org.subscriptionExpiresAt;
+
+if (isDowngrade && periodAdvanced) {
+  // Deferred downgrade takes effect at renewal
+  await applyPendingDowngrade(db, {
+    orgId,
+    newPurchasedSlots: slots,
+    subscriptionExpiresAt: newExpiresAt,
+  });
+  console.log(`✅ Org ${orgId} pending downgrade applied: ${slots} slots`);
+  return;
+}
+
+// Normal update (upgrades, renewals without pending downgrade)
+await convertOrgSubscriptionToPremium(db, {
+  orgId,
+  payerId,
+  purchasedSlots: slots,
+  stripeSubscriptionId: subscription.id,
+  subscriptionExpiresAt: newExpiresAt,
+});
+
+console.log(`✅ Org ${orgId} updated: ${slots} slots, expires ${newExpiresAt}`);
 ```
 
 **What Triggers This:**
 
-- Subscription renewal (Stripe charges card, extends period)
+- Subscription renewal (Stripe charges card, extends period) → **Downgrades take effect**
 - User changes quantity in Customer Portal (5 slots → 10 slots)
 - User switches billing cycle (monthly → yearly via Customer Portal)
 - Payment succeeds after retry (failed payment recovered)
+- User downgrades via in-app UI (Stripe updated, but DB slots unchanged until renewal)
 
 **Edge Cases Handled:**
 
-- Missing organizationId: Skip gracefully
-- Idempotency: Update is idempotent
-- Quantity = 0: Guard sets minimum to 1
+- Missing organizationId/payerId: Skip gracefully
+- Subscription ID mismatch: Skip (prevents processing stale subscriptions)
+- Deferred downgrade: Only reduce slots when `newExpiresAt >= org.subscriptionExpiresAt`
+- Immediate upgrade: Apply slot increase immediately via `convertOrgSubscriptionToPremium`
+- Quantity = 0: Guard sets minimum to 1 via `getPurchasedSlots()`
 
 ---
 
@@ -2399,14 +2426,22 @@ DROP TYPE "AccessType";
    - Updates DB directly via `updateOrgSubscriptionPurchasedSlots()`
 
 3. **Proration Behavior:**
-   - **Upgrades (2→4 slots):** Stripe immediately charges prorated difference
-   - **Downgrades (4→2 slots):** Stripe applies credit to customer balance/next invoice
+   - **Upgrades (2→4 slots):** `proration_behavior: "always_invoice"` - Stripe immediately creates invoice for prorated difference
+   - **Downgrades (4→2 slots):** `proration_behavior: "none"` - No proration, user keeps current slots until period ends
    - No preview step needed - Stripe handles all proration math
 
-4. **DB Update Strategy:**
+4. **DB Update Strategy (Upgrade):**
    - Router updates DB immediately after Stripe succeeds (instant feedback)
    - Webhook also fires but is idempotent (setting same value is harmless)
    - Handles edge case: If Stripe succeeds but DB fails, webhook will eventually sync
+
+5. **DB Update Strategy (Downgrade - Deferred):**
+   - Router updates Stripe subscription immediately (correct billing for next period)
+   - Router does NOT update DB `purchasedSlots` (user keeps current slots until renewal)
+   - Webhook handles DB update at renewal:
+     - Compares Stripe subscription quantity vs DB `purchasedSlots`
+     - Only updates if `subscriptionExpiresAt` advanced (new period started)
+     - Disables excess accounts when downgrade takes effect
 
 **Files Modified:**
 - [x] `packages/api/src/access-control/organization.ts` - Added `hasPermissionToUpdateOrgSubscriptionClause`
@@ -2444,7 +2479,7 @@ DROP TYPE "AccessType";
 | **Yearly price**         | Not specified              | **$299.99/slot/year** (16.7% discount)                 |
 | **Price fetching**       | Hardcoded                  | Live from Stripe API                                   |
 | **Feature gating**       | Simple expiry check        | Includes quota compliance check                        |
-| **Downgrade handling**   | Not specified              | Immediate with over-quota enforcement                  |
+| **Downgrade handling**   | Not specified              | Deferred until period ends (no proration)              |
 | **Settings page UI**     | Basic specification        | Complete implementation with live pricing              |
 | **Quantity limits**      | 1-24 slots                 | 1-unlimited (no max)                                   |
 | **Stripe portal config** | Plan switches unclear      | Allow both quantity changes and billing cycle switches |
@@ -2465,26 +2500,53 @@ DROP TYPE "AccessType";
   - Premium (qty=1): `purchasedSlots = 1`, `subscriptionTier = "PREMIUM"` → 1 slot, WITH AI ✅
   - Premium (qty=5): `purchasedSlots = 5`, `subscriptionTier = "PREMIUM"` → 5 slots, WITH AI
 
-### Downgrade Flow (New)
+### Downgrade Flow (Deferred until Period End)
 
 **Scenario:** User reduces from 10 to 5 slots while having 8 accounts connected.
 
 **Behavior:**
 
-1. Stripe applies reduction immediately (with proration credit)
-2. Webhook updates `purchasedSlots = 5`
-3. Org has 8 accounts, 5 slots → **over quota**
-4. Client-side check: `accountCount > purchasedSlots` → `isPremium = false`
-5. Premium features disabled for **ALL accounts**
-6. Warning banner shows: "Remove 3 accounts to restore premium"
-7. User removes 3 accounts → quota OK → premium restored
+1. User initiates downgrade (10→5 slots) via in-app UI
+2. Router calls `stripe.subscriptions.update()` with `proration_behavior: "none"`
+3. Stripe subscription quantity updated to 5 (next invoice will be for 5 slots)
+4. DB `purchasedSlots` stays at 10 (user keeps all 10 slots)
+5. UI shows "Downgrade scheduled - slots will reduce to 5 on {renewal_date}"
+6. At renewal, `customer.subscription.updated` webhook fires
+7. Webhook checks: Stripe quantity (5) < DB purchasedSlots (10) AND new period started
+8. Webhook updates `purchasedSlots = 5` and disables 5 excess accounts
+9. User notified of reduced slots
+
+**Webhook Logic:**
+
+```typescript
+// In customer.subscription.updated handler
+const slots = getPurchasedSlots(subscription);
+const newExpiresAt = new Date(subscription.current_period_end * 1000);
+
+// Apply downgrade only when new period has started (renewal detected)
+// Compare Stripe's new expiry against DB's old expiry
+const isDowngrade = slots < org.purchasedSlots;
+const periodAdvanced =
+  org.subscriptionExpiresAt !== null &&
+  newExpiresAt >= org.subscriptionExpiresAt;
+
+if (isDowngrade && periodAdvanced) {
+  // Apply pending downgrade to DB (Stripe already updated during downgrade action)
+  await applyPendingDowngrade(db, {
+    orgId,
+    newPurchasedSlots: slots,
+    subscriptionExpiresAt: newExpiresAt,
+  });
+}
+```
 
 **Why This Works:**
 
-- ✅ Simple (no scheduled changes)
-- ✅ Fair (all accounts treated equally)
-- ✅ Self-service (user fixes at their pace)
-- ✅ Clear consequence (over quota = no premium)
+- ✅ Fair to user (paid for current period, keeps access until it ends)
+- ✅ No race conditions (Stripe updated immediately, DB at renewal)
+- ✅ Clear billing (next invoice reflects new quantity)
+- ✅ No proration complexity (no credits to track)
+- ✅ Predictable (user knows exactly when slots reduce)
 
 ### What Makes This Simpler
 
@@ -2495,7 +2557,7 @@ DROP TYPE "AccessType";
 5. ✅ **Single settings page** - No nested routes
 6. ✅ **Clerk webhooks exist** - Just enhance, don't create
 7. ✅ **Layout handles org switching** - No custom logic needed
-8. ✅ **Immediate downgrades** - No scheduling complexity
+8. ✅ **Deferred downgrades** - User keeps slots until period ends, no proration
 9. ✅ **Live price fetching** - Always up-to-date, no manual sync
 
 ---
@@ -2515,9 +2577,18 @@ DROP TYPE "AccessType";
 
 ---
 
-**Plan Version:** 2.7 (Slot Update Flow Implemented)
+**Plan Version:** 2.8 (Deferred Downgrade Flow)
 **Last Updated:** 2026-01-31
 **Author:** Architecture discussion with user
+
+**Key Updates in v2.8:**
+
+- ✅ Deferred downgrade flow: User keeps slots until period ends
+- ✅ Upgrades: `proration_behavior: "always_invoice"` (immediate charge via invoice)
+- ✅ Downgrades: `proration_behavior: "none"` (Stripe updated immediately, DB at renewal)
+- ✅ Webhook logic: `isDowngrade && periodAdvanced` check (`newExpiresAt >= org.subscriptionExpiresAt`)
+- ✅ Uses `applyPendingDowngrade()` to update slots and disable excess accounts at renewal
+- ✅ No proration credits for downgrades (simpler billing)
 
 **Key Updates in v2.7:**
 
@@ -2547,6 +2618,6 @@ DROP TYPE "AccessType";
 - ✅ Actual Stripe pricing: $29.99/mo, $299.99/yr (16.7% discount)
 - ✅ Live price fetching from Stripe API
 - ✅ Quota-aware feature gating (client-side)
-- ✅ Immediate downgrade handling with over-quota enforcement
+- ✅ Deferred downgrade handling (user keeps slots until period ends)
 - ✅ Complete settings page UI implementation
 - ✅ No quantity limits (1-unlimited slots)

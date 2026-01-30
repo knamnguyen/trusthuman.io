@@ -209,7 +209,6 @@ const subscriptionRouter = createTRPCRouter({
     return {
       isActive,
       purchasedSlots: org.purchasedSlots,
-      pendingPurchasedSlots: org.pendingPurchasedSlots,
       usedSlots: org._count.linkedInAccounts,
       expiresAt: org.subscriptionExpiresAt,
       subscriptionTier: org.subscriptionTier as "FREE" | "PREMIUM",
@@ -615,14 +614,6 @@ const subscriptionRouter = createTRPCRouter({
         return { success: false, error: updateResult.error.message } as const;
       }
 
-      // Clear pending downgrade if user is upgrading
-      if (org.pendingPurchasedSlots !== null) {
-        await ctx.db.organization.update({
-          where: { id: organizationId },
-          data: { pendingPurchasedSlots: null },
-        });
-      }
-
       const invoiceResult = await safe(() =>
         stripe.invoices.retrieve(updateResult.output.latest_invoice as string, {
           expand: ["payment_intent"],
@@ -716,48 +707,6 @@ const subscriptionRouter = createTRPCRouter({
 
       return { success: true } as const;
     }),
-
-  /**
-   * Cancel a pending downgrade (clear pendingPurchasedSlots)
-   */
-  cancelPendingDowngrade: protectedProcedure.mutation(async ({ ctx }) => {
-    if (!ctx.activeOrg?.id) {
-      return {
-        success: false,
-        error: "No active organization selected",
-      } as const;
-    }
-
-    // Verify user is the payer
-    const org = await ctx.db.organization.findFirst({
-      where: {
-        id: ctx.activeOrg.id,
-        ...hasPermissionToUpdateOrgSubscriptionClause(ctx.user.id),
-      },
-      select: { pendingPurchasedSlots: true },
-    });
-
-    if (!org) {
-      return {
-        success: false,
-        error: "Only the subscription payer can cancel pending changes",
-      } as const;
-    }
-
-    if (org.pendingPurchasedSlots === null) {
-      return {
-        success: false,
-        error: "No pending downgrade to cancel",
-      } as const;
-    }
-
-    await ctx.db.organization.update({
-      where: { id: ctx.activeOrg.id },
-      data: { pendingPurchasedSlots: null },
-    });
-
-    return { success: true } as const;
-  }),
 });
 
 /**
@@ -894,7 +843,7 @@ export async function convertOrgSubscriptionToFree(
 
 /**
  * Apply a pending downgrade at renewal.
- * Called by webhook when subscription renews and pendingPurchasedSlots exists.
+ * Called by webhook when subscription renews with a lower new purchased slots.
  * Updates purchasedSlots, clears pending, and disables excess accounts.
  */
 export async function applyPendingDowngrade(
