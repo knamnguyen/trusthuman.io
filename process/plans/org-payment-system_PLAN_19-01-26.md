@@ -1,8 +1,8 @@
 # Organization Payment System Redesign
 
 **Date:** 2026-01-19
-**Updated:** 2026-01-28 (Version 2.4 - Phase 1, 2 & 3 Complete)
-**Status:** 🚧 In Progress (Phase 1, 2 & 3 Complete)
+**Updated:** 2026-01-31 (Version 2.7 - Slot Update Flow Complete)
+**Status:** 🚧 In Progress (Phase 1-5 Complete, Slot Update UI Complete)
 **Complexity:** Complex (Multi-phase migration)
 
 ---
@@ -2340,24 +2340,87 @@ DROP TYPE "AccessType";
 - Grace period on deletion: subscriptionExpiresAt set to period end (not immediate revocation)
 - Legacy handlers fall through when no org metadata present
 
-### New Pages (Phase 4) - PENDING
+### New Pages (Phase 4) ✅ COMPLETE
 
-- [ ] `apps/nextjs/src/app/billing-return/page.tsx` - Create return handler
-- [ ] `apps/nextjs/src/app/(new-dashboard)/[orgSlug]/settings/page.tsx` - Create or update billing page
+- [x] `apps/nextjs/src/app/billing-return/page.tsx` - Created return handler
+- [x] `apps/nextjs/src/app/(new-dashboard)/[orgSlug]/settings/page.tsx` - Created billing page with endorsely_referral support
 
-### UI (Phase 5) - ~18 files - PENDING
+### UI (Phase 5) ✅ COMPLETE
 
-- [ ] `apps/nextjs/src/hooks/use-subscription.ts` - Switch to org endpoints
-- [ ] `apps/nextjs/src/hooks/use-premium-status.ts` - Switch to org endpoints
-- [ ] `apps/nextjs/src/_components/subscription-status.tsx` - Use getSubscriptionStatus
-- [ ] `apps/nextjs/src/app/subscription/page.tsx` - Use createOrgCheckout
-- [ ] `packages/api/src/utils/check-premium-access.ts` - Use isPremiumOrg
-- [ ] `apps/wxt-extension/entrypoints/*` - Add premium checks with isPremiumOrg
+- [x] `apps/nextjs/src/hooks/use-org-subscription.ts` - Created new org-centric hook
+- [x] `apps/nextjs/src/hooks/use-subscription.ts` - Added deprecation notice
+- [x] `apps/nextjs/src/hooks/use-premium-status.ts` - Added deprecation notice
+- [x] `apps/nextjs/src/_components/subscription-status.tsx` - Added deprecation notice
+- [x] `apps/nextjs/src/_components/manage-subscription-button.tsx` - Updated to use org portal
+- [x] `apps/nextjs/src/app/subscription/page.tsx` - Converted to redirect to org settings
+- [x] `apps/nextjs/src/app/profile-import/page.tsx` - Updated to use useOrgSubscription
+- [x] `apps/nextjs/src/app/profile-list/[runId]/page.tsx` - Updated to use useOrgSubscription
+- [x] `packages/api/src/access-control/organization.ts` - Created hasPremiumAccess and hasPremiumAccessClause
+- [x] `packages/api/src/utils/check-premium-access.ts` - Added deprecation notice
+- [x] `packages/feature-flags/src/constants.ts` - Added getOrgBuildTargetListLimits
+- [x] `apps/wxt-extension/entrypoints/linkedin.content/hooks/use-org-subscription.ts` - Created hook
+- [x] `apps/wxt-extension/entrypoints/linkedin.content/_components/PremiumUpgradePrompt.tsx` - Created upgrade prompt
+- [x] `apps/wxt-extension/entrypoints/linkedin.content/compose-tab/ComposeTab.tsx` - Added premium imports (feature gating not applied yet)
+- [x] `apps/nextjs/src/app/layout.tsx` - Added global Window.endorsely_referral type
+- [x] `packages/api/src/router/organization.ts` - Added endorsely_referral to checkout input
 
-### Data Migration (Phase 6) - PENDING
+**Deleted Files:**
+- [x] `apps/nextjs/src/_components/subscribe-button.tsx` - No longer needed
+- [x] `apps/nextjs/src/app/subscription/success/page.tsx` - Replaced by billing-return
+- [x] `apps/nextjs/src/app/api/webhooks/stripe/route.ts` - Duplicate of Hono webhook
 
-- [ ] `scripts/migrate-subscriptions.ts` - Create migration script
-- [ ] `scripts/verify-migration.ts` - Create verification script
+### Data Migration (Phase 6) - IN PROGRESS
+
+- [x] `scripts/migrate-subscriptions.ts` - Created migration script
+- [x] `scripts/verify-migration.ts` - Created verification script
+
+### Slot Upgrade/Downgrade Flow - DECIDED: Option B (Custom UI)
+
+**Scenario:** User purchased 2 slots, now wants to upgrade to 4 slots.
+
+**Decision:** Option B - Custom in-app UI with `proration_behavior: "always_invoice"`
+
+**Rationale:**
+- Better UX: User stays in-app, no redirect to Stripe portal
+- Immediate feedback: DB updated directly after Stripe succeeds
+- Simple proration: `always_invoice` handles charges/credits automatically (no preview needed)
+- Webhook still fires as safety net (idempotent - same value = no harm)
+
+**Implementation (Complete):**
+
+1. **Access Control:** `hasPermissionToUpdateOrgSubscriptionClause(userId)` in `packages/api/src/access-control/organization.ts`
+   - Checks `payerId === userId` and `stripeSubscriptionId` exists
+   - Only payer can update slot quantity
+
+2. **Router Endpoint:** `trpc.organization.subscription.update({ slots })` in `packages/api/src/router/organization.ts`
+   - Uses `safe()` wrapper instead of try-catch (no extra indentation)
+   - Returns error objects instead of throwing for mutations
+   - Calls `stripe.subscriptions.update()` with `proration_behavior: "always_invoice"`
+   - Updates DB directly via `updateOrgSubscriptionPurchasedSlots()`
+
+3. **Proration Behavior:**
+   - **Upgrades (2→4 slots):** Stripe immediately charges prorated difference
+   - **Downgrades (4→2 slots):** Stripe applies credit to customer balance/next invoice
+   - No preview step needed - Stripe handles all proration math
+
+4. **DB Update Strategy:**
+   - Router updates DB immediately after Stripe succeeds (instant feedback)
+   - Webhook also fires but is idempotent (setting same value is harmless)
+   - Handles edge case: If Stripe succeeds but DB fails, webhook will eventually sync
+
+**Files Modified:**
+- [x] `packages/api/src/access-control/organization.ts` - Added `hasPermissionToUpdateOrgSubscriptionClause`
+- [x] `packages/api/src/router/organization.ts` - Added `subscription.update` mutation
+- [x] `apps/nextjs/src/app/(new-dashboard)/[orgSlug]/settings/page.tsx` - Added slot update UI
+
+**UI Features:**
+- Slot count input (only visible to payer)
+- Dynamic button: "Upgrade" / "Downgrade" / "Update" based on quantity change
+- Reset button to revert to current slot count
+- Proration info text (charge for upgrades, credit for downgrades)
+- Warning when downgrade will disable accounts
+- Toast notifications for success/error with account disable warnings
+- Query invalidation to refetch subscription status after update
 
 ### Cleanup (Phase 7) - PENDING
 
@@ -2443,16 +2506,40 @@ DROP TYPE "AccessType";
 2. ~~Begin Phase 1: Schema migration (non-breaking)~~ ✅
 3. ~~Phase 2: API endpoints~~ ✅
 4. ~~Phase 3: Webhook handlers~~ ✅
-5. **Phase 4: New pages (billing-return, settings)** ← NEXT
-6. Phase 5: UI updates (~18 files)
-7. Phase 6: Data migration script
-8. Test on staging environment
+5. ~~Phase 4: New pages (billing-return, settings)~~ ✅
+6. ~~Phase 5: UI updates~~ ✅
+7. **Phase 6: Data migration script** ← IN PROGRESS
+   - Scripts created, need to resolve open question about slot quantities
+8. Phase 7: Cleanup (remove old fields)
+9. Test on staging environment
 
 ---
 
-**Plan Version:** 2.4 (Phase 1, 2 & 3 Complete)
-**Last Updated:** 2026-01-28
+**Plan Version:** 2.7 (Slot Update Flow Implemented)
+**Last Updated:** 2026-01-31
 **Author:** Architecture discussion with user
+
+**Key Updates in v2.7:**
+
+- ✅ Decided: Option B (Custom UI) for slot upgrade/downgrade
+- ✅ Added `hasPermissionToUpdateOrgSubscriptionClause` access control
+- ✅ Added `subscription.update` mutation with `proration_behavior: "always_invoice"`
+- ✅ Uses `safe()` wrapper instead of try-catch, returns errors instead of throwing
+- ✅ Implemented slot update UI in settings page (input, upgrade/downgrade button, reset, proration info)
+
+**Key Updates in v2.6:**
+
+- ✅ Created migration scripts (`migrate-subscriptions.ts`, `verify-migration.ts`)
+- ⏸️ Added decision point: Slot upgrade/downgrade flow (Option A/B/C)
+
+**Key Updates in v2.5:**
+
+- ✅ Phase 4 & 5 complete
+- ✅ Created new org-centric hooks for NextJS and WXT extension
+- ✅ Added hasPremiumAccess and hasPremiumAccessClause in access-control
+- ✅ Added endorsely_referral support to org checkout
+- ✅ Deprecated old user-centric hooks and utilities
+- ✅ Deleted old subscribe-button, subscription/success page, and duplicate webhook route
 
 **Key Updates in v2.2:**
 

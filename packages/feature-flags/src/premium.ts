@@ -704,7 +704,7 @@ export const DEFAULT_STYLE_GUIDES = {
  * @param org - Organization data with subscription fields
  * @returns true if org has active premium with quota compliance
  */
-export function isPremiumOrg(org: {
+export function isOrgPremium(org: {
   subscriptionTier: string;
   subscriptionExpiresAt: Date | null;
   purchasedSlots: number;

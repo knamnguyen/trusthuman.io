@@ -55,3 +55,23 @@ export const getBuildTargetListLimits = (
     refreshesAt: new Date(lastRefreshedAt.getTime() + 7 * 24 * 60 * 60 * 1000),
   };
 };
+
+/**
+ * Org-centric version of getBuildTargetListLimits.
+ * Takes isPremium boolean instead of accessType string.
+ */
+export const getOrgBuildTargetListLimits = (
+  isPremium: boolean,
+  now: Date = new Date(),
+) => {
+  const lastRefreshedAt = startOfWeek(now);
+  const limit = isPremium
+    ? PREMIUM_BUILD_TARGET_LIST_WEEKLY_LIMIT
+    : FREE_BUILD_TARGET_LIST_WEEKLY_LIMIT;
+
+  return {
+    limit,
+    lastRefreshedAt,
+    refreshesAt: new Date(lastRefreshedAt.getTime() + 7 * 24 * 60 * 60 * 1000),
+  };
+};

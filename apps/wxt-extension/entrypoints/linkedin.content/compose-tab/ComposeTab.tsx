@@ -15,6 +15,8 @@ import { posthog } from "@/lib/posthog";
 import { Button } from "@sassy/ui/button";
 import { TooltipWithDialog } from "@sassy/ui/components/tooltip-with-dialog";
 
+import { PremiumUpgradePrompt } from "../_components/PremiumUpgradePrompt";
+import { useOrgSubscription } from "../hooks/use-org-subscription";
 import { useShadowRootStore } from "../stores";
 import { useComposeStore } from "../stores/compose-store";
 import { ComposeCard } from "./ComposeCard";
@@ -28,6 +30,11 @@ import { SettingsTags } from "./settings/SettingsTags";
 export function ComposeTab() {
   // DEBUG: Track renders
   console.log("[ComposeTab] Render");
+
+  // Premium status for feature gating
+  const { data: subscription } = useOrgSubscription();
+  const isPremium = subscription?.isPremium ?? false;
+  const isOverQuota = subscription?.isOverQuota ?? false;
 
   // Shadow root for tooltip/dialog portals
   const shadowRoot = useShadowRootStore((s) => s.shadowRoot);

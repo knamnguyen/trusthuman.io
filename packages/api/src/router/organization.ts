@@ -8,7 +8,9 @@ import {
   STRIPE_QUANTITY_PRICES,
 } from "@sassy/stripe/schema-validators";
 
+import { hasPermissionToUpdateOrgSubscriptionClause } from "../access-control/organization";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
+import { safe } from "../utils/commons";
 
 // Direct Stripe client for org-centric billing
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "", {
@@ -249,12 +251,12 @@ const subscriptionRouter = createTRPCRouter({
   checkout: protectedProcedure
     .input(
       z.object({
-        slots: z.number().min(1),
+        slots: z.number().int().min(1),
         interval: z.enum(["monthly", "yearly"]),
+        endorsely_referral: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      console.info({ ctx });
       if (!ctx.activeOrg?.id) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -355,6 +357,7 @@ const subscriptionRouter = createTRPCRouter({
         metadata: {
           organizationId,
           payerId: ctx.user.id,
+          endorsely_referral: input.endorsely_referral,
         },
       });
 
@@ -495,6 +498,115 @@ const subscriptionRouter = createTRPCRouter({
 
     return { url: session.url };
   }),
+
+  /**
+   * Update subscription quantity (slots)
+   * Only the payer can update. Uses always_invoice for immediate proration.
+   * Returns error object instead of throwing for mutation error handling.
+   */
+  update: protectedProcedure
+    .input(
+      z.object({
+        slots: z.number().int().min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.activeOrg?.id) {
+        return {
+          success: false,
+          error: "No active organization selected",
+        } as const;
+      }
+
+      const organizationId = ctx.activeOrg.id;
+
+      // Single query with access control clause - only payer can update
+      const org = await ctx.db.organization.findFirst({
+        where: {
+          id: organizationId,
+          ...hasPermissionToUpdateOrgSubscriptionClause(ctx.user.id),
+        },
+        select: {
+          stripeSubscriptionId: true,
+          purchasedSlots: true,
+        },
+      });
+
+      if (!org) {
+        return {
+          success: false,
+          error: "Only the subscription payer can update slot quantity",
+        } as const;
+      }
+
+      if (!org.stripeSubscriptionId) {
+        return {
+          success: false,
+          error: "No active subscription found",
+        } as const;
+      }
+
+      if (org.purchasedSlots === input.slots) {
+        return { success: false, error: "Slot quantity unchanged" } as const;
+      }
+
+      // Get subscription to find the item ID
+      const subscriptionResult = await safe(() =>
+        stripe.subscriptions.retrieve(org.stripeSubscriptionId!),
+      );
+
+      if (!subscriptionResult.ok) {
+        console.error(
+          "Error retrieving subscription:",
+          subscriptionResult.error,
+        );
+        return {
+          success: false,
+          error: "Internal server error",
+        } as const;
+      }
+
+      const subscriptionItem = subscriptionResult.output.items.data[0];
+      if (!subscriptionItem) {
+        return { success: false, error: "Subscription has no items" } as const;
+      }
+
+      // Update Stripe subscription with immediate proration
+      // always_invoice: charges immediately for upgrades, credits for downgrades
+      const updateResult = await safe(() =>
+        stripe.subscriptions.update(org.stripeSubscriptionId!, {
+          items: [{ id: subscriptionItem.id, quantity: input.slots }],
+          proration_behavior: "always_invoice",
+          payment_behavior: "pending_if_incomplete",
+        }),
+      );
+
+      if (!updateResult.ok) {
+        return { success: false, error: updateResult.error.message } as const;
+      }
+
+      const invoiceResult = await safe(() =>
+        stripe.invoices.retrieve(updateResult.output.latest_invoice as string, {
+          expand: ["payment_intent"],
+        }),
+      );
+
+      if (!invoiceResult.ok || !invoiceResult.output.hosted_invoice_url) {
+        console.error(
+          "Error retrieving invoice:",
+          invoiceResult.ok ? "invoice not found" : invoiceResult.error,
+        );
+        return {
+          success: false,
+          error: "Internal server error",
+        } as const;
+      }
+
+      return {
+        success: true,
+        url: invoiceResult.output.hosted_invoice_url,
+      } as const;
+    }),
 });
 
 /**
@@ -625,6 +737,28 @@ export async function convertOrgSubscriptionToFree(
     return await disableAccountsExceedingSlots(tx, {
       orgId,
       purchasedSlots: 1,
+    });
+  });
+}
+
+/**
+ * Update organization subscription slot count.
+ * Used when payer changes quantity via in-app UI.
+ * Disables excess accounts if downgrading.
+ */
+export async function updateOrgSubscriptionPurchasedSlots(
+  db: PrismaClient,
+  { orgId, purchasedSlots }: { orgId: string; purchasedSlots: number },
+) {
+  return await db.$transaction(async (tx) => {
+    await tx.organization.update({
+      where: { id: orgId },
+      data: { purchasedSlots },
+    });
+
+    return await disableAccountsExceedingSlots(tx, {
+      orgId,
+      purchasedSlots,
     });
   });
 }

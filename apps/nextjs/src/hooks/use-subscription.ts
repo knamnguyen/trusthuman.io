@@ -6,6 +6,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useTRPC } from "~/trpc/react";
 
 /**
+ * @deprecated Use `useOrgSubscription` from `~/hooks/use-org-subscription` instead.
+ * This hook uses user-based billing (User.accessType) which is deprecated.
+ * The new hook uses organization-based billing (Organization.subscriptionTier).
+ *
  * React hook to check if user has access
  * Uses tRPC with React Query for caching
  */

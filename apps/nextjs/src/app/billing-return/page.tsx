@@ -48,7 +48,9 @@ export default function BillingReturnPage({
     // wait till capture either succeeds or fails and org is loaded
     if (
       organization.data === undefined ||
-      (capture.data === undefined && capture.error === null)
+      (params.session_id !== undefined &&
+        capture.data === undefined &&
+        capture.error === null)
     ) {
       if (capture.error !== null) {
         posthog.captureException(new Error(JSON.stringify(capture.error.data)));
@@ -60,7 +62,14 @@ export default function BillingReturnPage({
     router.replace(
       `/${organization.data.orgSlug}/settings${params.success ? "?success=true" : ""}`,
     );
-  }, [organization.data, router, params.success, capture.data, capture.error]);
+  }, [
+    organization.data,
+    router,
+    params.success,
+    capture.data,
+    capture.error,
+    params.session_id,
+  ]);
 
   if (!params.orgId) {
     return (

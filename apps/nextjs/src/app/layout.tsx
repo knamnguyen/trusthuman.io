@@ -8,6 +8,12 @@ import { Toaster } from "@sassy/ui/toast";
 
 import "~/app/globals.css";
 
+declare global {
+  interface Window {
+    endorsely_referral?: string;
+  }
+}
+
 import { env } from "~/env";
 import { Providers } from "../lib/providers/providers";
 

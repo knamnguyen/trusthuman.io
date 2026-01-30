@@ -11,6 +11,9 @@ import { ManageSubscriptionButton } from "./manage-subscription-button";
 import { SubscribeButton } from "./subscribe-button";
 
 /**
+ * @deprecated Use the org settings page at /[orgSlug]/settings for billing management.
+ * This component uses the old user-centric billing system.
+ *
  * Displays the user's subscription status
  * Also shows temporary status messages for successful or canceled payments
  */

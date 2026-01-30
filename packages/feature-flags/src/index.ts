@@ -40,7 +40,7 @@ export {
   DEFAULT_STYLE_GUIDES_FREE,
   DEFAULT_STYLE_GUIDES_PREMIUM,
   DEFAULT_STYLE_GUIDES,
-  isPremiumOrg,
+  isOrgPremium,
   getPremiumStatus,
 } from "./premium";
 

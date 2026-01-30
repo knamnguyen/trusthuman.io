@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useOrganization } from "@clerk/nextjs";
@@ -15,6 +15,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@sassy/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@sassy/ui/dialog";
 import { Input } from "@sassy/ui/input";
 import { Label } from "@sassy/ui/label";
 import { Skeleton } from "@sassy/ui/skeleton";
@@ -27,6 +35,9 @@ export default function SettingsPage() {
     "yearly",
   ); // Default: yearly (recommended)
   const [quantity, setQuantity] = useState(1);
+  const [updateQuantity, setUpdateQuantity] = useState<number | null>(null);
+  const [showUpdateConfirm, setShowUpdateConfirm] = useState(false);
+  const [awaitingPayment, setAwaitingPayment] = useState<number | null>(null); // Target slot count
 
   const { orgSlug } = useParams<{ orgSlug: string }>();
   const { organization, isLoaded: isOrgLoaded } = useOrganization();
@@ -40,10 +51,32 @@ export default function SettingsPage() {
     ...trpc.organization.subscription.pricing.queryOptions(),
   });
 
-  const { data: status } = useQuery({
-    ...trpc.organization.subscription.status.queryOptions(),
-    enabled: !!orgId,
-  });
+  const { data: status } = useQuery(
+    trpc.organization.subscription.status.queryOptions(undefined, {
+      enabled: !!orgId,
+      refetchInterval: awaitingPayment !== null ? 2000 : false,
+    }),
+  );
+
+  // Initialize updateQuantity when status loads
+  useEffect(() => {
+    if (status?.purchasedSlots && updateQuantity === null) {
+      setUpdateQuantity(status.purchasedSlots);
+    }
+  }, [status?.purchasedSlots, updateQuantity]);
+
+  // Detect when payment is complete (slots updated to target)
+  useEffect(() => {
+    if (
+      awaitingPayment !== null &&
+      status?.purchasedSlots === awaitingPayment
+    ) {
+      setAwaitingPayment(null);
+      setShowUpdateConfirm(false);
+      setUpdateQuantity(awaitingPayment);
+      toast.success(`Successfully updated to ${awaitingPayment} slots.`);
+    }
+  }, [awaitingPayment, status?.purchasedSlots]);
 
   const createCheckout = useMutation({
     ...trpc.organization.subscription.checkout.mutationOptions(),
@@ -66,6 +99,20 @@ export default function SettingsPage() {
     },
   });
 
+  const updateSubscription = useMutation({
+    ...trpc.organization.subscription.update.mutationOptions(),
+    onSuccess: (data, vars) => {
+      if (!data.success) {
+        toast.error(data.error);
+        return;
+      }
+
+      // Open invoice in new tab and start polling
+      window.open(data.url, "_blank");
+      setAwaitingPayment(vars.slots);
+    },
+  });
+
   const isFreeTier = status?.subscriptionTier === "FREE";
   const isAdmin = status?.role === "admin";
   const isPayer = status?.isPayer ?? false;
@@ -85,6 +132,7 @@ export default function SettingsPage() {
     createCheckout.mutate({
       slots: quantity,
       interval: billingCycle,
+      endorsely_referral: window.endorsely_referral,
     });
   };
 
@@ -340,7 +388,7 @@ export default function SettingsPage() {
                     : "Upgrade to Premium"}
                 </Button>
               ) : !isFreeTier && (isPayer || isAdmin) ? (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <div className="space-y-1 text-sm">
                     <p>
                       <strong>{status.purchasedSlots} slots</strong> •{" "}
@@ -357,6 +405,69 @@ export default function SettingsPage() {
                       </p>
                     )}
                   </div>
+
+                  {/* Slot Update UI - Only for payer */}
+                  {isPayer && updateQuantity !== null && (
+                    <div className="border-t pt-4">
+                      <Label
+                        htmlFor="update-quantity"
+                        className="mb-2 block text-sm font-medium"
+                      >
+                        Update Slot Count
+                      </Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          id="update-quantity"
+                          type="text"
+                          value={updateQuantity}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            if (!isNaN(val) && val >= 1) {
+                              setUpdateQuantity(val);
+                            } else if (e.target.value === "") {
+                              setUpdateQuantity(0); // Allow empty input
+                            }
+                          }}
+                          className="flex-1"
+                        />
+                        <Button
+                          onClick={() => setShowUpdateConfirm(true)}
+                          disabled={
+                            updateSubscription.isPending ||
+                            updateQuantity === status.purchasedSlots ||
+                            updateQuantity < 1
+                          }
+                          variant="primary"
+                        >
+                          {updateQuantity > status.purchasedSlots
+                            ? "Upgrade"
+                            : updateQuantity < status.purchasedSlots
+                              ? "Downgrade"
+                              : "Update"}
+                        </Button>
+                        <Button
+                          onClick={() =>
+                            setUpdateQuantity(status.purchasedSlots)
+                          }
+                          variant="ghost"
+                        >
+                          Reset
+                        </Button>
+                      </div>
+                      {updateQuantity !== status.purchasedSlots && (
+                        <p className="text-muted-foreground mt-2 text-xs">
+                          {updateQuantity > status.purchasedSlots
+                            ? "You'll be charged a prorated amount for the additional slots."
+                            : `Reducing slots will apply a credit to your next invoice.${
+                                updateQuantity < status.usedSlots
+                                  ? ` Warning: ${status.usedSlots - updateQuantity} account(s) will be disabled.`
+                                  : ""
+                              }`}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
                   <Button
                     onClick={handleManageSubscription}
                     disabled={createPortal.isPending}
@@ -365,7 +476,7 @@ export default function SettingsPage() {
                   >
                     {createPortal.isPending
                       ? "Loading..."
-                      : "Manage Subscription"}
+                      : "Manage Billing & Invoices"}
                   </Button>
                 </div>
               ) : (
@@ -382,6 +493,129 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Update Subscription Confirmation Dialog */}
+      <Dialog
+        open={showUpdateConfirm}
+        onOpenChange={(open) => {
+          if (!open && awaitingPayment !== null) {
+            // User trying to close while awaiting payment - allow but stop polling
+            setAwaitingPayment(null);
+          }
+          setShowUpdateConfirm(open);
+        }}
+      >
+        <DialogContent>
+          {awaitingPayment !== null ? (
+            // Awaiting payment state
+            <>
+              <DialogHeader>
+                <DialogTitle>Awaiting Payment</DialogTitle>
+                <DialogDescription>
+                  A new tab has been opened for you to complete the payment.
+                  <br />
+                  <br />
+                  This dialog will automatically close once the payment is
+                  confirmed. You can also close this dialog and the subscription
+                  will update in the background.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="flex items-center justify-center py-4">
+                <div className="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" />
+              </div>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setAwaitingPayment(null);
+                    setShowUpdateConfirm(false);
+                  }}
+                >
+                  Close
+                </Button>
+              </DialogFooter>
+            </>
+          ) : (
+            // Confirmation state
+            <>
+              <DialogHeader>
+                <DialogTitle>
+                  {updateQuantity !== null &&
+                  updateQuantity > status.purchasedSlots
+                    ? "Confirm Upgrade"
+                    : "Confirm Downgrade"}
+                </DialogTitle>
+                <DialogDescription>
+                  {updateQuantity !== null &&
+                  updateQuantity > status.purchasedSlots ? (
+                    <>
+                      You are upgrading from{" "}
+                      <strong>{status.purchasedSlots} slots</strong> to{" "}
+                      <strong>{updateQuantity} slots</strong>.
+                      <br />
+                      <br />A prorated invoice for the additional{" "}
+                      {updateQuantity - status.purchasedSlots} slot(s) will be
+                      opened in a new tab for payment.
+                    </>
+                  ) : (
+                    <>
+                      You are downgrading from{" "}
+                      <strong>{status.purchasedSlots} slots</strong> to{" "}
+                      <strong>{updateQuantity} slots</strong>.
+                      <br />
+                      <br />
+                      Credit for the unused slots will be applied to your next
+                      invoice.
+                      {updateQuantity !== null &&
+                        updateQuantity < status.usedSlots && (
+                          <>
+                            <br />
+                            <br />
+                            <span className="font-semibold text-red-600">
+                              Warning: You currently have {status.usedSlots}{" "}
+                              account(s) connected.{" "}
+                              {status.usedSlots - updateQuantity} account(s)
+                              will be disabled to fit within your new slot
+                              limit.
+                            </span>
+                          </>
+                        )}
+                    </>
+                  )}
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowUpdateConfirm(false)}
+                  disabled={updateSubscription.isPending}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant={
+                    updateQuantity !== null && updateQuantity < status.usedSlots
+                      ? "destructive"
+                      : "primary"
+                  }
+                  onClick={() =>
+                    updateQuantity !== null &&
+                    updateSubscription.mutate({ slots: updateQuantity })
+                  }
+                  disabled={updateSubscription.isPending}
+                >
+                  {updateSubscription.isPending
+                    ? "Processing..."
+                    : updateQuantity !== null &&
+                        updateQuantity > status.purchasedSlots
+                      ? "Confirm Upgrade"
+                      : "Confirm Downgrade"}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

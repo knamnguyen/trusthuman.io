@@ -1,5 +1,10 @@
 import { useSubscription } from "./use-subscription";
 
+/**
+ * @deprecated Use `useOrgSubscription` from `~/hooks/use-org-subscription` instead.
+ * This hook uses user-based billing which is deprecated.
+ * The new hook uses organization-based billing with quota checks.
+ */
 export const usePremiumStatus = () => {
   const { isLoading, accessType } = useSubscription();
 
