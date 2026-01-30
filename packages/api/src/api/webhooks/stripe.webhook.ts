@@ -8,6 +8,7 @@ import { StripeService } from "@sassy/stripe";
 import { STRIPE_ID_TO_ACCESS_TYPE } from "@sassy/stripe/schema-validators";
 
 import {
+  applyPendingDowngrade,
   convertOrgSubscriptionToFree,
   convertOrgSubscriptionToPremium,
 } from "../../router/organization";
@@ -140,8 +141,48 @@ export const stripeWebhookRoutes = new Hono().post("/", async (c) => {
           break;
         }
 
-        // Org-centric: update organization
         const slots = getPurchasedSlots(subscription);
+
+        const org = await db.organization.findUnique({
+          where: { id: orgId },
+          select: {
+            stripeSubscriptionId: true,
+            purchasedSlots: true,
+            subscriptionExpiresAt: true,
+          },
+        });
+
+        if (org?.stripeSubscriptionId !== subscription.id) {
+          console.log(`${eventType}: Subscription ID mismatch, skipping`);
+          break;
+        }
+
+        // handle pending downgrade, 24 hours safety window check to avoid race conditions
+        if (
+          slots < org.purchasedSlots &&
+          org.subscriptionExpiresAt !== null &&
+          org.subscriptionExpiresAt > new Date(Date.now() - 24 * 60 * 1000)
+        ) {
+          // Apply pending downgrade to DB (Stripe already updated during downgrade action)
+          // This runs at renewal when subscriptionExpiresAt changes
+          await applyPendingDowngrade(db, {
+            orgId,
+            newPurchasedSlots: slots,
+            subscriptionExpiresAt: new Date(
+              subscription.current_period_end * 1000,
+            ),
+          });
+
+          console.log(
+            `✅ ${eventType}: Org ${orgId} pending downgrade applied: ${slots} slots`,
+          );
+
+          // Legacy user-centric: update user
+          await handleLegacySubscriptionUpdate(subscription);
+          break;
+        }
+
+        // No pending downgrade - normal update (upgrades, renewals without pending)
         const expiresAt = new Date(subscription.current_period_end * 1000);
 
         await convertOrgSubscriptionToPremium(db, {

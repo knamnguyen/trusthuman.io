@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useOrganization } from "@clerk/nextjs";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { Badge } from "@sassy/ui/badge";
 import { Button } from "@sassy/ui/button";
@@ -37,13 +37,23 @@ export default function SettingsPage() {
   const [quantity, setQuantity] = useState(1);
   const [updateQuantity, setUpdateQuantity] = useState<number | null>(null);
   const [showUpdateConfirm, setShowUpdateConfirm] = useState(false);
-  const [awaitingPayment, setAwaitingPayment] = useState<number | null>(null); // Target slot count
+  const [awaitingPayment, setAwaitingPayment] = useState<{
+    targetSlots: number;
+    previousSlots: number;
+    invoiceUrl: string;
+    invoiceId: string;
+    startedAt: number;
+  } | null>(null);
+
+  const POLLING_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
 
   const { orgSlug } = useParams<{ orgSlug: string }>();
   const { organization, isLoaded: isOrgLoaded } = useOrganization();
   const orgId = organization?.id;
 
   const trpc = useTRPC();
+
+  const queryClient = useQueryClient();
 
   const router = useRouter();
 
@@ -58,6 +68,23 @@ export default function SettingsPage() {
     }),
   );
 
+  // Polling timeout - stop after 5 minutes
+  useEffect(() => {
+    if (awaitingPayment === null) return;
+
+    const checkTimeout = () => {
+      if (Date.now() - awaitingPayment.startedAt > POLLING_TIMEOUT_MS) {
+        setAwaitingPayment(null);
+        toast.error(
+          "Payment verification timed out. Please refresh the page to check your subscription status.",
+        );
+      }
+    };
+
+    const interval = setInterval(checkTimeout, 5000);
+    return () => clearInterval(interval);
+  }, [awaitingPayment, POLLING_TIMEOUT_MS]);
+
   // Initialize updateQuantity when status loads
   useEffect(() => {
     if (status?.purchasedSlots && updateQuantity === null) {
@@ -69,12 +96,13 @@ export default function SettingsPage() {
   useEffect(() => {
     if (
       awaitingPayment !== null &&
-      status?.purchasedSlots === awaitingPayment
+      status?.purchasedSlots === awaitingPayment.targetSlots
     ) {
+      const targetSlots = awaitingPayment.targetSlots;
       setAwaitingPayment(null);
       setShowUpdateConfirm(false);
-      setUpdateQuantity(awaitingPayment);
-      toast.success(`Successfully updated to ${awaitingPayment} slots.`);
+      setUpdateQuantity(targetSlots);
+      toast.success(`Successfully updated to ${targetSlots} slots.`);
     }
   }, [awaitingPayment, status?.purchasedSlots]);
 
@@ -101,15 +129,50 @@ export default function SettingsPage() {
 
   const updateSubscription = useMutation({
     ...trpc.organization.subscription.update.mutationOptions(),
-    onSuccess: (data, vars) => {
+    onSuccess: (data) => {
       if (!data.success) {
         toast.error(data.error);
         return;
       }
 
+      if (data.isDowngrade === true) {
+        void queryClient.invalidateQueries({
+          queryKey: trpc.organization.subscription.status.queryKey(),
+        });
+        setShowUpdateConfirm(false);
+        setUpdateQuantity(status?.purchasedSlots ?? data.newSlots);
+        const effectiveDate = data.effectiveAt
+          ? new Date(data.effectiveAt).toLocaleDateString()
+          : "your next billing date";
+        toast.success(
+          `Downgrade scheduled. Your slots will reduce to ${data.newSlots} on ${effectiveDate}.`,
+        );
+        return;
+      }
+
       // Open invoice in new tab and start polling
       window.open(data.url, "_blank");
-      setAwaitingPayment(vars.slots);
+      setAwaitingPayment({
+        targetSlots: data.newSlots,
+        previousSlots: data.previousSlots,
+        invoiceUrl: data.url,
+        invoiceId: data.invoiceId,
+        startedAt: Date.now(),
+      });
+    },
+  });
+
+  const cancelUpdate = useMutation({
+    ...trpc.organization.subscription.cancelUpdate.mutationOptions(),
+    onSuccess: (data) => {
+      if (!data.success) {
+        toast.error(data.error);
+        return;
+      }
+
+      toast.success("Update cancelled. The invoice has been voided.");
+      setAwaitingPayment(null);
+      setShowUpdateConfirm(false);
     },
   });
 
@@ -434,6 +497,7 @@ export default function SettingsPage() {
                           onClick={() => setShowUpdateConfirm(true)}
                           disabled={
                             updateSubscription.isPending ||
+                            awaitingPayment !== null ||
                             updateQuantity === status.purchasedSlots ||
                             updateQuantity < 1
                           }
@@ -499,8 +563,10 @@ export default function SettingsPage() {
         open={showUpdateConfirm}
         onOpenChange={(open) => {
           if (!open && awaitingPayment !== null) {
-            // User trying to close while awaiting payment - allow but stop polling
-            setAwaitingPayment(null);
+            // User closing while awaiting payment - just close dialog, keep polling in background
+            // Invoice remains open - they can pay later or it will expire
+            setShowUpdateConfirm(false);
+            return;
           }
           setShowUpdateConfirm(open);
         }}
@@ -512,24 +578,40 @@ export default function SettingsPage() {
               <DialogHeader>
                 <DialogTitle>Awaiting Payment</DialogTitle>
                 <DialogDescription>
-                  A new tab has been opened for you to complete the payment.
+                  You will be redirected to an invoice to complete your payment.
                   <br />
                   <br />
-                  This dialog will automatically close once the payment is
-                  confirmed. You can also close this dialog and the subscription
-                  will update in the background.
+                  Once payment is verified, your account slots will be updated!
+                  If the tab didn't open, click "Pay" below.
                 </DialogDescription>
               </DialogHeader>
               <div className="flex items-center justify-center py-4">
                 <div className="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" />
               </div>
-              <DialogFooter>
+              <DialogFooter className="flex-col gap-2 sm:flex-row">
                 <Button
                   variant="outline"
-                  onClick={() => {
-                    setAwaitingPayment(null);
-                    setShowUpdateConfirm(false);
-                  }}
+                  onClick={() =>
+                    window.open(awaitingPayment.invoiceUrl, "_blank")
+                  }
+                >
+                  Pay
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() =>
+                    cancelUpdate.mutate({
+                      invoiceId: awaitingPayment.invoiceId,
+                      revertToSlots: awaitingPayment.previousSlots,
+                    })
+                  }
+                  disabled={cancelUpdate.isPending}
+                >
+                  {cancelUpdate.isPending ? "Cancelling..." : "Cancel Update"}
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => setShowUpdateConfirm(false)}
                 >
                   Close
                 </Button>

@@ -209,6 +209,7 @@ const subscriptionRouter = createTRPCRouter({
     return {
       isActive,
       purchasedSlots: org.purchasedSlots,
+      pendingPurchasedSlots: org.pendingPurchasedSlots,
       usedSlots: org._count.linkedInAccounts,
       expiresAt: org.subscriptionExpiresAt,
       subscriptionTier: org.subscriptionTier as "FREE" | "PREMIUM",
@@ -571,8 +572,37 @@ const subscriptionRouter = createTRPCRouter({
         return { success: false, error: "Subscription has no items" } as const;
       }
 
-      // Update Stripe subscription with immediate proration
-      // always_invoice: charges immediately for upgrades, credits for downgrades
+      const isDowngrade = input.slots < org.purchasedSlots;
+
+      if (isDowngrade) {
+        // Downgrade: Update Stripe immediately (so next invoice is correct)
+        // but keep current slots in DB until renewal
+        const updateResult = await safe(() =>
+          stripe.subscriptions.update(org.stripeSubscriptionId!, {
+            items: [{ id: subscriptionItem.id, quantity: input.slots }],
+            proration_behavior: "none", // No credit - takes effect at renewal
+          }),
+        );
+
+        if (!updateResult.ok) {
+          return { success: false, error: updateResult.error.message } as const;
+        }
+
+        return {
+          success: true,
+          isDowngrade: true,
+          url: null,
+          invoiceId: null,
+          previousSlots: org.purchasedSlots,
+          newSlots: input.slots,
+          effectiveAt: new Date(
+            subscriptionResult.output.current_period_end * 1000,
+          ),
+        } as const;
+      }
+
+      // Upgrade: Update Stripe subscription with immediate proration
+      // Clear any pending downgrade since user is upgrading
       const updateResult = await safe(() =>
         stripe.subscriptions.update(org.stripeSubscriptionId!, {
           items: [{ id: subscriptionItem.id, quantity: input.slots }],
@@ -583,6 +613,14 @@ const subscriptionRouter = createTRPCRouter({
 
       if (!updateResult.ok) {
         return { success: false, error: updateResult.error.message } as const;
+      }
+
+      // Clear pending downgrade if user is upgrading
+      if (org.pendingPurchasedSlots !== null) {
+        await ctx.db.organization.update({
+          where: { id: organizationId },
+          data: { pendingPurchasedSlots: null },
+        });
       }
 
       const invoiceResult = await safe(() =>
@@ -604,9 +642,122 @@ const subscriptionRouter = createTRPCRouter({
 
       return {
         success: true,
+        isDowngrade: false,
         url: invoiceResult.output.hosted_invoice_url,
+        invoiceId: invoiceResult.output.id,
+        previousSlots: org.purchasedSlots,
+        newSlots: input.slots,
       } as const;
     }),
+
+  /**
+   * Cancel a pending subscription update by voiding the invoice
+   * and reverting the subscription quantity
+   */
+  cancelUpdate: protectedProcedure
+    .input(
+      z.object({
+        invoiceId: z.string(),
+        revertToSlots: z.number().int().min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.activeOrg?.id) {
+        return {
+          success: false,
+          error: "No active organization selected",
+        } as const;
+      }
+
+      // Verify user is the payer
+      const org = await ctx.db.organization.findFirst({
+        where: {
+          id: ctx.activeOrg.id,
+          ...hasPermissionToUpdateOrgSubscriptionClause(ctx.user.id),
+        },
+        select: { stripeSubscriptionId: true },
+      });
+
+      if (!org?.stripeSubscriptionId) {
+        return {
+          success: false,
+          error: "No active subscription found",
+        } as const;
+      }
+
+      // Void the invoice
+      const voidResult = await safe(() =>
+        stripe.invoices.voidInvoice(input.invoiceId),
+      );
+
+      if (!voidResult.ok) {
+        // Invoice might already be paid or voided
+        console.error("Error voiding invoice:", voidResult.error);
+        return {
+          success: false,
+          error: "Could not cancel the invoice. It may have already been paid.",
+        } as const;
+      }
+
+      // Revert subscription quantity
+      const subscription = await stripe.subscriptions.retrieve(
+        org.stripeSubscriptionId,
+      );
+      const subscriptionItem = subscription.items.data[0];
+
+      if (subscriptionItem) {
+        await safe(() =>
+          stripe.subscriptions.update(org.stripeSubscriptionId!, {
+            items: [{ id: subscriptionItem.id, quantity: input.revertToSlots }],
+            proration_behavior: "none", // No proration for revert
+          }),
+        );
+      }
+
+      return { success: true } as const;
+    }),
+
+  /**
+   * Cancel a pending downgrade (clear pendingPurchasedSlots)
+   */
+  cancelPendingDowngrade: protectedProcedure.mutation(async ({ ctx }) => {
+    if (!ctx.activeOrg?.id) {
+      return {
+        success: false,
+        error: "No active organization selected",
+      } as const;
+    }
+
+    // Verify user is the payer
+    const org = await ctx.db.organization.findFirst({
+      where: {
+        id: ctx.activeOrg.id,
+        ...hasPermissionToUpdateOrgSubscriptionClause(ctx.user.id),
+      },
+      select: { pendingPurchasedSlots: true },
+    });
+
+    if (!org) {
+      return {
+        success: false,
+        error: "Only the subscription payer can cancel pending changes",
+      } as const;
+    }
+
+    if (org.pendingPurchasedSlots === null) {
+      return {
+        success: false,
+        error: "No pending downgrade to cancel",
+      } as const;
+    }
+
+    await ctx.db.organization.update({
+      where: { id: ctx.activeOrg.id },
+      data: { pendingPurchasedSlots: null },
+    });
+
+    return { success: true } as const;
+  }),
 });
 
 /**
@@ -737,6 +888,39 @@ export async function convertOrgSubscriptionToFree(
     return await disableAccountsExceedingSlots(tx, {
       orgId,
       purchasedSlots: 1,
+    });
+  });
+}
+
+/**
+ * Apply a pending downgrade at renewal.
+ * Called by webhook when subscription renews and pendingPurchasedSlots exists.
+ * Updates purchasedSlots, clears pending, and disables excess accounts.
+ */
+export async function applyPendingDowngrade(
+  db: PrismaClient,
+  {
+    orgId,
+    newPurchasedSlots,
+    subscriptionExpiresAt,
+  }: {
+    orgId: string;
+    newPurchasedSlots: number;
+    subscriptionExpiresAt: Date;
+  },
+) {
+  return await db.$transaction(async (tx) => {
+    await tx.organization.update({
+      where: { id: orgId },
+      data: {
+        purchasedSlots: newPurchasedSlots,
+        subscriptionExpiresAt,
+      },
+    });
+
+    return await disableAccountsExceedingSlots(tx, {
+      orgId,
+      purchasedSlots: newPurchasedSlots,
     });
   });
 }
