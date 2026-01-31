@@ -1,13 +1,12 @@
 model Organization {
-  id               String   @id
-  name             String
-  orgSlug          String?
-  stripeCustomerId String?  @unique // TODO: Remove in Phase 6 (org isn't a Stripe customer, User is)
-  purchasedSlots   Int      @default(1)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id             String   @id
+  name           String
+  orgSlug        String?
+  purchasedSlots Int      @default(1)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  // Payment fields (org-centric billing) - Phase 1
+  // Payment fields (org-centric billing)
   payerId               String? // WHO is paying (for billing portal access)
   stripeSubscriptionId  String?   @unique // Subscription ID (for cancellation)
   subscriptionTier      String    @default("FREE") // "FREE" | "PREMIUM"

@@ -31,9 +31,6 @@ CREATE TYPE "TargetListStatus" AS ENUM ('BUILDING', 'COMPLETED');
 -- CreateEnum
 CREATE TYPE "BuildTargetListJobStatus" AS ENUM ('QUEUED', 'RUNNING', 'COMPLETED', 'FAILED');
 
--- CreateEnum
-CREATE TYPE "AccessType" AS ENUM ('FREE', 'WEEKLY', 'MONTHLY', 'YEARLY');
-
 -- CreateTable
 CREATE TABLE "UserBrowserState" (
     "userId" TEXT NOT NULL,
@@ -225,8 +222,8 @@ CREATE TABLE "LinkedInAccount" (
     "autocommentEnabled" BOOLEAN NOT NULL DEFAULT false,
     "runDailyAt" TEXT,
     "isRunning" BOOLEAN NOT NULL DEFAULT false,
-    "accessType" "AccessType" NOT NULL DEFAULT 'FREE',
     "dailyAIcomments" INTEGER NOT NULL DEFAULT 0,
+    "dailyAIcommentsRefreshedAt" TIMESTAMP(3),
     "registrationStatus" TEXT,
     "name" TEXT,
     "email" TEXT,
@@ -333,7 +330,6 @@ CREATE TABLE "Organization" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "orgSlug" TEXT,
-    "stripeCustomerId" TEXT,
     "purchasedSlots" INTEGER NOT NULL DEFAULT 1,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -507,8 +503,6 @@ CREATE TABLE "User" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "stripeCustomerId" TEXT,
-    "accessType" "AccessType" NOT NULL DEFAULT 'FREE',
-    "stripeUserProperties" JSONB,
     "dailyAIcomments" INTEGER NOT NULL DEFAULT 0,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
@@ -570,9 +564,6 @@ CREATE UNIQUE INDEX "LinkedInProfile_urn_key" ON "LinkedInProfile"("urn");
 
 -- CreateIndex
 CREATE INDEX "LinkedInProfile_linkedinUrl_idx" ON "LinkedInProfile"("linkedinUrl");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Organization_stripeCustomerId_key" ON "Organization"("stripeCustomerId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Organization_stripeSubscriptionId_key" ON "Organization"("stripeSubscriptionId");

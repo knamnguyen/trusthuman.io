@@ -6,13 +6,7 @@ import {
   UserUpdateInputSchema,
 } from "@sassy/db/schema-validators";
 
-// import {
-//   userCreateSchema,
-//   userUpdateSchema,
-// } from "@sassy/db/schema-validators";
-
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
-import { checkPremiumAccess } from "../utils/check-premium-access";
 
 export const userRouter = () =>
   createTRPCRouter({
@@ -22,11 +16,6 @@ export const userRouter = () =>
      */
     warmup: protectedProcedure.query(() => {
       return { status: "warm" as const };
-    }),
-
-    checkAccess: protectedProcedure.query(async ({ ctx }) => {
-      const access = await checkPremiumAccess(ctx);
-      return access;
     }),
 
     /**

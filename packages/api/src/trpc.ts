@@ -81,7 +81,6 @@ function getCachedAuth(
 export type DbUser = Prisma.UserGetPayload<{
   select: {
     id: true;
-    accessType: true;
     dailyAIcomments: true;
     firstName: true;
     primaryEmailAddress: true;

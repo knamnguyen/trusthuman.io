@@ -2,10 +2,8 @@
 import { Hono } from "hono";
 import Stripe from "stripe";
 
-import type { AccessType, Prisma } from "@sassy/db";
 import { db } from "@sassy/db";
 import { StripeService } from "@sassy/stripe";
-import { STRIPE_ID_TO_ACCESS_TYPE } from "@sassy/stripe/schema-validators";
 
 import {
   applyPendingDowngrade,
@@ -176,9 +174,6 @@ export const stripeWebhookRoutes = new Hono().post("/", async (c) => {
           console.log(
             `✅ ${eventType}: Org ${orgId} pending downgrade applied: ${slots} slots`,
           );
-
-          // Legacy user-centric: update user
-          await handleLegacySubscriptionUpdate(subscription);
           break;
         }
 
@@ -193,9 +188,6 @@ export const stripeWebhookRoutes = new Hono().post("/", async (c) => {
         });
 
         console.log(`✅ ${eventType}: Org ${orgId} updated to ${slots} slots`);
-
-        // Legacy user-centric: update user
-        await handleLegacySubscriptionUpdate(subscription);
         break;
       }
 
@@ -226,9 +218,6 @@ export const stripeWebhookRoutes = new Hono().post("/", async (c) => {
         await convertOrgSubscriptionToFree(db, { orgId, expiresAt: endDate });
 
         console.log(`✅ ${eventType}: Org ${orgId} reset to free tier`);
-
-        // Legacy user-centric: reset user to FREE
-        await handleLegacySubscriptionDelete(subscription);
         break;
       }
 
@@ -262,85 +251,4 @@ export const stripeWebhookRoutes = new Hono().post("/", async (c) => {
 
 function getPurchasedSlots(subscription: Stripe.Subscription): number {
   return Math.max(1, subscription.items.data[0]?.quantity ?? 1);
-}
-
-// ============================================================================
-// LEGACY USER-CENTRIC HANDLERS (to be deprecated)
-// ============================================================================
-
-async function handleLegacySubscriptionUpdate(
-  subscription: Stripe.Subscription,
-) {
-  const stripeCustomerId =
-    typeof subscription.customer === "string"
-      ? subscription.customer
-      : undefined;
-
-  if (!stripeCustomerId) return;
-
-  let clerkUserId: string | undefined;
-  try {
-    const customer = await stripe.customers.retrieve(stripeCustomerId);
-    if ("metadata" in customer && customer.metadata.clerkUserId) {
-      clerkUserId = customer.metadata.clerkUserId;
-    }
-  } catch (e) {
-    console.error("Error fetching Stripe customer:", e);
-    return;
-  }
-
-  if (!clerkUserId) return;
-
-  const priceId = subscription.items.data[0]?.price.id;
-  const productId = subscription.items.data[0]?.price.product;
-
-  let accessType: AccessType = "FREE";
-  if (priceId && STRIPE_ID_TO_ACCESS_TYPE[priceId]) {
-    accessType = STRIPE_ID_TO_ACCESS_TYPE[priceId];
-  } else if (
-    typeof productId === "string" &&
-    STRIPE_ID_TO_ACCESS_TYPE[productId]
-  ) {
-    accessType = STRIPE_ID_TO_ACCESS_TYPE[productId];
-  }
-
-  const updateFields: Prisma.UserUpdateInput = {
-    accessType,
-    stripeCustomerId,
-    stripeUserProperties: subscription as unknown as Prisma.InputJsonValue,
-  };
-
-  await db.user.updateMany({
-    where: { id: clerkUserId },
-    data: updateFields,
-  });
-}
-
-async function handleLegacySubscriptionDelete(
-  subscription: Stripe.Subscription,
-) {
-  const stripeCustomerId =
-    typeof subscription.customer === "string"
-      ? subscription.customer
-      : undefined;
-
-  if (!stripeCustomerId) return;
-
-  let clerkUserId: string | undefined;
-  try {
-    const customer = await stripe.customers.retrieve(stripeCustomerId);
-    if ("metadata" in customer && customer.metadata.clerkUserId) {
-      clerkUserId = customer.metadata.clerkUserId;
-    }
-  } catch (e) {
-    console.error("Error fetching Stripe customer:", e);
-    return;
-  }
-
-  if (!clerkUserId) return;
-
-  await db.user.updateMany({
-    where: { id: clerkUserId },
-    data: { accessType: "FREE" },
-  });
 }

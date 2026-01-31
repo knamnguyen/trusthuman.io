@@ -2,7 +2,7 @@
 
 **Date:** 2026-01-19
 **Updated:** 2026-01-31 (Version 2.8 - Deferred Downgrade Flow)
-**Status:** 🚧 In Progress (Phase 1-6 Complete, Phase 7 Cleanup In Progress)
+**Status:** ✅ Complete (Phase 1-7 Done, Pending: db:push, migration run, chrome-extension update)
 **Complexity:** Complex (Multi-phase migration)
 
 ---
@@ -2457,13 +2457,20 @@ DROP TYPE "AccessType";
 - Toast notifications for success/error with account disable warnings
 - Query invalidation to refetch subscription status after update
 
-### Cleanup (Phase 7) - PENDING
+### Cleanup (Phase 7) ✅ COMPLETE
 
-- [ ] Remove `User.accessType`, `stripeUserProperties`, `LinkedInAccount.accessType`
-- [ ] Remove `AccessType` enum
-- [ ] Remove `Organization.stripeCustomerId`
-- [ ] Remove old endpoints, hooks, utilities
-- [ ] Remove dual-write logic
+- [x] Remove `User.accessType`, `stripeUserProperties` from schema
+- [x] Remove `LinkedInAccount.accessType` from schema
+- [x] Remove `AccessType` enum from schema
+- [x] Remove `Organization.stripeCustomerId` from schema
+- [x] Remove old endpoints (stripe.createCheckout, stripe.checkAccess, user.checkAccess)
+- [x] Remove deprecated hooks (use-subscription.ts, use-premium-status.ts)
+- [x] Remove deprecated components (subscription-status.tsx)
+- [x] Remove deprecated utils (check-premium-access.ts)
+- [x] Remove dual-write logic (legacy webhook handlers)
+- [x] Update routers to use org-centric premium checks
+- [ ] Chrome extension update (deferred - still uses accessType)
+- [ ] Run `pnpm db:push` (user to run manually after migration)
 
 ---
 
@@ -2573,8 +2580,13 @@ if (isDowngrade && periodAdvanced) {
 7. ~~Phase 6: Data migration script~~ ✅
    - Scripts ready at `packages/api/scripts/migrate-subscriptions.ts`
    - All existing subscriptions get 1 slot
-8. **Phase 7: Cleanup (remove old fields)** ← IN PROGRESS
-9. Test on staging environment
+8. ~~Phase 7: Cleanup (remove old fields)~~ ✅
+9. **Remaining steps:**
+   - Run migration script: `pnpm tsx packages/api/scripts/migrate-subscriptions.ts --execute`
+   - Verify migration: `pnpm tsx packages/api/scripts/verify-migration.ts`
+   - Run db:push: `pnpm db:push`
+   - Test on staging environment
+   - Update chrome-extension to use org-centric billing (deferred)
 
 ---
 

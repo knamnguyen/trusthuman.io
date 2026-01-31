@@ -4,7 +4,6 @@ import { ulid } from "ulidx";
 import z from "zod";
 
 import type {
-  AccessType,
   User as DbUser,
   Prisma,
   PrismaClient,
@@ -532,7 +531,7 @@ export const accountRouter = () =>
           data: {
             organizationId: null,
             ownerId: null,
-            status: null,
+            status: "DISABLED",
           },
         });
 
@@ -575,6 +574,21 @@ export function hasPermissionToAccessAccountClause(readerUserId: string) {
   };
 }
 
+/**
+ * Get the subscription tier for an account's organization
+ * Returns "FREE" if account has no organization or org has no subscription
+ */
+export async function getAccountSubscriptionTier(
+  db: PrismaClient,
+  accountId: string,
+): Promise<string> {
+  const account = await db.linkedInAccount.findUnique({
+    where: { id: accountId },
+    select: { org: { select: { subscriptionTier: true } } },
+  });
+  return account?.org?.subscriptionTier ?? "FREE";
+}
+
 //looks like only used in middleware now not in individual endpoints
 export async function getUserAccount(
   db: PrismaClient | PrismaTransactionalClient,
@@ -590,7 +604,6 @@ export async function getUserAccount(
         email: string;
         name: string | null;
         profileUrl: string | null;
-        accessType: AccessType;
         permitted: boolean;
       } | null;
       memberships: string[];
@@ -605,7 +618,6 @@ export async function getUserAccount(
             'email', lia.email,
             'name', lia.name,
             'profileUrl', lia."profileUrl",
-            'accessType', lia."accessType",
             'permitted', (
               -- Account must belong to user's active organization
               lia."organizationId" = ${activeOrgId}

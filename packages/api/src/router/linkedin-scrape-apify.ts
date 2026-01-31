@@ -3,9 +3,9 @@ import { z } from "zod";
 
 import { LinkedInScrapeApifyService } from "@sassy/linkedin-scrape-apify";
 
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { createTRPCRouter, orgProcedure } from "../trpc";
+import { hasPremiumAccess } from "../access-control/organization";
 import { findExistingLinkedInProfile } from "../utils/check-exist-linkedin-profile";
-import { checkPremiumAccess } from "../utils/check-premium-access";
 
 const apifyService = new LinkedInScrapeApifyService({
   token: process.env.APIFY_API_TOKEN ?? "",
@@ -24,11 +24,13 @@ const mapDbToProfileData = (record: any) => {
 
 export const linkedinScrapeApifyRouter = () =>
   createTRPCRouter({
-    scrapeByUrl: protectedProcedure
+    scrapeByUrl: orgProcedure
       .input(z.object({ url: z.string().url() }))
       .mutation(async ({ ctx, input }) => {
-        const access = await checkPremiumAccess(ctx);
-        if (!access) {
+        const isPremium = await hasPremiumAccess(ctx.db, {
+          orgId: ctx.activeOrg.id,
+        });
+        if (!isPremium) {
           throw new TRPCError({
             code: "FORBIDDEN",
             message: "Premium subscription required",
