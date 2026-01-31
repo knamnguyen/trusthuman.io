@@ -13,6 +13,7 @@ const isPublicRoute = createRouteMatcher([
   "/api/webhooks/clerk", // Allow Clerk webhooks
   "/api/cron(.*)", // Allow cron jobs to bypass authentication
   "/tools/linkedinpreview(.*)", // Allow LinkedIn preview tool (public routes)
+  "/api/mobile-oauth-callback", // Allow mobile OAuth callback for Capacitor apps
   // Generation routes are protected - removed from public routes
   // Add more public routes as needed
 ]);
