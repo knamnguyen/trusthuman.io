@@ -18,19 +18,17 @@
  * - PostPreviewSheet regenerate (single-card flow)
  */
 
-import type { AdjacentCommentInfo } from "@sassy/linkedin-automation/post/types";
 import type { DynamicStyleResult } from "@sassy/api";
-
+import type { AdjacentCommentInfo } from "@sassy/linkedin-automation/post/types";
 import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post-utilities";
 
 import type { CommentGenerateSettings } from "../../stores/target-list-queue";
-
-// Re-export for convenience (used by load-posts-to-cards)
-export type { CommentGenerateSettings as CommentGenerateSettingsSnapshot } from "../../stores/target-list-queue";
-
 import { getTrpcClient } from "../../../../lib/trpc/client";
 import { getCommentStyleConfig } from "../../stores/comment-style-cache";
 import { useSettingsDBStore } from "../../stores/settings-db-store";
+
+// Re-export for convenience (used by load-posts-to-cards)
+export type { CommentGenerateSettings as CommentGenerateSettingsSnapshot } from "../../stores/target-list-queue";
 
 // Lazily initialized
 let _postUtils: ReturnType<typeof createPostUtilities> | null = null;
@@ -85,25 +83,36 @@ export interface GenerateSingleCommentParams {
  * @returns Promise resolving to the generated comment result
  */
 export async function generateSingleComment(
-  params: GenerateSingleCommentParams
-): Promise<GeneratedCommentResult> {
-  const { postContent, postContainer, previousAiComment, humanEditedComment, settingsOverride } = params;
+  params: GenerateSingleCommentParams,
+) {
+  const {
+    postContent,
+    postContainer,
+    previousAiComment,
+    humanEditedComment,
+    settingsOverride,
+  } = params;
 
   // Get settings - use override if provided (for auto-resume), otherwise read from store
-  const commentGenerateSettings = settingsOverride ?? useSettingsDBStore.getState().commentGenerate;
-  const dynamicStyleEnabled = commentGenerateSettings?.dynamicChooseStyleEnabled ?? false;
-  const adjacentCommentsEnabled = commentGenerateSettings?.adjacentCommentsEnabled ?? true;
+  const commentGenerateSettings =
+    settingsOverride ?? useSettingsDBStore.getState().commentGenerate;
+  const dynamicStyleEnabled =
+    commentGenerateSettings?.dynamicChooseStyleEnabled ?? false;
+  const adjacentCommentsEnabled =
+    commentGenerateSettings?.adjacentCommentsEnabled ?? true;
 
   // Extract adjacent comments for AI context (if enabled)
   const postUtils = getPostUtils();
   const adjacentComments = adjacentCommentsEnabled
     ? postUtils.extractAdjacentComments(postContainer)
     : [];
-  const mappedAdjacentComments: AdjacentCommentInfo[] = adjacentComments.map((c) => ({
-    commentContent: c.commentContent,
-    likeCount: c.likeCount,
-    replyCount: c.replyCount,
-  }));
+  const mappedAdjacentComments: AdjacentCommentInfo[] = adjacentComments.map(
+    (c) => ({
+      commentContent: c.commentContent,
+      likeCount: c.likeCount,
+      replyCount: c.replyCount,
+    }),
+  );
 
   console.log("[generateSingleComment] Settings:", {
     dynamicStyleEnabled,
@@ -118,7 +127,8 @@ export async function generateSingleComment(
     console.log("[generateSingleComment] Using dynamic style selection");
     const results = await trpcClient.aiComments.generateDynamic.mutate({
       postContent,
-      adjacentComments: mappedAdjacentComments.length > 0 ? mappedAdjacentComments : undefined,
+      adjacentComments:
+        mappedAdjacentComments.length > 0 ? mappedAdjacentComments : undefined,
       count: 1,
     });
 
@@ -130,10 +140,11 @@ export async function generateSingleComment(
       hasStyleSnapshot: !!result.styleSnapshot,
     });
     return {
+      status: "success",
       comment: result.comment,
       styleId: result.styleId,
       styleSnapshot: result.styleSnapshot,
-    };
+    } as const;
   } else {
     // Static mode: Use selected default style
     const styleConfig = await getCommentStyleConfig();
@@ -146,7 +157,8 @@ export async function generateSingleComment(
     const result = await trpcClient.aiComments.generateComment.mutate({
       postContent,
       styleGuide: styleConfig.styleGuide,
-      adjacentComments: mappedAdjacentComments.length > 0 ? mappedAdjacentComments : undefined,
+      adjacentComments:
+        mappedAdjacentComments.length > 0 ? mappedAdjacentComments : undefined,
       maxWords: styleConfig.maxWords,
       creativity: styleConfig.creativity,
       previousAiComment,
@@ -193,25 +205,29 @@ export interface GenerateMultipleCommentsParams {
  * @returns Promise resolving to array of generated comment results
  */
 export async function generateMultipleComments(
-  params: GenerateMultipleCommentsParams
+  params: GenerateMultipleCommentsParams,
 ): Promise<GeneratedCommentResult[]> {
   const { postContent, postContainer, count } = params;
 
   // Get settings
   const commentGenerateSettings = useSettingsDBStore.getState().commentGenerate;
-  const dynamicStyleEnabled = commentGenerateSettings?.dynamicChooseStyleEnabled ?? false;
-  const adjacentCommentsEnabled = commentGenerateSettings?.adjacentCommentsEnabled ?? true;
+  const dynamicStyleEnabled =
+    commentGenerateSettings?.dynamicChooseStyleEnabled ?? false;
+  const adjacentCommentsEnabled =
+    commentGenerateSettings?.adjacentCommentsEnabled ?? true;
 
   // Extract adjacent comments for AI context (if enabled)
   const postUtils = getPostUtils();
   const adjacentComments = adjacentCommentsEnabled
     ? postUtils.extractAdjacentComments(postContainer)
     : [];
-  const mappedAdjacentComments: AdjacentCommentInfo[] = adjacentComments.map((c) => ({
-    commentContent: c.commentContent,
-    likeCount: c.likeCount,
-    replyCount: c.replyCount,
-  }));
+  const mappedAdjacentComments: AdjacentCommentInfo[] = adjacentComments.map(
+    (c) => ({
+      commentContent: c.commentContent,
+      likeCount: c.likeCount,
+      replyCount: c.replyCount,
+    }),
+  );
 
   console.log("[generateMultipleComments] Settings:", {
     dynamicStyleEnabled,
@@ -227,7 +243,8 @@ export async function generateMultipleComments(
     console.log("[generateMultipleComments] Using dynamic style selection");
     const results = await trpcClient.aiComments.generateDynamic.mutate({
       postContent,
-      adjacentComments: mappedAdjacentComments.length > 0 ? mappedAdjacentComments : undefined,
+      adjacentComments:
+        mappedAdjacentComments.length > 0 ? mappedAdjacentComments : undefined,
       count,
     });
 
@@ -249,7 +266,8 @@ export async function generateMultipleComments(
     const baseRequestParams = {
       postContent,
       styleGuide: styleConfig.styleGuide,
-      adjacentComments: mappedAdjacentComments.length > 0 ? mappedAdjacentComments : undefined,
+      adjacentComments:
+        mappedAdjacentComments.length > 0 ? mappedAdjacentComments : undefined,
       maxWords: styleConfig.maxWords,
       creativity: styleConfig.creativity,
     };
@@ -266,7 +284,8 @@ export async function generateMultipleComments(
 
     // Generate `count` comments in parallel
     const promises = Array.from({ length: count }, async () => {
-      const result = await trpcClient.aiComments.generateComment.mutate(baseRequestParams);
+      const result =
+        await trpcClient.aiComments.generateComment.mutate(baseRequestParams);
       return {
         comment: result.comment,
         styleId: styleConfig.styleId,
@@ -300,15 +319,16 @@ export async function generateAndUpdateCards(
       styleInfo: {
         commentStyleId: string | null;
         styleSnapshot: GeneratedCommentResult["styleSnapshot"];
-      }
+      },
     ) => void;
-  }
+  },
 ): Promise<void> {
-  const { cardIds, updateCardComment, updateCardStyleInfo, ...generateParams } = params;
+  const { cardIds, updateCardComment, updateCardStyleInfo, ...generateParams } =
+    params;
 
   if (cardIds.length !== generateParams.count) {
     console.error(
-      `[generateAndUpdateCards] cardIds length (${cardIds.length}) doesn't match count (${generateParams.count})`
+      `[generateAndUpdateCards] cardIds length (${cardIds.length}) doesn't match count (${generateParams.count})`,
     );
   }
 

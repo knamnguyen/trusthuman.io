@@ -7,11 +7,7 @@ import {
   generateDynamicInputSchema,
   generateDynamicOutputSchema,
 } from "../schema-validators";
-import {
-  accountProcedure,
-  createTRPCRouter,
-  protectedProcedure,
-} from "../trpc";
+import { accountProcedure, createTRPCRouter } from "../trpc";
 import { getAccountQuota, incrementAccountUsage } from "../utils/ai-quota";
 import {
   DEFAULT_CREATIVITY,
@@ -36,11 +32,14 @@ export const aiCommentsRouter = () =>
           orgId: ctx.activeOrg.id,
         });
 
+        // TODO: apply proper error checks and prompt for dialogs in the frontend
         if (!isPremium) {
           return {
             success: false,
             error:
               "AI comment generation is available for premium organizations only. Please upgrade your subscription to access this feature.",
+            comment: "Great post! Thanks for sharing.",
+            fallback: true,
           } as const;
         }
 
