@@ -1,44 +1,50 @@
 import React from 'react';
-import { useClerk } from '@clerk/clerk-react';
+import { useSignIn } from '@clerk/clerk-react';
 import { Button } from '@sassy/ui/button';
 
 /**
- * SignInButton - Google OAuth sign-in using Safari browser
+ * SignInButton - Google OAuth sign-in
+ *
+ * Now that redirect URLs are configured in Clerk dashboard,
+ * the standard authenticateWithRedirect should work.
  *
  * Flow:
  * 1. User clicks button
- * 2. We get OAuth URL from Clerk
- * 3. Open Safari with @capacitor/browser plugin
- * 4. User signs in to Google (one-tap if already logged in)
- * 5. Google redirects to capacitordemo://oauth/callback
- * 6. AppUrlListener catches the deep link
- * 7. OAuthCallbackPage completes the session
+ * 2. Clerk's authenticateWithRedirect opens system browser
+ * 3. User signs in to Google
+ * 4. Redirects to https://engagekit.io/api/mobile-oauth-callback
+ * 5. That redirects to capacitordemo://oauth/callback
+ * 6. App catches deep link
+ * 7. OAuthCallbackPage completes session
  */
 export const SignInButton: React.FC = () => {
-  const clerk = useClerk();
+  const { signIn } = useSignIn();
   const [isLoading, setIsLoading] = React.useState(false);
 
   const handleGoogleSignIn = async () => {
+    if (!signIn) {
+      console.error('[SignInButton] signIn is not available');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      console.log('[SignInButton] Starting Google OAuth...');
+      console.log('[SignInButton] Starting Google OAuth with authenticateWithRedirect...');
 
-      // Use HTTPS bridge URL that redirects to custom scheme
-      // Clerk → https://engagekit.io/api/mobile-oauth-callback → capacitordemo://
-      await clerk.client.signIn.authenticateWithRedirect({
+      // Now that redirect URLs are configured in Clerk Native applications,
+      // this should work properly
+      await signIn.authenticateWithRedirect({
         strategy: 'oauth_google',
         redirectUrl: 'https://engagekit.io/api/mobile-oauth-callback',
         redirectUrlComplete: '/dashboard',
       });
 
-      // In web, this redirects automatically
-      // In Capacitor, it opens Safari which then redirects back to our app
+      console.log('[SignInButton] Redirect initiated');
 
     } catch (error: any) {
       console.error('[SignInButton] OAuth error:', error);
 
-      // Log the full error for debugging
       if (error.errors) {
         console.error('[SignInButton] Clerk errors:', JSON.stringify(error.errors));
       }
