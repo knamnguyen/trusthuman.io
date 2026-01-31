@@ -37,15 +37,6 @@ export default function SettingsPage() {
   const [quantity, setQuantity] = useState(1);
   const [updateQuantity, setUpdateQuantity] = useState<number | null>(null);
   const [showUpdateConfirm, setShowUpdateConfirm] = useState(false);
-  const [awaitingPayment, setAwaitingPayment] = useState<{
-    targetSlots: number;
-    previousSlots: number;
-    invoiceUrl: string;
-    invoiceId: string;
-    startedAt: number;
-  } | null>(null);
-
-  const POLLING_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
 
   const { orgSlug } = useParams<{ orgSlug: string }>();
   const { organization, isLoaded: isOrgLoaded } = useOrganization();
@@ -64,26 +55,8 @@ export default function SettingsPage() {
   const { data: status } = useQuery(
     trpc.organization.subscription.status.queryOptions(undefined, {
       enabled: !!orgId,
-      refetchInterval: awaitingPayment !== null ? 2000 : false,
     }),
   );
-
-  // Polling timeout - stop after 5 minutes
-  useEffect(() => {
-    if (awaitingPayment === null) return;
-
-    const checkTimeout = () => {
-      if (Date.now() - awaitingPayment.startedAt > POLLING_TIMEOUT_MS) {
-        setAwaitingPayment(null);
-        toast.error(
-          "Payment verification timed out. Please refresh the page to check your subscription status.",
-        );
-      }
-    };
-
-    const interval = setInterval(checkTimeout, 5000);
-    return () => clearInterval(interval);
-  }, [awaitingPayment, POLLING_TIMEOUT_MS]);
 
   // Initialize updateQuantity when status loads
   useEffect(() => {
@@ -91,20 +64,6 @@ export default function SettingsPage() {
       setUpdateQuantity(status.purchasedSlots);
     }
   }, [status?.purchasedSlots, updateQuantity]);
-
-  // Detect when payment is complete (slots updated to target)
-  useEffect(() => {
-    if (
-      awaitingPayment !== null &&
-      status?.purchasedSlots === awaitingPayment.targetSlots
-    ) {
-      const targetSlots = awaitingPayment.targetSlots;
-      setAwaitingPayment(null);
-      setShowUpdateConfirm(false);
-      setUpdateQuantity(targetSlots);
-      toast.success(`Successfully updated to ${targetSlots} slots.`);
-    }
-  }, [awaitingPayment, status?.purchasedSlots]);
 
   const createCheckout = useMutation({
     ...trpc.organization.subscription.checkout.mutationOptions(),
@@ -141,38 +100,13 @@ export default function SettingsPage() {
         });
         setShowUpdateConfirm(false);
         setUpdateQuantity(status?.purchasedSlots ?? data.newSlots);
-        const effectiveDate = data.effectiveAt
-          ? new Date(data.effectiveAt).toLocaleDateString()
-          : "your next billing date";
         toast.success(
-          `Downgrade scheduled. Your slots will reduce to ${data.newSlots} on ${effectiveDate}.`,
+          `Downgrade scheduled. Your slots will reduce to ${data.newSlots} on ${data.effectiveAt.toString()}.`,
         );
         return;
       }
 
-      // Open invoice in new tab and start polling
-      window.open(data.url, "_blank");
-      setAwaitingPayment({
-        targetSlots: data.newSlots,
-        previousSlots: data.previousSlots,
-        invoiceUrl: data.url,
-        invoiceId: data.invoiceId,
-        startedAt: Date.now(),
-      });
-    },
-  });
-
-  const cancelUpdate = useMutation({
-    ...trpc.organization.subscription.cancelUpdate.mutationOptions(),
-    onSuccess: (data) => {
-      if (!data.success) {
-        toast.error(data.error);
-        return;
-      }
-
-      toast.success("Update cancelled. The invoice has been voided.");
-      setAwaitingPayment(null);
-      setShowUpdateConfirm(false);
+      router.push(data.url);
     },
   });
 
@@ -497,7 +431,6 @@ export default function SettingsPage() {
                           onClick={() => setShowUpdateConfirm(true)}
                           disabled={
                             updateSubscription.isPending ||
-                            awaitingPayment !== null ||
                             updateQuantity === status.purchasedSlots ||
                             updateQuantity < 1
                           }
@@ -559,143 +492,80 @@ export default function SettingsPage() {
       </div>
 
       {/* Update Subscription Confirmation Dialog */}
-      <Dialog
-        open={showUpdateConfirm}
-        onOpenChange={(open) => {
-          if (!open && awaitingPayment !== null) {
-            // User closing while awaiting payment - just close dialog, keep polling in background
-            // Invoice remains open - they can pay later or it will expire
-            setShowUpdateConfirm(false);
-            return;
-          }
-          setShowUpdateConfirm(open);
-        }}
-      >
+      <Dialog open={showUpdateConfirm} onOpenChange={setShowUpdateConfirm}>
         <DialogContent>
-          {awaitingPayment !== null ? (
-            // Awaiting payment state
-            <>
-              <DialogHeader>
-                <DialogTitle>Awaiting Payment</DialogTitle>
-                <DialogDescription>
-                  You will be redirected to an invoice to complete your payment.
+          <DialogHeader>
+            <DialogTitle>
+              {updateQuantity !== null && updateQuantity > status.purchasedSlots
+                ? "Confirm Upgrade"
+                : "Confirm Downgrade"}
+            </DialogTitle>
+            <DialogDescription>
+              {updateQuantity !== null &&
+              updateQuantity > status.purchasedSlots ? (
+                <>
+                  You are upgrading from{" "}
+                  <strong>{status.purchasedSlots} slots</strong> to{" "}
+                  <strong>{updateQuantity} slots</strong>.
+                  <br />
+                  <br />A prorated amount for the additional{" "}
+                  {updateQuantity - status.purchasedSlots} slot(s) will be
+                  charged.
+                </>
+              ) : (
+                <>
+                  You are downgrading from{" "}
+                  <strong>{status.purchasedSlots} slots</strong> to{" "}
+                  <strong>{updateQuantity} slots</strong>.
                   <br />
                   <br />
-                  Once payment is verified, your account slots will be updated!
-                  If the tab didn't open, click "Pay" below.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="flex items-center justify-center py-4">
-                <div className="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" />
-              </div>
-              <DialogFooter className="flex-col gap-2 sm:flex-row">
-                <Button
-                  variant="outline"
-                  onClick={() =>
-                    window.open(awaitingPayment.invoiceUrl, "_blank")
-                  }
-                >
-                  Pay
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={() =>
-                    cancelUpdate.mutate({
-                      invoiceId: awaitingPayment.invoiceId,
-                      revertToSlots: awaitingPayment.previousSlots,
-                    })
-                  }
-                  disabled={cancelUpdate.isPending}
-                >
-                  {cancelUpdate.isPending ? "Cancelling..." : "Cancel Update"}
-                </Button>
-                <Button
-                  variant="ghost"
-                  onClick={() => setShowUpdateConfirm(false)}
-                >
-                  Close
-                </Button>
-              </DialogFooter>
-            </>
-          ) : (
-            // Confirmation state
-            <>
-              <DialogHeader>
-                <DialogTitle>
+                  Credit for the unused slots will be applied to your next
+                  invoice.
                   {updateQuantity !== null &&
-                  updateQuantity > status.purchasedSlots
-                    ? "Confirm Upgrade"
-                    : "Confirm Downgrade"}
-                </DialogTitle>
-                <DialogDescription>
-                  {updateQuantity !== null &&
-                  updateQuantity > status.purchasedSlots ? (
-                    <>
-                      You are upgrading from{" "}
-                      <strong>{status.purchasedSlots} slots</strong> to{" "}
-                      <strong>{updateQuantity} slots</strong>.
-                      <br />
-                      <br />A prorated invoice for the additional{" "}
-                      {updateQuantity - status.purchasedSlots} slot(s) will be
-                      opened in a new tab for payment.
-                    </>
-                  ) : (
-                    <>
-                      You are downgrading from{" "}
-                      <strong>{status.purchasedSlots} slots</strong> to{" "}
-                      <strong>{updateQuantity} slots</strong>.
-                      <br />
-                      <br />
-                      Credit for the unused slots will be applied to your next
-                      invoice.
-                      {updateQuantity !== null &&
-                        updateQuantity < status.usedSlots && (
-                          <>
-                            <br />
-                            <br />
-                            <span className="font-semibold text-red-600">
-                              Warning: You currently have {status.usedSlots}{" "}
-                              account(s) connected.{" "}
-                              {status.usedSlots - updateQuantity} account(s)
-                              will be disabled to fit within your new slot
-                              limit.
-                            </span>
-                          </>
-                        )}
-                    </>
-                  )}
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowUpdateConfirm(false)}
-                  disabled={updateSubscription.isPending}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant={
-                    updateQuantity !== null && updateQuantity < status.usedSlots
-                      ? "destructive"
-                      : "primary"
-                  }
-                  onClick={() =>
-                    updateQuantity !== null &&
-                    updateSubscription.mutate({ slots: updateQuantity })
-                  }
-                  disabled={updateSubscription.isPending}
-                >
-                  {updateSubscription.isPending
-                    ? "Processing..."
-                    : updateQuantity !== null &&
-                        updateQuantity > status.purchasedSlots
-                      ? "Confirm Upgrade"
-                      : "Confirm Downgrade"}
-                </Button>
-              </DialogFooter>
-            </>
-          )}
+                    updateQuantity < status.usedSlots && (
+                      <>
+                        <br />
+                        <br />
+                        <span className="font-semibold text-red-600">
+                          Warning: You currently have {status.usedSlots}{" "}
+                          account(s) connected.{" "}
+                          {status.usedSlots - updateQuantity} account(s) will be
+                          disabled to fit within your new slot limit.
+                        </span>
+                      </>
+                    )}
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowUpdateConfirm(false)}
+              disabled={updateSubscription.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant={
+                updateQuantity !== null && updateQuantity < status.usedSlots
+                  ? "destructive"
+                  : "primary"
+              }
+              onClick={() =>
+                updateQuantity !== null &&
+                updateSubscription.mutate({ slots: updateQuantity })
+              }
+              disabled={updateSubscription.isPending}
+            >
+              {updateSubscription.isPending
+                ? "Processing..."
+                : updateQuantity !== null &&
+                    updateQuantity > status.purchasedSlots
+                  ? "Confirm Upgrade"
+                  : "Confirm Downgrade"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

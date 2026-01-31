@@ -83,7 +83,7 @@ export async function getAccountQuota(
     select: {
       dailyAIcomments: true,
       dailyAIcommentsRefreshedAt: true,
-      organization: {
+      org: {
         select: {
           subscriptionTier: true,
           subscriptionExpiresAt: true,
@@ -111,10 +111,10 @@ export async function getAccountQuota(
 
   // Prepare org data for premium check
   const orgData = {
-    subscriptionTier: account.organization?.subscriptionTier ?? "FREE",
-    subscriptionExpiresAt: account.organization?.subscriptionExpiresAt ?? null,
-    purchasedSlots: account.organization?.purchasedSlots ?? 0,
-    accountCount: account.organization?._count.linkedInAccounts ?? 0,
+    subscriptionTier: account.org?.subscriptionTier ?? "FREE",
+    subscriptionExpiresAt: account.org?.subscriptionExpiresAt ?? null,
+    purchasedSlots: account.org?.purchasedSlots ?? 0,
+    accountCount: account.org?._count.linkedInAccounts ?? 0,
   };
 
   if (needsRefresh) {

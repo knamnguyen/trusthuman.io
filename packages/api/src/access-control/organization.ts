@@ -83,3 +83,74 @@ export async function hasPremiumAccess(
 
   return count > 0;
 }
+
+/**
+ * Prisma where clause to filter organizations where user is an admin.
+ * Use for admin-only operations like billing, member management.
+ *
+ * @example
+ * const adminOrgs = await db.organization.findMany({
+ *   where: isOrgAdminClause(userId),
+ * });
+ */
+export function hasOrgAdminPermissionClause(userId: string) {
+  return {
+    members: {
+      some: {
+        userId,
+        role: "admin",
+      },
+    },
+  };
+}
+
+/**
+ * Async function to check if a user is an admin of an organization.
+ *
+ * @example
+ * const isAdmin = await isOrgAdmin(db, { actorUserId, orgId });
+ * if (!isAdmin) return { success: false, error: "Admin only" };
+ */
+export async function hasOrgAdminPermission(
+  db: PrismaClient,
+  { actorUserId, orgId }: { actorUserId: string; orgId: string },
+): Promise<boolean> {
+  const exists = await db.organization.count({
+    where: {
+      AND: [{ id: orgId }, hasOrgAdminPermissionClause(actorUserId)],
+    },
+  });
+
+  return exists > 0;
+}
+
+export function hasPermissionToAccessOrgClause(userId: string) {
+  return {
+    members: {
+      some: {
+        userId,
+      },
+    },
+  };
+}
+
+/**
+ * Async function to check if a user has permission to access an organization.
+ * Use when you need a boolean check before performing an action.
+ *
+ * @example
+ * const canAccess = await hasPermissionToAccessOrg(db, { actorUserId, orgId });
+ * if (!canAccess) return { success: false, error: "No access" };
+ */
+export async function hasPermissionToAccessOrg(
+  db: PrismaClient,
+  { actorUserId, orgId }: { actorUserId: string; orgId: string },
+): Promise<boolean> {
+  const exists = await db.organization.count({
+    where: {
+      AND: [{ id: orgId }, hasPermissionToAccessOrgClause(actorUserId)],
+    },
+  });
+
+  return exists > 0;
+}

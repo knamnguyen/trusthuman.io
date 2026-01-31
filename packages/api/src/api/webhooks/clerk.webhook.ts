@@ -189,11 +189,13 @@ export const clerkWebhookRoutes = new Hono().post("/", async (c) => {
           create: {
             id: orgId,
             name: orgName,
+            orgSlug: data.slug,
           },
           where: { id: orgId },
           update: {
             name: orgName,
             updatedAt: new Date(),
+            orgSlug: data.slug,
           },
         });
 
@@ -217,10 +219,12 @@ export const clerkWebhookRoutes = new Hono().post("/", async (c) => {
           create: {
             id: orgId,
             name: orgName,
+            orgSlug: data.slug,
           },
           update: {
             name: orgName,
             updatedAt: new Date(),
+            orgSlug: data.slug,
           },
         });
 
@@ -287,10 +291,13 @@ export const clerkWebhookRoutes = new Hono().post("/", async (c) => {
           where: { id: orgId },
           update: {
             updatedAt: new Date(),
+            name: data.organization.name,
+            orgSlug: data.organization.slug,
           },
           create: {
             id: orgId,
             name: data.organization.name,
+            orgSlug: data.organization.slug,
           },
         });
 
@@ -334,10 +341,13 @@ export const clerkWebhookRoutes = new Hono().post("/", async (c) => {
           where: { id: orgId },
           update: {
             updatedAt: new Date(),
+            orgSlug: data.organization.slug,
+            name: data.organization.name,
           },
           create: {
             id: orgId,
             name: data.organization.name,
+            orgSlug: data.organization.slug,
           },
         });
 

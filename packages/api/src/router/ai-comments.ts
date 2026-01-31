@@ -1,4 +1,6 @@
 import { TRPCError } from "@trpc/server";
+
+import { hasPremiumAccess } from "../access-control/organization";
 import {
   commentGenerationInputSchema,
   commentGenerationOutputSchema,
@@ -10,12 +12,12 @@ import {
   createTRPCRouter,
   protectedProcedure,
 } from "../trpc";
+import { getAccountQuota, incrementAccountUsage } from "../utils/ai-quota";
 import {
   DEFAULT_CREATIVITY,
   DEFAULT_MAX_WORDS,
   DEFAULT_STYLE_GUIDE,
 } from "../utils/ai-service/constants";
-import { getAccountQuota, incrementAccountUsage } from "../utils/ai-quota";
 import { truncateToWords } from "../utils/text-utils";
 
 export const aiCommentsRouter = () =>
@@ -30,14 +32,16 @@ export const aiCommentsRouter = () =>
       .input(commentGenerationInputSchema)
       .output(commentGenerationOutputSchema)
       .mutation(async ({ input, ctx }) => {
-        // Check quota before generation
-        const quota = await getAccountQuota(ctx.db, ctx.activeAccount.id);
+        const isPremium = await hasPremiumAccess(ctx.db, {
+          orgId: ctx.activeOrg.id,
+        });
 
-        if (!quota.isPremium && quota.used >= quota.limit) {
-          throw new TRPCError({
-            code: 'FORBIDDEN',
-            message: `Daily AI comment limit reached (${quota.used}/${quota.limit}). Resets at ${quota.resetsAt.toISOString()}. Upgrade to premium for unlimited comments.`
-          });
+        if (!isPremium) {
+          return {
+            success: false,
+            error:
+              "AI comment generation is available for premium organizations only. Please upgrade your subscription to access this feature.",
+          } as const;
         }
 
         // Generate comment
@@ -71,8 +75,8 @@ export const aiCommentsRouter = () =>
 
         if (!quota.isPremium && quota.used + count > quota.limit) {
           throw new TRPCError({
-            code: 'FORBIDDEN',
-            message: `Daily AI comment limit reached (${quota.used}/${quota.limit}). Resets at ${quota.resetsAt.toISOString()}. Upgrade to premium for unlimited comments.`
+            code: "FORBIDDEN",
+            message: `Daily AI comment limit reached (${quota.used}/${quota.limit}). Resets at ${quota.resetsAt.toISOString()}. Upgrade to premium for unlimited comments.`,
           });
         }
 

@@ -14,6 +14,7 @@ export default function BillingReturnPage({
   searchParams: Promise<{
     orgId?: string;
     success?: string;
+    action?: "create_subscription" | "update_subscription";
     session_id?: string;
   }>;
 }) {
@@ -36,10 +37,13 @@ export default function BillingReturnPage({
   const capture = useQuery(
     trpc.organization.subscription.capture.queryOptions(
       {
-        sessionId: params.session_id ?? "",
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        sessionId: params.session_id!,
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        action: params.action!,
       },
       {
-        enabled: !!params.session_id,
+        enabled: !!params.session_id && !!params.action,
       },
     ),
   );
@@ -49,6 +53,7 @@ export default function BillingReturnPage({
     if (
       organization.data === undefined ||
       (params.session_id !== undefined &&
+        params.action !== undefined &&
         capture.data === undefined &&
         capture.error === null)
     ) {
@@ -69,6 +74,7 @@ export default function BillingReturnPage({
     capture.data,
     capture.error,
     params.session_id,
+    params.action,
   ]);
 
   if (!params.orgId) {

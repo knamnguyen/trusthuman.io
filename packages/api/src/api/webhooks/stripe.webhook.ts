@@ -1,6 +1,6 @@
 // packages/api/src/api/webhooks/stripe.webhook.ts
+import type Stripe from "stripe";
 import { Hono } from "hono";
-import Stripe from "stripe";
 
 import { db } from "@sassy/db";
 import { StripeService } from "@sassy/stripe";
@@ -9,6 +9,7 @@ import {
   applyPendingDowngrade,
   convertOrgSubscriptionToFree,
   convertOrgSubscriptionToPremium,
+  handleCheckoutSessionSuccess,
 } from "../../router/organization";
 import { env } from "../../utils/env";
 
@@ -16,10 +17,6 @@ import { env } from "../../utils/env";
  * Stripe webhook handler
  * Handles both legacy user-centric and new org-centric subscription events
  */
-
-const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
-  apiVersion: "2023-08-16",
-});
 
 const stripeService = new StripeService({
   secretKey: env.STRIPE_SECRET_KEY,
@@ -51,78 +48,8 @@ export const stripeWebhookRoutes = new Hono().post("/", async (c) => {
     switch (eventType) {
       case "checkout.session.completed": {
         const session = data.object;
-        const orgId = session.metadata?.organizationId;
-        const payerId = session.metadata?.payerId;
 
-        if (!orgId || !payerId || !session.subscription) {
-          console.log(
-            "checkout.session.completed: Missing org metadata or subscription, skipping",
-          );
-          break;
-        }
-
-        const subscription = await stripe.subscriptions.retrieve(
-          session.subscription as string,
-        );
-
-        // Idempotency check
-        const existing = await db.organization.findUnique({
-          where: { id: orgId },
-          select: { stripeSubscriptionId: true },
-        });
-
-        if (existing?.stripeSubscriptionId === subscription.id) {
-          console.log(
-            "checkout.session.completed: Already processed, skipping",
-          );
-          break;
-        }
-
-        // Verify payer is still in org (race condition check)
-        const membership = await db.organizationMember.findUnique({
-          where: { orgId_userId: { orgId, userId: payerId } },
-        });
-
-        if (!membership) {
-          console.error(
-            `checkout.session.completed: User ${payerId} left org ${orgId}`,
-          );
-          await stripe.subscriptions.cancel(subscription.id);
-
-          // Attempt refund
-          if (subscription.latest_invoice) {
-            try {
-              const invoice = await stripe.invoices.retrieve(
-                subscription.latest_invoice as string,
-              );
-              if (invoice.payment_intent) {
-                await stripe.refunds.create({
-                  payment_intent: invoice.payment_intent as string,
-                  reason: "requested_by_customer",
-                });
-              }
-            } catch (e) {
-              console.error("checkout.session.completed: Refund failed", e);
-            }
-          }
-          break;
-        }
-
-        const quantity = getPurchasedSlots(subscription);
-
-        await convertOrgSubscriptionToPremium(db, {
-          orgId,
-          payerId,
-          purchasedSlots: quantity,
-          stripeSubscriptionId: subscription.id,
-          subscriptionExpiresAt: new Date(
-            subscription.current_period_end * 1000,
-          ),
-        });
-
-        console.log(
-          `✅ checkout.session.completed: Org ${orgId} subscribed with ${quantity} slots`,
-        );
+        await handleCheckoutSessionSuccess(db, session);
         break;
       }
 

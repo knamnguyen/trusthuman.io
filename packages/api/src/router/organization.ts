@@ -3,12 +3,21 @@ import Stripe from "stripe";
 import { z } from "zod";
 
 import type { PrismaClient, PrismaTransactionalClient } from "@sassy/db";
+import type {
+  CheckoutSessionMetadata,
+  SubscriptionMetadata,
+} from "@sassy/stripe/schema-validators";
 import {
+  checkoutSessionMetadataSchema,
   QUANTITY_PRICING_CONFIG,
   STRIPE_QUANTITY_PRICES,
 } from "@sassy/stripe/schema-validators";
 
-import { hasPermissionToUpdateOrgSubscriptionClause } from "../access-control/organization";
+import {
+  hasOrgAdminPermissionClause,
+  hasPermissionToAccessOrgClause,
+  hasPermissionToUpdateOrgSubscriptionClause,
+} from "../access-control/organization";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { safe } from "../utils/commons";
 
@@ -44,7 +53,6 @@ export const organizationRouter = () =>
               name: true,
               orgSlug: true,
               purchasedSlots: true,
-              stripeCustomerId: true,
               createdAt: true,
             },
           },
@@ -330,6 +338,12 @@ const subscriptionRouter = createTRPCRouter({
           ? STRIPE_QUANTITY_PRICES.YEARLY
           : STRIPE_QUANTITY_PRICES.MONTHLY;
 
+      const redirects = createCheckoutSessionRedirectUrls({
+        organizationId,
+        organizationSlug: adminOrg.orgSlug ?? "",
+        action: "create_subscription",
+      });
+
       const session = await stripe.checkout.sessions.create({
         customer: customerId,
         payment_method_types: ["card"],
@@ -344,21 +358,23 @@ const subscriptionRouter = createTRPCRouter({
           },
         ],
         mode: "subscription",
-        success_url: `${baseUrl}/billing-return?orgId=${organizationId}&success=true&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${baseUrl}/${adminOrg.orgSlug ?? ""}/settings?canceled=true`,
+        success_url: redirects.success,
+        cancel_url: redirects.cancel,
         allow_promotion_codes: true,
         subscription_data: {
           metadata: {
             organizationId,
             organizationName: adminOrg.name,
             payerId: ctx.user.id,
-          },
+          } satisfies SubscriptionMetadata,
         },
         metadata: {
+          type: "create_subscription",
           organizationId,
+          slots: input.slots.toString(),
           payerId: ctx.user.id,
-          endorsely_referral: input.endorsely_referral,
-        },
+          endorsely_referral: input.endorsely_referral ?? null,
+        } satisfies CheckoutSessionMetadata,
       });
 
       return { url: session.url };
@@ -369,67 +385,13 @@ const subscriptionRouter = createTRPCRouter({
     .input(
       z.object({
         sessionId: z.string(),
+        action: z.enum(["create_subscription", "update_subscription"]),
       }),
     )
     .query(async ({ input, ctx }) => {
-      const session = await stripe.checkout.sessions.retrieve(input.sessionId, {
-        expand: ["subscription"],
-      });
+      const session = await stripe.checkout.sessions.retrieve(input.sessionId);
 
-      const organizationId = session.metadata?.organizationId;
-
-      if (!organizationId) {
-        return {
-          status: "error",
-          message: "invalid session metadata",
-        } as const;
-      }
-
-      // Verify user is admin of the organization
-      const organization = await ctx.db.organization.findFirst({
-        where: {
-          id: organizationId,
-          ...hasOrgAdminPermissionClause(ctx.user.id),
-        },
-      });
-
-      if (!organization) {
-        return {
-          status: "error",
-          message: "organization not found",
-        } as const;
-      }
-
-      if (!session.subscription || session.status !== "complete") {
-        return {
-          status: "error",
-          message: "subscription not found or session not complete",
-        } as const;
-      }
-
-      const subscription = session.subscription;
-
-      if (typeof subscription === "string") {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Unexpected subscription type",
-        });
-      }
-
-      const quantity = subscription.items.data[0]?.quantity ?? 1;
-      const currentPeriodEnd = new Date(subscription.current_period_end * 1000);
-
-      await convertOrgSubscriptionToPremium(ctx.db, {
-        orgId: organizationId,
-        purchasedSlots: quantity,
-        stripeSubscriptionId: subscription.id,
-        payerId: ctx.user.id,
-        subscriptionExpiresAt: currentPeriodEnd,
-      });
-
-      return {
-        status: "success",
-      } as const;
+      return await handleCheckoutSessionSuccess(ctx.db, session);
     }),
 
   /**
@@ -508,6 +470,7 @@ const subscriptionRouter = createTRPCRouter({
     .input(
       z.object({
         slots: z.number().int().min(1),
+        endorsely_referral: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -529,6 +492,12 @@ const subscriptionRouter = createTRPCRouter({
         select: {
           stripeSubscriptionId: true,
           purchasedSlots: true,
+          name: true,
+          payer: {
+            select: {
+              stripeCustomerId: true,
+            },
+          },
         },
       });
 
@@ -544,6 +513,17 @@ const subscriptionRouter = createTRPCRouter({
           success: false,
           error: "No active subscription found",
         } as const;
+      }
+
+      const stripeCustomerId = org.payer?.stripeCustomerId;
+
+      if (!stripeCustomerId) {
+        // this shudnt happen bcs payer would always have stripeCustomerId if they have a subscription
+        // this is for type narrowing for stripeCustomerId usage below
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Payer has no Stripe customer ID",
+        });
       }
 
       if (org.purchasedSlots === input.slots) {
@@ -605,7 +585,7 @@ const subscriptionRouter = createTRPCRouter({
       const updateResult = await safe(() =>
         stripe.subscriptions.update(org.stripeSubscriptionId!, {
           items: [{ id: subscriptionItem.id, quantity: input.slots }],
-          proration_behavior: "always_invoice",
+          proration_behavior: "none",
           payment_behavior: "pending_if_incomplete",
         }),
       );
@@ -614,28 +594,74 @@ const subscriptionRouter = createTRPCRouter({
         return { success: false, error: updateResult.error.message } as const;
       }
 
-      const invoiceResult = await safe(() =>
-        stripe.invoices.retrieve(updateResult.output.latest_invoice as string, {
-          expand: ["payment_intent"],
-        }),
-      );
+      const interval = subscriptionItem.price.recurring?.interval;
 
-      if (!invoiceResult.ok || !invoiceResult.output.hosted_invoice_url) {
-        console.error(
-          "Error retrieving invoice:",
-          invoiceResult.ok ? "invoice not found" : invoiceResult.error,
-        );
-        return {
-          success: false,
-          error: "Internal server error",
-        } as const;
+      if (!interval) {
+        console.info("Missing interval on subscription item price");
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            "Internal issue with subscription, please contact engagekit.io@gmail.com for support",
+        });
+      }
+
+      const redirects = createCheckoutSessionRedirectUrls({
+        organizationId,
+        organizationSlug: ctx.activeOrg.slug ?? "",
+        action: "update_subscription",
+      });
+
+      console.info(redirects);
+
+      const session = await stripe.checkout.sessions.create({
+        customer: stripeCustomerId,
+        payment_method_types: ["card"],
+        line_items: [
+          {
+            price_data: {
+              unit_amount: calculateProratedAmount({
+                purchasedSlots: {
+                  old: org.purchasedSlots,
+                  new: input.slots,
+                },
+                currentPeriodEnd: new Date(
+                  subscriptionResult.output.current_period_end * 1000,
+                ),
+                term: interval === "month" ? "monthly" : "yearly",
+              }),
+              currency: "usd",
+              product_data: {
+                name: `Prorated charge for extra ${input.slots - org.purchasedSlots} slots purchase for ${org.name} untill end of ${new Date(subscriptionResult.output.current_period_end * 1000).toString()}`,
+              },
+            },
+            quantity: 1,
+          },
+        ],
+        mode: "payment",
+        success_url: redirects.success,
+        cancel_url: redirects.cancel,
+        allow_promotion_codes: true,
+        metadata: {
+          type: "update_subscription",
+          organizationId,
+          slots: input.slots.toString(),
+          payerId: ctx.user.id,
+          endorsely_referral: input.endorsely_referral ?? null,
+        } satisfies CheckoutSessionMetadata,
+      });
+
+      if (session.url === null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            "Failed to create checkout session, please contact engagekit.io@gmail.com for support.",
+        });
       }
 
       return {
         success: true,
         isDowngrade: false,
-        url: invoiceResult.output.hosted_invoice_url,
-        invoiceId: invoiceResult.output.id,
+        url: session.url,
         previousSlots: org.purchasedSlots,
         newSlots: input.slots,
       } as const;
@@ -708,77 +734,6 @@ const subscriptionRouter = createTRPCRouter({
       return { success: true } as const;
     }),
 });
-
-/**
- * Prisma where clause to filter organizations where user is an admin.
- * Use for admin-only operations like billing, member management.
- *
- * @example
- * const adminOrgs = await db.organization.findMany({
- *   where: isOrgAdminClause(userId),
- * });
- */
-export function hasOrgAdminPermissionClause(userId: string) {
-  return {
-    members: {
-      some: {
-        userId,
-        role: "admin",
-      },
-    },
-  };
-}
-
-/**
- * Async function to check if a user is an admin of an organization.
- *
- * @example
- * const isAdmin = await isOrgAdmin(db, { actorUserId, orgId });
- * if (!isAdmin) return { success: false, error: "Admin only" };
- */
-export async function hasOrgAdminPermission(
-  db: PrismaClient,
-  { actorUserId, orgId }: { actorUserId: string; orgId: string },
-): Promise<boolean> {
-  const exists = await db.organization.count({
-    where: {
-      AND: [{ id: orgId }, hasOrgAdminPermissionClause(actorUserId)],
-    },
-  });
-
-  return exists > 0;
-}
-
-export function hasPermissionToAccessOrgClause(userId: string) {
-  return {
-    members: {
-      some: {
-        userId,
-      },
-    },
-  };
-}
-
-/**
- * Async function to check if a user has permission to access an organization.
- * Use when you need a boolean check before performing an action.
- *
- * @example
- * const canAccess = await hasPermissionToAccessOrg(db, { actorUserId, orgId });
- * if (!canAccess) return { success: false, error: "No access" };
- */
-export async function hasPermissionToAccessOrg(
-  db: PrismaClient,
-  { actorUserId, orgId }: { actorUserId: string; orgId: string },
-): Promise<boolean> {
-  const exists = await db.organization.count({
-    where: {
-      AND: [{ id: orgId }, hasPermissionToAccessOrgClause(actorUserId)],
-    },
-  });
-
-  return exists > 0;
-}
 
 export async function convertOrgSubscriptionToPremium(
   db: PrismaClient,
@@ -964,4 +919,173 @@ async function disableAccountsExceedingSlots(
     status: "disabled",
     numAccountsDisabled: idsToDisable.length,
   } as const;
+}
+
+export function calculateProratedAmount({
+  purchasedSlots,
+  currentPeriodEnd,
+  term,
+  now = new Date(),
+}: {
+  purchasedSlots: {
+    old: number;
+    new: number;
+  };
+  currentPeriodEnd: Date;
+  term: "monthly" | "yearly";
+  now?: Date;
+}) {
+  if (purchasedSlots.new <= purchasedSlots.old) {
+    throw new Error("Proration calculation only valid for upgrades");
+  }
+
+  const daysToProrate =
+    (currentPeriodEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+
+  if (daysToProrate <= 0) {
+    throw new Error("No days left to prorate");
+  }
+
+  const dailyRatePerSlot =
+    QUANTITY_PRICING_CONFIG[term].pricePerSlot /
+    (term === "monthly" ? 30 : 365);
+
+  console.info({ daysToProrate, dailyRatePerSlot });
+  const proratedAmount =
+    (purchasedSlots.new - purchasedSlots.old) *
+    dailyRatePerSlot *
+    daysToProrate;
+
+  return Math.round(proratedAmount * 100); // in cents
+}
+
+export async function handleCheckoutSessionSuccess(
+  db: PrismaClient,
+  session: Stripe.Checkout.Session,
+) {
+  const metadata = checkoutSessionMetadataSchema.safeParse(session.metadata);
+
+  if (!metadata.success) {
+    return {
+      status: "error",
+      message: "invalid session metadata",
+    } as const;
+  }
+
+  const organizationId = metadata.data.organizationId;
+
+  // Verify user is admin of the organization
+  const organization = await db.organization.findFirst({
+    where: {
+      id: organizationId,
+    },
+  });
+
+  if (!organization) {
+    return {
+      status: "error",
+      message: "organization not found",
+    } as const;
+  }
+
+  if (session.status !== "complete") {
+    return {
+      status: "error",
+      message: "session not complete",
+    } as const;
+  }
+
+  switch (metadata.data.type) {
+    case "create_subscription": {
+      const subscriptionId = session.subscription;
+      if (typeof subscriptionId !== "string") {
+        return {
+          status: "error",
+          message: "missing subscription ID in session",
+        } as const;
+      }
+
+      const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+      const quantity = subscription.items.data[0]?.quantity ?? 1;
+      const currentPeriodEnd = new Date(subscription.current_period_end * 1000);
+
+      await convertOrgSubscriptionToPremium(db, {
+        orgId: organizationId,
+        purchasedSlots: quantity,
+        stripeSubscriptionId: subscription.id,
+        payerId: metadata.data.payerId,
+        subscriptionExpiresAt: currentPeriodEnd,
+      });
+      break;
+    }
+    case "update_subscription": {
+      const organization = await db.organization.findFirst({
+        where: { id: organizationId },
+        select: {
+          stripeSubscriptionId: true,
+        },
+      });
+      if (!organization?.stripeSubscriptionId) {
+        return {
+          status: "error",
+          message: "organization has no active subscription",
+        } as const;
+      }
+
+      const subscription = await stripe.subscriptions.retrieve(
+        organization.stripeSubscriptionId,
+      );
+
+      const itemId = subscription.items.data[0]?.id;
+
+      if (!itemId) {
+        return {
+          status: "error",
+          message: "subscription has no items",
+        } as const;
+      }
+
+      await stripe.subscriptions.update(organization.stripeSubscriptionId, {
+        items: [
+          {
+            quantity: parseInt(metadata.data.slots),
+            id: itemId,
+          },
+        ],
+        proration_behavior: "none",
+      });
+
+      await updateOrgSubscriptionPurchasedSlots(db, {
+        orgId: organizationId,
+        purchasedSlots: parseInt(metadata.data.slots),
+      });
+
+      break;
+    }
+    default: {
+      return {
+        status: "error",
+        message: "unknown session metadata type",
+      } as const;
+    }
+  }
+
+  return {
+    status: "success",
+  } as const;
+}
+
+function createCheckoutSessionRedirectUrls({
+  organizationId,
+  organizationSlug,
+  action,
+}: {
+  organizationId: string;
+  organizationSlug: string;
+  action: "create_subscription" | "update_subscription";
+}) {
+  return {
+    success: `${baseUrl}/billing-return?orgId=${organizationId}&success=true&session_id={CHECKOUT_SESSION_ID}&action=${action}`,
+    cancel: `${baseUrl}/${organizationSlug}/settings?canceled=true`,
+  };
 }

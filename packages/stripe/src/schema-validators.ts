@@ -49,8 +49,8 @@ export const STRIPE_QUANTITY_PRICES = {
  */
 export const QUANTITY_PRICING_CONFIG = {
   maxSlots: 24,
-  monthly: { pricePerSlot: 24.99 },
-  yearly: { pricePerSlot: 249 },
+  monthly: { pricePerSlot: 29.99 },
+  yearly: { pricePerSlot: 299.99 },
 } as const;
 
 // Zod schema for quantity checkout
@@ -68,3 +68,32 @@ export const updateSubscriptionQuantitySchema = z.object({
 export const changeSubscriptionCycleSchema = z.object({
   newCycle: z.enum(["MONTHLY", "YEARLY"]),
 });
+
+export const checkoutSessionMetadataSchema = z.union([
+  z.object({
+    type: z.literal("create_subscription"),
+    organizationId: z.string(),
+    payerId: z.string(),
+    slots: z.string(),
+    endorsely_referral: z.string().nullable(),
+  }),
+  z.object({
+    type: z.literal("update_subscription"),
+    organizationId: z.string(),
+    payerId: z.string(),
+    slots: z.string(),
+    endorsely_referral: z.string().nullable(),
+  }),
+]);
+
+export type CheckoutSessionMetadata = z.infer<
+  typeof checkoutSessionMetadataSchema
+>;
+
+export const subscriptionMetadataSchema = z.object({
+  organizationId: z.string(),
+  payerId: z.string(),
+  organizationName: z.string().optional(),
+});
+
+export type SubscriptionMetadata = z.infer<typeof subscriptionMetadataSchema>;
