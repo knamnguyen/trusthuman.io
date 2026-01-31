@@ -2,7 +2,7 @@
 
 **Date:** 2026-01-19
 **Updated:** 2026-01-31 (Version 2.8 - Deferred Downgrade Flow)
-**Status:** 🚧 In Progress (Phase 1-5 Complete, Slot Update UI Complete)
+**Status:** 🚧 In Progress (Phase 1-6 Complete, Phase 7 Cleanup In Progress)
 **Complexity:** Complex (Multi-phase migration)
 
 ---
@@ -2396,10 +2396,10 @@ DROP TYPE "AccessType";
 - [x] `apps/nextjs/src/app/subscription/success/page.tsx` - Replaced by billing-return
 - [x] `apps/nextjs/src/app/api/webhooks/stripe/route.ts` - Duplicate of Hono webhook
 
-### Data Migration (Phase 6) - IN PROGRESS
+### Data Migration (Phase 6) ✅ COMPLETE
 
-- [x] `scripts/migrate-subscriptions.ts` - Created migration script
-- [x] `scripts/verify-migration.ts` - Created verification script
+- [x] `packages/api/scripts/migrate-subscriptions.ts` - Migration script (sets purchasedSlots=1 for all)
+- [x] `packages/api/scripts/verify-migration.ts` - Verification script
 
 ### Slot Upgrade/Downgrade Flow - DECIDED: Option B (Custom UI)
 
@@ -2570,9 +2570,10 @@ if (isDowngrade && periodAdvanced) {
 4. ~~Phase 3: Webhook handlers~~ ✅
 5. ~~Phase 4: New pages (billing-return, settings)~~ ✅
 6. ~~Phase 5: UI updates~~ ✅
-7. **Phase 6: Data migration script** ← IN PROGRESS
-   - Scripts created, need to resolve open question about slot quantities
-8. Phase 7: Cleanup (remove old fields)
+7. ~~Phase 6: Data migration script~~ ✅
+   - Scripts ready at `packages/api/scripts/migrate-subscriptions.ts`
+   - All existing subscriptions get 1 slot
+8. **Phase 7: Cleanup (remove old fields)** ← IN PROGRESS
 9. Test on staging environment
 
 ---

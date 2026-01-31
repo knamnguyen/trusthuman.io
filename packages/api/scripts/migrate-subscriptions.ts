@@ -147,7 +147,7 @@ async function migrateUser(user: {
       `[DRY RUN] Would migrate user ${user.primaryEmailAddress} → org "${org.name}"`,
     );
     console.log(`  Subscription: ${subscription.id}`);
-    console.log(`  Quantity: ${subscription.items.data[0]?.quantity ?? 1}`);
+    console.log(`  Slots: 1 (all existing subscriptions get 1 slot)`);
     console.log(
       `  Expires: ${new Date(subscription.current_period_end * 1000).toISOString()}`,
     );
@@ -173,7 +173,7 @@ async function migrateUser(user: {
     );
 
     // 3b. Update Organization in DB
-    const quantity = subscription.items.data[0]?.quantity ?? 1;
+    // All existing subscriptions get 1 slot (decision: existing users get 1 slot)
     const expiresAt = new Date(subscription.current_period_end * 1000);
 
     await db.organization.update({
@@ -181,7 +181,7 @@ async function migrateUser(user: {
       data: {
         payerId: user.id,
         stripeSubscriptionId: subscription.id,
-        purchasedSlots: quantity,
+        purchasedSlots: 1, // All existing subscriptions get 1 slot
         subscriptionTier: "PREMIUM",
         subscriptionExpiresAt: expiresAt,
       },
