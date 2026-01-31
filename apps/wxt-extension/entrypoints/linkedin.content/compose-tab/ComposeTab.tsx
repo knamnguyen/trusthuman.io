@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { posthog } from "@/lib/posthog";
 import {
   Edit3,
   ExternalLink,
@@ -12,7 +13,6 @@ import {
 } from "lucide-react";
 import { useShallow } from "zustand/shallow";
 
-import { posthog } from "@/lib/posthog";
 import { Button } from "@sassy/ui/button";
 import { TooltipWithDialog } from "@sassy/ui/components/tooltip-with-dialog";
 
@@ -42,9 +42,15 @@ export function ComposeTab() {
   // Custom hooks for complex logic
   const { handleSubmitAll, handleGenerationComplete, isSubmitting } =
     useSubmitBatch();
-  const { handleStart, handleStop, isLoading, loadingProgress, scrollProgress } =
-    useLoadPosts(targetDraftCount, handleGenerationComplete);
-  const { queueProgress, isAutoResumeLoading, autoResumeScrollProgress } = useAutoResume(handleGenerationComplete);
+  const {
+    handleStart,
+    handleStop,
+    isLoading,
+    loadingProgress,
+    scrollProgress,
+  } = useLoadPosts(targetDraftCount, handleGenerationComplete);
+  const { queueProgress, isAutoResumeLoading, autoResumeScrollProgress } =
+    useAutoResume(handleGenerationComplete);
 
   // Subscribe to isUserEditing for paused indicator
   const isUserEditing = useComposeStore((state) => state.isUserEditing);
@@ -53,7 +59,6 @@ export function ComposeTab() {
     (state) => state.isEngageButtonGenerating,
   );
   const clearAllCards = useComposeStore((state) => state.clearAllCards);
-
 
   // Use separate subscriptions for different concerns to minimize re-renders
   // Card IDs for rendering the list - only changes when cards are added/removed
@@ -91,7 +96,8 @@ export function ComposeTab() {
   const previewingCardId = useComposeStore((state) => state.previewingCardId);
 
   // Conflict flags - disable certain actions when others are running
-  const isAnyGenerating = isLoading || isEngageButtonGenerating || isAutoResumeLoading;
+  const isAnyGenerating =
+    isLoading || isEngageButtonGenerating || isAutoResumeLoading;
 
   // Get account data for quick link
   const authOrganization = useAuthStore((state) => state.organization);
@@ -187,7 +193,7 @@ export function ComposeTab() {
                 href={historyLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-primary hover:text-primary/80 transition-colors flex items-center gap-1 text-xs font-medium whitespace-nowrap"
+                className="text-primary hover:text-primary/80 flex items-center gap-1 text-xs font-medium whitespace-nowrap transition-colors"
                 title="Open in dashboard"
               >
                 View Comment History
@@ -241,7 +247,10 @@ export function ComposeTab() {
               id="ek-load-posts-button"
               onClick={handleStartWithCloseSettings}
               disabled={
-                isSubmitting || isEngageButtonGenerating || hasEngageButtonCards || isAutoResumeLoading
+                isSubmitting ||
+                isEngageButtonGenerating ||
+                hasEngageButtonCards ||
+                isAutoResumeLoading
               }
               size="sm"
               className="h-7 flex-1 text-xs"
@@ -258,27 +267,28 @@ export function ComposeTab() {
           <div className="flex items-center gap-1.5">
             <span className="text-muted-foreground text-xs">Target:</span>
             <input
-              type="number"
-              min={1}
-              max={100}
+              type="text"
               value={targetDraftCount}
-              onChange={(e) =>
-                setTargetDraftCount(
-                  Math.min(100, Math.max(1, parseInt(e.target.value) || 1)),
-                )
-              }
+              onChange={(e) => {
+                const val = Number(e.target.value);
+                if (!isNaN(val) && val > 0 && val <= 100) {
+                  setTargetDraftCount(val);
+                } else if (e.target.value === "") {
+                  setTargetDraftCount(0);
+                }
+              }}
               className="border-input bg-background h-6 w-12 rounded border px-1 text-center text-xs"
               disabled={isLoading || isAutoResumeLoading}
             />
           </div>
         </div>
 
-
         {/* Row 3: Stats + Actions (only when cards exist) */}
         {cardIds.length > 0 && (
           <div className="flex items-center justify-between border-t pt-2">
             <div className="flex items-center gap-2 text-xs font-medium">
-              {((scrollProgress > 0 && isLoading) || (autoResumeScrollProgress > 0 && isAutoResumeLoading)) && (
+              {((scrollProgress > 0 && isLoading) ||
+                (autoResumeScrollProgress > 0 && isAutoResumeLoading)) && (
                 <span className="flex items-center gap-1 text-blue-600">
                   <Loader2 className="h-3 w-3 animate-spin" />
                   {scrollProgress || autoResumeScrollProgress} scrolling
