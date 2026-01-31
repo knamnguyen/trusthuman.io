@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
 import { SpeedInsights as VercelSpeedInsights } from "@vercel/speed-insights/next";
-import { Agentation } from "agentation";
 
 import { Toaster } from "@sassy/ui/toast";
 
@@ -10,6 +9,7 @@ import "~/app/globals.css";
 
 import { env } from "~/env";
 import { Providers } from "../lib/providers/providers";
+import { ConditionalScripts } from "./_components/conditional-scripts";
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -64,10 +64,6 @@ export default function RootLayout(props: { children: React.ReactNode }) {
         data-endorsely="2fb18c3c-7198-4c86-b16b-714f8e177932"
         strategy="afterInteractive"
       />
-      {/* tracking for leads generation from visits rb2b */}
-      <Script id="reb2b-tracking">
-        {`!function(key) {if (window.reb2b) return;window.reb2b = {loaded: true};var s = document.createElement("script");s.async = true;s.src = "https://ddwl4m2hdecbv.cloudfront.net/b/" + key + "/" + key + ".js.gz";document.getElementsByTagName("script")[0].parentNode.insertBefore(s, document.getElementsByTagName("script")[0]);}("9NMMZHR79ZNW");`}
-      </Script>
       {/* tracking for google analytics */}
       {/* Load Google Analytics script asynchronously */}
       <Script
@@ -86,6 +82,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
           `}
       </Script>
       <body className="bg-background text-foreground min-h-full font-sans antialiased">
+        <ConditionalScripts />
         <Providers>
           {props.children}
           <Toaster />
