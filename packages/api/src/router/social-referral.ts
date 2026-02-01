@@ -31,18 +31,8 @@ export const socialReferralRouter = () =>
           });
         }
 
-        // Check eligibility: org must have exactly 1 LinkedIn account
-        const accountCount = await ctx.db.linkedInAccount.count({
-          where: { organizationId: ctx.activeOrg.id },
-        });
-
-        if (accountCount !== 1) {
-          throw new TRPCError({
-            code: "FORBIDDEN",
-            message:
-              "Organization must have exactly 1 LinkedIn account to participate in social referral program",
-          });
-        }
+        // NOTE: No eligibility check - any org can participate
+        // Free days will apply to FIRST account added to org (handled in verification service)
 
         // Normalize URL for duplicate detection
         const normalized = normalizeUrl(input.postUrl);
