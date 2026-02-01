@@ -201,6 +201,15 @@ export function SpacebarEngageObserver() {
           cardIds: aiCardIds,
           updateCardComment,
           updateCardStyleInfo,
+          onError(error) {
+            switch (error.reason) {
+              case "quota_exceeded": {
+                break;
+              }
+              default:
+                break;
+            }
+          },
         });
       } finally {
         // Mark as done generating

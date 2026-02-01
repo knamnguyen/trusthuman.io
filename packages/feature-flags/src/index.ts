@@ -44,4 +44,8 @@ export {
   getPremiumStatus,
 } from "./premium";
 
-export { autoCommentConfigurationDefaults } from "./constants";
+export {
+  autoCommentConfigurationDefaults,
+  DEFAULT_COMMENT_STYLE_CONFIG,
+} from "./constants";
+export type { CommentStyleConfig } from "./constants";

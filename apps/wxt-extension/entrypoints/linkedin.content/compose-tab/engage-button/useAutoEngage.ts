@@ -14,6 +14,7 @@ import { createCommentUtilities } from "@sassy/linkedin-automation/comment/creat
 import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post-utilities";
 
 import { useComposeStore } from "../../stores/compose-store";
+import { useDailyQuotaLimitHitDialogStore } from "../../stores/dialog-store";
 import { useSettingsLocalStore } from "../../stores/settings-local-store";
 import { SIDEBAR_TABS, useSidebarStore } from "../../stores/sidebar-store";
 import { generateAndUpdateCards } from "../utils/generate-ai-comments";
@@ -32,6 +33,10 @@ export function useAutoEngage() {
     updateCardsComments,
   } = useComposeStore();
   const { openToTab } = useSidebarStore();
+
+  const showDailyQuotaLimitHitDialog = useDailyQuotaLimitHitDialogStore(
+    (state) => state.open,
+  );
 
   // Store refs to avoid recreating handleClick on every render
   const storeRef = useRef({
@@ -64,7 +69,7 @@ export function useAutoEngage() {
     const postUtils = createPostUtilities();
 
     const handleNativeCommentClick = async (
-      event: NativeCommentButtonClickEvent
+      event: NativeCommentButtonClickEvent,
     ) => {
       // Get fresh state from stores
       const composeState = useComposeStore.getState();
@@ -79,18 +84,18 @@ export function useAutoEngage() {
       // This prevents duplicate requests when programmatic clickCommentButton triggers this watcher
       if (composeState.isEngageButtonGenerating) {
         console.log(
-          "[useAutoEngage] SKIPPED - isEngageButtonGenerating already true (another trigger is active)"
+          "[useAutoEngage] SKIPPED - isEngageButtonGenerating already true (another trigger is active)",
         );
         return;
       }
 
       // Only block if Load Posts is running or Load Posts cards exist
       const hasLoadPostsCards = composeState.cards.some(
-        (c) => !composeState.singlePostCardIds.includes(c.id)
+        (c) => !composeState.singlePostCardIds.includes(c.id),
       );
       if (composeState.isCollecting || hasLoadPostsCards) {
         console.log(
-          "[useAutoEngage] SKIPPED - Load Posts running or Load Posts cards exist"
+          "[useAutoEngage] SKIPPED - Load Posts running or Load Posts cards exist",
         );
         return;
       }
@@ -115,7 +120,7 @@ export function useAutoEngage() {
       }
 
       console.log(
-        "[useAutoEngage] ▶▶▶ TRIGGERED - native comment button clicked, starting generation"
+        "[useAutoEngage] ▶▶▶ TRIGGERED - native comment button clicked, starting generation",
       );
 
       // Clear any existing single-post cards
@@ -141,7 +146,7 @@ export function useAutoEngage() {
 
       console.log(
         `EngageKit AutoEngage: ${humanOnlyMode ? "creating 1 manual card (100% human mode)" : "generating 3 AI variations"} for post:`,
-        fullCaption.slice(0, 100)
+        fullCaption.slice(0, 100),
       );
 
       // Map author info to expected format
@@ -211,7 +216,7 @@ export function useAutoEngage() {
       commentUtils.clickCommentButton(postContainer);
       await commentUtils.waitForCommentsReady(
         postContainer,
-        beforeComments.length
+        beforeComments.length,
       );
 
       // Blur focus from LinkedIn's comment box
@@ -252,6 +257,16 @@ export function useAutoEngage() {
           cardIds: aiCardIds,
           updateCardComment,
           updateCardStyleInfo,
+          onError(error) {
+            switch (error.reason) {
+              case "daily_quota_exceeded": {
+                showDailyQuotaLimitHitDialog();
+                break;
+              }
+              default:
+                break;
+            }
+          },
         });
       } finally {
         setIsEngageButtonGenerating(false);
@@ -260,7 +275,7 @@ export function useAutoEngage() {
 
     // Start watching for native comment button clicks
     const cleanup = commentUtils.watchForNativeCommentButtonClicks(
-      handleNativeCommentClick
+      handleNativeCommentClick,
     );
 
     return cleanup;

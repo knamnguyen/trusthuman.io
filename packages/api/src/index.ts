@@ -58,12 +58,8 @@ export type { AppRouter, RouterInputs, RouterOutputs };
 // Export schema validator types for use in other packages
 export type {
   CommentGenerationInput,
-  CommentGenerationOutput,
   CommentGeneratorConfig,
   CommentGeneratorError,
   // Dynamic style selection types
-  GenerateDynamicInput,
-  GenerateDynamicOutput,
-  DynamicStyleResult,
   StyleSnapshot,
 } from "./schema-validators";

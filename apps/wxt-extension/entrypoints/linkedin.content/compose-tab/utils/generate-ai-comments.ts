@@ -18,7 +18,8 @@
  * - PostPreviewSheet regenerate (single-card flow)
  */
 
-import type { DynamicStyleResult } from "@sassy/api";
+import posthog from "posthog-js";
+
 import type { AdjacentCommentInfo } from "@sassy/linkedin-automation/post/types";
 import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post-utilities";
 
@@ -133,7 +134,24 @@ export async function generateSingleComment(
       count: 1,
     });
 
-    const result = results[0] as DynamicStyleResult;
+    if (results.status === "error") {
+      return results;
+    }
+
+    const result = results.data[0];
+    if (!result) {
+      const error = new Error(
+        "[generateSingleComment] No result returned from generateDynamic",
+      );
+      posthog.captureException(error, {
+        extra: {
+          postContent,
+          adjacentCommentsCount: mappedAdjacentComments.length,
+        },
+      });
+      throw error;
+    }
+
     console.log("[generateSingleComment] Dynamic result:", {
       commentLength: result.comment?.length,
       styleId: result.styleId,
@@ -165,6 +183,10 @@ export async function generateSingleComment(
       previousAiComment,
       humanEditedComment,
     });
+
+    if (result.status === "error") {
+      return result;
+    }
 
     // Build style snapshot (null if using hardcoded default)
     const styleSnapshot = styleConfig.styleId
@@ -207,7 +229,7 @@ export interface GenerateMultipleCommentsParams {
  */
 export async function generateMultipleComments(
   params: GenerateMultipleCommentsParams,
-): Promise<GeneratedCommentResult[]> {
+) {
   const { postContent, postContainer, count } = params;
 
   // Get settings
@@ -249,12 +271,20 @@ export async function generateMultipleComments(
       count,
     });
 
+    if (results.status === "error") {
+      return results;
+    }
+
     // Map server results to our format
-    return results.map((result: DynamicStyleResult) => ({
-      comment: result.comment,
-      styleId: result.styleId,
-      styleSnapshot: result.styleSnapshot,
-    }));
+    return {
+      status: "success",
+      data: results.data.map((result) => ({
+        comment: result.comment,
+        styleId: result.styleId,
+        styleSnapshot: result.styleSnapshot,
+      })),
+      fails: [],
+    } as const;
   } else {
     // Static mode: Use selected default style, fire N parallel requests
     const styleConfig = await getCommentStyleConfig();
@@ -284,17 +314,32 @@ export async function generateMultipleComments(
       : null;
 
     // Generate `count` comments in parallel
-    const promises = Array.from({ length: count }, async () => {
-      const result =
-        await trpcClient.aiComments.generateComment.mutate(baseRequestParams);
-      return {
-        comment: result.comment,
-        styleId: styleConfig.styleId,
-        styleSnapshot,
-      };
-    });
+    const promises = Array.from({ length: count }, () =>
+      trpcClient.aiComments.generateComment.mutate(baseRequestParams),
+    );
 
-    return Promise.all(promises);
+    const results = await Promise.all(promises);
+
+    const fails = [];
+    const successes = [];
+
+    for (const result of results) {
+      if (result.status === "error") {
+        fails.push(result);
+      } else {
+        successes.push({
+          comment: result.comment,
+          styleId: styleConfig.styleId,
+          styleSnapshot,
+        });
+      }
+    }
+
+    return {
+      status: "success",
+      data: successes,
+      fails,
+    } as const;
   }
 }
 
@@ -322,6 +367,19 @@ export async function generateAndUpdateCards(
         styleSnapshot: GeneratedCommentResult["styleSnapshot"];
       },
     ) => void;
+    onError?: (
+      result: // extract fail result types from generateMultipleComments
+      // we have 2 cases of fails, one is the overall error
+      | Extract<
+            Awaited<ReturnType<typeof generateMultipleComments>>,
+            { status: "error" }
+          >
+        // the other is per-item fail for static mode batch generations
+        | Extract<
+            Awaited<ReturnType<typeof generateMultipleComments>>,
+            { status: "success" }
+          >["fails"][number],
+    ) => void;
   },
 ): Promise<void> {
   const { cardIds, updateCardComment, updateCardStyleInfo, ...generateParams } =
@@ -336,8 +394,12 @@ export async function generateAndUpdateCards(
   try {
     const results = await generateMultipleComments(generateParams);
 
+    if (results.status === "error") {
+      return params.onError?.(results);
+    }
+
     // Map results to cards
-    results.forEach((result, index) => {
+    results.data.forEach((result, index) => {
       const cardId = cardIds[index];
       if (cardId) {
         updateCardComment(cardId, result.comment);
@@ -347,6 +409,16 @@ export async function generateAndUpdateCards(
         });
       }
     });
+
+    const firstFail = results.fails[0];
+
+    if (firstFail !== undefined) {
+      console.warn(
+        `[generateAndUpdateCards] Some comment generations failed: ${results.fails.length}`,
+        results.fails,
+      );
+      params.onError?.(firstFail);
+    }
   } catch (err) {
     console.error("[generateAndUpdateCards] Error generating comments:", err);
     // Set empty comments on error so isGenerating becomes false

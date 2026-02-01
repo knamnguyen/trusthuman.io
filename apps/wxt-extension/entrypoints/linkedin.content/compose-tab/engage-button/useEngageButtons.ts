@@ -13,6 +13,7 @@ import { createCommentUtilities } from "@sassy/linkedin-automation/comment/creat
 import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post-utilities";
 
 import { useComposeStore } from "../../stores/compose-store";
+import { useDailyQuotaLimitHitDialogStore } from "../../stores/dialog-store";
 import { useSettingsLocalStore } from "../../stores/settings-local-store";
 import { SIDEBAR_TABS, useSidebarStore } from "../../stores/sidebar-store";
 import { generateAndUpdateCards } from "../utils/generate-ai-comments";
@@ -41,7 +42,7 @@ function createEngageButton(
   target: CommentEditorTarget,
   onClick: (target: CommentEditorTarget) => void,
   blinkSpriteUrl: string,
-  breatheSpriteUrl: string
+  breatheSpriteUrl: string,
 ): EngageButtonData {
   const button = document.createElement("button");
   button.type = "button";
@@ -113,10 +114,14 @@ export function useEngageButtons() {
   } = useComposeStore();
   const { openToTab } = useSidebarStore();
 
+  const showDailyQuotaLimitHitDialog = useDailyQuotaLimitHitDialogStore(
+    (state) => state.open,
+  );
+
   // Get sprite URLs
   const defaultSpriteUrl = chrome.runtime.getURL("/engagekit-sprite-blink.svg");
   const breatheSpriteUrl = chrome.runtime.getURL(
-    "/engagekit-sprite-breathe.svg"
+    "/engagekit-sprite-breathe.svg",
   );
 
   // Preload sprites
@@ -210,11 +215,11 @@ export function useEngageButtons() {
 
       // Check if Load Posts is active or has cards
       const hasLoadPostsCards = cards.some(
-        (c) => !singlePostCardIds.includes(c.id)
+        (c) => !singlePostCardIds.includes(c.id),
       );
       if (isCollecting || hasLoadPostsCards) {
         console.log(
-          "EngageKit: ignoring click - Load Posts running or Load Posts cards exist"
+          "EngageKit: ignoring click - Load Posts running or Load Posts cards exist",
         );
         return;
       }
@@ -251,7 +256,7 @@ export function useEngageButtons() {
 
       console.log(
         `[useEngageButtons] ▶▶▶ TRIGGERED - ${humanOnlyMode ? "creating 1 manual card (100% human mode)" : "generating 3 AI variations"} for post:`,
-        fullCaption.slice(0, 100)
+        fullCaption.slice(0, 100),
       );
 
       // Map author info to expected format
@@ -321,7 +326,7 @@ export function useEngageButtons() {
       commentUtils.clickCommentButton(postContainer);
       await commentUtils.waitForCommentsReady(
         postContainer,
-        beforeComments.length
+        beforeComments.length,
       );
 
       // Blur focus from LinkedIn's comment box
@@ -363,6 +368,16 @@ export function useEngageButtons() {
           cardIds: aiCardIds,
           updateCardComment,
           updateCardStyleInfo,
+          onError(error) {
+            switch (error.reason) {
+              case "daily_quota_exceeded": {
+                showDailyQuotaLimitHitDialog();
+                break;
+              }
+              default:
+                break;
+            }
+          },
         });
       } finally {
         setIsEngageButtonGenerating(false);
@@ -380,7 +395,7 @@ export function useEngageButtons() {
             target,
             handleClick,
             blinkUrl,
-            breatheUrl
+            breatheUrl,
           );
           target.container.appendChild(buttonData.button);
           buttonMap.set(target.id, buttonData);

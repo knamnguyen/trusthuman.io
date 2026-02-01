@@ -54,14 +54,6 @@ function getLimit(org: {
   return FEATURE_CONFIG.dailyComments.freeTierLimit; // 5
 }
 
-export interface QuotaStatus {
-  used: number;
-  limit: number;
-  isPremium: boolean;
-  refreshedAt: Date;
-  resetsAt: Date;
-}
-
 /**
  * Get account's AI comment quota with lazy refresh
  *
@@ -74,10 +66,7 @@ export interface QuotaStatus {
  * @param accountId - LinkedInAccount ID
  * @returns Quota status with used count, limit, and reset time
  */
-export async function getAccountQuota(
-  db: PrismaClient,
-  accountId: string,
-): Promise<QuotaStatus> {
+export async function getAccountQuota(db: PrismaClient, accountId: string) {
   const account = await db.linkedInAccount.findUnique({
     where: { id: accountId },
     select: {
@@ -117,6 +106,8 @@ export async function getAccountQuota(
     accountCount: account.org?._count.linkedInAccounts ?? 0,
   };
 
+  const limit = getLimit(orgData);
+
   if (needsRefresh) {
     // Reset quota and update timestamp
     await db.linkedInAccount.update({
@@ -129,7 +120,8 @@ export async function getAccountQuota(
 
     return {
       used: 0,
-      limit: getLimit(orgData),
+      left: limit,
+      limit,
       isPremium: isOrgPremium(orgData),
       refreshedAt: todayMidnightUTC,
       resetsAt: getNextMidnightUTC(),
@@ -139,7 +131,8 @@ export async function getAccountQuota(
   // No refresh needed, return current status
   return {
     used: account.dailyAIcomments,
-    limit: getLimit(orgData),
+    left: limit - account.dailyAIcomments,
+    limit,
     isPremium: isOrgPremium(orgData),
     refreshedAt: lastRefresh,
     resetsAt: getNextMidnightUTC(),
@@ -156,11 +149,11 @@ export async function getAccountQuota(
  * @param accountId - LinkedInAccount ID
  * @param count - Number of comments to add to usage
  */
-export async function incrementAccountUsage(
+export async function incrementDailyAiCommentUsage(
   db: PrismaClient,
   accountId: string,
   count: number,
-): Promise<void> {
+) {
   await db.linkedInAccount.update({
     where: { id: accountId },
     data: {

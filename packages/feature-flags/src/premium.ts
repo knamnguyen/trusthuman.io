@@ -9,8 +9,8 @@ export const FEATURE_CONFIG = {
   // Daily comment cap (applies to both plans but still tracked)
   dailyComments: {
     isPremium: false,
-    freeTierLimit: 5,        // Free: 5 comments/day
-    premiumTierLimit: -1,    // Premium: unlimited (-1 = no limit)
+    freeTierLimit: 20, // Free: 5 comments/day
+    premiumTierLimit: Number.MAX_SAFE_INTEGER, // Premium: Unlimited (use virtually unlimited number)
   },
   duplicateAuthorCheck: {
     isPremium: true,
@@ -733,17 +733,13 @@ export function getPremiumStatus(org: {
   subscriptionExpiresAt: Date | null;
   purchasedSlots: number;
   accountCount: number;
-}): {
-  isPremium: boolean;
-  reason?: "not_subscribed" | "expired" | "over_quota";
-  overQuotaBy?: number;
-} {
+}) {
   if (org.subscriptionTier !== "PREMIUM") {
-    return { isPremium: false, reason: "not_subscribed" };
+    return { isPremium: false, reason: "not_subscribed" } as const;
   }
 
   if (!org.subscriptionExpiresAt || org.subscriptionExpiresAt < new Date()) {
-    return { isPremium: false, reason: "expired" };
+    return { isPremium: false, reason: "expired" } as const;
   }
 
   if (org.accountCount > org.purchasedSlots) {
@@ -751,7 +747,7 @@ export function getPremiumStatus(org: {
       isPremium: false,
       reason: "over_quota",
       overQuotaBy: org.accountCount - org.purchasedSlots,
-    };
+    } as const;
   }
 
   return { isPremium: true };
