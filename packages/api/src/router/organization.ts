@@ -261,7 +261,7 @@ const subscriptionRouter = createTRPCRouter({
       z.object({
         slots: z.number().int().min(1),
         interval: z.enum(["monthly", "yearly"]),
-        endorsely_referral: z.string().optional(),
+        endorsely_referral: z.string().nullish(),
       }),
     )
     .mutation(async ({ ctx, input }) => {

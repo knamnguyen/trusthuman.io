@@ -1,14 +1,11 @@
-import { TRPCError } from "@trpc/server";
+import z from "zod";
 
-import { hasPremiumAccess } from "../access-control/organization";
-import {
-  commentGenerationInputSchema,
-  commentGenerationOutputSchema,
-  generateDynamicInputSchema,
-  generateDynamicOutputSchema,
-} from "../schema-validators";
+import { commentGenerationInputSchema } from "../schema-validators";
 import { accountProcedure, createTRPCRouter } from "../trpc";
-import { getAccountQuota, incrementAccountUsage } from "../utils/ai-quota";
+import {
+  getAccountQuota,
+  incrementDailyAiCommentUsage,
+} from "../utils/ai-quota";
 import {
   DEFAULT_CREATIVITY,
   DEFAULT_MAX_WORDS,
@@ -26,30 +23,48 @@ export const aiCommentsRouter = () =>
      */
     generateComment: accountProcedure
       .input(commentGenerationInputSchema)
-      .output(commentGenerationOutputSchema)
       .mutation(async ({ input, ctx }) => {
-        const isPremium = await hasPremiumAccess(ctx.db, {
-          orgId: ctx.activeOrg.id,
-        });
+        const quota = await getAccountQuota(ctx.db, ctx.activeAccount.id);
 
-        // TODO: apply proper error checks and prompt for dialogs in the frontend
-        if (!isPremium) {
+        if (quota === null) {
           return {
-            success: false,
-            error:
-              "AI comment generation is available for premium organizations only. Please upgrade your subscription to access this feature.",
-            comment: "Great post! Thanks for sharing.",
-            fallback: true,
+            status: "error",
+            reason: "account_not_found",
+            message: "Failed to retrieve account quota.",
+          } as const;
+        }
+
+        if (quota.left === 0) {
+          return {
+            status: "error",
+            reason: "daily_quota_exceeded",
+            message: `Daily AI comment limit reached (${quota.used}/${quota.limit}). Resets at ${quota.resetsAt.toISOString()}. Upgrade to premium for unlimited comments.`,
           } as const;
         }
 
         // Generate comment
         const result = await ctx.ai.generateComment(input);
 
-        // Increment usage
-        await incrementAccountUsage(ctx.db, ctx.activeAccount.id, 1);
+        if (result.success === false) {
+          console.info("[aiCommentsRouter] AI generation failed:", {
+            accountId: ctx.activeAccount.id,
+            error: result.error,
+          });
 
-        return result;
+          return {
+            status: "error",
+            reason: "internal_error",
+            message: `Failed to generate ai comment due to overload. Please try again later.`,
+          } as const;
+        }
+
+        // Increment usage
+        await incrementDailyAiCommentUsage(ctx.db, ctx.activeAccount.id, 1);
+
+        return {
+          status: "success",
+          comment: result.comment,
+        } as const;
       }),
 
     /**
@@ -63,8 +78,21 @@ export const aiCommentsRouter = () =>
      * 4. Return results with styleId and full styleSnapshot for history tracking
      */
     generateDynamic: accountProcedure
-      .input(generateDynamicInputSchema)
-      .output(generateDynamicOutputSchema)
+      .input(
+        z.object({
+          postContent: z.string().min(1, "Post content is required"),
+          adjacentComments: z
+            .array(
+              z.object({
+                commentContent: z.string(),
+                likeCount: z.number(),
+                replyCount: z.number(),
+              }),
+            )
+            .optional(),
+          count: z.number().min(1).max(5).default(3),
+        }),
+      )
       .mutation(async ({ input, ctx }) => {
         const { postContent, adjacentComments, count } = input;
         const accountId = ctx.activeAccount.id;
@@ -72,11 +100,20 @@ export const aiCommentsRouter = () =>
         // Check quota BEFORE generating
         const quota = await getAccountQuota(ctx.db, accountId);
 
-        if (!quota.isPremium && quota.used + count > quota.limit) {
-          throw new TRPCError({
-            code: "FORBIDDEN",
+        if (quota === null) {
+          return {
+            status: "error",
+            reason: "account_not_found",
+            message: "Failed to retrieve account quota.",
+          } as const;
+        }
+
+        if (count > quota.left) {
+          return {
+            status: "error",
+            reason: "daily_quota_exceeded",
             message: `Daily AI comment limit reached (${quota.used}/${quota.limit}). Resets at ${quota.resetsAt.toISOString()}. Upgrade to premium for unlimited comments.`,
-          });
+          } as const;
         }
 
         console.log("[generateDynamic] Starting dynamic generation", {
@@ -125,7 +162,10 @@ export const aiCommentsRouter = () =>
             }),
           );
 
-          return results;
+          return {
+            status: "success",
+            data: results,
+          } as const;
         }
 
         // 3. Build style summaries for selector (description or first 100 words of content)
@@ -196,18 +236,21 @@ export const aiCommentsRouter = () =>
         );
 
         // After successful generation, increment usage
-        await incrementAccountUsage(ctx.db, accountId, count);
+        await incrementDailyAiCommentUsage(ctx.db, accountId, count);
 
         console.log("[generateDynamic] Generated comments:", results.length);
 
-        return results;
+        return {
+          status: "success",
+          data: results,
+        } as const;
       }),
 
     /**
      * Get current quota status for active account
      * Used by UI to show remaining daily comment limit
      */
-    quota: accountProcedure.query(async ({ ctx }) => {
+    quota: accountProcedure.query(({ ctx }) => {
       return getAccountQuota(ctx.db, ctx.activeAccount.id);
     }),
   });

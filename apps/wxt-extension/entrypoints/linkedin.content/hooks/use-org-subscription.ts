@@ -30,7 +30,7 @@ export function useOrgSubscription() {
           const isOverQuota = data.usedSlots > data.purchasedSlots;
 
           return {
-            isPremium: isPremium && !isOverQuota,
+            isPremium: !!isPremium && !isOverQuota,
             isOverQuota,
             purchasedSlots: data.purchasedSlots,
             usedSlots: data.usedSlots,
