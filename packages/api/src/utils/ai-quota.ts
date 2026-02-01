@@ -89,7 +89,7 @@ export async function getAccountQuota(db: PrismaClient, accountId: string) {
   });
 
   if (!account) {
-    throw new Error(`Account ${accountId} not found`);
+    return null;
   }
 
   const todayMidnightUTC = getTodayMidnightUTC();

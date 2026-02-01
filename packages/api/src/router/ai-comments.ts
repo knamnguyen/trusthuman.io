@@ -26,6 +26,14 @@ export const aiCommentsRouter = () =>
       .mutation(async ({ input, ctx }) => {
         const quota = await getAccountQuota(ctx.db, ctx.activeAccount.id);
 
+        if (quota === null) {
+          return {
+            status: "error",
+            reason: "account_not_found",
+            message: "Failed to retrieve account quota.",
+          } as const;
+        }
+
         if (quota.left === 0) {
           return {
             status: "error",
@@ -91,6 +99,14 @@ export const aiCommentsRouter = () =>
 
         // Check quota BEFORE generating
         const quota = await getAccountQuota(ctx.db, accountId);
+
+        if (quota === null) {
+          return {
+            status: "error",
+            reason: "account_not_found",
+            message: "Failed to retrieve account quota.",
+          } as const;
+        }
 
         if (count > quota.left) {
           return {

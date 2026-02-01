@@ -8,6 +8,8 @@
  */
 
 import { useEffect, useRef } from "react";
+import { useTRPC } from "@/lib/trpc/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 import type { NativeCommentButtonClickEvent } from "@sassy/linkedin-automation/comment/types";
 import { createCommentUtilities } from "@sassy/linkedin-automation/comment/create-comment-utilities";
@@ -37,6 +39,9 @@ export function useAutoEngage() {
   const showDailyQuotaLimitHitDialog = useDailyQuotaLimitHitDialogStore(
     (state) => state.open,
   );
+
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
 
   // Store refs to avoid recreating handleClick on every render
   const storeRef = useRef({
@@ -251,6 +256,8 @@ export function useAutoEngage() {
       // Generate AI comments using shared utility
       try {
         await generateAndUpdateCards({
+          trpc,
+          queryClient,
           postContent: fullCaption,
           postContainer,
           count: 3,

@@ -18,13 +18,14 @@
  * - PostPreviewSheet regenerate (single-card flow)
  */
 
+import { QueryClient } from "@tanstack/react-query";
 import posthog from "posthog-js";
 
 import type { AdjacentCommentInfo } from "@sassy/linkedin-automation/post/types";
 import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post-utilities";
 
 import type { CommentGenerateSettings } from "../../stores/target-list-queue";
-import { getTrpcClient } from "../../../../lib/trpc/client";
+import { getTrpcClient, useTRPC } from "../../../../lib/trpc/client";
 import { getCommentStyleConfig } from "../../stores/comment-style-cache";
 import { useSettingsDBStore } from "../../stores/settings-db-store";
 
@@ -355,6 +356,8 @@ export async function generateMultipleComments(
  */
 export async function generateAndUpdateCards(
   params: GenerateMultipleCommentsParams & {
+    queryClient: QueryClient;
+    trpc: ReturnType<typeof useTRPC>;
     /** Card IDs to update (length should match count) */
     cardIds: string[];
     /** Callback to update card comment text */
@@ -382,8 +385,14 @@ export async function generateAndUpdateCards(
     ) => void;
   },
 ): Promise<void> {
-  const { cardIds, updateCardComment, updateCardStyleInfo, ...generateParams } =
-    params;
+  const {
+    cardIds,
+    updateCardComment,
+    updateCardStyleInfo,
+    queryClient,
+    trpc,
+    ...generateParams
+  } = params;
 
   if (cardIds.length !== generateParams.count) {
     console.error(
@@ -419,6 +428,8 @@ export async function generateAndUpdateCards(
       );
       params.onError?.(firstFail);
     }
+
+    void queryClient.invalidateQueries(trpc.aiComments.quota.queryOptions());
   } catch (err) {
     console.error("[generateAndUpdateCards] Error generating comments:", err);
     // Set empty comments on error so isGenerating becomes false

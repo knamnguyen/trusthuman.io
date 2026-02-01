@@ -25,4 +25,6 @@ export function createDialogStore<T>() {
   }));
 }
 
-export const useDailyQuotaLimitHitDialogStore = createDialogStore();
+export const useDailyQuotaLimitHitDialogStore = createDialogStore<{
+  showTurnOffAiCommentGenerationButton?: boolean;
+}>();

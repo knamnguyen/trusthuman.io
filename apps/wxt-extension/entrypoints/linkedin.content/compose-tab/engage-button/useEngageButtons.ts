@@ -7,6 +7,8 @@
  */
 
 import { useEffect, useRef } from "react";
+import { useTRPC } from "@/lib/trpc/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 import type { CommentEditorTarget } from "@sassy/linkedin-automation/comment/types";
 import { createCommentUtilities } from "@sassy/linkedin-automation/comment/create-comment-utilities";
@@ -117,6 +119,9 @@ export function useEngageButtons() {
   const showDailyQuotaLimitHitDialog = useDailyQuotaLimitHitDialogStore(
     (state) => state.open,
   );
+
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
 
   // Get sprite URLs
   const defaultSpriteUrl = chrome.runtime.getURL("/engagekit-sprite-blink.svg");
@@ -362,6 +367,8 @@ export function useEngageButtons() {
       // Generate AI comments using shared utility
       try {
         await generateAndUpdateCards({
+          trpc,
+          queryClient,
           postContent: fullCaption,
           postContainer,
           count: 3,
