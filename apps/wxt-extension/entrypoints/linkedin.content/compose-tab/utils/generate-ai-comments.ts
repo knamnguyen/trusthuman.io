@@ -125,6 +125,7 @@ export async function generateSingleComment(
   if (dynamicStyleEnabled) {
     // Dynamic mode: AI selects style, generates 1 comment
     console.log("[generateSingleComment] Using dynamic style selection");
+
     const results = await trpcClient.aiComments.generateDynamic.mutate({
       postContent,
       adjacentComments:

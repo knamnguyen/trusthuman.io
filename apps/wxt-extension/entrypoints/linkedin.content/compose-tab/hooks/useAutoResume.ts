@@ -34,6 +34,8 @@ export function useAutoResume(
   const [queueProgress, setQueueProgress] = useState<QueueProgressInfo | null>(
     null,
   );
+  const [isAutoResumeLoading, setIsAutoResumeLoading] = useState(false);
+  const [autoResumeScrollProgress, setAutoResumeScrollProgress] = useState(0);
 
   // Track if we've checked for pending navigation (prevent double-trigger)
   const checkedPendingNavRef = useRef(false);
@@ -138,6 +140,8 @@ export function useAutoResume(
 
       // Set up loading state (uses the same setIsCollecting from store as useLoadPosts)
       setIsCollecting(true);
+      setIsAutoResumeLoading(true);
+      setAutoResumeScrollProgress(0);
 
       // NOTE: We skip restoring settings to DB store during auto-resume
       // because the account store might not be loaded yet (we skipped waitForStoresReady).
@@ -166,6 +170,7 @@ export function useAutoResume(
           updateCardStyleInfo,
           updateBatchCardCommentAndStyle,
           onProgress: () => {}, // No progress UI during auto-resume
+          onScrollProgress: setAutoResumeScrollProgress, // Track scroll progress for UI
           onGenerationComplete,
         });
         console.log(
@@ -180,6 +185,8 @@ export function useAutoResume(
 
       console.log("[useAutoResume] Auto-resume Load Posts completed");
       setIsCollecting(false);
+      setIsAutoResumeLoading(false);
+      setAutoResumeScrollProgress(0);
 
       // If this was part of a queue, continue to next tab
       if (pendingNav.type === "queue") {
@@ -207,5 +214,9 @@ export function useAutoResume(
     getCards,
   ]);
 
-  return { queueProgress };
+  return {
+    queueProgress,
+    isAutoResumeLoading,
+    autoResumeScrollProgress
+  };
 }

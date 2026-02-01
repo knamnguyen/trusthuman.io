@@ -5,8 +5,8 @@
 
 export const DEFAULT_STYLE_GUIDE = `Keep it short, authentic, and conversational.
 Sound like a real person, not a corporate account.
-Use casual language when appropriate.`;
+Use casual language when appropriate. Be supportive, engaging. Comment on a specific detail from the post.`;
 
-export const DEFAULT_MAX_WORDS = 100;
+export const DEFAULT_MAX_WORDS = 40;
 
 export const DEFAULT_CREATIVITY = 1.0;

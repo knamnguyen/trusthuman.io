@@ -1,4 +1,6 @@
 import type { PrismaClient } from "@sassy/db";
+import { compareTwoStrings } from "string-similarity";
+
 import { SocialReferralService } from "@sassy/social-referral";
 
 const DAYS_PER_VERIFIED_POST = 7;
@@ -73,6 +75,58 @@ export async function verifySocialSubmission(
       keywords: [requiredKeyword],
       platform,
     });
+
+    // Check caption similarity against recent validated posts (last 7 days, same platform)
+    if (result.containsAll && result.text) {
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+      const recentValidatedPosts = await db.socialSubmission.findMany({
+        where: {
+          organizationId: submission.organizationId,
+          platform: submission.platform,
+          status: "VERIFIED",
+          submittedAt: { gte: sevenDaysAgo },
+          postText: { not: null },
+        },
+        select: { postText: true },
+      });
+
+      // Check if caption is too similar to any previous validated post
+      for (const post of recentValidatedPosts) {
+        if (post.postText) {
+          const similarity = compareTwoStrings(
+            result.text.toLowerCase().trim(),
+            post.postText.toLowerCase().trim(),
+          );
+
+          if (similarity > 0.95) {
+            // Mark as failed due to similarity
+            await db.socialSubmission.update({
+              where: { id: submissionId },
+              data: {
+                status: "FAILED",
+                verifiedAt: new Date(),
+                containsKeyword: true,
+                postText: result.text,
+                likes: result.likes,
+                comments: result.comments,
+                shares: result.shares,
+                daysAwarded: 0,
+              },
+            });
+
+            return {
+              success: false,
+              containsKeyword: true,
+              daysAwarded: 0,
+              message:
+                "This caption is too similar to a previous submission. Please write a unique post.",
+            };
+          }
+        }
+      }
+    }
 
     // Update submission with results
     await db.socialSubmission.update({
