@@ -379,8 +379,6 @@ export async function loadPostsToCards(
       }
     }
 
-    onBatchComplete?.();
-
     console.timeEnd(
       `⏱️ [loadPostsToCards] Build card objects (${posts.length} posts)`,
     );
@@ -400,6 +398,10 @@ export async function loadPostsToCards(
     console.timeEnd(
       `⏱️ [loadPostsToCards] onBatchReady total (${posts.length} posts)`,
     );
+
+    await Promise.all(aiPromises);
+
+    onBatchComplete?.();
   };
 
   // Build filter config from settings
