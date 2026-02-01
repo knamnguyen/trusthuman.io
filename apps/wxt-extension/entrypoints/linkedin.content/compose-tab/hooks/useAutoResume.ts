@@ -17,6 +17,7 @@ import type { PendingNavigationState } from "../../stores/navigation-state";
 import type { GenerationCompleteMetadata } from "./useSubmitBatch";
 import { useAccountStore } from "../../stores/account-store";
 import { useComposeStore } from "../../stores/compose-store";
+import { useDailyQuotaLimitHitDialogStore } from "../../stores/dialog-store";
 import { continueQueueProcessing } from "../../utils/multi-tab-navigation";
 import { loadPostsToCards } from "../utils/load-posts-to-cards";
 
@@ -58,6 +59,9 @@ export function useAutoResume(
   const updateBatchCardCommentAndStyle = useComposeStore(
     (state) => state.updateBatchCardCommentAndStyle,
   );
+
+  const showDailyAIGenerationQuotaExceededOverlay =
+    useDailyQuotaLimitHitDialogStore((state) => state.open);
   const isUrnIgnored = useComposeStore((state) => state.isUrnIgnored);
   const getCards = useComposeStore((state) => state.cards);
 
@@ -168,6 +172,9 @@ export function useAutoResume(
         "[useAutoResume] runAutoResume: Starting loadPostsToCards...",
       );
       try {
+        // we only want to show it once per load posts action to not be so annoying
+        let dailyQuotaExceededShown = false;
+
         await loadPostsToCards({
           targetCount: savedTargetDraftCount,
           postLoadSettings,
@@ -187,6 +194,17 @@ export function useAutoResume(
             void queryClient.invalidateQueries(
               trpc.aiComments.quota.queryOptions(),
             );
+          },
+          onDailyAiGenerationQuotaExceeded() {
+            if (dailyQuotaExceededShown) {
+              return;
+            }
+
+            dailyQuotaExceededShown = true;
+
+            showDailyAIGenerationQuotaExceededOverlay({
+              showTurnOffAiCommentGenerationButton: true,
+            });
           },
         });
         console.log(

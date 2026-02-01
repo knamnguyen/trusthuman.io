@@ -89,6 +89,7 @@ export interface LoadPostsToCardsParams {
     generatedCount: number;
   }) => void | Promise<void>;
   onBatchComplete?: () => void;
+  onDailyAiGenerationQuotaExceeded?: () => void;
 }
 
 /**
@@ -133,11 +134,7 @@ export async function loadPostsToCards(
     existingUrns,
     isUrnIgnored,
     shouldStop,
-    addCard,
     addBatchCards,
-    updateCardComment,
-    updateCardStyleInfo,
-    updateBatchCardCommentAndStyle,
     onProgress,
     onScrollProgress,
     onGenerationComplete,
@@ -312,6 +309,14 @@ export async function loadPostsToCards(
                 cardId,
                 result,
               );
+              if (result.reason === "daily_quota_exceeded") {
+                console.warn(
+                  `[loadPostsToCards] Daily AI generation quota exceeded`,
+                );
+                // Notify caller
+                params.onDailyAiGenerationQuotaExceeded?.();
+              }
+
               // Add error case to buffer
               aiUpdateBuffer.push({
                 cardId,
@@ -324,6 +329,7 @@ export async function loadPostsToCards(
               scheduleFlush();
               return;
             }
+
             console.log(
               "[loadPostsToCards] AI result for card",
               cardId.slice(0, 8),

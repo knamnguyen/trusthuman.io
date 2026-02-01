@@ -193,6 +193,9 @@ export function useLoadPosts(
     // Get current cards to find existing URNs (snapshot at start time)
     const existingUrns = new Set(getCards.map((card) => card.urn));
 
+    // we only want to show it once per load posts action to not be so annoying
+    let dailyQuotaExceededShown = false;
+
     // Run post collection using utility (blacklist is fetched internally)
     await loadPostsToCards({
       targetCount: targetDraftCount,
@@ -212,6 +215,16 @@ export function useLoadPosts(
         void queryClient.invalidateQueries(
           trpc.aiComments.quota.queryOptions(),
         );
+      },
+      onDailyAiGenerationQuotaExceeded: () => {
+        if (dailyQuotaExceededShown) {
+          return;
+        }
+
+        dailyQuotaExceededShown = true;
+        showDailyAIQuotaExceededOverlay({
+          showTurnOffAiCommentGenerationButton: true,
+        });
       },
     });
 
