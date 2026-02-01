@@ -44,7 +44,7 @@ export function LinkedInSidebar({ onClose }: LinkedInSidebarProps) {
 
   // Auth state from store (singleton - shared across all components)
   const { isSignedIn, isLoaded: isAuthLoaded } = useAuthStore();
-  const { currentLinkedInStatus, accounts, isLoading } = useAccountStore();
+  const { currentLinkedInStatus } = useAccountStore();
 
   const showDailyAILimitQuotaExceededOverlay = useDailyQuotaLimitHitDialogStore(
     (state) => state.isOpen,

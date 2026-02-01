@@ -1,4 +1,5 @@
 import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { defer } from "@/lib/commons";
 import {
   ExternalLink,
   Eye,
@@ -9,18 +10,17 @@ import {
   Trash2,
 } from "lucide-react";
 
+import { getTouchScoreColor } from "@sassy/linkedin-automation/comment/calculate-touch-score";
+import { createCommentUtilities } from "@sassy/linkedin-automation/comment/create-comment-utilities";
 import { Avatar, AvatarFallback, AvatarImage } from "@sassy/ui/avatar";
 import { Badge } from "@sassy/ui/badge";
 import { Button } from "@sassy/ui/button";
 import { Card, CardContent } from "@sassy/ui/card";
 import { Textarea } from "@sassy/ui/textarea";
 
-import { getTouchScoreColor } from "@sassy/linkedin-automation/comment/calculate-touch-score";
-import { createCommentUtilities } from "@sassy/linkedin-automation/comment/create-comment-utilities";
-
 import { useComposeStore } from "../stores/compose-store";
-import { submitCommentFullFlow } from "./utils/submit-comment-full-flow";
 import { generateSingleComment } from "./utils/generate-ai-comments";
+import { submitCommentFullFlow } from "./utils/submit-comment-full-flow";
 
 // Initialize utilities (auto-detects DOM version)
 const commentUtils = createCommentUtilities();
@@ -108,7 +108,9 @@ export const ComposeCard = memo(function ComposeCard({
   // Use selective subscriptions for actions (these are stable references)
   const updateCardText = useComposeStore((state) => state.updateCardText);
   const updateCardComment = useComposeStore((state) => state.updateCardComment);
-  const updateCardStyleInfo = useComposeStore((state) => state.updateCardStyleInfo);
+  const updateCardStyleInfo = useComposeStore(
+    (state) => state.updateCardStyleInfo,
+  );
   const setCardGenerating = useComposeStore((state) => state.setCardGenerating);
   const removeCard = useComposeStore((state) => state.removeCard);
   const removeSinglePostCard = useComposeStore(
@@ -204,9 +206,13 @@ export const ComposeCard = memo(function ComposeCard({
     // Mark as generating
     setCardGenerating(card.id, true);
 
+    using _ = defer(() => {
+      setCardGenerating(card.id, false);
+    });
+
     // Fire regeneration request using shared utility
     // generateSingleComment handles dynamic vs static mode internally
-    generateSingleComment({
+    const result = await generateSingleComment({
       postContent: card.fullCaption,
       postContainer: card.postContainer,
       previousAiComment,
@@ -214,23 +220,18 @@ export const ComposeCard = memo(function ComposeCard({
         humanEditedComment !== previousAiComment
           ? humanEditedComment
           : undefined,
-    })
-      .then((result) => {
-        updateCardComment(card.id, result.comment);
-        updateCardStyleInfo(card.id, {
-          commentStyleId: result.styleId,
-          styleSnapshot: result.styleSnapshot,
-        });
-      })
-      .catch((err) => {
-        console.error(
-          "EngageKit: error regenerating comment for card",
-          card.id,
-          err,
-        );
-        // On error, just mark as done (keep existing text)
-        setCardGenerating(card.id, false);
-      });
+    });
+
+    if (result.status === "error") {
+      console.error("Error regenerating comment:", result.message);
+      return;
+    }
+
+    updateCardComment(card.id, result.comment);
+    updateCardStyleInfo(card.id, {
+      commentStyleId: result.styleId,
+      styleSnapshot: result.styleSnapshot,
+    });
   }, [
     card.id,
     card.isGenerating,

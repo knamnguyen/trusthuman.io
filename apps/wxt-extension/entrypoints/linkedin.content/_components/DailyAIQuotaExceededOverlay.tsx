@@ -80,7 +80,7 @@ export function DailyAIQuotaExceededOverlay() {
           <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100">
             <Zap className="h-6 w-6 text-amber-600" />
           </div>
-          <CardTitle>You've used your free AI comments for today</CardTitle>
+          <CardTitle>You've used up your free AI comments for today</CardTitle>
           <CardDescription>
             <div>
               Upgrade to a paid plan to continue generating unlimited ai
