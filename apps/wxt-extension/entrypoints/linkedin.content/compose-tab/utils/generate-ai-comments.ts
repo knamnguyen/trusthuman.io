@@ -18,6 +18,7 @@
  * - PostPreviewSheet regenerate (single-card flow)
  */
 
+import { deferAsync } from "@/lib/commons";
 import { QueryClient } from "@tanstack/react-query";
 import posthog from "posthog-js";
 
@@ -400,11 +401,17 @@ export async function generateAndUpdateCards(
     );
   }
 
+  await using _ = deferAsync(async () => {
+    alert("refetching");
+    await queryClient.refetchQueries(trpc.aiComments.quota.queryOptions());
+  });
+
   try {
     const results = await generateMultipleComments(generateParams);
 
     if (results.status === "error") {
-      return params.onError?.(results);
+      params.onError?.(results);
+      return;
     }
 
     // Map results to cards
@@ -428,8 +435,6 @@ export async function generateAndUpdateCards(
       );
       params.onError?.(firstFail);
     }
-
-    void queryClient.invalidateQueries(trpc.aiComments.quota.queryOptions());
   } catch (err) {
     console.error("[generateAndUpdateCards] Error generating comments:", err);
     // Set empty comments on error so isGenerating becomes false

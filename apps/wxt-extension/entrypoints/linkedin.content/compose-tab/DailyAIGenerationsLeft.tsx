@@ -49,7 +49,7 @@ export function DailyAIGenerationsLeft() {
 
     const radius = 10;
     const circumference = 2 * Math.PI * radius;
-    const remainingPercentage = quota.data.left / quota.data.limit;
+    const remainingPercentage = Math.max(quota.data.left, 0) / quota.data.limit;
     const offset = circumference * (1 - remainingPercentage);
 
     return {
@@ -81,9 +81,9 @@ export function DailyAIGenerationsLeft() {
       <TooltipTrigger asChild>
         <button
           onClick={handleUpgrade}
-          className="hover:bg-muted flex items-center gap-1.5 rounded-md px-1.5 py-1 transition-colors"
+          className="hover:bg-muted flex items-center rounded-md px-1.5 py-1 transition-colors"
         >
-          <div className="relative h-6 w-6 shrink-0">
+          <div className="relative mr-0.5 h-6 w-6 shrink-0">
             <svg className="h-full w-full -rotate-90" viewBox="0 0 24 24">
               <circle
                 cx="12"
@@ -108,7 +108,7 @@ export function DailyAIGenerationsLeft() {
               />
             </svg>
             <div className="absolute inset-0 flex items-center justify-center text-[10px] font-semibold">
-              {quota.data.left}
+              {Math.max(quota.data.left, 0)}
             </div>
           </div>
           <span className="text-[12px] leading-tight whitespace-nowrap">
@@ -120,7 +120,7 @@ export function DailyAIGenerationsLeft() {
             width="16"
             height="16"
             fill="currentColor"
-            className="text-primary"
+            className="text-primary ml-1"
           >
             <path d="M19.745 10.5a1.4 1.4 0 0 1-.26.66l-7.94 10.73a.94.94 0 0 1-.53.35a.8.8 0 0 1-.22 0a1.1 1.1 0 0 1-.4-.08a1 1 0 0 1-.55-1l.8-6.21h-5.13a1.4 1.4 0 0 1-.7-.22a1.33 1.33 0 0 1-.46-.56a1.45 1.45 0 0 1-.1-.69c.03-.236.12-.46.26-.65l7.94-10.71a.93.93 0 0 1 .51-.34a1 1 0 0 1 .63.06a.94.94 0 0 1 .44.42a1 1 0 0 1 .11.55l-.8 6.21h5.14a1.16 1.16 0 0 1 .7.22c.194.141.35.33.45.55c.096.223.134.467.11.71" />
           </svg>
@@ -132,8 +132,8 @@ export function DailyAIGenerationsLeft() {
         container={shadowRoot ?? undefined}
       >
         <p className="text-sm font-medium">
-          {quota.data.left}/{quota.data.limit} Free AI generations remaining
-          today
+          {Math.max(quota.data.left, 0)}/{quota.data.limit} Free AI generations
+          remaining today
         </p>
         <p className="text-muted-foreground text-xs">
           Upgrade for more daily generations.

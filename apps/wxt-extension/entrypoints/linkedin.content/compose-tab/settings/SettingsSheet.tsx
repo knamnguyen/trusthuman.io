@@ -1,12 +1,11 @@
 import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Brain,
   Cog,
   ExternalLink,
   Filter,
-  Loader2,
   Send,
   Settings,
   X,
@@ -32,6 +31,7 @@ import type { BehaviorSettings } from "../../stores/settings-local-store";
 import { useAuthStore } from "../../../../lib/auth-store";
 import { getWebAppDomain } from "../../../../lib/get-sync-host-url";
 import { useTRPC } from "../../../../lib/trpc/client";
+import { useAccountQuota } from "../../hooks/use-account-quota";
 import { useOrgSubscription } from "../../hooks/use-org-subscription";
 import { useAccountStore } from "../../stores/account-store";
 import { useDailyQuotaLimitHitDialogStore } from "../../stores/dialog-store";
@@ -270,10 +270,8 @@ function SettingsBehaviorContent({
   ) => void;
 }) {
   const subscription = useOrgSubscription();
-  const queryClient = useQueryClient();
-  const trpc = useTRPC();
 
-  const quota = useQuery(trpc.aiComments.quota.queryOptions());
+  const quota = useAccountQuota();
 
   const showDailyAIQuotaExceededOverlay = useDailyQuotaLimitHitDialogStore(
     (state) => state.open,
@@ -316,6 +314,8 @@ function SettingsBehaviorContent({
               showDailyAIQuotaExceededOverlay();
               return;
             }
+
+            updateBehavior("humanOnlyMode", v);
           }}
         />
       </SettingsSection>

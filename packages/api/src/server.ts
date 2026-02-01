@@ -7,6 +7,7 @@ import { webhookRoutes } from "./api/webhooks/webhooks";
 import { appRouter } from "./router/root";
 import { createTRPCContext } from "./trpc";
 import { browserJobs } from "./utils/browser-job";
+import { initDBOS } from "./workflows";
 
 // DB Keepalive - ping every 30 seconds to prevent Supabase Supavisor from dropping idle connections
 // Uses a lightweight Prisma query (not $connect which can cause pool issues)
@@ -49,6 +50,11 @@ if (process.env.TLS_KEY !== undefined && process.env.TLS_CERT !== undefined) {
     cert: Bun.file(process.env.TLS_CERT),
   };
 }
+
+// Initialize DBOS for scheduled workflows (e.g. daily quota reset)
+void initDBOS()
+  .then(() => console.log("[DBOS] initialized successfully"))
+  .catch((err) => console.error("[DBOS] initialization failed:", err));
 
 Bun.serve({
   port: url.port,

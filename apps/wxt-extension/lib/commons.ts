@@ -6,7 +6,7 @@ export const defer = (cb: () => void) => {
   };
 };
 
-export const asyncDefer = (cb: () => Promise<void>) => {
+export const deferAsync = (cb: () => Promise<void>) => {
   return {
     [Symbol.asyncDispose]: async () => {
       await cb();
