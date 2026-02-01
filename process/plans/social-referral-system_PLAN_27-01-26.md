@@ -1,73 +1,107 @@
 # Social Referral System
 
 **Date:** 2026-01-27
-**Updated:** 2026-01-28 (Version 1.3 - UI Complete, Anti-Gaming Features Added)
+**Updated:** 2026-02-02 (Version 1.4 - Backend Complete, Rescan Workflow Implemented)
 **Complexity:** Complex (Multi-phase implementation)
-**Status:** ✅ Phase 1 UI Complete + Anti-Gaming → Ready for Backend Integration
+**Status:** ✅ Phase 1 COMPLETE → Ready for Payment System Integration
 
 ---
 
-## 🎉 Phase 1 UI Completion Summary (2026-01-28)
+## 📝 Version 1.4 Changes (2026-02-02)
+
+**Implementation Completed:**
+1. ✅ Rescan workflow implemented using DBOS workflows (loop-based, 3 scans total)
+2. ✅ Global duplicate detection with `urlNormalized` unique constraint
+3. ✅ URL normalization utility
+4. ✅ All 4 platform verifiers tested and working
+5. ✅ Engagement bonuses calculated during rescans
+
+**Policy Changes:**
+- ❌ **Removed eligibility check** - any org can participate (no "exactly 1 account" requirement)
+- ✅ Free days awarded at **org level** (not per-account)
+- ❌ **Email notifications removed from scope** (RFC-007 deleted)
+- ✅ Rescan uses DBOS workflows, not cron jobs (RFC-006 not needed)
+
+**Ready for Phase 2:**
+- Merge payment system changes from cofounder
+- Integrate Stripe credits for PREMIUM users
+- (Optional) Implement rate limiting
+
+---
+
+## 🎉 Phase 1 Implementation Complete (2026-02-02)
 
 ### ✅ What's Complete
 
+**Backend Implementation:**
+- ✅ Database schema with `SocialSubmission` table and `urlNormalized` unique constraint
+- ✅ Global duplicate detection (prevents same URL from multiple orgs)
+- ✅ URL normalization utility (trims, ensures https, removes trailing slashes)
+- ✅ tRPC API routes (submit, getStatus, list, getEarnedPremiumStatus, generateCaption)
+- ✅ Social referral verification service with keyword checking
+- ✅ Rescan workflow using DBOS (3 scans total at 24-hour intervals)
+- ✅ Loop-based workflow approach (eliminates recursion risks)
+- ✅ All 4 platform verifiers working (X, LinkedIn, Threads, Facebook)
+
 **UI Implementation (RFC-005):**
-- Full earn-premium page with professional, production-ready design
-- Collapsible "How It Works" card with 2-column responsive layout
-- Premium status badge in top-right corner
-- 2-step submission flow (caption editor + URL submission)
-- Submissions history table with real-time status updates
-- Platform-specific keywords (@engagekit_io for X/Threads, #engagekit_io for LinkedIn/Facebook)
-- Auto-detection of platform from URL
-- Independent page scrolling (fixed sidebar scroll issue)
-- Copy caption with toast notifications
-- Responsive design (mobile + desktop)
+- ✅ Full earn-premium page with professional, production-ready design
+- ✅ Collapsible "How It Works" card with 2-column responsive layout
+- ✅ Premium status badge in top-right corner
+- ✅ 2-step submission flow (caption editor + URL submission)
+- ✅ Submissions history table with real-time status updates
+- ✅ Platform-specific keywords (@engagekit_io for X/Threads, #engagekit_io for LinkedIn/Facebook)
+- ✅ Auto-detection of platform from URL
+- ✅ Independent page scrolling (fixed sidebar scroll issue)
+- ✅ Copy caption with toast notifications
+- ✅ Responsive design (mobile + desktop)
 
-**Reward Structure Updated:**
-- 1 verified post = **7 days** (updated from 3 days)
-- +1 day per **3 likes** (updated from 5 likes)
-- +1 day per **1 comment** (updated from 2 comments)
+**Reward Structure:**
+- 1 verified post = **7 days**
+- +1 day per **3 likes**
+- +1 day per **1 comment**
 - Posts rescanned every 24 hours for 2 more times (3 total scans)
+- Free days awarded at **org level** (extends `Organization.earnedPremiumExpiresAt`)
+- **No eligibility restrictions** - any org can participate
 
-**Anti-Gaming Features Added:**
+**Anti-Gaming Features:**
 - ✅ Caption similarity detection (>95% threshold)
 - ✅ Checks last 7 days of validated posts on different platforms
 - ✅ Uses Levenshtein distance algorithm via `string-similarity` library
 - ✅ Prevents users from reusing same caption with minor tweaks
-- ✅ Documented in "How It Works" section
+- ✅ Global URL duplicate prevention (unique constraint at DB level)
 
-**Files Modified:**
-- `apps/nextjs/src/app/(new-dashboard)/[orgSlug]/earn-premium/page.tsx` ✅
+**Files Implemented:**
+- `packages/db/prisma/models/social-submission.prisma` ✅
+- `packages/api/src/router/social-referral.ts` ✅
 - `packages/api/src/services/social-referral-verification.ts` ✅
-  - DAYS_PER_VERIFIED_POST = 7
-  - Added similarity check in verification flow
+- `packages/api/src/workflows/rescan-social-submission.workflow.ts` ✅
+- `packages/social-referral/src/utils/normalize-url.ts` ✅
+- `apps/nextjs/src/app/(new-dashboard)/[orgSlug]/earn-premium/page.tsx` ✅
 - `packages/api/package.json` ✅ (added string-similarity + @types)
+- Test files: `test-rescan-real-url.ts`, `test-rescan-simple.ts` ✅
 
 ### 🚀 What's Next (Phase 2)
 
-**Backend Integration Needed:**
-1. RFC-001: Database Schema (SocialSubmission table, Organization fields)
-2. RFC-002: Package Migration (Gifavatar social-referral package)
-3. RFC-003: Core API Routes (tRPC submit/status/list endpoints)
-4. RFC-004: Verification Service (immediate verification + rewards)
-5. **RFC-007: Loops Email Notification** (NEW - notify team when user submits post)
-6. RFC-006: Cron Job (daily rescans, engagement bonuses, post deletion detection)
+**Payment System Integration (with Cofounder):**
+1. Stripe credits for PREMIUM users (currently stubbed with console.log)
+2. Post deletion detection with credit revocation
+3. Error handling for social platform rate limits
 
-**Deferred UI Features:**
-- Settings page earned premium section
-- Sidebar "Organization Tools" section
-- Eligibility banner (when backend validation ready)
+**Notes:**
+- Email notifications NOT required (removed from scope)
+- Rescan workflow already implemented using DBOS workflows (not cron job)
 
 ### 📋 Implementation Status
 
 | RFC | Status | Notes |
 |-----|--------|-------|
-| RFC-001 | ⏳ TODO | Database schema design |
-| RFC-002 | ⏳ TODO | Package migration from Gifavatar |
-| RFC-003 | ⏳ TODO | tRPC API routes |
-| RFC-004 | ⏳ TODO | Verification service (FREE tier functional, PREMIUM stubbed) |
+| **RFC-001** | **✅ COMPLETE** | **Database schema with global duplicate detection** |
+| **RFC-002** | **✅ COMPLETE** | **Package migration from Gifavatar** |
+| **RFC-003** | **✅ COMPLETE** | **tRPC API routes implemented** |
+| **RFC-004** | **✅ COMPLETE** | **Verification + Rescan workflow (DBOS)** |
 | **RFC-005** | **✅ COMPLETE** | **UI fully implemented** |
-| RFC-006 | 🔌 DEFERRED | Phase 2: Cron job + rescans |
+| RFC-006 | ❌ NOT NEEDED | Rescan implemented via DBOS workflows, not cron |
+| RFC-007 | ❌ REMOVED | Email notifications not required |
 
 ---
 
@@ -92,14 +126,16 @@
 **Goal:** Implement viral growth mechanism where users earn premium access by sharing EngageKit on social media (X, LinkedIn, Threads, Facebook).
 
 **Key Features:**
-- Both FREE and PREMIUM users with exactly 1 account can participate
-- Immediate rewards upon post verification (+3 days)
-- ~~Rescan feature (up to 3 scans per post with bonus days for engagement growth)~~ **[DEFERRED - Phase 2]**
-- ~~Daily engagement-based bonuses~~ **[DEFERRED - Phase 2]**
+- **Any org can participate** - no account count restrictions
+- **Free days apply to FIRST account added** to org (regardless of premium/free status)
+- Immediate rewards upon post verification (+7 days) ✅ **[COMPLETE]**
+- Rescan feature (3 scans total at 24-hour intervals) ✅ **[COMPLETE - DBOS Workflow]**
+- Engagement-based bonuses (+1 day per 3 likes, +1 day per 1 comment) ✅ **[COMPLETE]**
 - Credits apply to org determined by URL (`/[orgSlug]/earn-premium`)
-- ~~Stripe customer balance credits for premium users~~ **[STUBBED - Phase 2 Integration]**
-- Extended premium access for free users **[FULLY FUNCTIONAL - Phase 1]**
-- ~~Post deletion detection with credit revocation~~ **[DEFERRED - Phase 2]**
+- Global duplicate detection (same URL cannot be submitted by multiple orgs) ✅ **[COMPLETE]**
+- Extended premium access for free users ✅ **[FULLY FUNCTIONAL]**
+- Stripe customer balance credits for premium users **[STUBBED - Phase 2 Integration]**
+- Post deletion detection with credit revocation **[DEFERRED - Phase 2]**
 
 **Development Split:**
 - **Phase 1 (Independent - You):** UI + Verification + FREE tier logic
@@ -115,48 +151,50 @@
 
 ## Development Phases
 
-### Phase 1: Independent Development (Your Work - No Payment System Dependency)
+### Phase 1: Independent Development ✅ COMPLETE
 
 **Scope:**
-- ✅ Database schema (minimal payment fields stubbed)
-- ✅ Gifavatar package migration
-- ✅ tRPC API routes (submit, status, list)
-- ✅ Immediate verification service
-- ✅ FREE tier reward logic (100% functional)
+- ✅ Database schema with `urlNormalized` unique constraint
+- ✅ Global duplicate detection (same URL cannot be submitted by multiple orgs)
+- ✅ Gifavatar package migration (`@sassy/social-referral`)
+- ✅ tRPC API routes (submit, getStatus, list, getEarnedPremiumStatus, generateCaption)
+- ✅ Immediate verification service with keyword checking
+- ✅ Rescan workflow using DBOS (3 scans at 24-hour intervals)
+- ✅ FREE tier reward logic (100% functional - org-level premium)
 - ✅ PREMIUM tier reward logic (stubbed with console logs)
 - ✅ UI for `/[orgSlug]/earn-premium` page
-- ✅ Settings page enhancement
-- ✅ Sidebar navigation update
-- ✅ Eligibility checks
-- ✅ Rate limiting
+- ✅ Caption similarity detection (anti-gaming)
+- ❌ Eligibility checks REMOVED (any org can participate)
+- ❌ Rate limiting NOT IMPLEMENTED (deferred)
 
 **What Works Immediately:**
-- FREE users can submit posts, get verified, earn +3 days premium
-- PREMIUM users can submit posts, see verification (credits stubbed)
-- Full UI experience
-- All 4 social platforms supported
+- ✅ Any org can submit posts (no account count restrictions)
+- ✅ Posts get verified and rescanned 3 times total (24-hour intervals)
+- ✅ Engagement bonuses calculated (+1 day per 3 likes, +1 day per 1 comment)
+- ✅ Free days awarded at org level (extends `Organization.earnedPremiumExpiresAt`)
+- ✅ All 4 social platforms supported (X, LinkedIn, Threads, Facebook)
+- ✅ Global duplicate prevention (unique constraint on normalized URLs)
+- ✅ Full UI experience with submission form and status table
 
 **What's Stubbed/Deferred:**
-- Stripe customer balance credits (console.log only)
-- Rescan feature (up to 3 scans per post)
-- Engagement bonuses based on likes/comments growth
-- Post deletion detection
+- 🔌 Stripe customer balance credits (console.log only)
+- 🔌 Post deletion detection with revocation
+- 🔌 Rate limiting (1 post/platform/day)
 
-### Phase 2: Payment Integration (Later - With Cofounder)
+### Phase 2: Payment Integration (Pending - With Cofounder)
 
 **Scope:**
 - 🔌 Connect Stripe credit system for PREMIUM users
-- 🔌 Implement rescan feature (up to 3 total scans per post, award bonus days based on engagement growth)
-- 🔌 Add rescan triggers (manual user action or scheduled cron)
-- 🔌 Add engagement bonus logic (10 credits per 10 additional interactions in Gifavatar model)
-- 🔌 Add post deletion detection with credit revocation
+- 🔌 Post deletion detection with credit revocation
 - 🔌 Calculate daily rate from Stripe subscription
 - 🔌 Convert earned days to dollar credits
+- 🔌 (Optional) Rate limiting (1 post/platform/day)
 
-**Database Schema Prepared for Phase 2:**
-- `lastScannedAt` - Tracks when last scan occurred
-- `nextScanAt` - Controls when next rescan is allowed
-- These fields are ready but unused in Phase 1
+**Already Implemented (No Phase 2 Work Needed):**
+- ✅ Rescan feature (DBOS workflow handles 3 scans automatically)
+- ✅ Engagement bonuses (+1 day per 3 likes, +1 day per 1 comment)
+- ✅ Global duplicate detection
+- ✅ Caption similarity check (anti-gaming)
 
 **Integration Points (Clearly Marked in Code):**
 ```typescript
@@ -165,11 +203,9 @@ if (org.subscriptionTier === "PREMIUM") {
   console.log(`[STUB] Would credit ${daysToAward} days to Stripe customer`);
   // await stripe.customers.createBalanceTransaction(...)
 }
-
-// TODO: Phase 2 - Rescan feature
-// Will use lastScannedAt and nextScanAt fields
-// Award bonus days based on engagement delta
 ```
+
+**Note:** Rescan workflow uses DBOS workflows (not cron jobs), so all engagement tracking is already functional.
 
 ---
 
@@ -330,25 +366,29 @@ RFC-001: Database Schema
 
 ## Architecture Decisions (Final)
 
-### ADR 1: Universal Eligibility (1 Account Only)
+### ADR 1: Universal Eligibility (First Account Rewards)
 
-**Decision:** Both FREE and PREMIUM orgs can participate if they have exactly 1 LinkedIn account.
+**Decision:** Any org can participate, but earned free days apply only to the FIRST account added to the org.
 
 **Rationale:**
-- Simplifies eligibility check: `accountCount === 1` (no tier check needed)
-- Reduces churn for single-user premium customers
-- Prevents money bleeding (restricted to 1 account)
-- Incentivizes existing premium users to promote EngageKit
+- No eligibility restrictions - all orgs can submit posts and earn rewards
+- Free days apply to first account added (regardless of premium or free status)
+- Prevents gaming by applying rewards to a single account per org
+- Incentivizes viral sharing without complex account count checks
+- Simplifies implementation - no need for eligibility validation on submission
 
 **Implementation:**
 ```typescript
-async function isEligible(orgId: string): Promise<boolean> {
-  const accountCount = await db.linkedInAccount.count({
-    where: { organizationId: orgId },
-  });
-  return accountCount === 1;
-}
+// Free days apply to first account added to org
+const firstAccount = await db.linkedInAccount.findFirst({
+  where: { organizationId: orgId },
+  orderBy: { createdAt: "asc" },
+});
+
+// Award days to this account regardless of subscription tier
 ```
+
+**Note:** Old eligibility check (`accountCount === 1`) removed from router.
 
 ---
 
@@ -2646,21 +2686,27 @@ curl -X GET http://localhost:3000/api/cron/rescan-social-submissions \
 
 ## Phase 1 → Phase 2 Handoff Summary
 
-### What Works After Phase 1 (Independent Development)
+### What Works After Phase 1 (Implementation Complete)
 
 **100% Functional:**
-- ✅ FREE users can submit posts, get verified, earn +3 days premium
+- ✅ Any org can submit posts (no eligibility restrictions)
+- ✅ Posts verified with keyword checking (@engagekit_io or #engagekit_io)
+- ✅ Rescan workflow performs 3 scans total (scan #1, #2 at +24h, #3 at +48h)
+- ✅ Engagement bonuses awarded (+1 day per 3 likes, +1 day per 1 comment)
+- ✅ FREE users earn +7 days base, extended at org level (`Organization.earnedPremiumExpiresAt`)
 - ✅ All 4 social platforms supported (X, LinkedIn, Threads, Facebook)
-- ✅ Eligibility enforcement (accountCount === 1)
-- ✅ Rate limiting (1 post/platform/day)
-- ✅ Complete UI with submission form, dashboard, stats
-- ✅ Settings page shows earned premium status
-- ✅ Sidebar navigation with Organization Tools section
+- ✅ Global duplicate detection (same URL cannot be submitted twice)
+- ✅ Caption similarity check prevents caption reuse (>95% threshold)
+- ✅ Complete UI with submission form, status table, caption generator
+- ✅ URL normalization (trims, ensures https, removes trailing slashes)
 
 **Stubbed (Console Logs Only):**
 - 🔌 PREMIUM user Stripe credits (days tracked, credits not applied)
-- 🔌 Engagement bonuses (no daily rescan)
 - 🔌 Post deletion detection (no revocation)
+
+**Not Implemented:**
+- ❌ Rate limiting (1 post/platform/day) - deferred
+- ❌ Email notifications - removed from scope
 
 ### Integration Points for Phase 2
 
@@ -2724,8 +2770,8 @@ if (org.subscriptionTier === "PREMIUM") {
 
 ---
 
-**Plan Version:** 1.1 (Phase 1 - Independent Development Scope)
-**Last Updated:** 2026-01-27
-**Status:** Ready for Phase 1 Implementation
+**Plan Version:** 1.4 (Phase 1 Complete - Backend Implemented)
+**Last Updated:** 2026-02-02
+**Status:** ✅ Phase 1 COMPLETE - Ready for Payment System Integration
 
-**Next Step:** Begin RFC-001 (Database Schema) - No payment system dependency required
+**Next Step:** Merge payment system changes from cofounder, then integrate Stripe credits for PREMIUM users
