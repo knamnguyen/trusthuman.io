@@ -1,41 +1,8 @@
 import z from "zod";
 
-export enum STRIPE_ID_PRICES {
-  WEEKLY = "price_1Rgu3rIeOImcBhu69gt6ATT5",
-  MONTHLY = "price_1Rgu3tIeOImcBhu6hGtPbqkx",
-  YEARLY = "price_1Rgu3vIeOImcBhu6Xy4JW0ue",
-}
-
-export enum STRIPE_ID_PRODUCTS {
-  WEEKLY = "prod_Sc8KmHeAXogWmV",
-  MONTHLY = "prod_Sc8KDu938GBww2",
-  YEARLY = "prod_Sc8KT6PYPewOkS",
-}
-
-//createCheckoutSchema
-export const createCheckoutSchema = z.object({
-  purchaseType: z.enum(["WEEKLY", "MONTHLY", "YEARLY"]),
-  endorsely_referral: z.string().optional().nullable(),
-});
-
 export const createCustomerPortalSchema = z.object({
   returnUrl: z.string().optional(),
 });
-
-// Mapping from Stripe product/price IDs to AccessType
-export const STRIPE_ID_TO_ACCESS_TYPE: Record<
-  string,
-  "FREE" | "WEEKLY" | "MONTHLY" | "YEARLY"
-> = {
-  // Product IDs
-  [STRIPE_ID_PRODUCTS.WEEKLY]: "WEEKLY",
-  [STRIPE_ID_PRODUCTS.MONTHLY]: "MONTHLY",
-  [STRIPE_ID_PRODUCTS.YEARLY]: "YEARLY",
-  // Price IDs
-  [STRIPE_ID_PRICES.WEEKLY]: "WEEKLY",
-  [STRIPE_ID_PRICES.MONTHLY]: "MONTHLY",
-  [STRIPE_ID_PRICES.YEARLY]: "YEARLY",
-};
 
 // ============================================================================
 // QUANTITY PRICING (Multi-Account)
@@ -61,10 +28,16 @@ export enum STRIPE_QUANTITY_PRODUCTS {
  * IMPORTANT: After running the script, update these values with
  * the actual Stripe price IDs from the output.
  */
-export enum STRIPE_QUANTITY_PRICES {
-  MONTHLY = "price_1SfwifIeOImcBhu6UuKoAjXp",
-  YEARLY = "price_1SfwigIeOImcBhu6o7PnYLCy",
-}
+export const STRIPE_QUANTITY_PRICES = {
+  MONTHLY:
+    process.env.NODE_ENV === "production"
+      ? "price_1SfwifIeOImcBhu6UuKoAjXp"
+      : "price_1SucpbIeOImcBhu6h87mFCaa",
+  YEARLY:
+    process.env.NODE_ENV === "production"
+      ? "price_1SfwigIeOImcBhu6o7PnYLCy"
+      : "price_1SucpcIeOImcBhu6IM5hqKzE",
+};
 
 /**
  * Quantity pricing configuration
@@ -76,8 +49,8 @@ export enum STRIPE_QUANTITY_PRICES {
  */
 export const QUANTITY_PRICING_CONFIG = {
   maxSlots: 24,
-  monthly: { pricePerSlot: 24.99 },
-  yearly: { pricePerSlot: 249 },
+  monthly: { pricePerSlot: 29.99 },
+  yearly: { pricePerSlot: 299.99 },
 } as const;
 
 // Zod schema for quantity checkout
@@ -95,3 +68,32 @@ export const updateSubscriptionQuantitySchema = z.object({
 export const changeSubscriptionCycleSchema = z.object({
   newCycle: z.enum(["MONTHLY", "YEARLY"]),
 });
+
+export const checkoutSessionMetadataSchema = z.union([
+  z.object({
+    type: z.literal("create_subscription"),
+    organizationId: z.string(),
+    payerId: z.string(),
+    slots: z.string(),
+    endorsely_referral: z.string().nullable(),
+  }),
+  z.object({
+    type: z.literal("update_subscription"),
+    organizationId: z.string(),
+    payerId: z.string(),
+    slots: z.string(),
+    endorsely_referral: z.string().nullable(),
+  }),
+]);
+
+export type CheckoutSessionMetadata = z.infer<
+  typeof checkoutSessionMetadataSchema
+>;
+
+export const subscriptionMetadataSchema = z.object({
+  organizationId: z.string(),
+  payerId: z.string(),
+  organizationName: z.string().optional(),
+});
+
+export type SubscriptionMetadata = z.infer<typeof subscriptionMetadataSchema>;

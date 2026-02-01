@@ -17,13 +17,10 @@ import type { Prisma, PrismaClient } from "@sassy/db";
 import { db } from "@sassy/db";
 
 import type { BrowserSessionRegistry } from "./utils/browser-session/browser-session";
-import { getOrInsertUser, getUserAccount } from "./router/account";
+import { getOrInsertUser } from "./router/account";
 import { AIService } from "./utils/ai-service/ai-service";
 import { browserJobs } from "./utils/browser-job";
-import {
-  assumedAccountJwt,
-  browserRegistry,
-} from "./utils/browser-session/browser-session";
+import { browserRegistry } from "./utils/browser-session/browser-session";
 import { env } from "./utils/env";
 
 /**
@@ -84,7 +81,6 @@ function getCachedAuth(
 export type DbUser = Prisma.UserGetPayload<{
   select: {
     id: true;
-    accessType: true;
     dailyAIcomments: true;
     firstName: true;
     primaryEmailAddress: true;

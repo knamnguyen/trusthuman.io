@@ -3,12 +3,10 @@ import { TRPCError } from "@trpc/server";
 
 import { StripeService } from "@sassy/stripe";
 import {
-  createCheckoutSchema,
   createCustomerPortalSchema,
   createQuantityCheckoutSchema,
 } from "@sassy/stripe/schema-validators";
 
-import type { TRPCContext } from "../trpc";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 /**
@@ -20,55 +18,16 @@ const stripeService = new StripeService({
   webhookSecret: process.env.STRIPE_WEBHOOK_SECRET ?? "",
 });
 
-/**
- * Utility function for checking access type
- */
-const checkAccessType = async (ctx: TRPCContext) => {
-  const user = await ctx.db.user.findUnique({
-    where: { id: ctx.user?.id },
-  });
-  const access = user?.accessType;
-  return access;
-};
-
 export const stripeRouter = () =>
   createTRPCRouter({
     /**
-     * Create a checkout session for subscription or one-time payment
-     *
-     * @param purchaseType - Type of purchase (MONTHLY, YEARLY, LIFETIME)
-     * @returns URL to redirect to Stripe checkout
-     */
-    createCheckout: protectedProcedure
-      .input(createCheckoutSchema)
-      .mutation(async ({ ctx, input }) => {
-        //if user already has lifetime subscription, don't allow config or checkout
-        const access = await checkAccessType(ctx);
-        if (access === "MONTHLY" || access === "WEEKLY" || access === "YEARLY")
-          throw new Error(
-            "User already has a subscription, click manage subscription to change plan",
-          );
-
-        const userId = ctx.user.id;
-
-        // Create checkout session with Stripe
-        const checkoutUrl = await stripeService.createCheckoutSession(
-          userId, // Clerk user ID
-          input.purchaseType,
-          ctx.user.primaryEmailAddress,
-        );
-        return checkoutUrl;
-      }),
-
-    /**
      * Create a customer portal session for subscription management
-     *
-     * @returns URL to redirect to Stripe customer portal
+     * @deprecated Use organization.subscription.portal() instead for org-centric billing
+     * Kept for backwards compatibility with chrome extension
      */
     createCustomerPortal: protectedProcedure
       .input(createCustomerPortalSchema)
       .mutation(async ({ ctx, input }) => {
-        //if user already has lifetime subscription, don't allow config or checkout
         const userId = ctx.user.id;
 
         // Get origin for redirect URL if not provided
@@ -90,13 +49,6 @@ export const stripeRouter = () =>
 
         return result;
       }),
-
-    checkAccess: protectedProcedure.query(async ({ ctx }) => {
-      const access = await checkAccessType(ctx);
-
-      if (access === "FREE") return { hasAccess: false, accessType: "FREE" };
-      return { hasAccess: true, accessType: access };
-    }),
 
     // ============================================================================
     // QUANTITY PRICING ENDPOINTS (Multi-Account)
@@ -158,4 +110,4 @@ export const stripeRouter = () =>
       }),
   });
 
-//prevent type leakage issues across your entire Turborepo while maintaining proper type checking during development
+// Prevent type leakage issues across your entire Turborepo while maintaining proper type checking during development

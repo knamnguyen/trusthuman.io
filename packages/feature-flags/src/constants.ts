@@ -33,24 +33,21 @@ function startOfWeek(now: Date): Date {
   return date;
 }
 
-export const getBuildTargetListLimits = (
-  accessType: "FREE" | (string & {}),
+/**
+ * Get build target list limits based on org subscription status.
+ * Takes isPremium boolean from organization's subscriptionTier.
+ */
+export const getOrgBuildTargetListLimits = (
+  isPremium: boolean,
   now: Date = new Date(),
 ) => {
   const lastRefreshedAt = startOfWeek(now);
-
-  if (accessType === "FREE") {
-    return {
-      limit: FREE_BUILD_TARGET_LIST_WEEKLY_LIMIT,
-      lastRefreshedAt,
-      refreshesAt: new Date(
-        lastRefreshedAt.getTime() + 7 * 24 * 60 * 60 * 1000,
-      ),
-    };
-  }
+  const limit = isPremium
+    ? PREMIUM_BUILD_TARGET_LIST_WEEKLY_LIMIT
+    : FREE_BUILD_TARGET_LIST_WEEKLY_LIMIT;
 
   return {
-    limit: PREMIUM_BUILD_TARGET_LIST_WEEKLY_LIMIT,
+    limit,
     lastRefreshedAt,
     refreshesAt: new Date(lastRefreshedAt.getTime() + 7 * 24 * 60 * 60 * 1000),
   };

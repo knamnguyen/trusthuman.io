@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 
 import { useTRPC } from "~/trpc/react";
@@ -12,8 +11,7 @@ interface ManageSubscriptionButtonProps {
 
 /**
  * Button that redirects user to Stripe customer portal
- * Only shows for users with active subscriptions (not lifetime users)
- * Uses tRPC to create a customer portal session
+ * Uses org-centric billing (organization.subscription.portal)
  */
 export function ManageSubscriptionButton({
   buttonText = "Manage subscription",
@@ -21,17 +19,14 @@ export function ManageSubscriptionButton({
 }: ManageSubscriptionButtonProps) {
   const trpc = useTRPC();
 
-  // react-query mutation for creating customer portal session
-  const { mutateAsync: createCustomerPortal, isPending } = useMutation(
-    trpc.stripe.createCustomerPortal.mutationOptions({}),
+  const { mutateAsync: createPortal, isPending } = useMutation(
+    trpc.organization.subscription.portal.mutationOptions(),
   );
 
   const handleClick = async () => {
     try {
-      // Call tRPC to create customer portal session
-      const { url } = await createCustomerPortal({});
+      const { url } = await createPortal();
 
-      // Redirect to Stripe customer portal
       if (url) {
         window.location.href = url;
       } else {

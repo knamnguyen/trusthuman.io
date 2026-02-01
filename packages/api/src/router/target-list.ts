@@ -2,7 +2,7 @@ import { DBOS } from "@dbos-inc/dbos-sdk";
 import { ulid } from "ulidx";
 import { z } from "zod";
 
-import { getBuildTargetListLimits } from "../../../feature-flags/src/constants";
+import { getOrgBuildTargetListLimits } from "../../../feature-flags/src/constants";
 import {
   accountProcedure,
   createTRPCRouter,
@@ -11,6 +11,7 @@ import {
 import { LinkedInIndustrySearch } from "../utils/industry-search";
 import { paginate } from "../utils/pagination";
 import { buildTargetListWorkflow } from "../workflows";
+import { getAccountSubscriptionTier } from "./account";
 
 const linkedInIndustrySearch = new LinkedInIndustrySearch();
 
@@ -73,7 +74,13 @@ export const targetListRouter = () =>
           } as const;
         }
 
-        const maxJobs = getBuildTargetListLimits(ctx.activeAccount.accessType);
+        // Get subscription tier from account's organization (org-centric billing)
+        const subscriptionTier = await getAccountSubscriptionTier(
+          ctx.db,
+          ctx.activeAccount.id,
+        );
+        const isPremium = subscriptionTier === "PREMIUM";
+        const maxJobs = getOrgBuildTargetListLimits(isPremium);
 
         const existingJobsCount = await ctx.db.buildTargetListJob.count({
           where: {

@@ -1,10 +1,14 @@
+import { TRPCError } from "@trpc/server";
+
+import { hasPremiumAccess } from "../access-control/organization";
 import {
   commentGenerationInputSchema,
   commentGenerationOutputSchema,
   generateDynamicInputSchema,
   generateDynamicOutputSchema,
 } from "../schema-validators";
-import { accountProcedure, createTRPCRouter, protectedProcedure } from "../trpc";
+import { accountProcedure, createTRPCRouter } from "../trpc";
+import { getAccountQuota, incrementAccountUsage } from "../utils/ai-quota";
 import {
   DEFAULT_CREATIVITY,
   DEFAULT_MAX_WORDS,
@@ -16,16 +20,36 @@ export const aiCommentsRouter = () =>
   createTRPCRouter({
     /**
      * Generate AI comment based on post content and style guide
-     * Protected procedure requiring user authentication
+     * Account procedure requiring active account context
      *
-     * Note: Rate limiting (daily comment limit) is handled separately
-     * via getDailyLimit and incrementDailyLimit endpoints
+     * Enforces daily quota limits based on organization subscription tier
      */
-    generateComment: protectedProcedure
+    generateComment: accountProcedure
       .input(commentGenerationInputSchema)
       .output(commentGenerationOutputSchema)
-      .mutation(({ input, ctx }) => {
-        return ctx.ai.generateComment(input);
+      .mutation(async ({ input, ctx }) => {
+        const isPremium = await hasPremiumAccess(ctx.db, {
+          orgId: ctx.activeOrg.id,
+        });
+
+        // TODO: apply proper error checks and prompt for dialogs in the frontend
+        if (!isPremium) {
+          return {
+            success: false,
+            error:
+              "AI comment generation is available for premium organizations only. Please upgrade your subscription to access this feature.",
+            comment: "Great post! Thanks for sharing.",
+            fallback: true,
+          } as const;
+        }
+
+        // Generate comment
+        const result = await ctx.ai.generateComment(input);
+
+        // Increment usage
+        await incrementAccountUsage(ctx.db, ctx.activeAccount.id, 1);
+
+        return result;
       }),
 
     /**
@@ -45,11 +69,23 @@ export const aiCommentsRouter = () =>
         const { postContent, adjacentComments, count } = input;
         const accountId = ctx.activeAccount.id;
 
+        // Check quota BEFORE generating
+        const quota = await getAccountQuota(ctx.db, accountId);
+
+        if (!quota.isPremium && quota.used + count > quota.limit) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: `Daily AI comment limit reached (${quota.used}/${quota.limit}). Resets at ${quota.resetsAt.toISOString()}. Upgrade to premium for unlimited comments.`,
+          });
+        }
+
         console.log("[generateDynamic] Starting dynamic generation", {
           accountId,
           postContentLength: postContent.length,
           adjacentCommentsCount: adjacentComments?.length ?? 0,
           count,
+          quotaUsed: quota.used,
+          quotaLimit: quota.limit,
         });
 
         // 1. Fetch all styles for this account
@@ -159,8 +195,19 @@ export const aiCommentsRouter = () =>
           }),
         );
 
+        // After successful generation, increment usage
+        await incrementAccountUsage(ctx.db, accountId, count);
+
         console.log("[generateDynamic] Generated comments:", results.length);
 
         return results;
       }),
+
+    /**
+     * Get current quota status for active account
+     * Used by UI to show remaining daily comment limit
+     */
+    quota: accountProcedure.query(async ({ ctx }) => {
+      return getAccountQuota(ctx.db, ctx.activeAccount.id);
+    }),
   });

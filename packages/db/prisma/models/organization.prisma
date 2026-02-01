@@ -1,18 +1,25 @@
 model Organization {
-  id               String   @id
-  name             String
-  orgSlug          String?
-  stripeCustomerId String?  @unique
-  purchasedSlots   Int      @default(1)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id             String   @id
+  name           String
+  orgSlug        String?
+  purchasedSlots Int      @default(1)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
+  // Payment fields (org-centric billing)
+  payerId               String? // WHO is paying (for billing portal access)
+  stripeSubscriptionId  String?   @unique // Subscription ID (for cancellation)
+  subscriptionTier      String    @default("FREE") // "FREE" | "PREMIUM"
+  subscriptionExpiresAt DateTime? // When subscription expires
+
+  // Relations
+  payer                  User?                @relation("OrgPayer", fields: [payerId], references: [id], onDelete: SetNull)
+  members                OrganizationMember[]
+  linkedInAccounts       LinkedInAccount[]
   // Social referral earned premium (for FREE users)
   earnedPremiumExpiresAt DateTime?
 
-  members            OrganizationMember[]
-  linkedInAccounts   LinkedInAccount[]
-  socialSubmissions  SocialSubmission[]
+  socialSubmissions SocialSubmission[]
 }
 
 model OrganizationMember {

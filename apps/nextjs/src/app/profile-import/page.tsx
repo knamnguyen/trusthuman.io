@@ -18,7 +18,7 @@ import {
 import { Separator } from "@sassy/ui/separator";
 import { Textarea } from "@sassy/ui/textarea";
 
-import { useSubscription } from "~/hooks/use-subscription";
+import { useOrgSubscription } from "~/hooks/use-org-subscription";
 import { useTRPC } from "~/trpc/react";
 
 const normalizeUrls = (raw: string): string[] => {
@@ -34,7 +34,9 @@ const normalizeUrls = (raw: string): string[] => {
 };
 
 export default function ProfileImportPage() {
-  const { hasAccess, accessType, isLoading } = useSubscription();
+  const { data, isPending: isLoading } = useOrgSubscription();
+  const hasAccess = data?.isPremium ?? false;
+  const subscriptionTier = data?.subscriptionTier ?? "FREE";
   const trpc = useTRPC();
   const router = useRouter();
   const [rawInput, setRawInput] = React.useState<string>("");
@@ -115,7 +117,7 @@ export default function ProfileImportPage() {
               <UserButton afterSignOutUrl="/" />
               <div className="text-sm text-zinc-600">
                 Subscription:
-                <span className="pl-1 font-medium uppercase">{accessType}</span>
+                <span className="pl-1 font-medium uppercase">{subscriptionTier}</span>
               </div>
             </div>
             <div className="text-center">

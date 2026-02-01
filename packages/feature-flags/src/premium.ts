@@ -9,8 +9,8 @@ export const FEATURE_CONFIG = {
   // Daily comment cap (applies to both plans but still tracked)
   dailyComments: {
     isPremium: false,
-    freeTierLimit: 100,
-    premiumTierLimit: 100,
+    freeTierLimit: 5,        // Free: 5 comments/day
+    premiumTierLimit: -1,    // Premium: unlimited (-1 = no limit)
   },
   duplicateAuthorCheck: {
     isPremium: true,
@@ -692,3 +692,67 @@ export const DEFAULT_STYLE_GUIDES = {
   ...DEFAULT_STYLE_GUIDES_FREE,
   ...DEFAULT_STYLE_GUIDES_PREMIUM,
 } as const;
+
+// ============================================================================
+// ORG-CENTRIC PREMIUM CHECKS
+// ============================================================================
+
+/**
+ * Check if an organization has premium access
+ * Considers: subscription tier, expiry date, and quota compliance
+ *
+ * @param org - Organization data with subscription fields
+ * @returns true if org has active premium with quota compliance
+ */
+export function isOrgPremium(org: {
+  subscriptionTier: string;
+  subscriptionExpiresAt: Date | null;
+  purchasedSlots: number;
+  accountCount: number;
+}): boolean {
+  // Check subscription tier
+  if (org.subscriptionTier !== "PREMIUM") return false;
+
+  // Check subscription active
+  if (!org.subscriptionExpiresAt) return false;
+  if (org.subscriptionExpiresAt < new Date()) return false;
+
+  // Check quota compliance (over quota = no premium)
+  if (org.accountCount > org.purchasedSlots) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Get premium status with detailed info for UI
+ */
+export function getPremiumStatus(org: {
+  subscriptionTier: string;
+  subscriptionExpiresAt: Date | null;
+  purchasedSlots: number;
+  accountCount: number;
+}): {
+  isPremium: boolean;
+  reason?: "not_subscribed" | "expired" | "over_quota";
+  overQuotaBy?: number;
+} {
+  if (org.subscriptionTier !== "PREMIUM") {
+    return { isPremium: false, reason: "not_subscribed" };
+  }
+
+  if (!org.subscriptionExpiresAt || org.subscriptionExpiresAt < new Date()) {
+    return { isPremium: false, reason: "expired" };
+  }
+
+  if (org.accountCount > org.purchasedSlots) {
+    return {
+      isPremium: false,
+      reason: "over_quota",
+      overQuotaBy: org.accountCount - org.purchasedSlots,
+    };
+  }
+
+  return { isPremium: true };
+}

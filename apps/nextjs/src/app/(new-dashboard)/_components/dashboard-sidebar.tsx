@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { OrganizationSwitcher, UserButton } from "@clerk/nextjs";
@@ -88,47 +89,59 @@ export function DashboardSidebar() {
   const params = useParams<{ orgSlug?: string; accountSlug?: string }>();
   const { orgSlug, accountSlug } = params;
 
-  // Account-level navigation items (only shown when an account is selected)
-  const accountItems = [];
-  if (accountSlug !== undefined) {
-    accountItems.push(
-      {
-        title: "Dashboard",
-        url: `/${orgSlug}/${accountSlug}`,
-        icon: LayoutDashboardIcon,
-      },
-      {
-        title: "History",
-        url: `/${orgSlug}/${accountSlug}/history`,
-        icon: HistoryIcon,
-      },
-      {
-        title: "Target List",
-        url: `/${orgSlug}/${accountSlug}/target-list`,
-        icon: UsersRoundIcon,
-      },
-      {
-        title: "Personas",
-        url: `/${orgSlug}/${accountSlug}/personas`,
-        icon: UsersIcon,
-      },
-    );
-  }
+  const items = useMemo(() => {
+    let prefix = `/${orgSlug}`;
 
-  // Organization-level items (always shown)
-  const orgItems = [
-    {
-      title: "Accounts",
-      url: `/${orgSlug}/accounts`,
-      icon: UserRoundIcon,
-    },
-    {
-      title: "Earn Premium",
-      url: `/${orgSlug}/earn-premium`,
-      icon: GiftIcon,
-      disabled: true, // Greyed out but still navigable
-    },
-  ];
+    if (accountSlug !== undefined) {
+      prefix += `/${accountSlug}`;
+    }
+
+    const items = [
+      {
+        title: "Accounts",
+        url: `${prefix}/accounts`,
+        icon: UserRoundIcon,
+      },
+      {
+        title: "Earn Premium",
+        url: `${prefix}/earn-premium`,
+        icon: GiftIcon,
+      },
+      {
+        title: "Subscription",
+        url: `${prefix}/settings`,
+        icon: SettingsIcon,
+      },
+    ];
+    // Build navigation items based on current context
+    // Account-level navigation (only shown when an account is selected)
+    if (accountSlug !== undefined) {
+      items.push(
+        {
+          title: "Dashboard",
+          url: `/${orgSlug}/${accountSlug}`,
+          icon: LayoutDashboardIcon,
+        },
+        {
+          title: "History",
+          url: `/${orgSlug}/${accountSlug}/history`,
+          icon: HistoryIcon,
+        },
+        {
+          title: "Target List",
+          url: `/${orgSlug}/${accountSlug}/target-list`,
+          icon: UsersRoundIcon,
+        },
+        {
+          title: "Personas",
+          url: `/${orgSlug}/${accountSlug}/personas`,
+          icon: UsersIcon,
+        },
+      );
+    }
+
+    return items;
+  }, [orgSlug, accountSlug]);
 
   return (
     <Sidebar collapsible="icon" className="relative">
@@ -161,11 +174,11 @@ export function DashboardSidebar() {
 
       <SidebarContent>
         {/* Account-level navigation (only shown when an account is selected) */}
-        {accountItems.length > 0 && (
+        {items.length > 0 && (
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
-                {accountItems.map((item) => (
+                {items.map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
                       <Link href={item.url}>
@@ -179,38 +192,6 @@ export function DashboardSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
         )}
-
-        {/* Organization-level navigation */}
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {orgItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild disabled={item.disabled}>
-                    <Link
-                      href={item.url}
-                      className={item.disabled ? "opacity-50" : ""}
-                    >
-                      <item.icon />
-                      <span className="font-medium">{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-
-              {/* Settings - Coming Soon */}
-              <SidebarMenuItem>
-                <SidebarMenuButton disabled className="opacity-50">
-                  <SettingsIcon />
-                  <span className="font-medium">Settings</span>
-                  <span className="ml-auto text-xs text-muted-foreground">
-                    Soon
-                  </span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter>
