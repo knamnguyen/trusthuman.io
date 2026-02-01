@@ -1,7 +1,10 @@
+import { DBOS } from "@dbos-inc/dbos-sdk";
 import type { PrismaClient } from "@sassy/db";
 import { compareTwoStrings } from "string-similarity";
 
 import { SocialReferralService } from "@sassy/social-referral";
+
+import { rescanSocialSubmissionWorkflow } from "../workflows/rescan-social-submission.workflow";
 
 const DAYS_PER_VERIFIED_POST = 7;
 
@@ -129,17 +132,24 @@ export async function verifySocialSubmission(
     }
 
     // Update submission with results
+    const now = new Date();
+    const nextScan = new Date(now.getTime() + 24 * 60 * 60 * 1000); // +24 hours
+
     await db.socialSubmission.update({
       where: { id: submissionId },
       data: {
         status: result.containsAll ? "VERIFIED" : "FAILED",
-        verifiedAt: new Date(),
+        verifiedAt: now,
         containsKeyword: result.containsAll,
         postText: result.text,
         likes: result.likes,
         comments: result.comments,
         shares: result.shares,
         daysAwarded: result.containsAll ? DAYS_PER_VERIFIED_POST : 0,
+        // Set scan metadata for rescans
+        scanCount: 1, // This is scan #1
+        lastScannedAt: now,
+        nextScanAt: result.containsAll ? nextScan : null, // Only schedule rescans for VERIFIED posts
       },
     });
 
@@ -172,6 +182,34 @@ export async function verifySocialSubmission(
             earnedPremiumExpiresAt: newExpiry,
           },
         });
+      }
+
+      // Schedule rescan workflow (will perform scan #2 and #3 at 24-hour intervals)
+      try {
+        const workflowHandle = await DBOS.startWorkflow(
+          rescanSocialSubmissionWorkflow,
+          {
+            workflowID: `rescan-${submissionId}-${Date.now()}`,
+          },
+        )(submissionId);
+
+        // Store workflow ID for tracking
+        await db.socialSubmission.update({
+          where: { id: submissionId },
+          data: {
+            rescanWorkflowId: workflowHandle.workflowID,
+          },
+        });
+
+        console.log(
+          `[Social Referral] Scheduled rescan workflow ${workflowHandle.workflowID} for submission ${submissionId}`,
+        );
+      } catch (error) {
+        // Log error but don't fail verification - rescans are a nice-to-have
+        console.error(
+          `[Social Referral] Failed to schedule rescan for ${submissionId}:`,
+          error,
+        );
       }
 
       return {

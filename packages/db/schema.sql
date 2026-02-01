@@ -375,11 +375,14 @@ CREATE TABLE "SocialSubmission" (
     "organizationId" TEXT NOT NULL,
     "platform" "SocialPlatform" NOT NULL,
     "postUrl" TEXT NOT NULL,
+    "urlNormalized" TEXT NOT NULL,
     "status" "SubmissionStatus" NOT NULL DEFAULT 'VERIFYING',
     "submittedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "verifiedAt" TIMESTAMP(3),
     "lastScannedAt" TIMESTAMP(3),
     "nextScanAt" TIMESTAMP(3),
+    "scanCount" INTEGER NOT NULL DEFAULT 0,
+    "rescanWorkflowId" TEXT,
     "containsKeyword" BOOLEAN NOT NULL DEFAULT false,
     "postText" TEXT,
     "likes" INTEGER NOT NULL DEFAULT 0,
@@ -575,6 +578,9 @@ CREATE INDEX "OrganizationMember_userId_idx" ON "OrganizationMember"("userId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "OrganizationMember_orgId_userId_key" ON "OrganizationMember"("orgId", "userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "SocialSubmission_urlNormalized_key" ON "SocialSubmission"("urlNormalized");
 
 -- CreateIndex
 CREATE INDEX "SocialSubmission_organizationId_idx" ON "SocialSubmission"("organizationId");

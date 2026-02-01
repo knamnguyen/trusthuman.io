@@ -2,8 +2,9 @@ import { DBOS } from "@dbos-inc/dbos-sdk";
 
 // we must import workflows so they get registered to DBOS before DBOS.launch is called
 import { buildTargetListWorkflow } from "./build-target-list.workflow";
+import { rescanSocialSubmissionWorkflow } from "./rescan-social-submission.workflow";
 
-export { buildTargetListWorkflow };
+export { buildTargetListWorkflow, rescanSocialSubmissionWorkflow };
 
 export async function initDBOS() {
   if (process.env.DBOS_SYSTEM_DATABASE_URL === undefined) {

@@ -5,6 +5,7 @@ import {
   listSubmissionsSchema,
   submitPostSchema,
 } from "@sassy/social-referral/schema-validators";
+import { normalizeUrl } from "@sassy/social-referral";
 
 import { verifySocialSubmission } from "../services/social-referral-verification";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
@@ -43,18 +44,20 @@ export const socialReferralRouter = () =>
           });
         }
 
-        // Check if URL already submitted
-        const existingSubmission = await ctx.db.socialSubmission.findFirst({
+        // Normalize URL for duplicate detection
+        const normalized = normalizeUrl(input.postUrl);
+
+        // Check if URL already submitted (globally, not per-org)
+        const existingSubmission = await ctx.db.socialSubmission.findUnique({
           where: {
-            organizationId: ctx.activeOrg.id,
-            postUrl: input.postUrl,
+            urlNormalized: normalized,
           },
         });
 
         if (existingSubmission) {
           throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "This post has already been submitted",
+            code: "CONFLICT",
+            message: "This post has already been submitted by another organization",
           });
         }
 
@@ -68,6 +71,7 @@ export const socialReferralRouter = () =>
               | "THREADS"
               | "FACEBOOK",
             postUrl: input.postUrl,
+            urlNormalized: normalized,
             status: "VERIFYING",
           },
         });

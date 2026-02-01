@@ -3,11 +3,14 @@ model SocialSubmission {
   organizationId String
   platform       SocialPlatform
   postUrl        String
+  urlNormalized  String   @unique // Normalized URL for global duplicate detection
   status         SubmissionStatus @default(VERIFYING)
   submittedAt    DateTime         @default(now())
   verifiedAt     DateTime?
   lastScannedAt  DateTime?
   nextScanAt     DateTime?
+  scanCount      Int              @default(0) // Total scans completed (max 3)
+  rescanWorkflowId String?        // DBOS workflow ID for active rescan
 
   // Verification results
   containsKeyword Boolean  @default(false)
