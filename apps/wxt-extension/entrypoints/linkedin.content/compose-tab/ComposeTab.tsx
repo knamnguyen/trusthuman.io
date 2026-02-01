@@ -34,11 +34,6 @@ export function ComposeTab() {
   // DEBUG: Track renders
   console.log("[ComposeTab] Render");
 
-  // Premium status for feature gating
-  const { data: subscription } = useOrgSubscription();
-  const isPremium = subscription?.isPremium ?? false;
-  const isOverQuota = subscription?.isOverQuota ?? false;
-
   // Shadow root for tooltip/dialog portals
   const shadowRoot = useShadowRootStore((s) => s.shadowRoot);
 
@@ -377,7 +372,7 @@ export function ComposeTab() {
 
       {/* Compose Cards List */}
       {cardIds.length > 0 && (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 pb-3">
           {cardIds.map((cardId) => {
             const isSinglePost = singlePostCardIds.includes(cardId);
             // Auto-focus the first single-post card (manual card) for quick typing

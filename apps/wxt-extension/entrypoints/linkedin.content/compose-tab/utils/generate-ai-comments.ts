@@ -201,10 +201,11 @@ export async function generateSingleComment(
       : null;
 
     return {
+      status: "success",
       comment: result.comment,
       styleId: styleConfig.styleId,
       styleSnapshot,
-    };
+    } as const;
   }
 }
 
@@ -402,7 +403,6 @@ export async function generateAndUpdateCards(
   }
 
   await using _ = deferAsync(async () => {
-    alert("refetching");
     await queryClient.refetchQueries(trpc.aiComments.quota.queryOptions());
   });
 

@@ -208,6 +208,11 @@ export function useLoadPosts(
       onProgress: setLoadingProgress,
       onScrollProgress: setScrollProgress,
       onGenerationComplete,
+      onBatchComplete: () => {
+        void queryClient.invalidateQueries(
+          trpc.aiComments.quota.queryOptions(),
+        );
+      },
     });
 
     setIsLoading(false);

@@ -10,6 +10,8 @@
  */
 
 import { useEffect, useRef, useState } from "react";
+import { useTRPC } from "@/lib/trpc/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 import type { PendingNavigationState } from "../../stores/navigation-state";
 import type { GenerationCompleteMetadata } from "./useSubmitBatch";
@@ -29,7 +31,9 @@ export interface QueueProgressInfo {
  * Hook for auto-resume system (multi-tab queue processing)
  */
 export function useAutoResume(
-  onGenerationComplete: (metadata: GenerationCompleteMetadata) => void | Promise<void>,
+  onGenerationComplete: (
+    metadata: GenerationCompleteMetadata,
+  ) => void | Promise<void>,
 ) {
   const [queueProgress, setQueueProgress] = useState<QueueProgressInfo | null>(
     null,
@@ -40,12 +44,17 @@ export function useAutoResume(
   // Track if we've checked for pending navigation (prevent double-trigger)
   const checkedPendingNavRef = useRef(false);
 
+  const queryClient = useQueryClient();
+  const trpc = useTRPC();
+
   // Store actions and selectors
   const setIsCollecting = useComposeStore((state) => state.setIsCollecting);
   const addCard = useComposeStore((state) => state.addCard);
   const addBatchCards = useComposeStore((state) => state.addBatchCards);
   const updateCardComment = useComposeStore((state) => state.updateCardComment);
-  const updateCardStyleInfo = useComposeStore((state) => state.updateCardStyleInfo);
+  const updateCardStyleInfo = useComposeStore(
+    (state) => state.updateCardStyleInfo,
+  );
   const updateBatchCardCommentAndStyle = useComposeStore(
     (state) => state.updateBatchCardCommentAndStyle,
   );
@@ -155,7 +164,9 @@ export function useAutoResume(
       const existingUrns = new Set(getCards.map((card) => card.urn));
 
       // Run post collection using utility (blacklist is fetched internally)
-      console.log("[useAutoResume] runAutoResume: Starting loadPostsToCards...");
+      console.log(
+        "[useAutoResume] runAutoResume: Starting loadPostsToCards...",
+      );
       try {
         await loadPostsToCards({
           targetCount: savedTargetDraftCount,
@@ -172,6 +183,11 @@ export function useAutoResume(
           onProgress: () => {}, // No progress UI during auto-resume
           onScrollProgress: setAutoResumeScrollProgress, // Track scroll progress for UI
           onGenerationComplete,
+          onBatchComplete() {
+            void queryClient.invalidateQueries(
+              trpc.aiComments.quota.queryOptions(),
+            );
+          },
         });
         console.log(
           "[useAutoResume] runAutoResume: loadPostsToCards completed successfully",
@@ -217,6 +233,6 @@ export function useAutoResume(
   return {
     queueProgress,
     isAutoResumeLoading,
-    autoResumeScrollProgress
+    autoResumeScrollProgress,
   };
 }

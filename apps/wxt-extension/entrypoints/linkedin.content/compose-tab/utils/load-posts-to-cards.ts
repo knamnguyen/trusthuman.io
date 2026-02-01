@@ -9,6 +9,8 @@
  * Extracted from ComposeTab to reduce duplication between handleStart and runAutoResume.
  */
 
+import posthog from "posthog-js";
+
 import type {
   PostFilterConfig,
   ReadyPost,
@@ -86,6 +88,7 @@ export interface LoadPostsToCardsParams {
     loadedCount: number;
     generatedCount: number;
   }) => void | Promise<void>;
+  onBatchComplete?: () => void;
 }
 
 /**
@@ -120,7 +123,9 @@ export function buildFilterConfig(
 export async function loadPostsToCards(
   params: LoadPostsToCardsParams,
 ): Promise<number> {
-  console.time(`⏱️ [loadPostsToCards] TOTAL (target: ${params.targetCount} posts)`);
+  console.time(
+    `⏱️ [loadPostsToCards] TOTAL (target: ${params.targetCount} posts)`,
+  );
   const {
     targetCount,
     postLoadSettings,
@@ -136,6 +141,7 @@ export async function loadPostsToCards(
     onProgress,
     onScrollProgress,
     onGenerationComplete,
+    onBatchComplete,
   } = params;
 
   // Get settings snapshots
@@ -221,9 +227,13 @@ export async function loadPostsToCards(
     );
 
     // Update all cards in ONE state update
-    console.time(`⏱️ [loadPostsToCards] updateManyCardsCommentAndStyle (${aiUpdateBuffer.length} cards)`);
+    console.time(
+      `⏱️ [loadPostsToCards] updateManyCardsCommentAndStyle (${aiUpdateBuffer.length} cards)`,
+    );
     useComposeStore.getState().updateManyCardsCommentAndStyle(aiUpdateBuffer);
-    console.timeEnd(`⏱️ [loadPostsToCards] updateManyCardsCommentAndStyle (${aiUpdateBuffer.length} cards)`);
+    console.timeEnd(
+      `⏱️ [loadPostsToCards] updateManyCardsCommentAndStyle (${aiUpdateBuffer.length} cards)`,
+    );
 
     // Clear buffer
     aiUpdateBuffer.length = 0;
@@ -237,7 +247,9 @@ export async function loadPostsToCards(
       return; // Already scheduled
     }
 
-    console.log(`[loadPostsToCards] ⏰ Scheduling flush (buffer has ${aiUpdateBuffer.length} items)`);
+    console.log(
+      `[loadPostsToCards] ⏰ Scheduling flush (buffer has ${aiUpdateBuffer.length} items)`,
+    );
     flushTimeoutId = setTimeout(() => {
       flushAIUpdates();
     }, 100); // Flush every 100ms
@@ -246,13 +258,17 @@ export async function loadPostsToCards(
   // Batch callback - called when each batch of posts is ready
   // NOTE: Blacklist filtering happens in collectPostsBatch, so all posts here are valid
   const onBatchReady = async (posts: ReadyPost[]) => {
-    console.time(`⏱️ [loadPostsToCards] onBatchReady total (${posts.length} posts)`);
+    console.time(
+      `⏱️ [loadPostsToCards] onBatchReady total (${posts.length} posts)`,
+    );
     console.log(
       `[loadPostsToCards] Batch received: ${posts.length} posts (humanMode: ${isHumanMode})`,
     );
 
     // Build array of all cards first (no state updates yet)
-    console.time(`⏱️ [loadPostsToCards] Build card objects (${posts.length} posts)`);
+    console.time(
+      `⏱️ [loadPostsToCards] Build card objects (${posts.length} posts)`,
+    );
     const cardsToAdd: ComposeCard[] = [];
 
     // Process all posts in the batch
@@ -290,6 +306,24 @@ export async function loadPostsToCards(
           settingsOverride: commentGenerateSettings,
         })
           .then((result) => {
+            if (result.status === "error") {
+              console.error(
+                "[loadPostsToCards] AI generation error for card",
+                cardId,
+                result,
+              );
+              // Add error case to buffer
+              aiUpdateBuffer.push({
+                cardId,
+                comment: "",
+                styleInfo: {
+                  commentStyleId: null,
+                  styleSnapshot: null,
+                },
+              });
+              scheduleFlush();
+              return;
+            }
             console.log(
               "[loadPostsToCards] AI result for card",
               cardId.slice(0, 8),
@@ -313,6 +347,10 @@ export async function loadPostsToCards(
             scheduleFlush();
           })
           .catch((err) => {
+            posthog.captureException(err, {
+              context: "[loadPostsToCards] AI generation failure",
+              cardId,
+            });
             console.error(
               "[loadPostsToCards] Error generating comment for card",
               cardId,
@@ -334,17 +372,28 @@ export async function loadPostsToCards(
         aiPromises.push(aiPromise);
       }
     }
-    console.timeEnd(`⏱️ [loadPostsToCards] Build card objects (${posts.length} posts)`);
+
+    onBatchComplete?.();
+
+    console.timeEnd(
+      `⏱️ [loadPostsToCards] Build card objects (${posts.length} posts)`,
+    );
 
     // Add ALL cards at once - SINGLE state update for entire batch
-    console.time(`⏱️ [loadPostsToCards] addBatchCards (${cardsToAdd.length} cards)`);
+    console.time(
+      `⏱️ [loadPostsToCards] addBatchCards (${cardsToAdd.length} cards)`,
+    );
     addBatchCards(cardsToAdd);
-    console.timeEnd(`⏱️ [loadPostsToCards] addBatchCards (${cardsToAdd.length} cards)`);
+    console.timeEnd(
+      `⏱️ [loadPostsToCards] addBatchCards (${cardsToAdd.length} cards)`,
+    );
 
     // Update progress for the whole batch
     loadedCount += posts.length;
     onProgress(loadedCount);
-    console.timeEnd(`⏱️ [loadPostsToCards] onBatchReady total (${posts.length} posts)`);
+    console.timeEnd(
+      `⏱️ [loadPostsToCards] onBatchReady total (${posts.length} posts)`,
+    );
   };
 
   // Build filter config from settings
@@ -360,7 +409,9 @@ export async function loadPostsToCards(
       : undefined;
 
   // Run batch collection
-  console.time(`⏱️ [loadPostsToCards] collectPostsBatch (${targetCount} posts)`);
+  console.time(
+    `⏱️ [loadPostsToCards] collectPostsBatch (${targetCount} posts)`,
+  );
   await collectPostsBatch(
     targetCount,
     existingUrns,
@@ -372,11 +423,15 @@ export async function loadPostsToCards(
     blacklistFilter,
     onScrollProgress, // Pass scroll progress callback to show feed post count
   );
-  console.timeEnd(`⏱️ [loadPostsToCards] collectPostsBatch (${targetCount} posts)`);
+  console.timeEnd(
+    `⏱️ [loadPostsToCards] collectPostsBatch (${targetCount} posts)`,
+  );
 
   // Wait for ALL AI generation promises to complete
   if (aiPromises.length > 0) {
-    console.log(`[loadPostsToCards] ⏳ Waiting for ${aiPromises.length} AI generation promises to complete...`);
+    console.log(
+      `[loadPostsToCards] ⏳ Waiting for ${aiPromises.length} AI generation promises to complete...`,
+    );
     console.time(`⏱️ [loadPostsToCards] Wait for all AI promises`);
     await Promise.allSettled(aiPromises);
     console.timeEnd(`⏱️ [loadPostsToCards] Wait for all AI promises`);
@@ -394,15 +449,23 @@ export async function loadPostsToCards(
 
   // Notify caller that generation is complete (fires AFTER promises resolve AND buffer flushed)
   if (onGenerationComplete) {
-    const generatedCount = useComposeStore.getState().cards.filter(
-      (c) => c.status === "draft" && !c.isGenerating && c.commentText.trim() !== ""
-    ).length;
+    const generatedCount = useComposeStore
+      .getState()
+      .cards.filter(
+        (c) =>
+          c.status === "draft" &&
+          !c.isGenerating &&
+          c.commentText.trim() !== "",
+      ).length;
 
-    console.log("[loadPostsToCards] 🔔 Invoking onGenerationComplete callback", {
-      targetCount,
-      loadedCount,
-      generatedCount,
-    });
+    console.log(
+      "[loadPostsToCards] 🔔 Invoking onGenerationComplete callback",
+      {
+        targetCount,
+        loadedCount,
+        generatedCount,
+      },
+    );
 
     await onGenerationComplete({
       targetCount,
