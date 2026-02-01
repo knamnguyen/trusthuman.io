@@ -328,6 +328,12 @@ export async function generateMultipleComments(
 
     for (const result of results) {
       if (result.status === "error") {
+        // just push an empty comment for failures
+        successes.push({
+          comment: "",
+          styleId: styleConfig.styleId,
+          styleSnapshot,
+        });
         fails.push(result);
       } else {
         successes.push({

@@ -19,6 +19,7 @@ import { Card, CardContent } from "@sassy/ui/card";
 import { Textarea } from "@sassy/ui/textarea";
 
 import { useComposeStore } from "../stores/compose-store";
+import { useDailyQuotaLimitHitDialogStore } from "../stores/dialog-store";
 import { generateSingleComment } from "./utils/generate-ai-comments";
 import { submitCommentFullFlow } from "./utils/submit-comment-full-flow";
 
@@ -49,6 +50,8 @@ export const ComposeCard = memo(function ComposeCard({
   // Subscribe to this specific card's data using a stable selector
   // The store preserves card references for unchanged cards, so this only
   // triggers re-renders when THIS specific card changes
+  // TODO: make this into a map selector in the store for better performance
+  // find is O(n) per render
   const card = useComposeStore(
     useCallback((state) => state.cards.find((c) => c.id === cardId), [cardId]),
   );
@@ -120,6 +123,10 @@ export const ComposeCard = memo(function ComposeCard({
   const setPreviewingCard = useComposeStore((state) => state.setPreviewingCard);
   const setIsUserEditing = useComposeStore((state) => state.setIsUserEditing);
   const updateCardStatus = useComposeStore((state) => state.updateCardStatus);
+
+  const showDailyAIQuotaExceededOverlay = useDailyQuotaLimitHitDialogStore(
+    (state) => state.open,
+  );
 
   // Early return if card not found (shouldn't happen, but safety check)
   if (!card) return null;
@@ -224,6 +231,11 @@ export const ComposeCard = memo(function ComposeCard({
 
     if (result.status === "error") {
       console.error("Error regenerating comment:", result.message);
+
+      if (result.reason === "daily_quota_exceeded") {
+        showDailyAIQuotaExceededOverlay();
+        return;
+      }
       return;
     }
 

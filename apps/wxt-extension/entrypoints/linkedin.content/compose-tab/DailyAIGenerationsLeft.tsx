@@ -136,7 +136,7 @@ export function DailyAIGenerationsLeft() {
           remaining today
         </p>
         <p className="text-muted-foreground text-xs">
-          Upgrade for more daily generations.
+          Upgrade for unlimited daily AI generations.
         </p>
         <Button variant="outline" size="sm" onClick={() => handleUpgrade()}>
           <Zap className="mr-1 h-3 w-3" />

@@ -6,6 +6,7 @@ import { createCommentUtilities } from "@sassy/linkedin-automation/comment/creat
 import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post-utilities";
 
 import { useComposeStore } from "../../stores/compose-store";
+import { useDailyQuotaLimitHitDialogStore } from "../../stores/dialog-store";
 import { useSettingsLocalStore } from "../../stores/settings-local-store";
 import { SIDEBAR_TABS, useSidebarStore } from "../../stores/sidebar-store";
 import { useMostVisiblePost } from "../../utils";
@@ -48,6 +49,10 @@ export function SpacebarEngageObserver() {
 
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+
+  const showDailyAIQuotaExceededOverlay = useDailyQuotaLimitHitDialogStore(
+    (state) => state.open,
+  );
 
   // Sidebar store for UI state
   const { openToTab } = useSidebarStore();
@@ -210,7 +215,8 @@ export function SpacebarEngageObserver() {
           updateCardStyleInfo,
           onError(error) {
             switch (error.reason) {
-              case "quota_exceeded": {
+              case "daily_quota_exceeded": {
+                showDailyAIQuotaExceededOverlay();
                 break;
               }
               default:
