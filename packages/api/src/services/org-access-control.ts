@@ -17,7 +17,7 @@ export const ORG_PREMIUM_SELECT = {
  * Checks BOTH paid subscription AND earned premium (social referral).
  *
  * Paid premium: tier=PREMIUM + not expired + within quota
- * Earned premium: earnedPremiumExpiresAt in the future
+ * Earned premium: earnedPremiumExpiresAt in the future + single account only
  */
 export function isOrgPremium(org: {
   subscriptionTier: string;
@@ -35,7 +35,9 @@ export function isOrgPremium(org: {
     org.accountCount <= org.purchasedSlots;
 
   const earnedPremium =
-    org.earnedPremiumExpiresAt != null && org.earnedPremiumExpiresAt > now;
+    org.earnedPremiumExpiresAt != null &&
+    org.earnedPremiumExpiresAt > now &&
+    org.accountCount <= 1;
 
   return paidPremium || earnedPremium;
 }

@@ -2,6 +2,19 @@ import { DBOS } from "@dbos-inc/dbos-sdk";
 
 import { db } from "@sassy/db";
 import { SocialReferralService } from "@sassy/social-referral";
+import { StripeService } from "@sassy/stripe";
+
+import {
+  calculateDaysToAward,
+  MONTHLY_CAP_DAYS,
+} from "../services/social-referral-verification";
+
+const CREDIT_PER_DAY_CENTS = 100; // $1.00/day ($29.99/mo / 30)
+
+const stripeService = new StripeService({
+  secretKey: process.env.STRIPE_SECRET_KEY ?? "",
+  webhookSecret: process.env.STRIPE_WEBHOOK_SECRET ?? "",
+});
 
 /**
  * Rescan a social submission to update engagement metrics
@@ -16,7 +29,7 @@ import { SocialReferralService } from "@sassy/social-referral";
  * Uses a loop instead of child workflows to avoid recursion risks.
  */
 export const rescanSocialSubmissionWorkflow = DBOS.registerWorkflow(
-  async (submissionId: string, delayMs = 24 * 60 * 60 * 1000) => {
+  async (submissionId: string, delayMs: number = 24 * 60 * 60 * 1000) => {
     console.log(
       `[Rescan] Starting rescan workflow for submission ${submissionId}`,
     );
@@ -126,19 +139,48 @@ export const rescanSocialSubmissionWorkflow = DBOS.registerWorkflow(
         continue;
       }
 
-      // Step 5: Update scan metadata and engagement metrics
+      // Step 5: Update metrics + award engagement bonuses
       await DBOS.runStep(
         async () => {
+          // Calculate additional days from updated engagement
+          const additionalDays = calculateDaysToAward(
+            rescanResult.likes ?? 0,
+            rescanResult.comments ?? 0,
+            submission.daysAwarded,
+          );
+
+          // Apply monthly cap
+          let cappedDays = 0;
+          if (additionalDays > 0) {
+            const now = new Date();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            const monthlyResult = await db.socialSubmission.aggregate({
+              where: {
+                organizationId: submission.organizationId,
+                status: "VERIFIED",
+                verifiedAt: { gte: startOfMonth },
+              },
+              _sum: { daysAwarded: true },
+            });
+            const monthlyUsed = monthlyResult._sum.daysAwarded ?? 0;
+            cappedDays = Math.min(
+              additionalDays,
+              MONTHLY_CAP_DAYS - monthlyUsed,
+            );
+            cappedDays = Math.max(cappedDays, 0);
+          }
+
+          const newTotalDays = submission.daysAwarded + cappedDays;
+
           const updated = await db.socialSubmission.update({
             where: { id: submissionId },
             data: {
               scanCount: scanNumber,
               lastScannedAt: new Date(),
-              // Update engagement metrics from rescan
               likes: rescanResult.likes,
               comments: rescanResult.comments,
               shares: rescanResult.shares,
-              // Clear nextScanAt if this is the final scan (scan #3)
+              daysAwarded: newTotalDays,
               nextScanAt:
                 scanNumber >= 3
                   ? null
@@ -146,8 +188,61 @@ export const rescanSocialSubmissionWorkflow = DBOS.registerWorkflow(
             },
           });
 
+          // Award engagement bonus if any
+          if (cappedDays > 0) {
+            const org = await db.organization.findUnique({
+              where: { id: submission.organizationId },
+              select: {
+                subscriptionTier: true,
+                subscriptionExpiresAt: true,
+                earnedPremiumExpiresAt: true,
+                payerId: true,
+              },
+            });
+
+            if (org) {
+              const now = new Date();
+              const isPaidPremium =
+                org.subscriptionTier === "PREMIUM" &&
+                org.subscriptionExpiresAt != null &&
+                org.subscriptionExpiresAt > now;
+
+              if (isPaidPremium && org.payerId) {
+                const payer = await db.user.findUnique({
+                  where: { id: org.payerId },
+                  select: { stripeCustomerId: true },
+                });
+                if (payer?.stripeCustomerId) {
+                  try {
+                    await stripeService.createBalanceCredit(
+                      payer.stripeCustomerId,
+                      cappedDays * CREDIT_PER_DAY_CENTS,
+                      `Social referral rescan: +${cappedDays} day(s) credit for submission ${submissionId}`,
+                    );
+                  } catch (err) {
+                    console.error(`[Rescan] Stripe credit failed:`, err);
+                  }
+                }
+              } else {
+                const currentExpiry = org.earnedPremiumExpiresAt;
+                const baseDate =
+                  currentExpiry && currentExpiry > now ? currentExpiry : now;
+                const newExpiry = new Date(baseDate);
+                newExpiry.setDate(newExpiry.getDate() + cappedDays);
+                await db.organization.update({
+                  where: { id: submission.organizationId },
+                  data: { earnedPremiumExpiresAt: newExpiry },
+                });
+              }
+            }
+
+            console.log(
+              `[Rescan] Awarded +${cappedDays} engagement bonus day(s) for ${submissionId}`,
+            );
+          }
+
           console.log(
-            `[Rescan] Completed scan #${scanNumber} for ${submissionId}: likes=${updated.likes}, comments=${updated.comments}, shares=${updated.shares}`,
+            `[Rescan] Completed scan #${scanNumber} for ${submissionId}: likes=${updated.likes}, comments=${updated.comments}, shares=${updated.shares}, daysAwarded=${newTotalDays}`,
           );
 
           return updated;

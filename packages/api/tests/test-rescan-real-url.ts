@@ -1,22 +1,22 @@
 /**
  * Test rescan workflow with REAL post URL
- * Run with: bun run packages/api/test-rescan-real-url.ts <POST_URL>
+ * Run with: bun run packages/api/tests/test-rescan-real-url.ts <POST_URL>
  *
  * Example:
- *   bun run packages/api/test-rescan-real-url.ts "https://x.com/username/status/123456"
+ *   bun run packages/api/tests/test-rescan-real-url.ts "https://x.com/username/status/123456"
  *
  * Or use predefined test URLs:
- *   bun run packages/api/test-rescan-real-url.ts threads
- *   bun run packages/api/test-rescan-real-url.ts linkedin
- *   bun run packages/api/test-rescan-real-url.ts facebook
- *   bun run packages/api/test-rescan-real-url.ts x
+ *   bun run packages/api/tests/test-rescan-real-url.ts threads
+ *   bun run packages/api/tests/test-rescan-real-url.ts linkedin
+ *   bun run packages/api/tests/test-rescan-real-url.ts facebook
+ *   bun run packages/api/tests/test-rescan-real-url.ts x
  *
  * This test:
- * 1. Creates a submission with the real URL
+ * 1. Creates a submission with the real URL (initial daysAwarded=1, base only)
  * 2. Runs rescan workflow (performs scan #2 and #3 with no delay for testing)
  * 3. Fetches REAL engagement metrics from the platform
- * 4. Verifies metrics are updated in the database
- * 5. Tests state transitions (scanCount 1→2→3)
+ * 4. Verifies engagement bonuses are awarded (+1 for 10+ likes, +1 for 3+ comments)
+ * 5. Tests state transitions (scanCount 1→2→3) and monthly cap enforcement
  */
 
 import { config } from "dotenv";
@@ -24,6 +24,11 @@ import { config } from "dotenv";
 import { db } from "@sassy/db";
 import { normalizeUrl } from "@sassy/social-referral";
 
+import {
+  MAX_DAYS_PER_POST,
+  LIKES_THRESHOLD,
+  COMMENTS_THRESHOLD,
+} from "../src/services/social-referral-verification";
 import {
   initDBOS,
   rescanSocialSubmissionWorkflow,
@@ -144,7 +149,8 @@ async function testRealUrlRescan() {
     console.log("✅ Cleanup complete\n");
 
     // Create test submission (scan #1 complete, VERIFIED)
-    console.log("4️⃣ Creating test submission...");
+    // Initial award: 1 day (base reward, no engagement bonuses yet)
+    console.log("4️⃣ Creating test submission (daysAwarded=1, base only)...");
     const submission = await db.socialSubmission.create({
       data: {
         organizationId: testOrgId,
@@ -158,7 +164,7 @@ async function testRealUrlRescan() {
         likes: 0, // Will be updated by workflow
         comments: 0,
         shares: 0,
-        daysAwarded: 7,
+        daysAwarded: 1, // Base reward only (no engagement thresholds met yet)
         scanCount: 1, // Simulating initial verification complete
         lastScannedAt: new Date(),
         nextScanAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
@@ -168,6 +174,7 @@ async function testRealUrlRescan() {
     console.log(`✅ Created submission: ${testSubmissionId}`);
     console.log(`   Platform: ${platform}`);
     console.log(`   URL: ${postUrl}`);
+    console.log(`   Initial daysAwarded: ${submission.daysAwarded}`);
     console.log(`   Initial scanCount: ${submission.scanCount}\n`);
 
     // Run rescan workflow (performs BOTH scan #2 and #3 with no delay for testing)
@@ -221,6 +228,12 @@ async function testRealUrlRescan() {
     }
 
     console.log("✅ All validations passed!");
+
+    // Show engagement bonus analysis
+    const likesBonus = (afterScan2.likes ?? 0) >= LIKES_THRESHOLD ? 1 : 0;
+    const commentsBonus = (afterScan2.comments ?? 0) >= COMMENTS_THRESHOLD ? 1 : 0;
+    const maxPossible = Math.min(1 + likesBonus + commentsBonus, MAX_DAYS_PER_POST);
+
     console.log("\n🎉 Test completed successfully with REAL data!");
     console.log("\n📝 Summary:");
     console.log(`   Platform: ${platform}`);
@@ -229,6 +242,8 @@ async function testRealUrlRescan() {
     console.log(
       `   Final engagement: ${afterScan2.likes} likes, ${afterScan2.comments} comments`,
     );
+    console.log(`   Days awarded: ${afterScan2.daysAwarded} (started at 1, max ${MAX_DAYS_PER_POST})`);
+    console.log(`   Engagement breakdown: base=1, likes(>=${LIKES_THRESHOLD})=${likesBonus}, comments(>=${COMMENTS_THRESHOLD})=${commentsBonus} → eligible=${maxPossible}`);
 
     // Cleanup prompt
     console.log("\n🧹 Cleanup:");

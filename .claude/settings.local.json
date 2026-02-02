@@ -5,7 +5,9 @@
       "WebFetch(domain:*)",
       "Bash(stripe:*)",
       "Bash(npx tsc:*)",
-      "mcp__sequential-thinking__sequentialthinking"
+      "mcp__sequential-thinking__sequentialthinking",
+      "Bash(git stash:*)",
+      "Bash(bun run:*)"
     ]
   }
 }

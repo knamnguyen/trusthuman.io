@@ -7,8 +7,13 @@ import {
 } from "@sassy/social-referral/schema-validators";
 import { normalizeUrl } from "@sassy/social-referral";
 
-import { verifySocialSubmission } from "../services/social-referral-verification";
+import {
+  verifySocialSubmission,
+  MONTHLY_CAP_DAYS,
+} from "../services/social-referral-verification";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
+
+const POSTS_PER_PLATFORM_PER_WEEK = 2;
 
 /**
  * Social Referral Router - Handle social media post submissions for premium rewards
@@ -31,8 +36,49 @@ export const socialReferralRouter = () =>
           });
         }
 
-        // NOTE: No eligibility check - any org can participate
-        // Free days will apply to FIRST account added to org (handled in verification service)
+        // ── Rate limit: 2 posts per platform per week per org ──────
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        const platformUpper = input.platform.toUpperCase() as
+          | "X"
+          | "LINKEDIN"
+          | "THREADS"
+          | "FACEBOOK";
+
+        const recentPlatformCount = await ctx.db.socialSubmission.count({
+          where: {
+            organizationId: ctx.activeOrg.id,
+            platform: platformUpper,
+            submittedAt: { gte: sevenDaysAgo },
+          },
+        });
+
+        if (recentPlatformCount >= POSTS_PER_PLATFORM_PER_WEEK) {
+          throw new TRPCError({
+            code: "TOO_MANY_REQUESTS",
+            message: `Limit of ${POSTS_PER_PLATFORM_PER_WEEK} posts per platform per week reached. Try again later.`,
+          });
+        }
+
+        // ── Monthly cap check: 14 days max per calendar month ───────
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const monthlyResult = await ctx.db.socialSubmission.aggregate({
+          where: {
+            organizationId: ctx.activeOrg.id,
+            status: "VERIFIED",
+            verifiedAt: { gte: startOfMonth },
+          },
+          _sum: { daysAwarded: true },
+        });
+        const monthlyUsed = monthlyResult._sum.daysAwarded ?? 0;
+
+        if (monthlyUsed >= MONTHLY_CAP_DAYS) {
+          throw new TRPCError({
+            code: "TOO_MANY_REQUESTS",
+            message: `Monthly reward cap of ${MONTHLY_CAP_DAYS} days reached. Resets next month.`,
+          });
+        }
 
         // Normalize URL for duplicate detection
         const normalized = normalizeUrl(input.postUrl);
