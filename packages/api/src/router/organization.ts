@@ -17,7 +17,7 @@ import {
   hasOrgAdminPermissionClause,
   hasPermissionToAccessOrgClause,
   hasPermissionToUpdateOrgSubscriptionClause,
-} from "../access-control/organization";
+} from "../services/org-access-control";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { safe } from "../utils/commons";
 

@@ -4,7 +4,7 @@ import { z } from "zod";
 // import { LinkedInScrapeApifyService } from "@sassy/linkedin-scrape-apify";
 import { ImportStatus } from "@sassy/db";
 
-import { hasPremiumAccess } from "../access-control/organization";
+import { hasPremiumAccess } from "../services/org-access-control";
 import { createTRPCRouter, orgProcedure, protectedProcedure } from "../trpc";
 import { executeRetrieve } from "../utils/execute-retrieve";
 import { executeRun } from "../utils/execute-run";

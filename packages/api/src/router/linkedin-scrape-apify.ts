@@ -3,8 +3,8 @@ import { z } from "zod";
 
 import { LinkedInScrapeApifyService } from "@sassy/linkedin-scrape-apify";
 
+import { hasPremiumAccess } from "../services/org-access-control";
 import { createTRPCRouter, orgProcedure } from "../trpc";
-import { hasPremiumAccess } from "../access-control/organization";
 import { findExistingLinkedInProfile } from "../utils/check-exist-linkedin-profile";
 
 const apifyService = new LinkedInScrapeApifyService({
