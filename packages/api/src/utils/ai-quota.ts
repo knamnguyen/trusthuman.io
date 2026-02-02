@@ -1,5 +1,7 @@
 import type { PrismaClient } from "@sassy/db";
-import { FEATURE_CONFIG, isOrgPremium } from "@sassy/feature-flags";
+import { FEATURE_CONFIG } from "@sassy/feature-flags";
+
+import { isOrgPremium } from "../services/org-access-control";
 
 /**
  * Get UTC midnight for tomorrow
@@ -28,6 +30,7 @@ function getLimit(org: {
   subscriptionExpiresAt: Date | null;
   purchasedSlots: number;
   accountCount: number;
+  earnedPremiumExpiresAt: Date | null;
 }): number {
   if (isOrgPremium(org)) {
     return FEATURE_CONFIG.dailyComments.premiumTierLimit; // -1 = unlimited
@@ -39,6 +42,7 @@ const ORG_SELECT = {
   subscriptionTier: true,
   subscriptionExpiresAt: true,
   purchasedSlots: true,
+  earnedPremiumExpiresAt: true,
   _count: {
     select: {
       linkedInAccounts: true,
@@ -51,6 +55,7 @@ function toOrgData(
     subscriptionTier: string;
     subscriptionExpiresAt: Date | null;
     purchasedSlots: number;
+    earnedPremiumExpiresAt: Date | null;
     _count: { linkedInAccounts: number };
   } | null,
 ) {
@@ -59,6 +64,7 @@ function toOrgData(
     subscriptionExpiresAt: org?.subscriptionExpiresAt ?? null,
     purchasedSlots: org?.purchasedSlots ?? 0,
     accountCount: org?._count.linkedInAccounts ?? 0,
+    earnedPremiumExpiresAt: org?.earnedPremiumExpiresAt ?? null,
   };
 }
 

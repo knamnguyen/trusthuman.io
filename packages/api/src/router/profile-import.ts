@@ -14,10 +14,7 @@ export const profileImportRouter = () =>
     createRun: orgProcedure
       .input(z.object({ urls: z.array(z.string().url()).min(1).max(100) }))
       .mutation(async ({ ctx, input }) => {
-        const isPremium = await hasPremiumAccess(ctx.db, {
-          orgId: ctx.activeOrg.id,
-        });
-        if (!isPremium) {
+        if (!(await hasPremiumAccess(ctx.db, { orgId: ctx.activeOrg.id }))) {
           throw new TRPCError({
             code: "FORBIDDEN",
             message: "Premium subscription required",
@@ -55,10 +52,7 @@ export const profileImportRouter = () =>
     createRetrieveOnly: orgProcedure
       .input(z.object({ urls: z.array(z.string().url()).min(1) }))
       .mutation(async ({ ctx, input }) => {
-        const isPremium = await hasPremiumAccess(ctx.db, {
-          orgId: ctx.activeOrg.id,
-        });
-        if (!isPremium) {
+        if (!(await hasPremiumAccess(ctx.db, { orgId: ctx.activeOrg.id }))) {
           throw new TRPCError({
             code: "FORBIDDEN",
             message: "Premium subscription required",

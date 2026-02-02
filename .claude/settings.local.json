@@ -3,7 +3,9 @@
     "allow": [
       "Bash(ls:*)",
       "WebFetch(domain:*)",
-      "Bash(stripe:*)"
+      "Bash(stripe:*)",
+      "Bash(npx tsc:*)",
+      "mcp__sequential-thinking__sequentialthinking"
     ]
   }
 }

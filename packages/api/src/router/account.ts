@@ -574,21 +574,6 @@ export function hasPermissionToAccessAccountClause(readerUserId: string) {
   };
 }
 
-/**
- * Get the subscription tier for an account's organization
- * Returns "FREE" if account has no organization or org has no subscription
- */
-export async function getAccountSubscriptionTier(
-  db: PrismaClient,
-  accountId: string,
-): Promise<string> {
-  const account = await db.linkedInAccount.findUnique({
-    where: { id: accountId },
-    select: { org: { select: { subscriptionTier: true } } },
-  });
-  return account?.org?.subscriptionTier ?? "FREE";
-}
-
 //looks like only used in middleware now not in individual endpoints
 export async function getUserAccount(
   db: PrismaClient | PrismaTransactionalClient,

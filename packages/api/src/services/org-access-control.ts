@@ -1,38 +1,64 @@
 import type { PrismaClient } from "@sassy/db";
 
 /**
- * Prisma where clause to filter organizations with active premium access.
- * Use in findFirst/findMany queries to filter by premium status.
- *
- * @example
- * const premiumOrg = await db.organization.findFirst({
- *   where: {
- *     id: orgId,
- *     ...hasPremiumAccessClause(),
- *   },
- * });
+ * Prisma select for fetching org fields needed by isOrgPremium().
+ * Use this whenever you need to check premium status after a DB query.
  */
-export function hasPremiumAccessClause() {
-  return {
-    subscriptionTier: "PREMIUM",
-    subscriptionExpiresAt: {
-      gt: new Date(),
-    },
-  };
+export const ORG_PREMIUM_SELECT = {
+  subscriptionTier: true,
+  subscriptionExpiresAt: true,
+  purchasedSlots: true,
+  earnedPremiumExpiresAt: true,
+  _count: { select: { linkedInAccounts: true } },
+} as const;
+
+/**
+ * Single source of truth for org premium checks.
+ * Checks BOTH paid subscription AND earned premium (social referral).
+ *
+ * Paid premium: tier=PREMIUM + not expired + within quota
+ * Earned premium: earnedPremiumExpiresAt in the future
+ */
+export function isOrgPremium(org: {
+  subscriptionTier: string;
+  subscriptionExpiresAt: Date | null;
+  purchasedSlots: number;
+  accountCount: number;
+  earnedPremiumExpiresAt: Date | null;
+}): boolean {
+  const now = new Date();
+
+  const paidPremium =
+    org.subscriptionTier === "PREMIUM" &&
+    org.subscriptionExpiresAt != null &&
+    org.subscriptionExpiresAt > now &&
+    org.accountCount <= org.purchasedSlots;
+
+  const earnedPremium =
+    org.earnedPremiumExpiresAt != null && org.earnedPremiumExpiresAt > now;
+
+  return paidPremium || earnedPremium;
 }
 
 /**
- * Prisma where clause to filter organizations where user is the subscription payer.
- * Use for subscription update operations (only payer can modify quantity).
- *
- * @example
- * const org = await db.organization.findFirst({
- *   where: {
- *     id: orgId,
- *     ...hasPermissionToUpdateOrgSubscriptionClause(userId),
- *   },
- * });
+ * Async wrapper: fetches org by ID and checks premium status.
+ * Use in routers where you have orgId but haven't fetched the org yet.
  */
+export async function hasPremiumAccess(
+  db: PrismaClient,
+  { orgId }: { orgId: string },
+): Promise<boolean> {
+  const org = await db.organization.findUnique({
+    where: { id: orgId },
+    select: ORG_PREMIUM_SELECT,
+  });
+  if (!org) return false;
+  return isOrgPremium({
+    ...org,
+    accountCount: org._count.linkedInAccounts,
+  });
+}
+
 export function hasPermissionToUpdateOrgSubscriptionClause(userId: string) {
   return {
     payerId: userId,
@@ -40,14 +66,6 @@ export function hasPermissionToUpdateOrgSubscriptionClause(userId: string) {
   };
 }
 
-/**
- * Check if a user has permission to update an organization's subscription.
- * Only the payer can update subscription quantity.
- *
- * @example
- * const canUpdate = await hasPermissionToUpdateOrgSubscription(db, { actorUserId, orgId });
- * if (!canUpdate) return { success: false, error: "Only payer can update" };
- */
 export async function hasPermissionToUpdateOrgSubscription(
   db: PrismaClient,
   { actorUserId, orgId }: { actorUserId: string; orgId: string },
@@ -56,28 +74,6 @@ export async function hasPermissionToUpdateOrgSubscription(
     where: {
       id: orgId,
       ...hasPermissionToUpdateOrgSubscriptionClause(actorUserId),
-    },
-  });
-
-  return count > 0;
-}
-
-/**
- * Check if an organization has premium access.
- * Use when you need a boolean check before performing an action.
- *
- * @example
- * const isPremium = await hasPremiumAccess(db, { orgId });
- * if (!isPremium) throw new TRPCError({ code: "FORBIDDEN" });
- */
-export async function hasPremiumAccess(
-  db: PrismaClient,
-  { orgId }: { orgId: string },
-): Promise<boolean> {
-  const count = await db.organization.count({
-    where: {
-      id: orgId,
-      ...hasPremiumAccessClause(),
     },
   });
 

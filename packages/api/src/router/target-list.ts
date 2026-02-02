@@ -10,8 +10,11 @@ import {
 } from "../trpc";
 import { LinkedInIndustrySearch } from "../utils/industry-search";
 import { paginate } from "../utils/pagination";
+import {
+  isOrgPremium,
+  ORG_PREMIUM_SELECT,
+} from "../services/org-access-control";
 import { buildTargetListWorkflow } from "../workflows";
-import { getAccountSubscriptionTier } from "./account";
 
 const linkedInIndustrySearch = new LinkedInIndustrySearch();
 
@@ -74,12 +77,18 @@ export const targetListRouter = () =>
           } as const;
         }
 
-        // Get subscription tier from account's organization (org-centric billing)
-        const subscriptionTier = await getAccountSubscriptionTier(
-          ctx.db,
-          ctx.activeAccount.id,
-        );
-        const isPremium = subscriptionTier === "PREMIUM";
+        // Get premium status from account's organization
+        const account = await ctx.db.linkedInAccount.findUnique({
+          where: { id: ctx.activeAccount.id },
+          select: { org: { select: ORG_PREMIUM_SELECT } },
+        });
+        const org = account?.org;
+        const isPremium = org
+          ? isOrgPremium({
+              ...org,
+              accountCount: org._count.linkedInAccounts,
+            })
+          : false;
         const maxJobs = getOrgBuildTargetListLimits(isPremium);
 
         const existingJobsCount = await ctx.db.buildTargetListJob.count({

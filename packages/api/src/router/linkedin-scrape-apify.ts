@@ -27,10 +27,7 @@ export const linkedinScrapeApifyRouter = () =>
     scrapeByUrl: orgProcedure
       .input(z.object({ url: z.string().url() }))
       .mutation(async ({ ctx, input }) => {
-        const isPremium = await hasPremiumAccess(ctx.db, {
-          orgId: ctx.activeOrg.id,
-        });
-        if (!isPremium) {
+        if (!(await hasPremiumAccess(ctx.db, { orgId: ctx.activeOrg.id }))) {
           throw new TRPCError({
             code: "FORBIDDEN",
             message: "Premium subscription required",
