@@ -31,7 +31,7 @@ export enum STRIPE_QUANTITY_PRODUCTS {
 export const STRIPE_QUANTITY_PRICES = {
   MONTHLY:
     process.env.NODE_ENV === "production"
-      ? "price_1SfwifIeOImcBhu6UuKoAjXp"
+      ? "price_1Su7SmIeOImcBhu6xW4lQkvj"
       : "price_1SucpbIeOImcBhu6h87mFCaa",
   YEARLY:
     process.env.NODE_ENV === "production"
