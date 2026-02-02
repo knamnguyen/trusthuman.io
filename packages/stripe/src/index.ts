@@ -275,6 +275,26 @@ export class StripeService {
   }
 
   /**
+   * Create a balance credit (negative transaction) on a Stripe customer.
+   * This reduces the amount owed on the next invoice.
+   *
+   * @param customerId - Stripe customer ID (cus_xxx)
+   * @param amountCents - Credit amount in cents (positive number; will be applied as negative)
+   * @param description - Human-readable description for the transaction
+   */
+  async createBalanceCredit(
+    customerId: string,
+    amountCents: number,
+    description: string,
+  ): Promise<Stripe.CustomerBalanceTransaction> {
+    return this.stripe.customers.createBalanceTransaction(customerId, {
+      amount: -Math.abs(amountCents), // negative = credit
+      currency: "usd",
+      description,
+    });
+  }
+
+  /**
    * Get current quantity-based subscription details
    *
    * @param clerkUserId - The user's Clerk ID
