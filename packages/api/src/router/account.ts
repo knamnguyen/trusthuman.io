@@ -364,7 +364,10 @@ export const accountRouter = () =>
         });
 
         const currentAccountCount = await ctx.db.linkedInAccount.count({
-          where: { organizationId: ctx.activeOrg.id },
+          where: {
+            organizationId: ctx.activeOrg.id,
+            status: { not: "DISABLED" },
+          },
         });
 
         console.log("current account count is: ", currentAccountCount);

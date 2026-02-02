@@ -233,6 +233,10 @@ export const clerkWebhookRoutes = new Hono().post("/", async (c) => {
       }
 
       case "organization.deleted": {
+        // TODO: Should cancel Stripe subscription before deleting org.
+        // Impact: Orphaned Stripe subscription if org deleted via Clerk dashboard.
+        // Fix: Check if org has stripeSubscriptionId, call
+        // stripe.subscriptions.cancel(), then proceed with deletion.
         console.log("🏢 Processing organization.deleted event");
 
         const orgId = data.id;

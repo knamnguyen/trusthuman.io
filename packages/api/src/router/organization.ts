@@ -696,6 +696,16 @@ const subscriptionRouter = createTRPCRouter({
   /**
    * Cancel a pending subscription update by voiding the invoice
    * and reverting the subscription quantity
+   *
+   * TODO: This mutation has known bugs — fix when building the cancel UI.
+   * - Downgrade cancel: `invoiceId` is null (downgrade returns invoiceId: null),
+   *   so voidInvoice(null) throws and the Stripe subscription revert never runs.
+   * - Upgrade cancel: Invoice is already paid after checkout completes, so
+   *   voidInvoice fails. Also no DB reversal happens.
+   * - Fix: For downgrade cancel, skip voidInvoice and just revert Stripe
+   *   subscription quantity. For upgrade cancel, refund the payment + revert
+   *   Stripe sub + revert DB.
+   * - Note: No frontend calls this mutation yet — safe to defer.
    */
   cancelUpdate: protectedProcedure
     .input(
@@ -803,22 +813,15 @@ export async function convertOrgSubscriptionToFree(
   db: PrismaClient,
   { orgId, expiresAt }: { orgId: string; expiresAt: Date },
 ) {
-  return await db.$transaction(async (tx) => {
-    await tx.organization.update({
-      where: { id: orgId },
-      data: {
-        payerId: null,
-        stripeSubscriptionId: null,
-        purchasedSlots: 1,
-        subscriptionTier: "FREE",
-        subscriptionExpiresAt: expiresAt, // Grace period
-      },
-    });
-
-    return await disableAccountsExceedingSlots(tx, {
-      orgId,
-      purchasedSlots: 1,
-    });
+  await db.organization.update({
+    where: { id: orgId },
+    data: {
+      payerId: null,
+      stripeSubscriptionId: null,
+      // Keep subscriptionTier and purchasedSlots — grace period preserves access
+      // until subscriptionExpiresAt. isOrgPremium() gates on expiry date.
+      subscriptionExpiresAt: expiresAt,
+    },
   });
 }
 
@@ -985,6 +988,13 @@ export function calculateProratedAmount({
   return Math.round(proratedAmount * 100); // in cents
 }
 
+/**
+ * TODO: Missing payer-in-org check before activating subscription.
+ * Race condition: Admin starts checkout → gets removed from org → completes
+ * payment → org gets premium but ex-member is charged.
+ * Fix: Before activating, query organizationMember for {orgId, userId: payerId}.
+ * If not found, cancel subscription + refund.
+ */
 export async function handleCheckoutSessionSuccess(
   db: PrismaClient,
   session: Stripe.Checkout.Session,
