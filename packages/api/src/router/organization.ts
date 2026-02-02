@@ -17,6 +17,7 @@ import {
   hasOrgAdminPermissionClause,
   hasPermissionToAccessOrgClause,
   hasPermissionToUpdateOrgSubscriptionClause,
+  isOrgPremium,
 } from "../services/org-access-control";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { safe } from "../utils/commons";
@@ -94,6 +95,7 @@ export const organizationRouter = () =>
             purchasedSlots: true,
             subscriptionTier: true,
             subscriptionExpiresAt: true,
+            earnedPremiumExpiresAt: true,
             createdAt: true,
             updatedAt: true,
             _count: {
@@ -210,15 +212,39 @@ const subscriptionRouter = createTRPCRouter({
       });
     }
 
-    const isActive = org.subscriptionExpiresAt
-      ? org.subscriptionExpiresAt > new Date()
+    const now = new Date();
+    const accountCount = org._count.linkedInAccounts;
+
+    const paidActive = org.subscriptionExpiresAt
+      ? org.subscriptionExpiresAt > now
       : false;
 
-    return {
-      isActive,
+    const earnedActive =
+      org.earnedPremiumExpiresAt != null &&
+      org.earnedPremiumExpiresAt > now &&
+      accountCount <= 1;
+
+    const isPremium = isOrgPremium({
+      subscriptionTier: org.subscriptionTier,
+      subscriptionExpiresAt: org.subscriptionExpiresAt,
       purchasedSlots: org.purchasedSlots,
-      usedSlots: org._count.linkedInAccounts,
+      accountCount,
+      earnedPremiumExpiresAt: org.earnedPremiumExpiresAt,
+    });
+
+    const premiumSource: "paid" | "earned" | "none" = paidActive
+      ? "paid"
+      : earnedActive
+        ? "earned"
+        : "none";
+
+    return {
+      isActive: isPremium,
+      premiumSource,
+      purchasedSlots: org.purchasedSlots,
+      usedSlots: accountCount,
       expiresAt: org.subscriptionExpiresAt,
+      earnedPremiumExpiresAt: org.earnedPremiumExpiresAt,
       subscriptionTier: org.subscriptionTier as "FREE" | "PREMIUM",
       payer: org.payer,
       isPayer: ctx.user.id === org.payerId,
