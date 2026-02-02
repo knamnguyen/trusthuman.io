@@ -1,18 +1,33 @@
 /**
  * Comprehensive Premium System Integration Test
  *
- * Tests the ENTIRE premium detection + reward + feature gating system:
+ * Tests the ENTIRE premium detection + reward + feature gating system across
+ * RFC-007's 16-combination test matrix:
  *
+ * CORE SCENARIOS (12 tests):
  *  1. FREE org (no premium)        → premiumSource="none", isPremium=false
  *  2. FREE org + earned premium     → premiumSource="earned", isPremium=true
  *  3. PREMIUM org (paid, active)    → premiumSource="paid", isPremium=true
  *  4. PREMIUM org (paid, expired)   → premiumSource="none", isPremium=false
- *  5. PREMIUM org (over quota)      → premiumSource="none", isPremium=false
+ *  5. PREMIUM org (over quota)      → premiumSource="paid", isPremium=false
  *  6. FREE org + earned + 2 accounts → premiumSource="none" (earned requires <=1 account)
  *  7. Social referral: FREE org     → earnedPremiumExpiresAt extended
  *  8. Social referral: PREMIUM org  → Stripe credit applied, earnedPremiumExpiresAt NOT set
  *  9. Monthly cap enforcement       → Days capped at 14/month
- * 10. Rate limit enforcement        → 2 posts/platform/week
+ * 10. Both paid + earned active     → premiumSource="paid" (priority)
+ * 11. Earned premium expired        → premiumSource="none"
+ * 12. Credit calculation            → $1.00/day constant verified
+ *
+ * EDGE CASES (9 tests):
+ * 13. Paid expired + earned active (1 account) → earned kicks in
+ * 14. Exactly at quota (5/5)       → isPremium=true
+ * 15. One over quota (6/5)         → isPremium=false
+ * 16. PREMIUM canceled (NULL expiry) → premiumSource="none"
+ * 17. FREE with no accounts        → premiumSource="none"
+ * 18. Long-term earned (365 days)  → premiumSource="earned"
+ * 19. Over quota + earned (8 accounts) → earned disqualified by accountCount
+ * 20. Over quota + earned (1 account) → earned overrides paid over-quota
+ * 21. Both expire same day         → paid priority
  *
  * Run with: bun run packages/api/tests/test-premium-system.ts
  */
@@ -436,10 +451,160 @@ async function testPremiumSystem() {
     console.log("");
 
     // ═══════════════════════════════════════════════════════════════
+    // TEST 13: PREMIUM paid expired + earned active (1 account)
+    // ═══════════════════════════════════════════════════════════════
+    console.log("TEST 13: PREMIUM paid expired + earned active (1 account)");
+    const expiredPaidEarnedActive = {
+      subscriptionTier: "PREMIUM",
+      subscriptionExpiresAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // expired yesterday
+      purchasedSlots: 5,
+      earnedPremiumExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+      accountCount: 1,
+    };
+    const status13 = getSubscriptionStatus(expiredPaidEarnedActive);
+    assert(status13.isActive === true, "Expired paid + active earned (1 account) should be premium");
+    assert(status13.premiumSource === "earned", "premiumSource should be 'earned' (paid expired)");
+    console.log("");
+
+    // ═══════════════════════════════════════════════════════════════
+    // TEST 14: PREMIUM exactly at quota (5/5)
+    // ═══════════════════════════════════════════════════════════════
+    console.log("TEST 14: PREMIUM exactly at quota (5/5)");
+    const exactQuota = {
+      subscriptionTier: "PREMIUM",
+      subscriptionExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      purchasedSlots: 5,
+      earnedPremiumExpiresAt: null,
+      accountCount: 5,
+    };
+    const status14 = getSubscriptionStatus(exactQuota);
+    assert(status14.isActive === true, "Exactly at quota (5/5) should be premium");
+    assert(status14.premiumSource === "paid", "premiumSource should be 'paid'");
+    const hook14 = hookOutput({ ...status14, usedSlots: 5, purchasedSlots: 5 });
+    assert(hook14.isPremium === true, "Hook: isPremium=true");
+    assert(hook14.isOverQuota === false, "Hook: isOverQuota=false (exactly at quota)");
+    console.log("");
+
+    // ═══════════════════════════════════════════════════════════════
+    // TEST 15: PREMIUM one over quota (6/5)
+    // ═══════════════════════════════════════════════════════════════
+    console.log("TEST 15: PREMIUM one over quota (6/5)");
+    const oneOverQuota = {
+      subscriptionTier: "PREMIUM",
+      subscriptionExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      purchasedSlots: 5,
+      earnedPremiumExpiresAt: null,
+      accountCount: 6,
+    };
+    const status15 = getSubscriptionStatus(oneOverQuota);
+    assert(status15.isActive === false, "One over quota (6/5) should NOT be premium");
+    assert(status15.premiumSource === "paid", "premiumSource should be 'paid' (subscription exists)");
+    const hook15 = hookOutput({ ...status15, usedSlots: 6, purchasedSlots: 5 });
+    assert(hook15.isPremium === false, "Hook: isPremium=false");
+    assert(hook15.isOverQuota === true, "Hook: isOverQuota=true");
+    console.log("");
+
+    // ═══════════════════════════════════════════════════════════════
+    // TEST 16: PREMIUM canceled (NULL expiry)
+    // ═══════════════════════════════════════════════════════════════
+    console.log("TEST 16: PREMIUM canceled (NULL expiry)");
+    const canceledPremium = {
+      subscriptionTier: "PREMIUM",
+      subscriptionExpiresAt: null,
+      purchasedSlots: 5,
+      earnedPremiumExpiresAt: null,
+      accountCount: 3,
+    };
+    const status16 = getSubscriptionStatus(canceledPremium);
+    assert(status16.isActive === false, "Canceled premium (NULL expiry) should NOT be premium");
+    assert(status16.premiumSource === "none", "premiumSource should be 'none'");
+    console.log("");
+
+    // ═══════════════════════════════════════════════════════════════
+    // TEST 17: FREE, no accounts added
+    // ═══════════════════════════════════════════════════════════════
+    console.log("TEST 17: FREE org with no accounts");
+    const freeNoAccounts = {
+      subscriptionTier: "FREE",
+      subscriptionExpiresAt: null,
+      purchasedSlots: 1,
+      earnedPremiumExpiresAt: null,
+      accountCount: 0,
+    };
+    const status17 = getSubscriptionStatus(freeNoAccounts);
+    assert(status17.isActive === false, "FREE with no accounts should NOT be premium");
+    assert(status17.premiumSource === "none", "premiumSource should be 'none'");
+    console.log("");
+
+    // ═══════════════════════════════════════════════════════════════
+    // TEST 18: FREE, long-term earned (365 days)
+    // ═══════════════════════════════════════════════════════════════
+    console.log("TEST 18: FREE org with long-term earned (365 days)");
+    const longTermEarned = {
+      subscriptionTier: "FREE",
+      subscriptionExpiresAt: null,
+      purchasedSlots: 1,
+      earnedPremiumExpiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 365 days
+      accountCount: 1,
+    };
+    const status18 = getSubscriptionStatus(longTermEarned);
+    assert(status18.isActive === true, "FREE with 365-day earned should be premium");
+    assert(status18.premiumSource === "earned", "premiumSource should be 'earned'");
+    console.log("");
+
+    // ═══════════════════════════════════════════════════════════════
+    // TEST 19: PREMIUM over quota + earned active (8 accounts) — earned DISQUALIFIED
+    // ═══════════════════════════════════════════════════════════════
+    console.log("TEST 19: PREMIUM over quota + earned active (8 accounts)");
+    const overQuotaEarnedMultiAccount = {
+      subscriptionTier: "PREMIUM",
+      subscriptionExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      purchasedSlots: 5,
+      earnedPremiumExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      accountCount: 8,
+    };
+    const status19 = getSubscriptionStatus(overQuotaEarnedMultiAccount);
+    assert(status19.isActive === false, "Over quota (8/5) + earned with 8 accounts should NOT be premium");
+    assert(status19.premiumSource === "paid", "premiumSource should be 'paid' (subscription exists)");
+    console.log("");
+
+    // ═══════════════════════════════════════════════════════════════
+    // TEST 20: PREMIUM over quota + earned active (1 account) — earned WORKS
+    // ═══════════════════════════════════════════════════════════════
+    console.log("TEST 20: PREMIUM over quota + earned active (1 account)");
+    const overQuotaEarnedSingleAccount = {
+      subscriptionTier: "PREMIUM",
+      subscriptionExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      purchasedSlots: 0,
+      earnedPremiumExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      accountCount: 1,
+    };
+    const status20 = getSubscriptionStatus(overQuotaEarnedSingleAccount);
+    assert(status20.isActive === true, "Over quota (1/0) but earned active (1 account) should be premium");
+    assert(status20.premiumSource === "paid", "premiumSource should be 'paid' (paidActive=true)");
+    console.log("");
+
+    // ═══════════════════════════════════════════════════════════════
+    // TEST 21: Both expire on same day
+    // ═══════════════════════════════════════════════════════════════
+    console.log("TEST 21: Both paid and earned expire on same day");
+    const sameExpiry = {
+      subscriptionTier: "PREMIUM",
+      subscriptionExpiresAt: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
+      purchasedSlots: 5,
+      earnedPremiumExpiresAt: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
+      accountCount: 3,
+    };
+    const status21 = getSubscriptionStatus(sameExpiry);
+    assert(status21.isActive === true, "Both expire same day should be premium");
+    assert(status21.premiumSource === "paid", "premiumSource should be 'paid' (takes priority)");
+    console.log("");
+
+    // ═══════════════════════════════════════════════════════════════
     // SUMMARY
     // ═══════════════════════════════════════════════════════════════
     console.log("═══════════════════════════════════════════════");
-    console.log("  ALL 12 TESTS PASSED");
+    console.log("  ALL 21 TESTS PASSED");
     console.log("═══════════════════════════════════════════════");
     console.log("");
     console.log("Coverage:");
@@ -455,6 +620,15 @@ async function testPremiumSystem() {
     console.log("  [10] Both paid + earned → paid priority");
     console.log("  [11] Earned premium expired → none");
     console.log("  [12] Credit calculation verified");
+    console.log("  [13] PREMIUM paid expired + earned active (1 account) → earned");
+    console.log("  [14] PREMIUM exactly at quota (5/5) → paid");
+    console.log("  [15] PREMIUM one over quota (6/5) → not premium");
+    console.log("  [16] PREMIUM canceled (NULL expiry) → none");
+    console.log("  [17] FREE with no accounts → none");
+    console.log("  [18] FREE with long-term earned (365 days) → earned");
+    console.log("  [19] PREMIUM over quota + earned (8 accounts) → not premium");
+    console.log("  [20] PREMIUM over quota + earned (1 account) → premium via earned");
+    console.log("  [21] Both paid and earned expire same day → paid priority");
     console.log("");
     console.log("Systems tested:");
     console.log("  - isOrgPremium() (org-access-control.ts)");
