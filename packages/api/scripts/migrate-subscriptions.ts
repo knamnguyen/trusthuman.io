@@ -36,20 +36,6 @@ const stripeQueue = new PQueue({
 // Parse args
 const isDryRun = !process.argv.includes("--execute");
 
-interface MigrationResult {
-  userId: string;
-  userEmail: string;
-  orgId: string | null;
-  orgName: string | null;
-  status:
-    | "migrated"
-    | "skipped_no_admin_org"
-    | "skipped_no_stripe_subscription"
-    | "error";
-  error?: string;
-  subscriptionId?: string;
-}
-
 async function withRateLimit<T>(fn: () => Promise<T>) {
   return await stripeQueue.add(fn);
 }
@@ -76,12 +62,18 @@ async function findActiveStripeSubscription(
   }
 }
 
-async function migrateUser(user: {
-  id: string;
-  primaryEmailAddress: string;
-  stripeCustomerId: string;
-  accessType: string;
-}): Promise<MigrationResult> {
+async function migrateUser(stripeCustomerId: string) {
+  const user = await db.user.findFirst({
+    where: { stripeCustomerId },
+  });
+
+  if (user === null) {
+    console.error(`User with stripeCustomerId ${stripeCustomerId} not found`);
+    return {
+      status: "skipped_no_user",
+    } as const;
+  }
+
   const baseResult = {
     userId: user.id,
     userEmail: user.primaryEmailAddress,
@@ -110,7 +102,7 @@ async function migrateUser(user: {
 
   if (!adminMembership) {
     console.warn(`⚠️  User ${user.primaryEmailAddress} has no admin org`);
-    return { ...baseResult, status: "skipped_no_admin_org" };
+    return { ...baseResult, status: "skipped_no_admin_org" } as const;
   }
 
   const org = adminMembership.org;
@@ -131,7 +123,7 @@ async function migrateUser(user: {
 
   // 2. Find active Stripe subscription
   const subscription = await findActiveStripeSubscription(
-    user.stripeCustomerId,
+    user.stripeCustomerId!,
   );
 
   if (!subscription) {
@@ -217,86 +209,20 @@ async function main() {
   console.log("=".repeat(60));
   console.log();
 
-  // Find all users with active subscriptions
-  const usersWithSubscriptions = await db.user.findMany({
-    where: {
-      accessType: { not: "FREE" },
-      stripeCustomerId: { not: null },
-    },
-    select: {
-      id: true,
-      primaryEmailAddress: true,
-      stripeCustomerId: true,
-      accessType: true,
-    },
+  const activeSubscriptions = await stripe.subscriptions.list({
+    limit: 100,
   });
 
   console.log(
-    `Found ${usersWithSubscriptions.length} users with subscriptions`,
+    `Found ${activeSubscriptions.data.length} users with subscriptions`,
   );
-  console.log();
 
-  const results: MigrationResult[] = [];
-
-  for (const user of usersWithSubscriptions) {
+  for (const sub of activeSubscriptions.data) {
     const result = await migrateUser(
       // just typecast here because we've already filtered out users with null stripeCustomerId
-      user as typeof user & {
-        stripeCustomerId: string;
-      },
+      sub.customer as string,
     );
-    results.push(result);
-  }
-
-  // Summary
-  console.log();
-  console.log("=".repeat(60));
-  console.log("MIGRATION SUMMARY");
-  console.log("=".repeat(60));
-
-  const migrated = results.filter((r) => r.status === "migrated");
-  const skippedNoOrg = results.filter(
-    (r) => r.status === "skipped_no_admin_org",
-  );
-  const skippedNoSub = results.filter(
-    (r) => r.status === "skipped_no_stripe_subscription",
-  );
-  const errors = results.filter((r) => r.status === "error");
-
-  console.log(`✅ Migrated:                    ${migrated.length}`);
-  console.log(`⚠️  Skipped (no admin org):      ${skippedNoOrg.length}`);
-  console.log(`⚠️  Skipped (no Stripe sub):     ${skippedNoSub.length}`);
-  console.log(`❌ Errors:                      ${errors.length}`);
-  console.log();
-
-  if (skippedNoOrg.length > 0) {
-    console.log("Users skipped (no admin org):");
-    for (const r of skippedNoOrg) {
-      console.log(`  - ${r.userEmail} (${r.userId})`);
-    }
-    console.log();
-  }
-
-  if (skippedNoSub.length > 0) {
-    console.log("Users skipped (no Stripe subscription):");
-    for (const r of skippedNoSub) {
-      console.log(`  - ${r.userEmail} (${r.userId})`);
-    }
-    console.log();
-  }
-
-  if (errors.length > 0) {
-    console.log("Errors:");
-    for (const r of errors) {
-      console.log(`  - ${r.userEmail}: ${r.error}`);
-    }
-    console.log();
-  }
-
-  if (isDryRun) {
-    console.log("=".repeat(60));
-    console.log("This was a DRY RUN. Run with --execute to apply changes.");
-    console.log("=".repeat(60));
+    console.log(`result for ${sub.customer as string}:`, result);
   }
 }
 

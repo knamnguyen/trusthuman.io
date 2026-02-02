@@ -67,7 +67,24 @@ export const stripeWebhookRoutes = new Hono().post("/", async (c) => {
         }
 
         const slots = getPurchasedSlots(subscription);
-        const newExpiresAt = new Date(subscription.current_period_end * 1000);
+        // HACK: stripe's library types are fucked we need to find current_period_end from subscription items in some cases
+        const currentPeriodEnd =
+          (subscription.current_period_end as number | undefined) ??
+          ((
+            subscription.items.data[0] as unknown as
+              | { current_period_end: number }
+              | undefined
+          )?.current_period_end as number | undefined);
+
+        if (currentPeriodEnd === undefined) {
+          console.error(
+            "${eventType}: Missing current_period_end, skipping, heres the subscription object",
+            subscription,
+          );
+          break;
+        }
+
+        const newExpiresAt = new Date(currentPeriodEnd * 1000);
 
         const org = await db.organization.findUnique({
           where: { id: orgId },
