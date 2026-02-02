@@ -276,19 +276,30 @@ export default function EarnPremiumPage() {
                       </h3>
                       <ul className="space-y-1 text-sm text-gray-600">
                         <li>
-                          • Get +7 days of premium access per verified post
+                          • <strong>+1 day</strong> for each verified post (base
+                          reward)
                         </li>
-                        <li>• +1 day per 3 likes on your post</li>
-                        <li>• +1 day per 1 comment on your post</li>
-                        <li>• Posts rescanned every 24 hours for 2 more times (3 scans total)</li>
-                        <li>• No caps - unlimited earning potential</li>
+                        <li>
+                          • <strong>+1 day</strong> bonus if post gets 10+ likes
+                        </li>
+                        <li>
+                          • <strong>+1 day</strong> bonus if post gets 5+
+                          comments
+                        </li>
+                        <li>
+                          • <strong>Max 3 days</strong> per post
+                        </li>
+                        <li>
+                          • Posts rescanned every 24 hours (3 scans total) to
+                          capture growing engagement
+                        </li>
                         <li>
                           • FREE users: Premium access extends from current
                           expiration
                         </li>
                         <li>
-                          • PREMIUM users: Credits apply to your subscription
-                          (Phase 2)
+                          • PREMIUM users: Earn Stripe credits ($1.00/day)
+                          applied to your next invoice
                         </li>
                       </ul>
                     </div>
@@ -317,24 +328,6 @@ export default function EarnPremiumPage() {
                         <li>• Post must be public and accessible</li>
                       </ul>
                     </div>
-
-                    {/* Future Features Section */}
-                    <div className="rounded-lg bg-blue-50 p-3">
-                      <h3 className="mb-2 text-sm font-semibold text-blue-900">
-                        🚀 Coming in Phase 2
-                      </h3>
-                      <ul className="space-y-1 text-xs text-blue-700">
-                        <li>
-                          • Automatic daily rescans (currently manual verification only)
-                        </li>
-                        <li>
-                          • Automatic credit revocation if post is deleted
-                        </li>
-                        <li>
-                          • PREMIUM user Stripe credit integration
-                        </li>
-                      </ul>
-                    </div>
                   </div>
 
                   {/* Right Column */}
@@ -345,10 +338,11 @@ export default function EarnPremiumPage() {
                         ⚖️ Limits
                       </h3>
                       <ul className="space-y-1 text-sm text-gray-600">
-                        <li>• 1 post per platform per day</li>
+                        <li>• 2 posts per platform per week</li>
+                        <li>• 14 days maximum per month</li>
                         <li>
-                          • Only organizations with exactly 1 LinkedIn account
-                          are eligible
+                          • Earned premium only for organizations with 1
+                          LinkedIn account
                         </li>
                         <li>
                           • Posts must be public and remain live to keep rewards
@@ -602,7 +596,9 @@ export default function EarnPremiumPage() {
                     <TableHead>Days Earned</TableHead>
                     <TableHead>Likes</TableHead>
                     <TableHead>Comments</TableHead>
-                    <TableHead className="min-w-[200px]">Post Content</TableHead>
+                    <TableHead className="min-w-[200px]">
+                      Post Content
+                    </TableHead>
                     <TableHead>Submitted</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -624,7 +620,7 @@ export default function EarnPremiumPage() {
                             href={submission.postUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="font-medium capitalize text-blue-600 hover:underline"
+                            className="font-medium text-blue-600 capitalize hover:underline"
                           >
                             {submission.platform.toLowerCase()}
                           </a>

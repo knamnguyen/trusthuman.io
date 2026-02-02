@@ -114,6 +114,11 @@ export default function SettingsPage() {
   const isAdmin = status?.role === "admin";
   const isPayer = status?.isPayer ?? false;
   const isOverQuota = (status?.usedSlots ?? 0) > (status?.purchasedSlots ?? 1);
+  const premiumSource = (status as { premiumSource?: "paid" | "earned" | "none" } | undefined)?.premiumSource ?? "none";
+  const earnedPremiumExpiresAt = (status as { earnedPremiumExpiresAt?: string | null } | undefined)?.earnedPremiumExpiresAt;
+  const earnedDaysRemaining = earnedPremiumExpiresAt
+    ? Math.max(0, Math.ceil((new Date(earnedPremiumExpiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+    : 0;
 
   // Price calculation
   const pricePerSlot =
@@ -202,6 +207,27 @@ export default function SettingsPage() {
         </Card>
       )}
 
+      {/* Earned Premium Banner */}
+      {premiumSource === "earned" && earnedDaysRemaining > 0 && (
+        <Card className="border-green-500 bg-green-50 dark:bg-green-950">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-green-900 dark:text-green-100">
+              Earned Premium Active
+            </CardTitle>
+            <CardDescription className="text-green-800 dark:text-green-200">
+              You have {earnedDaysRemaining} day{earnedDaysRemaining !== 1 ? "s" : ""} of
+              premium remaining from social referrals.{" "}
+              <Link
+                href={`/${orgSlug}/earn-premium`}
+                className="underline hover:text-green-950 dark:hover:text-green-50"
+              >
+                Earn more days
+              </Link>
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      )}
+
       <div className="grid gap-6 md:grid-cols-2">
         {/* Free Tier Card */}
         <Card className="flex flex-col">
@@ -243,9 +269,14 @@ export default function SettingsPage() {
             </ul>
 
             {isFreeTier && (
-              <Badge variant="secondary" className="mt-4">
-                Current Plan
-              </Badge>
+              <div className="mt-4 flex gap-2">
+                <Badge variant="secondary">Current Plan</Badge>
+                {premiumSource === "earned" && (
+                  <Badge className="bg-green-600 text-white hover:bg-green-700">
+                    Earned Premium
+                  </Badge>
+                )}
+              </div>
             )}
           </CardContent>
         </Card>
@@ -255,7 +286,7 @@ export default function SettingsPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-2xl">Premium</CardTitle>
-              {!isFreeTier && <Badge>Current Plan</Badge>}
+              {!isFreeTier && premiumSource === "paid" && <Badge>Current Plan</Badge>}
             </div>
             <div>
               <p className="text-3xl font-bold">

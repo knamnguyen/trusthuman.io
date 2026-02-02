@@ -44,11 +44,7 @@ export function DailyAIQuotaExceededOverlay() {
     });
   }, []);
 
-  const handleUpgrade = () => {
-    posthog.capture("extension:daily-quota-dialog:v1:upgrade-clicked", {
-      organizationId: organization?.id,
-    });
-
+  const getOrgPrefix = () => {
     const webAppDomain = getWebAppDomain();
     let prefix = webAppDomain.endsWith("/")
       ? webAppDomain.slice(0, -1)
@@ -62,8 +58,25 @@ export function DailyAIQuotaExceededOverlay() {
       prefix += `/${account.profileSlug}`;
     }
 
-    const upgradeUrl = `${prefix}/settings`;
+    return prefix;
+  };
+
+  const handleUpgrade = () => {
+    posthog.capture("extension:daily-quota-dialog:v1:upgrade-clicked", {
+      organizationId: organization?.id,
+    });
+
+    const upgradeUrl = `${getOrgPrefix()}/settings`;
     window.open(upgradeUrl, "_blank");
+  };
+
+  const handleEarnPremium = () => {
+    posthog.capture("extension:daily-quota-dialog:v1:earn-premium-clicked", {
+      organizationId: organization?.id,
+    });
+
+    const earnUrl = `${getOrgPrefix()}/earn-premium`;
+    window.open(earnUrl, "_blank");
   };
 
   return (
@@ -109,6 +122,11 @@ export function DailyAIQuotaExceededOverlay() {
           <div className="flex flex-col gap-2">
             <Button onClick={handleUpgrade} className="w-full" size="lg">
               Upgrade Your Plan
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+
+            <Button onClick={handleEarnPremium} variant="outline" className="w-full" size="lg">
+              Earn Free Premium Days
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
 

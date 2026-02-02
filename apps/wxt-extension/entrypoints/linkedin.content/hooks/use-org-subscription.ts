@@ -2,7 +2,8 @@
  * useOrgSubscription Hook
  *
  * Fetches organization subscription status from tRPC.
- * Returns isPremium, isOverQuota, and other subscription details.
+ * Returns isPremium, premiumSource, isOverQuota, and other subscription details.
+ * Supports both paid premium (Stripe subscription) and earned premium (social referral).
  */
 
 import { useCallback } from "react";
@@ -17,24 +18,25 @@ export function useOrgSubscription() {
     trpc.organization.subscription.status.queryOptions(undefined, {
       select: useCallback(
         (data: {
+          isActive: boolean;
+          premiumSource: "paid" | "earned" | "none";
           subscriptionTier: "FREE" | "PREMIUM";
           expiresAt?: Date | null;
+          earnedPremiumExpiresAt?: Date | null;
           usedSlots: number;
           purchasedSlots: number;
         }) => {
-          const isPremium =
-            data.subscriptionTier === "PREMIUM" &&
-            data.expiresAt &&
-            new Date(data.expiresAt) > new Date();
-
           const isOverQuota = data.usedSlots > data.purchasedSlots;
 
           return {
-            isPremium: !!isPremium && !isOverQuota,
+            isPremium: data.isActive,
+            premiumSource: data.premiumSource,
             isOverQuota,
             purchasedSlots: data.purchasedSlots,
             usedSlots: data.usedSlots,
             subscriptionTier: data.subscriptionTier,
+            expiresAt: data.expiresAt,
+            earnedPremiumExpiresAt: data.earnedPremiumExpiresAt,
           };
         },
         [],

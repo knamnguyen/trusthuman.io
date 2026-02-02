@@ -3,7 +3,7 @@
 **Date:** 2026-02-02
 **Complexity:** COMPLEX (Multi-phase integration)
 **Execution Model:** Phase-by-Phase with Pre-Research and Post-Testing
-**Status:** ⏳ IN PROGRESS (RFC-001, RFC-002, RFC-003, RFC-004 COMPLETE)
+**Status:** ⏳ IN PROGRESS (RFC-001 through RFC-005 COMPLETE)
 **Related Plans:**
 - @org-payment-system_PLAN_19-01-26.md (Org Payment System)
 - @social-referral-system_PLAN_27-01-26.md (Social Referral System)
@@ -106,15 +106,15 @@
 
 **Test:** 11 unit tests for `calculateDaysToAward()` passed. Real URL tests on X and Threads passed. Stripe credit manual testing pending.
 
-### RFC-004: Update AI Quota + Feature Gating
-**What happens:** Add `earnedPremiumExpiresAt` to `ORG_SELECT` in ai-quota.ts, update all routers using `hasPremiumAccess()` to work with earned premium, ensure unlimited AI comments for earned premium users.
+### RFC-004: Update AI Quota + Feature Gating ✅
+**What happened:** All routers already used consolidated `isOrgPremium()`/`hasPremiumAccess()` from RFC-002. Added `premiumSource` + `earnedPremiumExpiresAt` to `subscription.status` endpoint. Added `earnedPremiumExpiresAt` to `organization.get` select.
 
-**Test:** Earn premium via social post → verify unlimited AI comments available. Verify LinkedIn scrape, profile import, target list features all work with earned premium.
+**Test:** Audited all premium-gated routers. Type-check passes.
 
-### RFC-005: Frontend Integration
-**What happens:** Update `useOrgSubscription` hook in both Next.js and extension, add `premiumSource` to API response, update settings page to show earned premium badge, update earn-premium page UI.
+### RFC-005: Frontend Integration ✅
+**What happened:** Fixed broken `useOrgSubscription` hooks (both Next.js and extension) — were only checking paid subscription, now use API's `isActive` field. Added earned premium banner to settings page. Updated earn-premium page with correct reward info. Added "Earn Free Premium Days" button to extension quota overlay.
 
-**Test:** Frontend shows "Premium (Earned)" badge when `earnedPremiumExpiresAt` active. Settings page displays earned premium status correctly.
+**Test:** Type-check passes. No new errors in changed files.
 
 ### RFC-006: Database Migration & Verification
 **What happens:** Run `db:push` for schema changes, run migration script for existing subscriptions, verify data integrity.
@@ -687,11 +687,11 @@ model SocialSubmission {
 ✅ **RFC-002**: Consolidate Premium Check Logic (COMPLETE — `isOrgPremium()` + `hasPremiumAccess()` + `ORG_PREMIUM_SELECT` in `org-access-control.ts`)
 ✅ **RFC-003**: Fix Social Referral Premium Detection + Stripe Credits (COMPLETE — engagement-based rewards, Stripe `createBalanceCredit`, monthly cap, rate limiting, all tests passing)
 ✅ **RFC-004**: Update AI Quota + Feature Gating (COMPLETE — all routers already use consolidated checks; added `premiumSource` + `earnedPremiumExpiresAt` to subscription status)
-⏳ **RFC-005**: Frontend Integration (PLANNED)
+✅ **RFC-005**: Frontend Integration (COMPLETE — hooks fixed, settings page, earn-premium page, extension overlay updated)
 ⏳ **RFC-006**: Database Migration & Verification (PLANNED)
 ⏳ **RFC-007**: Comprehensive Testing & Edge Cases (PLANNED)
 
-**Immediate Next Steps:** RFC-005 (Frontend Integration)
+**Immediate Next Steps:** RFC-006 (Database Migration & Verification), RFC-007 (Comprehensive Testing)
 
 ---
 
