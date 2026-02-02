@@ -592,6 +592,9 @@ importers:
       '@sassy/api':
         specifier: workspace:^
         version: link:../../packages/api
+      '@sassy/feature-flags':
+        specifier: workspace:*
+        version: link:../../packages/feature-flags
       '@sassy/linkedin-automation':
         specifier: workspace:*
         version: link:../../packages/linkedin-automation

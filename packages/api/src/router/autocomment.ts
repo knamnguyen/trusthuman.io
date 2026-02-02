@@ -443,7 +443,6 @@ export const autoCommentRouter = () =>
           ctx.db,
           ctx.browserRegistry,
           runId,
-          ctx.user.id,
           input.accountId,
         );
 
@@ -649,7 +648,6 @@ async function startAutoComment(
   db: PrismaClient,
   browserRegistry: BrowserSessionRegistry,
   runId: string,
-  userId: string,
   accountId: string,
   params?: StartAutoCommentingParams,
 ) {
@@ -682,17 +680,11 @@ async function startAutoComment(
     } as const;
   }
 
-  const browserSession = new BrowserSession(
-    db,
-    browserRegistry,
-    accountId,
-    userId,
-    {
-      location: account.browserLocation as ProxyLocation,
-      browserProfileId: account.browserProfileId,
-      liveviewViewOnlyMode: process.env.NODE_ENV === "production",
-    },
-  );
+  const browserSession = new BrowserSession(db, browserRegistry, accountId, {
+    location: account.browserLocation as ProxyLocation,
+    browserProfileId: account.browserProfileId,
+    liveviewViewOnlyMode: process.env.NODE_ENV === "production",
+  });
 
   await browserSession.ready;
 
@@ -714,26 +706,26 @@ async function startAutoComment(
   ]);
 
   try {
-    const result = await browserSession.startAutoCommenting({
+    await browserSession.startAutoCommenting({
       autoCommentRunId: autoCommentRun.id,
       ...autocommentConfig,
       ...params,
     });
 
-    if (result.status === "errored") {
-      await db.autoCommentRun.update({
-        where: { id: autoCommentRun.id },
-        data: {
-          status: "errored",
-          error: result.error,
-          endedAt: new Date(),
-        },
-      });
-      return {
-        status: "error",
-        message: result.error,
-      } as const;
-    }
+    // if (result.status === "errored") {
+    //   await db.autoCommentRun.update({
+    //     where: { id: autoCommentRun.id },
+    //     data: {
+    //       status: "errored",
+    //       error: result.error,
+    //       endedAt: new Date(),
+    //     },
+    //   });
+    //   return {
+    //     status: "error",
+    //     message: result.error,
+    //   } as const;
+    // }
 
     return {
       status: "success",

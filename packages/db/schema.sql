@@ -14,7 +14,7 @@ CREATE TYPE "BrowserJobStatus" AS ENUM ('QUEUED', 'RUNNING', 'TERMINATED', 'COMP
 CREATE TYPE "CommentStatus" AS ENUM ('DRAFT', 'SCHEDULED', 'QUEUED', 'POSTING', 'POSTED', 'FAILED', 'CANCELLED');
 
 -- CreateEnum
-CREATE TYPE "LinkedInAccountStatus" AS ENUM ('REGISTERED', 'CONNECTING', 'CONNECTED');
+CREATE TYPE "LinkedInAccountStatus" AS ENUM ('DISABLED', 'REGISTERED', 'CONNECTING', 'CONNECTED');
 
 -- CreateEnum
 CREATE TYPE "ImportStatus" AS ENUM ('NOT_STARTED', 'RUNNING', 'FINISHED');
@@ -30,9 +30,6 @@ CREATE TYPE "TargetListStatus" AS ENUM ('BUILDING', 'COMPLETED');
 
 -- CreateEnum
 CREATE TYPE "BuildTargetListJobStatus" AS ENUM ('QUEUED', 'RUNNING', 'COMPLETED', 'FAILED');
-
--- CreateEnum
-CREATE TYPE "AccessType" AS ENUM ('FREE', 'WEEKLY', 'MONTHLY', 'YEARLY');
 
 -- CreateTable
 CREATE TABLE "UserBrowserState" (
@@ -214,7 +211,7 @@ CREATE TABLE "LinkedInAccount" (
     "id" TEXT NOT NULL,
     "ownerId" TEXT,
     "organizationId" TEXT,
-    "status" "LinkedInAccountStatus",
+    "status" "LinkedInAccountStatus" NOT NULL DEFAULT 'DISABLED',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "staticIpId" TEXT,
     "browserProfileId" TEXT NOT NULL,
@@ -225,8 +222,8 @@ CREATE TABLE "LinkedInAccount" (
     "autocommentEnabled" BOOLEAN NOT NULL DEFAULT false,
     "runDailyAt" TEXT,
     "isRunning" BOOLEAN NOT NULL DEFAULT false,
-    "accessType" "AccessType" NOT NULL DEFAULT 'FREE',
     "dailyAIcomments" INTEGER NOT NULL DEFAULT 0,
+    "dailyAIcommentsRefreshedAt" TIMESTAMP(3),
     "registrationStatus" TEXT,
     "name" TEXT,
     "email" TEXT,
@@ -333,10 +330,13 @@ CREATE TABLE "Organization" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "orgSlug" TEXT,
-    "stripeCustomerId" TEXT,
     "purchasedSlots" INTEGER NOT NULL DEFAULT 1,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "payerId" TEXT,
+    "stripeSubscriptionId" TEXT,
+    "subscriptionTier" TEXT NOT NULL DEFAULT 'FREE',
+    "subscriptionExpiresAt" TIMESTAMP(3),
     "earnedPremiumExpiresAt" TIMESTAMP(3),
 
     CONSTRAINT "Organization_pkey" PRIMARY KEY ("id")
@@ -506,8 +506,6 @@ CREATE TABLE "User" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "stripeCustomerId" TEXT,
-    "accessType" "AccessType" NOT NULL DEFAULT 'FREE',
-    "stripeUserProperties" JSONB,
     "dailyAIcomments" INTEGER NOT NULL DEFAULT 0,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
@@ -571,7 +569,7 @@ CREATE UNIQUE INDEX "LinkedInProfile_urn_key" ON "LinkedInProfile"("urn");
 CREATE INDEX "LinkedInProfile_linkedinUrl_idx" ON "LinkedInProfile"("linkedinUrl");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Organization_stripeCustomerId_key" ON "Organization"("stripeCustomerId");
+CREATE UNIQUE INDEX "Organization_stripeSubscriptionId_key" ON "Organization"("stripeSubscriptionId");
 
 -- CreateIndex
 CREATE INDEX "OrganizationMember_userId_idx" ON "OrganizationMember"("userId");
@@ -689,6 +687,9 @@ ALTER TABLE "LinkedInAccount" ADD CONSTRAINT "LinkedInAccount_ownerId_fkey" FORE
 
 -- AddForeignKey
 ALTER TABLE "LinkedInAccount" ADD CONSTRAINT "LinkedInAccount_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Organization" ADD CONSTRAINT "Organization_payerId_fkey" FOREIGN KEY ("payerId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "OrganizationMember" ADD CONSTRAINT "OrganizationMember_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;

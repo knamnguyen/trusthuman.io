@@ -11,7 +11,7 @@
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "format": "prettier --check . --ignore-path ../../.gitignore",
-    "dev": "bun --env-file=../../.env --hot ./src/server.ts",
+    "dev": "NODE_ENV=development bun --env-file=../../.env --hot --no-clear-screen ./src/server.ts",
     "start": "PORT=80 NODE_ENV=production bun --env-file=../../.env run ./src/server.ts",
     "lint": "eslint",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",

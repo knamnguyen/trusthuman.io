@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useRef } from "react";
+import { useTRPC } from "@/lib/trpc/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { createCommentUtilities } from "@sassy/linkedin-automation/comment/create-comment-utilities";
 import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post-utilities";
 
 import { useComposeStore } from "../../stores/compose-store";
+import { useDailyQuotaLimitHitDialogStore } from "../../stores/dialog-store";
 import { useSettingsLocalStore } from "../../stores/settings-local-store";
 import { SIDEBAR_TABS, useSidebarStore } from "../../stores/sidebar-store";
 import { useMostVisiblePost } from "../../utils";
@@ -43,6 +46,13 @@ export function SpacebarEngageObserver() {
     clearSinglePostCards,
     updateCardsComments,
   } = useComposeStore();
+
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+
+  const showDailyAIQuotaExceededOverlay = useDailyQuotaLimitHitDialogStore(
+    (state) => state.open,
+  );
 
   // Sidebar store for UI state
   const { openToTab } = useSidebarStore();
@@ -195,12 +205,24 @@ export function SpacebarEngageObserver() {
       // Generate AI comments using shared utility
       try {
         await generateAndUpdateCards({
+          trpc,
+          queryClient,
           postContent: fullCaption,
           postContainer,
           count: 3,
           cardIds: aiCardIds,
           updateCardComment,
           updateCardStyleInfo,
+          onError(error) {
+            switch (error.reason) {
+              case "daily_quota_exceeded": {
+                showDailyAIQuotaExceededOverlay();
+                break;
+              }
+              default:
+                break;
+            }
+          },
         });
       } finally {
         // Mark as done generating

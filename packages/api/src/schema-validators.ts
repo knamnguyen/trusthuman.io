@@ -7,10 +7,12 @@ import { z } from "zod";
  * Used by both tRPC procedures and Chrome extension client
  */
 
+// TODO: make all generatecomments endpoint use the generateComment endpoint no generate dynamic comment endpoint
 // Input schema for generating AI comments
 export const commentGenerationInputSchema = z.object({
   postContent: z.string().min(1, "Post content is required"),
   styleGuide: z.string().min(1, "Style guide is required").optional(),
+  styleId: z.string().optional(),
   adjacentComments: z
     .array(
       z.object({
@@ -31,14 +33,6 @@ export const commentGenerationInputSchema = z.object({
   maxWords: z.number().min(1).max(300).optional(),
   /** Creativity level / temperature (0-2), default 1.0 */
   creativity: z.number().min(0).max(2).optional(),
-});
-
-// Output schema for AI comment generation
-export const commentGenerationOutputSchema = z.object({
-  comment: z.string(),
-  success: z.boolean(),
-  fallback: z.boolean().optional(),
-  error: z.string().optional(),
 });
 
 // Configuration schema for AI comment generator
@@ -63,9 +57,6 @@ export const commentGeneratorErrorSchema = z.object({
 export type CommentGenerationInput = z.infer<
   typeof commentGenerationInputSchema
 >;
-export type CommentGenerationOutput = z.infer<
-  typeof commentGenerationOutputSchema
->;
 export type CommentGeneratorConfig = z.infer<
   typeof commentGeneratorConfigSchema
 >;
@@ -77,21 +68,6 @@ export type CommentGeneratorError = z.infer<typeof commentGeneratorErrorSchema>;
  * Used by the generateDynamic route for AI-powered style selection
  */
 
-// Input schema for generateDynamic
-export const generateDynamicInputSchema = z.object({
-  postContent: z.string().min(1, "Post content is required"),
-  adjacentComments: z
-    .array(
-      z.object({
-        commentContent: z.string(),
-        likeCount: z.number(),
-        replyCount: z.number(),
-      }),
-    )
-    .optional(),
-  count: z.union([z.literal(1), z.literal(3)]),
-});
-
 // Style snapshot schema - null when using hardcoded defaults
 export const styleSnapshotSchema = z
   .object({
@@ -102,17 +78,6 @@ export const styleSnapshotSchema = z
   })
   .nullable();
 
-// Output schema for generateDynamic
-export const generateDynamicOutputSchema = z.array(
-  z.object({
-    comment: z.string(),
-    styleId: z.string().nullable(),
-    styleSnapshot: styleSnapshotSchema,
-  }),
-);
-
 // Type exports for dynamic style selection
 export type GenerateDynamicInput = z.infer<typeof generateDynamicInputSchema>;
 export type StyleSnapshot = z.infer<typeof styleSnapshotSchema>;
-export type GenerateDynamicOutput = z.infer<typeof generateDynamicOutputSchema>;
-export type DynamicStyleResult = GenerateDynamicOutput[number];

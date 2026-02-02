@@ -20,14 +20,15 @@ import {
 import { Textarea } from "@sassy/ui/textarea";
 import { cn } from "@sassy/ui/utils";
 
-import { useSubscription } from "~/hooks/use-subscription";
+import { useOrgSubscription } from "~/hooks/use-org-subscription";
 import { useTRPC } from "~/trpc/react";
 
 export default function ProfileListRunPage() {
   const params = useParams<{ runId: string }>();
   const router = useRouter();
   const trpc = useTRPC();
-  const { accessType } = useSubscription();
+  const { data } = useOrgSubscription();
+  const subscriptionTier = data?.subscriptionTier ?? "FREE";
 
   const { data: runDetails } = useQuery({
     ...trpc.profileImport.getRunDetails.queryOptions({ id: params.runId }),
@@ -91,7 +92,7 @@ export default function ProfileListRunPage() {
             <UserButton afterSignOutUrl="/" />
             <div className="text-sm text-zinc-600">
               Subscription:
-              <span className="pl-1 font-medium uppercase">{accessType}</span>
+              <span className="pl-1 font-medium uppercase">{subscriptionTier}</span>
             </div>
           </div>
           <div className="text-center">

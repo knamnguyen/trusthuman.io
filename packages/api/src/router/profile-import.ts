@@ -4,18 +4,20 @@ import { z } from "zod";
 // import { LinkedInScrapeApifyService } from "@sassy/linkedin-scrape-apify";
 import { ImportStatus } from "@sassy/db";
 
-import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { checkPremiumAccess } from "../utils/check-premium-access";
+import { hasPremiumAccess } from "../access-control/organization";
+import { createTRPCRouter, orgProcedure, protectedProcedure } from "../trpc";
 import { executeRetrieve } from "../utils/execute-retrieve";
 import { executeRun } from "../utils/execute-run";
 
 export const profileImportRouter = () =>
   createTRPCRouter({
-    createRun: protectedProcedure
+    createRun: orgProcedure
       .input(z.object({ urls: z.array(z.string().url()).min(1).max(100) }))
       .mutation(async ({ ctx, input }) => {
-        const access = await checkPremiumAccess(ctx);
-        if (!access || access === "FREE") {
+        const isPremium = await hasPremiumAccess(ctx.db, {
+          orgId: ctx.activeOrg.id,
+        });
+        if (!isPremium) {
           throw new TRPCError({
             code: "FORBIDDEN",
             message: "Premium subscription required",
@@ -50,11 +52,13 @@ export const profileImportRouter = () =>
         return run; // { id }
       }),
 
-    createRetrieveOnly: protectedProcedure
+    createRetrieveOnly: orgProcedure
       .input(z.object({ urls: z.array(z.string().url()).min(1) }))
       .mutation(async ({ ctx, input }) => {
-        const access = await checkPremiumAccess(ctx);
-        if (!access || access === "FREE") {
+        const isPremium = await hasPremiumAccess(ctx.db, {
+          orgId: ctx.activeOrg.id,
+        });
+        if (!isPremium) {
           throw new TRPCError({
             code: "FORBIDDEN",
             message: "Premium subscription required",

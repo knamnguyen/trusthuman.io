@@ -11,15 +11,11 @@ model User {
 
   linkedInAccounts        LinkedInAccount[]
   organizationMemberships OrganizationMember[]
+  paidOrganizations       Organization[]       @relation("OrgPayer") // Orgs this user pays for
 
-  //to be deprecated move to linkedin account - leave for now since in prod
-  // except stripe customer id will be moved to org table
-
-  stripeCustomerId     String?            @unique
-  accessType           AccessType         @default(FREE)
-  stripeUserProperties Json?
-  dailyAIcomments      Int                @default(0)
-  profileImportRuns    ProfileImportRun[]
+  stripeCustomerId  String?            @unique
+  dailyAIcomments   Int                @default(0)
+  profileImportRuns ProfileImportRun[]
 
   //not sure about these - should these be linkedin to linkedin-account table?
   UserBrowserState UserBrowserState[]
@@ -29,11 +25,4 @@ model User {
   linkedInPostPreviews LinkedInPostPreview[]
   commentAnalyses      CommentAnalysis[]
   AutoCommentConfig    AutoCommentConfig[]
-}
-
-enum AccessType {
-  FREE
-  WEEKLY
-  MONTHLY
-  YEARLY
 }

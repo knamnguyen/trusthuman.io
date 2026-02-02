@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
+import { useAuthStore } from "@/lib/auth-store";
+import { getWebAppDomain } from "@/lib/get-sync-host-url";
 import { posthog } from "@/lib/posthog";
 import {
   Edit3,
@@ -16,11 +18,11 @@ import { useShallow } from "zustand/shallow";
 import { Button } from "@sassy/ui/button";
 import { TooltipWithDialog } from "@sassy/ui/components/tooltip-with-dialog";
 
-import { useAuthStore } from "../../../lib/auth-store";
-import { getWebAppDomain } from "../../../lib/get-sync-host-url";
+import { useOrgSubscription } from "../hooks/use-org-subscription";
 import { useAccountStore, useShadowRootStore } from "../stores";
 import { useComposeStore } from "../stores/compose-store";
 import { ComposeCard } from "./ComposeCard";
+import { DailyAIGenerationsLeft } from "./DailyAIGenerationsLeft";
 import { useAutoResume } from "./hooks/useAutoResume";
 import { useLoadPosts } from "./hooks/useLoadPosts";
 import { useSubmitBatch } from "./hooks/useSubmitBatch";
@@ -141,7 +143,7 @@ export function ComposeTab() {
       {/* Sticky Compact Header */}
       <div className="bg-background sticky top-0 z-10 -mx-4 border-b px-4 py-2">
         {/* Row 1: Title + History Link + Settings Icon */}
-        <div className="mb-2 flex items-center justify-between border-b pb-2">
+        <div className="mb-2 flex items-center border-b pb-2">
           <TooltipWithDialog
             tooltipContent={
               <p className="text-sm">
@@ -187,7 +189,9 @@ export function ComposeTab() {
               <span className="text-sm font-medium">Compose</span>
             </div>
           </TooltipWithDialog>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-1 items-center justify-between gap-2 pl-2">
+            <DailyAIGenerationsLeft />
+            <div className="flex-1" />
             {historyLink && (
               <a
                 href={historyLink}
@@ -368,7 +372,7 @@ export function ComposeTab() {
 
       {/* Compose Cards List */}
       {cardIds.length > 0 && (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 pb-3">
           {cardIds.map((cardId) => {
             const isSinglePost = singlePostCardIds.includes(cardId);
             // Auto-focus the first single-post card (manual card) for quick typing

@@ -353,10 +353,7 @@ if you're serious about #engagekit_io level networking this is it."
 Write the caption now (just the caption text, no quotes or extra formatting):`;
 
       try {
-        const { AIService } = await import("../utils/ai-service/ai-service");
-        const aiService = new AIService(process.env.GOOGLE_GENAI_API_KEY!);
-
-        const result = await aiService.generateComment({
+        const result = await ctx.ai.generateComment({
           postContent: prompt,
           creativity: 2.0, // Maximum creativity
           maxWords: 80,
@@ -411,7 +408,7 @@ Write the caption now (just the caption text, no quotes or extra formatting):`;
             if (i % 2 === 0 && part.trim()) {
               // This is the sentence content
               return acc + part;
-            } else if (['.', '!', '?'].includes(part)) {
+            } else if ([".", "!", "?"].includes(part)) {
               // This is the punctuation - add it and double line break
               const nextPart = arr[i + 1];
               return nextPart?.trim() ? acc + part + "\n\n" : acc + part;

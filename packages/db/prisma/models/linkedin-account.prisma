@@ -1,9 +1,9 @@
 model LinkedInAccount {
-  id               String                 @id @default(uuid())
+  id               String                @id @default(uuid())
   ownerId          String?
   organizationId   String?
-  status           LinkedInAccountStatus?
-  createdAt        DateTime               @default(now())
+  status           LinkedInAccountStatus @default(DISABLED)
+  createdAt        DateTime              @default(now())
   staticIpId       String?
   browserProfileId String
   browserLocation  String?
@@ -13,13 +13,13 @@ model LinkedInAccount {
   profileSlug String? @unique
   profileUrn  String? @unique
 
-  autocommentEnabled Boolean    @default(false)
+  autocommentEnabled Boolean @default(false)
   runDailyAt         String?
-  isRunning          Boolean    @default(false)
-  accessType         AccessType @default(FREE)
+  isRunning          Boolean @default(false)
 
   //resets count daily - but still can get from history of comments
   dailyAIcomments Int @default(0)
+  dailyAIcommentsRefreshedAt DateTime?
 
   //delete
   registrationStatus String?
@@ -42,8 +42,6 @@ model LinkedInAccount {
   targetProfiles     TargetProfile[]
   targetListProfiles TargetListProfile[]
 
-  
-
   //existing relations
   AutoCommentConfig       AutoCommentConfig[]
   BlacklistedProfile      BlacklistedProfile[]
@@ -59,6 +57,7 @@ model LinkedInAccount {
 }
 
 enum LinkedInAccountStatus {
+  DISABLED
   REGISTERED
   CONNECTING
   CONNECTED

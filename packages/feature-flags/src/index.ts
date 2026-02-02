@@ -40,6 +40,12 @@ export {
   DEFAULT_STYLE_GUIDES_FREE,
   DEFAULT_STYLE_GUIDES_PREMIUM,
   DEFAULT_STYLE_GUIDES,
+  isOrgPremium,
+  getPremiumStatus,
 } from "./premium";
 
-export { autoCommentConfigurationDefaults } from "./constants";
+export {
+  autoCommentConfigurationDefaults,
+  DEFAULT_COMMENT_STYLE_CONFIG,
+} from "./constants";
+export type { CommentStyleConfig } from "./constants";

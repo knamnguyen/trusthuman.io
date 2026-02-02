@@ -1,8 +1,10 @@
 import { DBOS } from "@dbos-inc/dbos-sdk";
 
-// we must import workflows so they get registered to DBOS before DBOS.launch is called
+// we must import workflows/scheduled jobs so they get registered to DBOS before DBOS.launch is called
 import { buildTargetListWorkflow } from "./build-target-list.workflow";
 import { rescanSocialSubmissionWorkflow } from "./rescan-social-submission.workflow";
+
+import "./account.workflows";
 
 export { buildTargetListWorkflow, rescanSocialSubmissionWorkflow };
 

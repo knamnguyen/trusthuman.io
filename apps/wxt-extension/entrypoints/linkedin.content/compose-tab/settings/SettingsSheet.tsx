@@ -1,18 +1,46 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
-import { Brain, Cog, ExternalLink, Filter, Send, Settings, X } from "lucide-react";
+import {
+  Brain,
+  Cog,
+  ExternalLink,
+  Filter,
+  Send,
+  Settings,
+  X,
+} from "lucide-react";
 
 import { Button } from "@sassy/ui/button";
 import { ExpandableTabs } from "@sassy/ui/expandable-tabs";
+import { Label } from "@sassy/ui/label";
 import { ScrollArea } from "@sassy/ui/scroll-area";
+import { Switch } from "@sassy/ui/switch";
 
+import type {
+  CommentGenerateSettingDB,
+  PostLoadSettingDB,
+  SubmitCommentSettingDB,
+} from "../../stores/settings-db-store";
+// =============================================================================
+// INLINE TAB CONTENT COMPONENTS
+// These will be extracted to separate files in Phase 2.2-2.5
+// =============================================================================
+
+import type { BehaviorSettings } from "../../stores/settings-local-store";
 import { useAuthStore } from "../../../../lib/auth-store";
 import { getWebAppDomain } from "../../../../lib/get-sync-host-url";
 import { useTRPC } from "../../../../lib/trpc/client";
+import { useAccountQuota } from "../../hooks/use-account-quota";
+import { useOrgSubscription } from "../../hooks/use-org-subscription";
 import { useAccountStore } from "../../stores/account-store";
+import { useDailyQuotaLimitHitDialogStore } from "../../stores/dialog-store";
 import { useSettingsDBStore } from "../../stores/settings-db-store";
 import { useSettingsLocalStore } from "../../stores/settings-local-store";
+import { BlacklistSelector } from "./BlacklistSelector";
+import { CommentStyleSelector } from "./CommentStyleSelector";
+import { SettingsImageManager } from "./SettingsImageManager";
+import { TargetListSelector } from "./TargetListSelector";
 
 // Tab configuration for settings
 const SETTINGS_TABS = [
@@ -45,8 +73,8 @@ export function SettingsSheet({ isOpen, onClose }: SettingsSheetProps) {
       {
         enabled: isOpen,
         staleTime: 30 * 1000,
-      }
-    )
+      },
+    ),
   );
 
   // Get behavior settings from LOCAL store (not synced to DB)
@@ -151,26 +179,6 @@ export function SettingsSheet({ isOpen, onClose }: SettingsSheetProps) {
   );
 }
 
-// =============================================================================
-// INLINE TAB CONTENT COMPONENTS
-// These will be extracted to separate files in Phase 2.2-2.5
-// =============================================================================
-
-import type { BehaviorSettings } from "../../stores/settings-local-store";
-import type {
-  CommentGenerateSettingDB,
-  PostLoadSettingDB,
-  SubmitCommentSettingDB,
-} from "../../stores/settings-db-store";
-
-import { Label } from "@sassy/ui/label";
-import { Switch } from "@sassy/ui/switch";
-
-import { BlacklistSelector } from "./BlacklistSelector";
-import { CommentStyleSelector } from "./CommentStyleSelector";
-import { SettingsImageManager } from "./SettingsImageManager";
-import { TargetListSelector } from "./TargetListSelector";
-
 /**
  * Section header component for organizing settings
  */
@@ -188,7 +196,7 @@ function SettingsSection({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+        <h3 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
           {title}
         </h3>
         {quickLink && quickLinkLabel && (
@@ -196,7 +204,7 @@ function SettingsSection({
             href={quickLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-primary hover:text-primary/80 transition-colors flex items-center gap-1.5 text-xs font-medium"
+            className="text-primary hover:text-primary/80 flex items-center gap-1.5 text-xs font-medium transition-colors"
             title="Open in dashboard"
           >
             {quickLinkLabel}
@@ -237,11 +245,13 @@ function SettingToggle({
           <p className="text-muted-foreground text-xs">{description}</p>
         )}
       </div>
-      <Switch
-        checked={checked}
-        onCheckedChange={onCheckedChange}
-        disabled={disabled}
-      />
+      <div className="relative">
+        <Switch
+          checked={checked}
+          onCheckedChange={onCheckedChange}
+          disabled={disabled}
+        />
+      </div>
     </div>
   );
 }
@@ -259,14 +269,54 @@ function SettingsBehaviorContent({
     value: BehaviorSettings[K],
   ) => void;
 }) {
+  const subscription = useOrgSubscription();
+
+  const quota = useAccountQuota();
+
+  const showDailyAIQuotaExceededOverlay = useDailyQuotaLimitHitDialogStore(
+    (state) => state.open,
+  );
+
   return (
     <div className="space-y-6">
       <SettingsSection title="Mode">
         <SettingToggle
+          disabled={subscription.isLoading || quota.isLoading}
           label="100% Human Mode"
           description="Skip AI generation, write comments manually"
           checked={behavior.humanOnlyMode}
-          onCheckedChange={(v) => updateBehavior("humanOnlyMode", v)}
+          onCheckedChange={(v) => {
+            if (v === true) {
+              // If turning on human-only mode, no checks needed
+              updateBehavior("humanOnlyMode", v);
+              return;
+            }
+
+            // else we need to check subscription and quota
+            // Make sure subscription and quota data are loaded
+            if (subscription.data === undefined || quota.data === undefined) {
+              return;
+            }
+
+            // if premium, allow without quota check
+            if (subscription.data.isPremium) {
+              updateBehavior("humanOnlyMode", v);
+              return;
+            }
+
+            // if free and quota exceeded, show overlay
+            if (quota.data === null) {
+              console.error("Failed to retrieve quota info");
+              return;
+            }
+
+            if (quota.data.left <= 0) {
+              showDailyAIQuotaExceededOverlay();
+              return;
+            }
+
+            updateBehavior("humanOnlyMode", v);
+          }}
         />
       </SettingsSection>
 
@@ -276,7 +326,9 @@ function SettingsBehaviorContent({
             label="Auto-Open on Comment Click"
             description="Trigger generation when clicking LinkedIn's comment button"
             checked={behavior.autoEngageOnCommentClick}
-            onCheckedChange={(v) => updateBehavior("autoEngageOnCommentClick", v)}
+            onCheckedChange={(v) =>
+              updateBehavior("autoEngageOnCommentClick", v)
+            }
           />
           <SettingToggle
             label="Spacebar Engage"
@@ -309,7 +361,10 @@ function SettingsBehaviorContent({
 }
 
 // Default values for PostLoadSetting (matches Prisma schema defaults)
-const DEFAULT_POST_LOAD: Omit<PostLoadSettingDB, "accountId" | "createdAt" | "updatedAt"> = {
+const DEFAULT_POST_LOAD: Omit<
+  PostLoadSettingDB,
+  "accountId" | "createdAt" | "updatedAt"
+> = {
   targetListEnabled: false,
   targetListIds: [],
   timeFilterEnabled: false,
@@ -338,7 +393,9 @@ function SettingsFiltersContent({
 }: {
   postLoad: PostLoadSettingDB | null;
   updatePostLoad: (
-    data: Partial<Omit<PostLoadSettingDB, "accountId" | "createdAt" | "updatedAt">>
+    data: Partial<
+      Omit<PostLoadSettingDB, "accountId" | "createdAt" | "updatedAt">
+    >,
   ) => Promise<void>;
   isLoaded: boolean;
   orgSlug: string | null | undefined;
@@ -347,19 +404,20 @@ function SettingsFiltersContent({
   // Show loading only if fetch hasn't completed
   if (!isLoaded) {
     return (
-      <div className="text-muted-foreground text-center text-sm py-4">
+      <div className="text-muted-foreground py-4 text-center text-sm">
         Loading settings...
       </div>
     );
   }
 
   // Use saved settings or defaults (null means no settings saved yet)
-  const settings = postLoad ?? DEFAULT_POST_LOAD as PostLoadSettingDB;
+  const settings = postLoad ?? (DEFAULT_POST_LOAD as PostLoadSettingDB);
 
   // Build quick links
-  const targetListLink = orgSlug && accountSlug
-    ? `${getWebAppDomain()}/${orgSlug}/${accountSlug}/target-list`
-    : undefined;
+  const targetListLink =
+    orgSlug && accountSlug
+      ? `${getWebAppDomain()}/${orgSlug}/${accountSlug}/target-list`
+      : undefined;
 
   return (
     <div className="space-y-6">
@@ -411,7 +469,7 @@ function SettingsFiltersContent({
           }}
         />
         {settings.timeFilterEnabled && (
-          <div className="ml-0 mt-2 flex items-center gap-2">
+          <div className="mt-2 ml-0 flex items-center gap-2">
             <Label className="text-xs">Max age:</Label>
             <input
               type="number"
@@ -471,7 +529,9 @@ function SettingsFiltersContent({
             label="Skip 2nd Degree"
             description="Skip posts from connections of connections"
             checked={settings.skipSecondDegree}
-            onCheckedChange={(v) => void updatePostLoad({ skipSecondDegree: v })}
+            onCheckedChange={(v) =>
+              void updatePostLoad({ skipSecondDegree: v })
+            }
           />
           <SettingToggle
             label="Skip 3rd+ Degree"
@@ -503,7 +563,10 @@ function SettingsFiltersContent({
 }
 
 // Default values for SubmitCommentSetting (matches Prisma schema defaults)
-const DEFAULT_SUBMIT_COMMENT: Omit<SubmitCommentSettingDB, "accountId" | "createdAt" | "updatedAt"> = {
+const DEFAULT_SUBMIT_COMMENT: Omit<
+  SubmitCommentSettingDB,
+  "accountId" | "createdAt" | "updatedAt"
+> = {
   submitDelayRange: "5-20",
   likePostEnabled: false,
   likeCommentEnabled: false,
@@ -524,7 +587,9 @@ function SettingsSubmitContent({
 }: {
   submitComment: SubmitCommentSettingDB | null;
   updateSubmitComment: (
-    data: Partial<Omit<SubmitCommentSettingDB, "accountId" | "createdAt" | "updatedAt">>
+    data: Partial<
+      Omit<SubmitCommentSettingDB, "accountId" | "createdAt" | "updatedAt">
+    >,
   ) => Promise<void>;
   isLoaded: boolean;
   orgSlug: string | null | undefined;
@@ -533,28 +598,28 @@ function SettingsSubmitContent({
   // Show loading only if fetch hasn't completed
   if (!isLoaded) {
     return (
-      <div className="text-muted-foreground text-center text-sm py-4">
+      <div className="text-muted-foreground py-4 text-center text-sm">
         Loading settings...
       </div>
     );
   }
 
   // Use saved settings or defaults (null means no settings saved yet)
-  const settings = submitComment ?? DEFAULT_SUBMIT_COMMENT as SubmitCommentSettingDB;
+  const settings =
+    submitComment ?? (DEFAULT_SUBMIT_COMMENT as SubmitCommentSettingDB);
 
   // Parse delay range for inputs
-  const [minDelay, maxDelay] = settings.submitDelayRange
-    .split("-")
-    .map(Number);
+  const [minDelay, maxDelay] = settings.submitDelayRange.split("-").map(Number);
 
   const updateDelayRange = (min: number, max: number) => {
     void updateSubmitComment({ submitDelayRange: `${min}-${max}` });
   };
 
   // Build quick link to history
-  const historyLink = orgSlug && accountSlug
-    ? `${getWebAppDomain()}/${orgSlug}/${accountSlug}/history`
-    : undefined;
+  const historyLink =
+    orgSlug && accountSlug
+      ? `${getWebAppDomain()}/${orgSlug}/${accountSlug}/history`
+      : undefined;
 
   return (
     <div className="space-y-6">
@@ -644,7 +709,10 @@ function SettingsSubmitContent({
 }
 
 // Default values for CommentGenerateSetting (matches Prisma schema defaults)
-const DEFAULT_COMMENT_GENERATE: Omit<CommentGenerateSettingDB, "accountId" | "createdAt" | "updatedAt"> = {
+const DEFAULT_COMMENT_GENERATE: Omit<
+  CommentGenerateSettingDB,
+  "accountId" | "createdAt" | "updatedAt"
+> = {
   commentStyleId: null,
   dynamicChooseStyleEnabled: false,
   adjacentCommentsEnabled: false,
@@ -662,7 +730,9 @@ function SettingsAIContent({
 }: {
   commentGenerate: CommentGenerateSettingDB | null;
   updateCommentGenerate: (
-    data: Partial<Omit<CommentGenerateSettingDB, "accountId" | "createdAt" | "updatedAt">>
+    data: Partial<
+      Omit<CommentGenerateSettingDB, "accountId" | "createdAt" | "updatedAt">
+    >,
   ) => Promise<void>;
   isLoaded: boolean;
   orgSlug: string | null | undefined;
@@ -671,19 +741,21 @@ function SettingsAIContent({
   // Show loading only if fetch hasn't completed
   if (!isLoaded) {
     return (
-      <div className="text-muted-foreground text-center text-sm py-4">
+      <div className="text-muted-foreground py-4 text-center text-sm">
         Loading settings...
       </div>
     );
   }
 
   // Use saved settings or defaults (null means no settings saved yet)
-  const settings = commentGenerate ?? DEFAULT_COMMENT_GENERATE as CommentGenerateSettingDB;
+  const settings =
+    commentGenerate ?? (DEFAULT_COMMENT_GENERATE as CommentGenerateSettingDB);
 
   // Build quick link to personas
-  const personasLink = orgSlug && accountSlug
-    ? `${getWebAppDomain()}/${orgSlug}/${accountSlug}/personas`
-    : undefined;
+  const personasLink =
+    orgSlug && accountSlug
+      ? `${getWebAppDomain()}/${orgSlug}/${accountSlug}/personas`
+      : undefined;
 
   return (
     <div className="space-y-6">

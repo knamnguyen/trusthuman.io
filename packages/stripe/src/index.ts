@@ -1,7 +1,7 @@
 // packages/stripe/src/index.ts
 import Stripe from "stripe";
 
-import { STRIPE_ID_PRICES, STRIPE_QUANTITY_PRICES } from "./schema-validators";
+import { STRIPE_QUANTITY_PRICES } from "./schema-validators";
 import { getQuantityPricingBreakdown } from "./utils";
 
 /**
@@ -37,52 +37,6 @@ export class StripeService {
       apiVersion: "2023-08-16", // Use a stable version
     });
     this.webhookSecret = config.webhookSecret;
-  }
-
-  async createCheckoutSession(
-    clerkUserId: string,
-    purchaseType: "WEEKLY" | "MONTHLY" | "YEARLY",
-    email?: string,
-    endorsely_referral?: string | null,
-  ): Promise<{ url: string | null }> {
-    // Get or create a Stripe customer with Clerk ID in metadata
-    const customerId = await this.getOrCreateCustomer(clerkUserId, email);
-
-    // const mode = purchaseType === "LIFETIME" ? "payment" : "subscription";
-    const mode = "subscription";
-
-    // Generate URLs based on environment
-    const baseUrl =
-      process.env.NEXTJS_URL ?? `http://localhost:${process.env.PORT}`;
-    const successUrl = `${baseUrl}/subscription?success=true`;
-    const cancelUrl = `${baseUrl}/subscription?canceled=true`;
-
-    // Create a checkout session with the base config plus mode-specific additions
-
-    const sessionConfig = {
-      customer: customerId,
-      payment_method_types: ["card"],
-      line_items: [
-        {
-          price: STRIPE_ID_PRICES[purchaseType],
-          quantity: 1,
-        },
-      ],
-      mode: mode,
-      success_url: successUrl,
-      cancel_url: cancelUrl,
-      allow_promotion_codes: true,
-      metadata: {
-        clerkUserId,
-        purchaseType,
-        endorsely_referral,
-      },
-    } as Stripe.Checkout.SessionCreateParams;
-
-    const session = await this.stripe.checkout.sessions.create(sessionConfig);
-
-    //return url to redirect to stripe checkout
-    return { url: session.url };
   }
 
   /**

@@ -9,11 +9,15 @@
  */
 
 import { useCallback, useRef, useState } from "react";
+import { useTRPC } from "@/lib/trpc/client";
+import { useQueryClient } from "@tanstack/react-query";
+import { defer } from "lib/commons";
 
 import type { PostLoadSettings } from "../../stores/target-list-queue";
-import type { CommentGenerateSettingsSnapshot } from "../utils/generate-ai-comments";
 import type { GenerationCompleteMetadata } from "./useSubmitBatch";
+import { useSettingsLocalStore } from "../../stores";
 import { useComposeStore } from "../../stores/compose-store";
+import { useDailyQuotaLimitHitDialogStore } from "../../stores/dialog-store";
 import { useSettingsDBStore } from "../../stores/settings-db-store";
 import { processTargetListQueue } from "../../utils/multi-tab-navigation";
 import { buildQueueItems } from "../utils/build-queue-items";
@@ -24,7 +28,9 @@ import { loadPostsToCards } from "../utils/load-posts-to-cards";
  */
 export function useLoadPosts(
   targetDraftCount: number,
-  onGenerationComplete: (metadata: GenerationCompleteMetadata) => void | Promise<void>,
+  onGenerationComplete: (
+    metadata: GenerationCompleteMetadata,
+  ) => void | Promise<void>,
 ) {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
@@ -36,12 +42,19 @@ export function useLoadPosts(
   const addCard = useComposeStore((state) => state.addCard);
   const addBatchCards = useComposeStore((state) => state.addBatchCards);
   const updateCardComment = useComposeStore((state) => state.updateCardComment);
-  const updateCardStyleInfo = useComposeStore((state) => state.updateCardStyleInfo);
+  const updateCardStyleInfo = useComposeStore(
+    (state) => state.updateCardStyleInfo,
+  );
   const updateBatchCardCommentAndStyle = useComposeStore(
     (state) => state.updateBatchCardCommentAndStyle,
   );
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const isUrnIgnored = useComposeStore((state) => state.isUrnIgnored);
   const getCards = useComposeStore((state) => state.cards);
+  const showDailyAIQuotaExceededOverlay = useDailyQuotaLimitHitDialogStore(
+    (state) => state.open,
+  );
 
   /**
    * Start batch collection:
@@ -52,6 +65,36 @@ export function useLoadPosts(
    */
   const handleStart = useCallback(async () => {
     setIsLoading(true);
+
+    using _ = defer(() => {
+      setIsLoading(false);
+    });
+
+    const behavior = useSettingsLocalStore.getState().behavior;
+
+    if (behavior.humanOnlyMode === false) {
+      const quota = await queryClient.fetchQuery(
+        // staletime: 0 to always fetch latest quota
+        trpc.aiComments.quota.queryOptions(undefined, {
+          staleTime: 0,
+        }),
+      );
+
+      // technically quota should never be null here because null is only returned if account not found
+      // but adding a null for type narrowing
+      if (quota === null) {
+        console.error(`[useLoadPosts] Failed to retrieve account quota`);
+        return;
+      }
+
+      if (quota.left <= 0) {
+        showDailyAIQuotaExceededOverlay({
+          showTurnOffAiCommentGenerationButton: true,
+        });
+        return;
+      }
+    }
+
     setIsCollecting(true); // Mark as collecting so ComposeCard can refocus on blur
     setLoadingProgress(0);
     setScrollProgress(0); // Reset scroll progress
@@ -150,6 +193,9 @@ export function useLoadPosts(
     // Get current cards to find existing URNs (snapshot at start time)
     const existingUrns = new Set(getCards.map((card) => card.urn));
 
+    // we only want to show it once per load posts action to not be so annoying
+    let dailyQuotaExceededShown = false;
+
     // Run post collection using utility (blacklist is fetched internally)
     await loadPostsToCards({
       targetCount: targetDraftCount,
@@ -165,6 +211,21 @@ export function useLoadPosts(
       onProgress: setLoadingProgress,
       onScrollProgress: setScrollProgress,
       onGenerationComplete,
+      onBatchComplete: () => {
+        void queryClient.invalidateQueries(
+          trpc.aiComments.quota.queryOptions(),
+        );
+      },
+      onDailyAiGenerationQuotaExceeded: () => {
+        if (dailyQuotaExceededShown) {
+          return;
+        }
+
+        dailyQuotaExceededShown = true;
+        showDailyAIQuotaExceededOverlay({
+          showTurnOffAiCommentGenerationButton: true,
+        });
+      },
     });
 
     setIsLoading(false);
