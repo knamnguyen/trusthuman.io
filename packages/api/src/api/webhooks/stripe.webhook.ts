@@ -34,12 +34,12 @@ export const stripeWebhookRoutes = new Hono().post("/", async (c) => {
       return c.text("Missing stripe signature", { status: 400 });
     }
 
-    const result = await stripeService.handleWebhookEvent(
+    const result = await stripeService.parseWebhookEvent(
       signature,
       Buffer.from(body),
     );
 
-    if (!result.event) {
+    if (!result.valid) {
       return c.text("No event to process");
     }
 

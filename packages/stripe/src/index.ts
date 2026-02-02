@@ -132,35 +132,23 @@ export class StripeService {
    * @param body Raw request body as Buffer
    * @returns WebhookResult with event and clerkUserId
    */
-  async handleWebhookEvent(
-    signature: string,
-    body: Buffer,
-  ): Promise<WebhookResult> {
+  parseWebhookEvent(signature: string, body: Buffer) {
     try {
       const event = this.stripe.webhooks.constructEvent(
         body,
         signature,
         this.webhookSecret,
       );
-      // Try to extract clerkUserId from event metadata (if present)
-      let clerkUserId: string | undefined = undefined;
-      if (event.data?.object?.metadata?.clerkUserId) {
-        clerkUserId = event.data.object.metadata.clerkUserId;
-      } else if (event.data?.object?.customer) {
-        // Optionally, fetch the customer to get metadata
-        const customerId = event.data.object.customer;
-        try {
-          const customer = await this.stripe.customers.retrieve(customerId);
-          if (typeof customer === "object" && customer.metadata?.clerkUserId) {
-            clerkUserId = customer.metadata.clerkUserId;
-          }
-        } catch (e) {
-          // ignore
-        }
-      }
-      return { received: true, event, clerkUserId };
+
+      return {
+        valid: true,
+        event,
+      } as const;
     } catch (error) {
-      return { received: false };
+      return {
+        valid: false,
+        error: error instanceof Error ? error : new Error(String(error)),
+      } as const;
     }
   }
 
@@ -292,79 +280,5 @@ export class StripeService {
       currency: "usd",
       description,
     });
-  }
-
-  /**
-   * Get current quantity-based subscription details
-   *
-   * @param clerkUserId - The user's Clerk ID
-   * @returns Subscription details including slot count and pricing
-   */
-  async getSubscriptionDetailsQuantity(clerkUserId: string): Promise<{
-    hasSubscription: boolean;
-    subscriptionId: string | null;
-    status: string | null;
-    numSlots: number;
-    billingCycle: "MONTHLY" | "YEARLY" | null;
-    pricing: ReturnType<typeof getQuantityPricingBreakdown> | null;
-    currentPeriodEnd: Date | null;
-    cancelAtPeriodEnd: boolean;
-  }> {
-    // Find customer
-    const customerId = await this.findCustomerByClerkId(clerkUserId);
-    if (!customerId) {
-      return {
-        hasSubscription: false,
-        subscriptionId: null,
-        status: null,
-        numSlots: 0,
-        billingCycle: null,
-        pricing: null,
-        currentPeriodEnd: null,
-        cancelAtPeriodEnd: false,
-      };
-    }
-
-    // Get active subscription
-    const subscriptions = await this.stripe.subscriptions.list({
-      customer: customerId,
-      status: "active",
-      limit: 1,
-    });
-
-    if (subscriptions.data.length === 0) {
-      return {
-        hasSubscription: false,
-        subscriptionId: null,
-        status: null,
-        numSlots: 0,
-        billingCycle: null,
-        pricing: null,
-        currentPeriodEnd: null,
-        cancelAtPeriodEnd: false,
-      };
-    }
-
-    const subscription = subscriptions.data[0]!;
-    const subscriptionItem = subscription.items.data[0];
-
-    const numSlots = subscriptionItem?.quantity ?? 1;
-    const billingCycle =
-      subscriptionItem?.price.recurring?.interval === "year"
-        ? "YEARLY"
-        : "MONTHLY";
-
-    const pricing = getQuantityPricingBreakdown(numSlots, billingCycle);
-
-    return {
-      hasSubscription: true,
-      subscriptionId: subscription.id,
-      status: subscription.status,
-      numSlots,
-      billingCycle,
-      pricing,
-      currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-      cancelAtPeriodEnd: subscription.cancel_at_period_end,
-    };
   }
 }

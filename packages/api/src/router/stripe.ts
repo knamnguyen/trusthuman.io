@@ -2,10 +2,7 @@
 import { TRPCError } from "@trpc/server";
 
 import { StripeService } from "@sassy/stripe";
-import {
-  createCustomerPortalSchema,
-  createQuantityCheckoutSchema,
-} from "@sassy/stripe/schema-validators";
+import { createCustomerPortalSchema } from "@sassy/stripe/schema-validators";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
