@@ -241,7 +241,13 @@ export default function EarnPremiumPage() {
               Share EngageKit on social media and earn free premium days!
             </p>
           </div>
-          {premiumStatus?.isActive && (
+          {/* Status badge - different for FREE vs PREMIUM orgs */}
+          {premiumStatus?.isPaidPremium && premiumStatus.totalCreditsEarned > 0 && (
+            <div className="rounded-full border border-blue-600 bg-blue-100 px-4 py-2 text-sm font-medium text-blue-800">
+              💰 ${premiumStatus.totalCreditsDollars.toFixed(2)} credits earned
+            </div>
+          )}
+          {!premiumStatus?.isPaidPremium && premiumStatus?.isActive && (
             <div className="rounded-full border border-green-600 bg-green-100 px-4 py-2 text-sm font-medium text-green-800">
               🎉 Premium Earned Active: {premiumStatus.daysRemaining} days
               remaining
@@ -593,7 +599,7 @@ export default function EarnPremiumPage() {
                   <TableRow>
                     <TableHead className="w-24">URL</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Days Earned</TableHead>
+                    <TableHead>Reward</TableHead>
                     <TableHead>Likes</TableHead>
                     <TableHead>Comments</TableHead>
                     <TableHead className="min-w-[200px]">
@@ -641,7 +647,19 @@ export default function EarnPremiumPage() {
                             {submission.status}
                           </span>
                         </TableCell>
-                        <TableCell>{submission.daysAwarded}</TableCell>
+                        <TableCell>
+                          {submission.awardType === "STRIPE_CREDIT" ? (
+                            <span className="text-blue-600">
+                              ${((submission.creditAmountCents ?? 0) / 100).toFixed(2)}
+                            </span>
+                          ) : submission.daysAwarded > 0 ? (
+                            <span>
+                              {submission.daysAwarded} day{submission.daysAwarded !== 1 ? "s" : ""}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">—</span>
+                          )}
+                        </TableCell>
                         <TableCell>{submission.likes}</TableCell>
                         <TableCell>{submission.comments}</TableCell>
                         <TableCell>

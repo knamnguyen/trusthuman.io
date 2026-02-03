@@ -212,17 +212,34 @@ export const rescanSocialSubmissionWorkflow = DBOS.registerWorkflow(
                   where: { id: org.payerId },
                   select: { stripeCustomerId: true },
                 });
+
+                const creditAmount = cappedDays * CREDIT_PER_DAY_CENTS;
+
                 if (payer?.stripeCustomerId) {
                   try {
                     await stripeService.createBalanceCredit(
                       payer.stripeCustomerId,
-                      cappedDays * CREDIT_PER_DAY_CENTS,
+                      creditAmount,
                       `Social referral rescan: +${cappedDays} day(s) credit for submission ${submissionId}`,
                     );
                   } catch (err) {
                     console.error(`[Rescan] Stripe credit failed:`, err);
                   }
                 }
+
+                // Update submission with credit info (add to existing if any)
+                const currentSubmission = await db.socialSubmission.findUnique({
+                  where: { id: submissionId },
+                  select: { creditAmountCents: true },
+                });
+                await db.socialSubmission.update({
+                  where: { id: submissionId },
+                  data: {
+                    awardType: "STRIPE_CREDIT",
+                    creditAmountCents:
+                      (currentSubmission?.creditAmountCents ?? 0) + creditAmount,
+                  },
+                });
               } else {
                 const currentExpiry = org.earnedPremiumExpiresAt;
                 const baseDate =
@@ -232,6 +249,14 @@ export const rescanSocialSubmissionWorkflow = DBOS.registerWorkflow(
                 await db.organization.update({
                   where: { id: submission.organizationId },
                   data: { earnedPremiumExpiresAt: newExpiry },
+                });
+
+                // Update submission with award type
+                await db.socialSubmission.update({
+                  where: { id: submissionId },
+                  data: {
+                    awardType: "EARNED_DAYS",
+                  },
                 });
               }
             }

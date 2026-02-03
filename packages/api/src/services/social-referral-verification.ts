@@ -252,15 +252,17 @@ export async function verifySocialSubmission(
           select: { stripeCustomerId: true },
         });
 
+        const creditAmount = finalDays * CREDIT_PER_DAY_CENTS;
+
         if (payer?.stripeCustomerId) {
           try {
             await stripeService.createBalanceCredit(
               payer.stripeCustomerId,
-              finalDays * CREDIT_PER_DAY_CENTS,
+              creditAmount,
               `Social referral: ${finalDays} day(s) credit for submission ${submissionId}`,
             );
             console.log(
-              `[Social Referral] Stripe credit applied: ${finalDays} day(s) / ${finalDays * CREDIT_PER_DAY_CENTS}¢ for org ${org.id}`,
+              `[Social Referral] Stripe credit applied: ${finalDays} day(s) / ${creditAmount}¢ for org ${org.id}`,
             );
           } catch (err) {
             console.error(
@@ -269,6 +271,15 @@ export async function verifySocialSubmission(
             );
           }
         }
+
+        // Track award type for PREMIUM org
+        await db.socialSubmission.update({
+          where: { id: submissionId },
+          data: {
+            awardType: "STRIPE_CREDIT",
+            creditAmountCents: creditAmount,
+          },
+        });
       } else {
         // FREE tier: Extend earnedPremiumExpiresAt
         const currentExpiry = org.earnedPremiumExpiresAt;
@@ -280,6 +291,14 @@ export async function verifySocialSubmission(
         await db.organization.update({
           where: { id: org.id },
           data: { earnedPremiumExpiresAt: newExpiry },
+        });
+
+        // Track award type for FREE org
+        await db.socialSubmission.update({
+          where: { id: submissionId },
+          data: {
+            awardType: "EARNED_DAYS",
+          },
         });
       }
     }

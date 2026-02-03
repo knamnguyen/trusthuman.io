@@ -9,7 +9,12 @@
       "Bash(git stash:*)",
       "Bash(bun run:*)",
       "Bash(find:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(bun test:*)",
+      "Bash(curl:*)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__query-docs",
+      "WebFetch(domain:docs.stripe.com)"
     ]
   }
 }

@@ -26,6 +26,9 @@ CREATE TYPE "SocialPlatform" AS ENUM ('X', 'LINKEDIN', 'THREADS', 'FACEBOOK');
 CREATE TYPE "SubmissionStatus" AS ENUM ('VERIFYING', 'VERIFIED', 'FAILED', 'REVOKED');
 
 -- CreateEnum
+CREATE TYPE "AwardType" AS ENUM ('EARNED_DAYS', 'STRIPE_CREDIT');
+
+-- CreateEnum
 CREATE TYPE "TargetListStatus" AS ENUM ('BUILDING', 'COMPLETED');
 
 -- CreateEnum
@@ -389,6 +392,8 @@ CREATE TABLE "SocialSubmission" (
     "comments" INTEGER NOT NULL DEFAULT 0,
     "shares" INTEGER NOT NULL DEFAULT 0,
     "daysAwarded" INTEGER NOT NULL DEFAULT 0,
+    "awardType" "AwardType",
+    "creditAmountCents" INTEGER,
 
     CONSTRAINT "SocialSubmission_pkey" PRIMARY KEY ("id")
 );

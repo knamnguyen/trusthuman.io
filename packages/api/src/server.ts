@@ -18,7 +18,7 @@ setInterval(async () => {
   try {
     // Simple count query - lightweight way to keep connection alive
     await db.$executeRaw`SELECT 1`;
-    console.debug("DB keepalive ping successful");
+    // console.debug("DB keepalive ping successful");
   } catch (error) {
     console.warn("DB keepalive ping failed:", error);
   }

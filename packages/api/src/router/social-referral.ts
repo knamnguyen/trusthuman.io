@@ -209,11 +209,16 @@ export const socialReferralRouter = () =>
           likes: submission.likes,
           comments: submission.comments,
           shares: submission.shares,
+          awardType: submission.awardType,
+          creditAmountCents: submission.creditAmountCents,
         }));
       }),
 
     /**
      * Get current organization's earned premium status
+     * Returns different data based on org tier:
+     * - FREE: { type: 'days', isActive, daysRemaining, expiresAt }
+     * - PREMIUM: { type: 'credits', totalCreditsEarned }
      */
     getEarnedPremiumStatus: protectedProcedure.query(async ({ ctx }) => {
       if (!ctx.activeOrg) {
@@ -226,7 +231,10 @@ export const socialReferralRouter = () =>
       const org = await ctx.db.organization.findUnique({
         where: { id: ctx.activeOrg.id },
         select: {
+          subscriptionTier: true,
+          subscriptionExpiresAt: true,
           earnedPremiumExpiresAt: true,
+          payerId: true,
         },
       });
 
@@ -238,6 +246,40 @@ export const socialReferralRouter = () =>
       }
 
       const now = new Date();
+
+      // Check if org is currently a paid PREMIUM subscriber
+      const isPaidPremium =
+        org.subscriptionTier === "PREMIUM" &&
+        org.subscriptionExpiresAt != null &&
+        org.subscriptionExpiresAt > now &&
+        org.payerId != null;
+
+      if (isPaidPremium) {
+        // PREMIUM org: return total credits earned
+        const creditsResult = await ctx.db.socialSubmission.aggregate({
+          where: {
+            organizationId: ctx.activeOrg.id,
+            awardType: "STRIPE_CREDIT",
+            status: "VERIFIED",
+          },
+          _sum: { creditAmountCents: true },
+        });
+
+        const totalCreditsEarned = creditsResult._sum.creditAmountCents ?? 0;
+
+        return {
+          type: "credits" as const,
+          isPaidPremium: true,
+          totalCreditsEarned,
+          totalCreditsDollars: totalCreditsEarned / 100,
+          // Also include days info for backwards compat / UI fallback
+          isActive: false,
+          expiresAt: null,
+          daysRemaining: 0,
+        };
+      }
+
+      // FREE org: return earned premium days
       const isActive = org.earnedPremiumExpiresAt
         ? org.earnedPremiumExpiresAt > now
         : false;
@@ -249,9 +291,14 @@ export const socialReferralRouter = () =>
         : 0;
 
       return {
+        type: "days" as const,
+        isPaidPremium: false,
         isActive,
         expiresAt: org.earnedPremiumExpiresAt,
-        daysRemaining: isActive ? daysRemaining : 0,
+        daysRemaining: isActive ? Math.max(daysRemaining, 0) : 0,
+        // Include credits fields for backwards compat
+        totalCreditsEarned: 0,
+        totalCreditsDollars: 0,
       };
     }),
 

@@ -20,7 +20,9 @@ model SocialSubmission {
   shares          Int      @default(0)
 
   // Reward tracking
-  daysAwarded     Int      @default(0)
+  daysAwarded        Int        @default(0)
+  awardType          AwardType? // null for legacy submissions pre-migration
+  creditAmountCents  Int?       // For STRIPE_CREDIT: actual cents credited to Stripe balance
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
@@ -41,4 +43,9 @@ enum SubmissionStatus {
   VERIFIED
   FAILED
   REVOKED
+}
+
+enum AwardType {
+  EARNED_DAYS   // FREE org: extends earnedPremiumExpiresAt
+  STRIPE_CREDIT // PREMIUM org: Stripe customer balance credit
 }
