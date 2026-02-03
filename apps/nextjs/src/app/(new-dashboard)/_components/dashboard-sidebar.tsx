@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { OrganizationSwitcher, UserButton } from "@clerk/nextjs";
 import {
+  ArrowLeftIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   GiftIcon,
@@ -89,59 +90,55 @@ export function DashboardSidebar() {
   const params = useParams<{ orgSlug?: string; accountSlug?: string }>();
   const { orgSlug, accountSlug } = params;
 
-  const items = useMemo(() => {
-    let prefix = `/${orgSlug}`;
+  const isInsideAccount = accountSlug !== undefined;
 
-    if (accountSlug !== undefined) {
-      prefix += `/${accountSlug}`;
-    }
+  const accountItems = useMemo(() => {
+    if (!isInsideAccount) return [];
 
-    const items = [
+    return [
+      {
+        title: "Dashboard",
+        url: `/${orgSlug}/${accountSlug}`,
+        icon: LayoutDashboardIcon,
+      },
+      {
+        title: "History",
+        url: `/${orgSlug}/${accountSlug}/history`,
+        icon: HistoryIcon,
+      },
+      {
+        title: "Target List",
+        url: `/${orgSlug}/${accountSlug}/target-list`,
+        icon: UsersRoundIcon,
+      },
+      {
+        title: "Personas",
+        url: `/${orgSlug}/${accountSlug}/personas`,
+        icon: UsersIcon,
+      },
+    ];
+  }, [orgSlug, accountSlug, isInsideAccount]);
+
+  const orgItems = useMemo(
+    () => [
       {
         title: "Accounts",
-        url: `${prefix}/accounts`,
+        url: `/${orgSlug}/accounts`,
         icon: UserRoundIcon,
       },
       {
         title: "Earn Premium",
-        url: `${prefix}/earn-premium`,
+        url: `/${orgSlug}/earn-premium`,
         icon: GiftIcon,
       },
       {
         title: "Subscription",
-        url: `${prefix}/settings`,
+        url: `/${orgSlug}/settings`,
         icon: SettingsIcon,
       },
-    ];
-    // Build navigation items based on current context
-    // Account-level navigation (only shown when an account is selected)
-    if (accountSlug !== undefined) {
-      items.push(
-        {
-          title: "Dashboard",
-          url: `/${orgSlug}/${accountSlug}`,
-          icon: LayoutDashboardIcon,
-        },
-        {
-          title: "History",
-          url: `/${orgSlug}/${accountSlug}/history`,
-          icon: HistoryIcon,
-        },
-        {
-          title: "Target List",
-          url: `/${orgSlug}/${accountSlug}/target-list`,
-          icon: UsersRoundIcon,
-        },
-        {
-          title: "Personas",
-          url: `/${orgSlug}/${accountSlug}/personas`,
-          icon: UsersIcon,
-        },
-      );
-    }
-
-    return items;
-  }, [orgSlug, accountSlug]);
+    ],
+    [orgSlug],
+  );
 
   return (
     <Sidebar collapsible="icon" className="relative">
@@ -173,12 +170,51 @@ export function DashboardSidebar() {
       <AccountSwitcher />
 
       <SidebarContent>
-        {/* Account-level navigation (only shown when an account is selected) */}
-        {items.length > 0 && (
+        {isInsideAccount ? (
+          <>
+            {/* Account-level navigation */}
+            <SidebarGroup>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {accountItems.map((item) => (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton asChild>
+                        <Link href={item.url}>
+                          <item.icon />
+                          <span className="font-medium">{item.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            {/* Back to org link */}
+            <SidebarGroup className="mt-auto">
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild>
+                      <Link
+                        href={`/${orgSlug}/accounts`}
+                        className="text-muted-foreground"
+                      >
+                        <ArrowLeftIcon />
+                        <span>Organization Settings</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </>
+        ) : (
+          /* Organization-level navigation (when not inside an account) */
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
-                {items.map((item) => (
+                {orgItems.map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
                       <Link href={item.url}>
