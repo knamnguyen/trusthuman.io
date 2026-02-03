@@ -7,6 +7,7 @@ import type {
   CheckoutSessionMetadata,
   SubscriptionMetadata,
 } from "@sassy/stripe/schema-validators";
+import { FEATURE_CONFIG } from "@sassy/feature-flags";
 import {
   checkoutSessionMetadataSchema,
   QUANTITY_PRICING_CONFIG,
@@ -177,7 +178,7 @@ const subscriptionRouter = createTRPCRouter({
       });
     }
 
-    // Single query: permission check + data fetch + membership role
+    // Single query: permission check + data fetch + membership role + quota
     const org = await ctx.db.organization.findFirst({
       where: {
         id: ctx.activeOrg.id,
@@ -199,6 +200,10 @@ const subscriptionRouter = createTRPCRouter({
           where: { userId: ctx.user.id },
           select: { role: true },
           take: 1,
+        },
+        // Include accounts for quota aggregation
+        linkedInAccounts: {
+          select: { dailyAIcomments: true },
         },
       },
     });
@@ -236,6 +241,25 @@ const subscriptionRouter = createTRPCRouter({
         ? "earned"
         : "none";
 
+    // Calculate AI quota (aggregate across all accounts)
+    const aiQuotaUsed = org.linkedInAccounts.reduce(
+      (sum, acc) => sum + acc.dailyAIcomments,
+      0,
+    );
+    const aiQuotaLimit = isPremium
+      ? FEATURE_CONFIG.dailyComments.premiumTierLimit // -1 = unlimited
+      : FEATURE_CONFIG.dailyComments.freeTierLimit;
+
+    // Calculate next reset time (midnight UTC)
+    const nextResetUTC = new Date(
+      Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate() + 1,
+        0, 0, 0, 0,
+      ),
+    );
+
     return {
       isActive: isPremium,
       premiumSource,
@@ -247,6 +271,13 @@ const subscriptionRouter = createTRPCRouter({
       payer: org.payer,
       isPayer: ctx.user.id === org.payerId,
       role: org.members[0]?.role ?? "MEMBER",
+      // AI quota info
+      aiQuota: {
+        used: aiQuotaUsed,
+        limit: aiQuotaLimit,
+        left: aiQuotaLimit === -1 ? Infinity : Math.max(0, aiQuotaLimit - aiQuotaUsed),
+        resetsAt: nextResetUTC,
+      },
     };
   }),
 

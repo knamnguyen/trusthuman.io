@@ -115,13 +115,14 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 p-6">
-      <div>
-        <h1 className="text-3xl font-bold">Billing & Subscription</h1>
-        <p className="text-muted-foreground">
-          Manage your organization's subscription and billing settings
-        </p>
-      </div>
+    <div className="flex h-screen flex-col overflow-y-auto p-6">
+      <div className="mx-auto w-full max-w-4xl space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">Billing & Subscription</h1>
+          <p className="text-muted-foreground">
+            Manage your organization's subscription and billing settings
+          </p>
+        </div>
 
       {/* Over Quota Warning */}
       {isOverQuota && !isFreeTier && (
@@ -214,6 +215,28 @@ export default function SettingsPage() {
                 {status.purchasedSlots} slot{status.purchasedSlots !== 1 ? "s" : ""} • {status.usedSlots} used
               </p>
             </div>
+          </div>
+
+          {/* AI Quota Display */}
+          <div className="flex flex-col items-center gap-1 border-x px-6">
+            <p className="text-muted-foreground text-xs uppercase tracking-wide">
+              AI Generations Today
+            </p>
+            {status.aiQuota.limit === -1 || status.aiQuota.limit > 1_000_000 ? (
+              <p className="text-lg font-semibold text-green-600">Unlimited</p>
+            ) : (
+              <>
+                <p className="text-lg font-semibold">
+                  <span className={status.aiQuota.left === 0 ? "text-red-500" : ""}>
+                    {status.aiQuota.used}
+                  </span>
+                  <span className="text-muted-foreground">/{status.aiQuota.limit}</span>
+                </p>
+                <p className="text-muted-foreground text-xs">
+                  Resets {new Date(status.aiQuota.resetsAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })}
+                </p>
+              </>
+            )}
           </div>
 
           {/* Billing Info & Actions */}
@@ -450,6 +473,7 @@ export default function SettingsPage() {
             </div>
           </CardContent>
         </Card>
+      </div>
       </div>
     </div>
   );
