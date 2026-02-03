@@ -16,11 +16,9 @@ import {
 import {
   hasOrgAdminPermissionClause,
   hasPermissionToAccessOrgClause,
-  hasPermissionToUpdateOrgSubscriptionClause,
   isOrgPremium,
 } from "../services/org-access-control";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
-import { safe } from "../utils/commons";
 
 // Direct Stripe client for org-centric billing
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "", {
@@ -487,288 +485,7 @@ const subscriptionRouter = createTRPCRouter({
     return { url: session.url };
   }),
 
-  /**
-   * Update subscription quantity (slots)
-   * Only the payer can update. Uses always_invoice for immediate proration.
-   * Returns error object instead of throwing for mutation error handling.
-   */
-  update: protectedProcedure
-    .input(
-      z.object({
-        slots: z.number().int().min(1),
-        endorsely_referral: z.string().optional(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      if (!ctx.activeOrg?.id) {
-        return {
-          success: false,
-          error: "No active organization selected",
-        } as const;
-      }
 
-      const organizationId = ctx.activeOrg.id;
-
-      // Single query with access control clause - only payer can update
-      const org = await ctx.db.organization.findFirst({
-        where: {
-          id: organizationId,
-          ...hasPermissionToUpdateOrgSubscriptionClause(ctx.user.id),
-        },
-        select: {
-          stripeSubscriptionId: true,
-          purchasedSlots: true,
-          name: true,
-          payer: {
-            select: {
-              stripeCustomerId: true,
-            },
-          },
-        },
-      });
-
-      if (!org) {
-        return {
-          success: false,
-          error: "Only the subscription payer can update slot quantity",
-        } as const;
-      }
-
-      if (!org.stripeSubscriptionId) {
-        return {
-          success: false,
-          error: "No active subscription found",
-        } as const;
-      }
-
-      const stripeCustomerId = org.payer?.stripeCustomerId;
-
-      if (!stripeCustomerId) {
-        // this shudnt happen bcs payer would always have stripeCustomerId if they have a subscription
-        // this is for type narrowing for stripeCustomerId usage below
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Payer has no Stripe customer ID",
-        });
-      }
-
-      if (org.purchasedSlots === input.slots) {
-        return { success: false, error: "Slot quantity unchanged" } as const;
-      }
-
-      // Get subscription to find the item ID
-      const subscriptionResult = await safe(() =>
-        stripe.subscriptions.retrieve(org.stripeSubscriptionId!),
-      );
-
-      if (!subscriptionResult.ok) {
-        console.error(
-          "Error retrieving subscription:",
-          subscriptionResult.error,
-        );
-        return {
-          success: false,
-          error: "Internal server error",
-        } as const;
-      }
-
-      const subscriptionItem = subscriptionResult.output.items.data[0];
-      if (!subscriptionItem) {
-        return { success: false, error: "Subscription has no items" } as const;
-      }
-
-      const isDowngrade = input.slots < org.purchasedSlots;
-
-      if (isDowngrade) {
-        // Downgrade: Update Stripe immediately (so next invoice is correct)
-        // but keep current slots in DB until renewal
-        const updateResult = await safe(() =>
-          stripe.subscriptions.update(org.stripeSubscriptionId!, {
-            items: [{ id: subscriptionItem.id, quantity: input.slots }],
-            proration_behavior: "none", // No credit - takes effect at renewal
-          }),
-        );
-
-        if (!updateResult.ok) {
-          return { success: false, error: updateResult.error.message } as const;
-        }
-
-        return {
-          success: true,
-          isDowngrade: true,
-          url: null,
-          invoiceId: null,
-          previousSlots: org.purchasedSlots,
-          newSlots: input.slots,
-          effectiveAt: new Date(
-            subscriptionResult.output.current_period_end * 1000,
-          ),
-        } as const;
-      }
-
-      // Upgrade: Update Stripe subscription with immediate proration
-      // Clear any pending downgrade since user is upgrading
-      const updateResult = await safe(() =>
-        stripe.subscriptions.update(org.stripeSubscriptionId!, {
-          items: [{ id: subscriptionItem.id, quantity: input.slots }],
-          proration_behavior: "none",
-          payment_behavior: "pending_if_incomplete",
-        }),
-      );
-
-      if (!updateResult.ok) {
-        return { success: false, error: updateResult.error.message } as const;
-      }
-
-      const interval = subscriptionItem.price.recurring?.interval;
-
-      if (!interval) {
-        console.info("Missing interval on subscription item price");
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message:
-            "Internal issue with subscription, please contact engagekit.io@gmail.com for support",
-        });
-      }
-
-      const redirects = createCheckoutSessionRedirectUrls({
-        organizationId,
-        organizationSlug: ctx.activeOrg.slug ?? "",
-        action: "update_subscription",
-      });
-
-      console.info(redirects);
-
-      const session = await stripe.checkout.sessions.create({
-        customer: stripeCustomerId,
-        payment_method_types: ["card"],
-        line_items: [
-          {
-            price_data: {
-              unit_amount: calculateProratedAmount({
-                purchasedSlots: {
-                  old: org.purchasedSlots,
-                  new: input.slots,
-                },
-                currentPeriodEnd: new Date(
-                  subscriptionResult.output.current_period_end * 1000,
-                ),
-                term: interval === "month" ? "monthly" : "yearly",
-              }),
-              currency: "usd",
-              product_data: {
-                name: `Prorated charge for extra ${input.slots - org.purchasedSlots} slots purchase for ${org.name} untill end of ${new Date(subscriptionResult.output.current_period_end * 1000).toString()}`,
-              },
-            },
-            quantity: 1,
-          },
-        ],
-        mode: "payment",
-        success_url: redirects.success,
-        cancel_url: redirects.cancel,
-        allow_promotion_codes: true,
-        metadata: {
-          type: "update_subscription",
-          organizationId,
-          slots: input.slots.toString(),
-          payerId: ctx.user.id,
-          endorsely_referral: input.endorsely_referral ?? null,
-        } satisfies CheckoutSessionMetadata,
-      });
-
-      if (session.url === null) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message:
-            "Failed to create checkout session, please contact engagekit.io@gmail.com for support.",
-        });
-      }
-
-      return {
-        success: true,
-        isDowngrade: false,
-        url: session.url,
-        previousSlots: org.purchasedSlots,
-        newSlots: input.slots,
-      } as const;
-    }),
-
-  /**
-   * Cancel a pending subscription update by voiding the invoice
-   * and reverting the subscription quantity
-   *
-   * TODO: This mutation has known bugs — fix when building the cancel UI.
-   * - Downgrade cancel: `invoiceId` is null (downgrade returns invoiceId: null),
-   *   so voidInvoice(null) throws and the Stripe subscription revert never runs.
-   * - Upgrade cancel: Invoice is already paid after checkout completes, so
-   *   voidInvoice fails. Also no DB reversal happens.
-   * - Fix: For downgrade cancel, skip voidInvoice and just revert Stripe
-   *   subscription quantity. For upgrade cancel, refund the payment + revert
-   *   Stripe sub + revert DB.
-   * - Note: No frontend calls this mutation yet — safe to defer.
-   */
-  cancelUpdate: protectedProcedure
-    .input(
-      z.object({
-        invoiceId: z.string(),
-        revertToSlots: z.number().int().min(1),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      if (!ctx.activeOrg?.id) {
-        return {
-          success: false,
-          error: "No active organization selected",
-        } as const;
-      }
-
-      // Verify user is the payer
-      const org = await ctx.db.organization.findFirst({
-        where: {
-          id: ctx.activeOrg.id,
-          ...hasPermissionToUpdateOrgSubscriptionClause(ctx.user.id),
-        },
-        select: { stripeSubscriptionId: true },
-      });
-
-      if (!org?.stripeSubscriptionId) {
-        return {
-          success: false,
-          error: "No active subscription found",
-        } as const;
-      }
-
-      // Void the invoice
-      const voidResult = await safe(() =>
-        stripe.invoices.voidInvoice(input.invoiceId),
-      );
-
-      if (!voidResult.ok) {
-        // Invoice might already be paid or voided
-        console.error("Error voiding invoice:", voidResult.error);
-        return {
-          success: false,
-          error: "Could not cancel the invoice. It may have already been paid.",
-        } as const;
-      }
-
-      // Revert subscription quantity
-      const subscription = await stripe.subscriptions.retrieve(
-        org.stripeSubscriptionId,
-      );
-      const subscriptionItem = subscription.items.data[0];
-
-      if (subscriptionItem) {
-        await safe(() =>
-          stripe.subscriptions.update(org.stripeSubscriptionId!, {
-            items: [{ id: subscriptionItem.id, quantity: input.revertToSlots }],
-            proration_behavior: "none", // No proration for revert
-          }),
-        );
-      }
-
-      return { success: true } as const;
-    }),
 });
 
 export async function convertOrgSubscriptionToPremium(
@@ -816,10 +533,10 @@ export async function convertOrgSubscriptionToFree(
   await db.organization.update({
     where: { id: orgId },
     data: {
+      subscriptionTier: "FREE",
+      purchasedSlots: 1,
       payerId: null,
       stripeSubscriptionId: null,
-      // Keep subscriptionTier and purchasedSlots — grace period preserves access
-      // until subscriptionExpiresAt. isOrgPremium() gates on expiry date.
       subscriptionExpiresAt: expiresAt,
     },
   });
@@ -950,43 +667,6 @@ async function disableAccountsExceedingSlots(
   } as const;
 }
 
-export function calculateProratedAmount({
-  purchasedSlots,
-  currentPeriodEnd,
-  term,
-  now = new Date(),
-}: {
-  purchasedSlots: {
-    old: number;
-    new: number;
-  };
-  currentPeriodEnd: Date;
-  term: "monthly" | "yearly";
-  now?: Date;
-}) {
-  if (purchasedSlots.new <= purchasedSlots.old) {
-    throw new Error("Proration calculation only valid for upgrades");
-  }
-
-  const daysToProrate =
-    (currentPeriodEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
-
-  if (daysToProrate <= 0) {
-    throw new Error("No days left to prorate");
-  }
-
-  const dailyRatePerSlot =
-    QUANTITY_PRICING_CONFIG[term].pricePerSlot /
-    (term === "monthly" ? 30 : 365);
-
-  console.info({ daysToProrate, dailyRatePerSlot });
-  const proratedAmount =
-    (purchasedSlots.new - purchasedSlots.old) *
-    dailyRatePerSlot *
-    daysToProrate;
-
-  return Math.round(proratedAmount * 100); // in cents
-}
 
 /**
  * TODO: Missing payer-in-org check before activating subscription.

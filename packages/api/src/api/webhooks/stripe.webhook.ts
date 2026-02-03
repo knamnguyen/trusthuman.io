@@ -6,7 +6,6 @@ import { db } from "@sassy/db";
 import { StripeService } from "@sassy/stripe";
 
 import {
-  applyPendingDowngrade,
   convertOrgSubscriptionToFree,
   convertOrgSubscriptionToPremium,
   handleCheckoutSessionSuccess,
@@ -59,6 +58,7 @@ export const stripeWebhookRoutes = new Hono().post("/", async (c) => {
         const orgId = subscription.metadata.organizationId;
         const payerId = subscription.metadata.payerId;
 
+        // Validate required metadata
         if (orgId === undefined || payerId === undefined) {
           console.error(
             `${eventType}: Missing organizationId or payerId in metadata, skipping`,
@@ -66,6 +66,7 @@ export const stripeWebhookRoutes = new Hono().post("/", async (c) => {
           break;
         }
 
+        // Extract subscription details
         const slots = getPurchasedSlots(subscription);
         // HACK: stripe's library types are fucked we need to find current_period_end from subscription items in some cases
         const currentPeriodEnd =
@@ -78,62 +79,35 @@ export const stripeWebhookRoutes = new Hono().post("/", async (c) => {
 
         if (currentPeriodEnd === undefined) {
           console.error(
-            "${eventType}: Missing current_period_end, skipping, heres the subscription object",
-            subscription,
+            `${eventType}: Missing current_period_end, skipping`,
           );
           break;
         }
 
         const newExpiresAt = new Date(currentPeriodEnd * 1000);
 
+        // Check current org state for idempotency
         const org = await db.organization.findUnique({
           where: { id: orgId },
           select: {
             stripeSubscriptionId: true,
             purchasedSlots: true,
-            subscriptionExpiresAt: true,
           },
         });
 
-        if (org?.stripeSubscriptionId !== subscription.id) {
-          console.log(`${eventType}: Subscription ID mismatch, skipping`);
-          break;
-        }
-
-        // Apply downgrade only when new period has started (renewal detected)
-        // Compare Stripe's new expiry against DB's old expiry
-        const isDowngrade = slots < org.purchasedSlots;
-        const periodAdvanced =
-          org.subscriptionExpiresAt !== null &&
-          newExpiresAt > org.subscriptionExpiresAt; // Changed >= to > for proper period detection
-
-        if (isDowngrade && periodAdvanced) {
-          // Period has advanced (renewal) - apply pending downgrade
-          await applyPendingDowngrade(db, {
-            orgId,
-            newPurchasedSlots: slots,
-            subscriptionExpiresAt: newExpiresAt,
-          });
-
+        // Idempotency: Skip if subscription ID doesn't match (prevents processing wrong subscription)
+        if (org?.stripeSubscriptionId && org.stripeSubscriptionId !== subscription.id) {
           console.log(
-            `✅ ${eventType}: Org ${orgId} pending downgrade applied: ${slots} slots`,
+            `${eventType}: Subscription ID mismatch (expected ${org.stripeSubscriptionId}, got ${subscription.id}), skipping`,
           );
           break;
         }
 
-        if (isDowngrade && !periodAdvanced) {
-          // Mid-period downgrade - defer to renewal
-          console.log(
-            `⏳ ${eventType}: Org ${orgId} downgrade deferred to renewal: ${org.purchasedSlots} → ${slots} slots`,
-          );
-          console.log(
-            `   Will take effect at: ${newExpiresAt.toISOString()}`,
-          );
-          break; // Don't update DB yet!
-        }
-
-        // Upgrades and renewals without pending downgrade - apply immediately
-
+        // Update DB to match Stripe state
+        // Note: Stripe Customer Portal handles all proration/credits automatically with these settings:
+        // - "Prorate charges and credits" (credits unused time, charges new price)
+        // - "Update immediately" for all changes (no deferrals)
+        // - Credits applied to customer balance (used for future invoices, not refunded)
         await convertOrgSubscriptionToPremium(db, {
           orgId,
           payerId,
@@ -142,7 +116,12 @@ export const stripeWebhookRoutes = new Hono().post("/", async (c) => {
           subscriptionExpiresAt: newExpiresAt,
         });
 
-        console.log(`✅ ${eventType}: Org ${orgId} updated to ${slots} slots`);
+        const changeDesc = org?.purchasedSlots
+          ? `${org.purchasedSlots}→${slots} slots`
+          : `${slots} slots`;
+        console.log(
+          `✅ ${eventType}: Org ${orgId} updated to ${changeDesc} until ${newExpiresAt.toISOString()}`,
+        );
         break;
       }
 

@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useOrganization } from "@clerk/nextjs";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { Badge } from "@sassy/ui/badge";
 import { Button } from "@sassy/ui/button";
@@ -15,14 +15,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@sassy/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@sassy/ui/dialog";
 import { Input } from "@sassy/ui/input";
 import { Label } from "@sassy/ui/label";
 import { Skeleton } from "@sassy/ui/skeleton";
@@ -35,16 +27,12 @@ export default function SettingsPage() {
     "yearly",
   ); // Default: yearly (recommended)
   const [quantity, setQuantity] = useState(1);
-  const [updateQuantity, setUpdateQuantity] = useState<number | null>(null);
-  const [showUpdateConfirm, setShowUpdateConfirm] = useState(false);
 
   const { orgSlug } = useParams<{ orgSlug: string }>();
   const { organization, isLoaded: isOrgLoaded } = useOrganization();
   const orgId = organization?.id;
 
   const trpc = useTRPC();
-
-  const queryClient = useQueryClient();
 
   const router = useRouter();
 
@@ -57,13 +45,6 @@ export default function SettingsPage() {
       enabled: !!orgId,
     }),
   );
-
-  // Initialize updateQuantity when status loads
-  useEffect(() => {
-    if (status?.purchasedSlots && updateQuantity === null) {
-      setUpdateQuantity(status.purchasedSlots);
-    }
-  }, [status?.purchasedSlots, updateQuantity]);
 
   const createCheckout = useMutation({
     ...trpc.organization.subscription.checkout.mutationOptions(),
@@ -82,30 +63,6 @@ export default function SettingsPage() {
   const createPortal = useMutation({
     ...trpc.organization.subscription.portal.mutationOptions(),
     onSuccess: (data) => {
-      router.push(data.url);
-    },
-  });
-
-  const updateSubscription = useMutation({
-    ...trpc.organization.subscription.update.mutationOptions(),
-    onSuccess: (data) => {
-      if (!data.success) {
-        toast.error(data.error);
-        return;
-      }
-
-      if (data.isDowngrade === true) {
-        void queryClient.invalidateQueries({
-          queryKey: trpc.organization.subscription.status.queryKey(),
-        });
-        setShowUpdateConfirm(false);
-        setUpdateQuantity(status?.purchasedSlots ?? data.newSlots);
-        toast.success(
-          `Downgrade scheduled. Your slots will reduce to ${data.newSlots} on ${data.effectiveAt.toString()}.`,
-        );
-        return;
-      }
-
       router.push(data.url);
     },
   });
@@ -434,68 +391,6 @@ export default function SettingsPage() {
                     )}
                   </div>
 
-                  {/* Slot Update UI - Only for payer */}
-                  {isPayer && updateQuantity !== null && (
-                    <div className="border-t pt-4">
-                      <Label
-                        htmlFor="update-quantity"
-                        className="mb-2 block text-sm font-medium"
-                      >
-                        Update Slot Count
-                      </Label>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          id="update-quantity"
-                          type="text"
-                          value={updateQuantity}
-                          onChange={(e) => {
-                            const val = Number(e.target.value);
-                            if (!isNaN(val) && val >= 1) {
-                              setUpdateQuantity(val);
-                            } else if (e.target.value === "") {
-                              setUpdateQuantity(0); // Allow empty input
-                            }
-                          }}
-                          className="flex-1"
-                        />
-                        <Button
-                          onClick={() => setShowUpdateConfirm(true)}
-                          disabled={
-                            updateSubscription.isPending ||
-                            updateQuantity === status.purchasedSlots ||
-                            updateQuantity < 1
-                          }
-                          variant="primary"
-                        >
-                          {updateQuantity > status.purchasedSlots
-                            ? "Upgrade"
-                            : updateQuantity < status.purchasedSlots
-                              ? "Downgrade"
-                              : "Update"}
-                        </Button>
-                        <Button
-                          onClick={() =>
-                            setUpdateQuantity(status.purchasedSlots)
-                          }
-                          variant="ghost"
-                        >
-                          Reset
-                        </Button>
-                      </div>
-                      {updateQuantity !== status.purchasedSlots && (
-                        <p className="text-muted-foreground mt-2 text-xs">
-                          {updateQuantity > status.purchasedSlots
-                            ? "You'll be charged a prorated amount for the additional slots."
-                            : `Reducing slots will apply a credit to your next invoice.${
-                                updateQuantity < status.usedSlots
-                                  ? ` Warning: ${status.usedSlots - updateQuantity} account(s) will be disabled.`
-                                  : ""
-                              }`}
-                        </p>
-                      )}
-                    </div>
-                  )}
-
                   <Button
                     onClick={handleManageSubscription}
                     disabled={createPortal.isPending}
@@ -521,84 +416,6 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Update Subscription Confirmation Dialog */}
-      <Dialog open={showUpdateConfirm} onOpenChange={setShowUpdateConfirm}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {updateQuantity !== null && updateQuantity > status.purchasedSlots
-                ? "Confirm Upgrade"
-                : "Confirm Downgrade"}
-            </DialogTitle>
-            <DialogDescription>
-              {updateQuantity !== null &&
-              updateQuantity > status.purchasedSlots ? (
-                <>
-                  You are upgrading from{" "}
-                  <strong>{status.purchasedSlots} slots</strong> to{" "}
-                  <strong>{updateQuantity} slots</strong>.
-                  <br />
-                  <br />A prorated amount for the additional{" "}
-                  {updateQuantity - status.purchasedSlots} slot(s) will be
-                  charged.
-                </>
-              ) : (
-                <>
-                  You are downgrading from{" "}
-                  <strong>{status.purchasedSlots} slots</strong> to{" "}
-                  <strong>{updateQuantity} slots</strong>.
-                  <br />
-                  <br />
-                  Credit for the unused slots will be applied to your next
-                  invoice.
-                  {updateQuantity !== null &&
-                    updateQuantity < status.usedSlots && (
-                      <>
-                        <br />
-                        <br />
-                        <span className="font-semibold text-red-600">
-                          Warning: You currently have {status.usedSlots}{" "}
-                          account(s) connected.{" "}
-                          {status.usedSlots - updateQuantity} account(s) will be
-                          disabled to fit within your new slot limit.
-                        </span>
-                      </>
-                    )}
-                </>
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowUpdateConfirm(false)}
-              disabled={updateSubscription.isPending}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant={
-                updateQuantity !== null && updateQuantity < status.usedSlots
-                  ? "destructive"
-                  : "primary"
-              }
-              onClick={() =>
-                updateQuantity !== null &&
-                updateSubscription.mutate({ slots: updateQuantity })
-              }
-              disabled={updateSubscription.isPending}
-            >
-              {updateSubscription.isPending
-                ? "Processing..."
-                : updateQuantity !== null &&
-                    updateQuantity > status.purchasedSlots
-                  ? "Confirm Upgrade"
-                  : "Confirm Downgrade"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
