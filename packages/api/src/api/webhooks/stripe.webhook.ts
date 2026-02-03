@@ -105,10 +105,10 @@ export const stripeWebhookRoutes = new Hono().post("/", async (c) => {
         const isDowngrade = slots < org.purchasedSlots;
         const periodAdvanced =
           org.subscriptionExpiresAt !== null &&
-          newExpiresAt >= org.subscriptionExpiresAt;
+          newExpiresAt > org.subscriptionExpiresAt; // Changed >= to > for proper period detection
 
         if (isDowngrade && periodAdvanced) {
-          // Apply pending downgrade to DB (Stripe already updated during downgrade action)
+          // Period has advanced (renewal) - apply pending downgrade
           await applyPendingDowngrade(db, {
             orgId,
             newPurchasedSlots: slots,
@@ -121,7 +121,18 @@ export const stripeWebhookRoutes = new Hono().post("/", async (c) => {
           break;
         }
 
-        // No pending downgrade - normal update (upgrades, renewals without pending)
+        if (isDowngrade && !periodAdvanced) {
+          // Mid-period downgrade - defer to renewal
+          console.log(
+            `⏳ ${eventType}: Org ${orgId} downgrade deferred to renewal: ${org.purchasedSlots} → ${slots} slots`,
+          );
+          console.log(
+            `   Will take effect at: ${newExpiresAt.toISOString()}`,
+          );
+          break; // Don't update DB yet!
+        }
+
+        // Upgrades and renewals without pending downgrade - apply immediately
 
         await convertOrgSubscriptionToPremium(db, {
           orgId,
@@ -157,7 +168,23 @@ export const stripeWebhookRoutes = new Hono().post("/", async (c) => {
           break;
         }
 
-        const endDate = new Date(subscription.current_period_end * 1000);
+        // HACK: same as customer.subscription.updated (lines 70-85)
+        const currentPeriodEnd =
+          (subscription.current_period_end as number | undefined) ??
+          ((
+            subscription.items.data[0] as unknown as
+              | { current_period_end: number }
+              | undefined
+          )?.current_period_end as number | undefined);
+
+        if (currentPeriodEnd === undefined) {
+          console.error(
+            `${eventType}: Missing current_period_end, skipping`,
+          );
+          break;
+        }
+
+        const endDate = new Date(currentPeriodEnd * 1000);
 
         await convertOrgSubscriptionToFree(db, { orgId, expiresAt: endDate });
 
