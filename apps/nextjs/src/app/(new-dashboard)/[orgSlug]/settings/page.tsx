@@ -185,6 +185,66 @@ export default function SettingsPage() {
         </Card>
       )}
 
+      {/* Current Plan Summary Card */}
+      <Card>
+        <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
+          {/* Plan Info */}
+          <div className="flex items-center gap-3">
+            <div
+              className={`flex h-10 w-10 items-center justify-center rounded-full ${
+                isFreeTier
+                  ? "bg-gray-100 dark:bg-gray-800"
+                  : "bg-primary/10"
+              }`}
+            >
+              <span className="text-lg">{isFreeTier ? "F" : "P"}</span>
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-semibold">
+                  {isFreeTier ? "Free Plan" : "Premium Plan"}
+                </h3>
+                {premiumSource === "earned" && (
+                  <Badge className="bg-green-600 text-white hover:bg-green-700">
+                    Earned
+                  </Badge>
+                )}
+              </div>
+              <p className="text-muted-foreground text-sm">
+                {status.purchasedSlots} slot{status.purchasedSlots !== 1 ? "s" : ""} • {status.usedSlots} used
+              </p>
+            </div>
+          </div>
+
+          {/* Billing Info & Actions */}
+          <div className="flex flex-col items-end gap-1 sm:gap-2">
+            {!isFreeTier && status.expiresAt && (
+              <p className="text-muted-foreground text-sm">
+                Renews {new Date(status.expiresAt).toLocaleDateString()}
+              </p>
+            )}
+            {!isFreeTier && (isPayer || isAdmin) ? (
+              <Button
+                onClick={handleManageSubscription}
+                disabled={createPortal.isPending}
+                variant="outline"
+                size="sm"
+              >
+                {createPortal.isPending ? "Loading..." : "Manage Billing & Invoices"}
+              </Button>
+            ) : isFreeTier && isAdmin ? (
+              <Button
+                onClick={handleUpgrade}
+                disabled={createCheckout.isPending}
+                size="sm"
+              >
+                {createCheckout.isPending ? "Loading..." : "Upgrade to Premium"}
+              </Button>
+            ) : null}
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid gap-6 md:grid-cols-2">
         {/* Free Tier Card */}
         <Card className="flex flex-col">
@@ -225,26 +285,13 @@ export default function SettingsPage() {
               </li>
             </ul>
 
-            {isFreeTier && (
-              <div className="mt-4 flex gap-2">
-                <Badge variant="secondary">Current Plan</Badge>
-                {premiumSource === "earned" && (
-                  <Badge className="bg-green-600 text-white hover:bg-green-700">
-                    Earned Premium
-                  </Badge>
-                )}
-              </div>
-            )}
           </CardContent>
         </Card>
 
         {/* Premium Tier Card */}
         <Card className="border-primary flex flex-col border-2">
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-2xl">Premium</CardTitle>
-              {!isFreeTier && premiumSource === "paid" && <Badge>Current Plan</Badge>}
-            </div>
+            <CardTitle className="text-2xl">Premium</CardTitle>
             <div>
               <p className="text-3xl font-bold">
                 ${pricePerSlot.toFixed(2)}
@@ -372,46 +419,34 @@ export default function SettingsPage() {
                     ? "Loading..."
                     : "Upgrade to Premium"}
                 </Button>
-              ) : !isFreeTier && (isPayer || isAdmin) ? (
-                <div className="space-y-4">
-                  <div className="space-y-1 text-sm">
+              ) : !isFreeTier ? (
+                <div className="text-muted-foreground space-y-2 text-center text-sm">
+                  {status.payer && !isPayer && (
                     <p>
-                      <strong>{status.purchasedSlots} slots</strong> •{" "}
-                      {status.usedSlots} used
+                      Paid by {status.payer.firstName} {status.payer.lastName}
                     </p>
-                    <p className="text-muted-foreground">
-                      {status.expiresAt
-                        ? `Renews on ${new Date(status.expiresAt).toLocaleDateString()}`
-                        : "No expiry date"}
-                    </p>
-                    {status.payer && !isPayer && (
-                      <p className="text-sm">
-                        Paid by {status.payer.firstName} {status.payer.lastName}
-                      </p>
-                    )}
-                  </div>
-
-                  <Button
-                    onClick={handleManageSubscription}
-                    disabled={createPortal.isPending}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    {createPortal.isPending
-                      ? "Loading..."
-                      : "Manage Billing & Invoices"}
-                  </Button>
+                  )}
+                  <p>
+                    To change plans or slots, use the{" "}
+                    <button
+                      onClick={handleManageSubscription}
+                      className="text-primary underline hover:no-underline"
+                      disabled={createPortal.isPending}
+                    >
+                      Manage Billing
+                    </button>{" "}
+                    button above.
+                  </p>
                 </div>
-              ) : (
+              ) : !isAdmin ? (
                 <Card className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
                   <CardHeader>
                     <CardDescription className="text-blue-900 dark:text-blue-100">
-                      Contact {status.payer?.firstName ?? "an admin"} to manage
-                      billing.
+                      Contact an admin to upgrade.
                     </CardDescription>
                   </CardHeader>
                 </Card>
-              )}
+              ) : null}
             </div>
           </CardContent>
         </Card>
