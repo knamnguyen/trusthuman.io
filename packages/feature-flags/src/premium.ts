@@ -9,7 +9,7 @@ export const FEATURE_CONFIG = {
   // Daily comment cap (applies to both plans but still tracked)
   dailyComments: {
     isPremium: false,
-    freeTierLimit: 1000, // Free: 20 comments/day
+    freeTierLimit: 20,
     premiumTierLimit: Number.MAX_SAFE_INTEGER, // Premium: Unlimited (use virtually unlimited number)
   },
   duplicateAuthorCheck: {
