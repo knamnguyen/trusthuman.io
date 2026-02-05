@@ -9,7 +9,10 @@ import "./account.workflows";
 export { buildTargetListWorkflow, rescanSocialSubmissionWorkflow };
 
 export async function initDBOS() {
-  if (process.env.DBOS_SYSTEM_DATABASE_URL === undefined) {
+  if (
+    process.env.DBOS_SYSTEM_DATABASE_URL === undefined ||
+    process.env.DBOS_CONDUCTOR_KEY === undefined
+  ) {
     throw new Error("DBOS_SYSTEM_DATABASE_URL is not defined");
   }
 
@@ -18,7 +21,9 @@ export async function initDBOS() {
     systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
   });
 
-  await DBOS.launch();
+  await DBOS.launch({
+    conductorKey: process.env.DBOS_CONDUCTOR_KEY,
+  });
 
   return {
     shutdown: () => DBOS.shutdown(),

@@ -83,7 +83,8 @@
     "NEXTJS_URL",
     "PORT",
     "VITE_APP_URL",
-    "CLERK_WEBHOOK_SIGNING_SECRET"
+    "CLERK_WEBHOOK_SIGNING_SECRET",
+    "DBOS_CONDUCTOR_KEY"
   ],
   "globalPassThroughEnv": [
     "NODE_ENV",
