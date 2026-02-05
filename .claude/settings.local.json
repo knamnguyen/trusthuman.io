@@ -14,7 +14,12 @@
       "Bash(curl:*)",
       "mcp__context7__resolve-library-id",
       "mcp__context7__query-docs",
-      "WebFetch(domain:docs.stripe.com)"
+      "WebFetch(domain:docs.stripe.com)",
+      "Bash(tree:*)",
+      "Bash(xargs -I {} sh -c 'echo \"\"=== {} ===\"\" && ls -la \"\"{}\"\"')",
+      "Bash(pnpm install:*)",
+      "Bash(pnpm:*)",
+      "WebFetch(domain:ai.google.dev)"
     ]
   }
 }
