@@ -9,7 +9,8 @@ import {
   parseNotificationEntries,
   parseTweetDetail,
 } from "../utils/parse-notifications";
-import { fetchNotifications, getTweetDetail, postTweet } from "../utils/x-api";
+import { fetchNotifications, getTweetDetail } from "../utils/x-api";
+import { postTweetViaDOM } from "../utils/dom-reply";
 
 type AutoRunStatus = "idle" | "fetching" | "generating" | "sending" | "waiting";
 
@@ -70,10 +71,11 @@ export function useAutoRun() {
       const parsed = parseNotificationEntries(notifResult.data);
       mentionsStore.setMentions(parsed);
 
-      // 2. Filter to actionable mentions
+      // 2. Filter to actionable mentions (within max age, direct reply, not already replied)
+      const maxAgeMs = settings.maxMentionAgeMinutes * 60 * 1000;
       const actionable = parsed.filter(
         (m) =>
-          m.replyCount === 0 &&
+          (!m.timestamp || Date.now() - new Date(m.timestamp).getTime() < maxAgeMs) &&
           m.conversationId === m.inReplyToStatusId &&
           !repliesStore.isAlreadyReplied(m.tweetId),
       );
@@ -144,13 +146,15 @@ export function useAutoRun() {
 
         repliesStore.setReply(mention.tweetId, { status: "sending" });
 
-        // Navigate to tweet page for context
+        // Navigate to tweet page for DOM manipulation
         const tweetPath = `/${mention.authorHandle}/status/${mention.tweetId}`;
         navigateX(tweetPath);
-        await new Promise((r) => setTimeout(r, 1500));
+        await new Promise((r) => setTimeout(r, 2000));
         if (abortRef.current) return;
 
-        const result = await postTweet(reply.text, mention.tweetId);
+        // Use DOM manipulation instead of GraphQL API (mimic request) to avoid detection
+        const result = await postTweetViaDOM(reply.text);
+        // const result = await postTweet(reply.text, mention.tweetId);
         if (result.success) {
           repliesStore.markSent(mention.tweetId);
           sentCount++;

@@ -19,7 +19,8 @@ import { useMentionsStore } from "./stores/mentions-store";
 import { useRepliesStore } from "./stores/replies-store";
 import { useSettingsStore } from "./stores/settings-store";
 import { useShadowRootStore } from "./stores/shadow-root-store";
-import { fetchNotifications, getTweetDetail, postTweet } from "./utils/x-api";
+import { fetchNotifications, getTweetDetail } from "./utils/x-api";
+import { postTweetViaDOM } from "./utils/dom-reply";
 import {
   parseNotificationEntries,
   parseTweetDetail,
@@ -81,10 +82,16 @@ export function XBoosterSidebar({ onClose }: XBoosterSidebarProps) {
     }
   }, [settingsLoaded, settings.repliedRetentionDays, pruneAlreadyReplied]);
 
-  // Filter mentions: zero replies, conversation matches reply-to, not already replied
+  // Filter mentions: within max age, conversation matches reply-to, not already replied
+  const maxAgeMs = settings.maxMentionAgeMinutes * 60 * 1000;
+  const isMentionFresh = (timestamp: string) => {
+    if (!timestamp) return true; // if no timestamp, don't filter out
+    return Date.now() - new Date(timestamp).getTime() < maxAgeMs;
+  };
+
   const filteredMentions = mentions.filter(
     (m) =>
-      m.replyCount === 0 &&
+      isMentionFresh(m.timestamp) &&
       m.conversationId === m.inReplyToStatusId &&
       !isAlreadyReplied(m.tweetId),
   );
@@ -121,6 +128,14 @@ export function XBoosterSidebar({ onClose }: XBoosterSidebarProps) {
     setLoading(true);
     setError(null);
 
+    // Read settings fresh from store to avoid stale closures
+    const currentSettings = useSettingsStore.getState().settings;
+    const currentMaxAgeMs = currentSettings.maxMentionAgeMinutes * 60 * 1000;
+    const isFresh = (timestamp: string) => {
+      if (!timestamp) return true;
+      return Date.now() - new Date(timestamp).getTime() < currentMaxAgeMs;
+    };
+
     try {
       // 1. Fetch notifications
       const notifResult = await fetchNotifications();
@@ -129,18 +144,16 @@ export function XBoosterSidebar({ onClose }: XBoosterSidebarProps) {
       const parsed = parseNotificationEntries(notifResult.data);
       setMentions(parsed);
 
-      // 2. Fetch original tweets (with caching)
+      // 2. Fetch original tweets (with caching) — only for actionable mentions
+      const actionable = parsed.filter(
+        (m) =>
+          isFresh(m.timestamp) &&
+          m.conversationId === m.inReplyToStatusId &&
+          !isAlreadyReplied(m.tweetId),
+      );
+
       const uniqueConversationIds = [
-        ...new Set(
-          parsed
-            .filter(
-              (m) =>
-                m.replyCount === 0 &&
-                m.conversationId === m.inReplyToStatusId &&
-                !isAlreadyReplied(m.tweetId),
-            )
-            .map((m) => m.conversationId),
-        ),
+        ...new Set(actionable.map((m) => m.conversationId)),
       ];
 
       for (const convId of uniqueConversationIds) {
@@ -155,13 +168,8 @@ export function XBoosterSidebar({ onClose }: XBoosterSidebarProps) {
         }
       }
 
-      // 3. Auto-generate AI replies (sequential to avoid rate limits)
-      const mentionsToReply = parsed.filter(
-        (m) =>
-          m.replyCount === 0 &&
-          m.conversationId === m.inReplyToStatusId &&
-          !isAlreadyReplied(m.tweetId),
-      );
+      // 3. Auto-generate AI replies only for actionable mentions
+      const mentionsToReply = actionable;
 
       for (const mention of mentionsToReply) {
         const cached = getCachedTweet(mention.conversationId);
@@ -190,12 +198,14 @@ export function XBoosterSidebar({ onClose }: XBoosterSidebarProps) {
 
       setReply(mention.tweetId, { status: "sending" });
 
-      // Navigate to the mention's tweet page first so the request context matches
+      // Navigate to the mention's tweet page first
       const tweetPath = `/${mention.authorHandle}/status/${mention.tweetId}`;
       navigateX(tweetPath);
-      await new Promise((r) => setTimeout(r, 1500));
+      await new Promise((r) => setTimeout(r, 2000));
 
-      const result = await postTweet(reply.text, mention.tweetId);
+      // Use DOM manipulation instead of GraphQL API (mimic request) to avoid detection
+      const result = await postTweetViaDOM(reply.text);
+      // const result = await postTweet(reply.text, mention.tweetId);
       if (result.success) {
         markSent(mention.tweetId);
       } else {

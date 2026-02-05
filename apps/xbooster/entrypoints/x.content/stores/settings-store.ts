@@ -20,6 +20,8 @@ export interface XBoosterSettings {
   maxSendsPerCycle: number;
   /** Auto-prune already-replied entries older than N days */
   repliedRetentionDays: number;
+  /** Only reply to mentions newer than N minutes */
+  maxMentionAgeMinutes: number;
 }
 
 const DEFAULT_SETTINGS: XBoosterSettings = {
@@ -33,6 +35,7 @@ const DEFAULT_SETTINGS: XBoosterSettings = {
   fetchCount: 40,
   maxSendsPerCycle: 10,
   repliedRetentionDays: 30,
+  maxMentionAgeMinutes: 1440,
 };
 
 interface SettingsStore {

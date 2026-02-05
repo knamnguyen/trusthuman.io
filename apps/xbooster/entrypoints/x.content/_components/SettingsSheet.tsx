@@ -233,6 +233,28 @@ export function SettingsSheet({ isOpen, onClose }: SettingsSheetProps) {
                 </div>
               </SettingsSection>
 
+              {/* Max Mention Age */}
+              <SettingsSection title="Max Mention Age">
+                <p className="text-xs text-muted-foreground">
+                  Only reply to mentions newer than this (skip older ones)
+                </p>
+                <div className="mt-2 flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="1"
+                    max="10080"
+                    value={settings.maxMentionAgeMinutes}
+                    onChange={(e) =>
+                      updateSettings({
+                        maxMentionAgeMinutes: parseInt(e.target.value) || 1440,
+                      })
+                    }
+                    className="h-8 w-20 rounded-md border border-input bg-background px-2 text-sm"
+                  />
+                  <span className="text-xs text-muted-foreground">min</span>
+                </div>
+              </SettingsSection>
+
               {/* Auto-Prune */}
               <SettingsSection title="History Cleanup">
                 <p className="text-xs text-muted-foreground">
