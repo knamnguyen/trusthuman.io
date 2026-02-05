@@ -2,7 +2,10 @@ import { DBOS, SchedulerMode } from "@dbos-inc/dbos-sdk";
 
 import { db } from "@sassy/db";
 
-async function resetDailyQuotas(_scheduledTime: Date, _startTime: Date) {
+const resetDailyQuotasWorkflow = DBOS.registerWorkflow(async function (
+  _scheduledTime: Date,
+  _startTime: Date,
+) {
   const result = await DBOS.runStep(
     async () => {
       return db.linkedInAccount.updateMany({
@@ -15,10 +18,10 @@ async function resetDailyQuotas(_scheduledTime: Date, _startTime: Date) {
   DBOS.logger.info(
     `[reset-daily-quotas] Reset completed. Accounts updated: ${result.count}`,
   );
-}
+});
 
-DBOS.registerScheduled(resetDailyQuotas, {
+DBOS.registerScheduled(resetDailyQuotasWorkflow, {
   crontab: "0 0 * * *",
   mode: SchedulerMode.ExactlyOncePerInterval,
-  name: "resetDailyQuotas",
+  name: resetDailyQuotasWorkflow.name,
 });
