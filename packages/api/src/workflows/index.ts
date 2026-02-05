@@ -13,12 +13,24 @@ export async function initDBOS() {
     throw new Error("DBOS_SYSTEM_DATABASE_URL is not defined");
   }
 
+  if (
+    process.env.NODE_ENV === "production" &&
+    process.env.DBOS_CONDUCTOR_KEY === undefined
+  ) {
+    throw new Error("DBOS_CONDUCTOR_KEY is not defined in production");
+  }
+
   DBOS.setConfig({
     name: "engagekit",
     systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
   });
 
-  await DBOS.launch();
+  await DBOS.launch({
+    conductorKey:
+      process.env.NODE_ENV === "production"
+        ? process.env.DBOS_CONDUCTOR_KEY
+        : undefined,
+  });
 
   return {
     shutdown: () => DBOS.shutdown(),
