@@ -1,4 +1,11 @@
-import { BarChart3, BookOpen, Feather, User, Users } from "lucide-react";
+import {
+  AtSign,
+  BarChart3,
+  BookOpen,
+  Feather,
+  User,
+  Users,
+} from "lucide-react";
 
 import { detectDomVersion } from "@sassy/linkedin-automation/dom/detect";
 import { Button } from "@sassy/ui/button";
@@ -16,6 +23,7 @@ import { AccountTab } from "./account-tab/AccountTab";
 import { AnalyticsTab } from "./analytics-tab/AnalyticsTab";
 import { ComposeTab } from "./compose-tab/ComposeTab";
 import { ConnectTab } from "./connect-tab/ConnectTab";
+import { FollowUpTab } from "./followup-tab/FollowUpTab";
 import {
   SIDEBAR_TABS,
   useAccountStore,
@@ -25,11 +33,12 @@ import {
 import { useDailyQuotaLimitHitDialogStore } from "./stores/dialog-store";
 
 // Tab items for the expandable tabs menu
-// Order: Compose, Connect, Analytics, Account (4 tabs)
+// Order: Compose, Connect, Analytics, Follow-Up, Account (5 tabs)
 const tabs = [
   { id: "ek-compose-tab-button", title: "Compose", icon: Feather },
   { id: "ek-connect-tab-button", title: "Connect", icon: Users },
   { id: "ek-analytics-tab-button", title: "Analytics", icon: BarChart3 },
+  { id: "ek-followup-tab-button", title: "Follow-Up", icon: AtSign },
   { id: "ek-account-tab-button", title: "Account", icon: User },
 ];
 
@@ -89,10 +98,9 @@ export function LinkedInSidebar({ onClose }: LinkedInSidebarProps) {
             size="sm"
             disabled={currentLinkedInStatus !== "registered"}
             onClick={() => startTour("extension-intro")}
-            className="h-8 w-20 gap-1.5 px-2.5"
+            className="h-8 w-8 gap-1.5 px-2.5"
           >
             <BookOpen className="h-4 w-4" />
-            Guide
           </Button>
         </div>
       </SheetHeader>
@@ -106,7 +114,10 @@ export function LinkedInSidebar({ onClose }: LinkedInSidebarProps) {
         {/* Tab 2: Analytics - Profile Views */}
         {selectedTab === SIDEBAR_TABS.ANALYTICS && <AnalyticsTab />}
 
-        {/* Tab 3: Account - Auth & Organization Info */}
+        {/* Tab 3: Follow-Up - Mentions Display */}
+        {selectedTab === SIDEBAR_TABS.FOLLOWUP && <FollowUpTab />}
+
+        {/* Tab 4: Account - Auth & Organization Info */}
         {selectedTab === SIDEBAR_TABS.ACCOUNT && <AccountTab />}
 
         {/* Sign-in overlay - covers everything when not signed in */}

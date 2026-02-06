@@ -3,12 +3,13 @@ import { create } from "zustand";
 import { posthog } from "../../../lib/posthog";
 
 // Tab indices for the sidebar
-// Order: Compose, Connect, Analytics, Account (4 tabs)
+// Order: Compose, Connect, Analytics, Follow-Up, Account (5 tabs)
 export const SIDEBAR_TABS = {
   COMPOSE: 0,
   CONNECT: 1,
   ANALYTICS: 2,
-  ACCOUNT: 3,
+  FOLLOWUP: 3,
+  ACCOUNT: 4,
 } as const;
 
 interface SidebarState {

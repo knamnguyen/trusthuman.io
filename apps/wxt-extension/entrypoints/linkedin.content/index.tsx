@@ -10,6 +10,9 @@ import { SIDEBAR_TABS, useAccountStore, useSidebarStore } from "./stores";
 import { consumePendingNavigation } from "./stores/navigation-state";
 import { initSettingsDBStoreListener, useSettingsDBStore } from "./stores/settings-db-store";
 import { autoFetchAllMetrics } from "./utils/data-fetch-mimic/unified-auto-fetch";
+import { getMentionsStore, waitForHydration } from "./followup-tab/mentions-store";
+import { fetchMentionsWithWatermark } from "./followup-tab/linkedin-mentions-fetcher";
+import { getFollowUpIntervalMs, isFollowUpAutoFetchDisabled } from "./followup-tab/followup-auto-fetch-config";
 
 import "../../assets/globals.css";
 
@@ -196,6 +199,93 @@ export default defineContentScript({
       }
     });
 
+    // Mentions auto-fetch for Follow-Up tab
+    const startMentionsAutoFetch = async () => {
+      const accountId = useAccountStore.getState().currentLinkedIn.profileUrn;
+
+      if (!accountId) {
+        console.warn(
+          "EngageKit WXT: No LinkedIn account ID detected, skipping mentions auto-fetch"
+        );
+        return;
+      }
+
+      console.log(
+        `EngageKit WXT: Starting mentions auto-fetch for account: ${accountId}`
+      );
+
+      const fetchMentions = async () => {
+        const disabled = await isFollowUpAutoFetchDisabled();
+        if (disabled) {
+          console.log("⏸️ Mentions auto-fetch is disabled");
+          return;
+        }
+
+        // Wait for persisted state to load from Chrome storage
+        await waitForHydration(accountId);
+
+        const store = getMentionsStore(accountId);
+        const { watermark, lastFetchTime } = store.getState();
+
+        // Check rate limit
+        const intervalMs = await getFollowUpIntervalMs();
+        if (lastFetchTime) {
+          const timeSinceLastFetch = Date.now() - lastFetchTime;
+          if (timeSinceLastFetch < intervalMs) {
+            console.log(
+              `⏱️ Mentions fetch rate limited: ${Math.round((intervalMs - timeSinceLastFetch) / 60000)}m until next fetch`
+            );
+            return;
+          }
+        }
+
+        try {
+          store.getState().setIsLoading(true);
+          const newMentions = await fetchMentionsWithWatermark(accountId, watermark);
+
+          if (newMentions.length > 0) {
+            store.getState().prependMentions(newMentions);
+            store.getState().setWatermark(newMentions[0]!.entityUrn);
+            console.log(`✅ Fetched ${newMentions.length} new mentions`);
+          } else {
+            console.log("✅ No new mentions");
+          }
+
+          store.getState().setLastFetchTime(Date.now());
+        } catch (err) {
+          console.error("❌ Mentions auto-fetch error:", err);
+          store.getState().setError(err instanceof Error ? err.message : "Unknown error");
+        } finally {
+          store.getState().setIsLoading(false);
+        }
+      };
+
+      // Initial fetch
+      await fetchMentions();
+
+      // Set up interval
+      const intervalMs = await getFollowUpIntervalMs();
+      if (intervalMs !== Infinity) {
+        setInterval(fetchMentions, intervalMs);
+      }
+    };
+
+    // Start mentions auto-fetch immediately
+    startMentionsAutoFetch();
+
+    // Re-trigger auto-fetch when account changes
+    let lastMentionsAccountId = useAccountStore.getState().currentLinkedIn.profileUrn;
+    const unsubscribeMentions = useAccountStore.subscribe((state) => {
+      const currentAccountId = state.currentLinkedIn.profileUrn;
+      if (currentAccountId && currentAccountId !== lastMentionsAccountId) {
+        console.log(
+          `EngageKit WXT: Account changed to ${currentAccountId}, triggering mentions auto-fetch`
+        );
+        lastMentionsAccountId = currentAccountId;
+        startMentionsAutoFetch();
+      }
+    });
+
     const ui = await createShadowRootUi(ctx, {
       name: "engagekit-sidebar",
       position: "overlay",
@@ -224,6 +314,7 @@ export default defineContentScript({
         cleanupSettingsStore();
         cleanupDomDetection();
         unsubscribe();
+        unsubscribeMentions();
         root?.unmount();
         console.log("EngageKit WXT: Sidebar unmounted");
       },
