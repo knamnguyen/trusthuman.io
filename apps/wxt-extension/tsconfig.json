@@ -26,6 +26,9 @@
     "assets",
     "*.ts",
     ".wxt/wxt.d.ts",
-    "../../process/analytics"
+    "../../process/analytics",
+    "../../process/archive/fetch-noti-linkedin/sample-2-fetch.js",
+    "../../process/archive/fetch-noti-linkedin/sample-3-fetch.js",
+    "../../process/archive/fetch-noti-linkedin/sample-initial-fetch.js"
   ]
 }
