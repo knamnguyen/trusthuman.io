@@ -27,6 +27,8 @@ import {
 } from "../../../lib/get-sync-host-url";
 import { useAccountStore } from "../stores";
 
+import { ActivityGraphCard } from "./ActivityGraphCard";
+
 /**
  * Organization & LinkedIn Accounts Card
  * Uses the account store for instant data access
@@ -265,6 +267,9 @@ export function AccountTab() {
   // Signed in - show features UI (SignInOverlay handles unauthenticated state)
   return (
     <div id="ek-account-tab" className="flex flex-col gap-4 px-4">
+      {/* Activity Graph - Fair Use Score */}
+      <ActivityGraphCard />
+
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">

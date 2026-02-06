@@ -432,10 +432,12 @@ async function getCommentQueryId(): Promise<string | null> {
 /**
  * Fetches recent comments for a LinkedIn member profile
  * @param profileUrn - The profile URN ID (e.g., "ACoAAEjGgeABxDXPoubs3XfseZ_a62DYx20aoCo")
+ * @param timeWindowDays - Optional: fetch comments within this many days (default: use MAX_PAGES limit)
  * @returns Array of comments with author, content, postAuthor, isReply, etc.
  */
 export async function fetchMemberComments(
   profileUrn: string,
+  timeWindowDays?: number,
 ): Promise<CommentData[]> {
   const auth = await storage.getItem<LinkedInAuth>("local:auth");
 
@@ -450,6 +452,13 @@ export async function fetchMemberComments(
     return [];
   }
 
+  // Time-based pagination setup
+  const now = Date.now();
+  const useTimeBased = timeWindowDays !== undefined;
+  const cutoffTime = useTimeBased
+    ? now - timeWindowDays * 24 * 60 * 60 * 1000
+    : 0;
+
   const MAX_PAGES = 2;
   const PAGE_SIZE = 20;
   const allComments: CommentData[] = [];
@@ -459,7 +468,7 @@ export async function fetchMemberComments(
   let hasMore = true;
   let pageCount = 0;
 
-  while (hasMore && pageCount < MAX_PAGES) {
+  while (hasMore && (useTimeBased || pageCount < MAX_PAGES)) {
     // Build variables - include paginationToken for subsequent requests
     let variables = `(count:${PAGE_SIZE},start:${start},profileUrn:urn%3Ali%3Afsd_profile%3A${profileUrn}`;
     if (paginationToken) {
@@ -500,6 +509,22 @@ export async function fetchMemberComments(
           }
         }
 
+        // Time-based stop condition: check if we've reached the cutoff
+        if (useTimeBased && pageComments.length > 0) {
+          const commentsWithTime = pageComments.filter((c) => c.time !== null);
+          if (commentsWithTime.length > 0) {
+            const oldestCommentTime = Math.min(
+              ...commentsWithTime.map((c) => c.time as number),
+            );
+            if (oldestCommentTime < cutoffTime) {
+              hasMore = false;
+              console.log(
+                `Reached cutoff time: ${new Date(cutoffTime).toISOString()}`,
+              );
+            }
+          }
+        }
+
         // Extract paginationToken for next request
         const nestedData = (data?.data as Record<string, unknown>)
           ?.data as Record<string, unknown>;
@@ -536,7 +561,9 @@ export async function fetchMemberComments(
   }
 
   console.log(
-    `Fetched ${allComments.length} comments across ${pageCount} pages`,
+    `Fetched ${allComments.length} comments ${
+      useTimeBased ? `in ${timeWindowDays} days` : `across ${pageCount} pages`
+    }`,
   );
   return allComments;
 }

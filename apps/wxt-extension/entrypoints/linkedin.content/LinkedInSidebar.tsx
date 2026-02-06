@@ -38,7 +38,7 @@ const tabs = [
   { id: "ek-compose-tab-button", title: "Compose", icon: Feather },
   { id: "ek-connect-tab-button", title: "Connect", icon: Users },
   { id: "ek-analytics-tab-button", title: "Analytics", icon: BarChart3 },
-  { id: "ek-followup-tab-button", title: "Follow-Up", icon: AtSign },
+  { id: "ek-followup-tab-button", title: "Mentions", icon: AtSign },
   { id: "ek-account-tab-button", title: "Account", icon: User },
 ];
 
