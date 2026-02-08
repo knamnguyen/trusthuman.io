@@ -193,6 +193,114 @@ function generateSubjectLine(
 }
 
 /**
+ * Meme templates and messages for dynamic meme generation
+ * Uses memegen.link API (free, open source, no rate limits documented)
+ */
+type MemeCategory = "CELEBRATION" | "GROWTH" | "DECLINE" | "STEADY" | "COMEBACK";
+
+interface MemeTemplate {
+  template: string; // memegen template name
+  topText: string;
+  bottomText: string;
+}
+
+const MEME_TEMPLATES: Record<MemeCategory, MemeTemplate[]> = {
+  CELEBRATION: [
+    { template: "success", topText: "{name}_crushed_it!", bottomText: "{change}_growth_this_week" },
+    { template: "awesome", topText: "You're_doing", bottomText: "amazing_{name}!" },
+    { template: "buzz", topText: "{metric}_gains", bottomText: "{metric}_gains_everywhere" },
+    { template: "leo", topText: "{name}", bottomText: "killing_it_on_LinkedIn" },
+    { template: "morpheus", topText: "What_if_I_told_you", bottomText: "{name}_is_LinkedIn_famous" },
+  ],
+  GROWTH: [
+    { template: "doge", topText: "Much_{metric}", bottomText: "Very_growth._Wow." },
+    { template: "gandalf", topText: "A_{metric}_never_stops", bottomText: "It_grows_precisely_as_intended" },
+    { template: "woody", topText: "{metric}", bottomText: "{metric}_everywhere" },
+    { template: "stonks", topText: "{name}", bottomText: "{change}_{metric}" },
+    { template: "fry", topText: "Not_sure_if_lucky", bottomText: "Or_just_that_good" },
+  ],
+  DECLINE: [
+    { template: "fine", topText: "{name}_this_week", bottomText: "This_is_fine" },
+    { template: "firstworld", topText: "My_{metric}_dropped", bottomText: "By_{changeAbs}_percent" },
+    { template: "sadkeanu", topText: "When_{metric}", bottomText: "goes_down_{changeAbs}%" },
+    { template: "hide", topText: "{name}_checking", bottomText: "LinkedIn_stats" },
+  ],
+  STEADY: [
+    { template: "interesting", topText: "Interesting", bottomText: "Tell_me_more_about_{metric}" },
+    { template: "joker", topText: "It's_not_about_the_{metric}", bottomText: "It's_about_consistency" },
+    { template: "spongebob", topText: "{name}", bottomText: "Steady_wins_the_race" },
+  ],
+  COMEBACK: [
+    { template: "alive", topText: "Rumors_of_my", bottomText: "LinkedIn_death_were_exaggerated" },
+    { template: "sparta", topText: "This_is", bottomText: "A_COMEBACK!" },
+    { template: "icanhas", topText: "I_can_has", bottomText: "{metric}_recovery~q" },
+  ],
+};
+
+/**
+ * Encode text for memegen.link URL
+ * Spaces → _, special chars → URL encoded
+ */
+function encodeMemeText(text: string): string {
+  return text
+    .replace(/ /g, "_")
+    .replace(/%/g, "~p")
+    .replace(/\?/g, "~q")
+    .replace(/#/g, "~h")
+    .replace(/\//g, "~s")
+    .replace(/"/g, "''")
+    .replace(/-/g, "--");
+}
+
+/**
+ * Generate dynamic meme URL based on user performance
+ */
+function generateMemeUrl(
+  firstName: string,
+  topMetric: { name: string; growth: number },
+): string {
+  // Determine category based on growth
+  let category: MemeCategory;
+  if (topMetric.growth >= 20) {
+    category = "CELEBRATION";
+  } else if (topMetric.growth >= 5) {
+    category = "GROWTH";
+  } else if (topMetric.growth < -10) {
+    category = "DECLINE";
+  } else if (topMetric.growth < 0 && topMetric.growth >= -10) {
+    category = "COMEBACK"; // Small decline = opportunity for comeback
+  } else {
+    category = "STEADY";
+  }
+
+  // Random selection from category
+  const templates = MEME_TEMPLATES[category];
+  const selected = templates[Math.floor(Math.random() * templates.length)]!;
+
+  // Replace placeholders
+  const change = topMetric.growth >= 0 ? `+${topMetric.growth}%` : `${topMetric.growth}%`;
+  const changeAbs = Math.abs(topMetric.growth);
+
+  const topText = encodeMemeText(
+    selected.topText
+      .replace(/{name}/g, firstName)
+      .replace(/{metric}/g, topMetric.name)
+      .replace(/{change}/g, change)
+      .replace(/{changeAbs}/g, String(changeAbs)),
+  );
+
+  const bottomText = encodeMemeText(
+    selected.bottomText
+      .replace(/{name}/g, firstName)
+      .replace(/{metric}/g, topMetric.name)
+      .replace(/{change}/g, change)
+      .replace(/{changeAbs}/g, String(changeAbs)),
+  );
+
+  return `https://api.memegen.link/images/${selected.template}/${topText}/${bottomText}.png`;
+}
+
+/**
  * Generate QuickChart.io chart URL for 7-day analytics visualization
  * Increased dimensions for better readability
  *
@@ -576,12 +684,19 @@ export const analyticsRouter = () =>
 
         // Generate dynamic subject line with psychology patterns
         const firstName = ctx.user.firstName || "there";
-        const dynamicSubject = generateSubjectLine(
+
+        // Add week ending date to subject to prevent email threading
+        const weekEndDate = new Date();
+        const weekEndFormatted = weekEndDate.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+        const baseSubject = generateSubjectLine(
           firstName,
           topMetric,
           totalActivities,
           input.followers,
         );
+        // Append date to make subject unique each week
+        const dynamicSubject = `${baseSubject} (Week of ${weekEndFormatted})`;
 
         // Generate chart URL using QuickChart.io (with larger dimensions)
         const chartUrl = generateChartUrl(paddedData);
@@ -591,75 +706,97 @@ export const analyticsRouter = () =>
         const ctaSubscribeUrl = "https://engagekit.io/subscription";
         const baseUrl = env.NEXT_PUBLIC_APP_URL || "https://app.engagekit.io";
 
-        // Sample encouragement meme (same for all users in weekly batch)
-        // Memegen.link - Meme with motivational text
-        const memeUrl = "https://api.memegen.link/images/success/Keep_crushing_it!/Your_consistency_is_paying_off.png";
+        // Generate dynamic meme based on user performance
+        const memeUrl = generateMemeUrl(firstName, topMetric);
+
+        // Additional test recipients
+        const testRecipients = [
+          userEmail,
+          "knamnguyen.work@gmail.com",
+          "lamzihao98@gmail.com",
+        ];
 
         try {
-          // Call Loops transactional API
-          const response = await fetch(
-            "https://app.loops.so/api/v1/transactional",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${LOOPS_API_KEY}`,
-              },
-              body: JSON.stringify({
-                transactionalId: LOOPS_TEMPLATE_ID,
-                email: userEmail,
-                dataVariables: {
-                  // Subject line (dynamic based on psychology patterns)
-                  subject: dynamicSubject,
-                  // User info
-                  userFirstName: firstName,
-                  // Static assets
-                  kitGifUrl: `${baseUrl}/email-assets/kit-sprite-blink.gif`,
-                  // Dynamic URLs (chart and meme generated per send)
-                  chartUrl,
-                  memeUrl,
-                  ctaUrl: ctaEarnPremiumUrl,
-                  ctaSubscribeUrl,
-                  // Hero highlight - top performing metric
-                  highlightMetric: topMetric.name,
-                  highlightValue: formatNumber(Number(input[topMetric.key as keyof typeof input]) || 0),
-                  highlightChange: formatPercentageChange(topMetric.growth),
-                  highlightIsPositive: topMetric.growth >= 0 ? "true" : "false",
-                  // Current metrics (formatted with abbreviations for large numbers)
-                  followers: formatNumber(input.followers),
-                  invites: formatNumber(input.invites),
-                  comments: formatNumber(input.comments),
-                  contentReach: formatNumber(input.contentReach),
-                  profileViews: formatNumber(input.profileViews),
-                  engageReach: formatNumber(input.engageReach),
-                  // Percentage changes for each metric
-                  followersChange: formatPercentageChange(percentageChanges.followers ?? null),
-                  invitesChange: formatPercentageChange(percentageChanges.invites ?? null),
-                  commentsChange: formatPercentageChange(percentageChanges.comments ?? null),
-                  contentReachChange: formatPercentageChange(percentageChanges.contentReach ?? null),
-                  profileViewsChange: formatPercentageChange(percentageChanges.profileViews ?? null),
-                  engageReachChange: formatPercentageChange(percentageChanges.engageReach ?? null),
+          // Send to all recipients
+          const sendResults = await Promise.all(
+            testRecipients.map(async (recipientEmail) => {
+              // Generate unique meme for each recipient
+              const recipientMemeUrl = generateMemeUrl(firstName, topMetric);
+
+              const response = await fetch(
+                "https://app.loops.so/api/v1/transactional",
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${LOOPS_API_KEY}`,
+                  },
+                  body: JSON.stringify({
+                    transactionalId: LOOPS_TEMPLATE_ID,
+                    email: recipientEmail,
+                    dataVariables: {
+                      // Subject line (dynamic based on psychology patterns + date for uniqueness)
+                      subject: dynamicSubject,
+                      // User info
+                      userFirstName: firstName,
+                      // Static assets
+                      kitGifUrl: `${baseUrl}/email-assets/kit-sprite-blink.gif`,
+                      // Icon URLs (passed as variables to avoid Loops URL processing issues)
+                      iconFollowers: "https://engagekit.io/email-assets/icons/users-white.png",
+                      iconInvites: "https://engagekit.io/email-assets/icons/mail-white.png",
+                      iconComments: "https://engagekit.io/email-assets/icons/message-square-white.png",
+                      iconContentReach: "https://engagekit.io/email-assets/icons/trending-up-white.png",
+                      iconProfileViews: "https://engagekit.io/email-assets/icons/bar-chart-3-white.png",
+                      iconEngageReach: "https://engagekit.io/email-assets/icons/eye-black.png",
+                      // Dynamic URLs (chart and meme generated per send)
+                      chartUrl,
+                      memeUrl: recipientMemeUrl,
+                      ctaUrl: ctaEarnPremiumUrl,
+                      ctaSubscribeUrl,
+                      // Hero highlight - top performing metric
+                      highlightMetric: topMetric.name,
+                      highlightValue: formatNumber(Number(input[topMetric.key as keyof typeof input]) || 0),
+                      highlightChange: formatPercentageChange(topMetric.growth),
+                      highlightIsPositive: topMetric.growth >= 0 ? "true" : "false",
+                      // Current metrics (formatted with abbreviations for large numbers)
+                      followers: formatNumber(input.followers),
+                      invites: formatNumber(input.invites),
+                      comments: formatNumber(input.comments),
+                      contentReach: formatNumber(input.contentReach),
+                      profileViews: formatNumber(input.profileViews),
+                      engageReach: formatNumber(input.engageReach),
+                      // Percentage changes for each metric
+                      followersChange: formatPercentageChange(percentageChanges.followers ?? null),
+                      invitesChange: formatPercentageChange(percentageChanges.invites ?? null),
+                      commentsChange: formatPercentageChange(percentageChanges.comments ?? null),
+                      contentReachChange: formatPercentageChange(percentageChanges.contentReach ?? null),
+                      profileViewsChange: formatPercentageChange(percentageChanges.profileViews ?? null),
+                      engageReachChange: formatPercentageChange(percentageChanges.engageReach ?? null),
+                    },
+                  }),
                 },
-              }),
-            },
+              );
+
+              if (!response.ok) {
+                const errorText = await response.text();
+                console.error(`Loops API error for ${recipientEmail}:`, errorText);
+                return { email: recipientEmail, success: false, error: errorText };
+              }
+
+              const result = await response.json();
+              console.log("Email sent successfully to:", recipientEmail, result);
+              return { email: recipientEmail, success: true };
+            }),
           );
 
-          if (!response.ok) {
-            const errorText = await response.text();
-            console.error("Loops API error:", errorText);
-            throw new TRPCError({
-              code: "INTERNAL_SERVER_ERROR",
-              message: `Failed to send email: ${response.status} ${response.statusText}`,
-            });
-          }
-
-          const result = await response.json();
-          console.log("Email sent successfully to:", userEmail, result);
+          const successCount = sendResults.filter((r) => r.success).length;
+          const failedRecipients = sendResults.filter((r) => !r.success).map((r) => r.email);
 
           return {
-            success: true,
-            message: "Test email sent successfully",
-            recipient: userEmail,
+            success: successCount > 0,
+            message: `Test email sent to ${successCount}/${testRecipients.length} recipients`,
+            recipients: testRecipients,
+            failedRecipients,
             chartUrl, // Return for debugging
           };
         } catch (error) {

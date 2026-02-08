@@ -131,10 +131,8 @@
             <mj-section padding="0">
               <mj-column>
                 <mj-spacer height="10px" />
-                <mj-text align="center" padding="0">
-                  <div style="width: 40px; height: 40px; background-color: #1b9aaa; border: 2px solid #000000; border-radius: 50%; margin: 0 auto 10px auto; display: flex; align-items: center; justify-content: center;">
-                    <img src="https://engagekit.io/email-assets/icons/users-white.png" width="20" height="20" alt="" style="display: block;" />
-                  </div>
+                <mj-text align="center" padding="0 0 10px 0">
+                  <img src="{DATA_VARIABLE:iconFollowers}" width="40" height="40" alt="" style="background-color: #1b9aaa; border: 2px solid #000000; border-radius: 50%; padding: 5px; box-sizing: border-box;" />
                 </mj-text>
                 <mj-text
                   align="center"
@@ -175,10 +173,8 @@
             <mj-section padding="0">
               <mj-column>
                 <mj-spacer height="10px" />
-                <mj-text align="center" padding="0">
-                  <div style="width: 40px; height: 40px; background-color: #308169; border: 2px solid #000000; border-radius: 50%; margin: 0 auto 10px auto; display: flex; align-items: center; justify-content: center;">
-                    <img src="https://engagekit.io/email-assets/icons/mail-white.png" width="20" height="20" alt="" style="display: block;" />
-                  </div>
+                <mj-text align="center" padding="0 0 10px 0">
+                  <img src="{DATA_VARIABLE:iconInvites}" width="40" height="40" alt="" style="background-color: #308169; border: 2px solid #000000; border-radius: 50%; padding: 5px; box-sizing: border-box;" />
                 </mj-text>
                 <mj-text
                   align="center"
@@ -219,10 +215,8 @@
             <mj-section padding="0">
               <mj-column>
                 <mj-spacer height="10px" />
-                <mj-text align="center" padding="0">
-                  <div style="width: 40px; height: 40px; background-color: #ffc63d; border: 2px solid #000000; border-radius: 50%; margin: 0 auto 10px auto; display: flex; align-items: center; justify-content: center;">
-                    <img src="https://engagekit.io/email-assets/icons/message-square-white.png" width="20" height="20" alt="" style="display: block;" />
-                  </div>
+                <mj-text align="center" padding="0 0 10px 0">
+                  <img src="{DATA_VARIABLE:iconComments}" width="40" height="40" alt="" style="background-color: #ffc63d; border: 2px solid #000000; border-radius: 50%; padding: 5px; box-sizing: border-box;" />
                 </mj-text>
                 <mj-text
                   align="center"
@@ -267,10 +261,8 @@
             <mj-section padding="0">
               <mj-column>
                 <mj-spacer height="10px" />
-                <mj-text align="center" padding="0">
-                  <div style="width: 40px; height: 40px; background-color: #ed6b67; border: 2px solid #000000; border-radius: 50%; margin: 0 auto 10px auto; display: flex; align-items: center; justify-content: center;">
-                    <img src="https://engagekit.io/email-assets/icons/trending-up-white.png" width="20" height="20" alt="" style="display: block;" />
-                  </div>
+                <mj-text align="center" padding="0 0 10px 0">
+                  <img src="{DATA_VARIABLE:iconContentReach}" width="40" height="40" alt="" style="background-color: #ed6b67; border: 2px solid #000000; border-radius: 50%; padding: 5px; box-sizing: border-box;" />
                 </mj-text>
                 <mj-text
                   align="center"
@@ -311,10 +303,8 @@
             <mj-section padding="0">
               <mj-column>
                 <mj-spacer height="10px" />
-                <mj-text align="center" padding="0">
-                  <div style="width: 40px; height: 40px; background-color: #e5496d; border: 2px solid #000000; border-radius: 50%; margin: 0 auto 10px auto; display: flex; align-items: center; justify-content: center;">
-                    <img src="https://engagekit.io/email-assets/icons/bar-chart-3-white.png" width="20" height="20" alt="" style="display: block;" />
-                  </div>
+                <mj-text align="center" padding="0 0 10px 0">
+                  <img src="{DATA_VARIABLE:iconProfileViews}" width="40" height="40" alt="" style="background-color: #e5496d; border: 2px solid #000000; border-radius: 50%; padding: 5px; box-sizing: border-box;" />
                 </mj-text>
                 <mj-text
                   align="center"
@@ -355,10 +345,8 @@
             <mj-section padding="0">
               <mj-column>
                 <mj-spacer height="10px" />
-                <mj-text align="center" padding="0">
-                  <div style="width: 40px; height: 40px; background-color: #f9dcec; border: 2px solid #000000; border-radius: 50%; margin: 0 auto 10px auto; display: flex; align-items: center; justify-content: center;">
-                    <img src="https://engagekit.io/email-assets/icons/eye-black.png" width="20" height="20" alt="" style="display: block;" />
-                  </div>
+                <mj-text align="center" padding="0 0 10px 0">
+                  <img src="{DATA_VARIABLE:iconEngageReach}" width="40" height="40" alt="" style="background-color: #f9dcec; border: 2px solid #000000; border-radius: 50%; padding: 5px; box-sizing: border-box;" />
                 </mj-text>
                 <mj-text
                   align="center"
