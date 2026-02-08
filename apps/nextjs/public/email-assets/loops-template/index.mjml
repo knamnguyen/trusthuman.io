@@ -1,0 +1,512 @@
+<mjml>
+  <mj-head>
+    <mj-title>Your Weekly LinkedIn Analytics</mj-title>
+    <mj-font name="Fira Sans" href="https://fonts.googleapis.com/css?family=Fira+Sans:400,600" />
+    <mj-attributes>
+      <mj-all font-family="'Fira Sans', Arial, sans-serif" />
+      <mj-text color="#000000" line-height="1.5" />
+      <mj-section background-color="#f6f5ee" />
+    </mj-attributes>
+    <mj-style>
+      /* Card styling with theme border-radius */
+      .card-wrapper {
+        border-radius: 6px !important;
+        overflow: hidden;
+      }
+      .metric-card {
+        background-color: #ffffff;
+        border: 2px solid #000000;
+        border-radius: 6px;
+        box-shadow: 2px 2px 0px 0px #000000;
+      }
+      .metric-icon {
+        width: 30px;
+        height: 30px;
+        border: 2px solid #000000;
+        border-radius: 50%;
+        margin: 0 auto 10px auto;
+      }
+      .chart-container {
+        background-color: #ffffff;
+        border: 2px solid #000000;
+        border-radius: 6px;
+        box-shadow: 2px 2px 0px 0px #000000;
+        padding: 20px;
+      }
+      .cta-button {
+        background-color: #e5486c;
+        border-radius: 6px;
+        border: 3px solid #000000;
+        box-shadow: 2px 2px 0px 0px #000000;
+      }
+    </mj-style>
+  </mj-head>
+  <mj-body background-color="#f6f5ee">
+
+    <!-- Main wrapper -->
+    <mj-wrapper background-color="#fbf6e5" border-radius="8px" padding="0">
+
+      <!-- 1. Kit Mascot GIF -->
+      <mj-section padding="20px">
+        <mj-column>
+          <mj-image
+            src="kit-sprite-blink.gif"
+            alt="Kit the slush mascot"
+            width="120px"
+            align="center"
+          />
+        </mj-column>
+      </mj-section>
+
+      <!-- 2. Hero Banner -->
+      <mj-section padding="0 30px 15px 30px">
+        <mj-column>
+          <mj-text
+            align="center"
+            font-size="28px"
+            font-weight="600"
+            color="#000000"
+            padding="0 0 10px 0"
+          >
+            Your Weekly LinkedIn Wins! 🎉
+          </mj-text>
+          <mj-text
+            align="center"
+            font-size="16px"
+            color="#000000"
+            padding="0"
+          >
+            Here's how you crushed it this week, {DATA_VARIABLE:userFirstName}!
+          </mj-text>
+        </mj-column>
+      </mj-section>
+
+      <!-- 2.5 Hero Highlight - Top Metric -->
+      <mj-section padding="0 30px 30px 30px">
+        <mj-column>
+          <mj-wrapper background-color="#e5486c" border="3px solid #000000" border-radius="8px" css-class="box-shadow: 3px 3px 0px 0px #000000;" padding="20px">
+            <mj-section padding="0" background-color="transparent">
+              <mj-column>
+                <mj-text
+                  align="center"
+                  font-size="14px"
+                  font-weight="600"
+                  color="#ffffff"
+                  text-transform="uppercase"
+                  letter-spacing="0.1em"
+                  padding="0 0 5px 0"
+                >
+                  🏆 TOP PERFORMER THIS WEEK
+                </mj-text>
+                <mj-text
+                  align="center"
+                  font-size="36px"
+                  font-weight="600"
+                  color="#ffffff"
+                  padding="0 0 5px 0"
+                >
+                  {DATA_VARIABLE:highlightValue} {DATA_VARIABLE:highlightMetric}
+                </mj-text>
+                <mj-text
+                  align="center"
+                  font-size="20px"
+                  font-weight="600"
+                  color="#ffffff"
+                  padding="0"
+                >
+                  {DATA_VARIABLE:highlightChange} vs last week
+                </mj-text>
+              </mj-column>
+            </mj-section>
+          </mj-wrapper>
+        </mj-column>
+      </mj-section>
+
+      <!-- 3. Metrics Cards Row 1: Followers, Invites, Comments -->
+      <mj-section padding="0 30px 10px 30px">
+
+        <!-- Followers Card -->
+        <mj-column width="33.33%" padding="0 5px 0 0">
+          <mj-wrapper background-color="#ffffff" border="2px solid #000000" border-radius="6px" css-class="box-shadow: 2px 2px 0px 0px #000000;" padding="15px">
+            <mj-section padding="0">
+              <mj-column>
+                <mj-spacer height="10px" />
+                <mj-text align="center" padding="0">
+                  <div style="width: 40px; height: 40px; background-color: #1b9aaa; border: 2px solid #000000; border-radius: 50%; margin: 0 auto 10px auto; display: flex; align-items: center; justify-content: center;">
+                    <img src="https://engagekit.io/email-assets/icons/users-white.png" width="20" height="20" alt="" style="display: block;" />
+                  </div>
+                </mj-text>
+                <mj-text
+                  align="center"
+                  font-size="48px"
+                  font-weight="600"
+                  color="#000000"
+                  padding="0 0 2px 0"
+                >
+                  {DATA_VARIABLE:followers}
+                </mj-text>
+                <mj-text
+                  align="center"
+                  font-size="14px"
+                  font-weight="600"
+                  color="#308169"
+                  padding="0 0 5px 0"
+                >
+                  {DATA_VARIABLE:followersChange}
+                </mj-text>
+                <mj-text
+                  align="center"
+                  font-size="12px"
+                  color="#7a7a7a"
+                  text-transform="uppercase"
+                  letter-spacing="0.05em"
+                  padding="0"
+                >
+                  Followers
+                </mj-text>
+              </mj-column>
+            </mj-section>
+          </mj-wrapper>
+        </mj-column>
+
+        <!-- Invites Card -->
+        <mj-column width="33.33%" padding="0 5px">
+          <mj-wrapper background-color="#ffffff" border="2px solid #000000" border-radius="6px" css-class="box-shadow: 2px 2px 0px 0px #000000;" padding="15px">
+            <mj-section padding="0">
+              <mj-column>
+                <mj-spacer height="10px" />
+                <mj-text align="center" padding="0">
+                  <div style="width: 40px; height: 40px; background-color: #308169; border: 2px solid #000000; border-radius: 50%; margin: 0 auto 10px auto; display: flex; align-items: center; justify-content: center;">
+                    <img src="https://engagekit.io/email-assets/icons/mail-white.png" width="20" height="20" alt="" style="display: block;" />
+                  </div>
+                </mj-text>
+                <mj-text
+                  align="center"
+                  font-size="48px"
+                  font-weight="600"
+                  color="#000000"
+                  padding="0 0 2px 0"
+                >
+                  {DATA_VARIABLE:invites}
+                </mj-text>
+                <mj-text
+                  align="center"
+                  font-size="14px"
+                  font-weight="600"
+                  color="#308169"
+                  padding="0 0 5px 0"
+                >
+                  {DATA_VARIABLE:invitesChange}
+                </mj-text>
+                <mj-text
+                  align="center"
+                  font-size="12px"
+                  color="#7a7a7a"
+                  text-transform="uppercase"
+                  letter-spacing="0.05em"
+                  padding="0"
+                >
+                  Invites
+                </mj-text>
+              </mj-column>
+            </mj-section>
+          </mj-wrapper>
+        </mj-column>
+
+        <!-- Comments Card -->
+        <mj-column width="33.33%" padding="0 0 0 5px">
+          <mj-wrapper background-color="#ffffff" border="2px solid #000000" border-radius="6px" css-class="box-shadow: 2px 2px 0px 0px #000000;" padding="15px">
+            <mj-section padding="0">
+              <mj-column>
+                <mj-spacer height="10px" />
+                <mj-text align="center" padding="0">
+                  <div style="width: 40px; height: 40px; background-color: #ffc63d; border: 2px solid #000000; border-radius: 50%; margin: 0 auto 10px auto; display: flex; align-items: center; justify-content: center;">
+                    <img src="https://engagekit.io/email-assets/icons/message-square-white.png" width="20" height="20" alt="" style="display: block;" />
+                  </div>
+                </mj-text>
+                <mj-text
+                  align="center"
+                  font-size="48px"
+                  font-weight="600"
+                  color="#000000"
+                  padding="0 0 2px 0"
+                >
+                  {DATA_VARIABLE:comments}
+                </mj-text>
+                <mj-text
+                  align="center"
+                  font-size="14px"
+                  font-weight="600"
+                  color="#308169"
+                  padding="0 0 5px 0"
+                >
+                  {DATA_VARIABLE:commentsChange}
+                </mj-text>
+                <mj-text
+                  align="center"
+                  font-size="12px"
+                  color="#7a7a7a"
+                  text-transform="uppercase"
+                  letter-spacing="0.05em"
+                  padding="0"
+                >
+                  Comments
+                </mj-text>
+              </mj-column>
+            </mj-section>
+          </mj-wrapper>
+        </mj-column>
+      </mj-section>
+
+      <!-- 4. Metrics Cards Row 2: Content Reach, Profile Views, Engage Reach -->
+      <mj-section padding="0 30px 30px 30px">
+
+        <!-- Content Reach Card -->
+        <mj-column width="33.33%" padding="0 5px 0 0">
+          <mj-wrapper background-color="#ffffff" border="2px solid #000000" border-radius="6px" css-class="box-shadow: 2px 2px 0px 0px #000000;" padding="15px">
+            <mj-section padding="0">
+              <mj-column>
+                <mj-spacer height="10px" />
+                <mj-text align="center" padding="0">
+                  <div style="width: 40px; height: 40px; background-color: #ed6b67; border: 2px solid #000000; border-radius: 50%; margin: 0 auto 10px auto; display: flex; align-items: center; justify-content: center;">
+                    <img src="https://engagekit.io/email-assets/icons/trending-up-white.png" width="20" height="20" alt="" style="display: block;" />
+                  </div>
+                </mj-text>
+                <mj-text
+                  align="center"
+                  font-size="48px"
+                  font-weight="600"
+                  color="#000000"
+                  padding="0 0 2px 0"
+                >
+                  {DATA_VARIABLE:contentReach}
+                </mj-text>
+                <mj-text
+                  align="center"
+                  font-size="14px"
+                  font-weight="600"
+                  color="#308169"
+                  padding="0 0 5px 0"
+                >
+                  {DATA_VARIABLE:contentReachChange}
+                </mj-text>
+                <mj-text
+                  align="center"
+                  font-size="12px"
+                  color="#7a7a7a"
+                  text-transform="uppercase"
+                  letter-spacing="0.05em"
+                  padding="0"
+                >
+                  Content Reach
+                </mj-text>
+              </mj-column>
+            </mj-section>
+          </mj-wrapper>
+        </mj-column>
+
+        <!-- Profile Views Card -->
+        <mj-column width="33.33%" padding="0 5px">
+          <mj-wrapper background-color="#ffffff" border="2px solid #000000" border-radius="6px" css-class="box-shadow: 2px 2px 0px 0px #000000;" padding="15px">
+            <mj-section padding="0">
+              <mj-column>
+                <mj-spacer height="10px" />
+                <mj-text align="center" padding="0">
+                  <div style="width: 40px; height: 40px; background-color: #e5496d; border: 2px solid #000000; border-radius: 50%; margin: 0 auto 10px auto; display: flex; align-items: center; justify-content: center;">
+                    <img src="https://engagekit.io/email-assets/icons/bar-chart-3-white.png" width="20" height="20" alt="" style="display: block;" />
+                  </div>
+                </mj-text>
+                <mj-text
+                  align="center"
+                  font-size="48px"
+                  font-weight="600"
+                  color="#000000"
+                  padding="0 0 2px 0"
+                >
+                  {DATA_VARIABLE:profileViews}
+                </mj-text>
+                <mj-text
+                  align="center"
+                  font-size="14px"
+                  font-weight="600"
+                  color="#308169"
+                  padding="0 0 5px 0"
+                >
+                  {DATA_VARIABLE:profileViewsChange}
+                </mj-text>
+                <mj-text
+                  align="center"
+                  font-size="12px"
+                  color="#7a7a7a"
+                  text-transform="uppercase"
+                  letter-spacing="0.05em"
+                  padding="0"
+                >
+                  Profile Views
+                </mj-text>
+              </mj-column>
+            </mj-section>
+          </mj-wrapper>
+        </mj-column>
+
+        <!-- Engage Reach Card -->
+        <mj-column width="33.33%" padding="0 0 0 5px">
+          <mj-wrapper background-color="#ffffff" border="2px solid #000000" border-radius="6px" css-class="box-shadow: 2px 2px 0px 0px #000000;" padding="15px">
+            <mj-section padding="0">
+              <mj-column>
+                <mj-spacer height="10px" />
+                <mj-text align="center" padding="0">
+                  <div style="width: 40px; height: 40px; background-color: #f9dcec; border: 2px solid #000000; border-radius: 50%; margin: 0 auto 10px auto; display: flex; align-items: center; justify-content: center;">
+                    <img src="https://engagekit.io/email-assets/icons/eye-black.png" width="20" height="20" alt="" style="display: block;" />
+                  </div>
+                </mj-text>
+                <mj-text
+                  align="center"
+                  font-size="48px"
+                  font-weight="600"
+                  color="#000000"
+                  padding="0 0 2px 0"
+                >
+                  {DATA_VARIABLE:engageReach}
+                </mj-text>
+                <mj-text
+                  align="center"
+                  font-size="14px"
+                  font-weight="600"
+                  color="#308169"
+                  padding="0 0 5px 0"
+                >
+                  {DATA_VARIABLE:engageReachChange}
+                </mj-text>
+                <mj-text
+                  align="center"
+                  font-size="12px"
+                  color="#7a7a7a"
+                  text-transform="uppercase"
+                  letter-spacing="0.05em"
+                  padding="0"
+                >
+                  Engage Reach
+                </mj-text>
+              </mj-column>
+            </mj-section>
+          </mj-wrapper>
+        </mj-column>
+      </mj-section>
+
+      <!-- 5. 7-Day Chart -->
+      <mj-section padding="0 30px 30px 30px">
+        <mj-column>
+          <mj-wrapper background-color="#ffffff" border="2px solid #000000" border-radius="6px" css-class="box-shadow: 2px 2px 0px 0px #000000;" padding="20px">
+            <mj-section padding="0">
+              <mj-column>
+                <mj-text
+                  align="center"
+                  font-size="18px"
+                  font-weight="600"
+                  color="#000000"
+                  padding="0 0 15px 0"
+                >
+                  Your 7-Day Progress
+                </mj-text>
+                <mj-image
+                  src="{DATA_VARIABLE:chartUrl}"
+                  alt="7-day analytics chart"
+                  width="560px"
+                  align="center"
+                  padding="0"
+                />
+              </mj-column>
+            </mj-section>
+          </mj-wrapper>
+        </mj-column>
+      </mj-section>
+
+      <!-- 6. Encouragement Section (Meme) -->
+      <mj-section padding="0 30px 30px 30px">
+        <mj-column>
+          <mj-wrapper background-color="#ffffff" border="2px solid #000000" border-radius="6px" css-class="box-shadow: 2px 2px 0px 0px #000000;" padding="20px">
+            <mj-section padding="0">
+              <mj-column>
+                <mj-image
+                  src="{DATA_VARIABLE:memeUrl}"
+                  alt="Encouragement meme"
+                  width="300px"
+                  align="center"
+                  padding="0 0 15px 0"
+                />
+                <mj-text
+                  align="center"
+                  font-size="16px"
+                  font-weight="600"
+                  color="#000000"
+                  padding="0"
+                >
+                  Keep crushing it! Your consistency is paying off. 💪
+                </mj-text>
+              </mj-column>
+            </mj-section>
+          </mj-wrapper>
+        </mj-column>
+      </mj-section>
+
+      <!-- 7. CTA Buttons -->
+      <mj-section padding="0 30px 20px 30px">
+        <mj-column>
+          <mj-button
+            href="{DATA_VARIABLE:ctaUrl}"
+            background-color="#e5486c"
+            color="#ffffff"
+            font-size="18px"
+            font-weight="600"
+            border="3px solid #000000" border-radius="8px"
+            css-class="box-shadow: 2px 2px 0px 0px #000000;"
+            padding="15px 40px"
+            align="center"
+          >
+            Earn Premium →
+          </mj-button>
+        </mj-column>
+      </mj-section>
+
+      <mj-section padding="0 30px 40px 30px">
+        <mj-column>
+          <mj-button
+            href="{DATA_VARIABLE:ctaSubscribeUrl}"
+            background-color="#308169"
+            color="#ffffff"
+            font-size="18px"
+            font-weight="600"
+            border="3px solid #000000" border-radius="8px"
+            css-class="box-shadow: 2px 2px 0px 0px #000000;"
+            padding="15px 40px"
+            align="center"
+          >
+            Subscribe Premium →
+          </mj-button>
+        </mj-column>
+      </mj-section>
+
+      <!-- 8. Footer -->
+      <mj-section
+        border-top="2px solid #000000"
+        background-color="#f6f5ee"
+        padding="20px 30px"
+      >
+        <mj-column>
+          <mj-text
+            align="center"
+            font-size="12px"
+            color="#7a7a7a"
+            padding="0"
+          >
+            You're receiving this because you're subscribed to weekly analytics from EngageKit.<br/>
+            <a href="#" style="color: #e5486c; text-decoration: underline;">Unsubscribe</a> | <a href="#" style="color: #e5486c; text-decoration: underline;">Preferences</a>
+          </mj-text>
+        </mj-column>
+      </mj-section>
+
+    </mj-wrapper>
+
+  </mj-body>
+</mjml>

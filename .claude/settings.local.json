@@ -23,7 +23,11 @@
       "Bash(git commit -m \"$\\(cat <<''EOF''\nadd xBooster WXT Chrome extension for X/Twitter engagement automation\n\nSidebar-only Chrome extension \\(apps/xbooster\\) using WXT framework with:\n- Background auth capture via webRequest on x.com API calls\n- Content script sidebar with Shadow DOM CSS isolation\n- X.com GraphQL API integration \\(NotificationsTimeline, TweetDetail, CreateTweet\\)\n- AI reply generation via Gemini 3 Flash with thinking \\(v5 anti-AI prompt\\)\n- Auto-run loop with configurable intervals, delays, and cycle caps\n- Settings panel with persistent configuration in chrome.storage.local\n- Already-replied tracking to prevent duplicate replies\n- SPA navigation pattern for natural request context\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(/Users/knamnguyen/Documents/0-Programming/engagekit-turborepo/process/scripts/merge-worktree.sh)",
       "Bash(git commit:*)",
-      "Bash(test:*)"
+      "Bash(test:*)",
+      "Bash(SKIP_ENV_VALIDATION=true pnpm tsx:*)",
+      "Bash(unzip:*)",
+      "Bash(convert:*)",
+      "Bash(magick:*)"
     ]
   }
 }

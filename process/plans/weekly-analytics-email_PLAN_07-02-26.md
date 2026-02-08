@@ -1739,6 +1739,35 @@ See [Component Details](#7-component-details) section above for full tRPC proced
 
 **Dependencies**: RFC-004 (DBOS Workflow)
 
+**Status**: ⏳ IN PROGRESS (Design finalized, ready for Loops implementation)
+
+**Design Decisions (Finalized Feb 8, 2026)**:
+- **Layout**: Duolingo-inspired (encouraging, progress-focused) + Neobrutalist design (hard shadows, thick borders)
+- **Colors**: Using `packages/ui/src/styles/theme.css` palette:
+  - Background: `#f6f5ee` (warm cream)
+  - Card: `#fbf6e5` (light cream)
+  - Primary: `#e5486c` (vibrant pink)
+  - Secondary: `#308169` (teal green)
+  - Border: `#000000` (pure black)
+  - Shadow: `2px 2px 0px 0px #000000` (neobrutalist hard shadow)
+  - Chart colors: `#1b9aaa`, `#308169`, `#ffc63d`, `#ed6b67`, `#e5496d`
+- **Kit Mascot GIF**: Blinking animation at top (hosted in Loops or `/email-assets/kit-sprite-blink.gif`)
+- **7-Day Chart**: QuickChart.io for multi-line chart (last 7 days, all 6 metrics)
+- **Encouragement Section**:
+  - Weekly meme/GIF (same for all users in batch)
+  - Simple approach: 1-2 API calls per week total (Klipy or Giphy free tier)
+  - Memegen.link for custom memes: `https://api.memegen.link/images/<template>/<text_top>/<text_bottom>.png`
+- **CTA Button**: Links to `/[org-slug]/earn-premium`
+- **No Fake Stats**: Removed "surpassed X% of users" - stick to real numbers only
+
+**Email Structure** (Top to Bottom):
+1. Animated GIF Header (Kit blinking mascot - 120px x 120px)
+2. Hero Banner (neobrutalist style, primary color background)
+3. 6 Metric Cards (2 rows × 3 columns, color-coded by chart colors)
+4. 7-Day Trend Chart (QuickChart.io multi-line chart)
+5. Encouragement Section (weekly meme/GIF)
+6. CTA Button (neobrutalist style, links to earn-premium)
+
 **Stages**:
 
 **Stage 0: Pre-Phase Research**
@@ -1771,25 +1800,45 @@ See [Component Details](#7-component-details) section above for full tRPC proced
    - Color: green for positive, red for negative, gray for zero
 3. Replicate for all 6 metrics (followers, invites, comments, contentReach, profileViews, engageReach)
 
-**Stage 3: Chart Implementation**
-1. Research Loops chart options:
-   - Option A: Use Loops native chart component (if available)
-   - Option B: HTML table with styled cells (fallback)
-   - Option C: Link to chart image (generated server-side)
-2. Implement chosen option:
-   - X-axis: Last 8 week labels ({{ chartWeeks }} array)
-   - Y-axis: Metric values (6 lines, one per metric)
-   - Legend: Color-coded metric names
-3. Ensure mobile responsive (chart scales or scrolls)
+**Stage 3: Chart Implementation** ✅ DECIDED: QuickChart.io
+1. Use QuickChart.io for server-side chart generation:
+   - Free service, no API key needed for basic usage
+   - Generates chart URL with embedded config
+   - Returns PNG image perfect for email embedding
+2. Generate chart URL in backend:
+   ```typescript
+   const chartUrl = `https://quickchart.io/chart?c=${encodeURIComponent(JSON.stringify({
+     type: 'line',
+     data: {
+       labels: ['Jan 25', '26', '27', '28', '29', '30', '31'], // Last 7 days
+       datasets: [
+         {label: 'Followers', data: [49,49,49,49,49,49,49], borderColor: '#1b9aaa'},
+         {label: 'Invites', data: [11,11,11,11,11,11,11], borderColor: '#308169'},
+         {label: 'Comments', data: [2,9,9,7,7,7,7], borderColor: '#ffc63d'},
+         {label: 'Content Reach', data: [54,48,37,50,54,54,54], borderColor: '#ed6b67'},
+         {label: 'Profile Views', data: [83,82,82,83,83,83,83], borderColor: '#e5496d'},
+         {label: 'Engage Reach', data: [270,270,270,270,270,270,270], borderColor: '#1b9aaa'}
+       ]
+     },
+     options: {
+       scales: {y: {beginAtZero: false}}
+     }
+   }))}`;
+   ```
+3. Embed in email template: `<img src="{{chartUrl}}" alt="7-Day Trend" width="600" />`
+4. Ensure mobile responsive (max-width: 100%, height: auto)
 
 **Stage 4: Template Variables**
 1. Define all variables in Loops template:
-   - `userName`, `orgName`, `weekStart`, `weekEnd`
-   - 6 metrics: `followers`, `invites`, `comments`, `contentReach`, `profileViews`, `engageReach`
-   - 6 changes: `followersChange`, `invitesChange`, ... (format: "+5" or "-2")
-   - Chart arrays: `chartWeeks`, `chartFollowers`, `chartInvites`, ...
+   - **User info**: `userName`, `orgName`, `orgSlug`
+   - **Date range**: `weekStart`, `weekEnd`
+   - **6 metrics**: `followers`, `invites`, `comments`, `contentReach`, `profileViews`, `engageReach`
+   - **6 changes**: `followersChange`, `invitesChange`, `commentsChange`, `contentReachChange`, `profileViewsChange`, `engageReachChange` (format: "+5%" or "-2%")
+   - **Chart**: `chartUrl` (QuickChart.io generated URL)
+   - **Media**: `kitGifUrl` (blinking mascot), `encouragementGifUrl` or `memeUrl` (weekly same-for-all)
+   - **CTA**: `ctaUrl` (format: `https://engagekit.com/{{orgSlug}}/earn-premium`)
 2. Add fallback values for testing (e.g., `{{ followers | default: 0 }}`)
-3. Test template preview in Loops editor
+3. Test template preview in Loops editor with sample data
 
 **Stage 5: Mobile Optimization**
 1. Test template on mobile devices (Loops preview feature)

@@ -11,6 +11,7 @@ const envSchema = z.object({
   CLERK_SECRET_KEY: z.string(),
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string(),
   LOOPS_API_KEY: z.string(),
+  NEXT_PUBLIC_APP_URL: z.string().url().default("https://app.engagekit.io"),
 });
 
 // Skip validation during build/CI - env vars are only needed at runtime
