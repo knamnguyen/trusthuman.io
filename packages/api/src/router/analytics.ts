@@ -2,6 +2,7 @@ import { TRPCError } from "@trpc/server";
 import z from "zod";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { analyticsSyncInputSchema } from "../schema-validators";
 import { env } from "../utils/env";
 
 /**
@@ -9,8 +10,80 @@ import { env } from "../utils/env";
  * Handles analytics-related endpoints including email reports
  */
 
+/**
+ * Normalize date to start-of-day UTC (00:00:00)
+ * Ensures consistent date format for composite unique constraint @@unique([accountId, date])
+ *
+ * @param date - Date object or ISO string (optional, defaults to today)
+ * @returns Date object set to midnight UTC
+ *
+ * @example
+ * normalizeToStartOfDay(new Date('2025-02-08T15:30:00Z')) // Returns 2025-02-08T00:00:00Z
+ * normalizeToStartOfDay() // Returns today at 00:00:00Z
+ */
+function normalizeToStartOfDay(date?: Date | string): Date {
+  const d = date ? (typeof date === "string" ? new Date(date) : date) : new Date();
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+}
+
 export const analyticsRouter = () =>
   createTRPCRouter({
+    /**
+     * Sync Daily Analytics Metrics
+     * Upserts LinkedIn analytics data for the current account
+     * One record per account per day (based on normalized UTC date)
+     */
+    syncDailyMetrics: protectedProcedure
+      .input(analyticsSyncInputSchema)
+      .mutation(async ({ ctx, input }) => {
+        if (!ctx.activeAccount) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "No active account selected",
+          });
+        }
+
+        // Normalize date to start-of-day UTC (defaults to today if not provided)
+        const normalizedDate = normalizeToStartOfDay(input.date);
+
+        // Upsert: update if record exists for this account+date, create if new
+        const record = await ctx.db.linkedInAnalyticsDaily.upsert({
+          where: {
+            accountId_date: {
+              accountId: ctx.activeAccount.id,
+              date: normalizedDate,
+            },
+          },
+          update: {
+            followers: input.followers,
+            invites: input.invites,
+            comments: input.comments,
+            contentReach: input.contentReach,
+            profileViews: input.profileViews,
+            engageReach: input.engageReach,
+          },
+          create: {
+            accountId: ctx.activeAccount.id,
+            date: normalizedDate,
+            followers: input.followers,
+            invites: input.invites,
+            comments: input.comments,
+            contentReach: input.contentReach,
+            profileViews: input.profileViews,
+            engageReach: input.engageReach,
+          },
+        });
+
+        console.log(
+          "Analytics synced for account:",
+          ctx.activeAccount.id,
+          "date:",
+          normalizedDate.toISOString(),
+        );
+
+        return record;
+      }),
+
     /**
      * Send Test Analytics Email
      * Sends a test email with LinkedIn analytics metrics to the current user

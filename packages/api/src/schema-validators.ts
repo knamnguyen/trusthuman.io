@@ -81,3 +81,25 @@ export const styleSnapshotSchema = z
 // Type exports for dynamic style selection
 export type GenerateDynamicInput = z.infer<typeof generateDynamicInputSchema>;
 export type StyleSnapshot = z.infer<typeof styleSnapshotSchema>;
+
+/**
+ * Analytics Sync Schemas
+ *
+ * Used by the weekly analytics email feature to sync LinkedIn metrics
+ * from the extension to the database
+ */
+
+// Input schema for syncing daily LinkedIn analytics metrics
+export const analyticsSyncInputSchema = z.object({
+  followers: z.number().int().nonnegative(),
+  invites: z.number().int().nonnegative(),
+  comments: z.number().int().nonnegative(),
+  contentReach: z.number().int().nonnegative(),
+  profileViews: z.number().int().nonnegative(),
+  engageReach: z.number().int().nonnegative(),
+  // Optional date - defaults to today (normalized to start-of-day UTC)
+  date: z.date().or(z.string().datetime()).optional(),
+});
+
+// Type export for analytics sync input
+export type AnalyticsSyncInput = z.infer<typeof analyticsSyncInputSchema>;
