@@ -52,6 +52,9 @@ model LinkedInAccount {
   organizationMemberships OrganizationMember[]
   buildTargetListJobs     BuildTargetListJob[]
 
+  // Weekly analytics email feature
+  analyticsDaily LinkedInAnalyticsDaily[]
+
   @@index([organizationId])
   @@index([ownerId])
 }

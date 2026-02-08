@@ -25,4 +25,7 @@ model User {
   linkedInPostPreviews LinkedInPostPreview[]
   commentAnalyses      CommentAnalysis[]
   AutoCommentConfig    AutoCommentConfig[]
+
+  // Weekly analytics email preferences
+  emailPreferences UserEmailPreferences?
 }

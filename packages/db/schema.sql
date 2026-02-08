@@ -35,6 +35,35 @@ CREATE TYPE "TargetListStatus" AS ENUM ('BUILDING', 'COMPLETED');
 CREATE TYPE "BuildTargetListJobStatus" AS ENUM ('QUEUED', 'RUNNING', 'COMPLETED', 'FAILED');
 
 -- CreateTable
+CREATE TABLE "LinkedInAnalyticsDaily" (
+    "id" TEXT NOT NULL,
+    "accountId" TEXT NOT NULL,
+    "date" TIMESTAMP(3) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "followers" INTEGER NOT NULL,
+    "invites" INTEGER NOT NULL,
+    "comments" INTEGER NOT NULL,
+    "contentReach" INTEGER NOT NULL,
+    "profileViews" INTEGER NOT NULL,
+    "engageReach" INTEGER NOT NULL,
+
+    CONSTRAINT "LinkedInAnalyticsDaily_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "UserEmailPreferences" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "weeklyAnalyticsEnabled" BOOLEAN NOT NULL DEFAULT true,
+    "unsubscribedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "UserEmailPreferences_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "UserBrowserState" (
     "userId" TEXT NOT NULL,
     "state" TEXT NOT NULL,
@@ -517,6 +546,21 @@ CREATE TABLE "User" (
 );
 
 -- CreateIndex
+CREATE INDEX "LinkedInAnalyticsDaily_accountId_idx" ON "LinkedInAnalyticsDaily"("accountId");
+
+-- CreateIndex
+CREATE INDEX "LinkedInAnalyticsDaily_date_idx" ON "LinkedInAnalyticsDaily"("date");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "LinkedInAnalyticsDaily_accountId_date_key" ON "LinkedInAnalyticsDaily"("accountId", "date");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "UserEmailPreferences_userId_key" ON "UserEmailPreferences"("userId");
+
+-- CreateIndex
+CREATE INDEX "UserEmailPreferences_userId_idx" ON "UserEmailPreferences"("userId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "BrowserInstance_hyperbrowserSessionId_key" ON "BrowserInstance"("hyperbrowserSessionId");
 
 -- CreateIndex
@@ -635,6 +679,12 @@ CREATE UNIQUE INDEX "User_primaryEmailAddress_key" ON "User"("primaryEmailAddres
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_stripeCustomerId_key" ON "User"("stripeCustomerId");
+
+-- AddForeignKey
+ALTER TABLE "LinkedInAnalyticsDaily" ADD CONSTRAINT "LinkedInAnalyticsDaily_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "UserEmailPreferences" ADD CONSTRAINT "UserEmailPreferences_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "UserBrowserState" ADD CONSTRAINT "UserBrowserState_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
