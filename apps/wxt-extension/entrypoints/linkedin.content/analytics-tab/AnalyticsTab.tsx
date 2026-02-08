@@ -10,8 +10,10 @@ import {
 } from "lucide-react";
 
 import { Button } from "@sassy/ui/button";
+import { toast } from "@sassy/ui/toast";
 
 import type { DataSnapshot } from "../utils/data-fetch-mimic/data-collector";
+import { getTrpcClient } from "@/lib/trpc/client";
 import { useAccountStore } from "../stores/account-store";
 import {
   DEFAULT_AUTO_FETCH_INTERVAL_HOURS,
@@ -157,6 +159,41 @@ export function AnalyticsTab() {
     error: contentImpressionsError,
     refetch: contentImpressionsRefetch,
   } = useContentImpressionsHistory();
+
+  // State for send test email button
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+
+  // Handle send test email button click
+  const handleSendTestEmail = async () => {
+    setIsSendingEmail(true);
+
+    try {
+      // Gather metrics from current analytics data
+      const metrics = {
+        followers: followersLatest?.data.totalFollowers ?? 0,
+        invites: inviteCountLatest?.data.totalInvites ?? 0,
+        comments: commentsLatest?.data.totalComments ?? 0,
+        contentReach: contentImpressionsLatest?.data.totalImpressions ?? 0,
+        profileView: profileViewsLatest?.data.totalViews ?? 0, // Note: singular per template
+        engageReach: profileImpressionsLatest?.data.totalImpressions ?? 0,
+      };
+
+      // Call tRPC mutation directly using getTrpcClient() pattern
+      const trpc = getTrpcClient();
+      await trpc.analytics.sendTestAnalyticsEmail.mutate(metrics);
+
+      toast.success("Test email sent! Check your inbox.", {
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error("Error sending test email:", error);
+      toast.error(`Failed to send email: ${error instanceof Error ? error.message : "Unknown error"}`, {
+        duration: 5000,
+      });
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
 
   // Get time range in days for percentage calculations
   const timeRangeDays = useMemo(() => {
@@ -433,6 +470,17 @@ export function AnalyticsTab() {
           ))}
         </select>
       </div>
+
+      {/* Send Test Email Button */}
+      <Button
+        onClick={handleSendTestEmail}
+        disabled={isSendingEmail}
+        variant="outline"
+        className="w-full"
+      >
+        <Mail className="mr-2 h-4 w-4" />
+        {isSendingEmail ? "Sending..." : "Send Test Email"}
+      </Button>
 
       {/* DEV ONLY - Action Buttons (commented out for production) */}
       {/* <div className="flex gap-2">

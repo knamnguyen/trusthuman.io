@@ -2,6 +2,7 @@ import { createTRPCRouter } from "../trpc";
 import { accountRouter } from "./account";
 import { achievementsRouter } from "./achievements";
 import { aiCommentsRouter } from "./ai-comments";
+import { analyticsRouter } from "./analytics";
 import { autoCommentRouter } from "./autocomment";
 import { commentRouter } from "./comment";
 // import { blacklistRouter } from "./blacklist";
@@ -41,6 +42,7 @@ export const appRouter = createTRPCRouter({
   settings: settingsRouter(),
   achievements: achievementsRouter(),
   socialReferral: socialReferralRouter(),
+  analytics: analyticsRouter(),
 });
 
 // export type definition of API
