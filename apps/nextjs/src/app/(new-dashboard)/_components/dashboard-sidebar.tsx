@@ -90,55 +90,51 @@ export function DashboardSidebar() {
   const params = useParams<{ orgSlug?: string; accountSlug?: string }>();
   const { orgSlug, accountSlug } = params;
 
-  const isInsideAccount = accountSlug !== undefined;
+  const items = useMemo(() => {
+    let prefix = `/${orgSlug}`;
 
-  const accountItems = useMemo(() => {
-    if (!isInsideAccount) return [];
+    if (accountSlug !== undefined) {
+      prefix += `/${accountSlug}`;
+    }
 
     return [
       {
+        title: "Accounts",
+        url: `${prefix}/accounts`,
+        icon: UserRoundIcon,
+      },
+      {
         title: "Dashboard",
-        url: `/${orgSlug}/${accountSlug}`,
+        url: `${prefix}`,
         icon: LayoutDashboardIcon,
       },
       {
         title: "History",
-        url: `/${orgSlug}/${accountSlug}/history`,
+        url: `${prefix}/history`,
         icon: HistoryIcon,
       },
       {
         title: "Target List",
-        url: `/${orgSlug}/${accountSlug}/target-list`,
+        url: `${prefix}/target-list`,
         icon: UsersRoundIcon,
       },
       {
         title: "Personas",
-        url: `/${orgSlug}/${accountSlug}/personas`,
+        url: `${prefix}/personas`,
         icon: UsersIcon,
-      },
-    ];
-  }, [orgSlug, accountSlug, isInsideAccount]);
-
-  const orgItems = useMemo(
-    () => [
-      {
-        title: "Accounts",
-        url: `/${orgSlug}/accounts`,
-        icon: UserRoundIcon,
       },
       {
         title: "Earn Premium",
-        url: `/${orgSlug}/earn-premium`,
+        url: `${prefix}/earn-premium`,
         icon: GiftIcon,
       },
       {
         title: "Subscription",
-        url: `/${orgSlug}/settings`,
+        url: `${prefix}/settings`,
         icon: SettingsIcon,
       },
-    ],
-    [orgSlug],
-  );
+    ];
+  }, [orgSlug, accountSlug]);
 
   return (
     <Sidebar collapsible="icon" className="relative">
@@ -170,64 +166,42 @@ export function DashboardSidebar() {
       <AccountSwitcher />
 
       <SidebarContent>
-        {isInsideAccount ? (
-          <>
-            {/* Account-level navigation */}
-            <SidebarGroup>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {accountItems.map((item) => (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild>
-                        <Link href={item.url}>
-                          <item.icon />
-                          <span className="font-medium">{item.title}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
+        {/* Account-level navigation */}
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {items.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <Link href={item.url}>
+                      <item.icon />
+                      <span className="font-medium">{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
-            {/* Back to org link */}
-            <SidebarGroup className="mt-auto">
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild>
-                      <Link
-                        href={`/${orgSlug}/accounts`}
-                        className="text-muted-foreground"
-                      >
-                        <ArrowLeftIcon />
-                        <span>Organization Settings</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </>
-        ) : (
-          /* Organization-level navigation (when not inside an account) */
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {orgItems.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      <Link href={item.url}>
-                        <item.icon />
-                        <span className="font-medium">{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
+        {/* Back to org link */}
+        <SidebarGroup className="mt-auto">
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link
+                    href={`/${orgSlug}/accounts`}
+                    className="text-muted-foreground"
+                  >
+                    <ArrowLeftIcon />
+                    <span>Organization Settings</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter>
