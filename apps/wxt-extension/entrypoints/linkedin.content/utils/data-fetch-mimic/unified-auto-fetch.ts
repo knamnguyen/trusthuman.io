@@ -15,6 +15,7 @@ import { fetchProfileViews } from "./linkedin-personal-profile-view-fetcher";
 import { fetchProfileImpressions } from "./linkedin-profile-impressions-fetcher";
 import { profileImpressionsCollector } from "./profile-impressions-collector";
 import { profileViewsCollector } from "./profile-views-collector";
+import { syncToDatabase } from "./sync-to-database";
 
 const MAX_RETRIES = 3;
 const BASE_DELAY_MS = 1000; // 1 second
@@ -124,6 +125,12 @@ export async function autoFetchAllMetrics(accountId: string): Promise<boolean> {
       await setLastUnifiedFetchTime(Date.now());
 
       console.log("✅ All 6 metrics fetched and saved successfully");
+
+      // Sync to database (silent failure - don't block on errors)
+      syncToDatabase(accountId).catch((err) => {
+        console.error("⚠️ Database sync failed (non-blocking):", err);
+      });
+
       return true;
     } catch (error) {
       console.error(`❌ Attempt ${attempt}/${MAX_RETRIES} failed:`, error);

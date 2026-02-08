@@ -11,6 +11,8 @@ Build an automated weekly email system that sends LinkedIn analytics summaries t
 
 **Status**: ⏳ PLANNED (Updated with architectural improvements)
 
+**Demo Status**: ✅ COMPLETED - Quick demo successfully validated Loops integration, email template design, and tRPC patterns (See: `process/plans/completed/loops-email-demo_PLAN_07-02-26.md`)
+
 **IMPORTANT**: This plan follows strict **Pre-Phase Research** and **Post-Phase Testing** paradigm at every RFC. Each phase begins with research (existing patterns, similar implementations, potential blockers) and ends with comprehensive testing (acceptance criteria verification, edge cases, error scenarios).
 
 ---
@@ -36,7 +38,13 @@ Build an automated weekly email system that sends LinkedIn analytics summaries t
 **Revised approach**: Extension sends only daily records array
 **Rationale**: Simpler payload, simpler backend logic, single source of truth. Backend computes weekly aggregates when needed for emails.
 
----
+### ✅ Keep It Functional (No Over-Engineering)
+**Core Requirements**:
+- ✅ **Auto-sync on LinkedIn load**: Data syncs **immediately when user opens LinkedIn** (not when sidebar opens) - happens automatically after fetch completes
+- ✅ **Research chrome.storage.local patterns FIRST**: Multiple snapshots per day exist - must map correctly to single daily DB record (critical research task in RFC-003)
+- ✅ **Bun tests for critical components**: DBOS workflow (simulate real usage), Loops email integration - all tests must include cleanup logic
+- ✅ **No email preference UI**: Users already agreed to emails on signup. Just webhook to sync Loops unsubscribe → database (no toggle, no settings page)
+- ✅ **Focus on functionality**: Make it work reliably, avoid fancy features
 
 ---
 
@@ -65,20 +73,23 @@ EngageKit users track their LinkedIn engagement through the WXT browser extensio
 **In-scope**:
 - Database schema for storing LinkedIn analytics (daily granularity only, weekly computed on-demand)
 - Analytics tied to LinkedInAccount (persists even if org disconnects)
+- **Auto-sync on LinkedIn load**: Extension syncs data **immediately when user opens LinkedIn** (after fetch completes, no sidebar interaction needed)
+- **Research chrome.storage.local patterns**: Understand how multiple daily snapshots map to single DB record
 - Extension data sync endpoint (POST analytics data after fetch)
-- DBOS scheduled workflow (runs every Tuesday at 10 AM UTC)
-- Loops email integration (send email, manage subscriptions)
-- UserEmailPreferences table (feature-specific opt-out)
+- DBOS scheduled workflow (runs every Tuesday at 10 AM UTC) with **bun tests simulating real usage**
+- Loops email integration (send email, manage subscriptions) with **bun tests**
 - Email template (6 metric cards + weekly chart, ChromeStats style)
 - Test email button in analytics tab (preview functionality)
 - Backfill support (sync historical data from extension local storage)
 - Organization-level distribution (all org members get same LinkedIn account analytics)
 - Webhook endpoint (sync Loops unsubscribe events to database)
+- **All tests include cleanup logic**
 
 **Out-of-scope (V1)**:
 - Real-time email triggers (only weekly scheduled)
 - Per-user analytics (only per-organization LinkedIn account)
 - Email customization (users can't choose metrics or frequency)
+- **Email preference UI/toggle** (users already agreed on signup; just webhook for unsubscribe)
 - Mobile app integration (extension-only for data sync)
 - Advanced charts (only simple line chart for weekly trends)
 - A/B testing email content
@@ -93,30 +104,30 @@ EngageKit users track their LinkedIn engagement through the WXT browser extensio
 
 **Test:** Tables visible in database, migrations applied successfully, indexes exist, test aggregation query (GROUP BY week) performs well (<100ms), no errors in Prisma schema validation.
 
-### Phase 4-6: Extension Data Sync (tRPC Endpoint, Backfill Logic, Integration)
-**What happens:** Create tRPC mutation for syncing analytics data from extension, implement upsert logic for daily/weekly records, add backfill support for historical data, integrate sync call into extension's data fetch flow.
+### Phase 4-6: Extension Data Sync (Research chrome.storage, tRPC Endpoint, Auto-Sync Integration)
+**What happens:** **CRITICAL RESEARCH**: Examine chrome.storage.local analytics structure (multiple snapshots per day → single daily DB record mapping). Create tRPC mutation for syncing analytics data, implement upsert logic handling multiple daily snapshots, add backfill support, integrate auto-sync on LinkedIn load (NOT sidebar open).
 
-**Test:** Extension calls sync endpoint after fetch, data appears in database, backfill works for historical data, no duplicate records created.
+**Test:** Extension auto-syncs when LinkedIn loads, data appears in database, multiple daily snapshots aggregate correctly, backfill works, no duplicate records, **bun test simulates extension sync flow with cleanup**.
 
-### Phase 7-8: DBOS Workflow (Cron Job, Query Logic)
-**What happens:** Create DBOS scheduled workflow that runs every Tuesday at 10 AM UTC, query organizations with new analytics data (lastSyncedAt > lastEmailSentAt), fetch all org members with email preferences enabled.
+### Phase 7-8: DBOS Workflow (Cron Job, Query Logic, Bun Testing)
+**What happens:** Create DBOS scheduled workflow that runs every Tuesday at 10 AM UTC, query organizations with new analytics data, fetch all org members. **Create bun test script that simulates real workflow execution** (seed test data, trigger workflow, verify emails sent, cleanup).
 
-**Test:** Workflow triggers on schedule, queries return correct organizations, logs show execution, no errors in DBOS runtime.
+**Test:** Workflow triggers on schedule, queries return correct organizations, **bun test passes with real-use simulation**, cleanup logic removes test data, no errors in DBOS runtime.
 
-### Phase 9-11: Loops Integration (Email Template, Send Logic, Webhook)
-**What happens:** Create Loops email template with 6 metric cards and chart, implement email sending logic via Loops API, set up "Weekly Analytics" mailing list, create webhook endpoint to handle unsubscribe events.
+### Phase 5-7: Loops Integration (Email Template, Send Logic, Webhook, Bun Testing)
+**What happens:** Create Loops email template with 6 metric cards and chart, implement email sending logic via Loops API, set up "Weekly Analytics" mailing list, create webhook endpoint to handle unsubscribe events. **Create bun test for Loops integration** (send test email, verify receipt, test webhook, cleanup).
 
-**Test:** Email sends successfully, template renders correctly, mailing list created, webhook receives and processes unsubscribe events.
+**Test:** Email sends successfully, template renders correctly, mailing list created, webhook receives and processes unsubscribe events, **bun test verifies Loops API integration with cleanup**.
 
-### Phase 12-13: Test Email Feature (UI Button, Preview Logic)
+### Phase 8: Test Email Feature (UI Button, Preview Logic)
 **What happens:** Add "Send Test Email" button to analytics tab in extension sidebar, implement test email logic (sends to current user only with current week's data), add loading/success/error states.
 
 **Test:** Button visible in analytics tab, clicking sends test email to user, loading state appears, success toast shown, test email received in inbox.
 
-### Phase 14-15: Email Preference Management (UI Toggle, API Integration)
-**What happens:** Add email preference toggle in app settings, create tRPC mutations for updating preferences, sync with Loops mailing list API (add/remove user), implement preference checks in cron job.
+### Phase 9: Testing & QA (Comprehensive Testing)
+**What happens:** Write unit tests for all helpers, tRPC integration tests, DBOS workflow tests with bun. Run full test suite, manual E2E testing, email client testing, performance testing, security testing.
 
-**Test:** Toggle works in UI, preference saved to database, Loops API synced, cron job respects preferences.
+**Test:** All tests pass, no critical bugs, email renders correctly across clients (Gmail, Outlook, Apple Mail), workflow performs well with large datasets, authorization and security verified.
 
 ### Expected Outcome
 - Every Tuesday at 10 AM UTC, organizations with new LinkedIn analytics data receive emails
@@ -902,6 +913,103 @@ const orgs = await db.organization.findMany({
 └──────────────────────────────────────────────────────────┘
 ```
 
+### Email Subject Line Strategy
+
+**Goal**: Optimize for open rates using emotional triggers, personalization, and numbers
+
+**Sender Configuration**:
+- **From**: `LinkedIn Stats by EngageKit <hello@engagekit.io>`
+- **Reply-To**: `hello@engagekit.io`
+- **Subject**: Dynamic (see patterns below)
+
+**Key Stats** (Research-backed):
+- 57% more opens with numbers in subject lines
+- 29% higher open rate with personalization (first name)
+- 56% increase with emojis
+- Optimal length: 3-8 words, under 70 characters
+
+**Selection Algorithm**:
+
+```typescript
+// Step 1: Find metric with highest absolute growth
+const topMetric = Object.entries(percentageChanges)
+  .filter(([_, value]) => value !== null && !isNaN(value))
+  .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))[0];
+
+const [metricKey, growth] = topMetric;
+
+// Step 2: Select emotional category based on growth
+if (growth >= 20) {
+  return CELEBRATION;  // "Congrats Kelly, +45%! 🎉"
+} else if (growth >= 5 && growth < 20) {
+  return CHALLENGE;    // "Keep pushing, Kelly! +12% 💪"
+} else if (growth < 0 && growth >= -20) {
+  return EMPATHY;      // "Don't be sad, Kelly... -8%"
+} else if (growth < -20) {
+  return URGENCY;      // "Uh oh, Kelly. Down -35% 📉"
+} else if (totalActivities >= 50) {
+  return MILESTONE;    // "Kelly, 68 LinkedIn wins! 🎯"
+} else {
+  return CURIOSITY;    // "Interesting week, Kelly 🤔"
+}
+
+// Step 3: Randomly select pattern from category (prevents repetition)
+```
+
+**Pattern Categories** (8 categories):
+
+1. **CELEBRATION** (Growth ≥20%):
+   - `Congrats ${firstName}, +${growth}% this week! 🎉`
+   - `${firstName}, you're crushing it! +${growth}% 🔥`
+   - `Amazing week, ${firstName}! +${growth}% 🚀`
+   - `${firstName}, new record! +${growth}% 📈`
+   - `You're on fire, ${firstName}! +${growth}% 💪`
+
+2. **CHALLENGE** (Growth 5-20%):
+   - `Did you beat last week, ${firstName}? 💪`
+   - `${firstName}, keep pushing! +${growth}%`
+   - `Almost there, ${firstName}! +${growth}%`
+   - `Can you do better, ${firstName}? +${growth}%`
+
+3. **EMPATHY** (Growth -20% to 0%):
+   - `Don't be sad, ${firstName}... ${metricName} -${decline}%`
+   - `Tough week, ${firstName}? ${metricName} down ${decline}%`
+   - `${firstName}, let's bounce back! -${decline}% last week`
+   - `It happens, ${firstName}. -${decline}% this week`
+
+4. **URGENCY** (Growth < -20%):
+   - `Uh oh, ${firstName}. ${metricName} dropped ${decline}%`
+   - `${firstName}, we need to talk... -${decline}% 📉`
+   - `Don't let it slide, ${firstName}! -${decline}%`
+
+5. **MILESTONE** (Total activities ≥50):
+   - `${firstName}, ${totalActivities} LinkedIn wins this week!`
+   - `${totalActivities} activities! Keep going, ${firstName}`
+   - `You hit ${followers} followers, ${firstName}! 🎯`
+
+6. **CURIOSITY** (Mixed results):
+   - `${firstName}, you won't believe this... 👀`
+   - `Interesting week, ${firstName} 🤔`
+   - `${firstName}, check this out...`
+   - `Hmm, ${firstName}. Interesting. 💭`
+
+7. **HUMOR** (Low activity):
+   - `${firstName}, LinkedIn ghost mode? 👻`
+   - `Did LinkedIn break, ${firstName}? 🤷`
+   - `Still alive, ${firstName}? 😴`
+   - `${firstName}, your LinkedIn needs you! 💼`
+
+8. **NEUTRAL** (Fallback):
+   - `${firstName}'s LinkedIn stats 📊`
+   - `This week's report, ${firstName} 📈`
+   - `Stats are in, ${firstName}! 🎯`
+
+**Implementation Location**: `packages/api/src/lib/analytics/subject-line.ts`
+
+**Pattern Inspired By**: Duolingo's email strategy (emotional triggers, variety, brevity)
+
+---
+
 ### Webhook Endpoint
 
 **Location**: `apps/nextjs/src/app/api/webhooks/loops/unsubscribe/route.ts`
@@ -1003,20 +1111,41 @@ See [Component Details](#7-component-details) section above for full tRPC proced
 
 ## 13. Phased Delivery Plan
 
+### Demo Completed (Pre-Implementation Validation)
+
+✅ **Quick Demo** (COMPLETED - February 7, 2026)
+- **Purpose**: Validate Loops integration, email template design, and tRPC patterns before full implementation
+- **What was built**: Test button in analytics tab → sends email with 6 metrics → Loops transactional API
+- **Key learnings**:
+  - ✅ Loops integration verified (Template ID: `cmlc5hhdz1ebf0i25hqomb3zf`)
+  - ✅ tRPC pattern confirmed: Use `getTrpcClient()` directly in async functions (NOT React hooks)
+  - ✅ Analytics data structure validated (6 metrics via custom hooks)
+  - ✅ Email template design approved by client
+  - ✅ Analytics router created: `packages/api/src/router/analytics.ts`
+- **Files created**:
+  - `packages/api/src/router/analytics.ts` - Analytics router with `sendTestAnalyticsEmail` mutation
+  - Modified: `apps/wxt-extension/entrypoints/linkedin.content/analytics-tab/AnalyticsTab.tsx` - Test button added
+- **Reusable for full implementation**:
+  - Loops template (same template ID will be used)
+  - Analytics router (extend with new mutations)
+  - tRPC pattern (apply to all extension mutations)
+- **Demo plan archived**: `process/plans/completed/loops-email-demo_PLAN_07-02-26.md`
+
+---
+
 ### Current Status
 
-⏳ **Phase 1**: Database Schema & Migrations (PLANNED)
-⏳ **Phase 2**: tRPC Sync Endpoint (PLANNED)
-⏳ **Phase 3**: Extension Integration (Data Sync) (PLANNED)
+✅ **Phase 1**: Database Schema & Migrations (COMPLETED - Feb 8, 2026)
+✅ **Phase 2**: tRPC Sync Endpoint (COMPLETED - Feb 8, 2026)
+✅ **Phase 3**: Extension Integration (Data Sync) (COMPLETED - Feb 8, 2026)
 ⏳ **Phase 4**: DBOS Scheduled Workflow (PLANNED)
-⏳ **Phase 5**: Loops Email Template (PLANNED)
-⏳ **Phase 6**: Email Sending Logic (PLANNED)
+⏳ **Phase 5**: Loops Email Integration (PARTIALLY VALIDATED - demo completed, need full implementation)
+⏳ **Phase 6**: Email Sending Logic (PARTIALLY VALIDATED - test mutation created, need scheduled logic)
 ⏳ **Phase 7**: Webhook Endpoint (Unsubscribe Handling) (PLANNED)
-⏳ **Phase 8**: Test Email Button (Extension UI) (PLANNED)
-⏳ **Phase 9**: Email Preference Toggle (App Settings) (PLANNED)
-⏳ **Phase 10**: Testing & QA (PLANNED)
+⏳ **Phase 8**: Test Email Button (✅ COMPLETED in demo - may need refinement)
+⏳ **Phase 9**: Testing & QA (PLANNED)
 
-**Immediate Next Steps**: Phase 1 - Database Schema & Migrations
+**Immediate Next Steps**: Phase 4 - DBOS Scheduled Workflow
 
 ---
 
@@ -1026,19 +1155,17 @@ See [Component Details](#7-component-details) section above for full tRPC proced
 
 - [M-001] LinkedInAnalyticsWeekly table with 6 metrics
 - [M-002] LinkedInAnalyticsDaily table for granular data
-- [M-003] UserEmailPreferences table with weeklyAnalytics field
-- [M-004] tRPC syncWeeklyData mutation (extension → backend)
-- [M-005] Backfill support for historical data
-- [M-006] DBOS scheduled workflow (Tuesday 10 AM UTC)
-- [M-007] Query logic for orgs with new data
-- [M-008] Loops email template with 6 metric cards
-- [M-009] Weekly trend chart (last 8 weeks)
-- [M-010] Email sending logic via Loops API
-- [M-011] Loops mailing list creation ("Weekly Analytics")
-- [M-012] Webhook endpoint for unsubscribe events
-- [M-013] Test email button in analytics tab
-- [M-014] Email preference toggle in app settings
-- [M-015] Organization-level email distribution (all members)
+- [M-003] tRPC syncWeeklyData mutation (extension → backend)
+- [M-004] Backfill support for historical data
+- [M-005] DBOS scheduled workflow (Tuesday 10 AM UTC)
+- [M-006] Query logic for orgs with new data
+- [M-007] Loops email template with 6 metric cards
+- [M-008] Weekly trend chart (last 8 weeks)
+- [M-009] Email sending logic via Loops API
+- [M-010] Loops mailing list creation ("Weekly Analytics")
+- [M-011] Webhook endpoint for unsubscribe events
+- [M-012] Test email button in analytics tab
+- [M-013] Organization-level email distribution (all members)
 
 ### Should-Have (S)
 
@@ -1076,6 +1203,24 @@ See [Component Details](#7-component-details) section above for full tRPC proced
 **Summary**: Create `LinkedInAnalyticsDaily` table (single table, tied to LinkedInAccount) and `UserEmailPreferences` table with proper relationships and indexes. Weekly aggregates computed on-demand via SQL GROUP BY.
 
 **Dependencies**: None
+
+**Status**: ✅ COMPLETED (Feb 8, 2026)
+
+**Implementation Notes**:
+- Created `packages/db/prisma/models/analytics.prisma` with both tables
+- `LinkedInAnalyticsDaily`: Tied to LinkedInAccount with `accountId` foreign key
+- `UserEmailPreferences`: Tied to User with `userId` foreign key
+- Used `pnpm db:push` (not migrations) per user preference
+- Composite unique constraint: `@@unique([accountId, date])`
+- Indexes: accountId, date for query performance
+- Relations added to User and LinkedInAccount models
+
+**Files Created**:
+- `packages/db/prisma/models/analytics.prisma`
+
+**Files Modified**:
+- `packages/db/prisma/models/user.prisma` - Added emailPreferences relation
+- `packages/db/prisma/models/linkedin-account.prisma` - Added analyticsDaily relation
 
 **Stages**:
 
@@ -1168,6 +1313,21 @@ See [Component Details](#7-component-details) section above for full tRPC proced
 **Summary**: Create tRPC mutation for extension to sync daily analytics data to backend (single table, no weekly aggregates).
 
 **Dependencies**: RFC-001 (Database Schema)
+
+**Status**: ✅ COMPLETED (Feb 8, 2026)
+
+**Implementation Notes**:
+- Created `analyticsSyncInputSchema` in `packages/api/src/schema-validators.ts`
+- Added `syncDailyMetrics` mutation to `packages/api/src/router/analytics.ts`
+- **Simplified from plan**: Single-record sync (not batch) - extension syncs today's data only
+- **Auth approach**: Uses `ctx.activeAccount` from middleware (no linkedInAccountId param)
+- **Date handling**: Optional date parameter, defaults to today, normalized to start-of-day UTC
+- **Return value**: Full `LinkedInAnalyticsDaily` record for transparency
+- Helper function: `normalizeToStartOfDay()` ensures consistent date format for composite unique constraint
+
+**Files Modified**:
+- `packages/api/src/schema-validators.ts` - Added analytics sync input schema
+- `packages/api/src/router/analytics.ts` - Added syncDailyMetrics endpoint
 
 **Stages**:
 
@@ -1332,27 +1492,61 @@ See [Component Details](#7-component-details) section above for full tRPC proced
 
 ### RFC-003: Extension Integration (Data Sync)
 
-**Summary**: Integrate data sync call into extension's data fetch flow.
+**Summary**: Integrate auto-sync on LinkedIn load (NOT sidebar open). **CRITICAL**: Research chrome.storage.local patterns - multiple snapshots per day must map correctly to single daily DB record.
 
 **Dependencies**: RFC-002 (tRPC Sync Endpoint)
 
+**Status**: ✅ COMPLETED (Feb 8, 2026)
+
+**Implementation Notes**:
+- Created `sync-to-database.ts` with smart backfill detection
+- Backfill strategy: Aggregate by date (YYYY-MM-DD), take latest snapshot per day
+- Backfill-done flag: `local:analytics-backfill-done-{accountId}` prevents re-backfilling
+- First sync: Backfills all historical data (up to 365 days) via `backfillAnalytics` endpoint
+- Subsequent syncs: Only sync today's data via `syncDailyMetrics` endpoint
+- Auto-sync integration: Hooked into `unified-auto-fetch.ts` after successful fetch (line 129-131)
+- Force Sync button added to Analytics Tab for testing
+- Updated all 6 collectors from 90 to 365 days storage (1 year retention)
+- Date normalization: Convert YYYY-MM-DD to ISO datetime (YYYY-MM-DDTHH:mm:ss.sssZ)
+- Tested: Backfill working (4 days synced), subsequent syncs only update today, upsert prevents duplicates
+
+**Files Created**:
+- `apps/wxt-extension/.../sync-to-database.ts` - Smart sync helper with backfill detection
+
+**Files Modified**:
+- `apps/wxt-extension/.../unified-auto-fetch.ts` - Added sync call after successful fetch
+- `apps/wxt-extension/.../AnalyticsTab.tsx` - Added Force Sync button
+- All 6 collector files - Updated maxSnapshots from 90 to 365
+
 **Stages**:
 
-**Stage 0: Pre-Phase Research**
-1. Read extension's data fetch logic (`useDataFetcher.ts`)
-2. Understand when fetches happen (every 2 hours, on LinkedIn page load)
-3. Review how extension currently calls tRPC (existing examples)
-4. Understand chrome.storage.local structure (how data is stored)
-5. Present proposed integration points to user
+**Stage 0: Pre-Phase Research** ⚠️ **CRITICAL RESEARCH TASK**
+1. **Read chrome.storage.local analytics structure**:
+   - Examine how analytics data is currently stored
+   - **CRITICAL**: User mentioned "one day might have multiple data snapshots"
+   - Understand snapshot format, frequency, and aggregation strategy
+   - Determine how to map multiple snapshots → single daily DB record
+   - Answer: Should we SUM metrics? Take latest? Average?
+2. Read extension's data fetch logic (`useDataFetcher.ts` or similar):
+   - When does fetch happen? (every 2 hours, on page load?)
+   - Where does fetch complete? (exact function/line)
+3. **Identify LinkedIn load trigger** (NOT sidebar open):
+   - Find where extension detects LinkedIn page load
+   - Verify this is the correct place to trigger sync
+4. Review how extension currently calls tRPC (existing mutations)
+5. **Present findings to user for approval**: chrome.storage structure, aggregation strategy, sync trigger location
 
-**Stage 1: Data Transformation Helper**
+**Stage 1: Data Transformation Helper (Handle Multiple Daily Snapshots)**
 1. Create helper function `transformLocalStorageToSyncPayload()`:
-   - Input: chrome.storage.local analytics data
-   - Output: `{ weeklyData, dailyData }` matching tRPC schema
-2. Calculate week boundaries (Saturday to Friday)
-3. Aggregate daily data into weekly totals
-4. Handle partial weeks (current week may be incomplete)
-5. Add unit tests for transformation
+   - Input: chrome.storage.local analytics data (with multiple snapshots per day)
+   - Output: `{ linkedInAccountId, dailyData: [] }` matching tRPC schema
+   - **Critical logic**: Aggregate multiple snapshots per day into single daily record
+     - Strategy (based on research findings): Likely take LATEST snapshot per day (most recent metrics)
+     - Or SUM if metrics are incremental (depends on chrome.storage structure)
+2. Group snapshots by date (YYYY-MM-DD)
+3. For each date, apply aggregation strategy (latest/sum/average based on Stage 0 findings)
+4. Handle partial days (current day may have incomplete data)
+5. Add unit tests for transformation (test multiple snapshots → single daily record)
 
 **Stage 2: Backfill Logic**
 1. Create helper function `shouldBackfill()`:
@@ -1364,22 +1558,36 @@ See [Component Details](#7-component-details) section above for full tRPC proced
    - Limit to last 6 months (avoid huge payloads)
 3. Store `lastBackfillTimestamp` to prevent re-backfilling
 
-**Stage 3: Sync Integration**
-1. Find where data fetch completes in extension code
+**Stage 3: Auto-Sync Integration (LinkedIn Load, NOT Sidebar Open)**
+1. **Find LinkedIn page load event** (NOT sidebar open trigger):
+   - Hook into extension's content script initialization
+   - Ensure sync happens automatically when user opens LinkedIn
+   - Verify this fires AFTER data fetch completes
 2. Add async call to `syncAnalyticsData()` after fetch:
    ```typescript
    const syncAnalyticsData = async () => {
      const needsBackfill = await shouldBackfill();
      const payload = needsBackfill
-       ? await getHistoricalData()
-       : await getCurrentWeekData();
+       ? await getHistoricalData()  // All historical daily records
+       : await getCurrentDailyData();  // Only recent daily records
 
-     await trpc.analytics.syncWeeklyData.mutate(payload);
+     await trpc.analytics.syncAnalyticsData.mutate({
+       linkedInAccountId: currentAccountId,  // Extension knows this
+       dailyData: payload  // Array of daily records (already aggregated)
+     });
      await updateLastSyncTimestamp();
    };
+
+   // Call on LinkedIn load (after fetch completes)
+   onLinkedInLoad(() => {
+     syncAnalyticsData().catch(err => {
+       console.error('Analytics sync failed:', err);
+       // Don't show error to user, just log
+     });
+   });
    ```
-3. Fire-and-forget pattern (don't block UI on sync)
-4. Add error handling (log errors, don't show to user)
+3. **Fire-and-forget pattern**: Don't block UI on sync, don't await, no loading states
+4. Add error handling (log errors, don't show to user, don't break extension)
 
 **Stage 4: Testing**
 1. Test first sync with backfill (check all historical data syncs)
@@ -2020,188 +2228,15 @@ See [Component Details](#7-component-details) section above for full tRPC proced
 
 **What's Functional Now**: Users can preview weekly email before Tuesday send
 
-**Ready For**: RFC-009 (Email Preference Toggle)
+**Ready For**: RFC-009 (Testing & QA)
 
 ---
 
-### RFC-009: Email Preference Toggle (App Settings)
-
-**Summary**: Add UI toggle in app settings for users to opt-in/out of weekly emails.
-
-**Dependencies**: RFC-008 (Test Email Button)
-
-**Stages**:
-
-**Stage 0: Pre-Phase Research**
-1. Find app settings page location (`apps/nextjs/src/app/...`)
-2. Review existing settings patterns (toggle components)
-3. Understand how settings are saved (tRPC mutations?)
-4. Review Loops API for adding/removing users from mailing lists
-5. Present proposed settings UI to user
-
-**Stage 1: tRPC Mutation**
-1. Create `updateEmailPreference` mutation:
-   ```typescript
-   updateEmailPreference: protectedProcedure
-     .input(z.object({
-       weeklyAnalytics: z.boolean()
-     }))
-     .mutation(async ({ ctx, input }) => {
-       const userId = ctx.user.id;
-       const userEmail = ctx.user.email;
-
-       // Update database
-       await db.userEmailPreferences.upsert({
-         where: { userId },
-         update: { weeklyAnalytics: input.weeklyAnalytics },
-         create: { userId, weeklyAnalytics: input.weeklyAnalytics }
-       });
-
-       // Sync with Loops mailing list
-       const mailingListId = process.env.LOOPS_WEEKLY_ANALYTICS_MAILING_LIST_ID;
-       if (input.weeklyAnalytics) {
-         // Add to mailing list
-         await fetch("https://app.loops.so/api/v1/contacts/update", {
-           method: "PUT",
-           headers: {
-             "Authorization": `Bearer ${process.env.LOOPS_API_KEY}`,
-             "Content-Type": "application/json"
-           },
-           body: JSON.stringify({
-             email: userEmail,
-             mailingLists: { [mailingListId]: true }
-           })
-         });
-       } else {
-         // Remove from mailing list
-         await fetch("https://app.loops.so/api/v1/contacts/update", {
-           method: "PUT",
-           headers: {
-             "Authorization": `Bearer ${process.env.LOOPS_API_KEY}`,
-             "Content-Type": "application/json"
-           },
-           body: JSON.stringify({
-             email: userEmail,
-             mailingLists: { [mailingListId]: false }
-           })
-         });
-       }
-
-       return { success: true, preference: input.weeklyAnalytics };
-     });
-   ```
-
-**Stage 2: Settings UI Component**
-1. Create settings section in app:
-   ```tsx
-   <SettingsSection title="Email Notifications">
-     <SettingItem
-       label="Weekly Analytics Summary"
-       description="Receive a weekly email every Tuesday with your LinkedIn analytics"
-       control={
-         <Switch
-           checked={emailPreferences?.weeklyAnalytics ?? true}
-           onCheckedChange={handleToggle}
-           disabled={isUpdating}
-         />
-       }
-     />
-   </SettingsSection>
-   ```
-2. Use existing Switch component from UI library
-3. Add description text below label
-
-**Stage 3: Toggle Handler**
-1. Fetch current preference on page load:
-   ```tsx
-   const { data: emailPreferences } = trpc.user.getEmailPreferences.useQuery();
-   ```
-2. Implement toggle handler:
-   ```tsx
-   const updatePreference = trpc.user.updateEmailPreference.useMutation({
-     onSuccess: () => {
-       toast.success("Email preference updated!");
-     },
-     onError: (error) => {
-       toast.error(`Failed to update: ${error.message}`);
-     }
-   });
-
-   const handleToggle = (checked: boolean) => {
-     updatePreference.mutate({ weeklyAnalytics: checked });
-   };
-   ```
-3. Show loading state (disable switch during update)
-
-**Stage 4: Initial State Setup**
-1. Create `getEmailPreferences` query:
-   ```typescript
-   getEmailPreferences: protectedProcedure
-     .query(async ({ ctx }) => {
-       const userId = ctx.user.id;
-
-       const preferences = await db.userEmailPreferences.findUnique({
-         where: { userId }
-       });
-
-       // Default to true (opt-in) if no record exists
-       return preferences ?? { weeklyAnalytics: true };
-     });
-   ```
-2. Handle users without preferences record (default to enabled)
-
-**Stage 5: Loops Initial Setup**
-1. On user signup, create UserEmailPreferences record:
-   ```typescript
-   // In signup flow (wherever that is)
-   await db.userEmailPreferences.create({
-     data: {
-       userId: newUser.id,
-       weeklyAnalytics: true // Opt-in by default
-     }
-   });
-
-   // Add to Loops mailing list
-   await loops.createContact({
-     email: newUser.email,
-     mailingLists: {
-       [process.env.LOOPS_WEEKLY_ANALYTICS_MAILING_LIST_ID]: true
-     }
-   });
-   ```
-
-**Post-Phase Testing**:
-1. Navigate to app settings page
-2. Verify toggle shows current preference
-3. Toggle to "off", verify success toast
-4. Check database (weeklyAnalytics should be false)
-5. Check Loops dashboard (user removed from mailing list)
-6. Toggle back to "on", verify success toast
-7. Check database and Loops (should be re-added)
-8. Trigger workflow (user should not receive email when toggled off)
-
-**Acceptance Criteria**:
-- [ ] Settings section visible in app
-- [ ] Toggle shows current preference on load
-- [ ] Toggle updates database on change
-- [ ] Toggle syncs with Loops mailing list
-- [ ] Success toast on successful update
-- [ ] Error toast on failure
-- [ ] Loading state during update (switch disabled)
-- [ ] New users default to opt-in (true)
-- [ ] Workflow respects preference (no email when false)
-
-**What's Functional Now**: Users can manage weekly email subscription in app
-
-**Ready For**: RFC-010 (Testing & QA)
-
----
-
-### RFC-010: Testing & Quality Assurance
+### RFC-009: Testing & Quality Assurance
 
 **Summary**: Comprehensive testing coverage for weekly analytics email feature.
 
-**Dependencies**: RFC-009 (Email Preference Toggle)
+**Dependencies**: RFC-008 (Test Email Button)
 
 **Stages**:
 
@@ -2698,17 +2733,7 @@ See [Component Details](#7-component-details) section above for full tRPC proced
 - [ ] Show error toast on failure
 - [ ] Test button click sends email
 
-**Phase 9: Email Preference Toggle** (2 hours)
-- [ ] Create updateEmailPreference mutation
-- [ ] Sync preference with Loops mailing list API
-- [ ] Create getEmailPreferences query
-- [ ] Add toggle to app settings page
-- [ ] Implement handleToggle handler
-- [ ] Show loading state during update
-- [ ] Show success toast on update
-- [ ] Test toggle updates database and Loops
-
-**Phase 10: Testing & QA** (4 hours)
+**Phase 9: Testing & QA** (4 hours)
 - [ ] Write unit tests for all helpers
 - [ ] Write tRPC integration tests
 - [ ] Write DBOS workflow tests
@@ -2720,7 +2745,7 @@ See [Component Details](#7-component-details) section above for full tRPC proced
 - [ ] Fix all critical bugs
 - [ ] Document known issues (minor bugs)
 
-**Total Estimated Time**: 24-28 hours (3-4 days)
+**Total Estimated Time**: 22-26 hours (3-4 days)
 
 ---
 

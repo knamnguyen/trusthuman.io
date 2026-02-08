@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
+import { getTrpcClient } from "@/lib/trpc/client";
 import {
   BarChart3,
+  Database,
   Eye,
   Mail,
   MessageSquare,
@@ -13,7 +15,6 @@ import { Button } from "@sassy/ui/button";
 import { toast } from "@sassy/ui/toast";
 
 import type { DataSnapshot } from "../utils/data-fetch-mimic/data-collector";
-import { getTrpcClient } from "@/lib/trpc/client";
 import { useAccountStore } from "../stores/account-store";
 import {
   DEFAULT_AUTO_FETCH_INTERVAL_HOURS,
@@ -21,6 +22,7 @@ import {
   INTERVAL_OPTIONS,
   setAutoFetchIntervalHours,
 } from "../utils/data-fetch-mimic/auto-fetch-config";
+import { syncToDatabase } from "../utils/data-fetch-mimic/sync-to-database";
 import { useContentImpressionsHistory } from "../utils/data-fetch-mimic/use-content-impressions-history";
 import {
   useCommentsHistory,
@@ -163,6 +165,47 @@ export function AnalyticsTab() {
   // State for send test email button
   const [isSendingEmail, setIsSendingEmail] = useState(false);
 
+  // State for force sync button
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  // Handle force sync button click
+  const handleForceSync = async () => {
+    setIsSyncing(true);
+
+    try {
+      const accountId = useAccountStore.getState().currentLinkedIn.profileUrn;
+
+      if (!accountId) {
+        toast.error("No account ID found", { duration: 3000 });
+        return;
+      }
+
+      console.log("🔄 Force sync triggered for account:", accountId);
+
+      const result = await syncToDatabase(accountId, false); // false = do backfill if needed
+
+      if (result.success) {
+        toast.success(`✅ Synced ${result.synced} record(s) to database`, {
+          duration: 3000,
+        });
+      } else {
+        toast.error("Sync failed - check console for details", {
+          duration: 5000,
+        });
+      }
+    } catch (error) {
+      console.error("Error during force sync:", error);
+      toast.error(
+        `Sync failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+        {
+          duration: 5000,
+        },
+      );
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   // Handle send test email button click
   const handleSendTestEmail = async () => {
     setIsSendingEmail(true);
@@ -187,9 +230,12 @@ export function AnalyticsTab() {
       });
     } catch (error) {
       console.error("Error sending test email:", error);
-      toast.error(`Failed to send email: ${error instanceof Error ? error.message : "Unknown error"}`, {
-        duration: 5000,
-      });
+      toast.error(
+        `Failed to send email: ${error instanceof Error ? error.message : "Unknown error"}`,
+        {
+          duration: 5000,
+        },
+      );
     } finally {
       setIsSendingEmail(false);
     }
@@ -471,6 +517,16 @@ export function AnalyticsTab() {
         </select>
       </div>
 
+      {/* Force Sync Button */}
+      <Button
+        onClick={handleForceSync}
+        disabled={isSyncing}
+        variant="outline"
+        className="w-full"
+      >
+        <Database className="mr-2 h-4 w-4" />
+        {isSyncing ? "Syncing..." : "Force Sync to DB"}
+      </Button>
       {/* Send Test Email Button */}
       <Button
         onClick={handleSendTestEmail}

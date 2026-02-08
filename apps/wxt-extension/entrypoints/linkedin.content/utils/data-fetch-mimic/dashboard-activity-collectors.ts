@@ -38,13 +38,13 @@ async function fetchComments(): Promise<CommentsData | null> {
 
 /**
  * Singleton DataCollector instance for posts
- * - Stores last 90 snapshots
+ * - Stores last 365 snapshots (1 year)
  * - Auto-fetches no more than once per 24 hours
  */
 export const postsCollector = new DataCollector<PostsData>(
   {
     storageKey: "dashboard-posts",
-    maxSnapshots: 90,
+    maxSnapshots: 365,
     minIntervalMs: 24 * 60 * 60 * 1000, // 24 hours
   },
   fetchPosts,
@@ -52,13 +52,13 @@ export const postsCollector = new DataCollector<PostsData>(
 
 /**
  * Singleton DataCollector instance for comments
- * - Stores last 90 snapshots
+ * - Stores last 365 snapshots (1 year)
  * - Auto-fetches no more than once per 24 hours
  */
 export const commentsCollector = new DataCollector<CommentsData>(
   {
     storageKey: "dashboard-comments",
-    maxSnapshots: 90,
+    maxSnapshots: 365,
     minIntervalMs: 24 * 60 * 60 * 1000, // 24 hours
   },
   fetchComments,

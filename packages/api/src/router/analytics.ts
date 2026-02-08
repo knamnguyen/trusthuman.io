@@ -85,6 +85,87 @@ export const analyticsRouter = () =>
       }),
 
     /**
+     * Backfill Analytics (Batch Sync)
+     * One-time sync of historical analytics data from extension local storage
+     * Upserts multiple daily records in a single transaction
+     */
+    backfillAnalytics: protectedProcedure
+      .input(
+        z.object({
+          dailyRecords: z.array(analyticsSyncInputSchema),
+        }),
+      )
+      .mutation(async ({ ctx, input }) => {
+        if (!ctx.activeAccount) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "No active account selected",
+          });
+        }
+
+        if (input.dailyRecords.length === 0) {
+          return { synced: 0, accountId: ctx.activeAccount.id };
+        }
+
+        // Capture accountId for use in transaction
+        const accountId = ctx.activeAccount.id;
+
+        try {
+          // Batch upsert all records in a transaction
+          const results = await ctx.db.$transaction(
+            input.dailyRecords.map((record) => {
+              const normalizedDate = normalizeToStartOfDay(record.date);
+
+              return ctx.db.linkedInAnalyticsDaily.upsert({
+                where: {
+                  accountId_date: {
+                    accountId,
+                    date: normalizedDate,
+                  },
+                },
+                update: {
+                  followers: record.followers,
+                  invites: record.invites,
+                  comments: record.comments,
+                  contentReach: record.contentReach,
+                  profileViews: record.profileViews,
+                  engageReach: record.engageReach,
+                },
+                create: {
+                  accountId,
+                  date: normalizedDate,
+                  followers: record.followers,
+                  invites: record.invites,
+                  comments: record.comments,
+                  contentReach: record.contentReach,
+                  profileViews: record.profileViews,
+                  engageReach: record.engageReach,
+                },
+              });
+            }),
+          );
+
+          console.log(
+            "Backfill completed for account:",
+            accountId,
+            "records synced:",
+            results.length,
+          );
+
+          return {
+            synced: results.length,
+            accountId,
+          };
+        } catch (error) {
+          console.error("Backfill analytics error:", error);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to backfill analytics data",
+          });
+        }
+      }),
+
+    /**
      * Send Test Analytics Email
      * Sends a test email with LinkedIn analytics metrics to the current user
      * Uses Loops transactional email API
