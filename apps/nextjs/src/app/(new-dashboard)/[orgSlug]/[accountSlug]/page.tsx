@@ -4,18 +4,11 @@ import { useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@sassy/ui/card";
-
 import { useAchievementsStore } from "~/stores/zustand-store";
 import { useTRPC } from "~/trpc/react";
 
 import { AchievementsSection } from "./_components/achievements/AchievementsSection";
+import { AnalyticsSection } from "./_components/analytics";
 
 export default function AccountDashboardPage() {
   const { accountSlug } = useParams<{ accountSlug: string }>();
@@ -95,49 +88,8 @@ export default function AccountDashboardPage() {
       <div className="relative flex min-h-0 flex-1">
         <div className="flex-1 overflow-y-auto p-6">
           <div className="mx-auto max-w-7xl space-y-8">
-            {/* Account Info Cards */}
-            <div className="grid gap-6 md:grid-cols-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Account Info</CardTitle>
-                  <CardDescription>LinkedIn account details</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <p>
-                      <span className="text-gray-500">Profile:</span>{" "}
-                      {account?.profileSlug}
-                    </p>
-                    <p>
-                      <span className="text-gray-500">Status:</span>{" "}
-                      {account?.status ?? "Unknown"}
-                    </p>
-                    {account?.profileUrl && (
-                      <a
-                        href={account.profileUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-500 hover:underline"
-                      >
-                        View LinkedIn Profile →
-                      </a>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Quick Actions</CardTitle>
-                  <CardDescription>Common tasks</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-500">
-                    Use the sidebar to navigate to different sections.
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
+            {/* Analytics Section */}
+            <AnalyticsSection />
 
             {/* Achievements Section */}
             <AchievementsSection />
