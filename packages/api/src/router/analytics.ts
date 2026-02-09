@@ -4,470 +4,23 @@ import z from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { analyticsSyncInputSchema } from "../schema-validators";
 import { env } from "../utils/env";
+import {
+  normalizeToStartOfDay,
+  calculatePercentageChange,
+  formatPercentageChange,
+  formatNumber,
+  findTopMetric,
+  generateSubjectLine,
+  generateChartUrl,
+  generateMemeUrl,
+  padToSevenDays,
+  padDateLabels,
+} from "../utils/email-analytics";
 
 /**
  * Analytics Router
  * Handles analytics-related endpoints including email reports
  */
-
-/**
- * Normalize date to start-of-day UTC (00:00:00)
- * Ensures consistent date format for composite unique constraint @@unique([accountId, date])
- *
- * @param date - Date object or ISO string (optional, defaults to today)
- * @returns Date object set to midnight UTC
- *
- * @example
- * normalizeToStartOfDay(new Date('2025-02-08T15:30:00Z')) // Returns 2025-02-08T00:00:00Z
- * normalizeToStartOfDay() // Returns today at 00:00:00Z
- */
-function normalizeToStartOfDay(date?: Date | string): Date {
-  const d = date ? (typeof date === "string" ? new Date(date) : date) : new Date();
-  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
-}
-
-/**
- * Metric display names for user-facing text
- */
-const METRIC_DISPLAY_NAMES: Record<string, string> = {
-  followers: "Followers",
-  invites: "Invites",
-  comments: "Comments",
-  contentReach: "Content Reach",
-  profileViews: "Profile Views",
-  engageReach: "Engage Reach",
-};
-
-/**
- * Calculate percentage change from first to last value in array
- * Returns null if invalid data (division by zero, etc.)
- */
-function calculatePercentageChange(data: number[]): number | null {
-  if (data.length < 2) return null;
-  const first = data[0]!;
-  const last = data[data.length - 1]!;
-  if (first === 0) return last > 0 ? 100 : 0; // Avoid division by zero
-  return Math.round(((last - first) / first) * 100);
-}
-
-/**
- * Format percentage change for display (e.g., "+14%" or "-8%")
- */
-function formatPercentageChange(change: number | null): string {
-  if (change === null) return "0%";
-  const sign = change >= 0 ? "+" : "";
-  return `${sign}${change}%`;
-}
-
-/**
- * Format large numbers with abbreviations (e.g., 1000 → "1k", 1500 → "1.5k")
- * Matches the extension's display format
- */
-function formatNumber(num: number): string {
-  if (num >= 1000000) {
-    const value = num / 1000000;
-    return value % 1 === 0 ? `${value}M` : `${value.toFixed(1)}M`;
-  }
-  if (num >= 1000) {
-    const value = num / 1000;
-    return value % 1 === 0 ? `${value}k` : `${value.toFixed(1)}k`;
-  }
-  return String(num);
-}
-
-/**
- * Find the top performing metric (highest absolute growth)
- */
-function findTopMetric(percentageChanges: Record<string, number | null>): {
-  key: string;
-  name: string;
-  growth: number;
-} {
-  const entries = Object.entries(percentageChanges)
-    .filter(([_, value]) => value !== null && !isNaN(value as number))
-    .sort((a, b) => Math.abs((b[1] as number)) - Math.abs((a[1] as number)));
-
-  if (entries.length === 0) {
-    return { key: "followers", name: "Followers", growth: 0 };
-  }
-
-  const [key, growth] = entries[0]!;
-  return {
-    key,
-    name: METRIC_DISPLAY_NAMES[key] || key,
-    growth: growth as number,
-  };
-}
-
-/**
- * Subject line patterns based on Duolingo psychology strategy
- */
-type SubjectCategory = "CELEBRATION" | "CHALLENGE" | "EMPATHY" | "URGENCY" | "MILESTONE" | "CURIOSITY" | "HUMOR" | "NEUTRAL";
-
-const SUBJECT_PATTERNS: Record<SubjectCategory, string[]> = {
-  CELEBRATION: [
-    "Congrats {firstName}, {change} this week! 🎉",
-    "{firstName}, you're crushing it! {change} 🔥",
-    "Amazing week, {firstName}! {change} 🚀",
-    "{firstName}, new record! {change} 📈",
-    "You're on fire, {firstName}! {change} 💪",
-  ],
-  CHALLENGE: [
-    "Did you beat last week, {firstName}? 💪",
-    "{firstName}, keep pushing! {change}",
-    "Almost there, {firstName}! {change}",
-    "Can you do better, {firstName}? {change}",
-  ],
-  EMPATHY: [
-    "Don't be sad, {firstName}... {metric} {change}",
-    "Tough week, {firstName}? {metric} down {changeAbs}%",
-    "{firstName}, let's bounce back! {change} last week",
-    "It happens, {firstName}. {change} this week",
-  ],
-  URGENCY: [
-    "Uh oh, {firstName}. {metric} dropped {changeAbs}%",
-    "{firstName}, we need to talk... {change} 📉",
-    "Don't let it slide, {firstName}! {change}",
-  ],
-  MILESTONE: [
-    "{firstName}, {total} LinkedIn wins this week!",
-    "{total} activities! Keep going, {firstName}",
-    "You hit {followers} followers, {firstName}! 🎯",
-  ],
-  CURIOSITY: [
-    "{firstName}, you won't believe this... 👀",
-    "Interesting week, {firstName} 🤔",
-    "{firstName}, check this out...",
-    "Hmm, {firstName}. Interesting. 💭",
-  ],
-  HUMOR: [
-    "{firstName}, LinkedIn ghost mode? 👻",
-    "Did LinkedIn break, {firstName}? 🤷",
-    "Still alive, {firstName}? 😴",
-    "{firstName}, your LinkedIn needs you! 💼",
-  ],
-  NEUTRAL: [
-    "{firstName}'s LinkedIn stats 📊",
-    "This week's report, {firstName} 📈",
-    "Stats are in, {firstName}! 🎯",
-  ],
-};
-
-/**
- * Select subject line category based on growth and activity
- */
-function selectSubjectCategory(growth: number, totalActivities: number): SubjectCategory {
-  if (growth >= 20) return "CELEBRATION";
-  if (growth >= 5 && growth < 20) return "CHALLENGE";
-  if (growth < 0 && growth >= -20) return "EMPATHY";
-  if (growth < -20) return "URGENCY";
-  if (totalActivities >= 50) return "MILESTONE";
-  if (Math.abs(growth) <= 5) return "CURIOSITY";
-  if (totalActivities < 10) return "HUMOR";
-  return "NEUTRAL";
-}
-
-/**
- * Generate dynamic subject line with psychology patterns
- */
-function generateSubjectLine(
-  firstName: string,
-  topMetric: { name: string; growth: number },
-  totalActivities: number,
-  followers: number,
-): string {
-  const category = selectSubjectCategory(topMetric.growth, totalActivities);
-  const patterns = SUBJECT_PATTERNS[category];
-  const pattern = patterns[Math.floor(Math.random() * patterns.length)]!;
-
-  const change = formatPercentageChange(topMetric.growth);
-  const changeAbs = Math.abs(topMetric.growth);
-
-  return pattern
-    .replace(/{firstName}/g, firstName)
-    .replace(/{change}/g, change)
-    .replace(/{changeAbs}/g, String(changeAbs))
-    .replace(/{metric}/g, topMetric.name)
-    .replace(/{total}/g, String(totalActivities))
-    .replace(/{followers}/g, String(followers));
-}
-
-/**
- * Meme templates and messages for dynamic meme generation
- * Uses memegen.link API (free, open source, no rate limits documented)
- */
-type MemeCategory = "CELEBRATION" | "GROWTH" | "DECLINE" | "STEADY" | "COMEBACK";
-
-interface MemeTemplate {
-  template: string; // memegen template name
-  topText: string;
-  bottomText: string;
-}
-
-const MEME_TEMPLATES: Record<MemeCategory, MemeTemplate[]> = {
-  CELEBRATION: [
-    { template: "success", topText: "{name}_crushed_it!", bottomText: "{change}_growth_this_week" },
-    { template: "awesome", topText: "You're_doing", bottomText: "amazing_{name}!" },
-    { template: "buzz", topText: "{metric}_gains", bottomText: "{metric}_gains_everywhere" },
-    { template: "leo", topText: "{name}", bottomText: "killing_it_on_LinkedIn" },
-    { template: "morpheus", topText: "What_if_I_told_you", bottomText: "{name}_is_LinkedIn_famous" },
-  ],
-  GROWTH: [
-    { template: "doge", topText: "Much_{metric}", bottomText: "Very_growth._Wow." },
-    { template: "gandalf", topText: "A_{metric}_never_stops", bottomText: "It_grows_precisely_as_intended" },
-    { template: "woody", topText: "{metric}", bottomText: "{metric}_everywhere" },
-    { template: "stonks", topText: "{name}", bottomText: "{change}_{metric}" },
-    { template: "fry", topText: "Not_sure_if_lucky", bottomText: "Or_just_that_good" },
-  ],
-  DECLINE: [
-    { template: "fine", topText: "{name}_this_week", bottomText: "This_is_fine" },
-    { template: "firstworld", topText: "My_{metric}_dropped", bottomText: "By_{changeAbs}_percent" },
-    { template: "sadkeanu", topText: "When_{metric}", bottomText: "goes_down_{changeAbs}%" },
-    { template: "hide", topText: "{name}_checking", bottomText: "LinkedIn_stats" },
-  ],
-  STEADY: [
-    { template: "interesting", topText: "Interesting", bottomText: "Tell_me_more_about_{metric}" },
-    { template: "joker", topText: "It's_not_about_the_{metric}", bottomText: "It's_about_consistency" },
-    { template: "spongebob", topText: "{name}", bottomText: "Steady_wins_the_race" },
-  ],
-  COMEBACK: [
-    { template: "alive", topText: "Rumors_of_my", bottomText: "LinkedIn_death_were_exaggerated" },
-    { template: "sparta", topText: "This_is", bottomText: "A_COMEBACK!" },
-    { template: "icanhas", topText: "I_can_has", bottomText: "{metric}_recovery~q" },
-  ],
-};
-
-/**
- * Encode text for memegen.link URL
- * Spaces → _, special chars → URL encoded
- */
-function encodeMemeText(text: string): string {
-  return text
-    .replace(/ /g, "_")
-    .replace(/%/g, "~p")
-    .replace(/\?/g, "~q")
-    .replace(/#/g, "~h")
-    .replace(/\//g, "~s")
-    .replace(/"/g, "''")
-    .replace(/-/g, "--");
-}
-
-/**
- * Generate dynamic meme URL based on user performance
- */
-function generateMemeUrl(
-  firstName: string,
-  topMetric: { name: string; growth: number },
-): string {
-  // Determine category based on growth
-  let category: MemeCategory;
-  if (topMetric.growth >= 20) {
-    category = "CELEBRATION";
-  } else if (topMetric.growth >= 5) {
-    category = "GROWTH";
-  } else if (topMetric.growth < -10) {
-    category = "DECLINE";
-  } else if (topMetric.growth < 0 && topMetric.growth >= -10) {
-    category = "COMEBACK"; // Small decline = opportunity for comeback
-  } else {
-    category = "STEADY";
-  }
-
-  // Random selection from category
-  const templates = MEME_TEMPLATES[category];
-  const selected = templates[Math.floor(Math.random() * templates.length)]!;
-
-  // Replace placeholders
-  const change = topMetric.growth >= 0 ? `+${topMetric.growth}%` : `${topMetric.growth}%`;
-  const changeAbs = Math.abs(topMetric.growth);
-
-  const topText = encodeMemeText(
-    selected.topText
-      .replace(/{name}/g, firstName)
-      .replace(/{metric}/g, topMetric.name)
-      .replace(/{change}/g, change)
-      .replace(/{changeAbs}/g, String(changeAbs)),
-  );
-
-  const bottomText = encodeMemeText(
-    selected.bottomText
-      .replace(/{name}/g, firstName)
-      .replace(/{metric}/g, topMetric.name)
-      .replace(/{change}/g, change)
-      .replace(/{changeAbs}/g, String(changeAbs)),
-  );
-
-  return `https://api.memegen.link/images/${selected.template}/${topText}/${bottomText}.png`;
-}
-
-/**
- * Generate QuickChart.io chart URL for 7-day analytics visualization
- * Increased dimensions for better readability
- *
- * @param data - 7-day data arrays for each metric
- * @param labels - Date labels for the X-axis
- * @returns Encoded QuickChart.io URL
- */
-function generateChartUrl(data: {
-  followers: number[];
-  invites: number[];
-  comments: number[];
-  contentReach: number[];
-  profileViews: number[];
-  engageReach: number[];
-  labels: string[];
-}): string {
-  // Define all metrics with their styling
-  const metrics = [
-    {
-      key: "followers",
-      label: "Followers",
-      data: data.followers,
-      borderColor: "#1b9aaa",
-      backgroundColor: "rgba(27, 154, 170, 0.1)",
-    },
-    {
-      key: "invites",
-      label: "Invites",
-      data: data.invites,
-      borderColor: "#308169",
-      backgroundColor: "rgba(48, 129, 105, 0.1)",
-    },
-    {
-      key: "comments",
-      label: "Comments",
-      data: data.comments,
-      borderColor: "#ffc63d",
-      backgroundColor: "rgba(255, 198, 61, 0.1)",
-    },
-    {
-      key: "contentReach",
-      label: "Content Reach",
-      data: data.contentReach,
-      borderColor: "#ed6b67",
-      backgroundColor: "rgba(237, 107, 103, 0.1)",
-    },
-    {
-      key: "profileViews",
-      label: "Profile Views",
-      data: data.profileViews,
-      borderColor: "#e5496d",
-      backgroundColor: "rgba(229, 73, 109, 0.1)",
-    },
-    {
-      key: "engageReach",
-      label: "Engage Reach",
-      data: data.engageReach,
-      borderColor: "#f9dcec",
-      backgroundColor: "rgba(249, 220, 236, 0.1)",
-    },
-  ];
-
-  // Find the metric with the highest max value (the "top" line on the chart)
-  const topMetricKey = metrics.reduce((topKey, metric) => {
-    const currentMax = Math.max(...metric.data);
-    const topMax = Math.max(
-      ...metrics.find((m) => m.key === topKey)!.data,
-    );
-    return currentMax > topMax ? metric.key : topKey;
-  }, metrics[0].key);
-
-  // Build datasets with data labels only on the top line
-  const datasets = metrics.map((metric) => ({
-    label: metric.label,
-    data: metric.data,
-    borderColor: metric.borderColor,
-    backgroundColor: metric.backgroundColor,
-    borderWidth: 6,
-    tension: 0.3,
-    pointRadius: 10,
-    datalabels:
-      metric.key === topMetricKey
-        ? {
-            display: true,
-            anchor: "end",
-            align: "top",
-            font: { size: 24, weight: "bold" },
-            color: metric.borderColor,
-          }
-        : { display: false },
-  }));
-
-  const chartConfig = {
-    type: "line",
-    data: {
-      labels: data.labels,
-      datasets,
-    },
-    options: {
-      plugins: {
-        legend: {
-          display: true,
-          position: "top",
-          labels: {
-            font: { size: 360 },
-            padding: 100,
-            boxWidth: 200,
-          },
-        },
-        // Global datalabels default (disabled, overridden per dataset)
-        datalabels: { display: false },
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: { font: { size: 300 } },
-        },
-        x: {
-          ticks: { font: { size: 300 } },
-        },
-      },
-    },
-  };
-
-  // Using devicePixelRatio=0.5 to make fonts appear larger relative to the chart
-  return `https://quickchart.io/chart?width=800&height=400&devicePixelRatio=0.5&c=${encodeURIComponent(JSON.stringify(chartConfig))}`;
-}
-
-/**
- * Pad data arrays to 7 days by repeating the first value for missing days
- * Handles cases where users have less than 7 days of data
- *
- * @param data - Array of data points (1-7 values)
- * @returns Array padded to exactly 7 values
- */
-function padToSevenDays<T>(data: T[]): T[] {
-  if (data.length === 7) return data;
-  if (data.length === 0) return Array(7).fill(0 as T);
-
-  // Pad by repeating the first value for earlier days
-  const paddingNeeded = 7 - data.length;
-  const padding = Array(paddingNeeded).fill(data[0]);
-  return [...padding, ...data];
-}
-
-/**
- * Generate date labels for the last 7 days
- * If fewer labels provided, generates labels for earlier days
- *
- * @param labels - Existing labels (1-7 values)
- * @returns Array of 7 date labels
- */
-function padDateLabels(labels: string[]): string[] {
-  if (labels.length === 7) return labels;
-
-  // Generate missing labels by going back in time
-  const paddingNeeded = 7 - labels.length;
-  const missingLabels: string[] = [];
-
-  // Parse the earliest date and go backwards
-  // For simplicity, just use generic labels like "Day -6", "Day -5", etc.
-  for (let i = paddingNeeded; i > 0; i--) {
-    missingLabels.push(`-${i}d`);
-  }
-
-  return [...missingLabels, ...labels];
-}
 
 export const analyticsRouter = () =>
   createTRPCRouter({
@@ -812,4 +365,243 @@ export const analyticsRouter = () =>
           });
         }
       }),
+
+    /**
+     * Send Test Analytics Email from Real DB Data
+     * Queries actual analytics data from DB and sends test email
+     * Validates the full flow before scheduled workflow runs
+     */
+    sendTestEmailFromDB: protectedProcedure.mutation(async ({ ctx }) => {
+      const userEmail = ctx.user.primaryEmailAddress;
+
+      if (!userEmail) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "User email not found",
+        });
+      }
+
+      if (!ctx.activeAccount) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "No active account selected",
+        });
+      }
+
+      // Query last 7 days of analytics data for this account
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      sevenDaysAgo.setHours(0, 0, 0, 0);
+
+      const analyticsRecords = await ctx.db.linkedInAnalyticsDaily.findMany({
+        where: {
+          accountId: ctx.activeAccount.id,
+          date: {
+            gte: sevenDaysAgo,
+          },
+        },
+        orderBy: {
+          date: "asc",
+        },
+      });
+
+      if (analyticsRecords.length === 0) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message:
+            "No analytics data found for this account. Please sync analytics data first by visiting the Analytics tab in the extension.",
+        });
+      }
+
+      // Extract arrays from records
+      const followersWeek = analyticsRecords.map((r) => r.followers);
+      const invitesWeek = analyticsRecords.map((r) => r.invites);
+      const commentsWeek = analyticsRecords.map((r) => r.comments);
+      const contentReachWeek = analyticsRecords.map((r) => r.contentReach);
+      const profileViewsWeek = analyticsRecords.map((r) => r.profileViews);
+      const engageReachWeek = analyticsRecords.map((r) => r.engageReach);
+
+      // Generate date labels from actual dates
+      const dateLabels = analyticsRecords.map((r) =>
+        r.date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      );
+
+      // Get latest values as current metrics
+      const latestRecord = analyticsRecords[analyticsRecords.length - 1]!;
+      const currentMetrics = {
+        followers: latestRecord.followers,
+        invites: latestRecord.invites,
+        comments: latestRecord.comments,
+        contentReach: latestRecord.contentReach,
+        profileViews: latestRecord.profileViews,
+        engageReach: latestRecord.engageReach,
+      };
+
+      const LOOPS_API_KEY = env.LOOPS_API_KEY;
+      const LOOPS_TEMPLATE_ID = "cmlc5hhdz1ebf0i25hqomb3zf";
+
+      // Pad data to 7 days if needed
+      const paddedData = {
+        followers: padToSevenDays(followersWeek),
+        invites: padToSevenDays(invitesWeek),
+        comments: padToSevenDays(commentsWeek),
+        contentReach: padToSevenDays(contentReachWeek),
+        profileViews: padToSevenDays(profileViewsWeek),
+        engageReach: padToSevenDays(engageReachWeek),
+        labels: padDateLabels(dateLabels),
+      };
+
+      // Calculate percentage changes
+      const percentageChanges: Record<string, number | null> = {
+        followers: calculatePercentageChange(paddedData.followers),
+        invites: calculatePercentageChange(paddedData.invites),
+        comments: calculatePercentageChange(paddedData.comments),
+        contentReach: calculatePercentageChange(paddedData.contentReach),
+        profileViews: calculatePercentageChange(paddedData.profileViews),
+        engageReach: calculatePercentageChange(paddedData.engageReach),
+      };
+
+      // Find top metric
+      const topMetric = findTopMetric(percentageChanges);
+
+      // Calculate total activities
+      const totalActivities =
+        currentMetrics.followers +
+        currentMetrics.invites +
+        currentMetrics.comments +
+        currentMetrics.contentReach +
+        currentMetrics.profileViews +
+        currentMetrics.engageReach;
+
+      // Generate dynamic subject line
+      const firstName = ctx.user.firstName || "there";
+      const weekEndDate = new Date();
+      const weekEndFormatted = weekEndDate.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
+      const baseSubject = generateSubjectLine(
+        firstName,
+        topMetric,
+        totalActivities,
+        currentMetrics.followers,
+      );
+      const dynamicSubject = `${baseSubject} (Week of ${weekEndFormatted})`;
+
+      // Generate chart URL
+      const chartUrl = generateChartUrl(paddedData);
+
+      // Construct URLs
+      const ctaEarnPremiumUrl = "https://engagekit.io/earn-premium";
+      const ctaSubscribeUrl = "https://engagekit.io/subscription";
+      const baseUrl = env.NEXT_PUBLIC_APP_URL || "https://app.engagekit.io";
+
+      // Generate meme
+      const memeUrl = generateMemeUrl(firstName, topMetric);
+
+      try {
+        const response = await fetch(
+          "https://app.loops.so/api/v1/transactional",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${LOOPS_API_KEY}`,
+            },
+            body: JSON.stringify({
+              transactionalId: LOOPS_TEMPLATE_ID,
+              email: userEmail,
+              dataVariables: {
+                subject: dynamicSubject,
+                userFirstName: firstName,
+                kitGifUrl: `${baseUrl}/email-assets/kit-sprite-blink.gif`,
+                iconFollowers:
+                  "https://engagekit.io/email-assets/icons/users-white.png",
+                iconInvites:
+                  "https://engagekit.io/email-assets/icons/mail-white.png",
+                iconComments:
+                  "https://engagekit.io/email-assets/icons/message-square-white.png",
+                iconContentReach:
+                  "https://engagekit.io/email-assets/icons/trending-up-white.png",
+                iconProfileViews:
+                  "https://engagekit.io/email-assets/icons/bar-chart-3-white.png",
+                iconEngageReach:
+                  "https://engagekit.io/email-assets/icons/eye-black.png",
+                chartUrl,
+                memeUrl,
+                ctaUrl: ctaEarnPremiumUrl,
+                ctaSubscribeUrl,
+                highlightMetric: topMetric.name,
+                highlightValue: formatNumber(
+                  currentMetrics[
+                    topMetric.key as keyof typeof currentMetrics
+                  ] || 0,
+                ),
+                highlightChange: formatPercentageChange(topMetric.growth),
+                highlightIsPositive: topMetric.growth >= 0 ? "true" : "false",
+                followers: formatNumber(currentMetrics.followers),
+                invites: formatNumber(currentMetrics.invites),
+                comments: formatNumber(currentMetrics.comments),
+                contentReach: formatNumber(currentMetrics.contentReach),
+                profileViews: formatNumber(currentMetrics.profileViews),
+                engageReach: formatNumber(currentMetrics.engageReach),
+                followersChange: formatPercentageChange(
+                  percentageChanges.followers ?? null,
+                ),
+                invitesChange: formatPercentageChange(
+                  percentageChanges.invites ?? null,
+                ),
+                commentsChange: formatPercentageChange(
+                  percentageChanges.comments ?? null,
+                ),
+                contentReachChange: formatPercentageChange(
+                  percentageChanges.contentReach ?? null,
+                ),
+                profileViewsChange: formatPercentageChange(
+                  percentageChanges.profileViews ?? null,
+                ),
+                engageReachChange: formatPercentageChange(
+                  percentageChanges.engageReach ?? null,
+                ),
+              },
+            }),
+          },
+        );
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("Loops API error:", errorText);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: `Email service error: ${errorText}`,
+          });
+        }
+
+        const result = await response.json();
+        console.log("Test email (from DB) sent successfully to:", userEmail, result);
+
+        return {
+          success: true,
+          recipient: userEmail,
+          recordsUsed: analyticsRecords.length,
+          dateRange: {
+            from: analyticsRecords[0]!.date.toISOString(),
+            to: latestRecord.date.toISOString(),
+          },
+          chartUrl,
+          topMetric: topMetric.name,
+        };
+      } catch (error) {
+        console.error("Error sending test analytics email from DB:", error);
+
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to send test email",
+        });
+      }
+    }),
   });

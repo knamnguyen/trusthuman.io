@@ -517,7 +517,7 @@
                       height="32"
                       alt=""
                       style="
-                        background-color: #f9dcec;
+                        background-color: #9b59b6;
                         border: 2px solid #000000;
                         border-radius: 50%;
                         padding: 4px;
@@ -561,7 +561,7 @@
                     align="center"
                     font-size="10px"
                     font-weight="600"
-                    color="#c78da8"
+                    color="#9b59b6"
                     text-transform="uppercase"
                     letter-spacing="0.03em"
                     padding="2px 0 0 0"
