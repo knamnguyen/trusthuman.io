@@ -599,7 +599,7 @@
                 <mj-image
                   src="{DATA_VARIABLE:chartUrl}"
                   alt="7-day analytics chart"
-                  width="500px"
+                  width="700px"
                   align="center"
                   padding="0"
                 />
@@ -624,7 +624,7 @@
                 <mj-image
                   src="{DATA_VARIABLE:memeUrl}"
                   alt="Encouragement meme"
-                  width="500px"
+                  width="700px"
                   align="center"
                   padding="0 0 8px 0"
                 />
