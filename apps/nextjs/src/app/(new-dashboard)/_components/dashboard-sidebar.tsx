@@ -90,19 +90,46 @@ export function DashboardSidebar() {
   const params = useParams<{ orgSlug?: string; accountSlug?: string }>();
   const { orgSlug, accountSlug } = params;
 
-  const items = useMemo(() => {
-    let prefix = `/${orgSlug}`;
+  let prefix = `/${orgSlug}`;
 
-    if (accountSlug !== undefined) {
-      prefix += `/${accountSlug}`;
-    }
+  if (accountSlug !== undefined) {
+    prefix += `/${accountSlug}`;
+  }
 
+  const sharedItems = useMemo(() => {
     return [
       {
         title: "Accounts",
         url: `${prefix}/accounts`,
         icon: UserRoundIcon,
       },
+      {
+        title: "Earn Premium",
+        url: `${prefix}/earn-premium`,
+        icon: GiftIcon,
+      },
+      {
+        title: "Subscription",
+        url: `${prefix}/settings`,
+        icon: SettingsIcon,
+      },
+    ];
+  }, [orgSlug, accountSlug, prefix]);
+
+  const accountItems = useMemo(() => {
+    let prefix = `/${orgSlug}`;
+
+    if (accountSlug !== undefined) {
+      prefix += `/${accountSlug}`;
+    }
+
+    const items = [];
+
+    if (accountSlug !== undefined) {
+      items.push();
+    }
+
+    return [
       {
         title: "Dashboard",
         url: `${prefix}`,
@@ -123,18 +150,8 @@ export function DashboardSidebar() {
         url: `${prefix}/personas`,
         icon: UsersIcon,
       },
-      {
-        title: "Earn Premium",
-        url: `${prefix}/earn-premium`,
-        icon: GiftIcon,
-      },
-      {
-        title: "Subscription",
-        url: `${prefix}/settings`,
-        icon: SettingsIcon,
-      },
     ];
-  }, [orgSlug, accountSlug]);
+  }, [orgSlug, accountSlug, prefix]);
 
   return (
     <Sidebar collapsible="icon" className="relative">
@@ -167,10 +184,30 @@ export function DashboardSidebar() {
 
       <SidebarContent>
         {/* Account-level navigation */}
+        {accountSlug !== undefined && (
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {accountItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <Link href={item.url}>
+                        <item.icon />
+                        <span className="font-medium">{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
+        {/* Shared navigation items */}
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
+              {sharedItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <Link href={item.url}>
@@ -180,25 +217,6 @@ export function DashboardSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* Back to org link */}
-        <SidebarGroup className="mt-auto">
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link
-                    href={`/${orgSlug}/accounts`}
-                    className="text-muted-foreground"
-                  >
-                    <ArrowLeftIcon />
-                    <span>Organization Settings</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
