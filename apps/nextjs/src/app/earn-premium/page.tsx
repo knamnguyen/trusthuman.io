@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 
-export default async function SettingsPageRedirect() {
+export default async function EarnPremiumPageRedirect() {
   const { orgSlug } = await auth();
 
   if (orgSlug) {
-    redirect(`/${orgSlug}/settings`);
+    redirect(`/${orgSlug}/earn-premium`);
   }
 
   redirect(`/home`);
