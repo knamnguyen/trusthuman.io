@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useOrganization } from "@clerk/nextjs";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Mail } from "lucide-react";
 
 import { Button } from "@sassy/ui/button";
 import {
@@ -16,6 +17,7 @@ import {
 } from "@sassy/ui/card";
 import { Input } from "@sassy/ui/input";
 import { Label } from "@sassy/ui/label";
+import { Switch } from "@sassy/ui/switch";
 
 import { useTRPC } from "~/trpc/react";
 
@@ -68,6 +70,36 @@ export default function AccountsPage() {
     },
   });
 
+  // Email preferences with optimistic updates
+  const emailPreferencesQueryKey = trpc.analytics.getEmailPreferences.queryKey();
+  const { data: emailPreferences } = useQuery(
+    trpc.analytics.getEmailPreferences.queryOptions(),
+  );
+
+  // Use local state for instant toggle response
+  const handleEmailPreferenceChange = (checked: boolean) => {
+    // Optimistically update cache immediately
+    queryClient.setQueryData(emailPreferencesQueryKey, (old: typeof emailPreferences) => ({
+      ...old,
+      weeklyAnalyticsEnabled: checked,
+    }));
+
+    // Fire mutation in background
+    updateEmailPreferencesMutation.mutate(
+      { weeklyAnalyticsEnabled: checked },
+      {
+        onError: () => {
+          // Rollback on error by refetching
+          void queryClient.invalidateQueries({ queryKey: emailPreferencesQueryKey });
+        },
+      },
+    );
+  };
+
+  const updateEmailPreferencesMutation = useMutation(
+    trpc.analytics.updateEmailPreferences.mutationOptions(),
+  );
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!profileUrl.trim()) return;
@@ -87,8 +119,8 @@ export default function AccountsPage() {
   // if currentOrg === undefined means still fetching
   if (!isOrgLoaded || currentOrg === undefined) {
     return (
-      <div className="min-h-dvh bg-gray-50 p-6">
-        <div className="mx-auto max-w-4xl">
+      <div className="flex h-screen flex-col overflow-y-auto p-6">
+        <div className="mx-auto w-full max-w-4xl">
           <Card>
             <CardContent className="py-8">
               <p className="text-center text-gray-500">
@@ -103,8 +135,8 @@ export default function AccountsPage() {
 
   if (orgError) {
     return (
-      <div className="min-h-dvh bg-gray-50 p-6">
-        <div className="mx-auto max-w-4xl">
+      <div className="flex h-screen flex-col overflow-y-auto p-6">
+        <div className="mx-auto w-full max-w-4xl">
           <Card>
             <CardContent className="py-8">
               <p className="text-center text-red-500">
@@ -120,8 +152,8 @@ export default function AccountsPage() {
   // if currentOrg === null means user not in any orgs
   if (currentOrg === null) {
     return (
-      <div className="min-h-dvh bg-gray-50 p-6">
-        <div className="mx-auto max-w-4xl">
+      <div className="flex h-screen flex-col overflow-y-auto p-6">
+        <div className="mx-auto w-full max-w-4xl">
           <Card>
             <CardContent className="py-8">
               <p className="text-center text-gray-500">
@@ -138,16 +170,14 @@ export default function AccountsPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-gray-50 p-6">
-      <div className="mx-auto max-w-4xl">
-        <h1 className="mb-2 text-2xl font-bold text-gray-900">
-          LinkedIn Accounts
-        </h1>
-        <p className="mb-6 text-gray-600">
-          Manage LinkedIn accounts in your organization
-        </p>
-
-        <div className="flex flex-col gap-6">
+    <div className="flex h-screen flex-col overflow-y-auto p-6">
+      <div className="mx-auto w-full max-w-4xl space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold">LinkedIn Accounts</h1>
+          <p className="text-muted-foreground">
+            Manage LinkedIn accounts in your organization
+          </p>
+        </div>
           {/* Organization Info */}
           <Card>
             <CardHeader>
@@ -253,7 +283,36 @@ export default function AccountsPage() {
               )}
             </CardContent>
           </Card>
-        </div>
+
+          {/* Email Preferences */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Mail className="h-5 w-5" />
+                Email Preferences
+              </CardTitle>
+              <CardDescription>
+                Manage your email notification settings
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <Label htmlFor="weekly-analytics" className="font-medium">
+                    Weekly Analytics Email
+                  </Label>
+                  <p className="text-sm text-gray-500">
+                    Receive weekly email summaries for all your LinkedIn accounts
+                  </p>
+                </div>
+                <Switch
+                  id="weekly-analytics"
+                  checked={emailPreferences?.weeklyAnalyticsEnabled ?? true}
+                  onCheckedChange={handleEmailPreferenceChange}
+                />
+              </div>
+            </CardContent>
+          </Card>
       </div>
     </div>
   );

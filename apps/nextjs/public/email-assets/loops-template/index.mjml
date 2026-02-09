@@ -689,13 +689,10 @@
           <mj-text align="center" font-size="11px" color="#7a7a7a" padding="0">
             You're receiving this because you're subscribed to weekly analytics
             from EngageKit.<br />
-            <a href="#" style="color: #e5486c; text-decoration: underline"
-              >Unsubscribe</a
-            >
-            |
-            <a href="#" style="color: #e5486c; text-decoration: underline"
-              >Preferences</a
-            >
+            To stop receiving these emails, turn off "Weekly Analytics Email" in your
+            <a href="https://app.engagekit.io/accounts" style="color: #e5486c; text-decoration: underline"
+              >account settings</a
+            >.
           </mj-text>
         </mj-column>
       </mj-section>
