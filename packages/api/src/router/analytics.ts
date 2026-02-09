@@ -25,6 +25,69 @@ import {
 export const analyticsRouter = () =>
   createTRPCRouter({
     /**
+     * Get Daily Analytics
+     * Returns analytics data for the active account within a date range
+     * Used by dashboard UI to display metrics and charts
+     */
+    getDailyAnalytics: protectedProcedure
+      .input(
+        z.object({
+          days: z.number().int().positive().max(365).default(30),
+        }).optional(),
+      )
+      .query(async ({ ctx, input }) => {
+        if (!ctx.activeAccount) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "No active account selected",
+          });
+        }
+
+        const days = input?.days ?? 30;
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - days);
+        startDate.setHours(0, 0, 0, 0);
+
+        const records = await ctx.db.linkedInAnalyticsDaily.findMany({
+          where: {
+            accountId: ctx.activeAccount.id,
+            date: { gte: startDate },
+          },
+          orderBy: { date: "asc" },
+        });
+
+        // Calculate percentage changes if we have data
+        if (records.length >= 2) {
+          const first = records[0]!;
+          const last = records[records.length - 1]!;
+
+          const calcChange = (firstVal: number, lastVal: number) => {
+            if (firstVal === 0) return lastVal > 0 ? 100 : 0;
+            return ((lastVal - firstVal) / firstVal) * 100;
+          };
+
+          return {
+            records,
+            percentageChanges: {
+              followers: calcChange(first.followers, last.followers),
+              invites: calcChange(first.invites, last.invites),
+              comments: calcChange(first.comments, last.comments),
+              contentReach: calcChange(first.contentReach, last.contentReach),
+              profileViews: calcChange(first.profileViews, last.profileViews),
+              engageReach: calcChange(first.engageReach, last.engageReach),
+            },
+            latest: last,
+          };
+        }
+
+        return {
+          records,
+          percentageChanges: null,
+          latest: records.length > 0 ? records[records.length - 1] : null,
+        };
+      }),
+
+    /**
      * Sync Daily Analytics Metrics
      * Upserts LinkedIn analytics data for the current account
      * One record per account per day (based on normalized UTC date)
@@ -604,4 +667,47 @@ export const analyticsRouter = () =>
         });
       }
     }),
+
+    /**
+     * Get Email Preferences
+     * Returns the current user's email preferences
+     */
+    getEmailPreferences: protectedProcedure.query(async ({ ctx }) => {
+      const preferences = await ctx.db.userEmailPreferences.findUnique({
+        where: { userId: ctx.user.id },
+      });
+
+      // Return defaults if no preferences exist yet
+      return {
+        weeklyAnalyticsEnabled: preferences?.weeklyAnalyticsEnabled ?? true,
+      };
+    }),
+
+    /**
+     * Update Email Preferences
+     * Updates the current user's email preferences
+     */
+    updateEmailPreferences: protectedProcedure
+      .input(
+        z.object({
+          weeklyAnalyticsEnabled: z.boolean(),
+        }),
+      )
+      .mutation(async ({ ctx, input }) => {
+        const preferences = await ctx.db.userEmailPreferences.upsert({
+          where: { userId: ctx.user.id },
+          update: {
+            weeklyAnalyticsEnabled: input.weeklyAnalyticsEnabled,
+          },
+          create: {
+            userId: ctx.user.id,
+            weeklyAnalyticsEnabled: input.weeklyAnalyticsEnabled,
+          },
+        });
+
+        return {
+          success: true,
+          weeklyAnalyticsEnabled: preferences.weeklyAnalyticsEnabled,
+        };
+      }),
   });

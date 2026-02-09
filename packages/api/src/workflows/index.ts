@@ -5,6 +5,7 @@ import { buildTargetListWorkflow } from "./build-target-list.workflow";
 import { rescanSocialSubmissionWorkflow } from "./rescan-social-submission.workflow";
 
 import "./account.workflows";
+import "./email.workflows";
 
 export { buildTargetListWorkflow, rescanSocialSubmissionWorkflow };
 

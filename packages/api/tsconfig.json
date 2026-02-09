@@ -7,6 +7,13 @@
     "jsx": "preserve",
     "paths": {}
   },
-  "include": ["src", "scripts", "../apify-runners/src/industry-search.ts"],
+  "include": [
+    "src",
+    "scripts",
+    "../apify-runners/src/industry-search.ts",
+    "tests/test-comment-ai-workflow.ts",
+    "tests/test-email-workflow-logic.ts",
+    "tests/test-email-workflow-manual.ts"
+  ],
   "exclude": ["node_modules"]
 }
