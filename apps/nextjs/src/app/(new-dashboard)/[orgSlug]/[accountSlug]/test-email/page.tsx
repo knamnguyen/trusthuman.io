@@ -7,10 +7,14 @@ import { useTRPC } from "~/trpc/react";
 export default function TestEmailPage() {
   const trpc = useTRPC();
   const [loading, setLoading] = useState(false);
+  const [loadingFromDB, setLoadingFromDB] = useState(false);
   const [result, setResult] = useState<{
     success: boolean;
     message: string;
     chartUrl?: string;
+    recordsUsed?: number;
+    dateRange?: { from: string; to: string };
+    topMetric?: string;
   } | null>(null);
 
   const sendTestEmail = useMutation({
@@ -29,6 +33,28 @@ export default function TestEmailPage() {
         message: `Error: ${error.message}`,
       });
       setLoading(false);
+    },
+  });
+
+  const sendTestEmailFromDB = useMutation({
+    ...trpc.analytics.sendTestEmailFromDB.mutationOptions(),
+    onSuccess: (data) => {
+      setResult({
+        success: true,
+        message: `Email sent successfully to ${data.recipient}! Used ${data.recordsUsed} days of real data.`,
+        chartUrl: data.chartUrl,
+        recordsUsed: data.recordsUsed,
+        dateRange: data.dateRange,
+        topMetric: data.topMetric,
+      });
+      setLoadingFromDB(false);
+    },
+    onError: (error) => {
+      setResult({
+        success: false,
+        message: `Error: ${error.message}`,
+      });
+      setLoadingFromDB(false);
     },
   });
 
@@ -59,6 +85,12 @@ export default function TestEmailPage() {
     });
   };
 
+  const handleSendTestFromDB = () => {
+    setLoadingFromDB(true);
+    setResult(null);
+    sendTestEmailFromDB.mutate({});
+  };
+
   return (
     <div className="container mx-auto max-w-2xl p-8">
       <h1 className="mb-4 text-3xl font-bold">Test Analytics Email</h1>
@@ -86,11 +118,28 @@ export default function TestEmailPage() {
 
         <button
           onClick={handleSendTest}
-          disabled={loading}
+          disabled={loading || loadingFromDB}
           className="w-full rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
         >
-          {loading ? "Sending..." : "Send Test Email"}
+          {loading ? "Sending..." : "Send Test Email (Sample Data)"}
         </button>
+
+        <div className="my-4 flex items-center gap-4">
+          <div className="h-px flex-1 bg-border" />
+          <span className="text-sm text-muted-foreground">or</span>
+          <div className="h-px flex-1 bg-border" />
+        </div>
+
+        <button
+          onClick={handleSendTestFromDB}
+          disabled={loading || loadingFromDB}
+          className="w-full rounded-md bg-green-600 px-4 py-2 font-medium text-white hover:bg-green-700 disabled:opacity-50"
+        >
+          {loadingFromDB ? "Sending..." : "Send Test Email (Real DB Data)"}
+        </button>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Uses actual analytics data synced from your extension. Requires at least 1 day of synced data.
+        </p>
 
         {result && (
           <div
@@ -104,6 +153,16 @@ export default function TestEmailPage() {
               {result.success ? "✅ Success!" : "❌ Error"}
             </p>
             <p className="mt-1 text-sm">{result.message}</p>
+            {result.recordsUsed && result.dateRange && (
+              <div className="mt-2 text-sm">
+                <p>Records used: {result.recordsUsed} days</p>
+                <p>
+                  Date range: {new Date(result.dateRange.from).toLocaleDateString()} -{" "}
+                  {new Date(result.dateRange.to).toLocaleDateString()}
+                </p>
+                {result.topMetric && <p>Top metric: {result.topMetric}</p>}
+              </div>
+            )}
             {result.chartUrl && (
               <details className="mt-2">
                 <summary className="cursor-pointer text-sm font-medium">

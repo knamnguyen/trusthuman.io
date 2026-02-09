@@ -9,9 +9,12 @@
 
 Build an automated weekly email system that sends LinkedIn analytics summaries to all organization members every Tuesday at 10 AM UTC. The email displays 6 key metrics (followers, invites, comments, content reach, profile views, engage reach) in card format, plus a weekly trend chart. The system syncs analytics data from the WXT extension to the backend database, uses DBOS scheduled workflows for reliable weekly delivery, and integrates with Loops email service for sending and managing subscriptions.
 
-**Status**: ⏳ PLANNED (Updated with architectural improvements)
+**Status**: 🚧 IN PROGRESS (Phases 1-4, 5-7, 8, 10-11 completed; Phase 9 remaining)
 
 **Demo Status**: ✅ COMPLETED - Quick demo successfully validated Loops integration, email template design, and tRPC patterns (See: `process/plans/completed/loops-email-demo_PLAN_07-02-26.md`)
+
+**Email Template Status**: ✅ COMPLETED (Feb 9, 2026) - Full MJML template with dynamic memes, charts, subject lines working
+**Chart Known Limitation**: Data labels overlap with legend on QuickChart.io - tried layout.padding, legend.padding, y-axis max, clamp - none worked. Keeping data labels enabled but overlap may occur when top metric line is near top of chart.
 
 **IMPORTANT**: This plan follows strict **Pre-Phase Research** and **Post-Phase Testing** paradigm at every RFC. Each phase begins with research (existing patterns, similar implementations, potential blockers) and ends with comprehensive testing (acceptance criteria verification, edge cases, error scenarios).
 
@@ -45,6 +48,35 @@ Build an automated weekly email system that sends LinkedIn analytics summaries t
 - ✅ **Bun tests for critical components**: DBOS workflow (simulate real usage), Loops email integration - all tests must include cleanup logic
 - ✅ **No email preference UI**: Users already agreed to emails on signup. Just webhook to sync Loops unsubscribe → database (no toggle, no settings page)
 - ✅ **Focus on functionality**: Make it work reliably, avoid fancy features
+
+### ✅ Per-Account Email Distribution (Revised Feb 9, 2026)
+**Original plan**: Send one email per Organization to all org members
+**Revised approach**: Send one email per LinkedInAccount to owner + org admins
+**Rationale**:
+- Data model: `LinkedInAccount` has analytics, not `Organization`
+- Multi-account orgs: If org has 3 accounts, send 3 separate emails (each with different data)
+- Clear ownership: Each email is for a specific LinkedIn account
+- Query pattern: `LinkedInAccount → owner + org.admins`
+
+**Recipients per email**:
+1. Account owner (`LinkedInAccount.ownerId → User.primaryEmailAddress`)
+2. Org admins (`LinkedInAccount.organizationId → Organization.members[role=admin] → User.primaryEmailAddress`)
+
+**Deduplication**: If owner is also org admin, send only one email (not duplicate)
+
+### ✅ Orphaned Account Handling
+**Decision**: Skip accounts with `ownerId = null`
+**When ownerId is null**:
+- Account removed from org (via `removeFromOrg` mutation)
+- Organization deleted (via Clerk webhook)
+- User deleted (via Prisma `onDelete: SetNull` cascade)
+**Query filter**: `WHERE ownerId IS NOT NULL`
+
+### ✅ V1 Simple Email Preferences (No Per-Account Granularity)
+**Decision**: Keep current `UserEmailPreferences` model with global toggle
+**Schema**: `UserEmailPreferences.weeklyAnalyticsEnabled` (boolean, per-user)
+**V1 behavior**: User opts in/out globally for ALL accounts they receive emails for
+**Future V2**: Add `UserAccountEmailPreference` junction table for per-account control if users complain about too many emails
 
 ---
 
@@ -1138,14 +1170,89 @@ See [Component Details](#7-component-details) section above for full tRPC proced
 ✅ **Phase 1**: Database Schema & Migrations (COMPLETED - Feb 8, 2026)
 ✅ **Phase 2**: tRPC Sync Endpoint (COMPLETED - Feb 8, 2026)
 ✅ **Phase 3**: Extension Integration (Data Sync) (COMPLETED - Feb 8, 2026)
-⏳ **Phase 4**: DBOS Scheduled Workflow (PLANNED)
-⏳ **Phase 5**: Loops Email Integration (PARTIALLY VALIDATED - demo completed, need full implementation)
-⏳ **Phase 6**: Email Sending Logic (PARTIALLY VALIDATED - test mutation created, need scheduled logic)
-⏳ **Phase 7**: Webhook Endpoint (Unsubscribe Handling) (PLANNED)
-⏳ **Phase 8**: Test Email Button (✅ COMPLETED in demo - may need refinement)
+✅ **Phase 4**: DBOS Scheduled Workflow (COMPLETED - Feb 9, 2026)
+  - ✅ Existing DBOS patterns analyzed (`resetDailyQuotasWorkflow`)
+  - ✅ Per-account email distribution design confirmed
+  - ✅ Recipients: owner + org admins (deduplicated)
+  - ✅ Filter: `ownerId IS NOT NULL`
+  - ✅ V1 email prefs: global toggle (not per-account)
+  - ✅ Implementation complete (`email.workflows.ts`)
+  - ✅ Email helpers extracted to shared utils (`email-analytics.ts`)
+  - ✅ Workflow registered and scheduled (Wednesday 10 AM UTC)
+  - ✅ TypeScript compilation successful (no errors)
+  - ✅ **DBOS Testing VERIFIED (Feb 9, 2026)**:
+    - Local DBOS database confirmed working (`localhost:5432/engagekit_dbos`)
+    - Helper function tests pass (7/7) via `test-email-workflow-logic.ts`
+    - Manual workflow test created (`test-email-workflow-manual.ts`)
+    - End-to-end test successful: DB query → data processing → Loops API → email delivered
+    - Test email received at `engagekit.io@gmail.com` with correct subject/content
+  - **Chart Known Limitation**: Data labels may overlap with legend on QuickChart.io (tried layout.padding, legend.padding, y-axis max, clamp - none worked). Keeping data labels enabled for top metric.
+✅ **Phase 5**: Loops Email Template (COMPLETED - Feb 9, 2026) - MJML template with dynamic memes, charts, subject lines
+✅ **Phase 6**: Email Sending Logic (COMPLETED - Feb 9, 2026) - Test mutation works, dynamic content generation
+✅ **Phase 7**: Webhook Endpoint (Unsubscribe Handling) (COMPLETED - Feb 10, 2026)
+  - **Goal**: Sync Loops unsubscribe events to database so cron job respects user preferences
+  - **Implementation Completed**:
+    - ✅ Created `loops.webhook.ts` with HMAC-SHA256 signature verification
+    - ✅ Handles `contact.unsubscribed` event → sets `weeklyAnalyticsEnabled = false`
+    - ✅ Added route to `webhooks.ts` at `/api/webhooks/loops`
+    - ✅ Added optional `LOOPS_WEBHOOK_SECRET` env var
+    - ✅ Updated email template footer with in-app preference link
+  - **Files Created/Modified**:
+    - `packages/api/src/api/webhooks/loops.webhook.ts` (NEW)
+    - `packages/api/src/api/webhooks/webhooks.ts` (added loops route)
+    - `packages/api/src/utils/env.ts` (added LOOPS_WEBHOOK_SECRET)
+    - `apps/nextjs/public/email-assets/loops-template/index.mjml` (updated footer)
+  - **Setup Required**:
+    - Configure webhook in Loops Dashboard: Settings > Webhooks
+    - Add endpoint: `https://app.engagekit.io/api/webhooks/loops`
+    - Enable `contact.unsubscribed` event
+    - Copy signing secret to `LOOPS_WEBHOOK_SECRET` env var
+✅ **Phase 8**: Test Email Button (COMPLETED - Feb 9, 2026) - Working via tRPC endpoint
 ⏳ **Phase 9**: Testing & QA (PLANNED)
+✅ **Phase 10**: Analytics Dashboard UI (COMPLETED - Feb 9, 2026)
+  - **Goal**: Display analytics data in Next.js account dashboard (mirror extension UI)
+  - **Implementation Completed**:
+    - ✅ Added `analytics.getDailyAnalytics` tRPC query (packages/api/src/router/analytics.ts)
+    - ✅ Created `MetricCard.tsx` - compact cards with icon, value, % change, colored border selection
+    - ✅ Created `AnalyticsChart.tsx` - Recharts LineChart with time range (7D/2W/1M/3M/All) + delta/absolute toggle
+    - ✅ Created `AnalyticsSection.tsx` - horizontal layout (cards left 2x3 grid, chart right)
+    - ✅ Integrated into account dashboard page (above AchievementsSection)
+    - ✅ Removed placeholder "Account Info" and "Quick Actions" cards from dashboard
+  - **Files Created**:
+    - `apps/nextjs/.../[accountSlug]/_components/analytics/MetricCard.tsx`
+    - `apps/nextjs/.../[accountSlug]/_components/analytics/AnalyticsChart.tsx`
+    - `apps/nextjs/.../[accountSlug]/_components/analytics/AnalyticsSection.tsx`
+    - `apps/nextjs/.../[accountSlug]/_components/analytics/index.ts`
+  - **UI Features**:
+    - Horizontal layout: cards on left (fixed 256px width), chart on right (flex-1)
+    - 6 metric cards in 2 columns × 3 rows grid (3 columns on mobile)
+    - Click cards to toggle metrics on chart (colored border indicates selection)
+    - Time range selector (7D, 2W, 1M, 3M, All)
+    - View mode toggle (Change vs Total)
+    - Percentage change with color coding (green/red/muted)
+    - Loading, error, and empty states
+    - Responsive: stacks vertically on mobile, horizontal on desktop (lg breakpoint)
 
-**Immediate Next Steps**: Phase 4 - DBOS Scheduled Workflow
+✅ **Phase 11**: Email Preferences Toggle (COMPLETED - Feb 9, 2026)
+  - **Goal**: Allow users to opt-out of weekly analytics emails without global Loops unsubscribe
+  - **Rationale**: Loops unsubscribe = global opt-out from ALL emails. In-app toggle = granular control (keeps users subscribed for other email types)
+  - **Implementation Completed**:
+    - ✅ Added `analytics.getEmailPreferences` tRPC query
+    - ✅ Added `analytics.updateEmailPreferences` tRPC mutation (upserts UserEmailPreferences)
+    - ✅ Added "Email Preferences" card with Switch toggle to [orgSlug]/accounts page
+  - **Files Modified**:
+    - `packages/api/src/router/analytics.ts` - Added get/update email preferences endpoints
+    - `apps/nextjs/.../[orgSlug]/accounts/page.tsx` - Added email preferences UI card
+  - **UI Features**:
+    - Card at bottom of accounts page with Mail icon
+    - Switch toggle for "Weekly Analytics Email"
+    - Description: "Receive weekly email summaries for all your LinkedIn accounts"
+    - Optimistic updates with query invalidation
+
+**Immediate Next Steps**:
+- Phase 9: Testing & QA - production deployment verification on first Tuesday run
+- Follow up with cofounder for DBOS Cloud Console access (production monitoring)
+- Ensure DBOS workflow checks `UserEmailPreferences.weeklyAnalyticsEnabled` before sending emails
 
 ---
 
@@ -1625,89 +1732,128 @@ See [Component Details](#7-component-details) section above for full tRPC proced
 
 **Dependencies**: RFC-003 (Extension Integration)
 
+**Pre-Phase Research Status**: ✅ COMPLETED (Feb 9, 2026)
+- Existing DBOS pattern found: `resetDailyQuotasWorkflow` in `account.workflows.ts`
+- Uses `DBOS.registerWorkflow()` + `DBOS.registerScheduled()` (not decorators)
+- Steps wrapped in `DBOS.runStep()` with named identifiers
+- Logging via `DBOS.logger.info/warn/error`
+
+**Key Design Decisions (from research)**:
+- **Per-account emails**: One email per LinkedInAccount (not per-org)
+- **Recipients**: Account owner + org admins (deduplicated)
+- **Filter**: `ownerId IS NOT NULL` (skip orphaned accounts)
+- **Preferences**: Global toggle via `UserEmailPreferences.weeklyAnalyticsEnabled`
+
 **Stages**:
 
-**Stage 0: Pre-Phase Research**
-1. Read existing DBOS workflow (`dailyQuotaResetWorkflow`)
-2. Understand `@Scheduled` decorator syntax (cron format)
-3. Review DBOS step pattern (`ctxt.invoke()`)
-4. Understand DBOS logging (`ctxt.logger`)
-5. Present proposed workflow structure to user
+**Stage 0: Pre-Phase Research** ✅ COMPLETED
+1. ✅ Read existing DBOS workflow (`resetDailyQuotasWorkflow`)
+2. ✅ Understand DBOS registration pattern (not decorators)
+3. ✅ Review DBOS step pattern (`DBOS.runStep()`)
+4. ✅ Understand DBOS logging (`DBOS.logger`)
+5. ✅ Clarified per-account vs per-org design
 
 **Stage 1: Workflow Scaffolding**
 1. Create `packages/api/src/workflows/email.workflows.ts` (new file)
-2. Import dependencies: `Scheduled`, `ScheduledWorkflowContext`, `db`
-3. Define workflow class: `EmailWorkflows`
-4. Add `@Scheduled({ cron: "0 10 * * 2" })` decorator (Tuesday 10 AM UTC)
-5. Create skeleton workflow method:
+2. Import dependencies: `DBOS`, `SchedulerMode`, `db`
+3. Register workflow with `DBOS.registerWorkflow()`:
    ```typescript
-   @Scheduled({ cron: "0 10 * * 2" })
-   static async weeklyAnalyticsEmailWorkflow(ctxt: ScheduledWorkflowContext) {
-     ctxt.logger.info("Starting weekly analytics email workflow");
-   }
-   ```
-
-**Stage 2: Query Logic - Organizations with New Data**
-1. Create DBOS step `getOrganizationsWithNewData()`:
-   ```typescript
-   const orgs = await db.organization.findMany({
-     where: {
-       analyticsWeekly: {
-         some: {
-           lastSyncedAt: {
-             gt: // 7 days ago or lastAnalyticsEmailAt
-           }
-         }
-       },
-       linkedInUrl: { not: null } // Only orgs with LinkedIn accounts
+   const weeklyAnalyticsEmailWorkflow = DBOS.registerWorkflow(
+     async function (_scheduledTime: Date, _startTime: Date) {
+       DBOS.logger.info("Starting weekly analytics email workflow");
+       // ... workflow logic
      },
-     include: {
-       analyticsWeekly: {
-         orderBy: { weekStartDate: 'desc' },
-         take: 1 // Most recent week
-       },
-       users: {
-         where: {
-           emailPreferences: {
-             weeklyAnalytics: true // Only subscribed users
-           }
-         },
-         include: { emailPreferences: true }
-       }
-     }
+     { name: "weekly-analytics-email-workflow" }
+   );
+
+   DBOS.registerScheduled(weeklyAnalyticsEmailWorkflow, {
+     crontab: "0 10 * * 2", // Tuesday 10 AM UTC
+     mode: SchedulerMode.ExactlyOncePerInterval,
+     name: weeklyAnalyticsEmailWorkflow.name,
    });
    ```
-2. Filter orgs where `lastSyncedAt > (lastAnalyticsEmailAt ?? 7 days ago)`
-3. Return list of organizations with users
+4. Import in `workflows/index.ts` to register on startup
+
+**Stage 2: Query Logic - Accounts with New Data**
+1. Create DBOS step `getAccountsToEmail()`:
+   ```typescript
+   const accounts = await DBOS.runStep(
+     async () => {
+       const sevenDaysAgo = new Date();
+       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+       return db.linkedInAccount.findMany({
+         where: {
+           ownerId: { not: null },  // Skip orphaned accounts
+           analyticsDaily: {
+             some: { date: { gte: sevenDaysAgo } }  // Has recent data
+           }
+         },
+         include: {
+           owner: {
+             include: { emailPreferences: true }
+           },
+           org: {
+             include: {
+               members: {
+                 where: { role: "admin" },
+                 include: { user: { include: { emailPreferences: true } } }
+               }
+             }
+           },
+           analyticsDaily: {
+             where: { date: { gte: sevenDaysAgo } },
+             orderBy: { date: 'asc' }
+           }
+         }
+       });
+     },
+     { name: "get-accounts-to-email" }
+   );
+   ```
+2. For each account, collect unique recipients (owner + org admins, deduplicated)
+3. Filter recipients by `emailPreferences.weeklyAnalyticsEnabled = true`
 
 **Stage 3: Email Sending Logic**
-1. Create DBOS step `sendAnalyticsEmailToOrg(orgId)`:
-   - Fetch current week metrics (LinkedInAnalyticsWeekly)
-   - Fetch previous week metrics (for change calculation)
-   - Fetch 8 weeks of daily data (for chart)
-   - Transform data into Loops template variables
-   - For each user in org:
+1. Create DBOS step `sendEmailForAccount(account)`:
+   - Reuse helpers from `analytics.ts` router (extract to shared utils)
+   - Calculate percentage changes from 7-day data
+   - Generate chart URL, meme URL, subject line
+   - Build Loops template variables
+   - For each recipient:
      - Call Loops API to send email
-     - Update user's lastAnalyticsEmailAt timestamp
-2. Add error handling (catch per-org, don't fail entire workflow)
-3. Add retry logic (if Loops API fails, retry 3 times with exponential backoff)
+     - Log success/failure
+2. Add error handling (catch per-account, don't fail entire workflow)
+3. Continue to next account on failure (log error)
 
 **Stage 4: Workflow Integration**
-1. Wire up workflow method:
+1. Wire up full workflow:
    ```typescript
-   static async weeklyAnalyticsEmailWorkflow(ctxt: ScheduledWorkflowContext) {
-     const orgs = await ctxt.invoke(getOrganizationsWithNewData);
-     ctxt.logger.info(`Found ${orgs.length} organizations to email`);
+   const weeklyAnalyticsEmailWorkflow = DBOS.registerWorkflow(
+     async function (_scheduledTime: Date, _startTime: Date) {
+       const accounts = await getAccountsToEmail();
+       DBOS.logger.info(`Found ${accounts.length} accounts to email`);
 
-     for (const org of orgs) {
-       await ctxt.invoke(sendAnalyticsEmailToOrg, org.id);
-     }
+       let successCount = 0;
+       let failCount = 0;
 
-     ctxt.logger.info("Weekly analytics email workflow complete");
-   }
+       for (const account of accounts) {
+         try {
+           await sendEmailForAccount(account);
+           successCount++;
+         } catch (error) {
+           DBOS.logger.error(`Failed to send email for account ${account.id}:`, error);
+           failCount++;
+         }
+       }
+
+       DBOS.logger.info(`Weekly analytics email workflow complete. Success: ${successCount}, Failed: ${failCount}`);
+     },
+     { name: "weekly-analytics-email-workflow" }
+   );
    ```
-2. Register workflow in DBOS config
-3. Test workflow locally (trigger manually via DBOS CLI)
+2. Register workflow import in `workflows/index.ts`
+3. Test workflow locally (trigger manually)
 
 **Post-Phase Testing**:
 1. Trigger workflow manually: `dbos invoke weeklyAnalyticsEmailWorkflow`
@@ -1874,16 +2020,19 @@ See [Component Details](#7-component-details) section above for full tRPC proced
 6. Forward email to colleagues for feedback
 
 **Acceptance Criteria**:
-- [ ] Template created in Loops dashboard
-- [ ] 6 metric cards display correctly
-- [ ] Change indicators show +/- with colors
-- [ ] Chart displays last 8 weeks (or alternative visualization)
-- [ ] Mobile responsive (cards stack, chart readable)
-- [ ] Unsubscribe link works
-- [ ] Template preview looks professional
-- [ ] All variables mapped correctly
+- [x] Template created in Loops dashboard (MJML uploaded as zip)
+- [x] 6 metric cards display correctly (2x3 grid with mj-group)
+- [x] Change indicators show +/- with colors (green for positive)
+- [x] Chart displays last 7 days (QuickChart.io multi-line, 500px width)
+- [x] Mobile responsive (mj-group prevents card stacking, maintains 3-column)
+- [ ] Unsubscribe link works (placeholder - needs Loops webhook)
+- [x] Template preview looks professional (neobrutalist design with color-coded labels)
+- [x] All variables mapped correctly (DATA_VARIABLE syntax)
+- [x] Dynamic meme generation (memegen.link with category-based selection)
+- [x] Dynamic subject lines (psychology patterns + week date)
+- [x] Test email sending working (tRPC endpoint)
 
-**What's Functional Now**: Email template ready to receive data
+**What's Functional Now**: Full email template with dynamic content generation, test sending works
 
 **Ready For**: RFC-006 (Email Sending Logic)
 

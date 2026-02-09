@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { getTrpcClient } from "@/lib/trpc/client";
+// import { getTrpcClient } from "@/lib/trpc/client"; // DEV ONLY - commented out
 import {
   BarChart3,
-  Database,
+  // Database, // DEV ONLY - commented out
   Eye,
   Mail,
   MessageSquare,
@@ -11,8 +11,8 @@ import {
   Users,
 } from "lucide-react";
 
-import { Button } from "@sassy/ui/button";
-import { toast } from "@sassy/ui/toast";
+// import { Button } from "@sassy/ui/button"; // DEV ONLY - commented out
+// import { toast } from "@sassy/ui/toast"; // DEV ONLY - commented out
 
 import type { DataSnapshot } from "../utils/data-fetch-mimic/data-collector";
 import { useAccountStore } from "../stores/account-store";
@@ -22,7 +22,7 @@ import {
   INTERVAL_OPTIONS,
   setAutoFetchIntervalHours,
 } from "../utils/data-fetch-mimic/auto-fetch-config";
-import { syncToDatabase } from "../utils/data-fetch-mimic/sync-to-database";
+// import { syncToDatabase } from "../utils/data-fetch-mimic/sync-to-database"; // DEV ONLY - commented out
 import { useContentImpressionsHistory } from "../utils/data-fetch-mimic/use-content-impressions-history";
 import {
   useCommentsHistory,
@@ -162,84 +162,11 @@ export function AnalyticsTab() {
     refetch: contentImpressionsRefetch,
   } = useContentImpressionsHistory();
 
-  // State for send test email button
-  const [isSendingEmail, setIsSendingEmail] = useState(false);
-
-  // State for force sync button
-  const [isSyncing, setIsSyncing] = useState(false);
-
-  // Handle force sync button click
-  const handleForceSync = async () => {
-    setIsSyncing(true);
-
-    try {
-      const accountId = useAccountStore.getState().currentLinkedIn.profileUrn;
-
-      if (!accountId) {
-        toast.error("No account ID found", { duration: 3000 });
-        return;
-      }
-
-      console.log("🔄 Force sync triggered for account:", accountId);
-
-      const result = await syncToDatabase(accountId, false); // false = do backfill if needed
-
-      if (result.success) {
-        toast.success(`✅ Synced ${result.synced} record(s) to database`, {
-          duration: 3000,
-        });
-      } else {
-        toast.error("Sync failed - check console for details", {
-          duration: 5000,
-        });
-      }
-    } catch (error) {
-      console.error("Error during force sync:", error);
-      toast.error(
-        `Sync failed: ${error instanceof Error ? error.message : "Unknown error"}`,
-        {
-          duration: 5000,
-        },
-      );
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
-  // Handle send test email button click
-  const handleSendTestEmail = async () => {
-    setIsSendingEmail(true);
-
-    try {
-      // Gather metrics from current analytics data
-      const metrics = {
-        followers: followersLatest?.data.totalFollowers ?? 0,
-        invites: inviteCountLatest?.data.totalInvites ?? 0,
-        comments: commentsLatest?.data.totalComments ?? 0,
-        contentReach: contentImpressionsLatest?.data.totalImpressions ?? 0,
-        profileView: profileViewsLatest?.data.totalViews ?? 0, // Note: singular per template
-        engageReach: profileImpressionsLatest?.data.totalImpressions ?? 0,
-      };
-
-      // Call tRPC mutation directly using getTrpcClient() pattern
-      const trpc = getTrpcClient();
-      await trpc.analytics.sendTestAnalyticsEmail.mutate(metrics);
-
-      toast.success("Test email sent! Check your inbox.", {
-        duration: 3000,
-      });
-    } catch (error) {
-      console.error("Error sending test email:", error);
-      toast.error(
-        `Failed to send email: ${error instanceof Error ? error.message : "Unknown error"}`,
-        {
-          duration: 5000,
-        },
-      );
-    } finally {
-      setIsSendingEmail(false);
-    }
-  };
+  // DEV ONLY - State and handlers commented out for production
+  // const [isSendingEmail, setIsSendingEmail] = useState(false);
+  // const [isSyncing, setIsSyncing] = useState(false);
+  // const handleForceSync = async () => { ... };
+  // const handleSendTestEmail = async () => { ... };
 
   // Get time range in days for percentage calculations
   const timeRangeDays = useMemo(() => {
@@ -305,47 +232,9 @@ export function AnalyticsTab() {
     });
   };
 
-  // DEV ONLY - Unified refresh - fetches all metrics at once for synchronized timestamps
-  // const refetchAll = async () => {
-  //   console.log("🔄 Refreshing all metrics...");
-  //   try {
-  //     await Promise.all([
-  //       profileViewsRefetch(),
-  //       inviteCountRefetch(),
-  //       commentsRefetch(),
-  //       followersRefetch(),
-  //       profileImpressionsRefetch(),
-  //       contentImpressionsRefetch(),
-  //     ]);
-  //     console.log("✅ All metrics refresh initiated successfully");
-  //   } catch (error) {
-  //     console.error("❌ Refresh failed:", error);
-  //     throw error;
-  //   }
-  // };
-
-  // DEV ONLY - Clear all stored data for the current account
-  // const clearAllData = async () => {
-  //   if (
-  //     window.confirm(
-  //       "Are you sure you want to clear all analytics data for this LinkedIn account? This cannot be undone.",
-  //     )
-  //   ) {
-  //     if (!accountId) {
-  //       console.warn("No account ID available to clear data");
-  //       return;
-  //     }
-  //     const { storage } = await import("wxt/storage");
-  //     await storage.removeItem(`local:profile-views-${accountId}` as `local:${string}`);
-  //     await storage.removeItem(`local:invite-count-${accountId}` as `local:${string}`);
-  //     await storage.removeItem(`local:dashboard-comments-${accountId}` as `local:${string}`);
-  //     await storage.removeItem(`local:followers-count-${accountId}` as `local:${string}`);
-  //     await storage.removeItem(`local:profile-impressions-${accountId}` as `local:${string}`);
-  //     await storage.removeItem(`local:content-impressions-${accountId}` as `local:${string}`);
-  //     console.log(`🗑️ All analytics data cleared for account: ${accountId}`);
-  //     window.location.reload();
-  //   }
-  // };
+  // DEV ONLY - refetchAll and clearAllData commented out for production
+  // const refetchAll = async () => { ... };
+  // const clearAllData = async () => { ... };
 
   return (
     <div id="ek-analytics-tab" className="flex flex-col gap-4 px-4">
@@ -517,50 +406,18 @@ export function AnalyticsTab() {
         </select>
       </div>
 
-      {/* Force Sync Button */}
-      <Button
-        onClick={handleForceSync}
-        disabled={isSyncing}
-        variant="outline"
-        className="w-full"
-      >
+      {/* DEV ONLY - Buttons commented out for production */}
+      {/* <Button onClick={handleForceSync} disabled={isSyncing} variant="outline" className="w-full">
         <Database className="mr-2 h-4 w-4" />
         {isSyncing ? "Syncing..." : "Force Sync to DB"}
       </Button>
-      {/* Send Test Email Button */}
-      <Button
-        onClick={handleSendTestEmail}
-        disabled={isSendingEmail}
-        variant="outline"
-        className="w-full"
-      >
+      <Button onClick={handleSendTestEmail} disabled={isSendingEmail} variant="outline" className="w-full">
         <Mail className="mr-2 h-4 w-4" />
         {isSendingEmail ? "Sending..." : "Send Test Email"}
       </Button>
-
-      {/* DEV ONLY - Action Buttons (commented out for production) */}
-      {/* <div className="flex gap-2">
-        <Button
-          onClick={refetchAll}
-          variant="primary"
-          className="flex-1"
-          disabled={
-            profileViewsLoading ||
-            inviteCountLoading ||
-            commentsLoading ||
-            followersLoading ||
-            profileImpressionsLoading ||
-            contentImpressionsLoading
-          }
-        >
-          {profileViewsLoading ||
-          inviteCountLoading ||
-          commentsLoading ||
-          followersLoading ||
-          profileImpressionsLoading ||
-          contentImpressionsLoading
-            ? "Refreshing..."
-            : "Refresh All"}
+      <div className="flex gap-2">
+        <Button onClick={refetchAll} variant="primary" className="flex-1" disabled={...}>
+          Refresh All
         </Button>
         <Button onClick={clearAllData} variant="destructive" className="flex-1">
           Clear All Data
