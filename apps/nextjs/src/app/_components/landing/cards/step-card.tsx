@@ -32,7 +32,7 @@ export function StepCard({ number, title, description, videoPath }: StepCardProp
               muted
               playsInline
               aria-label={`Demo video showing ${title}`}
-              className="rounded-lg shadow-lg md:max-h-[280px] md:object-cover md:object-left md:[transform:scale(1.05)_perspective(1000px)_rotateY(-6deg)_rotateX(1deg)]"
+              className="w-full rounded-lg border shadow-xl md:max-h-[280px] md:object-cover md:object-left md:[transform:scale(1.05)_perspective(1000px)_rotateY(-6deg)_rotateX(1deg)]"
             >
               <source src={videoPath} type="video/mp4" />
               Your browser does not support the video tag.
@@ -49,7 +49,7 @@ export function StepCard({ number, title, description, videoPath }: StepCardProp
               muted
               playsInline
               aria-label={`Demo video showing ${title}`}
-              className="rounded-lg shadow-lg md:max-h-[280px] md:object-cover md:object-right md:[transform:scale(1.05)_perspective(1000px)_rotateY(6deg)_rotateX(1deg)]"
+              className="w-full rounded-lg border shadow-xl md:max-h-[280px] md:object-cover md:object-right md:[transform:scale(1.05)_perspective(1000px)_rotateY(6deg)_rotateX(1deg)]"
             >
               <source src={videoPath} type="video/mp4" />
               Your browser does not support the video tag.
