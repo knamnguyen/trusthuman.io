@@ -194,93 +194,108 @@ export function NavDropdown({
       {/* Full-width dropdown - positioned outside nav to avoid overflow */}
       {/* Hidden on mobile - mobile uses hamburger menu instead */}
       {isOpen && (
-        <div
-          ref={menuRef}
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
-          className={cn(
-            "fixed right-0 left-0 z-[100] hidden md:block",
-            "border-[1.5px] border-black bg-background shadow-[4px_4px_0_#000]",
-            "rounded-t-none rounded-b-sm",
-            "animate-[slideDown_0.2s_ease-out]",
-          )}
-          style={{
-            width: "100vw",
-            maxWidth: "100vw",
-            top: `${navHeight}px`,
-          }}
-        >
-          <div className="container mx-auto px-4 py-6">
-            {children ? (
-              children
-            ) : (
-              <div className="flex gap-6">
-                {/* Left side - Item list */}
-                <div className="w-1/2 flex-shrink-0">
-                  <div
-                    className={cn(
-                      "grid grid-cols-2 gap-2",
-                      items.length > 8 && "max-h-[400px] overflow-y-auto pr-2",
-                    )}
-                  >
-                    {items.map((item) => {
-                      const Icon = item.icon;
-                      const isHovered = hoveredItem?.id === item.id;
-                      return (
-                        <a
-                          key={item.id}
-                          href={item.href}
-                          onMouseEnter={() => setHoveredItem(item)}
-                          onMouseLeave={() => setHoveredItem(null)}
-                          className={cn(
-                            "flex items-center gap-3 rounded-sm px-4 py-7",
-                            "border-[1.5px] border-black shadow-[2px_2px_0_#000]",
-                            "bg-card text-black no-underline",
-                            "hover:translate-y-[2px] hover:shadow-[1px_1px_0_#000]",
-                            "transition-all duration-150",
-                            "focus-visible:ring-2 focus-visible:ring-black focus-visible:outline-none",
-                            isHovered && "bg-accent",
-                          )}
-                        >
-                          {Icon ? (
-                            <Icon className="h-5 w-5 flex-shrink-0" />
-                          ) : (
-                            <span className="flex-shrink-0 text-lg">
-                              {item.iconEmoji || "📄"}
-                            </span>
-                          )}
-                          <div className="flex min-w-0 flex-col">
-                            <span className="text-sm font-semibold">
-                              {item.title}
-                            </span>
-                            {item.description && (
-                              <span className="text-muted-foreground truncate text-xs">
-                                {item.description}
+        <>
+          {/* Inject keyframes for clip-path animation */}
+          <style>{`
+            @keyframes navDropdownSlideDown {
+              from {
+                opacity: 0;
+                clip-path: inset(0 0 100% 0);
+              }
+              to {
+                opacity: 1;
+                clip-path: inset(0 0 0% 0);
+              }
+            }
+          `}</style>
+          <div
+            ref={menuRef}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            className={cn(
+              "fixed right-0 left-0 z-[100] hidden md:block",
+              "border-[1.5px] border-black bg-background shadow-[4px_4px_0_#000]",
+              "rounded-t-none rounded-b-sm",
+            )}
+            style={{
+              width: "100vw",
+              maxWidth: "100vw",
+              top: `${navHeight}px`,
+              animation: "navDropdownSlideDown 0.25s ease-out forwards",
+            }}
+          >
+            <div className="container mx-auto px-4 py-6">
+              {children ? (
+                children
+              ) : (
+                <div className="flex gap-6">
+                  {/* Left side - Item list */}
+                  <div className="w-1/2 flex-shrink-0">
+                    <div
+                      className={cn(
+                        "grid grid-cols-2 gap-2",
+                        items.length > 8 && "max-h-[400px] overflow-y-auto pr-2",
+                      )}
+                    >
+                      {items.map((item) => {
+                        const Icon = item.icon;
+                        const isHovered = hoveredItem?.id === item.id;
+                        return (
+                          <a
+                            key={item.id}
+                            href={item.href}
+                            onMouseEnter={() => setHoveredItem(item)}
+                            onMouseLeave={() => setHoveredItem(null)}
+                            className={cn(
+                              "flex items-center gap-3 rounded-sm px-4 py-7",
+                              "border-[1.5px] border-black shadow-[2px_2px_0_#000]",
+                              "bg-card text-black no-underline",
+                              "hover:translate-y-[2px] hover:shadow-[1px_1px_0_#000]",
+                              "transition-all duration-150",
+                              "focus-visible:ring-2 focus-visible:ring-black focus-visible:outline-none",
+                              isHovered && "bg-accent",
+                            )}
+                          >
+                            {Icon ? (
+                              <Icon className="h-5 w-5 flex-shrink-0" />
+                            ) : (
+                              <span className="flex-shrink-0 text-lg">
+                                {item.iconEmoji || "📄"}
                               </span>
                             )}
-                          </div>
-                        </a>
-                      );
-                    })}
+                            <div className="flex min-w-0 flex-col">
+                              <span className="text-sm font-semibold">
+                                {item.title}
+                              </span>
+                              {item.description && (
+                                <span className="text-muted-foreground truncate text-xs">
+                                  {item.description}
+                                </span>
+                              )}
+                            </div>
+                          </a>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
 
-                {/* Right side - Preview component */}
-                <div className="min-w-0 flex-1">
-                  <div className="relative h-[400px]">
-                    <div className="absolute inset-0 overflow-auto">
-                      {renderPreview ? (
-                        renderPreview(hoveredItem)
-                      ) : (
-                        <DefaultPreview item={hoveredItem} />
-                      )}
+                  {/* Right side - Preview component */}
+                  <div className="min-w-0 flex-1">
+                    <div className="relative h-[400px]">
+                      <div className="absolute inset-0 overflow-auto">
+                        {renderPreview ? (
+                          renderPreview(hoveredItem)
+                        ) : (
+                          <DefaultPreview item={hoveredItem} />
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        </div>
+        </>
       )}
     </>
   );

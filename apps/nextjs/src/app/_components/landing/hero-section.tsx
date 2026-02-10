@@ -2,32 +2,13 @@
 
 import Image from "next/image";
 
+import { Badge } from "@sassy/ui/badge";
 import { Button } from "@sassy/ui/button";
 
 import { useMobileSignupModal } from "~/hooks/use-mobile-signup-modal";
+import { MESSAGING } from "./landing-content";
 import { MobileSignupForm } from "./mobile-signup-form";
 import { MobileSignupModal } from "./mobile-signup-modal";
-import { RotatingTitles } from "./rotating-titles";
-
-const titles = [
-  "You :)",
-  "Solopreneurs",
-  "Content Creators",
-  "Job Applicants",
-  "Startup Founders",
-  "Students",
-  "Marketers",
-  "Salespeople",
-  "Indie Builders",
-  "Thought Leaders",
-  "Influencers",
-  "Recruiters",
-  "Consultants",
-  "Freelancers",
-  "Agency Owners",
-  "Business Leaders",
-  "C-Suite Executives",
-];
 
 export function HeroSection() {
   const { isOpen, closeModal } = useMobileSignupModal();
@@ -39,7 +20,8 @@ export function HeroSection() {
   };
 
   return (
-    <section className="container flex flex-col items-center gap-6 py-24 text-center sm:py-32">
+    <section className="bg-card w-full">
+      <div className="container flex flex-col items-center gap-6 py-24 text-center sm:py-32">
       <Image
         src="/engagekit-logo.svg"
         alt="EngageKit Logo"
@@ -47,30 +29,26 @@ export function HeroSection() {
         height={120}
         className="mt-[-50px] mb-[-50px] h-70 w-70"
       />
-      <h1 className="flex flex-wrap items-center justify-center gap-x-4 text-5xl font-extrabold tracking-tighter [word-spacing:0.15em] sm:text-7xl">
-        <span>
-          AI LinkedIn Engagement Intern <br />
-          that works 24/7 for
-        </span>
-        <RotatingTitles titles={titles} />
+
+      {/* Headline */}
+      <h1 className="text-5xl font-extrabold tracking-tighter sm:text-7xl">
+        {MESSAGING.hero.headline}
       </h1>
-      <p className="max-w-2xl text-lg text-gray-600">
-        100 human-like comments/day on auto-pilot <br />
-        Get your LinkedIn profile reach 100k+ <br />
-        Thousands of new followers <br />
-        Save 100 hours a month <br />
-        Free to get started
+
+      {/* Subheadline */}
+      <p className="max-w-2xl text-lg text-muted-foreground">
+        {MESSAGING.hero.subheadline}
       </p>
-      <div className="w-full max-w-md">
+
+      {/* CTA Buttons */}
+      <div className="flex flex-col sm:flex-row gap-4 w-full max-w-2xl justify-center">
         {/* Mobile & iPad: Show signup form */}
-        <div className="block lg:hidden">
+        <div className="block lg:hidden w-full">
           <MobileSignupForm />
         </div>
 
-        {/* Desktop: Show button */}
-        <div className="hidden lg:block">
-          {/* Original Chrome extension link preserved for reference: */}
-          {/* https://chrome.google.com/webstore/detail/inobbppddbakbhhfkfkinmicnbpeekok */}
+        {/* Desktop: Show buttons */}
+        <div className="hidden lg:flex gap-4">
           <Button
             size="lg"
             onClick={() => {
@@ -78,20 +56,40 @@ export function HeroSection() {
                 "https://chromewebstore.google.com/detail/engagekit/gnaedgbedhaolekeffieinkehccpaiii",
                 "_blank",
               );
-              // To revert to Tally popup:
-              // if (typeof window !== "undefined" && (window as any).Tally) {
-              //   (window as any).Tally.openPopup("woN0Re", { layout: "modal", width: 700 });
-              // }
             }}
-            className="cursor-pointer rounded-md border-2 border-black bg-pink-500 p-6 text-lg font-bold text-white shadow-[4px_4px_0px_#000] transition-all hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-none sm:p-8 sm:text-xl"
           >
-            I want to grow my LinkedIn
+            {MESSAGING.hero.primaryCTA}
+          </Button>
+
+          <Button
+            size="lg"
+            variant="secondary"
+            onClick={() => {
+              document
+                .getElementById("context-engine")
+                ?.scrollIntoView({ behavior: "smooth" });
+            }}
+          >
+            {MESSAGING.hero.secondaryCTA}
           </Button>
         </div>
       </div>
 
+      {/* Trust Badges */}
+      <div className="mt-8 flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground">
+        {MESSAGING.hero.trustBadges.map((badge, index) => (
+          <span key={badge} className="flex items-center gap-4">
+            <span>{badge}</span>
+            {index < MESSAGING.hero.trustBadges.length - 1 && (
+              <span className="text-border">•</span>
+            )}
+          </span>
+        ))}
+      </div>
+
       {/* Mobile Signup Modal */}
       <MobileSignupModal isOpen={isOpen} onClose={closeModal} />
+      </div>
     </section>
   );
 }

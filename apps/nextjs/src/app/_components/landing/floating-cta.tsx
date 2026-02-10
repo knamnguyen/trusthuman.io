@@ -44,9 +44,10 @@ export const FloatingCTA = () => {
       {/* Original redirect preserved - https://chrome.google.com/webstore/detail/inobbppddbakbhhfkfkinmicnbpeekok */}
       <Button
         onClick={handleRedirect}
-        className="h-16 cursor-pointer rounded-md border-2 border-black bg-pink-500 px-8 text-xl font-bold text-white shadow-[6px_6px_0px_#000] transition-all hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none"
+        size="lg"
+        className="h-16 cursor-pointer rounded-md border-2 border-border bg-primary px-8 text-xl font-bold text-primary-foreground shadow-[6px_6px_0px_#000] transition-all hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none"
       >
-        Grow your LinkedIn now
+        Build relationships now
       </Button>
     </div>
   );

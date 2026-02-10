@@ -2,53 +2,56 @@
 
 import Image from "next/image";
 
-import { Button } from "@sassy/ui/button";
+import { NavBlog } from "@sassy/ui/components/nav-blog";
+
+import { useBlogPosts } from "~/hooks/use-blog-posts";
+import { useTools } from "~/hooks/use-tools";
+
+// Landing page logo component
+function LandingLogo() {
+  return (
+    <a href="/" className="mx-auto flex items-center gap-2 md:mx-0">
+      <Image
+        src="/engagekit-logo.svg"
+        alt="EngageKit Logo"
+        width={32}
+        height={32}
+        className="h-8 w-8"
+      />
+      <span className="text-lg font-bold">EngageKit</span>
+    </a>
+  );
+}
+
+// Landing page mobile menu items
+const landingMobileMenuItems = [
+  { label: "Free Tools", href: "https://blog.engagekit.io/tag/tool" },
+  { label: "Blog", href: "https://blog.engagekit.io" },
+];
 
 export const Header = () => {
-  const handleScrollToCTA = () => {
-    document
-      .getElementById("final-cta")
-      ?.scrollIntoView({ behavior: "smooth" });
+  // Fetch real data from Ghost CMS
+  const { blogItems, isLoading: blogItemsLoading } = useBlogPosts();
+  const { toolItems, isLoading: toolItemsLoading } = useTools();
+
+  const handleCtaClick = () => {
+    window.open(
+      "https://chromewebstore.google.com/detail/engagekit/gnaedgbedhaolekeffieinkehccpaiii",
+      "_blank",
+    );
   };
 
   return (
-    <header className="fixed top-0 z-50 w-full border-b-2 border-black bg-zinc-50/90 backdrop-blur-lg">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <div className="flex items-center gap-2">
-          <Image
-            src="/engagekit-logo.svg"
-            alt="EngageKit Logo"
-            width={32}
-            height={32}
-            className="h-8 w-8"
-          />
-          <h1 className="text-xl font-bold tracking-tight">EngageKit</h1>
-        </div>
-        <h1>
-          <span className="hidden sm:inline">
-            AI Intern that engage on LinkedIn for you 24/7
-          </span>
-        </h1>
-        {/* Original Chrome extension link preserved for reference: */}
-        {/* https://chrome.google.com/webstore/detail/inobbppddbakbhhfkfkinmicnbpeekok */}
-        <Button
-          onClick={() => {
-            // Reverted to open Chrome extension page
-            window.open(
-              "https://chromewebstore.google.com/detail/engagekit/gnaedgbedhaolekeffieinkehccpaiii",
-              "_blank",
-            );
-            // To switch back to Tally popup, uncomment below:
-            // if (typeof window !== "undefined" && (window as any).Tally) {
-            //   (window as any).Tally.openPopup("woN0Re", { layout: "modal", width: 700 });
-            // }
-          }}
-          className="cursor-pointer rounded-md border-2 border-black bg-pink-500 font-bold text-white shadow-[4px_4px_0px_#000] transition-all hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-none"
-          size="sm"
-        >
-          Add to Chrome
-        </Button>
-      </div>
-    </header>
+    <NavBlog
+      logo={<LandingLogo />}
+      ctaText="Add to Chrome"
+      ctaOnClick={handleCtaClick}
+      mobileMenuItems={landingMobileMenuItems}
+      showDropdowns={true}
+      toolItems={toolItems}
+      toolItemsLoading={toolItemsLoading}
+      blogItems={blogItems}
+      blogItemsLoading={blogItemsLoading}
+    />
   );
 };

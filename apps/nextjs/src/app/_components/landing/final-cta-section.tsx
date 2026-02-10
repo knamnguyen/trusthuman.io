@@ -2,6 +2,8 @@
 
 import { Button } from "@sassy/ui/button";
 
+import { MESSAGING } from "./landing-content";
+
 export const FinalCTASection = () => {
   const handleRedirect = () => {
     window.open(
@@ -15,21 +17,35 @@ export const FinalCTASection = () => {
   };
 
   return (
-    <section id="final-cta" className="bg-zinc-900 py-20 text-center">
-      <div className="container mx-auto px-4">
-        <h2 className="text-5xl font-extrabold tracking-tighter text-white sm:text-7xl">
-          Get EngageKit.
+    <section id="final-cta" className="bg-foreground py-20">
+      <div className="container mx-auto max-w-4xl px-4 text-center">
+        <h2 className="text-4xl font-bold tracking-tight text-background sm:text-5xl mb-4">
+          {MESSAGING.finalCTA.headline}
         </h2>
-        <p className="mt-4 text-8xl font-extrabold tracking-tighter text-pink-500">
-          Free.
+        <p className="text-xl text-muted mb-8">
+          {MESSAGING.finalCTA.subheadline}
         </p>
-        <div className="mt-8">
-          {/* Original redirect preserved - https://chrome.google.com/webstore/detail/inobbppddbakbhhfkfkinmicnbpeekok */}
+
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button
-            onClick={handleRedirect}
-            className="h-auto cursor-pointer rounded-md border-2 border-black bg-pink-500 px-8 py-4 text-lg font-bold text-white shadow-[8px_8px_0px_#000] transition-all hover:translate-x-[6px] hover:translate-y-[6px] hover:shadow-none sm:px-16 sm:text-2xl"
+            asChild
+            size="lg"
+            className="bg-primary text-primary-foreground border-2 border-background shadow-[4px_4px_0px_hsl(var(--background))] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_hsl(var(--background))] transition-all font-bold text-lg"
           >
-            Let's grow on LinkedIn
+            <a href={MESSAGING.finalCTA.primaryLink} target="_blank" rel="noopener noreferrer">
+              {MESSAGING.finalCTA.primaryCTA}
+            </a>
+          </Button>
+
+          <Button
+            asChild
+            size="lg"
+            variant="secondary"
+            className="border-2 border-background shadow-[4px_4px_0px_hsl(var(--background))] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_hsl(var(--background))] transition-all font-bold text-lg"
+          >
+            <a href={MESSAGING.finalCTA.secondaryLink}>
+              {MESSAGING.finalCTA.secondaryCTA}
+            </a>
           </Button>
         </div>
       </div>

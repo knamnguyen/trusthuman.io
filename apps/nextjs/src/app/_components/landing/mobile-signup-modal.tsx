@@ -17,9 +17,9 @@ interface MobileSignupModalProps {
 export function MobileSignupModal({ isOpen, onClose }: MobileSignupModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="mx-4 max-w-md rounded-xl border-2 border-black bg-white p-6 shadow-[4px_4px_0px_#000] sm:mx-auto">
+      <DialogContent className="mx-4 max-w-md rounded-xl border-2 border-border bg-card p-6 shadow-[4px_4px_0px_#000] sm:mx-auto">
         <DialogHeader className="text-center">
-          <DialogTitle className="text-xl font-bold text-black">
+          <DialogTitle className="text-xl font-bold text-foreground">
             Reminder to install EngageKit on Chrome + Exclusive 50% discount!{" "}
             <div className="flex flex-row items-center justify-center text-6xl">
               🐱🐶

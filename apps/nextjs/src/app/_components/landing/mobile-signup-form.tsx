@@ -167,7 +167,7 @@ export function MobileSignupForm() {
             required
             className={`w-full max-w-[300px] ${
               isInline ? "mr-2" : "mb-2"
-            } h-auto min-h-[44px] rounded-md border border-gray-300 bg-white px-3 py-3 shadow-sm`}
+            } h-auto min-h-[44px] rounded-md border border-border bg-card px-3 py-3 shadow-sm`}
             style={{
               color: formStyles.formFontColor,
               fontFamily: `'${formStyles.formFont}', sans-serif`,
@@ -185,7 +185,7 @@ export function MobileSignupForm() {
   function SignUpFormError() {
     return (
       <div className="flex w-full items-center justify-center">
-        <p className="text-center text-sm text-red-700">
+        <p className="text-center text-sm text-destructive">
           {errorMessage || "Oops! Something went wrong, please try again"}
         </p>
       </div>
@@ -197,7 +197,7 @@ export function MobileSignupForm() {
 
     return (
       <button
-        className="mx-auto mt-2 block cursor-pointer border-none bg-transparent text-center text-sm text-gray-500"
+        className="mx-auto mt-2 block cursor-pointer border-none bg-transparent text-center text-sm text-muted-foreground"
         style={{
           textDecoration: isHovered ? "underline" : "none",
         }}
@@ -216,7 +216,7 @@ export function MobileSignupForm() {
         type="submit"
         className={`${
           isInline ? "w-min" : "w-full"
-        } max-w-[300px] cursor-pointer rounded-md border-2 border-black bg-pink-500 px-4 py-3 text-center leading-tight font-bold text-white shadow-[4px_4px_0px_#000] transition-all hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-none`}
+        } max-w-[300px] cursor-pointer rounded-md border-2 border-border bg-primary px-4 py-3 text-center leading-tight font-bold text-primary-foreground shadow-[4px_4px_0px_#000] transition-all hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-none`}
         style={{
           fontSize: `${formStyles.buttonFontSizePx}px`,
           fontFamily: `'${formStyles.buttonFont}', sans-serif`,

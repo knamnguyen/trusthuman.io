@@ -12,19 +12,33 @@ import type { DropdownItem } from "./nav/types";
 // Re-export DropdownItem for consumers (backwards compatibility)
 export type { DropdownItem };
 
-// Blog-specific mobile menu items
-const mobileMenuItems = [
+// Mobile menu item type
+interface MobileMenuItem {
+  label: string;
+  href: string;
+}
+
+// Default blog-specific mobile menu items
+const defaultMobileMenuItems: MobileMenuItem[] = [
   { label: "Free Tools", href: "https://blog.engagekit.io/tag/tool" },
   { label: "Blogs", href: "https://blog.engagekit.io/tag/blog" },
 ];
 
-// Blog-specific mobile menu component
+// Mobile menu component with customizable items and CTA
 function MobileMenu({
   isOpen,
   onClose,
+  menuItems,
+  ctaText,
+  ctaHref,
+  ctaOnClick,
 }: {
   isOpen: boolean;
   onClose: () => void;
+  menuItems: MobileMenuItem[];
+  ctaText: string;
+  ctaHref?: string;
+  ctaOnClick?: () => void;
 }) {
   const [navHeight, setNavHeight] = useState(57);
   const menuRef = React.useRef<HTMLDivElement>(null);
@@ -68,6 +82,14 @@ function MobileMenu({
 
   if (!isOpen) return null;
 
+  const handleCtaClick = () => {
+    if (ctaOnClick) {
+      ctaOnClick();
+    } else if (ctaHref) {
+      window.open(ctaHref, "_blank");
+    }
+  };
+
   return (
     <div
       ref={menuRef}
@@ -85,7 +107,7 @@ function MobileMenu({
     >
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col gap-3">
-          {mobileMenuItems.map((item) => (
+          {menuItems.map((item) => (
             <a
               key={item.href}
               href={item.href}
@@ -106,9 +128,9 @@ function MobileMenu({
             <Button
               variant="primary"
               className="w-full"
-              onClick={() => (window.location.href = "https://engagekit.io")}
+              onClick={handleCtaClick}
             >
-              Grow on LinkedIn
+              {ctaText}
             </Button>
           </div>
         </div>
@@ -117,8 +139,8 @@ function MobileMenu({
   );
 }
 
-// Blog-specific logo component
-function BlogLogo() {
+// Default blog logo component
+function DefaultBlogLogo() {
   return (
     <a
       href="https://blog.engagekit.io"
@@ -140,10 +162,18 @@ function BlogLogo() {
 }
 
 interface NavBlogProps {
+  // Dropdown items
   blogItems?: DropdownItem[];
   blogItemsLoading?: boolean;
   toolItems?: DropdownItem[];
   toolItemsLoading?: boolean;
+  // Customization props
+  logo?: React.ReactNode;
+  ctaText?: string;
+  ctaHref?: string;
+  ctaOnClick?: () => void;
+  mobileMenuItems?: MobileMenuItem[];
+  showDropdowns?: boolean;
 }
 
 export function NavBlog({
@@ -151,8 +181,24 @@ export function NavBlog({
   blogItemsLoading,
   toolItems = [],
   toolItemsLoading,
+  logo,
+  ctaText = "Grow on LinkedIn",
+  ctaHref,
+  ctaOnClick,
+  mobileMenuItems = defaultMobileMenuItems,
+  showDropdowns = true,
 }: NavBlogProps = {}) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const handleCtaClick = () => {
+    if (ctaOnClick) {
+      ctaOnClick();
+    } else if (ctaHref) {
+      window.open(ctaHref, "_blank");
+    } else {
+      window.location.href = "https://engagekit.io";
+    }
+  };
 
   return (
     <>
@@ -160,30 +206,32 @@ export function NavBlog({
         <div className="container mx-auto flex items-center justify-between px-4">
           {/* Logo */}
           <div className="flex flex-1 items-center gap-3 md:flex-none">
-            <BlogLogo />
+            {logo ?? <DefaultBlogLogo />}
           </div>
 
           {/* Desktop: Dropdown menus - using new composable NavDropdown */}
-          <div className="hidden items-center gap-0 md:flex">
-            <NavDropdown
-              label="Free Tools"
-              items={toolItems}
-              isLoading={toolItemsLoading}
-            />
-            <NavDropdown
-              label="Blog"
-              items={blogItems}
-              isLoading={blogItemsLoading}
-            />
-          </div>
+          {showDropdowns && (
+            <div className="hidden items-center gap-0 md:flex">
+              <NavDropdown
+                label="Free Tools"
+                items={toolItems}
+                isLoading={toolItemsLoading}
+              />
+              <NavDropdown
+                label="Blog"
+                items={blogItems}
+                isLoading={blogItemsLoading}
+              />
+            </div>
+          )}
 
           {/* Desktop: CTA Button */}
           <div className="hidden gap-2 md:flex">
             <Button
               variant="primary"
-              onClick={() => (window.location.href = "https://engagekit.io")}
+              onClick={handleCtaClick}
             >
-              Grow on LinkedIn
+              {ctaText}
             </Button>
           </div>
 
@@ -206,6 +254,10 @@ export function NavBlog({
       <MobileMenu
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
+        menuItems={mobileMenuItems}
+        ctaText={ctaText}
+        ctaHref={ctaHref}
+        ctaOnClick={ctaOnClick}
       />
     </>
   );

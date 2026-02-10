@@ -153,7 +153,18 @@ export const parseCommentsFromVoyagerResponse = (
       ? ((data?.data as Record<string, unknown>)?.included as unknown[])
       : [];
 
+  // DEBUG: Log entity types in response
+  const entityTypes = new Map<string, number>();
+  for (const item of included) {
+    const type = (item as Record<string, unknown>)?.$type as string;
+    if (type) {
+      entityTypes.set(type, (entityTypes.get(type) || 0) + 1);
+    }
+  }
+  console.log(`[DEBUG] Response entities:`, Object.fromEntries(entityTypes));
+
   if (!included.length) {
+    console.log(`[DEBUG] No included entities in response`);
     return { comments: [], profilesByUrn: new Map(), updatesByUrn: new Map() };
   }
 
@@ -468,6 +479,8 @@ export async function fetchMemberComments(
   let hasMore = true;
   let pageCount = 0;
 
+  console.log(`[DEBUG] Starting fetch: useTimeBased=${useTimeBased}, cutoffTime=${new Date(cutoffTime).toISOString()}, MAX_PAGES=${MAX_PAGES}`);
+
   while (hasMore && (useTimeBased || pageCount < MAX_PAGES)) {
     // Build variables - include paginationToken for subsequent requests
     let variables = `(count:${PAGE_SIZE},start:${start},profileUrn:urn%3Ali%3Afsd_profile%3A${profileUrn}`;
@@ -477,6 +490,8 @@ export async function fetchMemberComments(
     variables += ")";
 
     const endpoint = `https://www.linkedin.com/voyager/api/graphql?variables=${variables}&queryId=${queryId}`;
+
+    console.log(`[DEBUG] Page ${pageCount + 1}: Fetching with start=${start}, paginationToken=${paginationToken ? 'exists' : 'none'}`);
 
     try {
       const response = await fetch(endpoint, {
@@ -496,9 +511,21 @@ export async function fetchMemberComments(
       if (!response.ok) throw new Error(`Status ${response.status}`);
 
       const data = await response.json();
+
+      // DEBUG: Log raw response structure
+      console.log(`[DEBUG] Response keys:`, Object.keys(data));
+      if (data?.data) {
+        console.log(`[DEBUG] data.data keys:`, Object.keys(data.data));
+        if ((data.data as Record<string, unknown>)?.data) {
+          console.log(`[DEBUG] data.data.data keys:`, Object.keys((data.data as Record<string, unknown>).data as object));
+        }
+      }
+
       const { comments: pageComments } = parseCommentsFromVoyagerResponse(data);
+      console.log(`[DEBUG] Page ${pageCount + 1}: Parsed ${pageComments.length} comments from response`);
 
       if (pageComments.length === 0) {
+        console.log(`[DEBUG] STOPPING: No comments returned on page ${pageCount + 1}`);
         hasMore = false;
       } else {
         // Deduplicate by entityUrn before adding
@@ -512,15 +539,19 @@ export async function fetchMemberComments(
         // Time-based stop condition: check if we've reached the cutoff
         if (useTimeBased && pageComments.length > 0) {
           const commentsWithTime = pageComments.filter((c) => c.time !== null);
+          console.log(`[DEBUG] Comments with timestamps: ${commentsWithTime.length}/${pageComments.length}`);
           if (commentsWithTime.length > 0) {
             const oldestCommentTime = Math.min(
               ...commentsWithTime.map((c) => c.time as number),
             );
+            const newestCommentTime = Math.max(
+              ...commentsWithTime.map((c) => c.time as number),
+            );
+            console.log(`[DEBUG] Time range on this page: ${new Date(newestCommentTime).toISOString()} to ${new Date(oldestCommentTime).toISOString()}`);
+            console.log(`[DEBUG] Cutoff time: ${new Date(cutoffTime).toISOString()}`);
             if (oldestCommentTime < cutoffTime) {
+              console.log(`[DEBUG] STOPPING: Oldest comment (${new Date(oldestCommentTime).toISOString()}) < cutoff (${new Date(cutoffTime).toISOString()})`);
               hasMore = false;
-              console.log(
-                `Reached cutoff time: ${new Date(cutoffTime).toISOString()}`,
-              );
             }
           }
         }
@@ -536,30 +567,46 @@ export async function fetchMemberComments(
         const metadata = feedData?.metadata as Record<string, unknown>;
         const nextToken = metadata?.paginationToken as string | undefined;
 
+        // DEBUG: Log pagination extraction
+        console.log(`[DEBUG] Pagination extraction:`);
+        console.log(`  - nestedData exists: ${!!nestedData}`);
+        console.log(`  - feedData exists: ${!!feedData}`);
+        console.log(`  - metadata exists: ${!!metadata}`);
+        console.log(`  - nextToken: ${nextToken ? nextToken.substring(0, 50) + '...' : 'NONE'}`);
+
         if (nextToken) {
           paginationToken = nextToken;
         } else {
+          console.log(`[DEBUG] STOPPING: No pagination token found`);
           hasMore = false;
         }
 
         // Also check elements count
         const elements = feedData?.["*elements"] as unknown[] | undefined;
+        console.log(`[DEBUG] Elements count: ${elements?.length ?? 'undefined'}, PAGE_SIZE: ${PAGE_SIZE}`);
         if (elements && elements.length < PAGE_SIZE) {
+          console.log(`[DEBUG] STOPPING: Elements (${elements.length}) < PAGE_SIZE (${PAGE_SIZE})`);
           hasMore = false;
         }
 
         start += PAGE_SIZE;
         pageCount++;
 
+        console.log(`[DEBUG] Page ${pageCount} complete. Total comments so far: ${allComments.length}, hasMore: ${hasMore}`);
+
         // Rate limiting delay between requests
         if (hasMore) await new Promise((r) => setTimeout(r, 300));
       }
     } catch (e) {
-      console.error(`Error fetching comments page ${pageCount}:`, e);
+      console.error(`[DEBUG] Error fetching comments page ${pageCount}:`, e);
       break;
     }
   }
 
+  console.log(`[DEBUG] ========== FETCH COMPLETE ==========`);
+  console.log(`[DEBUG] Total pages fetched: ${pageCount}`);
+  console.log(`[DEBUG] Total comments: ${allComments.length}`);
+  console.log(`[DEBUG] Time window: ${timeWindowDays} days`);
   console.log(
     `Fetched ${allComments.length} comments ${
       useTimeBased ? `in ${timeWindowDays} days` : `across ${pageCount} pages`
