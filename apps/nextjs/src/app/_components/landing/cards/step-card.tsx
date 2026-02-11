@@ -32,7 +32,7 @@ export function StepCard({
   const videoClassEven =
     "m-auto rounded-lg border shadow-xl md:max-h-[350px] md:object-cover md:object-right md:[transform:scale(1.3)_perspective(1040px)_rotateY(11deg)_rotateX(2deg)_rotate(-2deg)]";
 
-  // YouTube iframe with same styling
+  // YouTube iframe with same styling - scaled up to crop black bars
   const renderYouTubeEmbed = (isOddPosition: boolean) => (
     <div
       className={`relative aspect-video w-full overflow-hidden rounded-lg border shadow-xl md:max-h-[350px] ${
@@ -41,10 +41,11 @@ export function StepCard({
           : "md:[transform:scale(1.3)_perspective(1040px)_rotateY(11deg)_rotateX(2deg)_rotate(-2deg)]"
       }`}
     >
+      {/* Scale up iframe to crop out black letterbox bars */}
       <iframe
         src={youtubeEmbedUrl}
         title={`Demo video showing ${title}`}
-        className="absolute inset-0 h-full w-full"
+        className="absolute h-[140%] w-[140%] -left-[20%] -top-[20%]"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen={false}
         style={{ border: 0, pointerEvents: "none" }}
