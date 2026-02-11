@@ -16,17 +16,20 @@ export function ContextEngineSection() {
 
         {/* YouTube Embed - Full Width */}
         <div className="mb-16">
-          <div className="aspect-video w-full max-w-4xl mx-auto overflow-hidden rounded-2xl border-2 border-border shadow-lg">
-            <iframe
-              width="100%"
-              height="100%"
-              src={MESSAGING.contextEngine.youtubeUrl}
-              title="EngageKit Context Engine Overview"
-              style={{ border: "0px" }}
-              allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              referrerPolicy="strict-origin-when-cross-origin"
-              allowFullScreen
-            />
+          {/* Neo-brutalism card wrapper */}
+          <div className="w-full max-w-4xl mx-auto rounded-xl bg-[#fbf6e5] p-3 border-[1.5px] border-black shadow-[4px_4px_0_#000]">
+            <div className="aspect-video w-full overflow-hidden rounded-lg border-[1.5px] border-black">
+              <iframe
+                width="100%"
+                height="100%"
+                src={MESSAGING.contextEngine.youtubeUrl}
+                title="EngageKit Context Engine Overview"
+                style={{ border: "0px" }}
+                allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+              />
+            </div>
           </div>
         </div>
 

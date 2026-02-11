@@ -33,7 +33,8 @@
       "Bash(claude export:*)",
       "Bash(open:*)",
       "Bash(grep:*)",
-      "WebFetch(domain:chartjs-plugin-datalabels.netlify.app)"
+      "WebFetch(domain:chartjs-plugin-datalabels.netlify.app)",
+      "Bash(git push:*)"
     ]
   }
 }

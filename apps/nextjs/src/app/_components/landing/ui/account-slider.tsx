@@ -19,7 +19,10 @@ export function AccountSlider({
   pricePerAccount,
   isYearly,
 }: AccountSliderProps) {
-  const totalPrice = pricePerAccount * value;
+  // Always show monthly equivalent price
+  const monthlyPricePerAccount = isYearly ? pricePerAccount / 12 : pricePerAccount;
+  const monthlyTotal = monthlyPricePerAccount * value;
+  const yearlyTotal = pricePerAccount * value;
 
   return (
     <div className="mt-6 space-y-3 p-4 rounded-lg border-2 border-primary/30 bg-primary/10">
@@ -35,9 +38,14 @@ export function AccountSlider({
         className="[&_[role=slider]]:bg-primary [&_[role=slider]]:border-2 [&_[role=slider]]:border-border"
       />
       <p className="text-xs text-muted-foreground">
-        {value} accounts × ${pricePerAccount.toFixed(2)}/{isYearly ? "year" : "month"} ={" "}
-        <span className="font-bold text-primary">${totalPrice.toFixed(2)}</span>
+        {value} accounts × ${monthlyPricePerAccount.toFixed(2)}/mo ={" "}
+        <span className="font-bold text-primary">${monthlyTotal.toFixed(2)}</span>
       </p>
+      {isYearly && (
+        <p className="text-xs text-muted-foreground">
+          ${yearlyTotal.toFixed(2)} billed yearly
+        </p>
+      )}
     </div>
   );
 }

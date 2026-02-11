@@ -47,14 +47,25 @@ export function PricingCard({
   onAccountCountChange,
 }: PricingCardProps) {
   // Calculate price based on tier type
+  // Always show monthly price (for yearly, show monthly equivalent to feel cheaper)
   let displayPrice = 0;
+  let totalYearlyPrice = 0;
   if (tier.id === "premium-multi" && accountCount) {
-    const pricePerAccount = isYearly
-      ? tier.yearlyPricePerAccount ?? 0
-      : tier.monthlyPricePerAccount ?? 0;
-    displayPrice = pricePerAccount * accountCount;
+    const monthlyPricePerAccount = tier.monthlyPricePerAccount ?? 0;
+    const yearlyPricePerAccount = tier.yearlyPricePerAccount ?? 0;
+    if (isYearly) {
+      displayPrice = (yearlyPricePerAccount / 12) * accountCount;
+      totalYearlyPrice = yearlyPricePerAccount * accountCount;
+    } else {
+      displayPrice = monthlyPricePerAccount * accountCount;
+    }
   } else {
-    displayPrice = isYearly ? tier.yearlyPrice ?? 0 : tier.monthlyPrice ?? 0;
+    if (isYearly) {
+      displayPrice = (tier.yearlyPrice ?? 0) / 12;
+      totalYearlyPrice = tier.yearlyPrice ?? 0;
+    } else {
+      displayPrice = tier.monthlyPrice ?? 0;
+    }
   }
 
   return (
@@ -78,14 +89,19 @@ export function PricingCard({
           </Badge>
         )}
         <CardTitle className="text-2xl">{tier.name}</CardTitle>
-        <div className="text-4xl font-bold text-primary py-4">
+        <div className="text-4xl font-bold text-primary pt-4 pb-1">
           {getFormattedPrice(displayPrice)}
           {displayPrice > 0 && (
             <span className="text-lg text-muted-foreground font-normal">
-              /{isYearly ? "year" : "month"}
+              /mo
             </span>
           )}
         </div>
+        {isYearly && displayPrice > 0 && (
+          <p className="text-sm text-muted-foreground pb-2">
+            {getFormattedPrice(totalYearlyPrice)} billed yearly
+          </p>
+        )}
         <CardDescription className="text-base">
           {tier.description}
         </CardDescription>
