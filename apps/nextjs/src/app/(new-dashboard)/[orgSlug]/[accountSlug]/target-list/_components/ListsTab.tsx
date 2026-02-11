@@ -1,9 +1,11 @@
 "use client";
 
-import { FolderOpen, Loader2, Users } from "lucide-react";
+import { useRef } from "react";
+import { FolderOpen, Loader2, LoaderCircleIcon, Users } from "lucide-react";
 
-import { Button } from "@sassy/ui/button";
 import { cn } from "@sassy/ui/utils";
+
+import { useFetchNextPage } from "~/hooks/use-fetch-next-page";
 
 // Sentinel value for "All Profiles" view
 export const ALL_PROFILES_ID = "__all__";
@@ -34,6 +36,13 @@ export function ListsTab({
   isLoadingMore,
   totalProfilesCount,
 }: ListsTabProps) {
+  const ref = useRef<HTMLDivElement | null>(null);
+
+  useFetchNextPage(ref, {
+    fetchNextPage: onLoadMore,
+    hasNextPage: hasMore,
+  });
+
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center gap-2 py-12">
@@ -53,7 +62,7 @@ export function ListsTab({
           "flex items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors",
           selectedListId === ALL_PROFILES_ID
             ? "bg-primary text-primary-foreground"
-            : "hover:bg-muted"
+            : "hover:bg-muted",
         )}
       >
         <Users className="h-4 w-4 flex-shrink-0" />
@@ -67,7 +76,7 @@ export function ListsTab({
 
       {lists.length > 0 && (
         <>
-          <p className="text-muted-foreground mb-2 mt-4 text-xs font-medium uppercase tracking-wide">
+          <p className="text-muted-foreground mt-4 mb-2 text-xs font-medium tracking-wide uppercase">
             Your Lists
           </p>
           {lists.map((list) => (
@@ -79,7 +88,7 @@ export function ListsTab({
                 "flex items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors",
                 selectedListId === list.id
                   ? "bg-primary text-primary-foreground"
-                  : "hover:bg-muted"
+                  : "hover:bg-muted",
               )}
             >
               <FolderOpen className="h-4 w-4 flex-shrink-0" />
@@ -87,22 +96,9 @@ export function ListsTab({
             </button>
           ))}
           {hasMore && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onLoadMore}
-              disabled={isLoadingMore}
-              className="mt-2"
-            >
-              {isLoadingMore ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Loading...
-                </>
-              ) : (
-                "Load more lists"
-              )}
-            </Button>
+            <div ref={ref} className="mt-2 flex justify-center">
+              <LoaderCircleIcon className="animate-spin" />
+            </div>
           )}
         </>
       )}
