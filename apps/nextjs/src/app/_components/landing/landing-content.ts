@@ -107,21 +107,21 @@ export const MESSAGING = {
         title: "Compose Context-Aware Comments",
         description:
           "Our AI analyzes post content, author background, and conversation tone to draft thoughtful, relevant comments. You review and refine before posting.",
-        videoPath: "/preview-demo/engagekit 1.0 compose preview.mp4",
+        videoPath: "/preview-demo/engagekit-compose-preview.mp4",
       },
       {
         number: 2,
         title: "Build Your Target Network",
         description:
           "Create lists of high-value connections—prospects, partners, investors, or thought leaders. Focus your engagement where it matters most.",
-        videoPath: "/preview-demo/engagekit 1.0 target list preview.mp4",
+        videoPath: "/preview-demo/engagekit-target-list-preview.mp4",
       },
       {
         number: 3,
         title: "Track Meaningful Engagement",
         description:
           "Monitor interactions that lead to relationships, not just vanity metrics. See which connections convert to meetings, partnerships, and revenue.",
-        videoPath: "/preview-demo/engagekit 1.0 analytics preview.mp4",
+        videoPath: "/preview-demo/engagekit-analytics-preview.mp4",
       },
     ],
   },
@@ -471,10 +471,10 @@ export const MESSAGING = {
 
 export const ASSETS = {
   videos: {
-    composePreview: "/preview-demo/engagekit 1.0 compose preview.mp4",
-    targetListPreview: "/preview-demo/engagekit 1.0 target list preview.mp4",
-    analyticsPreview: "/preview-demo/engagekit 1.0 analytics preview.mp4",
-    accountTabPreview: "/preview-demo/engagekit 1.0 account tab preview.mp4",
+    composePreview: "/preview-demo/engagekit-compose-preview.mp4",
+    targetListPreview: "/preview-demo/engagekit-target-list-preview.mp4",
+    analyticsPreview: "/preview-demo/engagekit-analytics-preview.mp4",
+    accountTabPreview: "/preview-demo/engagekit-account-tab-preview.mp4",
   },
   youtube: {
     overviewVideo: "https://www.youtube.com/embed/JKpkQG_zB6U",
