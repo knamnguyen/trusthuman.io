@@ -1,14 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import { User } from "lucide-react";
+import { LoaderCircleIcon, User } from "lucide-react";
 
 import { Badge } from "@sassy/ui/badge";
-import { Button } from "@sassy/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@sassy/ui/card";
 import { cn } from "@sassy/ui/utils";
 
+import { useFetchNextPage } from "~/hooks/use-fetch-next-page";
 import { useTRPC } from "~/trpc/react";
 import { ALL_PROFILES_ID } from "./ListsTab";
 import { ManageListButton } from "./ManageListButton";
@@ -51,7 +51,10 @@ export function TargetLists() {
     ),
   );
 
-  const allLists = targetLists.data?.pages.flatMap((p) => p.data) ?? [];
+  const allLists = useMemo(
+    () => targetLists.data?.pages.flatMap((p) => p.data) ?? [],
+    [targetLists.data],
+  );
 
   // Prefetch profiles for all lists once lists are loaded
   useEffect(() => {
@@ -135,7 +138,7 @@ export function TargetLists() {
           selectedProfile={selectedProfile}
           onClearProfile={() => setSelectedProfile(null)}
           isLoadingLists={targetLists.isLoading}
-          hasMoreLists={targetLists.hasNextPage ?? false}
+          hasMoreLists={targetLists.hasNextPage}
           onLoadMoreLists={() => targetLists.fetchNextPage()}
           isLoadingMoreLists={targetLists.isFetchingNextPage}
         />
@@ -164,7 +167,14 @@ function AllProfilesGrid({
     ),
   );
 
-  const allProfiles = profiles.data?.pages.flatMap((p) => p.data) ?? [];
+  const allProfiles = useMemo(
+    () => profiles.data?.pages.flatMap((p) => p.data) ?? [],
+    [profiles.data],
+  );
+
+  const ref = useRef<HTMLDivElement>(null);
+
+  useFetchNextPage(ref, profiles);
 
   if (profiles.isLoading) {
     return (
@@ -205,14 +215,8 @@ function AllProfilesGrid({
           </div>
 
           {profiles.hasNextPage && (
-            <div className="mt-6 flex justify-center">
-              <Button
-                variant="outline"
-                onClick={() => profiles.fetchNextPage()}
-                disabled={profiles.isFetchingNextPage}
-              >
-                {profiles.isFetchingNextPage ? "Loading..." : "Load more"}
-              </Button>
+            <div ref={ref} className="mt-6 flex justify-center">
+              <LoaderCircleIcon className="animate-spin" />
             </div>
           )}
         </>
@@ -246,6 +250,10 @@ function ProfilesGrid({
   );
 
   const allProfiles = profiles.data?.pages.flatMap((p) => p.data) ?? [];
+
+  const ref = useRef<HTMLDivElement>(null);
+
+  useFetchNextPage(ref, profiles);
 
   if (profiles.isLoading) {
     return (
@@ -284,14 +292,8 @@ function ProfilesGrid({
           </div>
 
           {profiles.hasNextPage && (
-            <div className="mt-6 flex justify-center">
-              <Button
-                variant="outline"
-                onClick={() => profiles.fetchNextPage()}
-                disabled={profiles.isFetchingNextPage}
-              >
-                {profiles.isFetchingNextPage ? "Loading..." : "Load more"}
-              </Button>
+            <div ref={ref} className="mt-6 flex justify-center">
+              <LoaderCircleIcon />
             </div>
           )}
         </>
