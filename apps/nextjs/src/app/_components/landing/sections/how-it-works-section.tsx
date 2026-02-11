@@ -3,9 +3,9 @@ import { StepCard } from "../cards/step-card";
 
 export function HowItWorksSection() {
   return (
-    <section className="bg-card py-20">
+    <section className="bg-card py-20 md:py-32 overflow-hidden">
       <div className="container mx-auto max-w-7xl px-4">
-        <div className="text-center mb-16">
+        <div className="text-center mb-24 md:mb-32">
           <h2 className="text-4xl font-bold tracking-tight sm:text-5xl mb-4">
             {MESSAGING.howItWorks.headline}
           </h2>
@@ -14,7 +14,7 @@ export function HowItWorksSection() {
           </p>
         </div>
 
-        <div className="space-y-24">
+        <div className="space-y-32 md:space-y-48">
           {MESSAGING.howItWorks.steps.map((step) => (
             <StepCard key={step.number} {...step} />
           ))}
