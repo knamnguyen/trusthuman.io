@@ -1,6 +1,9 @@
 // apps/nextjs/src/app/_components/landing/landing-content.ts
 // Single source of truth for all landing page content
 
+// Base URL for assets - using absolute URLs for better mobile video support
+const ASSET_BASE = "https://engagekit.io";
+
 export const MESSAGING = {
   hero: {
     headline: "Build a personal brand that closes deals",
@@ -107,28 +110,29 @@ export const MESSAGING = {
         title: "Compose Context-Aware Comments",
         description:
           "Our AI analyzes post content, author background, and conversation tone to draft thoughtful, relevant comments. You review and refine before posting.",
-        videoPath: "/preview-demo/engagekit-compose-preview.mp4",
+        videoPath: `${ASSET_BASE}/preview-demo/engagekit-compose-preview.mp4`,
       },
       {
         number: 2,
         title: "Build Your Target Network",
         description:
           "Create lists of high-value connections—prospects, partners, investors, or thought leaders. Focus your engagement where it matters most.",
-        videoPath: "/preview-demo/engagekit-target-list-preview.mp4",
+        videoPath: `${ASSET_BASE}/preview-demo/engagekit-target-list-preview.mp4`,
       },
       {
         number: 3,
         title: "Track Meaningful Engagement",
         description:
           "Monitor interactions that lead to relationships, not just vanity metrics. See which connections convert to meetings, partnerships, and revenue.",
-        videoPath: "/preview-demo/engagekit-analytics-preview.mp4",
+        videoPath: `${ASSET_BASE}/preview-demo/engagekit-analytics-preview.mp4`,
       },
     ],
   },
 
   contextEngine: {
-    headline: "Context is Your Competitive Advantage",
-    subheadline: "Generic comments are noise. Context-aware engagement opens doors.",
+    headline: "Context is Your Competitive Advantage. See how in 3 min",
+    subheadline:
+      "Generic comments are noise. Context-aware engagement opens doors.",
     description:
       "EngageKit's Context Engine analyzes every post's content, the author's industry and role, recent conversation patterns, and your relationship history. The result? Comments that sound like you wrote them—because you approve every one.",
     youtubeUrl: "https://www.youtube.com/embed/JKpkQG_zB6U",
@@ -204,7 +208,8 @@ export const MESSAGING = {
 
   targetPersonas: {
     headline: "Who This Is For",
-    subheadline: "Strategic professionals who understand that relationships drive revenue",
+    subheadline:
+      "Strategic professionals who understand that relationships drive revenue",
     personas: [
       {
         icon: "Rocket",
@@ -244,7 +249,8 @@ export const MESSAGING = {
 
   reduceSlop: {
     headline: "Cut Through the Slop. Engage 10x Faster.",
-    subheadline: "LinkedIn is drowning in AI-generated spam. We help you rise above it.",
+    subheadline:
+      "LinkedIn is drowning in AI-generated spam. We help you rise above it.",
     coreValueProp:
       "EngageKit helps you read and remember your engagement with others at 10x the speed and effectiveness.",
     benefits: [
@@ -287,21 +293,24 @@ export const MESSAGING = {
       title: "Operations Manager",
       quote:
         "EngageKit helped me build genuine relationships with potential clients. Three partnerships started from LinkedIn conversations I never would have had time for otherwise.",
-      image: "/testimonials/american middle aged women business professional.jpg",
+      image:
+        "/testimonials/american middle aged women business professional.jpg",
     },
     {
       name: "Jamal Brooks",
       title: "Computer Science Student",
       quote:
         "Instead of generic applications, I engaged with hiring managers on LinkedIn. The conversations led to two internship offers before I even applied formally.",
-      image: "/testimonials/black student in america building a personal brand for recruiting.jpg",
+      image:
+        "/testimonials/black student in america building a personal brand for recruiting.jpg",
     },
     {
       name: "Li Mei",
       title: "High School Senior",
       quote:
         "I connected with alumni and professors through thoughtful engagement. It made my university applications stand out, and acceptance letters followed.",
-      image: "/testimonials/chinese student applying to university from high school girl.jpg",
+      image:
+        "/testimonials/chinese student applying to university from high school girl.jpg",
     },
     {
       name: "Sofía García",
@@ -315,21 +324,24 @@ export const MESSAGING = {
       title: "Sales Director",
       quote:
         "Prospects now recognize my name before our first call. EngageKit helped me warm up my pipeline, and my close rate jumped 40%.",
-      image: "/testimonials/german business man middle age in office setting.jpg",
+      image:
+        "/testimonials/german business man middle age in office setting.jpg",
     },
     {
       name: "Chloe Wong",
       title: "Marketing Manager",
       quote:
         "Strategic engagement with target accounts tripled our inbound demo requests. The ROI on relationship-building is incredible.",
-      image: "/testimonials/hong kong girl professional 30 years old marketing.jpg",
+      image:
+        "/testimonials/hong kong girl professional 30 years old marketing.jpg",
     },
     {
       name: "Marek Novak",
       title: "Animation Storyteller",
       quote:
         "I stay connected with industry leaders without sacrificing creative time. Two studio partnerships started from LinkedIn conversations this year.",
-      image: "/testimonials/storyteller animation 40 somthing man from europe.jpg",
+      image:
+        "/testimonials/storyteller animation 40 somthing man from europe.jpg",
     },
     {
       name: "Aisha Khan",
@@ -406,7 +418,8 @@ export const MESSAGING = {
           "Volume discounts available",
         ],
         cta: "Contact Sales",
-        ctaLink: "mailto:knamnguyen.work@gmail.com?subject=Premium Multi Inquiry",
+        ctaLink:
+          "mailto:knamnguyen.work@gmail.com?subject=Premium Multi Inquiry",
       },
     ],
   },
@@ -471,10 +484,10 @@ export const MESSAGING = {
 
 export const ASSETS = {
   videos: {
-    composePreview: "/preview-demo/engagekit-compose-preview.mp4",
-    targetListPreview: "/preview-demo/engagekit-target-list-preview.mp4",
-    analyticsPreview: "/preview-demo/engagekit-analytics-preview.mp4",
-    accountTabPreview: "/preview-demo/engagekit-account-tab-preview.mp4",
+    composePreview: `${ASSET_BASE}/preview-demo/engagekit-compose-preview.mp4`,
+    targetListPreview: `${ASSET_BASE}/preview-demo/engagekit-target-list-preview.mp4`,
+    analyticsPreview: `${ASSET_BASE}/preview-demo/engagekit-analytics-preview.mp4`,
+    accountTabPreview: `${ASSET_BASE}/preview-demo/engagekit-account-tab-preview.mp4`,
   },
   youtube: {
     overviewVideo: "https://www.youtube.com/embed/JKpkQG_zB6U",
@@ -492,7 +505,10 @@ export function getFormattedPrice(price: number): string {
   return price === 0 ? "Free" : `$${price.toFixed(2)}`;
 }
 
-export function calculateTotalPrice(pricePerAccount: number, accountCount: number): number {
+export function calculateTotalPrice(
+  pricePerAccount: number,
+  accountCount: number,
+): number {
   return pricePerAccount * accountCount;
 }
 
