@@ -111,6 +111,9 @@ export const MESSAGING = {
         description:
           "Our AI analyzes post content, author background, and conversation tone to draft thoughtful, relevant comments. You review and refine before posting.",
         videoPath: `${ASSET_BASE}/preview-demo/engagekit-compose-preview.mp4`,
+        // YouTube fallback - looping, no controls, muted for autoplay
+        youtubeEmbedUrl:
+          "https://www.youtube.com/embed/2Ee0FnkDNnY?autoplay=1&mute=1&loop=1&playlist=2Ee0FnkDNnY&controls=0&modestbranding=1&rel=0&showinfo=0&disablekb=1",
       },
       {
         number: 2,
@@ -118,6 +121,8 @@ export const MESSAGING = {
         description:
           "Create lists of high-value connections—prospects, partners, investors, or thought leaders. Focus your engagement where it matters most.",
         videoPath: `${ASSET_BASE}/preview-demo/engagekit-target-list-preview.mp4`,
+        youtubeEmbedUrl:
+          "https://www.youtube.com/embed/llZWpYXt4_8?autoplay=1&mute=1&loop=1&playlist=llZWpYXt4_8&controls=0&modestbranding=1&rel=0&showinfo=0&disablekb=1",
       },
       {
         number: 3,
@@ -125,6 +130,8 @@ export const MESSAGING = {
         description:
           "Monitor interactions that lead to relationships, not just vanity metrics. See which connections convert to meetings, partnerships, and revenue.",
         videoPath: `${ASSET_BASE}/preview-demo/engagekit-analytics-preview.mp4`,
+        youtubeEmbedUrl:
+          "https://www.youtube.com/embed/mnEa0UulI-c?autoplay=1&mute=1&loop=1&playlist=mnEa0UulI-c&controls=0&modestbranding=1&rel=0&showinfo=0&disablekb=1",
       },
     ],
   },
