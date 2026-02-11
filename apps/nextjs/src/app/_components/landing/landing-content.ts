@@ -6,7 +6,7 @@ const ASSET_BASE = "https://engagekit.io";
 
 export const MESSAGING = {
   hero: {
-    headline: "Build a personal brand that closes deals",
+    headline: "Build a personal brand with authentic engagement",
     subheadline:
       "Transform LinkedIn engagement from noise into revenue. Connect with decision-makers authentically, stay top-of-mind, and turn relationships into business outcomes.",
     primaryCTA: "Start Building Relationships",

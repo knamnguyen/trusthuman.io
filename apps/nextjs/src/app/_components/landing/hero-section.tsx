@@ -23,10 +23,11 @@ export function HeroSection() {
     <section className="bg-card w-full">
       <div className="container flex flex-col items-center gap-6 py-24 text-center sm:py-32">
       <Image
-        src="/engagekit-logo.svg"
+        src="/email-assets/kit-sprite-blink.gif"
         alt="EngageKit Logo"
         width={120}
         height={120}
+        unoptimized
         className="mt-[-50px] mb-[-50px] h-70 w-70"
       />
 
