@@ -120,6 +120,7 @@ export const commentRouter = () =>
             commentedAt: "desc",
           },
           cursor: input?.cursor ? { id: input.cursor } : undefined,
+          skip: input?.cursor ? 1 : 0, // Skip the cursor item itself
           take: limit + 1, // Take one extra for pagination
           select: {
             id: true,

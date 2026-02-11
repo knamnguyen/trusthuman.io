@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { MessageSquare } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { Loader2, MessageSquare } from "lucide-react";
 import { useParams } from "next/navigation";
 
 import { Badge } from "@sassy/ui/badge";
@@ -13,6 +13,8 @@ import { CommentCard } from "./_components/CommentCard";
 import { PostPreviewSidebar } from "./_components/PostPreviewSidebar";
 import type { HistoryComment, PostCommentInfo, StyleSnapshot } from "./_components/types";
 
+const COMMENTS_PER_PAGE = 20;
+
 export default function HistoryPage() {
   const { accountSlug } = useParams<{ accountSlug: string }>();
   const trpc = useTRPC();
@@ -20,16 +22,51 @@ export default function HistoryPage() {
   // Selected comment state
   const [selectedCommentId, setSelectedCommentId] = useState<string | null>(null);
 
-  const { data, isLoading, error } = useQuery(
-    trpc.comment.listByAccount.queryOptions({ limit: 50 }),
+  // Ref for infinite scroll sentinel
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  const {
+    data,
+    isLoading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery(
+    trpc.comment.listByAccount.infiniteQueryOptions(
+      { limit: COMMENTS_PER_PAGE },
+      {
+        getNextPageParam: (lastPage) => lastPage.next,
+      },
+    ),
   );
 
-  // Transform the raw data to typed HistoryComment[]
-  const comments: HistoryComment[] = (data?.data ?? []).map((c) => ({
-    ...c,
-    postComments: c.postComments as PostCommentInfo[] | null,
-    styleSnapshot: c.styleSnapshot as StyleSnapshot | null,
-  }));
+  // Infinite scroll with IntersectionObserver
+  useEffect(() => {
+    const sentinel = loadMoreRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && hasNextPage && !isFetchingNextPage) {
+          void fetchNextPage();
+        }
+      },
+      { threshold: 0.1 },
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // Flatten paginated data and transform to typed HistoryComment[]
+  const comments: HistoryComment[] = (data?.pages ?? []).flatMap((page) =>
+    page.data.map((c) => ({
+      ...c,
+      postComments: c.postComments as PostCommentInfo[] | null,
+      styleSnapshot: c.styleSnapshot as StyleSnapshot | null,
+    })),
+  );
 
   // Find selected comment
   const selectedComment = comments.find((c) => c.id === selectedCommentId) ?? null;
@@ -42,14 +79,16 @@ export default function HistoryPage() {
   const canGoNext = selectedIndex >= 0 && selectedIndex < comments.length - 1;
 
   const handlePrev = useCallback(() => {
-    if (canGoPrev && comments[selectedIndex - 1]) {
-      setSelectedCommentId(comments[selectedIndex - 1]!.id);
+    const prevComment = comments[selectedIndex - 1];
+    if (canGoPrev && prevComment) {
+      setSelectedCommentId(prevComment.id);
     }
   }, [canGoPrev, comments, selectedIndex]);
 
   const handleNext = useCallback(() => {
-    if (canGoNext && comments[selectedIndex + 1]) {
-      setSelectedCommentId(comments[selectedIndex + 1]!.id);
+    const nextComment = comments[selectedIndex + 1];
+    if (canGoNext && nextComment) {
+      setSelectedCommentId(nextComment.id);
     }
   }, [canGoNext, comments, selectedIndex]);
 
@@ -125,6 +164,13 @@ export default function HistoryPage() {
                   onSelect={() => handleSelectComment(comment.id)}
                 />
               ))}
+
+              {/* Infinite scroll sentinel */}
+              <div ref={loadMoreRef} className="flex justify-center py-4">
+                {isFetchingNextPage && (
+                  <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
+                )}
+              </div>
             </div>
           )}
         </div>
