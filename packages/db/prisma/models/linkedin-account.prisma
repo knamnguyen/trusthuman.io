@@ -37,6 +37,7 @@ model LinkedInAccount {
 
   //existing
   targetLists TargetList[]
+  discoverySets DiscoverySet[]
 
   // delete later since redundant - each account already one to many relations with targetlists
   targetProfiles     TargetProfile[]

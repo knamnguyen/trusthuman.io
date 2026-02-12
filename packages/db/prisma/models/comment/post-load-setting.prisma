@@ -6,6 +6,10 @@ model PostLoadSetting {
   targetListEnabled Boolean  @default(false)
   targetListIds     String[]
 
+  // Discovery Sets
+  discoverySetEnabled Boolean  @default(false)
+  discoverySetIds     String[]
+
   //input box of hours from minimum 1h to max 8760 - not slider
   //only get posts posted within (younger than) X hours
   timeFilterEnabled Boolean @default(false)

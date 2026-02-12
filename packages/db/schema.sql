@@ -174,6 +174,8 @@ CREATE TABLE "PostLoadSetting" (
     "accountId" TEXT NOT NULL,
     "targetListEnabled" BOOLEAN NOT NULL DEFAULT false,
     "targetListIds" TEXT[],
+    "discoverySetEnabled" BOOLEAN NOT NULL DEFAULT false,
+    "discoverySetIds" TEXT[],
     "timeFilterEnabled" BOOLEAN NOT NULL DEFAULT false,
     "minPostAge" INTEGER,
     "skipFriendActivitiesEnabled" BOOLEAN NOT NULL DEFAULT false,
@@ -237,6 +239,22 @@ CREATE TABLE "Comment" (
     "styleSnapshot" JSONB,
 
     CONSTRAINT "Comment_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "DiscoverySet" (
+    "id" TEXT NOT NULL,
+    "accountId" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "keywords" TEXT[],
+    "keywordsMode" TEXT NOT NULL DEFAULT 'OR',
+    "excluded" TEXT[],
+    "authorJobTitle" TEXT,
+    "authorIndustries" TEXT[],
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "DiscoverySet_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -598,6 +616,12 @@ CREATE INDEX "Comment_accountId_status_commentedAt_idx" ON "Comment"("accountId"
 CREATE INDEX "Comment_accountId_status_authorProfileUrl_idx" ON "Comment"("accountId", "status", "authorProfileUrl");
 
 -- CreateIndex
+CREATE INDEX "DiscoverySet_accountId_idx" ON "DiscoverySet"("accountId");
+
+-- CreateIndex
+CREATE INDEX "DiscoverySet_accountId_createdAt_idx" ON "DiscoverySet"("accountId", "createdAt");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "LinkedInAccount_profileUrl_key" ON "LinkedInAccount"("profileUrl");
 
 -- CreateIndex
@@ -737,6 +761,9 @@ ALTER TABLE "Comment" ADD CONSTRAINT "Comment_autoCommentRunId_fkey" FOREIGN KEY
 
 -- AddForeignKey
 ALTER TABLE "Comment" ADD CONSTRAINT "Comment_commentStyleId_fkey" FOREIGN KEY ("commentStyleId") REFERENCES "CommentStyle"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "DiscoverySet" ADD CONSTRAINT "DiscoverySet_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LinkedInAccount"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "LinkedInAccount" ADD CONSTRAINT "LinkedInAccount_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
