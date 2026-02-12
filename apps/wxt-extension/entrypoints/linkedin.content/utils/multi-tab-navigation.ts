@@ -91,8 +91,9 @@ export async function processTargetListQueue(
     url: feedUrl,
   });
 
-  // Get account ID from store to pass to new tab (so API calls work before store loads)
+  // Get account ID and profile URL from store to pass to new tab (so API calls work before store loads)
   const accountId = useAccountStore.getState().matchingAccount?.id;
+  const currentUserProfileUrl = useAccountStore.getState().currentLinkedIn?.profileUrl ?? undefined;
   if (!accountId) {
     console.warn(
       "[MultiTabNav] No account ID available - API calls in new tab may fail until store loads",
@@ -106,6 +107,7 @@ export async function processTargetListQueue(
     queueState,
     commentGenerateSettings,
     accountId,
+    currentUserProfileUrl,
   );
 
   // Open via background script (bypasses popup blocker)
@@ -150,8 +152,9 @@ export async function continueQueueProcessing(): Promise<boolean> {
     url: feedUrl,
   });
 
-  // Get account ID from store to pass to new tab
+  // Get account ID and profile URL from store to pass to new tab
   const accountId = useAccountStore.getState().matchingAccount?.id;
+  const currentUserProfileUrl = useAccountStore.getState().currentLinkedIn?.profileUrl ?? undefined;
 
   // Save pending navigation state so auto-resume triggers in the new tab
   if (queueState) {
@@ -161,6 +164,7 @@ export async function continueQueueProcessing(): Promise<boolean> {
       queueState,
       queueState.commentGenerateSettings,
       accountId,
+      currentUserProfileUrl,
     );
   }
 

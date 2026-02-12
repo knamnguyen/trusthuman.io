@@ -186,6 +186,7 @@ CREATE TABLE "PostLoadSetting" (
     "skipThirdDegree" BOOLEAN NOT NULL DEFAULT false,
     "skipFollowing" BOOLEAN NOT NULL DEFAULT false,
     "skipCommentsLoading" BOOLEAN NOT NULL DEFAULT true,
+    "skipIfUserCommented" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 

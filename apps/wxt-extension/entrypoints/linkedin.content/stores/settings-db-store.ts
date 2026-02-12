@@ -55,6 +55,7 @@ export interface PostLoadSettingDB {
   skipFollowing: boolean;
 
   skipCommentsLoading: boolean;
+  skipIfUserCommented: boolean;
 
   createdAt: Date;
   updatedAt: Date;
@@ -114,6 +115,7 @@ const DEFAULT_POST_LOAD: Omit<
   skipThirdDegree: false,
   skipFollowing: false,
   skipCommentsLoading: true, // Default to true (50% faster, matches Prisma default)
+  skipIfUserCommented: false,
 };
 
 const DEFAULT_SUBMIT_COMMENT: Omit<

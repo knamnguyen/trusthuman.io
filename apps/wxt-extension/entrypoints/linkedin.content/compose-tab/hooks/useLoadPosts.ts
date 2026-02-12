@@ -150,6 +150,7 @@ export function useLoadPosts(
             skipThirdDegree: postLoadSettings.skipThirdDegree,
             skipFollowing: postLoadSettings.skipFollowing,
             skipCommentsLoading: postLoadSettings.skipCommentsLoading,
+            skipIfUserCommented: postLoadSettings.skipIfUserCommented,
           };
 
           // Build comment generate settings snapshot for dynamic style branching

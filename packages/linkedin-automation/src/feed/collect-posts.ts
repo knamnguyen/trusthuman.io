@@ -49,6 +49,9 @@ export interface PostFilterConfig {
 
   /** Skip loading LinkedIn comments (50% faster, but AI won't use adjacent comments) */
   skipCommentsLoading: boolean;
+
+  /** Skip posts where the current user has already commented */
+  skipIfUserCommented?: boolean;
 }
 
 // Lazy-initialized utilities (created on first use when DOM is ready)
@@ -152,6 +155,7 @@ function findNewPosts(
   isAuthorBlacklisted?: (
     authorProfileUrl: string | null | undefined,
   ) => boolean,
+  currentUserProfileUrl?: string,
 ): Array<{ urn: string; container: HTMLElement }> {
   const newPosts: Array<{ urn: string; container: HTMLElement }> = [];
   const postUtils = getPostUtils();
@@ -251,6 +255,9 @@ function findNewPosts(
       }
     }
 
+    // Note: skipIfUserCommented check happens AFTER comments are loaded (in collectPostsBatch)
+    // because comments need to be expanded first before we can check authorship
+
     newPosts.push({ urn, container });
   }
 
@@ -308,6 +315,7 @@ function extractPostData(container: HTMLElement): ReadyPost | null {
  * @param filterConfig - Configuration for filtering posts (promoted, company, connection degree, etc.)
  * @param isAuthorBlacklisted - Optional function to check if a post author should be skipped (blacklist)
  * @param onScrollProgress - Optional callback fired during scrolling with current feed post count
+ * @param currentUserProfileUrl - Optional current user's profile URL (for skipIfUserCommented filter)
  * @returns Number of posts collected
  */
 export async function collectPostsBatch(
@@ -322,6 +330,7 @@ export async function collectPostsBatch(
     authorProfileUrl: string | null | undefined,
   ) => boolean,
   onScrollProgress?: (feedPostCount: number) => void,
+  currentUserProfileUrl?: string,
 ): Promise<ReadyPost[]> {
   const postUtils = getPostUtils();
   const commentUtils = getCommentUtils();
@@ -367,6 +376,7 @@ export async function collectPostsBatch(
       isUrnIgnored,
       filterConfig,
       isAuthorBlacklisted,
+      currentUserProfileUrl,
     );
     console.timeEnd(`⏱️ [EngageKit] findNewPosts`);
 
@@ -422,12 +432,52 @@ export async function collectPostsBatch(
         );
       }
 
+      // Step 3.5: Filter out posts where user has already commented (NOW comments are loaded)
+      let filteredPostContexts = postContexts;
+      if (filterConfig?.skipIfUserCommented && currentUserProfileUrl) {
+        // Normalize URL: remove trailing slash for comparison
+        const normalizeUrl = (url: string | null | undefined) =>
+          url?.replace(/\/+$/, "") ?? "";
+        const normalizedUserUrl = normalizeUrl(currentUserProfileUrl);
+        console.log(
+          `[EngageKit] Checking for user comments, normalizedUserUrl: ${normalizedUserUrl}`,
+        );
+        const beforeCount = filteredPostContexts.length;
+        filteredPostContexts = postContexts.filter(({ container, urn }) => {
+          const comments = postUtils.extractPostComments(container);
+          // Debug: log comment authors for this post
+          if (comments.length > 0) {
+            console.log(
+              `[EngageKit] Post ${urn} has ${comments.length} comments, authors:`,
+              comments.map((c) => normalizeUrl(c.authorProfileUrl)),
+            );
+          }
+          const userAlreadyCommented = comments.some(
+            (comment) =>
+              normalizeUrl(comment.authorProfileUrl) === normalizedUserUrl,
+          );
+          if (userAlreadyCommented) {
+            console.log(
+              `[EngageKit] ⏭️ Skipping post - user already commented (${urn})`,
+            );
+            return false;
+          }
+          return true;
+        });
+        const skippedCount = beforeCount - filteredPostContexts.length;
+        if (skippedCount > 0) {
+          console.log(
+            `[EngageKit] Filtered out ${skippedCount} posts where user already commented`,
+          );
+        }
+      }
+
       // Step 4: Collect ALL post data
       console.time(
-        `⏱️ [EngageKit] extractPostData (${postsToProcess.length} posts)`,
+        `⏱️ [EngageKit] extractPostData (${filteredPostContexts.length} posts)`,
       );
       const readyPosts: ReadyPost[] = [];
-      for (const { container } of postContexts) {
+      for (const { container } of filteredPostContexts) {
         if (shouldStop?.()) break;
         const postData = extractPostData(container);
         if (postData) {
@@ -435,7 +485,7 @@ export async function collectPostsBatch(
         }
       }
       console.timeEnd(
-        `⏱️ [EngageKit] extractPostData (${postsToProcess.length} posts)`,
+        `⏱️ [EngageKit] extractPostData (${filteredPostContexts.length} posts)`,
       );
 
       // Step 5: Emit entire batch at once

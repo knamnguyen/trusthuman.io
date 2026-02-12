@@ -29,6 +29,7 @@ export const postLoadSettingSchema = z.object({
   skipFollowing: z.boolean(),
 
   skipCommentsLoading: z.boolean(),
+  skipIfUserCommented: z.boolean(),
 
   createdAt: z.date(),
   updatedAt: z.date(),

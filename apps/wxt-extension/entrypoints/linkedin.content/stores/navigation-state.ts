@@ -44,6 +44,8 @@ export interface PendingNavigationState {
   commentGenerateSettings?: CommentGenerateSettings;
   /** Account ID from the originating tab (for API requests in new tab before store loads) */
   accountId?: string;
+  /** Current user's LinkedIn profile URL (for skipIfUserCommented filter) */
+  currentUserProfileUrl?: string;
 }
 
 const STORAGE_KEY = "pendingTargetListNavigation";
@@ -60,6 +62,7 @@ export async function savePendingNavigation(
   queueState?: TargetListQueueState,
   commentGenerateSettings?: CommentGenerateSettings,
   accountId?: string,
+  currentUserProfileUrl?: string,
 ): Promise<void> {
   const state: PendingNavigationState = {
     type: queueState ? "queue" : "single",
@@ -69,6 +72,7 @@ export async function savePendingNavigation(
     queueState,
     commentGenerateSettings,
     accountId,
+    currentUserProfileUrl,
   };
 
   console.log("[NavigationState] Saving state:", {
@@ -76,6 +80,7 @@ export async function savePendingNavigation(
     hasQueue: !!queueState,
     hasDynamicStyle: commentGenerateSettings?.dynamicChooseStyleEnabled,
     accountId: accountId ? "present" : "missing",
+    currentUserProfileUrl: currentUserProfileUrl ? "present" : "missing",
   });
   console.log(
     "[NavigationState] browser.storage.local available:",

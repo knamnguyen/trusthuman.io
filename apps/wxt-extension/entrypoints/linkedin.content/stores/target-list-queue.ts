@@ -49,6 +49,7 @@ export interface PostLoadSettings {
   skipThirdDegree: boolean;
   skipFollowing: boolean;
   skipCommentsLoading: boolean;
+  skipIfUserCommented: boolean;
 }
 
 /**

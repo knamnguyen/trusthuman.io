@@ -20,6 +20,7 @@ import { collectPostsBatch } from "@sassy/linkedin-automation/feed/collect-posts
 import type { ComposeCard } from "../../stores/compose-store";
 import type { PostLoadSettings } from "../../stores/target-list-queue";
 import type { CommentGenerateSettingsSnapshot } from "./generate-ai-comments";
+import { useAccountStore } from "../../stores/account-store";
 import {
   getCachedBlacklist,
   prefetchBlacklist,
@@ -90,6 +91,8 @@ export interface LoadPostsToCardsParams {
   }) => void | Promise<void>;
   onBatchComplete?: () => void;
   onDailyAiGenerationQuotaExceeded?: () => void;
+  /** Current user's LinkedIn profile URL (for skipIfUserCommented filter, passed from auto-resume) */
+  currentUserProfileUrl?: string;
 }
 
 /**
@@ -99,6 +102,11 @@ export interface LoadPostsToCardsParams {
 export function buildFilterConfig(
   settings: PostLoadSettings | null,
 ): PostFilterConfig {
+  const skipIfUserCommented = settings?.skipIfUserCommented ?? false;
+
+  console.log("[buildFilterConfig] settings?.skipIfUserCommented:", settings?.skipIfUserCommented);
+  console.log("[buildFilterConfig] skipIfUserCommented (with default):", skipIfUserCommented);
+
   return {
     timeFilterEnabled: settings?.timeFilterEnabled ?? false,
     minPostAge: settings?.minPostAge ?? null,
@@ -109,7 +117,11 @@ export function buildFilterConfig(
     skipSecondDegree: settings?.skipSecondDegree ?? false,
     skipThirdDegree: settings?.skipThirdDegree ?? false,
     skipFollowing: settings?.skipFollowing ?? false,
-    skipCommentsLoading: settings?.skipCommentsLoading ?? false,
+    // Force comment loading when skipIfUserCommented is enabled (comments are needed to check authorship)
+    skipCommentsLoading: skipIfUserCommented
+      ? false
+      : settings?.skipCommentsLoading ?? false,
+    skipIfUserCommented,
   };
 }
 
@@ -139,6 +151,7 @@ export async function loadPostsToCards(
     onScrollProgress,
     onGenerationComplete,
     onBatchComplete,
+    currentUserProfileUrl: passedProfileUrl,
   } = params;
 
   // Get settings snapshots
@@ -416,6 +429,19 @@ export async function loadPostsToCards(
           isAuthorBlacklisted(authorProfileUrl, blacklistProfileUrls)
       : undefined;
 
+  // Get current user's profile URL for skipIfUserCommented filter
+  // Priority: 1. Passed from auto-resume, 2. From account store
+  const currentUserProfileUrl =
+    passedProfileUrl ??
+    useAccountStore.getState().currentLinkedIn?.profileUrl ??
+    undefined;
+
+  console.log(
+    "[loadPostsToCards] currentUserProfileUrl:",
+    currentUserProfileUrl,
+    passedProfileUrl ? "(from auto-resume)" : "(from store)",
+  );
+
   // Run batch collection
   console.time(
     `⏱️ [loadPostsToCards] collectPostsBatch (${targetCount} posts)`,
@@ -430,6 +456,7 @@ export async function loadPostsToCards(
     filterConfig,
     blacklistFilter,
     onScrollProgress, // Pass scroll progress callback to show feed post count
+    currentUserProfileUrl, // Pass current user profile URL for skipIfUserCommented filter
   );
   console.timeEnd(
     `⏱️ [loadPostsToCards] collectPostsBatch (${targetCount} posts)`,

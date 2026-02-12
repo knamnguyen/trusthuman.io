@@ -26,6 +26,9 @@ model PostLoadSetting {
   // AI will only use post caption, not adjacent comments
   skipCommentsLoading Boolean @default(true)
 
+  // Skip posts where the current user has already commented
+  skipIfUserCommented Boolean @default(false)
+
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
   linkedInAccount LinkedInAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)

@@ -110,6 +110,7 @@ export function useAutoResume(
         commentGenerateSettings,
         targetDraftCount: savedTargetDraftCount,
         queueState,
+        currentUserProfileUrl,
       } = pendingNav;
 
       console.log("[useAutoResume] runAutoResume settings:", {
@@ -206,6 +207,7 @@ export function useAutoResume(
               showTurnOffAiCommentGenerationButton: true,
             });
           },
+          currentUserProfileUrl, // Pass from saved navigation state for skipIfUserCommented filter
         });
         console.log(
           "[useAutoResume] runAutoResume: loadPostsToCards completed successfully",

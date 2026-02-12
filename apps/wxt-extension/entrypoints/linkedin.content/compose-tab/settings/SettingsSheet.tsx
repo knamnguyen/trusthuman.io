@@ -379,6 +379,7 @@ const DEFAULT_POST_LOAD: Omit<
   skipThirdDegree: false,
   skipFollowing: false,
   skipCommentsLoading: false,
+  skipIfUserCommented: false,
 };
 
 /**
@@ -549,14 +550,25 @@ function SettingsFiltersContent({
       </SettingsSection>
 
       <SettingsSection title="Performance">
-        <SettingToggle
-          label="Skip Loading Comments"
-          description="50% faster post loading (AI uses caption only, no adjacent comments)"
-          checked={settings.skipCommentsLoading}
-          onCheckedChange={(v) =>
-            void updatePostLoad({ skipCommentsLoading: v })
-          }
-        />
+        <div className="space-y-4">
+          <SettingToggle
+            label="Skip Loading Comments"
+            description="50% faster post loading (AI uses caption only, no adjacent comments)"
+            checked={settings.skipCommentsLoading}
+            onCheckedChange={(v) =>
+              void updatePostLoad({ skipCommentsLoading: v })
+            }
+            disabled={settings.skipIfUserCommented}
+          />
+          <SettingToggle
+            label="Skip Posts Where I Already Commented"
+            description="Requires loading comments (slower collection)"
+            checked={settings.skipIfUserCommented}
+            onCheckedChange={(v) =>
+              void updatePostLoad({ skipIfUserCommented: v })
+            }
+          />
+        </div>
       </SettingsSection>
     </div>
   );
