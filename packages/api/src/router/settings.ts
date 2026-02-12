@@ -4,7 +4,7 @@ import {
   commentGenerateSettingUpsertSchema,
   postLoadSettingUpsertSchema,
   submitCommentSettingUpsertSchema,
-} from "@sassy/validators";
+} from "@sassy/db/schema-validators";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 

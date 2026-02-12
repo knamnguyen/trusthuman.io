@@ -258,6 +258,3 @@ export const startAutoCommentingParamsSchema = z.object({
 export type StartAutoCommentingParams = z.output<
   typeof startAutoCommentingParamsSchema
 >;
-
-// Settings schemas
-export * from "./settings";

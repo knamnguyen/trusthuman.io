@@ -20,9 +20,11 @@
   "dependencies": {
     "@clerk/chrome-extension": "^2.5.2",
     "@sassy/api": "workspace:^",
+    "@sassy/db": "workspace:*",
     "@sassy/feature-flags": "workspace:*",
     "@sassy/linkedin-automation": "workspace:*",
     "@sassy/ui": "workspace:*",
+    "@sassy/validators": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "@trpc/client": "catalog:",
     "class-variance-authority": "^0.7.1",

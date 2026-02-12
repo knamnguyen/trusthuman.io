@@ -18,6 +18,14 @@
 
 import { create } from "zustand";
 
+import type {
+  PostLoadSetting,
+  SubmitCommentSetting,
+  CommentGenerateSetting,
+  PostLoadSettingsPartial,
+  CommentGenerateSettingsPartial,
+} from "@sassy/db/schema-validators";
+
 import { getTrpcClient } from "../../../lib/trpc/client";
 import { prefetchBlacklist } from "./blacklist-cache";
 import { prefetchCommentStyle } from "./comment-style-cache";
@@ -27,80 +35,16 @@ import { prefetchUrnsForLists } from "./target-list-queue";
 // TYPES
 // =============================================================================
 
-/**
- * PostLoadSetting - Filters during Load Posts
- * NOTE: Toggle and selection are independent (both stored in DB):
- * - targetListEnabled + targetListIds[] (target list feature)
- * - skipBlacklistEnabled + blacklistId (blacklist feature)
- *
- * NOTE: selectedTargetListUrns is runtime cache (fetched on-demand, not stored in DB)
- */
-export interface PostLoadSettingDB {
-  accountId: string;
-  targetListEnabled: boolean;
-  targetListIds: string[];
-
-  timeFilterEnabled: boolean;
-  minPostAge: number | null;
-
-  skipFriendActivitiesEnabled: boolean;
-  skipCompanyPagesEnabled: boolean;
-  skipPromotedPostsEnabled: boolean;
-  skipBlacklistEnabled: boolean;
-  blacklistId: string | null;
-
-  skipFirstDegree: boolean;
-  skipSecondDegree: boolean;
-  skipThirdDegree: boolean;
-  skipFollowing: boolean;
-
-  skipCommentsLoading: boolean;
-  skipIfUserCommented: boolean;
-
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-/**
- * SubmitCommentSetting - Actions when submitting comments
- */
-export interface SubmitCommentSettingDB {
-  accountId: string;
-
-  submitDelayRange: string;
-  likePostEnabled: boolean;
-  likeCommentEnabled: boolean;
-  tagPostAuthorEnabled: boolean;
-  attachPictureEnabled: boolean;
-  defaultPictureAttachUrl: string | null;
-
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-/**
- * CommentGenerateSetting - AI generation options
- */
-export interface CommentGenerateSettingDB {
-  accountId: string;
-
-  commentStyleId: string | null;
-  dynamicChooseStyleEnabled: boolean;
-  adjacentCommentsEnabled: boolean;
-
-  createdAt: Date;
-  updatedAt: Date;
-}
+export type PostLoadSettingDB = PostLoadSetting;
+export type SubmitCommentSettingDB = SubmitCommentSetting;
+export type CommentGenerateSettingDB = CommentGenerateSetting;
 
 // =============================================================================
-// DEFAULT VALUES (matches Prisma schema defaults)
-// Used for optimistic updates when no settings exist yet
+// DEFAULT VALUES (matches Prisma @default values)
+// TypeScript will error if a field is missing after db:generate
 // =============================================================================
 
-const DEFAULT_POST_LOAD: Omit<
-  PostLoadSettingDB,
-  "accountId" | "createdAt" | "updatedAt"
-> = {
+const DEFAULT_POST_LOAD: PostLoadSettingsPartial = {
   targetListEnabled: false,
   targetListIds: [],
   timeFilterEnabled: false,
@@ -114,14 +58,11 @@ const DEFAULT_POST_LOAD: Omit<
   skipSecondDegree: false,
   skipThirdDegree: false,
   skipFollowing: false,
-  skipCommentsLoading: true, // Default to true (50% faster, matches Prisma default)
+  skipCommentsLoading: true,
   skipIfUserCommented: false,
 };
 
-const DEFAULT_SUBMIT_COMMENT: Omit<
-  SubmitCommentSettingDB,
-  "accountId" | "createdAt" | "updatedAt"
-> = {
+const DEFAULT_SUBMIT_COMMENT: Omit<SubmitCommentSettingDB, "accountId" | "createdAt" | "updatedAt"> = {
   submitDelayRange: "5-20",
   likePostEnabled: false,
   likeCommentEnabled: false,
@@ -130,10 +71,7 @@ const DEFAULT_SUBMIT_COMMENT: Omit<
   defaultPictureAttachUrl: null,
 };
 
-const DEFAULT_COMMENT_GENERATE: Omit<
-  CommentGenerateSettingDB,
-  "accountId" | "createdAt" | "updatedAt"
-> = {
+const DEFAULT_COMMENT_GENERATE: CommentGenerateSettingsPartial = {
   commentStyleId: null,
   dynamicChooseStyleEnabled: false,
   adjacentCommentsEnabled: false,

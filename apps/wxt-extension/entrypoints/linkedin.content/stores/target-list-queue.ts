@@ -19,6 +19,11 @@
 
 import { browser } from "wxt/browser";
 
+import type {
+  PostLoadSettingsPartial,
+  CommentGenerateSetting
+} from "@sassy/db/schema-validators";
+
 import { getTrpcClient } from "../../../lib/trpc/client";
 
 const QUEUE_STORAGE_KEY = "engagekit-target-list-queue";
@@ -33,33 +38,17 @@ export interface TargetListQueueItem {
   targetListName: string;
 }
 
-export interface PostLoadSettings {
-  // Copy of PostLoadSettingDB fields needed for queue processing
-  targetListEnabled: boolean;
-  targetListIds: string[];
-  timeFilterEnabled: boolean;
-  minPostAge: number | null;
-  skipFriendActivitiesEnabled: boolean;
-  skipCompanyPagesEnabled: boolean;
-  skipPromotedPostsEnabled: boolean;
-  skipBlacklistEnabled: boolean;
-  blacklistId: string | null;
-  skipFirstDegree: boolean;
-  skipSecondDegree: boolean;
-  skipThirdDegree: boolean;
-  skipFollowing: boolean;
-  skipCommentsLoading: boolean;
-  skipIfUserCommented: boolean;
-}
+/**
+ * PostLoadSettings for queue processing (omits DB-only fields)
+ * Re-exported from @sassy/db/schema-validators for convenience
+ */
+export type PostLoadSettings = PostLoadSettingsPartial;
 
 /**
  * Snapshot of comment generation settings for queue processing.
  * Only includes fields needed for AI generation branching logic.
  */
-export interface CommentGenerateSettings {
-  dynamicChooseStyleEnabled: boolean;
-  adjacentCommentsEnabled: boolean;
-}
+export type CommentGenerateSettings = Pick<CommentGenerateSetting, 'dynamicChooseStyleEnabled' | 'adjacentCommentsEnabled'>;
 
 export interface TargetListQueueState {
   queue: TargetListQueueItem[];

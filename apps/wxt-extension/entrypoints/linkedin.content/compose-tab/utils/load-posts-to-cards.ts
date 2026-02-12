@@ -104,8 +104,14 @@ export function buildFilterConfig(
 ): PostFilterConfig {
   const skipIfUserCommented = settings?.skipIfUserCommented ?? false;
 
-  console.log("[buildFilterConfig] settings?.skipIfUserCommented:", settings?.skipIfUserCommented);
-  console.log("[buildFilterConfig] skipIfUserCommented (with default):", skipIfUserCommented);
+  console.log(
+    "[buildFilterConfig] settings?.skipIfUserCommented:",
+    settings?.skipIfUserCommented,
+  );
+  console.log(
+    "[buildFilterConfig] skipIfUserCommented (with default):",
+    skipIfUserCommented,
+  );
 
   return {
     timeFilterEnabled: settings?.timeFilterEnabled ?? false,
@@ -120,7 +126,7 @@ export function buildFilterConfig(
     // Force comment loading when skipIfUserCommented is enabled (comments are needed to check authorship)
     skipCommentsLoading: skipIfUserCommented
       ? false
-      : settings?.skipCommentsLoading ?? false,
+      : (settings?.skipCommentsLoading ?? false),
     skipIfUserCommented,
   };
 }
@@ -156,23 +162,6 @@ export async function loadPostsToCards(
 
   // Get settings snapshots
   const isHumanMode = useSettingsLocalStore.getState().behavior.humanOnlyMode;
-
-  // Debug: Log all postLoadSettings to see what's being passed
-  console.log("[loadPostsToCards] postLoadSettings:", {
-    targetListEnabled: postLoadSettings?.targetListEnabled,
-    targetListIds: postLoadSettings?.targetListIds,
-    skipBlacklistEnabled: postLoadSettings?.skipBlacklistEnabled,
-    blacklistId: postLoadSettings?.blacklistId,
-    timeFilterEnabled: postLoadSettings?.timeFilterEnabled,
-    minPostAge: postLoadSettings?.minPostAge,
-    skipCompanyPagesEnabled: postLoadSettings?.skipCompanyPagesEnabled,
-    skipPromotedPostsEnabled: postLoadSettings?.skipPromotedPostsEnabled,
-    skipFriendActivitiesEnabled: postLoadSettings?.skipFriendActivitiesEnabled,
-    skipFirstDegree: postLoadSettings?.skipFirstDegree,
-    skipSecondDegree: postLoadSettings?.skipSecondDegree,
-    skipThirdDegree: postLoadSettings?.skipThirdDegree,
-    skipFollowing: postLoadSettings?.skipFollowing,
-  });
 
   // === BLACKLIST SETUP ===
   // Get blacklist profile URLs from cache (if enabled and configured)

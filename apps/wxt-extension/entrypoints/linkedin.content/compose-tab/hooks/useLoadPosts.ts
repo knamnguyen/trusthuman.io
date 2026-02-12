@@ -133,33 +133,14 @@ export function useLoadPosts(
             },
           );
 
-          // Build settings snapshot for queue
-          const settingsForQueue: PostLoadSettings = {
-            targetListEnabled: postLoadSettings.targetListEnabled,
-            targetListIds: postLoadSettings.targetListIds,
-            timeFilterEnabled: postLoadSettings.timeFilterEnabled,
-            minPostAge: postLoadSettings.minPostAge,
-            skipFriendActivitiesEnabled:
-              postLoadSettings.skipFriendActivitiesEnabled,
-            skipCompanyPagesEnabled: postLoadSettings.skipCompanyPagesEnabled,
-            skipPromotedPostsEnabled: postLoadSettings.skipPromotedPostsEnabled,
-            skipBlacklistEnabled: postLoadSettings.skipBlacklistEnabled,
-            blacklistId: postLoadSettings.blacklistId,
-            skipFirstDegree: postLoadSettings.skipFirstDegree,
-            skipSecondDegree: postLoadSettings.skipSecondDegree,
-            skipThirdDegree: postLoadSettings.skipThirdDegree,
-            skipFollowing: postLoadSettings.skipFollowing,
-            skipCommentsLoading: postLoadSettings.skipCommentsLoading,
-            skipIfUserCommented: postLoadSettings.skipIfUserCommented,
-          };
+          // Build settings snapshot for queue (omit DB-only fields)
+          const { accountId, createdAt, updatedAt, ...settingsForQueue } = postLoadSettings;
 
           // Build comment generate settings snapshot for dynamic style branching
           const commentGenerateSettings = commentGenerateSettingsDB
             ? {
-                dynamicChooseStyleEnabled:
-                  commentGenerateSettingsDB.dynamicChooseStyleEnabled,
-                adjacentCommentsEnabled:
-                  commentGenerateSettingsDB.adjacentCommentsEnabled,
+                dynamicChooseStyleEnabled: commentGenerateSettingsDB.dynamicChooseStyleEnabled,
+                adjacentCommentsEnabled: commentGenerateSettingsDB.adjacentCommentsEnabled,
               }
             : undefined;
 

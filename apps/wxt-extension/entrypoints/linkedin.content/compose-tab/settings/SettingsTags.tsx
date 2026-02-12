@@ -66,6 +66,9 @@ export function SettingsTags() {
     if (postLoad?.skipBlacklistEnabled) {
       result.push("Blacklist");
     }
+    if (postLoad?.skipIfUserCommented) {
+      result.push("Skip Commented");
+    }
     if (postLoad?.targetListEnabled && postLoad.targetListIds.length > 0) {
       result.push("Target List");
     }
