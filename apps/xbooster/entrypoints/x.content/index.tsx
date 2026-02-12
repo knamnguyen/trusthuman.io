@@ -1,5 +1,7 @@
 import ReactDOM from "react-dom/client";
 
+import { initStealthHeaders } from "@/lib/x-stealth-headers";
+
 import App from "./App";
 
 import "../../assets/globals.css";
@@ -28,6 +30,13 @@ export default defineContentScript({
     });
 
     ui.mount();
+
+    // Initialize stealth headers early (non-blocking)
+    // so they are ready by the time the first API call happens
+    initStealthHeaders().catch((err) => {
+      console.warn("xBooster: Stealth headers init error:", err);
+    });
+
     console.log("xBooster: Content script loaded");
   },
 });

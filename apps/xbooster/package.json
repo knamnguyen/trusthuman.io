@@ -14,6 +14,7 @@
   "dependencies": {
     "@sassy/ui": "workspace:*",
     "clsx": "^2.1.1",
+    "js-sha256": "^0.11.1",
     "lucide-react": "^0.511.0",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",

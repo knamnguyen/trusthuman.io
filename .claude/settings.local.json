@@ -34,7 +34,10 @@
       "Bash(open:*)",
       "Bash(grep:*)",
       "WebFetch(domain:chartjs-plugin-datalabels.netlify.app)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(python3:*)",
+      "Bash(npx wxt prepare:*)",
+      "Bash(echo:*)"
     ]
   }
 }
