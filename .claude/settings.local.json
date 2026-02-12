@@ -34,7 +34,19 @@
       "Bash(open:*)",
       "Bash(grep:*)",
       "WebFetch(domain:chartjs-plugin-datalabels.netlify.app)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "WebFetch(domain:www.aifreeapi.com)",
+      "WebFetch(domain:gist.github.com)",
+      "WebFetch(domain:www.getopenclaw.ai)",
+      "Bash(echo:*)",
+      "Bash(lsof:*)",
+      "Bash(pgrep:*)",
+      "Bash(# Check Chrome stderr - look in the system log log show --predicate ''process == \"\"Google Chrome\"\"'' --last 2m --style compact)",
+      "Bash(pkill:*)",
+      "Bash(# Try with explicit user-data-dir and check DevTools port via websocket URL pkill -9 -f \"\"Google Chrome\"\" ; sleep 2 # Chrome sometimes needs --no-first-run to skip dialogs /Applications/Google\\\\ Chrome.app/Contents/MacOS/Google\\\\ Chrome \\\\ --remote-debugging-port=9222 \\\\ --user-data-dir=\"\"/Users/knamnguyen/Library/Application Support/Google/Chrome\"\" \\\\ --profile-directory=\"\"Default\"\" \\\\ --no-first-run \\\\ & sleep 5 cat /tmp/chrome-debug.log)",
+      "Bash(python3:*)",
+      "Bash(xargs:*)",
+      "Bash(gtimeout 5 bun run:*)"
     ]
   }
 }
