@@ -103,36 +103,40 @@ export function useAutoRun() {
         }
       }
 
-      // 4. Generate AI replies
+      // 4. Generate AI replies (parallel)
       setStatus("generating");
       for (const mention of actionable) {
-        if (abortRef.current) return;
-        const cached = mentionsStore.getCachedTweet(mention.conversationId);
-        const originalText = cached?.text ?? mention.text;
-
         repliesStore.setReply(mention.tweetId, {
           status: "generating",
           text: "",
         });
-
-        try {
-          const text = await generateReply({
-            originalTweetText: originalText,
-            mentionText: mention.text,
-            mentionAuthor: mention.authorName,
-            customPrompt: settings.customPrompt,
-            maxWordsMin: settings.maxWordsMin,
-            maxWordsMax: settings.maxWordsMax,
-          });
-          repliesStore.setReply(mention.tweetId, { status: "ready", text });
-        } catch (err) {
-          repliesStore.setReply(mention.tweetId, {
-            status: "error",
-            error:
-              err instanceof Error ? err.message : "Failed to generate reply",
-          });
-        }
       }
+
+      await Promise.all(
+        actionable.map(async (mention) => {
+          if (abortRef.current) return;
+          const cached = mentionsStore.getCachedTweet(mention.conversationId);
+          const originalText = cached?.text ?? mention.text;
+
+          try {
+            const text = await generateReply({
+              originalTweetText: originalText,
+              mentionText: mention.text,
+              mentionAuthor: mention.authorName,
+              customPrompt: settings.customPrompt,
+              maxWordsMin: settings.maxWordsMin,
+              maxWordsMax: settings.maxWordsMax,
+            });
+            repliesStore.setReply(mention.tweetId, { status: "ready", text });
+          } catch (err) {
+            repliesStore.setReply(mention.tweetId, {
+              status: "error",
+              error:
+                err instanceof Error ? err.message : "Failed to generate reply",
+            });
+          }
+        }),
+      );
 
       // 5. Send replies with randomized delays (capped by maxSendsPerCycle)
       setStatus("sending");

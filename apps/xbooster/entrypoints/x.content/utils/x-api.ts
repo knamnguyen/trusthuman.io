@@ -1,4 +1,5 @@
 import { getXAuth } from "@/lib/x-auth-service";
+import { getStealthHeaders } from "@/lib/x-stealth-headers";
 
 // Feature flags required by X.com's GraphQL API
 const FEATURES = {
@@ -47,6 +48,8 @@ const FALLBACK_QUERY_IDS = {
   CreateTweet: "F7hteriqzdRzvMfXM6Ul4w",
   TweetDetail: "Vrkl31e9tzfybLjkgNUEmg",
   NotificationsTimeline: "Jizym-xYEiKIUsJ0xn6hFg",
+  ListLatestTweetsTimeline: "8F_zY5Fd6RPLh6thWMTWxg",
+  CommunityTweetsTimeline: "4D6L5dLISN2dBphE1Hk7Dg",
 };
 
 // Cache extracted queryIds so we don't re-parse the bundle
@@ -77,6 +80,8 @@ async function extractQueryIds(): Promise<Record<string, string>> {
         "CreateTweet",
         "TweetDetail",
         "NotificationsTimeline",
+        "ListLatestTweetsTimeline",
+        "CommunityTweetsTimeline",
       ]) {
         if (objStr.includes(`operationName:"${op}"`)) {
           const idMatch = objStr.match(/queryId:"([^"]+)"/);
@@ -111,7 +116,11 @@ function extractCookieValue(cookieString: string, name: string): string | null {
 /**
  * Build common headers for X.com API requests
  */
-async function buildHeaders(referer: string): Promise<HeadersInit> {
+async function buildHeaders(
+  referer: string,
+  method: string,
+  path: string,
+): Promise<HeadersInit> {
   const auth = await getXAuth();
   if (!auth) throw new Error("No auth captured — browse X.com first");
   if (!auth.cookie) throw new Error("No cookies captured");
@@ -119,6 +128,8 @@ async function buildHeaders(referer: string): Promise<HeadersInit> {
 
   const ct0 = extractCookieValue(auth.cookie, "ct0");
   if (!ct0) throw new Error("Missing ct0 cookie");
+
+  const stealth = await getStealthHeaders(method, path);
 
   return {
     authorization: auth.authorization,
@@ -129,6 +140,7 @@ async function buildHeaders(referer: string): Promise<HeadersInit> {
     "x-twitter-client-language": "en",
     cookie: auth.cookie,
     Referer: referer,
+    ...stealth,
   };
 }
 
@@ -153,7 +165,11 @@ export async function fetchNotifications(count = 40): Promise<{
       JSON.stringify(variables),
     )}&features=${encodeURIComponent(JSON.stringify(FEATURES))}`;
 
-    const headers = await buildHeaders("https://x.com/notifications");
+    const headers = await buildHeaders(
+      "https://x.com/notifications",
+      "GET",
+      `/i/api/graphql/${queryId}/NotificationsTimeline`,
+    );
 
     const res = await fetch(url, {
       method: "GET",
@@ -215,6 +231,8 @@ export async function getTweetDetail(tweetId: string): Promise<{
 
     const headers = await buildHeaders(
       `https://x.com/i/web/status/${tweetId}`,
+      "GET",
+      `/i/api/graphql/${queryId}/TweetDetail`,
     );
 
     const res = await fetch(url, {
@@ -274,7 +292,11 @@ export async function postTweet(
       queryId,
     };
 
-    const headers = await buildHeaders(window.location.href);
+    const headers = await buildHeaders(
+      window.location.href,
+      "POST",
+      `/i/api/graphql/${queryId}/CreateTweet`,
+    );
 
     const res = await fetch(`/i/api/graphql/${queryId}/CreateTweet`, {
       method: "POST",
@@ -295,6 +317,103 @@ export async function postTweet(
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("xBooster: postTweet error:", message);
+    return { success: false, message };
+  }
+}
+
+/**
+ * Fetch tweets from an X list via ListLatestTweetsTimeline GraphQL endpoint
+ */
+export async function getListTweets(
+  listId: string,
+  count = 20,
+): Promise<{ success: boolean; data?: unknown; message?: string }> {
+  try {
+    const queryId = await getQueryId("ListLatestTweetsTimeline");
+
+    const variables = {
+      listId,
+      count,
+    };
+
+    const url = `/i/api/graphql/${queryId}/ListLatestTweetsTimeline?variables=${encodeURIComponent(
+      JSON.stringify(variables),
+    )}&features=${encodeURIComponent(JSON.stringify(FEATURES))}`;
+
+    const headers = await buildHeaders(
+      "https://x.com",
+      "GET",
+      `/i/api/graphql/${queryId}/ListLatestTweetsTimeline`,
+    );
+
+    const res = await fetch(url, {
+      method: "GET",
+      credentials: "include",
+      headers,
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(`HTTP ${res.status}: ${err}`);
+    }
+
+    const json = await res.json();
+    if (json.errors) throw new Error(JSON.stringify(json.errors));
+
+    return { success: true, data: json };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("xBooster: getListTweets error:", message);
+    return { success: false, message };
+  }
+}
+
+/**
+ * Fetch tweets from an X community via CommunityTweetsTimeline GraphQL endpoint
+ */
+export async function getCommunityTweets(
+  communityId: string,
+  count = 20,
+): Promise<{ success: boolean; data?: unknown; message?: string }> {
+  try {
+    const queryId = await getQueryId("CommunityTweetsTimeline");
+
+    const variables = {
+      communityId,
+      count,
+      displayLocation: "Community",
+      rankingMode: "Recency",
+      withCommunity: true,
+    };
+
+    const url = `/i/api/graphql/${queryId}/CommunityTweetsTimeline?variables=${encodeURIComponent(
+      JSON.stringify(variables),
+    )}&features=${encodeURIComponent(JSON.stringify(FEATURES))}`;
+
+    const headers = await buildHeaders(
+      "https://x.com",
+      "GET",
+      `/i/api/graphql/${queryId}/CommunityTweetsTimeline`,
+    );
+
+    const res = await fetch(url, {
+      method: "GET",
+      credentials: "include",
+      headers,
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(`HTTP ${res.status}: ${err}`);
+    }
+
+    const json = await res.json();
+    if (json.errors) throw new Error(JSON.stringify(json.errors));
+
+    return { success: true, data: json };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("xBooster: getCommunityTweets error:", message);
     return { success: false, message };
   }
 }

@@ -4,26 +4,34 @@ const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
  * Post a reply using DOM manipulation instead of GraphQL API calls.
  * Assumes the browser is already navigated to the tweet page.
  *
+ * @param text - The reply text to post.
+ * @param target - Which reply button to click:
+ *   "mention" (default) = second button (replying to a reply on your tweet)
+ *   "original" = first button (replying directly to the original tweet)
+ *
  * Flow:
- * 1. Click the second reply button (first belongs to the parent/original tweet)
+ * 1. Click the appropriate reply button
  * 2. Wait for modal, then focus the tweet textarea
  * 3. Insert text via execCommand (simulates normal typing)
  * 4. Click the submit button
  */
 export async function postTweetViaDOM(
   text: string,
+  target: "mention" | "original" = "mention",
 ): Promise<{ success: boolean; message?: string }> {
   try {
     const tweetText = text.trim();
     if (!tweetText) throw new Error("Empty tweet");
 
-    // 1. Click the second reply button (first one belongs to the parent tweet)
+    // 1. Click the reply button
     const replyButtons = document.querySelectorAll('[data-testid="reply"]');
-    if (replyButtons.length < 2) {
-      throw new Error("Second reply button not found");
+    const buttonIndex = target === "original" ? 0 : 1;
+    const minButtons = buttonIndex + 1;
+    if (replyButtons.length < minButtons) {
+      throw new Error(`Reply button not found (need index ${buttonIndex}, found ${replyButtons.length})`);
     }
-    (replyButtons[1] as HTMLElement).click();
-    console.log("xBooster: Clicked reply button");
+    (replyButtons[buttonIndex] as HTMLElement).click();
+    console.log(`xBooster: Clicked reply button [${buttonIndex}] (${target})`);
 
     await delay(1500);
 

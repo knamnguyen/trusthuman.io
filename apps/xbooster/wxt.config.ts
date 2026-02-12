@@ -34,6 +34,12 @@ export default defineConfig({
       extension_pages:
         "script-src 'self'; object-src 'self'; connect-src 'self' http://localhost:* ws://localhost:* https://generativelanguage.googleapis.com;",
     },
+    web_accessible_resources: [
+      {
+        resources: ["page-context.js"],
+        matches: ["https://*.x.com/*", "https://x.com/*"],
+      },
+    ],
   },
 
   vite: () => ({
