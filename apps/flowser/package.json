@@ -1,0 +1,22 @@
+{
+  "name": "@sassy/flowser",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "clean": "git clean -xdf .cache .turbo dist node_modules"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "@sassy/linkedin-automation": "workspace:*",
+    "puppeteer-core": "^24.22.3",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@sassy/tsconfig": "workspace:*",
+    "@types/bun": "^1.3.5",
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
+  }
+}

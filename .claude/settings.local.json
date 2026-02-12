@@ -37,7 +37,15 @@
       "Bash(git push:*)",
       "Bash(python3:*)",
       "Bash(npx wxt prepare:*)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "WebFetch(domain:www.aifreeapi.com)",
+      "WebFetch(domain:gist.github.com)",
+      "WebFetch(domain:www.getopenclaw.ai)",
+      "Bash(lsof:*)",
+      "Bash(pgrep:*)",
+      "Bash(pkill:*)",
+      "Bash(xargs:*)",
+      "Bash(gtimeout 5 bun run:*)"
     ]
   }
 }
