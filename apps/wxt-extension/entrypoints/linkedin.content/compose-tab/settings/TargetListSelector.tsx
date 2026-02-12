@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Check, ChevronDown, Loader2 } from "lucide-react";
 
+import { buildListFeedUrl } from "@sassy/linkedin-automation/navigate/build-list-feed-url";
 import { Button } from "@sassy/ui/button";
 import {
   Command,
@@ -16,10 +17,13 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@sassy/ui/popover";
 import { cn } from "@sassy/ui/utils";
 
-import { useTRPC } from "../../../../lib/trpc/client";
+import { getTrpcClient, useTRPC } from "../../../../lib/trpc/client";
 import { useShadowRootStore } from "../../stores";
 import { useSettingsDBStore } from "../../stores/settings-db-store";
-import { prefetchUrnsForLists } from "../../stores/target-list-queue";
+import {
+  getCachedUrns,
+  prefetchUrnsForLists,
+} from "../../stores/target-list-queue";
 
 // Default for when settings haven't loaded yet
 const DEFAULT_TARGET_LIST_IDS: string[] = [];
@@ -41,6 +45,7 @@ export function TargetListSelector() {
   const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [isOpeningPreview, setIsOpeningPreview] = useState(false);
 
   // DB Settings store
   const postLoad = useSettingsDBStore((s) => s.postLoad);
@@ -160,29 +165,73 @@ export function TargetListSelector() {
   // Show loading if settings haven't loaded yet
   const isLoading = !isLoaded || isLoadingLists;
 
+  /**
+   * Opens preview tabs for each selected target list.
+   * Each tab shows the LinkedIn search feed for that list's members.
+   */
+  const handleOpenPreview = async () => {
+    if (savedTargetListIds.length === 0) return;
+
+    setIsOpeningPreview(true);
+
+    try {
+      const trpcClient = getTrpcClient();
+
+      // Open a tab for each selected list
+      for (const listId of savedTargetListIds) {
+        // Try cache first
+        let urns: string[] = [];
+        const cached = getCachedUrns(listId);
+
+        if (cached) {
+          urns = cached.urns;
+        } else {
+          // Fetch URNs if not cached
+          const profiles = await trpcClient.targetList.getProfilesInList.query({
+            listId,
+          });
+          urns =
+            profiles?.data
+              .map((p) => p.profileUrn)
+              .filter((urn): urn is string => urn !== null) ?? [];
+        }
+
+        if (urns.length > 0) {
+          const url = buildListFeedUrl(urns);
+          window.open(url, "_blank");
+        }
+      }
+    } catch (error) {
+      console.error("[TargetListSelector] Failed to open preview:", error);
+    } finally {
+      setIsOpeningPreview(false);
+    }
+  };
+
   return (
-    <Popover open={open} onOpenChange={handleOpenChange}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className="w-full justify-between text-left font-normal"
-          disabled={isSaving}
-        >
-          {isSaving ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              <span className="truncate">Saving...</span>
-            </>
-          ) : (
-            <>
-              <span className="truncate">{getDisplayText()}</span>
-              <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-            </>
-          )}
-        </Button>
-      </PopoverTrigger>
+    <div className="flex items-center gap-2">
+      <Popover open={open} onOpenChange={handleOpenChange}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className="flex-1 justify-between text-left font-normal"
+            disabled={isSaving}
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <span className="truncate">Saving...</span>
+              </>
+            ) : (
+              <>
+                <span className="truncate">{getDisplayText()}</span>
+                <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </>
+            )}
+          </Button>
+        </PopoverTrigger>
       <PopoverContent
         className="z-[10000] w-[280px] p-0"
         align="start"
@@ -257,5 +306,24 @@ export function TargetListSelector() {
         </Command>
       </PopoverContent>
     </Popover>
+
+      {/* Preview button - opens each selected list in a new tab */}
+      {savedTargetListIds.length > 0 && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleOpenPreview}
+          disabled={isOpeningPreview}
+          title="Preview selected lists in new tabs"
+          className="shrink-0"
+        >
+          {isOpeningPreview ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            "Preview"
+          )}
+        </Button>
+      )}
+    </div>
   );
 }
