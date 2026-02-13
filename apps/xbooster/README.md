@@ -40,3 +40,18 @@ chrome.storage.local.set({"xbooster_replied": PASTE_ARRAY_HERE}, () => console.l
 ```
 
 Where `PASTE_ARRAY_HERE` is the `xbooster_replied` array from the exported data.
+
+## VPS Setup (24/7 Running)
+
+When running xBooster on a VPS via Chrome Remote Desktop, Chrome will freeze the tab after ~5 minutes of CRD disconnect due to tab throttling. To prevent this, launch Chrome with these flags:
+
+```bash
+google-chrome --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-renderer-backgrounding
+```
+
+A convenience script `start-chrome.sh` is also provided in the repo root. Upload it to the VPS and run:
+
+```bash
+chmod +x start-chrome.sh
+./start-chrome.sh
+```
