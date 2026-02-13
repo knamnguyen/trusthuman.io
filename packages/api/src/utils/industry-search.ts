@@ -1,67 +1,38 @@
-import { Document } from "flexsearch";
-
-import { chunkify } from "./commons";
-
 export class LinkedInIndustrySearch {
-  private _index: Promise<
-    Document<
-      {
-        id: string;
-        label: string;
-        hierarchy: string;
-        description: string;
-      },
-      true
-    >
-  > | null = null;
-
-  get index() {
-    this._index ??= this.init();
-    return this._index;
-  }
-
-  private async init() {
-    const index = new Document<
-      {
-        id: string;
-        label: string;
-        hierarchy: string;
-        description: string;
-      },
-      true
-    >({
-      worker: true,
-      document: {
-        id: "id",
-        index: ["label"],
-      },
-    });
-
-    for (const industry of chunkify(linkedInIndustries, 100)) {
-      // TODO: append is not a function
-      const promises = industry.map((ind) => index.append(ind));
-      await Promise.all(promises);
+  /**
+   * Search industries by label (case-insensitive substring match)
+   * Searches both label and hierarchy for better results
+   */
+  search(query: string | null, limit = 20) {
+    if (!query || query.trim() === "") {
+      return linkedInIndustries.slice(0, limit);
     }
 
-    return index;
-  }
+    const searchTerm = query.toLowerCase().trim();
 
-  async search(query: string | null, limit = 20) {
-    const index = await this.index;
-    const results = await index.search(query ?? "", {
-      enrich: true,
-      limit,
-    });
+    // Score and filter industries
+    const scored = linkedInIndustries
+      .map((industry) => {
+        const labelLower = industry.label.toLowerCase();
+        const hierarchyLower = industry.hierarchy.toLowerCase();
 
-    const docs = [];
+        // Exact label match gets highest score
+        if (labelLower === searchTerm) return { industry, score: 100 };
+        // Label starts with search term
+        if (labelLower.startsWith(searchTerm)) return { industry, score: 80 };
+        // Label contains search term
+        if (labelLower.includes(searchTerm)) return { industry, score: 60 };
+        // Hierarchy contains search term
+        if (hierarchyLower.includes(searchTerm)) return { industry, score: 40 };
 
-    for (const result of results) {
-      for (const doc of result.result) {
-        docs.push(doc.doc!);
-      }
-    }
+        return { industry, score: 0 };
+      })
+      .filter((item) => item.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit)
+      .map((item) => item.industry);
 
-    return docs;
+    return scored;
   }
 
   list(opts?: { limit?: number; offset?: number }) {

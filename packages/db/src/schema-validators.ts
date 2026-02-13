@@ -9,7 +9,7 @@
  * 2. Run `pnpm db:generate`
  * 3. Done! All types auto-update.
  */
-import { z } from "zod";
+import type { z } from "zod";
 
 // Re-export all auto-generated schemas from Prisma
 export * from "../generated/zod-prisma-validators";
@@ -19,6 +19,7 @@ import {
   PostLoadSettingSchema,
   SubmitCommentSettingSchema,
   CommentGenerateSettingSchema,
+  DiscoverySetSchema,
 } from "../generated/zod-prisma-validators";
 
 // =============================================================================
@@ -70,3 +71,32 @@ export type CommentGenerateSettingsPartial = Omit<
   z.infer<typeof CommentGenerateSettingSchema>,
   "accountId" | "createdAt" | "updatedAt"
 >;
+
+// =============================================================================
+// DISCOVERY SET SCHEMAS (for tRPC input validation)
+// =============================================================================
+
+/** Schema for creating a new DiscoverySet - omits id, accountId, timestamps */
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+export const discoverySetCreateSchema = DiscoverySetSchema.omit({
+  id: true,
+  accountId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type DiscoverySetCreate = z.infer<typeof discoverySetCreateSchema>;
+
+/** Schema for updating a DiscoverySet - requires id, all other fields optional */
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+export const discoverySetUpdateSchema = DiscoverySetSchema.pick({
+  id: true,
+  name: true,
+  keywords: true,
+  keywordsMode: true,
+  excluded: true,
+  authorJobTitle: true,
+  authorIndustries: true,
+}).partial().required({ id: true });
+
+export type DiscoverySetUpdate = z.infer<typeof discoverySetUpdateSchema>;
