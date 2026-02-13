@@ -45,7 +45,12 @@
       "Bash(pgrep:*)",
       "Bash(pkill:*)",
       "Bash(xargs:*)",
-      "Bash(gtimeout 5 bun run:*)"
+      "Bash(gtimeout 5 bun run:*)",
+      "Bash(openssl genrsa:*)",
+      "Bash(openssl rsa:*)",
+      "Bash(chmod:*)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=8192\" pnpm build:*)",
+      "Bash(bash:*)"
     ]
   }
 }

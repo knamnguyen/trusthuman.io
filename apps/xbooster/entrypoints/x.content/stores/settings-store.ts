@@ -6,7 +6,7 @@ export interface XBoosterSettings {
   /** Fetch interval range in minutes */
   fetchIntervalMin: number;
   fetchIntervalMax: number;
-  /** Send delay range in seconds between replies */
+  /** Send delay range in minutes between replies (supports decimals, e.g. 0.5 = 30s) */
   sendDelayMin: number;
   sendDelayMax: number;
   /** Custom system prompt (empty = use default) */
@@ -22,13 +22,15 @@ export interface XBoosterSettings {
   repliedRetentionDays: number;
   /** Only reply to mentions newer than N minutes */
   maxMentionAgeMinutes: number;
+  /** Minutes to pause after 3 consecutive send failures */
+  failPauseMinutes: number;
 }
 
 const DEFAULT_SETTINGS: XBoosterSettings = {
   fetchIntervalMin: 60,
   fetchIntervalMax: 90,
-  sendDelayMin: 60,
-  sendDelayMax: 120,
+  sendDelayMin: 1,
+  sendDelayMax: 2,
   customPrompt: "",
   maxWordsMin: 5,
   maxWordsMax: 15,
@@ -36,6 +38,7 @@ const DEFAULT_SETTINGS: XBoosterSettings = {
   maxSendsPerCycle: 10,
   repliedRetentionDays: 30,
   maxMentionAgeMinutes: 1440,
+  failPauseMinutes: 60,
 };
 
 interface SettingsStore {

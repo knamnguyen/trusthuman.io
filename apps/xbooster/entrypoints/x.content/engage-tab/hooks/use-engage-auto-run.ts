@@ -13,20 +13,25 @@ import {
   parseListTweetsResponse,
 } from "../utils/parse-tweets";
 import type { EngageTweetData } from "../utils/parse-tweets";
+import { isPaused, recordSuccess, recordFailure } from "../../utils/send-guard";
+import { useReplyHistoryStore } from "../../utils/reply-history-store";
 
 type EngageAutoRunStatus =
   | "idle"
   | "fetching"
   | "generating"
   | "sending"
+  | "send-delay"
   | "waiting"
-  | "source-delay";
+  | "source-delay"
+  | "rate-limited";
 
 interface EngageAutoRunState {
   isRunning: boolean;
   status: EngageAutoRunStatus;
   lastRunAt: number | null;
   nextRunAt: number | null;
+  delayUntil: number | null;
   cycleCount: number;
   sentThisCycle: number;
   currentSourceIndex: number;
@@ -35,7 +40,7 @@ interface EngageAutoRunState {
 }
 
 function randomBetween(min: number, max: number): number {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+  return Math.random() * (max - min) + min;
 }
 
 export function useEngageAutoRun() {
@@ -44,6 +49,7 @@ export function useEngageAutoRun() {
     status: "idle",
     lastRunAt: null,
     nextRunAt: null,
+    delayUntil: null,
     cycleCount: 0,
     sentThisCycle: 0,
     currentSourceIndex: 0,
@@ -136,6 +142,12 @@ export function useEngageAutoRun() {
       await Promise.all(
         actionable.map(async (tweet) => {
           if (abortRef.current) return;
+
+          // Look up past interactions with this author
+          const pastInteractions = useReplyHistoryStore
+            .getState()
+            .getByAuthor(tweet.authorHandle);
+
           try {
             const text = await generateReply({
               originalTweetText: tweet.text,
@@ -144,6 +156,12 @@ export function useEngageAutoRun() {
               customPrompt: settings.customPrompt,
               maxWordsMin: settings.maxWordsMin,
               maxWordsMax: settings.maxWordsMax,
+              conversationHistory: pastInteractions.length > 0
+                ? pastInteractions.map((h) => ({
+                    theirText: h.theirText,
+                    ourReply: h.ourReply,
+                  }))
+                : undefined,
             });
             repliesStore.setReply(tweet.tweetId, { status: "ready", text });
           } catch (err) {
@@ -159,6 +177,12 @@ export function useEngageAutoRun() {
       // 4. Send replies (capped by maxSendsPerSource)
       setStatus("sending");
       let sentCount = 0;
+
+      // Check if paused before sending
+      if (isPaused()) {
+        setStatus("rate-limited");
+        return sentCount;
+      }
       const sendableCount = Math.min(
         actionable.length,
         settings.maxSendsPerSource,
@@ -183,19 +207,40 @@ export function useEngageAutoRun() {
         const sendResult = await postTweetViaDOM(reply.text, "original");
         if (sendResult.success) {
           repliesStore.markSent(tweet.tweetId);
+          recordSuccess(); // Reset failure counter
           sentCount++;
+
+          // Save to conversation history
+          await useReplyHistoryStore.getState().addEntry({
+            tweetId: tweet.tweetId,
+            repliedAt: Date.now(),
+            authorHandle: tweet.authorHandle,
+            authorName: tweet.authorName,
+            theirText: tweet.text,
+            ourReply: reply.text,
+            mode: "ENGAGE",
+          });
         } else {
           repliesStore.setReply(tweet.tweetId, {
             status: "error",
             error: sendResult.message ?? "Failed to send reply",
           });
+          recordFailure(settings.failPauseMinutes); // Increment failure counter
+
+          // Check if now paused and exit
+          if (isPaused()) {
+            setStatus("rate-limited");
+            return sentCount;
+          }
         }
 
         // Random delay between sends (skip after last)
         if (i < sendableCount - 1) {
           const delay =
-            randomBetween(settings.sendDelayMin, settings.sendDelayMax) * 1000;
+            randomBetween(settings.sendDelayMin, settings.sendDelayMax) * 60 * 1000;
+          setState((prev) => ({ ...prev, status: "send-delay", delayUntil: Date.now() + delay }));
           await new Promise((r) => setTimeout(r, delay));
+          setState((prev) => ({ ...prev, status: "sending", delayUntil: null }));
         }
       }
 
@@ -217,8 +262,10 @@ export function useEngageAutoRun() {
     const repliesStore = useEngageRepliesStore.getState();
     const tweetsStore = useEngageTweetsStore.getState();
 
-    // Auto-prune old replied entries
+    // Auto-prune old replied entries and history
     await repliesStore.pruneAlreadyReplied(settings.repliedRetentionDays);
+    const historyStore = useReplyHistoryStore.getState();
+    await historyStore.prune(settings.repliedRetentionDays);
 
     // Clear old tweets at start of cycle
     tweetsStore.setTweets([]);
@@ -249,8 +296,9 @@ export function useEngageAutoRun() {
             randomBetween(settings.sourceDelayMin, settings.sourceDelayMax) *
             60 *
             1000;
-          setStatus("source-delay");
+          setState((prev) => ({ ...prev, status: "source-delay", delayUntil: Date.now() + delayMs }));
           await new Promise((r) => setTimeout(r, delayMs));
+          setState((prev) => ({ ...prev, delayUntil: null }));
         }
       }
     } catch (err) {
@@ -275,10 +323,11 @@ export function useEngageAutoRun() {
       1000;
     const nextRunAt = Date.now() + delayMs;
 
-    setState((prev) => ({ ...prev, status: "waiting", nextRunAt }));
+    setState((prev) => ({ ...prev, status: "waiting", nextRunAt, delayUntil: nextRunAt }));
 
     timeoutRef.current = setTimeout(async () => {
       if (abortRef.current) return;
+      setState((prev) => ({ ...prev, delayUntil: null }));
       await runCycle();
       if (!abortRef.current) scheduleNext();
     }, delayMs);
@@ -293,9 +342,11 @@ export function useEngageAutoRun() {
       cycleCount: 0,
     }));
 
-    // Load settings if not loaded
+    // Load settings and history if not loaded
     const settingsStore = useEngageSettingsStore.getState();
     if (!settingsStore.isLoaded) await settingsStore.loadSettings();
+    const histStore = useReplyHistoryStore.getState();
+    if (!histStore.isLoaded) await histStore.load();
 
     // Run first cycle immediately
     await runCycle();
@@ -313,6 +364,7 @@ export function useEngageAutoRun() {
       isRunning: false,
       status: "idle",
       nextRunAt: null,
+      delayUntil: null,
     }));
   }, []);
 

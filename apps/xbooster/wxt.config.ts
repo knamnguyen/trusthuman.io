@@ -21,6 +21,8 @@ export default defineConfig({
   },
 
   manifest: {
+    // Fixed key ensures consistent extension ID across installs (preserves chrome.storage)
+    key: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4j3Nxc4h6za2Imjv5bBzEy+VDaQDpA0otWhli5Vvl4qlVZwdZjPssMf1WV7ZYism9bD7cM3Td9sEkFGNChC45b0gfnG8IoAzWMJlTMwL1JBuVCbEgZrkuGFiSPIJX57VEJ4YvpGZmURHjnO5phjcRWA/OxNBq+tEz8GIduIV1n1V3uxEvHxpzQCNjktnQIjSwIGplimg/a85UBCr3dg1KFLywwWJQpZMbjkJDbtFITuAQoXmR0+owC/qDK9dZ/gUx0XvHVLYn9aR0fV8Tq9Us0ibKMRkd9P+hjfsTSsS0MQYi6OYBzdkrv5YV8TtBrZ5yQE9aRWlYEb5zm1dfTBhFQIDAQAB",
     name: "xBooster",
     description: "X/Twitter Engagement Automation",
     version: "0.1.0",

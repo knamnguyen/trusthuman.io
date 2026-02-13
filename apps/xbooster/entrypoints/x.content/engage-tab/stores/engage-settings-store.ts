@@ -9,7 +9,7 @@ export interface EngageSettings {
   /** Delay range in minutes between processing each source */
   sourceDelayMin: number;
   sourceDelayMax: number;
-  /** Send delay range in seconds between replies within a source */
+  /** Send delay range in minutes between replies within a source (supports decimals, e.g. 0.5 = 30s) */
   sendDelayMin: number;
   sendDelayMax: number;
   /** Custom system prompt (empty = use default) */
@@ -25,6 +25,8 @@ export interface EngageSettings {
   repliedRetentionDays: number;
   /** Only engage with tweets newer than N minutes */
   maxTweetAgeMinutes: number;
+  /** Minutes to pause after 3 consecutive send failures */
+  failPauseMinutes: number;
 }
 
 const DEFAULT_ENGAGE_SETTINGS: EngageSettings = {
@@ -32,8 +34,8 @@ const DEFAULT_ENGAGE_SETTINGS: EngageSettings = {
   fetchIntervalMax: 60,
   sourceDelayMin: 1,
   sourceDelayMax: 10,
-  sendDelayMin: 30,
-  sendDelayMax: 60,
+  sendDelayMin: 0.5,
+  sendDelayMax: 1,
   customPrompt: "",
   maxWordsMin: 5,
   maxWordsMax: 20,
@@ -41,6 +43,7 @@ const DEFAULT_ENGAGE_SETTINGS: EngageSettings = {
   maxSendsPerSource: 3,
   repliedRetentionDays: 30,
   maxTweetAgeMinutes: 1440,
+  failPauseMinutes: 60,
 };
 
 interface EngageSettingsStore {

@@ -11,21 +11,24 @@ import {
 } from "../utils/parse-notifications";
 import { fetchNotifications, getTweetDetail } from "../utils/x-api";
 import { postTweetViaDOM } from "../utils/dom-reply";
+import { isPaused, recordSuccess, recordFailure } from "../utils/send-guard";
+import { useReplyHistoryStore } from "../utils/reply-history-store";
 
-type AutoRunStatus = "idle" | "fetching" | "generating" | "sending" | "waiting";
+type AutoRunStatus = "idle" | "fetching" | "generating" | "sending" | "send-delay" | "waiting" | "rate-limited";
 
 interface AutoRunState {
   isRunning: boolean;
   status: AutoRunStatus;
   lastRunAt: number | null;
   nextRunAt: number | null;
+  delayUntil: number | null;
   cycleCount: number;
   sentThisCycle: number;
   error: string | null;
 }
 
 function randomBetween(min: number, max: number): number {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+  return Math.random() * (max - min) + min;
 }
 
 export function useAutoRun() {
@@ -34,6 +37,7 @@ export function useAutoRun() {
     status: "idle",
     lastRunAt: null,
     nextRunAt: null,
+    delayUntil: null,
     cycleCount: 0,
     sentThisCycle: 0,
     error: null,
@@ -56,8 +60,10 @@ export function useAutoRun() {
     const mentionsStore = useMentionsStore.getState();
     const repliesStore = useRepliesStore.getState();
 
-    // Auto-prune old replied entries
+    // Auto-prune old replied entries and history
     await repliesStore.pruneAlreadyReplied(settings.repliedRetentionDays);
+    const historyStore = useReplyHistoryStore.getState();
+    await historyStore.prune(settings.repliedRetentionDays);
 
     let sentCount = 0;
 
@@ -118,6 +124,11 @@ export function useAutoRun() {
           const cached = mentionsStore.getCachedTweet(mention.conversationId);
           const originalText = cached?.text ?? mention.text;
 
+          // Look up past interactions with this author
+          const pastInteractions = useReplyHistoryStore
+            .getState()
+            .getByAuthor(mention.authorHandle);
+
           try {
             const text = await generateReply({
               originalTweetText: originalText,
@@ -126,6 +137,12 @@ export function useAutoRun() {
               customPrompt: settings.customPrompt,
               maxWordsMin: settings.maxWordsMin,
               maxWordsMax: settings.maxWordsMax,
+              conversationHistory: pastInteractions.length > 0
+                ? pastInteractions.map((h) => ({
+                    theirText: h.theirText,
+                    ourReply: h.ourReply,
+                  }))
+                : undefined,
             });
             repliesStore.setReply(mention.tweetId, { status: "ready", text });
           } catch (err) {
@@ -140,6 +157,13 @@ export function useAutoRun() {
 
       // 5. Send replies with randomized delays (capped by maxSendsPerCycle)
       setStatus("sending");
+
+      // Check if paused before sending
+      if (isPaused()) {
+        setStatus("rate-limited");
+        return;
+      }
+
       const sendableCount = Math.min(actionable.length, settings.maxSendsPerCycle);
       for (let i = 0; i < sendableCount; i++) {
         if (abortRef.current) return;
@@ -161,19 +185,42 @@ export function useAutoRun() {
         // const result = await postTweet(reply.text, mention.tweetId);
         if (result.success) {
           repliesStore.markSent(mention.tweetId);
+          recordSuccess(); // Reset failure counter
           sentCount++;
+
+          // Save to conversation history
+          const cached = mentionsStore.getCachedTweet(mention.conversationId);
+          await useReplyHistoryStore.getState().addEntry({
+            tweetId: mention.tweetId,
+            repliedAt: Date.now(),
+            authorHandle: mention.authorHandle,
+            authorName: mention.authorName,
+            theirText: mention.text,
+            ourReply: reply.text,
+            parentTweetText: cached?.text,
+            mode: "MENTION",
+          });
         } else {
           repliesStore.setReply(mention.tweetId, {
             status: "error",
             error: result.message ?? "Failed to send reply",
           });
+          recordFailure(settings.failPauseMinutes); // Increment failure counter
+
+          // Check if now paused and break loop
+          if (isPaused()) {
+            setStatus("rate-limited");
+            break;
+          }
         }
 
         // Random delay between sends (skip after last)
         if (i < sendableCount - 1) {
           const delay =
-            randomBetween(settings.sendDelayMin, settings.sendDelayMax) * 1000;
+            randomBetween(settings.sendDelayMin, settings.sendDelayMax) * 60 * 1000;
+          setState((prev) => ({ ...prev, status: "send-delay", delayUntil: Date.now() + delay }));
           await new Promise((r) => setTimeout(r, delay));
+          setState((prev) => ({ ...prev, status: "sending", delayUntil: null }));
         }
       }
     } catch (err) {
@@ -198,10 +245,11 @@ export function useAutoRun() {
       1000;
     const nextRunAt = Date.now() + delayMs;
 
-    setState((prev) => ({ ...prev, status: "waiting", nextRunAt }));
+    setState((prev) => ({ ...prev, status: "waiting", nextRunAt, delayUntil: nextRunAt }));
 
     timeoutRef.current = setTimeout(async () => {
       if (abortRef.current) return;
+      setState((prev) => ({ ...prev, delayUntil: null }));
       await runCycle();
       if (!abortRef.current) scheduleNext();
     }, delayMs);
@@ -216,9 +264,11 @@ export function useAutoRun() {
       cycleCount: 0,
     }));
 
-    // Load settings if not loaded
+    // Load settings and history if not loaded
     const settingsStore = useSettingsStore.getState();
     if (!settingsStore.isLoaded) await settingsStore.loadSettings();
+    const histStore = useReplyHistoryStore.getState();
+    if (!histStore.isLoaded) await histStore.load();
 
     // Run first cycle immediately
     await runCycle();
@@ -236,6 +286,7 @@ export function useAutoRun() {
       isRunning: false,
       status: "idle",
       nextRunAt: null,
+      delayUntil: null,
     }));
   }, []);
 

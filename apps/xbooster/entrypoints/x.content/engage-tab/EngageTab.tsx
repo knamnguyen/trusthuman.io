@@ -14,6 +14,7 @@ import { generateReply } from "../utils/ai-reply";
 import { postTweetViaDOM } from "../utils/dom-reply";
 import { navigateX } from "../utils/navigate-x";
 import { getCommunityTweets, getListTweets } from "../utils/x-api";
+import { useCountdown, formatCountdown } from "../hooks/use-countdown";
 import { useEngageAutoRun } from "./hooks/use-engage-auto-run";
 import { useEngageRepliesStore } from "./stores/engage-replies-store";
 import { useEngageSettingsStore } from "./stores/engage-settings-store";
@@ -31,8 +32,10 @@ const STATUS_LABELS: Record<string, string> = {
   fetching: "Fetching tweets...",
   generating: "Generating replies...",
   sending: "Sending replies...",
+  "send-delay": "Waiting between sends...",
   "source-delay": "Waiting before next source...",
   waiting: "Waiting for next cycle...",
+  "rate-limited": "Paused (consecutive failures)",
 };
 
 export function EngageTab() {
@@ -64,6 +67,7 @@ export function EngageTab() {
   const [sourceErrors, setSourceErrors] = useState<string[]>([]);
 
   const autoRun = useEngageAutoRun();
+  const countdown = useCountdown(autoRun.delayUntil);
 
   // Load persisted data on mount
   useEffect(() => {
@@ -316,15 +320,8 @@ export function EngageTab() {
                 Cycle {autoRun.cycleCount} · {autoRun.sentThisCycle} sent
               </div>
             )}
-            {autoRun.isRunning && autoRun.nextRunAt && (
-              <div>
-                Next in{" "}
-                {Math.max(
-                  0,
-                  Math.round((autoRun.nextRunAt - Date.now()) / 60000),
-                )}
-                m
-              </div>
+            {autoRun.isRunning && countdown !== null && (
+              <div>{formatCountdown(countdown)}</div>
             )}
           </div>
         </div>
