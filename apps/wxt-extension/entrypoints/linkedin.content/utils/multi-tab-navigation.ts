@@ -1,66 +1,67 @@
 /**
  * Multi-Tab Navigation Handler
  *
- * Handles sequential processing of multiple target lists in separate tabs.
- * Each list opens in a new tab, processes posts, then automatically opens the next tab.
+ * Handles sequential processing of multiple queue items (target lists or discovery sets) in separate tabs.
+ * Each item opens in a new tab, processes posts, then automatically opens the next tab.
  *
  * Flow:
- * 1. User selects multiple target lists and clicks "Load Posts"
- * 2. processTargetListQueue() creates queue state and opens first tab
- * 3. Auto-resume system detects queue state and processes first list
+ * 1. User selects multiple items and clicks "Load Posts"
+ * 2. processQueue() creates queue state and opens first tab
+ * 3. Auto-resume system detects queue state and processes first item
  * 4. On completion, continueQueueProcessing() opens next tab
- * 5. Repeat until all lists processed
+ * 5. Repeat until all items processed
  * 6. Tabs remain open for review
  */
-
-import { buildListFeedUrl } from "@sassy/linkedin-automation/navigate/build-list-feed-url";
 
 import { useAccountStore } from "../stores/account-store";
 import { savePendingNavigation } from "../stores/navigation-state";
 import type {
   CommentGenerateSettings,
   PostLoadSettings,
-  TargetListQueueItem,
-  TargetListQueueState,
-} from "../stores/target-list-queue";
+  QueueItem,
+  QueueState,
+} from "../stores/queue";
 import {
+  buildQueueItemUrl,
   clearQueueState,
   getNextQueueItem,
+  getQueueItemName,
   isQueueComplete,
   loadQueueState,
   saveQueueState,
-} from "../stores/target-list-queue";
+} from "../stores/queue";
 import { openTabViaBackground } from "./open-tab-via-background";
 
 /**
- * Start processing multiple target lists in sequence
- * Creates queue state and opens first tab
+ * Start processing a queue of items in sequence.
+ * Creates queue state and opens first tab.
  *
- * @param selectedLists - Array of target lists to process
+ * @param items - Array of queue items (target lists or discovery sets) to process
  * @param settings - Post load settings snapshot
- * @param targetDraftCount - Number of drafts to collect per list
+ * @param targetDraftCount - Number of drafts to collect per item
  * @param commentGenerateSettings - Comment generation settings snapshot (for dynamic style)
  */
-export async function processTargetListQueue(
-  selectedLists: TargetListQueueItem[],
+export async function processQueue(
+  items: QueueItem[],
   settings: PostLoadSettings,
   targetDraftCount: number,
   commentGenerateSettings?: CommentGenerateSettings,
 ): Promise<void> {
-  if (selectedLists.length === 0) {
-    console.error("[MultiTabNav] No target lists provided");
-    throw new Error("No target lists selected");
+  if (items.length === 0) {
+    console.error("[MultiTabNav] No queue items provided");
+    throw new Error("No queue items selected");
   }
 
   console.log("[MultiTabNav] Starting queue processing", {
-    listCount: selectedLists.length,
+    itemCount: items.length,
     targetDraftCount,
     dynamicStyleEnabled: commentGenerateSettings?.dynamicChooseStyleEnabled,
+    itemTypes: items.map((i) => i.type),
   });
 
   // Create queue state
-  const queueState: TargetListQueueState = {
-    queue: selectedLists,
+  const queueState: QueueState = {
+    queue: items,
     currentIndex: 0,
     postLoadSettings: settings,
     commentGenerateSettings,
@@ -68,7 +69,7 @@ export async function processTargetListQueue(
     createdAt: Date.now(),
   };
 
-  // Save queue state to session storage
+  // Save queue state to local storage
   console.log("[MultiTabNav] About to save queue state...");
   await saveQueueState(queueState);
   console.log("[MultiTabNav] Queue state saved successfully");
@@ -76,24 +77,28 @@ export async function processTargetListQueue(
   // Get first item
   console.log("[MultiTabNav] Getting first queue item...");
   const firstItem = await getNextQueueItem();
-  console.log("[MultiTabNav] Got first queue item:", firstItem ? firstItem.targetListName : "null");
+  console.log(
+    "[MultiTabNav] Got first queue item:",
+    firstItem ? getQueueItemName(firstItem) : "null",
+  );
 
   if (!firstItem) {
     console.error("[MultiTabNav] Failed to get first queue item");
     throw new Error("Failed to initialize queue");
   }
 
-  // Open first tab with first list feed URL
-  const feedUrl = buildListFeedUrl(firstItem.targetListUrns);
+  // Build URL for first item
+  const url = buildQueueItemUrl(firstItem);
   console.log("[MultiTabNav] Opening first tab", {
-    listName: firstItem.targetListName,
-    urnCount: firstItem.targetListUrns.length,
-    url: feedUrl,
+    itemName: getQueueItemName(firstItem),
+    itemType: firstItem.type,
+    url,
   });
 
   // Get account ID and profile URL from store to pass to new tab (so API calls work before store loads)
   const accountId = useAccountStore.getState().matchingAccount?.id;
-  const currentUserProfileUrl = useAccountStore.getState().currentLinkedIn?.profileUrl ?? undefined;
+  const currentUserProfileUrl =
+    useAccountStore.getState().currentLinkedIn?.profileUrl ?? undefined;
   if (!accountId) {
     console.warn(
       "[MultiTabNav] No account ID available - API calls in new tab may fail until store loads",
@@ -111,14 +116,16 @@ export async function processTargetListQueue(
   );
 
   // Open via background script (bypasses popup blocker)
-  await openTabViaBackground(feedUrl);
+  await openTabViaBackground(url);
 
-  console.log("[MultiTabNav] First tab opened, auto-resume will handle processing");
+  console.log(
+    "[MultiTabNav] First tab opened, auto-resume will handle processing",
+  );
 }
 
 /**
  * Continue processing queue by opening next tab
- * Called after current list processing completes
+ * Called after current item processing completes
  *
  * Returns true if next tab was opened, false if queue complete
  */
@@ -144,17 +151,18 @@ export async function continueQueueProcessing(): Promise<boolean> {
   // Get current queue state for pending navigation
   const queueState = await loadQueueState();
 
-  // Open next tab via background script (bypasses popup blocker)
-  const feedUrl = buildListFeedUrl(nextItem.targetListUrns);
+  // Build URL for next item
+  const url = buildQueueItemUrl(nextItem);
   console.log("[MultiTabNav] Opening next tab", {
-    listName: nextItem.targetListName,
-    urnCount: nextItem.targetListUrns.length,
-    url: feedUrl,
+    itemName: getQueueItemName(nextItem),
+    itemType: nextItem.type,
+    url,
   });
 
   // Get account ID and profile URL from store to pass to new tab
   const accountId = useAccountStore.getState().matchingAccount?.id;
-  const currentUserProfileUrl = useAccountStore.getState().currentLinkedIn?.profileUrl ?? undefined;
+  const currentUserProfileUrl =
+    useAccountStore.getState().currentLinkedIn?.profileUrl ?? undefined;
 
   // Save pending navigation state so auto-resume triggers in the new tab
   if (queueState) {
@@ -168,8 +176,10 @@ export async function continueQueueProcessing(): Promise<boolean> {
     );
   }
 
-  await openTabViaBackground(feedUrl);
+  await openTabViaBackground(url);
 
-  console.log("[MultiTabNav] Next tab opened, auto-resume will handle processing");
+  console.log(
+    "[MultiTabNav] Next tab opened, auto-resume will handle processing",
+  );
   return true;
 }

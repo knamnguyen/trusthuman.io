@@ -3,8 +3,8 @@ import { browser } from "wxt/browser";
 import type {
   CommentGenerateSettings,
   PostLoadSettings,
-  TargetListQueueState,
-} from "./target-list-queue";
+  QueueState,
+} from "./queue";
 
 /**
  * State saved before navigating to target list feed.
@@ -39,7 +39,7 @@ export interface PendingNavigationState {
   /** Timestamp when saved (for expiry check) */
   savedAt: number;
   /** Queue state (only for type === 'queue') */
-  queueState?: TargetListQueueState;
+  queueState?: QueueState;
   /** Comment generation settings snapshot (for dynamic style branching) */
   commentGenerateSettings?: CommentGenerateSettings;
   /** Account ID from the originating tab (for API requests in new tab before store loads) */
@@ -59,7 +59,7 @@ const MAX_AGE_MS = 30_000;
 export async function savePendingNavigation(
   postLoadSettings: PostLoadSettings,
   targetDraftCount: number,
-  queueState?: TargetListQueueState,
+  queueState?: QueueState,
   commentGenerateSettings?: CommentGenerateSettings,
   accountId?: string,
   currentUserProfileUrl?: string,

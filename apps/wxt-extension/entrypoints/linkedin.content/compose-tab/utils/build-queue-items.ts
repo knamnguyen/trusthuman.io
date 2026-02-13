@@ -1,29 +1,27 @@
 /**
  * Build Queue Items Utility
  *
- * Builds TargetListQueueItem[] from target list IDs by:
- * 1. Using cached URNs when available (from prefetch)
- * 2. Fetching uncached URNs from API
- * 3. Caching newly fetched URNs for future use
- *
- * Extracted from ComposeTab.handleStart to reduce component complexity.
+ * Builds QueueItem[] from target list IDs or discovery set IDs by:
+ * 1. Using cached data when available (from prefetch)
+ * 2. Fetching uncached data from API
+ * 3. Caching newly fetched data for future use
  */
 
-import type { TargetListQueueItem } from "../../stores/target-list-queue";
+import type {
+  TargetListQueueItem,
+  DiscoverySetQueueItem,
+} from "../../stores/queue";
 import { getTrpcClient } from "../../../../lib/trpc/client";
-import {
-  cacheTargetListUrns,
-  getCachedUrns,
-} from "../../stores/target-list-queue";
+import { cacheTargetListUrns, getCachedUrns } from "../../stores/queue";
 
 /**
- * Build queue items from target list IDs
+ * Build target list queue items from target list IDs
  * Uses cache when available, fetches uncached lists from API
  *
  * @param targetListIds - Array of target list IDs to build queue from
- * @returns Array of queue items with URNs, or empty array if no valid lists
+ * @returns Array of target list queue items, or empty array if no valid lists
  */
-export async function buildQueueItems(
+export async function buildTargetListQueueItems(
   targetListIds: string[],
 ): Promise<TargetListQueueItem[]> {
   console.log(
@@ -44,9 +42,10 @@ export async function buildQueueItems(
         `[buildQueueItems] Using cached URNs for "${cached.listName}": ${cached.urns.length} URNs`,
       );
       cachedItems.push({
-        targetListId: listId,
-        targetListUrns: cached.urns,
-        targetListName: cached.listName,
+        type: "targetList",
+        id: listId,
+        name: cached.listName,
+        urns: cached.urns,
       });
     } else {
       uncachedListIds.push(listId);
@@ -87,9 +86,10 @@ export async function buildQueueItems(
         // Cache for future use
         cacheTargetListUrns(listId!, urns, listName);
         fetchedItems.push({
-          targetListId: listId!,
-          targetListUrns: urns,
-          targetListName: listName,
+          type: "targetList",
+          id: listId!,
+          name: listName,
+          urns,
         });
       } else {
         console.warn(
@@ -102,12 +102,75 @@ export async function buildQueueItems(
   // Combine cached and fetched items (maintain original order)
   const queueItems: TargetListQueueItem[] = [];
   for (const listId of targetListIds) {
-    const cached = cachedItems.find((item) => item.targetListId === listId);
-    const fetched = fetchedItems.find((item) => item.targetListId === listId);
+    const cached = cachedItems.find((item) => item.id === listId);
+    const fetched = fetchedItems.find((item) => item.id === listId);
     if (cached) queueItems.push(cached);
     else if (fetched) queueItems.push(fetched);
   }
 
-  console.log(`[buildQueueItems] Built ${queueItems.length} queue items`);
+  console.log(`[buildQueueItems] Built ${queueItems.length} target list queue items`);
   return queueItems;
 }
+
+/**
+ * Build discovery set queue items from discovery set IDs
+ * Fetches sets from API since discovery sets include all needed data
+ *
+ * @param discoverySetIds - Array of discovery set IDs to build queue from
+ * @returns Array of discovery set queue items, or empty array if no valid sets
+ */
+export async function buildDiscoverySetQueueItems(
+  discoverySetIds: string[],
+): Promise<DiscoverySetQueueItem[]> {
+  console.log(
+    `[buildQueueItems] Building queue for ${discoverySetIds.length} discovery sets...`,
+  );
+
+  if (discoverySetIds.length === 0) {
+    return [];
+  }
+
+  const trpcClient = getTrpcClient();
+
+  try {
+    // Fetch all discovery sets in one call
+    const sets = await trpcClient.discoverySet.findByIds.query({
+      ids: discoverySetIds,
+    });
+
+    if (sets.length === 0) {
+      console.warn("[buildQueueItems] No discovery sets found for IDs:", discoverySetIds);
+      return [];
+    }
+
+    // Convert to queue items (maintain order from input IDs)
+    const queueItems: DiscoverySetQueueItem[] = [];
+
+    for (const setId of discoverySetIds) {
+      const set = sets.find((s) => s.id === setId);
+      if (set) {
+        queueItems.push({
+          type: "discoverySet",
+          id: set.id,
+          name: set.name,
+          keywords: set.keywords,
+          keywordsMode: set.keywordsMode as "AND" | "OR",
+          excluded: set.excluded,
+          authorJobTitle: set.authorJobTitle ?? undefined,
+          authorIndustries: set.authorIndustries,
+        });
+      } else {
+        console.warn(`[buildQueueItems] Discovery set not found: ${setId}`);
+      }
+    }
+
+    console.log(`[buildQueueItems] Built ${queueItems.length} discovery set queue items`);
+    return queueItems;
+  } catch (error) {
+    console.error("[buildQueueItems] Failed to fetch discovery sets:", error);
+    return [];
+  }
+}
+
+// Legacy export for backward compatibility
+export { buildTargetListQueueItems as buildQueueItems };

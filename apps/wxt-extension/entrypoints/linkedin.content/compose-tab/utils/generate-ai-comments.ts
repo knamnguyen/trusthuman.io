@@ -25,13 +25,13 @@ import posthog from "posthog-js";
 import type { AdjacentCommentInfo } from "@sassy/linkedin-automation/post/types";
 import { createPostUtilities } from "@sassy/linkedin-automation/post/create-post-utilities";
 
-import type { CommentGenerateSettings } from "../../stores/target-list-queue";
+import type { CommentGenerateSettings } from "../../stores/queue";
 import { getTrpcClient, useTRPC } from "../../../../lib/trpc/client";
 import { getCommentStyleConfig } from "../../stores/comment-style-cache";
 import { useSettingsDBStore } from "../../stores/settings-db-store";
 
 // Re-export for convenience (used by load-posts-to-cards)
-export type { CommentGenerateSettings as CommentGenerateSettingsSnapshot } from "../../stores/target-list-queue";
+export type { CommentGenerateSettings as CommentGenerateSettingsSnapshot } from "../../stores/queue";
 
 // Lazily initialized
 let _postUtils: ReturnType<typeof createPostUtilities> | null = null;
@@ -168,7 +168,10 @@ export async function generateSingleComment(
     } as const;
   } else {
     // Static mode: Use selected default style
-    const styleConfig = await getCommentStyleConfig();
+    // Pass commentStyleId from override so we don't depend on DB store in new tabs
+    const styleConfig = await getCommentStyleConfig(
+      commentGenerateSettings?.commentStyleId,
+    );
     console.log("[generateSingleComment] Using static style config:", {
       styleName: styleConfig.styleName,
       maxWords: styleConfig.maxWords,

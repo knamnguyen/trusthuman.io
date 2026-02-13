@@ -50,10 +50,19 @@ const DEFAULT_CONFIG: CommentStyleConfig = {
  * Get the comment style config for AI generation.
  * Uses cached value if available and style ID hasn't changed.
  * Falls back to defaults if no style is selected.
+ *
+ * @param styleIdOverride - Optional style ID to use instead of reading from DB store.
+ *                          Used during auto-resume when DB store isn't loaded yet.
  */
-export async function getCommentStyleConfig(): Promise<CommentStyleConfig> {
+export async function getCommentStyleConfig(
+  styleIdOverride?: string | null,
+): Promise<CommentStyleConfig> {
   const settingsStore = useSettingsDBStore.getState();
-  const selectedStyleId = settingsStore.commentGenerate?.commentStyleId ?? null;
+  // Use override if provided (for auto-resume), otherwise read from DB store
+  const selectedStyleId =
+    styleIdOverride !== undefined
+      ? styleIdOverride
+      : (settingsStore.commentGenerate?.commentStyleId ?? null);
 
   // If no style selected, return defaults
   if (!selectedStyleId) {

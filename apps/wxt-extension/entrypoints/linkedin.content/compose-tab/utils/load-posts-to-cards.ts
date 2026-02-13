@@ -18,7 +18,7 @@ import type {
 import { collectPostsBatch } from "@sassy/linkedin-automation/feed/collect-posts";
 
 import type { ComposeCard } from "../../stores/compose-store";
-import type { PostLoadSettings } from "../../stores/target-list-queue";
+import type { PostLoadSettings } from "../../stores/queue";
 import type { CommentGenerateSettingsSnapshot } from "./generate-ai-comments";
 import { useAccountStore } from "../../stores/account-store";
 import {

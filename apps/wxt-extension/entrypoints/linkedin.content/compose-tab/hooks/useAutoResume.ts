@@ -134,7 +134,7 @@ export function useAutoResume(
         setQueueProgress({
           currentIndex: actualIndex + 1, // 1-indexed for display
           totalLists: queueState.queue.length,
-          currentListName: currentItem?.targetListName ?? "Unknown",
+          currentListName: currentItem?.name ?? "Unknown",
         });
       }
 

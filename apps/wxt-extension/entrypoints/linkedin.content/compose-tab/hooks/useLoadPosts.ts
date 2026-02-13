@@ -2,7 +2,7 @@
  * useLoadPosts Hook
  *
  * Handles the "Load Posts" flow:
- * - Queue building for target lists
+ * - Queue building for target lists and discovery sets
  * - Multi-tab navigation for queue processing
  * - Normal feed collection
  * - Progress tracking and stop mechanism
@@ -13,21 +13,21 @@ import { useTRPC } from "@/lib/trpc/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { defer } from "lib/commons";
 
-import { buildDiscoverySearchUrl } from "@sassy/linkedin-automation/navigate/build-discovery-search-url";
-
-import type { PostLoadSettings } from "../../stores/target-list-queue";
+import type { PostLoadSettings } from "../../stores/queue";
 import type { GenerationCompleteMetadata } from "./useSubmitBatch";
 import { useSettingsLocalStore } from "../../stores";
 import { useComposeStore } from "../../stores/compose-store";
 import { useDailyQuotaLimitHitDialogStore } from "../../stores/dialog-store";
 import { useSettingsDBStore } from "../../stores/settings-db-store";
-import { processTargetListQueue } from "../../utils/multi-tab-navigation";
-import { openTabViaBackground } from "../../utils/open-tab-via-background";
-import { buildQueueItems } from "../utils/build-queue-items";
+import { processQueue } from "../../utils/multi-tab-navigation";
+import {
+  buildDiscoverySetQueueItems,
+  buildTargetListQueueItems,
+} from "../utils/build-queue-items";
 import { loadPostsToCards } from "../utils/load-posts-to-cards";
 
 /**
- * Hook for loading posts from feed or target lists
+ * Hook for loading posts from feed, target lists, or discovery sets
  */
 export function useLoadPosts(
   targetDraftCount: number,
@@ -108,12 +108,24 @@ export function useLoadPosts(
     const commentGenerateSettingsDB =
       useSettingsDBStore.getState().commentGenerate;
 
-    // If target list is enabled with list IDs, use queue system to process lists
     // Only use queue if we're not already on a search/content page (already navigated)
     const isOnSearchPage = window.location.pathname.startsWith(
       "/search/results/content",
     );
 
+    // Build comment generate settings snapshot for queue processing
+    // Includes all settings needed for AI generation in new tabs without waiting for DB store
+    const commentGenerateSettings = commentGenerateSettingsDB
+      ? {
+          dynamicChooseStyleEnabled:
+            commentGenerateSettingsDB.dynamicChooseStyleEnabled,
+          adjacentCommentsEnabled:
+            commentGenerateSettingsDB.adjacentCommentsEnabled,
+          commentStyleId: commentGenerateSettingsDB.commentStyleId,
+        }
+      : undefined;
+
+    // If target list is enabled with list IDs, use queue system to process lists
     const targetListIds = postLoadSettings?.targetListIds ?? [];
     if (
       postLoadSettings?.targetListEnabled &&
@@ -126,29 +138,19 @@ export function useLoadPosts(
       );
 
       try {
-        const queueItems = await buildQueueItems(targetListIds);
+        const queueItems = await buildTargetListQueueItems(targetListIds);
 
         if (queueItems.length > 0) {
           console.log(
-            `[useLoadPosts] Starting queue with ${queueItems.length} lists`,
-            {
-              queueItems: JSON.stringify(queueItems),
-            },
+            `[useLoadPosts] Starting queue with ${queueItems.length} target lists`,
           );
 
           // Build settings snapshot for queue (omit DB-only fields)
-          const { accountId, createdAt, updatedAt, ...settingsForQueue } = postLoadSettings;
-
-          // Build comment generate settings snapshot for dynamic style branching
-          const commentGenerateSettings = commentGenerateSettingsDB
-            ? {
-                dynamicChooseStyleEnabled: commentGenerateSettingsDB.dynamicChooseStyleEnabled,
-                adjacentCommentsEnabled: commentGenerateSettingsDB.adjacentCommentsEnabled,
-              }
-            : undefined;
+          const { accountId, createdAt, updatedAt, ...settingsForQueue } =
+            postLoadSettings;
 
           // Start queue processing - this opens first tab via background script
-          await processTargetListQueue(
+          await processQueue(
             queueItems,
             settingsForQueue,
             targetDraftCount,
@@ -168,15 +170,14 @@ export function useLoadPosts(
         }
       } catch (err) {
         // Target list enabled but failed - stop, don't fall through to feed collection
-        console.error(`[useLoadPosts] Failed to build queue:`, err);
+        console.error(`[useLoadPosts] Failed to build target list queue:`, err);
         setIsLoading(false);
         setIsCollecting(false);
         return;
       }
     }
 
-    // If discovery sets are enabled with set IDs, open search tabs
-    // This runs in parallel with feed collection (unlike target lists which redirect)
+    // If discovery sets are enabled with set IDs, use queue system to process sets
     const discoverySetIds = postLoadSettings?.discoverySetIds ?? [];
     if (
       postLoadSettings?.discoverySetEnabled &&
@@ -184,39 +185,49 @@ export function useLoadPosts(
       !isOnSearchPage
     ) {
       console.log(
-        `[useLoadPosts] Opening ${discoverySetIds.length} discovery set tabs...`,
+        `[useLoadPosts] Building queue for ${discoverySetIds.length} discovery sets...`,
       );
 
       try {
-        // Fetch discovery sets from API
-        const sets = await queryClient.fetchQuery(
-          trpc.discoverySet.findByIds.queryOptions({ ids: discoverySetIds }),
-        );
+        const queueItems = await buildDiscoverySetQueueItems(discoverySetIds);
 
-        if (sets.length > 0) {
-          // Open each set in a new tab
-          for (const set of sets) {
-            const url = buildDiscoverySearchUrl({
-              keywords: set.keywords,
-              keywordsMode: set.keywordsMode as "AND" | "OR",
-              excluded: set.excluded,
-              authorJobTitle: set.authorJobTitle ?? undefined,
-              authorIndustries: set.authorIndustries,
-            });
-
-            console.log(`[useLoadPosts] Opening discovery set tab: ${set.name}`);
-            await openTabViaBackground(url);
-          }
-
+        if (queueItems.length > 0) {
           console.log(
-            `[useLoadPosts] Opened ${sets.length} discovery set tabs`,
+            `[useLoadPosts] Starting queue with ${queueItems.length} discovery sets`,
           );
+
+          // Build settings snapshot for queue (omit DB-only fields)
+          const { accountId, createdAt, updatedAt, ...settingsForQueue } =
+            postLoadSettings;
+
+          // Start queue processing - this opens first tab via background script
+          await processQueue(
+            queueItems,
+            settingsForQueue,
+            targetDraftCount,
+            commentGenerateSettings,
+          );
+
+          // Reset loading state - the new tab will handle Load Posts via auto-resume
+          setIsLoading(false);
+          setIsCollecting(false);
+          return;
         } else {
-          console.warn(`[useLoadPosts] No discovery sets found for IDs:`, discoverySetIds);
+          // No valid discovery sets found - show error and stop
+          console.error(`[useLoadPosts] No valid discovery sets found`);
+          setIsLoading(false);
+          setIsCollecting(false);
+          return;
         }
       } catch (err) {
-        // Discovery set tabs failed to open - log but continue with feed collection
-        console.error(`[useLoadPosts] Failed to open discovery set tabs:`, err);
+        // Discovery sets enabled but failed - stop, don't fall through to feed collection
+        console.error(
+          `[useLoadPosts] Failed to build discovery set queue:`,
+          err,
+        );
+        setIsLoading(false);
+        setIsCollecting(false);
+        return;
       }
     }
 

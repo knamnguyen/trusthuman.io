@@ -1,19 +1,19 @@
 /**
- * Target List Queue State Module
+ * Queue State Module
  *
- * Manages queue state for processing multiple target lists sequentially.
+ * Manages queue state for processing multiple items (target lists or discovery sets) sequentially.
  * Queue state is stored in browser.storage.local so it:
  * - Persists across page reloads (survives navigation)
  * - Note: Using local instead of session because session storage
  *   has issues in content scripts (hangs on set/get operations)
  *
  * Processing flow:
- * 1. User selects multiple target lists and clicks "Load Posts"
- * 2. Queue is created with all lists + settings snapshot
- * 3. First tab opens with first list
- * 4. Auto-resume triggers, processes first list
- * 5. On completion, opens next tab with next list
- * 6. Repeat until all lists processed
+ * 1. User selects multiple items and clicks "Load Posts"
+ * 2. Queue is created with all items + settings snapshot
+ * 3. First tab opens with first item
+ * 4. Auto-resume triggers, processes first item
+ * 5. On completion, opens next tab with next item
+ * 6. Repeat until all items processed
  * 7. Tabs remain open for review
  */
 
@@ -21,12 +21,15 @@ import { browser } from "wxt/browser";
 
 import type {
   PostLoadSettingsPartial,
-  CommentGenerateSetting
+  CommentGenerateSetting,
 } from "@sassy/db/schema-validators";
+
+import { buildDiscoverySearchUrl } from "@sassy/linkedin-automation/navigate/build-discovery-search-url";
+import { buildListFeedUrl } from "@sassy/linkedin-automation/navigate/build-list-feed-url";
 
 import { getTrpcClient } from "../../../lib/trpc/client";
 
-const QUEUE_STORAGE_KEY = "engagekit-target-list-queue";
+const QUEUE_STORAGE_KEY = "engagekit-queue";
 
 // =============================================================================
 // TYPES
@@ -36,28 +39,29 @@ const QUEUE_STORAGE_KEY = "engagekit-target-list-queue";
  * Target List queue item - processes posts from a specific list of profiles
  */
 export interface TargetListQueueItem {
-  type: 'targetList';
-  targetListId: string;
-  targetListUrns: string[];
-  targetListName: string;
+  type: "targetList";
+  id: string;
+  name: string;
+  urns: string[];
 }
 
 /**
  * Discovery Set queue item - processes posts from a LinkedIn search
  */
 export interface DiscoverySetQueueItem {
-  type: 'discoverySet';
-  discoverySetId: string;
-  discoverySetName: string;
+  type: "discoverySet";
+  id: string;
+  name: string;
   keywords: string[];
-  keywordsMode: 'AND' | 'OR';
+  keywordsMode: "AND" | "OR";
   excluded: string[];
   authorJobTitle?: string;
   authorIndustries: string[];
 }
 
 /**
- * Union type for all queue item types
+ * Union type for all queue item types.
+ * Add new item types here for future extensibility.
  */
 export type QueueItem = TargetListQueueItem | DiscoverySetQueueItem;
 
@@ -69,17 +73,75 @@ export type PostLoadSettings = PostLoadSettingsPartial;
 
 /**
  * Snapshot of comment generation settings for queue processing.
- * Only includes fields needed for AI generation branching logic.
+ * Includes all fields needed for AI generation in new tabs without waiting for DB store.
+ * - dynamicChooseStyleEnabled: whether AI picks styles dynamically
+ * - adjacentCommentsEnabled: whether to include adjacent comments as context
+ * - commentStyleId: the selected style ID for static mode (when dynamic is disabled)
  */
-export type CommentGenerateSettings = Pick<CommentGenerateSetting, 'dynamicChooseStyleEnabled' | 'adjacentCommentsEnabled'>;
+export type CommentGenerateSettings = Pick<
+  CommentGenerateSetting,
+  "dynamicChooseStyleEnabled" | "adjacentCommentsEnabled" | "commentStyleId"
+>;
 
-export interface TargetListQueueState {
-  queue: TargetListQueueItem[];
+/**
+ * Queue state stored in browser.storage.local
+ */
+export interface QueueState {
+  queue: QueueItem[];
   currentIndex: number;
-  postLoadSettings: PostLoadSettings; // Settings snapshot for entire queue
-  commentGenerateSettings?: CommentGenerateSettings; // AI generation settings snapshot
+  postLoadSettings: PostLoadSettings;
+  commentGenerateSettings?: CommentGenerateSettings;
   targetDraftCount: number;
   createdAt: number;
+}
+
+// =============================================================================
+// QUEUE ITEM HELPERS
+// =============================================================================
+
+/**
+ * Build the LinkedIn URL for a queue item based on its type.
+ * This is the URL that will be opened in a new tab.
+ */
+export function buildQueueItemUrl(item: QueueItem): string {
+  switch (item.type) {
+    case "targetList":
+      return buildListFeedUrl(item.urns);
+    case "discoverySet":
+      return buildDiscoverySearchUrl({
+        keywords: item.keywords,
+        keywordsMode: item.keywordsMode,
+        excluded: item.excluded,
+        authorJobTitle: item.authorJobTitle,
+        authorIndustries: item.authorIndustries,
+      });
+    default: {
+      // TypeScript exhaustiveness check - will error if a type is not handled
+      const _exhaustiveCheck: never = item;
+      throw new Error(`Unknown queue item type: ${(_exhaustiveCheck as QueueItem).type}`);
+    }
+  }
+}
+
+/**
+ * Get the display name for a queue item (for progress UI)
+ */
+export function getQueueItemName(item: QueueItem): string {
+  return item.name;
+}
+
+/**
+ * Get a debug description of a queue item
+ */
+export function getQueueItemDescription(item: QueueItem): string {
+  switch (item.type) {
+    case "targetList":
+      return `Target List "${item.name}" (${item.urns.length} profiles)`;
+    case "discoverySet":
+      return `Discovery Set "${item.name}" (${item.keywords.length} keywords)`;
+    default:
+      return `Unknown item "${(item as QueueItem).name}"`;
+  }
 }
 
 // =============================================================================
@@ -204,25 +266,21 @@ export async function prefetchUrnsForLists(listIds: string[]): Promise<void> {
 // =============================================================================
 
 /**
- * Save queue state to session storage
+ * Save queue state to local storage
  */
-export async function saveQueueState(
-  state: TargetListQueueState,
-): Promise<void> {
+export async function saveQueueState(state: QueueState): Promise<void> {
   console.log("[QueueState] saveQueueState called with:", {
     queueLength: state.queue.length,
     currentIndex: state.currentIndex,
   });
-  console.log("[QueueState] browser object:", typeof browser);
-  console.log("[QueueState] browser.storage:", typeof browser?.storage);
-  console.log("[QueueState] browser.storage.local:", typeof browser?.storage?.local);
 
   try {
-    console.log("[QueueState] About to call browser.storage.local.set...");
-
     // Add timeout to detect if storage.local is hanging
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error("Storage operation timed out after 5s")), 5000);
+      setTimeout(
+        () => reject(new Error("Storage operation timed out after 5s")),
+        5000,
+      );
     });
 
     await Promise.race([
@@ -244,12 +302,10 @@ const QUEUE_TIMEOUT_MS = 5 * 60 * 1000;
  * Load queue state from local storage
  * Returns null if no queue exists or if expired
  */
-export async function loadQueueState(): Promise<TargetListQueueState | null> {
+export async function loadQueueState(): Promise<QueueState | null> {
   try {
     const result = await browser.storage.local.get(QUEUE_STORAGE_KEY);
-    const state = result[QUEUE_STORAGE_KEY] as
-      | TargetListQueueState
-      | undefined;
+    const state = result[QUEUE_STORAGE_KEY] as QueueState | undefined;
 
     if (!state) {
       console.log("QueueState: No queue state found");
@@ -280,7 +336,7 @@ export async function loadQueueState(): Promise<TargetListQueueState | null> {
 }
 
 /**
- * Clear queue state from session storage
+ * Clear queue state from local storage
  */
 export async function clearQueueState(): Promise<void> {
   try {
@@ -295,7 +351,7 @@ export async function clearQueueState(): Promise<void> {
  * Get next queue item and increment index
  * Returns null if queue is complete or no queue exists
  */
-export async function getNextQueueItem(): Promise<TargetListQueueItem | null> {
+export async function getNextQueueItem(): Promise<QueueItem | null> {
   const state = await loadQueueState();
 
   if (!state) {
@@ -330,7 +386,8 @@ export async function getNextQueueItem(): Promise<TargetListQueueItem | null> {
   console.log("QueueState: Got next queue item", {
     index: state.currentIndex - 1,
     total: state.queue.length,
-    listName: item.targetListName,
+    itemName: getQueueItemName(item),
+    itemType: item.type,
   });
 
   return item;

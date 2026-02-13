@@ -23,7 +23,7 @@ import { useSettingsDBStore } from "../../stores/settings-db-store";
 import {
   getCachedUrns,
   prefetchUrnsForLists,
-} from "../../stores/target-list-queue";
+} from "../../stores/queue";
 
 // Default for when settings haven't loaded yet
 const DEFAULT_TARGET_LIST_IDS: string[] = [];

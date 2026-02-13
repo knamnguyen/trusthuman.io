@@ -29,7 +29,7 @@ import type {
 import { getTrpcClient } from "../../../lib/trpc/client";
 import { prefetchBlacklist } from "./blacklist-cache";
 import { prefetchCommentStyle } from "./comment-style-cache";
-import { prefetchUrnsForLists } from "./target-list-queue";
+import { prefetchUrnsForLists } from "./queue";
 
 // =============================================================================
 // TYPES
