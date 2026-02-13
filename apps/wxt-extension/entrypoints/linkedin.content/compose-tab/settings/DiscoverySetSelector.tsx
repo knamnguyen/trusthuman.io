@@ -320,10 +320,7 @@ export function DiscoverySetSelector() {
           {isOpeningPreview ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            <>
-              <ExternalLink className="mr-1 h-3 w-3" />
-              Preview
-            </>
+            <>Preview</>
           )}
         </Button>
       )}

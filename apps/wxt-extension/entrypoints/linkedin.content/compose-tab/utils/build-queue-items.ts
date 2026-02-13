@@ -149,6 +149,12 @@ export async function buildDiscoverySetQueueItems(
     for (const setId of discoverySetIds) {
       const set = sets.find((s) => s.id === setId);
       if (set) {
+        console.log(`[buildQueueItems] Discovery set "${set.name}":`, {
+          keywords: set.keywords,
+          authorJobTitle: set.authorJobTitle,
+          authorIndustries: set.authorIndustries,
+          authorIndustriesLength: set.authorIndustries?.length,
+        });
         queueItems.push({
           type: "discoverySet",
           id: set.id,

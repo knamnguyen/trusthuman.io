@@ -230,6 +230,15 @@ export const useSettingsDBStore = create<SettingsDBStore>((set, get) => ({
   updatePostLoad: async (data) => {
     const currentPostLoad = get().postLoad;
 
+    // Mutual exclusion: Target List and Discovery Set cannot both be enabled
+    // When one is enabled, automatically disable the other
+    let mutuallyExclusiveData = { ...data };
+    if (data.targetListEnabled === true) {
+      mutuallyExclusiveData.discoverySetEnabled = false;
+    } else if (data.discoverySetEnabled === true) {
+      mutuallyExclusiveData.targetListEnabled = false;
+    }
+
     // Always do optimistic update (use defaults if no settings exist yet)
     const optimisticValue = {
       ...(currentPostLoad ?? {
@@ -238,7 +247,7 @@ export const useSettingsDBStore = create<SettingsDBStore>((set, get) => ({
         createdAt: new Date(),
         updatedAt: new Date(),
       }),
-      ...data,
+      ...mutuallyExclusiveData,
       updatedAt: new Date(),
     } as PostLoadSettingDB;
 
@@ -247,7 +256,7 @@ export const useSettingsDBStore = create<SettingsDBStore>((set, get) => ({
     try {
       const trpc = getTrpcClient();
       const updated = (await trpc.settings.postLoad.upsert.mutate(
-        data,
+        mutuallyExclusiveData,
       )) as PostLoadSettingDB;
 
       // Only update if the optimistic value hasn't been changed by another update
@@ -260,7 +269,7 @@ export const useSettingsDBStore = create<SettingsDBStore>((set, get) => ({
         set({ postLoad: updated });
       }
 
-      console.log("SettingsDBStore: Updated postLoad setting", data);
+      console.log("SettingsDBStore: Updated postLoad setting", mutuallyExclusiveData);
     } catch (error) {
       console.error("SettingsDBStore: Error updating postLoad", error);
 

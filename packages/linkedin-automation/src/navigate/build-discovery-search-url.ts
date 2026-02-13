@@ -88,6 +88,14 @@ export function buildDiscoverySearchUrl(params: DiscoverySearchParams): string {
     authorIndustries,
   } = params;
 
+  console.log("[buildDiscoverySearchUrl] Params:", {
+    keywords,
+    keywordsMode,
+    authorJobTitle,
+    authorIndustries,
+    authorIndustriesLength: authorIndustries?.length,
+  });
+
   const urlParams = new URLSearchParams();
 
   // Build keywords query string
@@ -111,5 +119,7 @@ export function buildDiscoverySearchUrl(params: DiscoverySearchParams): string {
   // LinkedIn expects quotes around the sort value
   urlParams.set("sortBy", '["date_posted"]');
 
-  return `${DISCOVERY_SEARCH_BASE_URL}?${urlParams.toString()}`;
+  const finalUrl = `${DISCOVERY_SEARCH_BASE_URL}?${urlParams.toString()}`;
+  console.log("[buildDiscoverySearchUrl] Final URL:", finalUrl);
+  return finalUrl;
 }
