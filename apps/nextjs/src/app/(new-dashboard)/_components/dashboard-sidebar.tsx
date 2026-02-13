@@ -11,6 +11,7 @@ import {
   GiftIcon,
   HistoryIcon,
   LayoutDashboardIcon,
+  SearchIcon,
   SettingsIcon,
   UserRoundIcon,
   UsersIcon,
@@ -144,6 +145,11 @@ export function DashboardSidebar() {
         title: "Target List",
         url: `${prefix}/target-list`,
         icon: UsersRoundIcon,
+      },
+      {
+        title: "Discovery Sets",
+        url: `${prefix}/discovery-sets`,
+        icon: SearchIcon,
       },
       {
         title: "Personas",
