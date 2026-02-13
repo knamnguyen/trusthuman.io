@@ -285,6 +285,11 @@ before outputting, check every single one. if ANY match, rewrite from scratch.
 
 reply text only. one sentence. no emojis. no labels. no explanation. ready to paste.`;
 
+interface ConversationHistoryItem {
+  theirText: string;
+  ourReply: string;
+}
+
 interface GenerateReplyOptions {
   originalTweetText: string;
   mentionText: string;
@@ -292,6 +297,7 @@ interface GenerateReplyOptions {
   customPrompt?: string;
   maxWordsMin?: number;
   maxWordsMax?: number;
+  conversationHistory?: ConversationHistoryItem[];
 }
 
 /**
@@ -304,21 +310,54 @@ export async function generateReply({
   customPrompt,
   maxWordsMin = 5,
   maxWordsMax = 15,
+  conversationHistory,
 }: GenerateReplyOptions): Promise<string> {
   const systemPrompt = customPrompt?.trim() || DEFAULT_REPLY_PROMPT;
   // Pick a random target word count within the range for variety
   const targetWords =
     Math.floor(Math.random() * (maxWordsMax - maxWordsMin + 1)) + maxWordsMin;
 
+  // Detect mode: if mentionText is empty, we're engaging with someone else's tweet (Mode A)
+  // If mentionText has content, someone replied to our tweet (Mode B)
+  const isEngageMode = !mentionText.trim();
+
+  const contextBlock = isEngageMode
+    ? `CONTEXT (Mode A — you are replying to someone else's tweet):
+${mentionAuthor}'s tweet: "${originalTweetText}"
+
+Generate your reply to ${mentionAuthor}'s tweet.`
+    : `CONTEXT (Mode B — someone replied to YOUR tweet, you are replying back):
+YOUR original tweet: "${originalTweetText}"
+${mentionAuthor}'s reply to your tweet: "${mentionText}"
+
+Generate your reply to ${mentionAuthor}.`;
+
+  // Build conversation history block if we have past interactions with this author
+  let historyBlock = "";
+  if (conversationHistory && conversationHistory.length > 0) {
+    console.log(
+      `xBooster: Injecting ${conversationHistory.length} past interaction(s) with ${mentionAuthor} into prompt`,
+    );
+    const lines = conversationHistory
+      .map((h) => `- them: "${h.theirText}" → you replied: "${h.ourReply}"`)
+      .join("\n");
+    historyBlock = `\n\nPREVIOUS INTERACTIONS with ${mentionAuthor} (most recent first):
+${lines}
+
+IMPORTANT: do NOT repeat questions or topics you already covered. keep the conversation moving forward naturally. reference past context if it fits but dont force it.`;
+  } else {
+    console.log(
+      `xBooster: No past interactions with ${mentionAuthor} - generating fresh reply`,
+    );
+  }
+
   const fullPrompt = `${systemPrompt}
 
 ---
 
-CONTEXT (Mode B — someone replied to YOUR tweet, you are replying back):
-YOUR original tweet: "${originalTweetText}"
-${mentionAuthor}'s reply to your tweet: "${mentionText}"
+${contextBlock}${historyBlock}
 
-Generate your reply to ${mentionAuthor}. Keep it between ${maxWordsMin} and ${maxWordsMax} words (aim for ~${targetWords}). Reply text only, ready to paste.`;
+CRITICAL WORD COUNT OVERRIDE: Your reply MUST be between ${maxWordsMin} and ${maxWordsMax} words (aim for exactly ~${targetWords} words). This overrides any tier word counts in the prompt above. Count your words before outputting. Reply text only, ready to paste.`;
 
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${GEMINI_API_KEY}`,
@@ -334,19 +373,19 @@ Generate your reply to ${mentionAuthor}. Keep it between ${maxWordsMin} and ${ma
         safetySettings: [
           {
             category: "HARM_CATEGORY_HARASSMENT",
-            threshold: "BLOCK_MEDIUM_AND_ABOVE",
+            threshold: "BLOCK_ONLY_HIGH",
           },
           {
             category: "HARM_CATEGORY_HATE_SPEECH",
-            threshold: "BLOCK_MEDIUM_AND_ABOVE",
+            threshold: "BLOCK_ONLY_HIGH",
           },
           {
             category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-            threshold: "BLOCK_MEDIUM_AND_ABOVE",
+            threshold: "BLOCK_ONLY_HIGH",
           },
           {
             category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-            threshold: "BLOCK_MEDIUM_AND_ABOVE",
+            threshold: "BLOCK_ONLY_HIGH",
           },
         ],
       }),
@@ -361,12 +400,38 @@ Generate your reply to ${mentionAuthor}. Keep it between ${maxWordsMin} and ${ma
   /* eslint-disable @typescript-eslint/no-explicit-any */
   const data: any = await response.json();
 
+  // Check for safety filter blocks or missing candidates
+  const candidate = data?.candidates?.[0];
+  if (!candidate) {
+    const blockReason = data?.promptFeedback?.blockReason;
+    const safetyRatings = JSON.stringify(data?.promptFeedback?.safetyRatings ?? []);
+    console.warn(
+      `xBooster: Gemini returned no candidates. blockReason=${blockReason}, safetyRatings=${safetyRatings}`,
+    );
+    throw new Error(
+      blockReason
+        ? `Gemini blocked: ${blockReason}`
+        : "Gemini returned no candidates",
+    );
+  }
+
+  if (candidate.finishReason && candidate.finishReason !== "STOP") {
+    console.warn(
+      `xBooster: Gemini finishReason=${candidate.finishReason}, safetyRatings=${JSON.stringify(candidate.safetyRatings ?? [])}`,
+    );
+  }
+
   // Gemini 3 with thinking returns thought + text parts; grab the last non-thought text part
-  const parts: any[] = data?.candidates?.[0]?.content?.parts ?? [];
+  const parts: any[] = candidate?.content?.parts ?? [];
   const textPart = parts.filter((p: any) => p.text && !p.thought).pop();
   const rawText = textPart?.text;
 
-  if (!rawText) throw new Error("Gemini returned empty response");
+  if (!rawText) {
+    console.warn(
+      `xBooster: Gemini returned parts but no text. Parts: ${JSON.stringify(parts.map((p: any) => ({ thought: !!p.thought, hasText: !!p.text, len: p.text?.length })))}`,
+    );
+    throw new Error("Gemini returned empty response (no text part)");
+  }
 
   // Clean up quotes
   return rawText.trim().replace(/^["']|["']$/g, "");

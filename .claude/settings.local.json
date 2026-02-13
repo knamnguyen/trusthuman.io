@@ -37,7 +37,11 @@
       "Bash(git push:*)",
       "Bash(python3:*)",
       "Bash(npx wxt prepare:*)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(openssl genrsa:*)",
+      "Bash(openssl rsa:*)",
+      "Bash(chmod:*)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=8192\" pnpm build:*)"
     ]
   }
 }

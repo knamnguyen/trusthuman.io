@@ -2,7 +2,7 @@
   "name": "@sassy/xbooster",
   "description": "xBooster - X/Twitter Engagement Automation",
   "private": true,
-  "version": "0.1.3",
+  "version": "0.1.5",
   "type": "module",
   "scripts": {
     "dev": "pnpm with-env wxt",

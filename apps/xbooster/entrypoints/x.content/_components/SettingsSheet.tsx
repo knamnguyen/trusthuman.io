@@ -134,12 +134,13 @@ function MentionsSettings({
             <Label className="text-xs">Min:</Label>
             <input
               type="number"
-              min="5"
+              min="0"
               max="240"
+              step="0.1"
               value={settings.fetchIntervalMin}
               onChange={(e) =>
                 updateSettings({
-                  fetchIntervalMin: parseInt(e.target.value) || 60,
+                  fetchIntervalMin: parseFloat(e.target.value) || 0,
                 })
               }
               className="h-8 w-16 rounded-md border border-input bg-background px-2 text-sm"
@@ -150,12 +151,13 @@ function MentionsSettings({
             <Label className="text-xs">Max:</Label>
             <input
               type="number"
-              min="5"
+              min="0"
               max="240"
+              step="0.1"
               value={settings.fetchIntervalMax}
               onChange={(e) =>
                 updateSettings({
-                  fetchIntervalMax: parseInt(e.target.value) || 90,
+                  fetchIntervalMax: parseFloat(e.target.value) || 0,
                 })
               }
               className="h-8 w-16 rounded-md border border-input bg-background px-2 text-sm"
@@ -168,19 +170,20 @@ function MentionsSettings({
       {/* Send Delay */}
       <SettingsSection title="Send Delay">
         <p className="text-xs text-muted-foreground">
-          Random delay between sending replies (seconds)
+          Random delay between sending replies (minutes)
         </p>
         <div className="mt-2 flex items-center gap-2">
           <div className="flex items-center gap-1">
             <Label className="text-xs">Min:</Label>
             <input
               type="number"
-              min="5"
-              max="600"
+              min="0"
+              max="30"
+              step="0.1"
               value={settings.sendDelayMin}
               onChange={(e) =>
                 updateSettings({
-                  sendDelayMin: parseInt(e.target.value) || 60,
+                  sendDelayMin: parseFloat(e.target.value) || 0,
                 })
               }
               className="h-8 w-16 rounded-md border border-input bg-background px-2 text-sm"
@@ -191,18 +194,19 @@ function MentionsSettings({
             <Label className="text-xs">Max:</Label>
             <input
               type="number"
-              min="5"
-              max="600"
+              min="0"
+              max="30"
+              step="0.1"
               value={settings.sendDelayMax}
               onChange={(e) =>
                 updateSettings({
-                  sendDelayMax: parseInt(e.target.value) || 120,
+                  sendDelayMax: parseFloat(e.target.value) || 0,
                 })
               }
               className="h-8 w-16 rounded-md border border-input bg-background px-2 text-sm"
             />
           </div>
-          <span className="text-xs text-muted-foreground">sec</span>
+          <span className="text-xs text-muted-foreground">min</span>
         </div>
       </SettingsSection>
 
@@ -301,13 +305,37 @@ function MentionsSettings({
             type="number"
             min="1"
             max="10080"
+            step="0.1"
             value={settings.maxMentionAgeMinutes}
             onChange={(e) =>
               updateSettings({
-                maxMentionAgeMinutes: parseInt(e.target.value) || 1440,
+                maxMentionAgeMinutes: parseFloat(e.target.value) || 1440,
               })
             }
             className="h-8 w-20 rounded-md border border-input bg-background px-2 text-sm"
+          />
+          <span className="text-xs text-muted-foreground">min</span>
+        </div>
+      </SettingsSection>
+
+      {/* Fail Pause */}
+      <SettingsSection title="Fail Pause">
+        <p className="text-xs text-muted-foreground">
+          Pause duration after 3 consecutive send failures
+        </p>
+        <div className="mt-2 flex items-center gap-2">
+          <input
+            type="number"
+            min="0"
+            max="1440"
+            step="0.1"
+            value={settings.failPauseMinutes}
+            onChange={(e) =>
+              updateSettings({
+                failPauseMinutes: parseFloat(e.target.value) || 0,
+              })
+            }
+            className="h-8 w-16 rounded-md border border-input bg-background px-2 text-sm"
           />
           <span className="text-xs text-muted-foreground">min</span>
         </div>
@@ -395,12 +423,13 @@ function EngageSettingsPanel({
             <Label className="text-xs">Min:</Label>
             <input
               type="number"
-              min="5"
+              min="0"
               max="240"
+              step="0.1"
               value={settings.fetchIntervalMin}
               onChange={(e) =>
                 updateSettings({
-                  fetchIntervalMin: parseInt(e.target.value) || 30,
+                  fetchIntervalMin: parseFloat(e.target.value) || 0,
                 })
               }
               className="h-8 w-16 rounded-md border border-input bg-background px-2 text-sm"
@@ -411,12 +440,13 @@ function EngageSettingsPanel({
             <Label className="text-xs">Max:</Label>
             <input
               type="number"
-              min="5"
+              min="0"
               max="240"
+              step="0.1"
               value={settings.fetchIntervalMax}
               onChange={(e) =>
                 updateSettings({
-                  fetchIntervalMax: parseInt(e.target.value) || 60,
+                  fetchIntervalMax: parseFloat(e.target.value) || 0,
                 })
               }
               className="h-8 w-16 rounded-md border border-input bg-background px-2 text-sm"
@@ -438,10 +468,11 @@ function EngageSettingsPanel({
               type="number"
               min="0"
               max="60"
+              step="0.1"
               value={settings.sourceDelayMin}
               onChange={(e) =>
                 updateSettings({
-                  sourceDelayMin: parseInt(e.target.value) || 1,
+                  sourceDelayMin: parseFloat(e.target.value) || 0,
                 })
               }
               className="h-8 w-16 rounded-md border border-input bg-background px-2 text-sm"
@@ -454,10 +485,11 @@ function EngageSettingsPanel({
               type="number"
               min="0"
               max="60"
+              step="0.1"
               value={settings.sourceDelayMax}
               onChange={(e) =>
                 updateSettings({
-                  sourceDelayMax: parseInt(e.target.value) || 10,
+                  sourceDelayMax: parseFloat(e.target.value) || 0,
                 })
               }
               className="h-8 w-16 rounded-md border border-input bg-background px-2 text-sm"
@@ -470,19 +502,20 @@ function EngageSettingsPanel({
       {/* Send Delay */}
       <SettingsSection title="Send Delay">
         <p className="text-xs text-muted-foreground">
-          Random delay between sending replies within a source (seconds)
+          Random delay between sending replies within a source (minutes)
         </p>
         <div className="mt-2 flex items-center gap-2">
           <div className="flex items-center gap-1">
             <Label className="text-xs">Min:</Label>
             <input
               type="number"
-              min="1"
-              max="600"
+              min="0"
+              max="30"
+              step="0.1"
               value={settings.sendDelayMin}
               onChange={(e) =>
                 updateSettings({
-                  sendDelayMin: parseInt(e.target.value) || 30,
+                  sendDelayMin: parseFloat(e.target.value) || 0,
                 })
               }
               className="h-8 w-16 rounded-md border border-input bg-background px-2 text-sm"
@@ -493,18 +526,19 @@ function EngageSettingsPanel({
             <Label className="text-xs">Max:</Label>
             <input
               type="number"
-              min="1"
-              max="600"
+              min="0"
+              max="30"
+              step="0.1"
               value={settings.sendDelayMax}
               onChange={(e) =>
                 updateSettings({
-                  sendDelayMax: parseInt(e.target.value) || 60,
+                  sendDelayMax: parseFloat(e.target.value) || 0,
                 })
               }
               className="h-8 w-16 rounded-md border border-input bg-background px-2 text-sm"
             />
           </div>
-          <span className="text-xs text-muted-foreground">sec</span>
+          <span className="text-xs text-muted-foreground">min</span>
         </div>
       </SettingsSection>
 
@@ -603,13 +637,37 @@ function EngageSettingsPanel({
             type="number"
             min="1"
             max="10080"
+            step="0.1"
             value={settings.maxTweetAgeMinutes}
             onChange={(e) =>
               updateSettings({
-                maxTweetAgeMinutes: parseInt(e.target.value) || 1440,
+                maxTweetAgeMinutes: parseFloat(e.target.value) || 1440,
               })
             }
             className="h-8 w-20 rounded-md border border-input bg-background px-2 text-sm"
+          />
+          <span className="text-xs text-muted-foreground">min</span>
+        </div>
+      </SettingsSection>
+
+      {/* Fail Pause */}
+      <SettingsSection title="Fail Pause">
+        <p className="text-xs text-muted-foreground">
+          Pause duration after 3 consecutive send failures
+        </p>
+        <div className="mt-2 flex items-center gap-2">
+          <input
+            type="number"
+            min="0"
+            max="1440"
+            step="0.1"
+            value={settings.failPauseMinutes}
+            onChange={(e) =>
+              updateSettings({
+                failPauseMinutes: parseFloat(e.target.value) || 0,
+              })
+            }
+            className="h-8 w-16 rounded-md border border-input bg-background px-2 text-sm"
           />
           <span className="text-xs text-muted-foreground">min</span>
         </div>

@@ -22,6 +22,7 @@ import {
 import { generateReply } from "../utils/ai-reply";
 import { navigateX } from "../utils/navigate-x";
 import { useAutoRun } from "../hooks/use-auto-run";
+import { useCountdown, formatCountdown } from "../hooks/use-countdown";
 import type { MentionData } from "../stores/mentions-store";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -29,7 +30,9 @@ const STATUS_LABELS: Record<string, string> = {
   fetching: "Fetching mentions...",
   generating: "Generating replies...",
   sending: "Sending replies...",
+  "send-delay": "Waiting between sends...",
   waiting: "Waiting for next cycle...",
+  "rate-limited": "Paused (consecutive failures)",
 };
 
 export function MentionsTab() {
@@ -56,6 +59,7 @@ export function MentionsTab() {
   const { settings, loadSettings, isLoaded: settingsLoaded } = useSettingsStore();
 
   const autoRun = useAutoRun();
+  const countdown = useCountdown(autoRun.delayUntil);
 
   // Load already-replied IDs and settings on mount
   useEffect(() => {
@@ -278,15 +282,8 @@ export function MentionsTab() {
                 Cycle {autoRun.cycleCount} · {autoRun.sentThisCycle} sent
               </div>
             )}
-            {autoRun.isRunning && autoRun.nextRunAt && (
-              <div>
-                Next in{" "}
-                {Math.max(
-                  0,
-                  Math.round((autoRun.nextRunAt - Date.now()) / 60000),
-                )}
-                m
-              </div>
+            {autoRun.isRunning && countdown !== null && (
+              <div>{formatCountdown(countdown)}</div>
             )}
           </div>
         </div>
