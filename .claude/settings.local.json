@@ -41,7 +41,8 @@
       "Bash(openssl genrsa:*)",
       "Bash(openssl rsa:*)",
       "Bash(chmod:*)",
-      "Bash(NODE_OPTIONS=\"--max-old-space-size=8192\" pnpm build:*)"
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=8192\" pnpm build:*)",
+      "Bash(bash:*)"
     ]
   }
 }
