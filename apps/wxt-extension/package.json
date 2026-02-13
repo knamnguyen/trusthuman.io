@@ -2,7 +2,7 @@
   "name": "@sassy/wxt-extension",
   "description": "EngageKit",
   "private": true,
-  "version": "1.4.24",
+  "version": "1.4.25",
   "type": "module",
   "scripts": {
     "dev": "pnpm with-env wxt",

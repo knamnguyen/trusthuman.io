@@ -32,11 +32,34 @@ const QUEUE_STORAGE_KEY = "engagekit-target-list-queue";
 // TYPES
 // =============================================================================
 
+/**
+ * Target List queue item - processes posts from a specific list of profiles
+ */
 export interface TargetListQueueItem {
+  type: 'targetList';
   targetListId: string;
   targetListUrns: string[];
   targetListName: string;
 }
+
+/**
+ * Discovery Set queue item - processes posts from a LinkedIn search
+ */
+export interface DiscoverySetQueueItem {
+  type: 'discoverySet';
+  discoverySetId: string;
+  discoverySetName: string;
+  keywords: string[];
+  keywordsMode: 'AND' | 'OR';
+  excluded: string[];
+  authorJobTitle?: string;
+  authorIndustries: string[];
+}
+
+/**
+ * Union type for all queue item types
+ */
+export type QueueItem = TargetListQueueItem | DiscoverySetQueueItem;
 
 /**
  * PostLoadSettings for queue processing (omits DB-only fields)

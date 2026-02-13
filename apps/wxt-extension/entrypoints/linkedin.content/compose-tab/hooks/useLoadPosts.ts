@@ -13,6 +13,8 @@ import { useTRPC } from "@/lib/trpc/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { defer } from "lib/commons";
 
+import { buildDiscoverySearchUrl } from "@sassy/linkedin-automation/navigate/build-discovery-search-url";
+
 import type { PostLoadSettings } from "../../stores/target-list-queue";
 import type { GenerationCompleteMetadata } from "./useSubmitBatch";
 import { useSettingsLocalStore } from "../../stores";
@@ -20,6 +22,7 @@ import { useComposeStore } from "../../stores/compose-store";
 import { useDailyQuotaLimitHitDialogStore } from "../../stores/dialog-store";
 import { useSettingsDBStore } from "../../stores/settings-db-store";
 import { processTargetListQueue } from "../../utils/multi-tab-navigation";
+import { openTabViaBackground } from "../../utils/open-tab-via-background";
 import { buildQueueItems } from "../utils/build-queue-items";
 import { loadPostsToCards } from "../utils/load-posts-to-cards";
 
@@ -169,6 +172,51 @@ export function useLoadPosts(
         setIsLoading(false);
         setIsCollecting(false);
         return;
+      }
+    }
+
+    // If discovery sets are enabled with set IDs, open search tabs
+    // This runs in parallel with feed collection (unlike target lists which redirect)
+    const discoverySetIds = postLoadSettings?.discoverySetIds ?? [];
+    if (
+      postLoadSettings?.discoverySetEnabled &&
+      discoverySetIds.length > 0 &&
+      !isOnSearchPage
+    ) {
+      console.log(
+        `[useLoadPosts] Opening ${discoverySetIds.length} discovery set tabs...`,
+      );
+
+      try {
+        // Fetch discovery sets from API
+        const sets = await queryClient.fetchQuery(
+          trpc.discoverySet.findByIds.queryOptions({ ids: discoverySetIds }),
+        );
+
+        if (sets.length > 0) {
+          // Open each set in a new tab
+          for (const set of sets) {
+            const url = buildDiscoverySearchUrl({
+              keywords: set.keywords,
+              keywordsMode: set.keywordsMode as "AND" | "OR",
+              excluded: set.excluded,
+              authorJobTitle: set.authorJobTitle ?? undefined,
+              authorIndustries: set.authorIndustries,
+            });
+
+            console.log(`[useLoadPosts] Opening discovery set tab: ${set.name}`);
+            await openTabViaBackground(url);
+          }
+
+          console.log(
+            `[useLoadPosts] Opened ${sets.length} discovery set tabs`,
+          );
+        } else {
+          console.warn(`[useLoadPosts] No discovery sets found for IDs:`, discoverySetIds);
+        }
+      } catch (err) {
+        // Discovery set tabs failed to open - log but continue with feed collection
+        console.error(`[useLoadPosts] Failed to open discovery set tabs:`, err);
       }
     }
 

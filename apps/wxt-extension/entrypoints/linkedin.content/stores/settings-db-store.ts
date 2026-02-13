@@ -47,6 +47,8 @@ export type CommentGenerateSettingDB = CommentGenerateSetting;
 const DEFAULT_POST_LOAD: PostLoadSettingsPartial = {
   targetListEnabled: false,
   targetListIds: [],
+  discoverySetEnabled: false,
+  discoverySetIds: [],
   timeFilterEnabled: false,
   minPostAge: null,
   skipFriendActivitiesEnabled: false,

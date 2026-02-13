@@ -104,6 +104,31 @@ export const discoverySetRouter = () =>
         return set;
       }),
 
+    findByIds: protectedProcedure
+      .input(
+        z.object({
+          ids: z.array(z.string()),
+        }),
+      )
+      .query(async ({ ctx, input }) => {
+        if (ctx.activeAccount === null) {
+          return [];
+        }
+
+        if (input.ids.length === 0) {
+          return [];
+        }
+
+        const sets = await ctx.db.discoverySet.findMany({
+          where: {
+            id: { in: input.ids },
+            accountId: ctx.activeAccount.id,
+          },
+        });
+
+        return sets;
+      }),
+
     update: protectedProcedure
       .input(discoverySetUpdateSchema)
       .mutation(async ({ ctx, input }) => {

@@ -39,6 +39,7 @@ import { useSettingsDBStore } from "../../stores/settings-db-store";
 import { useSettingsLocalStore } from "../../stores/settings-local-store";
 import { BlacklistSelector } from "./BlacklistSelector";
 import { CommentStyleSelector } from "./CommentStyleSelector";
+import { DiscoverySetSelector } from "./DiscoverySetSelector";
 import { SettingsImageManager } from "./SettingsImageManager";
 import { TargetListSelector } from "./TargetListSelector";
 
@@ -69,6 +70,17 @@ export function SettingsSheet({ isOpen, onClose }: SettingsSheetProps) {
   // This ensures the dropdown is instant when user enables "Use Target List"
   useQuery(
     trpc.targetList.findLists.queryOptions(
+      { cursor: undefined },
+      {
+        enabled: isOpen,
+        staleTime: 30 * 1000,
+      },
+    ),
+  );
+
+  // Prefetch discovery sets when settings sheet opens
+  useQuery(
+    trpc.discoverySet.list.queryOptions(
       { cursor: undefined },
       {
         enabled: isOpen,
@@ -367,6 +379,8 @@ const DEFAULT_POST_LOAD: Omit<
 > = {
   targetListEnabled: false,
   targetListIds: [],
+  discoverySetEnabled: false,
+  discoverySetIds: [],
   timeFilterEnabled: false,
   minPostAge: null,
   skipFriendActivitiesEnabled: false,
@@ -420,6 +434,11 @@ function SettingsFiltersContent({
       ? `${getWebAppDomain()}/${orgSlug}/${accountSlug}/target-list`
       : undefined;
 
+  const discoverySetLink =
+    orgSlug && accountSlug
+      ? `${getWebAppDomain()}/${orgSlug}/${accountSlug}/discovery-sets`
+      : undefined;
+
   return (
     <div className="space-y-6">
       <SettingsSection
@@ -438,6 +457,24 @@ function SettingsFiltersContent({
         />
         <div className="mt-2">
           <TargetListSelector />
+        </div>
+      </SettingsSection>
+
+      <SettingsSection
+        title="Discovery Sets"
+        quickLink={discoverySetLink}
+        quickLinkLabel="Manage Discovery Sets"
+      >
+        <SettingToggle
+          label="Use Discovery Sets"
+          description="Open LinkedIn searches based on saved filter sets"
+          checked={settings.discoverySetEnabled}
+          onCheckedChange={(v) => {
+            void updatePostLoad({ discoverySetEnabled: v });
+          }}
+        />
+        <div className="mt-2">
+          <DiscoverySetSelector />
         </div>
       </SettingsSection>
 
