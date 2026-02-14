@@ -1,7 +1,8 @@
 # Capacitor Demo App with Clerk Authentication - Implementation Plan
 
 **Date:** 2026-01-26
-**Status:** PLAN COMPLETE - AWAITING APPROVAL
+**Updated:** 2026-02-13
+**Status:** BLOCKED - CLERK + CAPACITOR PRODUCTION REDIRECT ISSUE UNRESOLVED
 **Complexity:** COMPLEX
 
 ---
@@ -1073,6 +1074,98 @@ apps/capacitor-demo/
 
 ---
 
+## BLOCKER: Clerk + Capacitor Production Redirect Issue
+
+**Status:** UNRESOLVED - REQUIRES DEEP RESEARCH VERIFICATION
+
+### Problem Statement
+
+After initial OAuth login succeeds, **Capacitor apps in production keep redirecting users to Safari** instead of maintaining the session within the app's WKWebView. This is a fundamental architectural incompatibility between `@clerk/clerk-react` (web SDK) and Capacitor's iOS WKWebView.
+
+### How It Manifests
+
+```
+1. User opens app → taps "Sign in with Google" → Safari opens → OAuth completes → deep link returns to app ✅
+2. User backgrounds or closes app
+3. User reopens app
+4. Clerk-JS tries to refresh session via HTTP redirect to:
+   https://clerk.your-domain.dev/v1/client/handshake?redirect_url=...
+5. WKWebView (in production) treats this as external navigation → opens Safari ❌
+6. User is stuck in Safari looking at a Clerk handshake URL
+7. Session context is lost
+```
+
+### Root Causes
+
+#### 1. `@clerk/clerk-react` relies on cookie-based session management
+- Clerk's web SDK (`clerk-js`) manages sessions via cookies and redirect-based "handshakes"
+- This works in browsers but breaks in Capacitor's WKWebView in production builds
+- The handshake flow involves redirecting to Clerk's domain, which WKWebView delegates to Safari
+
+#### 2. WKWebView cookie isolation on iOS
+- WKWebView does NOT share cookies with Safari or SFSafariViewController (since iOS 11)
+- Each has its own isolated cookie jar
+- Clerk's cookie-based session refresh cannot work across these boundaries
+- This is a documented WebKit limitation: https://bugs.webkit.org/show_bug.cgi?id=213510
+
+#### 3. Production vs Development discrepancy
+- **Development:** WebView loads from `http://localhost:5173` — cookies work somewhat normally
+- **Production:** WebView loads from `capacitor://` or `https://localhost` scheme — cookie and navigation policies are stricter, causing Clerk handshake redirects to break
+
+#### 4. No official Clerk SDK for Capacitor
+- Clerk officially supports `@clerk/clerk-expo` for React Native/Expo with a `tokenCache` prop that uses `expo-secure-store` — token-based, no cookies
+- `@clerk/clerk-react` (web SDK) has NO `tokenCache` prop — it relies entirely on cookies
+- `@clerk/clerk-expo` requires React Native runtime, which Capacitor does not provide
+
+### Community Evidence
+
+- **Ionic Forum (Jul-Oct 2025):** Documented production issue with NO verified fix — https://forum.ionicframework.com/t/ios-webview-redirects-to-safari-after-clerk-authentication-production-vs-development-issue/248720
+- **Capacitor cookie issues (long-standing):** https://github.com/ionic-team/capacitor/issues/1373, https://github.com/ionic-team/capacitor/issues/6809
+- **`allowNavigation` in production:** Capacitor maintainer confirms it works but is officially "not recommended" — https://github.com/ionic-team/capacitor/discussions/4895
+
+### Potential Solutions (To Be Verified)
+
+#### Option A: `allowNavigation` + Clerk domain whitelisting
+- Add all Clerk domains to `capacitor.config.ts` `server.allowNavigation`
+- Keeps Clerk's handshake redirects inside WKWebView instead of opening Safari
+- **Risk:** Officially not recommended for production; may lose "app context"
+- **Confidence:** LOW — no one has confirmed this fully solves it
+
+#### Option B: Custom native plugin to intercept Clerk handshake
+- Write a Capacitor plugin overriding `WKNavigationDelegate.decidePolicyForNavigationAction`
+- Detect Clerk handshake URLs (`*/v1/client/handshake*`) and handle via `fetch()` inside WebView
+- **Risk:** Complex, fragile, breaks if Clerk changes internal URLs
+- **Confidence:** MEDIUM — architecturally sound but high maintenance
+
+#### Option C: Token-based session persistence (replicate Expo pattern)
+- After OAuth, extract Clerk session token via `getToken()`
+- Store in `@capacitor-community/secure-storage` (iOS Keychain)
+- On app restart, restore token from secure storage, bypass cookie-based handshake
+- **Risk:** `@clerk/clerk-react` may not support overriding its internal session management
+- **Confidence:** MEDIUM — the Expo SDK does this, but unclear if web SDK allows it
+
+#### Option D: Switch auth provider (Auth0 / Supabase Auth)
+- Auth0 has an official Ionic/Capacitor quickstart with PKCE flow: https://auth0.com/docs/quickstart/native/ionic-react/interactive
+- Supabase Auth also has documented Capacitor patterns
+- **Risk:** Requires rearchitecting auth across the whole platform
+- **Confidence:** HIGH — these are proven paths
+
+#### Option E: Switch to Expo/React Native
+- Use `@clerk/clerk-expo` with `tokenCache` + `expo-secure-store` (official first-class support)
+- Abandons Capacitor entirely for the mobile app
+- **Risk:** Different mobile framework, new build pipeline
+- **Confidence:** HIGH — Clerk's officially supported mobile path
+
+### Questions for Deep Research Verification
+
+1. Has anyone successfully used `@clerk/clerk-react` in a Capacitor iOS production app without the Safari redirect issue?
+2. Does `allowNavigation` with Clerk domains (`*.clerk.accounts.dev`, `*.clerk.com`) fully resolve the handshake redirect in production builds?
+3. Can Clerk's web SDK session management be overridden to use token-based persistence instead of cookies?
+4. Is there a Capacitor plugin or native workaround that intercepts WKWebView navigation to prevent Clerk handshakes from opening Safari?
+5. Has Clerk announced any plans for a Capacitor SDK or documented a recommended Capacitor integration path?
+
+---
+
 ## Known Limitations & Trade-offs
 
 ### 1. No Prebuilt Clerk UI Components for Native
@@ -1085,10 +1178,11 @@ apps/capacitor-demo/
 - **Solution:** Use `@capacitor/browser` to open Safari
 - **Impact:** User leaves app momentarily (standard mobile pattern)
 
-### 3. Session Persistence Complexity
+### 3. Session Persistence Complexity (SEE BLOCKER ABOVE)
 - **Issue:** Capacitor webview doesn't share cookies with Safari
-- **Solution:** Clerk handles token-based session storage internally
-- **Impact:** Should "just work" but needs thorough testing
+- **Previous assumption:** "Clerk handles token-based session storage internally" — **THIS IS WRONG**
+- **Reality:** `@clerk/clerk-react` uses cookie-based sessions with redirect handshakes that break in production WKWebView
+- **Impact:** CRITICAL — this is the primary blocker for production viability
 
 ### 4. Development Workflow
 - **Issue:** iPhone can't access `localhost:5173`
@@ -1106,9 +1200,10 @@ apps/capacitor-demo/
 
 | Risk | Likelihood | Impact | Mitigation |
 |------|-----------|--------|------------|
+| **Clerk session handshake redirects to Safari in production** | **HIGH** | **CRITICAL** | **UNRESOLVED — see BLOCKER section above** |
 | Clerk OAuth callback doesn't work in Capacitor | Medium | High | Extensive testing; fallback to email/password auth if needed |
 | Deep link conflicts with existing apps | Low | Medium | Use unique URL scheme (`capacitordemo://`) |
-| Session not persisting after app restart | Medium | High | Test Clerk's session storage; may need custom implementation |
+| Session not persisting after app restart | **HIGH** | **CRITICAL** | **Cookie-based sessions break in WKWebView — requires architectural solution** |
 | Google OAuth blocks Capacitor webview | Low | Critical | Already using Browser plugin (system browser) |
 | iOS code signing issues during device testing | Medium | Low | Clear documentation for code signing steps |
 | Port conflicts with existing Next.js app | Low | Low | Use port 5173 (Vite default, different from Next.js 3000) |
@@ -1176,24 +1271,30 @@ After successful demo:
 
 ## Approval Status
 
-**PLAN STATUS:** ✅ COMPLETE - READY FOR REVIEW
+**PLAN STATUS:** ⛔ BLOCKED — PENDING DEEP RESEARCH VERIFICATION
 
-**Awaiting user approval to proceed to EXECUTE phase.**
+**Blocker:** The Clerk + Capacitor production Safari redirect issue must be resolved before proceeding. The app scaffolding exists but cannot ship to production without a verified solution to session persistence in WKWebView.
 
-Once approved, implementation will follow these phases in order:
+**Next Step:** Verify the blocker via Claude Deep Research with the 5 questions listed in the BLOCKER section. Based on findings, either:
+- Proceed with a verified workaround (Options A-C)
+- Pivot auth provider (Option D)
+- Pivot mobile framework to Expo (Option E)
+
+Once blocker is resolved, implementation follows these phases:
 1. Project initialization (Steps 1.1-1.2)
 2. Deep link configuration (Steps 2.1-2.2)
 3. React app structure (Steps 3.1-3.8)
-4. tRPC integration - optional (Phase 4)
-5. Styling & UI (Steps 5.1)
-6. Environment variables (Phase 6)
-7. Turborepo integration (Steps 7.1-7.3)
-8. iOS device testing setup (Steps 8.1-8.3)
-9. Testing & validation (Phase 9)
+4. **Session persistence solution (NEW — based on deep research findings)**
+5. tRPC integration - optional (Phase 4)
+6. Styling & UI (Steps 5.1)
+7. Environment variables (Phase 6)
+8. Turborepo integration (Steps 7.1-7.3)
+9. iOS device testing setup (Steps 8.1-8.3)
+10. Testing & validation (Phase 9)
 
-**Estimated Complexity:** Complex (multi-phase, new app, iOS configuration)
-**Estimated Files:** ~25 new files, 3 modified
-**Critical Path:** Deep link configuration → OAuth flow → Device testing
+**Estimated Complexity:** Complex (multi-phase, new app, iOS configuration, **auth architecture TBD**)
+**Estimated Files:** ~25 new files, 3 modified (may increase depending on solution)
+**Critical Path:** **Resolve blocker** → Deep link configuration → OAuth flow → Session persistence → Device testing
 
 ---
 
