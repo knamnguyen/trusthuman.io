@@ -1,4 +1,4 @@
-# Unified Product Tour & Feature Guide Architecture (v11 - Research Complete)
+# Unified Product Tour & Feature Guide Architecture (v12 - Learn Mode Analysis Complete)
 
 ## Goal
 
@@ -821,3 +821,551 @@ interface PersistedTourState {
 - Tour completion rate: 61% average, 70-80% top performers
 - Optimal tour length: 3-5 steps
 - Users skip 80% of tours with >5 steps
+
+---
+
+# PART 2: Learn Mode Design Analysis (Added 2026-02-14)
+
+This section documents comprehensive multi-agent analysis of Learn Mode architecture options, conducted to determine the best approach for contextual feature discovery.
+
+## Current Implementation Status
+
+### What Has Been Implemented
+
+| Component | Status | Location |
+|-----------|--------|----------|
+| `TourContext` with state machine | ✅ Done | `packages/ui/src/components/tour/tour-context.tsx` |
+| `useTour` hook with actions | ✅ Done | `startTour`, `endTour`, `nextStep`, `prevStep`, `goToStep`, `switchView` |
+| Flow/step data structures | ✅ Done | `packages/ui/src/components/tour/types.ts` |
+| `TourOverlay` SVG mask | ✅ Done | `packages/ui/src/components/tour/tour-overlay.tsx` |
+| `TourModal` with video hero | ✅ Done | `packages/ui/src/components/tour/tour-modal.tsx` |
+| `TourTooltip` with floating-ui | ✅ Done | `packages/ui/src/components/tour/tour-tooltip.tsx` |
+| `TourProgress` clickable dots | ✅ Done | `packages/ui/src/components/tour/tour-progress.tsx` |
+| YouTube embed helpers | ✅ Done | `packages/ui/src/components/tour/utils/youtube.ts` |
+| Dual-video system | ✅ Done | Seamless loop via postMessage |
+| View switching (modal ↔ tooltip) | ✅ Done | Minimize/Maximize buttons |
+| Multi-highlight support | ✅ Done | Array of selectors |
+| Modal 9-position grid | ✅ Done | `packages/ui/src/components/tour/utils/modal-position.ts` |
+| Shadow DOM support | ✅ Done | `portalContainer` prop |
+| `onBeforeTour` / `onBeforeStep` | ✅ Done | Async callbacks |
+| `SimulatedElement` with cloning | ✅ Done | `packages/ui/src/components/tour/simulated-element.tsx` |
+| `GhostCursor` animation | ✅ Done | `packages/ui/src/components/tour/ghost-cursor.tsx` |
+| Extension intro tour | ✅ Done | `apps/wxt-extension/.../tour-flows.ts` (4 steps) |
+
+### What Has NOT Been Implemented (From Original Plan)
+
+| Feature | Plan Description | Status |
+|---------|------------------|--------|
+| **Learn Mode toggle** | Global ON/OFF with localStorage | ❌ Not built |
+| **HoverTrigger hotspots** | Pulsing indicators on elements | ❌ Not built |
+| **Inactive Tooltip** | Brief preview on hover | ❌ Not built |
+| **Three View States** | Inactive → Active Tooltip → Modal | ❌ Only 2 views |
+| **Lifecycle states** | `init` / `ready` / `active` / `error` | ❌ Simplified |
+| **Callback system** | `onCallback` with event types | ⚠️ Simplified |
+| **`interactToNext`** | Require user interaction | ❌ Not built |
+| **Observable system** | Per-step resize/mutation observers | ❌ Not built |
+| **Cross-route navigation** | Pending step pattern | ❌ Not needed |
+
+---
+
+## The Learn Mode Design Question
+
+When implementing Learn Mode with hotspots, a critical question emerged:
+
+**If multiple tour flows reference the same element, how should hotspots behave?**
+
+Example scenario:
+```
+Flow A (Extension Intro):     Step 1 → #compose-tab
+Flow B (Power User Tips):     Step 3 → #compose-tab
+Flow C (What's New - Feb):    Step 1 → #compose-tab
+
+Learn Mode ON → Multiple hotspots on same element?
+```
+
+This led to comprehensive multi-agent analysis of design options.
+
+---
+
+## Design Options Analyzed
+
+### Option 1: Element-Centric Merge
+
+One hotspot per unique DOM selector, regardless of how many flows reference it.
+
+```
+Hover #compose-tab →
+┌────────────────────────────────┐
+│ Compose Tab                    │
+│ "Write comments 10x faster"    │
+│                                │
+│ Available Guides:              │
+│ ┌────────────────────────────┐ │
+│ │ 📘 Extension Basics        │ │
+│ │ ⚡ Power User Tips         │ │
+│ │ ✨ What's New (Feb)        │ │
+│ └────────────────────────────┘ │
+└────────────────────────────────┘
+```
+
+### Option 2: Active Flow Context
+
+Only ONE flow's hotspots show at a time. User selects which "guide context" they're in.
+
+```
+┌─────────────────────────────────────────┐
+│ Learn Mode: [Extension Basics ▼]        │
+└─────────────────────────────────────────┘
+
+Only Extension Basics hotspots visible.
+Switch dropdown → different hotspots appear.
+```
+
+### Option 3: Priority System
+
+Each flow has a priority number. For overlapping selectors, highest priority wins.
+
+### Option 4: Completion-Based Filtering
+
+Completed flows don't show hotspots. Overlap naturally resolves as user progresses.
+
+### Option 5: Feature Entity (Inverted Model)
+
+Create Feature as first-class entity. Steps reference features by ID.
+
+```typescript
+interface Feature {
+  id: string;
+  selector: string;
+  name: string;
+  guides: Guide[];
+}
+```
+
+### Option 6: Hybrid
+
+Combine flow-centric with completion tracking and "more guides" badges.
+
+---
+
+## Multi-Agent Analysis: Arguments AGAINST Element-Centric
+
+### From Devil's Advocate Agent
+
+**Critical Flaws Identified:**
+
+1. **Analysis Paralysis**: Multiple guides per element = "which one do I pick?" Users close tooltip without choosing.
+
+2. **Lost Narrative Context**: A tour step like "Compose Overview" makes sense as Step 1 of 4-step intro. As standalone hotspot? Decontextualized and confusing.
+
+3. **Prerequisite Chains Break**: User clicks hotspot on Step 4 → But Steps 1-3 weren't completed → `onBeforeStep` expects context → Experience breaks.
+
+4. **Context Collapse Problem**: Steps lose meaning outside their flow. "Now click here" makes no sense without previous steps.
+
+5. **Can't Teach Multi-Step Workflows**: "How to create a target list and load posts" requires sequence:
+   - Navigate to target list page
+   - Create list
+   - Open extension
+   - Select list
+   - Click load
+
+   Element-centric fragments this into isolated hotspots.
+
+6. **No Clear Starting Point**: 30 hotspots pulsing = "where do I begin?" Visual overwhelm.
+
+7. **Scale Death Spiral**:
+   - 50 steps → ~30 unique elements
+   - 30 hotspots on screen = visual clutter
+   - Popular element referenced by 10 flows = dropdown scrolls
+   - User overwhelmed, clicks nothing
+
+8. **Cognitive Load**: Violates progressive disclosure. Shows ALL hotspots at once vs. revealing information gradually.
+
+9. **Fundamental Flaw - "Element ≠ Feature"**: Users think in workflows, not buttons. "How do I accomplish X?" vs "What does this button do?"
+
+10. **Array Selector Chaos**: Current design uses `selector: string | string[]`. How to merge `["#button"]` vs `["#button", "#other"]`? Which selector wins?
+
+### From UX Research Agent
+
+**Research-Based Concerns:**
+
+1. **Choice Overload**: Appcues data shows users who see multiple tours have 28% completion vs 64% for single tour.
+
+2. **Context-Switching Penalty**: Gloria Mark (UCI) research: 23 minutes to return to task after interruption.
+
+3. **Self-Determination Theory** (Deci & Ryan): While autonomy is important, too many choices = decision fatigue, not autonomy.
+
+4. **Tutorial Completion Data**:
+   - 55-70% abandon onboarding tours (Appcues 2021)
+   - Only 15% complete multi-step tours (ProdPad 2019)
+   - But this is for FLOWS — element-centric doesn't solve this, just hides the metric.
+
+5. **Passive Users Risk**: Users who never explore will never discover features. At least flows ensure exposure.
+
+### From Technical Architecture Agent
+
+**Implementation Concerns:**
+
+1. **State Complexity**: Hotspot must track `Map<flowId, steps[]>` internally. Debugging nightmare.
+
+2. **Re-render Explosion**: Every hotspot re-renders when ANY flow changes.
+
+3. **`onBeforeStep` Execution Order**: 3 flows reference same element with different `onBeforeStep` actions. Which runs?
+
+4. **`simulateSelectors` Conflict**: Flow A wants to simulate `["#button"]`, Flow B wants `["#button", "#settings"]`. Which shows?
+
+### From Product Strategy Agent
+
+**Business Concerns:**
+
+1. **Activation Rate Estimates**:
+   - Element-Centric: 30-40% activation
+   - Flow-Centric: 60-70% activation
+   - Hybrid: 70-80% activation
+
+2. **Time to First Value**:
+   - Element-Centric: 5-10 min (user explores randomly)
+   - Flow-Centric: 2-4 min (focused on outcome)
+
+3. **Checklist Achievability**: "Complete all 20 feature tours" feels overwhelming vs "Complete these 3 flows".
+
+4. **No Successful Products Use Pure Element-Centric**: Duolingo, Notion, Slack, Headspace all use flow-first → element discovery LATER.
+
+---
+
+## Multi-Agent Analysis: Arguments FOR Element-Centric
+
+### From Devil's Advocate Agent (Defending Element-Centric)
+
+**Strong Arguments:**
+
+1. **"Users Think in Tasks" is Wrong for THIS Product**: EngageKit users are LinkedIn power users coming back daily, not learning once. Day 2: "How do I view engagement rate?" → Wants direct access, not re-running flow.
+
+2. **Tutorial Hell**: Flows force sequential steps. User at Step 4: "I already know this..." → Abandonment. Element-centric lets users learn just what they need.
+
+3. **"I Already Know Most of This" Problem**: Flow has 4 steps, user needs help with 1 thing. Flow-centric forces them through 4 steps to learn 1 thing.
+
+4. **Just-In-Time Learning**:
+   - Just-in-time retention: 70-80%
+   - Front-loaded tutorials: 20-30%
+   - Element-centric = natural just-in-time moments
+
+5. **Flow Complexity Explosion**: Product grows → 7+ flows. "Is account management in 'Extension Intro' or 'Account Setup'?" Flow discovery becomes its own UX problem.
+
+6. **Visual Hierarchy Solves Starting Point**: Hotspots pulse at varying intensities. "Important" features pulse more. User naturally starts with most prominent.
+
+7. **Expert User Retention**: After 30 days, power users hate forced tutorials. "How do I export analytics?" → Element-centric: hover, done. Flow-centric: find flow, skip 5 steps, finally get answer.
+
+8. **Real Products Using Element-Centric**:
+   - **Figma**: Hotspots on every tool, hover = tooltip
+   - **Linear**: "?" help icon on every feature
+   - **VSCode**: Hover any menu item = description
+   - **Notion**: "Learn more" links contextually placed
+
+9. **Analytics Granularity**:
+   - Element-centric: "40% struggle with export-dropdown"
+   - Flow-centric: "60% completed tour" (but WHICH step confused them?)
+
+10. **Industry Trend**: 2015 = flow-centric tutorials. 2025 = contextual element-centric help. Element-centric is the future.
+
+### From UX Research Agent (Supporting Element-Centric)
+
+**Research-Based Support:**
+
+1. **Expert User Learning** (Carroll & Rosson 1987): "Paradox of the Active User" — Users resist lengthy learning sequences. They learn by doing.
+
+2. **Pull vs Push Learning** (Adult Learning Theory): Adults are self-directed learners. Push learning imposes cognitive load BEFORE users have context.
+
+3. **Tutorial Skip Rate**: 55-70% abandon flows anyway. So flow "completion" is a vanity metric.
+
+4. **Contextual Help Research** (Novick & Ward 2006): Contextual help increased task completion by 40% vs upfront documentation.
+
+5. **Microsoft Research 2013**: Tooltips during task flow = 3x longer retention than upfront demos.
+
+6. **Autonomy = Core Psychological Need** (Self-Determination Theory): When users feel controlled, intrinsic motivation decreases.
+
+7. **Return Users**: Flow-centric requires "re-onboard" or separate help docs. Element-centric: tooltips are always there.
+
+8. **LinkedIn Context**: Users are IN LinkedIn doing tasks. Element-centric = "help where I am" vs flows = "take me away from my task".
+
+9. **Microlearning Research**: 3-5 minute learning bursts increase retention by 20% vs 30-minute sessions. Tooltips = 5-10 second microlearning.
+
+### From Technical Architecture Agent (Supporting Element-Centric)
+
+**Architectural Advantages:**
+
+1. **DOM as Source of Truth**: Element exists → hotspot valid. Element removed → hotspot auto-invalid. Self-healing.
+
+2. **Decoupling**: Elements, guides, collections are independent layers. Change one without cascading.
+
+3. **Dynamic Content**: A/B tests, feature flags, personalization all natural with element-centric.
+
+4. **Maintenance Velocity**:
+   - Element-Centric: O(1) — add one hotspot
+   - Flow-Centric: O(N) — update N flows
+
+5. **Composability**: Guides are Lego bricks (combine any way). Flow steps are puzzle pieces (only fit designed order).
+
+6. **Future Features**:
+   - AI-powered suggestions: Detect user hesitation on element → show guide
+   - Personalized paths: Filter guides by user.role, user.skillLevel
+   - A/B testing: Add variant to element, measure per-variant
+
+7. **Analytics**: Element-level insights ("which features need better UX") vs flow-level ("who finished").
+
+### From Product Strategy Agent (Supporting Element-Centric)
+
+**Product Arguments:**
+
+1. **User Sophistication**: Marketers, salespeople, recruiters are professionals. They learn by exploring.
+
+2. **LinkedIn Integration**: Users are IN LinkedIn. Element-centric = "help where I am".
+
+3. **Partial Adoption is OK**: Recruiter who only uses "Save Profile" and ignores AI commenting is satisfied customer, not failed activation.
+
+4. **Power User Path**: Best customers are power users. Element-centric serves them.
+
+5. **Competitive Differentiation**: Most tools = boring flows. Element-centric feels "smart" and "modern".
+
+6. **Gamification Reframe**: "Discover and master features" (exploration) vs "complete this flow" (homework).
+
+7. **Re-engagement**: User returns after 2 months. Element-centric: hover, instant help. Flow-centric: restart tour?
+
+8. **Support Burden**: Persistent tooltips = living documentation. Reduces "how do I?" tickets.
+
+---
+
+## Synthesis: The Goal-Centric Approach
+
+Both sides argued past each other because they answered **different questions**:
+
+| Question | Best Answer |
+|----------|-------------|
+| "What does this button do?" | Element-Centric |
+| "How do I accomplish this task?" | Flow-Centric |
+| "Help me when I need it" | Element-Centric |
+| "Teach me the product" | Flow-Centric |
+| "I'm an expert, get out of my way" | Element-Centric |
+| "I'm new, guide me" | Flow-Centric |
+
+**Your users are BOTH** — new to YOUR extension, but experts at LinkedIn.
+
+### The Third Path: Goal-Centric Discovery
+
+Neither pure element-centric nor pure flow-centric. Instead: **Goal-based filtering**.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    GOAL-BASED DISCOVERY                      │
+│                                                             │
+│  "What do you want to accomplish?"                          │
+│                                                             │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────┐ │
+│  │ 💬 Comment      │  │ 👥 Build my     │  │ 📊 Track    │ │
+│  │ faster on       │  │ target list     │  │ my results  │ │
+│  │ posts           │  │                 │  │             │ │
+│  └─────────────────┘  └─────────────────┘  └─────────────┘ │
+│                                                             │
+│  User picks goal → System highlights RELEVANT elements      │
+│  (Not all elements, not forced sequence, but goal-filtered) │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### How Goal-Centric Solves Both Sides' Concerns
+
+| Concern | How Goal-Based Solves It |
+|---------|--------------------------|
+| Too many hotspots | Only show hotspots relevant to chosen goal |
+| No starting point | Goal selection IS the starting point |
+| Can't teach workflows | Goal = workflow, shows elements in that workflow |
+| Choice paralysis | 3 goals, not 30 hotspots |
+| Expert users | Can skip goal selection, explore freely |
+| Prerequisites | Goal implies sequence; system can guide order |
+| Element-level help | Still have tooltips per element |
+| Return users | Can re-select goal or hover any element |
+
+### Proposed Goal-Centric Architecture
+
+```typescript
+interface Goal {
+  id: string;
+  title: string;  // "Comment faster on posts"
+  description: string;
+  icon: string;
+
+  // Which elements are relevant to this goal
+  relevantSelectors: string[];
+
+  // Optional: Suggested order (but not forced)
+  suggestedOrder?: string[];
+
+  // Completion criteria
+  completionCriteria?: {
+    type: 'action' | 'view';
+    selector: string;
+    count?: number;
+  }[];
+}
+
+interface TourStep {
+  id: string;
+  selector: string;
+  title: string;
+  subtitle: string;
+
+  // Which goals this step is relevant to
+  goalIds: string[];
+
+  // Existing fields...
+  previewVideo?: string;
+  tutorialVideo?: string;
+}
+```
+
+### Goal-Centric User Experience
+
+```
+FIRST TIME:
+┌─────────────────────────────────────────┐
+│ What brings you to EngageKit today?     │
+│                                         │
+│ ○ Comment faster on posts               │
+│ ○ Build my target list                  │
+│ ○ Track my engagement results           │
+│ ○ Just exploring (show all)             │
+└─────────────────────────────────────────┘
+
+User picks "Comment faster" →
+Only Compose tab elements get hotspots.
+Other tabs dimmed but accessible.
+
+User completes goal (or switches) →
+New goal = new relevant hotspots.
+
+RETURN USER:
+No modal. Hotspots for last-used goal.
+Can hover any element for instant help.
+Can re-select goal from settings.
+```
+
+### Comparison Matrix
+
+| Dimension | Flow-Centric | Element-Centric | Goal-Centric |
+|-----------|--------------|-----------------|--------------|
+| Starting point | ✅ Clear | ❌ Unclear | ✅ Clear (3 goals) |
+| User autonomy | ❌ Low | ✅ High | ✅ High (optional) |
+| Cognitive load | ⚠️ Sequential | ❌ High (30 hotspots) | ✅ Low (filtered) |
+| Teaches workflows | ✅ Yes | ❌ No | ✅ Yes (goal = workflow) |
+| Expert-friendly | ❌ No | ✅ Yes | ✅ Yes ("just exploring") |
+| Return users | ❌ Restart tour | ✅ Hover help | ✅ Both |
+| Gamification | ⚠️ Flow completion | ⚠️ Feature discovery | ✅ Goal completion |
+| Prerequisites | ✅ Enforced | ❌ Broken | ✅ Suggested order |
+| Maintenance | ❌ O(N) flows | ✅ O(1) elements | ✅ O(1) + goals |
+
+---
+
+## Recommendation
+
+### Primary Recommendation: Goal-Centric Discovery
+
+1. **First-time experience**: Goal selection modal (3-4 goals)
+2. **In-goal experience**: Only relevant hotspots visible
+3. **Expert escape**: "Just exploring" shows all hotspots
+4. **Return users**: Remember last goal, persistent tooltips
+5. **Gamification**: Goal completion + feature mastery badges
+6. **Checklist**: Goals become natural checklist items
+
+### Implementation Priority
+
+**Phase 1: MVP (Ship existing tours)**
+- Current implementation is functional
+- 4-step intro tour works via `startTour()`
+- No Learn Mode yet, but tours work
+
+**Phase 2: Goal-Centric Learn Mode**
+- Add `Goal` interface
+- Add goal selection UI
+- Filter hotspots by selected goal
+- Add `isLearnModeOn` + `activeGoalId` to context
+
+**Phase 3: Advanced Features**
+- Completion tracking per goal
+- "More guides" badge for overlapping elements
+- Gamification (points, badges)
+- Smart suggestions (detect user hesitation)
+
+---
+
+## Future Considerations
+
+### Checklist Integration
+
+Goals naturally map to checklist items:
+
+```
+Today's Goal:
+☐ Complete 1 core goal (required)
+
+This Week:
+☐ Complete all 3 core goals (stretch)
+☐ Explore 2 advanced features (optional)
+```
+
+### Gamification Integration
+
+```
+🥉 Bronze: Complete 1 core goal
+🥈 Silver: Complete all core goals
+🥇 Gold: Complete goals + 5 optional guides
+💎 Platinum: Master all features
+```
+
+### Analytics Strategy
+
+Track both element-level and goal-level metrics:
+- Which elements get most hovers (need better UX?)
+- Which goals have highest completion (good design)
+- Where do users switch goals mid-way (confusion?)
+- Which "just exploring" users convert to goal-users
+
+---
+
+## Open Questions for Next Session
+
+1. **Goal definition**: What are the 3-4 core goals for EngageKit?
+2. **UI placement**: Where does goal selector appear? Modal? Sidebar header?
+3. **Persistence**: localStorage? Chrome storage? Per-account?
+4. **Expert detection**: Can we auto-detect power users and skip goal selection?
+5. **Goal switching**: How do users change goals mid-session?
+6. **Completion criteria**: What constitutes "goal completed"?
+
+---
+
+## Agent IDs for Resumption
+
+If continuing this analysis, these agent sessions can be resumed:
+
+- **Critique Agent (against element-centric)**: `af789cc`
+- **UX Research (against element-centric)**: `ae285e1`
+- **Technical Architecture**: `ab6a21f`
+- **Product Strategy (against element-centric)**: `a490d33`
+- **Devil's Advocate (for element-centric)**: `aa3c802`
+- **UX Research (for element-centric)**: `ac5d559`
+- **Technical Architecture (for element-centric)**: `a529429`
+- **Product Strategy (for element-centric)**: `a5cf78b`
+
+---
+
+## Summary
+
+This plan has evolved from a simple "Learn Mode with hotspots" concept to a comprehensive analysis of discovery architecture. The key insight is that neither pure element-centric nor pure flow-centric is optimal for EngageKit.
+
+**Goal-Centric Discovery** bridges both approaches:
+- Structure without force (goals, not flows)
+- Element-level granularity (hotspots, not steps)
+- User autonomy (choose goal, explore within it)
+- Progressive disclosure (complete goal → see more goals)
+- Gamification hooks (goal completion, feature discovery)
+
+**Next step when resuming**: Define the 3-4 core goals for EngageKit users and design the goal selection UI.
