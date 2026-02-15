@@ -16,8 +16,18 @@ export function recordSuccess(): void {
 /**
  * Record a failed send. Increments counter and pauses after 3 failures.
  * @param pauseMinutes - How many minutes to pause (from settings). Defaults to 60.
+ * @param isRateLimit - If true, pause immediately without waiting for 3 failures.
  */
-export function recordFailure(pauseMinutes: number = 60): void {
+export function recordFailure(pauseMinutes: number = 60, isRateLimit: boolean = false): void {
+  if (isRateLimit) {
+    const pauseMs = pauseMinutes * 60 * 1000;
+    pausedUntil = Date.now() + pauseMs;
+    console.warn(
+      `xBooster: Rate limit detected. Pausing all sends immediately for ${pauseMinutes} minutes until ${new Date(pausedUntil).toLocaleTimeString()}`
+    );
+    return;
+  }
+
   consecutiveFailures++;
 
   if (consecutiveFailures >= 3) {

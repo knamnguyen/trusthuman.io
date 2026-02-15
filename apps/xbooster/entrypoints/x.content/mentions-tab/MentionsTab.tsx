@@ -21,6 +21,7 @@ import {
 } from "../utils/parse-notifications";
 import { generateReply } from "../utils/ai-reply";
 import { navigateX } from "../utils/navigate-x";
+import { hasCaption } from "../utils/tweet-filters";
 import { useAutoRun } from "../hooks/use-auto-run";
 import { useCountdown, formatCountdown } from "../hooks/use-countdown";
 import type { MentionData } from "../stores/mentions-store";
@@ -85,7 +86,9 @@ export function MentionsTab() {
     (m) =>
       isMentionFresh(m.timestamp) &&
       m.conversationId === m.inReplyToStatusId &&
-      !isAlreadyReplied(m.tweetId),
+      !isAlreadyReplied(m.tweetId) &&
+      (!settings.skipMentionsWithReplies || m.replyCount === 0) &&
+      (!settings.skipNoCaption || hasCaption(m.text)),
   );
 
   // Count pending replies that can be sent
@@ -130,7 +133,9 @@ export function MentionsTab() {
 
     try {
       // 1. Fetch notifications
-      const notifResult = await fetchNotifications();
+      // Overfetch to compensate for filtering (4x target, capped at 200)
+      const rawFetchCount = Math.min(currentSettings.fetchCount * 4, 200);
+      const notifResult = await fetchNotifications(rawFetchCount);
       if (!notifResult.success) throw new Error(notifResult.message);
 
       const parsed = parseNotificationEntries(notifResult.data);
@@ -141,8 +146,10 @@ export function MentionsTab() {
         (m) =>
           isFresh(m.timestamp) &&
           m.conversationId === m.inReplyToStatusId &&
-          !isAlreadyReplied(m.tweetId),
-      );
+          !isAlreadyReplied(m.tweetId) &&
+          (!currentSettings.skipMentionsWithReplies || m.replyCount === 0) &&
+          (!currentSettings.skipNoCaption || hasCaption(m.text)),
+      ).slice(0, currentSettings.fetchCount);
 
       const uniqueConversationIds = [
         ...new Set(actionable.map((m) => m.conversationId)),
@@ -196,7 +203,11 @@ export function MentionsTab() {
       await new Promise((r) => setTimeout(r, 2000));
 
       // Use DOM manipulation instead of GraphQL API (mimic request) to avoid detection
-      const result = await postTweetViaDOM(reply.text);
+      const s = useSettingsStore.getState().settings;
+      const result = await postTweetViaDOM(reply.text, "mention", {
+        confirmByNavigation: s.confirmTweetByNavigation,
+        confirmWaitSeconds: s.confirmWaitSeconds,
+      });
       // const result = await postTweet(reply.text, mention.tweetId);
       if (result.success) {
         markSent(mention.tweetId);
@@ -332,6 +343,7 @@ export function MentionsTab() {
               handleGenerateReply(mention, cached?.text ?? mention.text);
             }}
             onSend={() => handleSendReply(mention)}
+            onRemove={() => markSent(mention.tweetId)}
           />
         ))}
 

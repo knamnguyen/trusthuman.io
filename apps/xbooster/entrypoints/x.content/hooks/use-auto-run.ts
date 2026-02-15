@@ -12,6 +12,7 @@ import {
 import { fetchNotifications, getTweetDetail } from "../utils/x-api";
 import { postTweetViaDOM } from "../utils/dom-reply";
 import { isPaused, recordSuccess, recordFailure } from "../utils/send-guard";
+import { hasCaption } from "../utils/tweet-filters";
 import { useReplyHistoryStore } from "../utils/reply-history-store";
 
 type AutoRunStatus = "idle" | "fetching" | "generating" | "sending" | "send-delay" | "waiting" | "rate-limited";
@@ -29,6 +30,30 @@ interface AutoRunState {
 
 function randomBetween(min: number, max: number): number {
   return Math.random() * (max - min) + min;
+}
+
+// === Auto-run state persistence helpers (for crash recovery) ===
+
+async function saveAutoRunState(mentionsRunning?: boolean, engageRunning?: boolean): Promise<void> {
+  try {
+    await chrome.runtime.sendMessage({
+      action: "save-auto-run-state",
+      mentionsRunning,
+      engageRunning,
+    });
+  } catch (err) {
+    console.error("xBooster: Failed to save auto-run state:", err);
+  }
+}
+
+async function getAutoRunState(): Promise<{ mentionsRunning: boolean; engageRunning: boolean } | null> {
+  try {
+    const response = await chrome.runtime.sendMessage({ action: "get-auto-run-state" });
+    return response?.state ?? null;
+  } catch (err) {
+    console.error("xBooster: Failed to get auto-run state:", err);
+    return null;
+  }
 }
 
 export function useAutoRun() {
@@ -68,23 +93,27 @@ export function useAutoRun() {
     let sentCount = 0;
 
     try {
-      // 1. Fetch notifications
+      // 1. Fetch notifications (with pagination, overfetch 4x to compensate for filtering)
       setStatus("fetching");
-      const notifResult = await fetchNotifications(settings.fetchCount);
+      const rawFetchCount = Math.min(settings.fetchCount * 4, 200);
+      const fetchAbort = new AbortController();
+      const notifResult = await fetchNotifications(rawFetchCount, fetchAbort.signal);
       if (!notifResult.success) throw new Error(notifResult.message);
       if (abortRef.current) return;
 
       const parsed = parseNotificationEntries(notifResult.data);
       mentionsStore.setMentions(parsed);
 
-      // 2. Filter to actionable mentions (within max age, direct reply, not already replied)
+      // 2. Filter to actionable mentions (within max age, direct reply, not already replied, no existing replies)
       const maxAgeMs = settings.maxMentionAgeMinutes * 60 * 1000;
       const actionable = parsed.filter(
         (m) =>
           (!m.timestamp || Date.now() - new Date(m.timestamp).getTime() < maxAgeMs) &&
           m.conversationId === m.inReplyToStatusId &&
-          !repliesStore.isAlreadyReplied(m.tweetId),
-      );
+          !repliesStore.isAlreadyReplied(m.tweetId) &&
+          (!settings.skipMentionsWithReplies || m.replyCount === 0) &&
+          (!settings.skipNoCaption || hasCaption(m.text)),
+      ).slice(0, settings.fetchCount);
 
       if (actionable.length === 0) {
         setStatus("waiting", {
@@ -164,64 +193,73 @@ export function useAutoRun() {
         return;
       }
 
-      const sendableCount = Math.min(actionable.length, settings.maxSendsPerCycle);
-      for (let i = 0; i < sendableCount; i++) {
-        if (abortRef.current) return;
+      const setSendLock = (window as any).__xbooster_setSendLock as ((isActive: boolean) => void) | undefined;
+      setSendLock?.(true);
 
-        const mention = actionable[i]!;
-        const reply = useRepliesStore.getState().replies[mention.tweetId];
-        if (!reply?.text.trim() || reply.status !== "ready") continue;
+      try {
+        const sendableCount = Math.min(actionable.length, settings.maxSendsPerCycle);
+        for (let i = 0; i < sendableCount; i++) {
+          if (abortRef.current) return;
 
-        repliesStore.setReply(mention.tweetId, { status: "sending" });
+          const mention = actionable[i]!;
+          const reply = useRepliesStore.getState().replies[mention.tweetId];
+          if (!reply?.text.trim() || reply.status !== "ready") continue;
 
-        // Navigate to tweet page for DOM manipulation
-        const tweetPath = `/${mention.authorHandle}/status/${mention.tweetId}`;
-        navigateX(tweetPath);
-        await new Promise((r) => setTimeout(r, 2000));
-        if (abortRef.current) return;
+          repliesStore.setReply(mention.tweetId, { status: "sending" });
 
-        // Use DOM manipulation instead of GraphQL API (mimic request) to avoid detection
-        const result = await postTweetViaDOM(reply.text);
-        // const result = await postTweet(reply.text, mention.tweetId);
-        if (result.success) {
-          repliesStore.markSent(mention.tweetId);
-          recordSuccess(); // Reset failure counter
-          sentCount++;
+          // Navigate to tweet page for DOM manipulation
+          const tweetPath = `/${mention.authorHandle}/status/${mention.tweetId}`;
+          navigateX(tweetPath);
+          await new Promise((r) => setTimeout(r, 2000));
+          if (abortRef.current) return;
 
-          // Save to conversation history
-          const cached = mentionsStore.getCachedTweet(mention.conversationId);
-          await useReplyHistoryStore.getState().addEntry({
-            tweetId: mention.tweetId,
-            repliedAt: Date.now(),
-            authorHandle: mention.authorHandle,
-            authorName: mention.authorName,
-            theirText: mention.text,
-            ourReply: reply.text,
-            parentTweetText: cached?.text,
-            mode: "MENTION",
+          // Use DOM manipulation instead of GraphQL API (mimic request) to avoid detection
+          const result = await postTweetViaDOM(reply.text, "mention", {
+            confirmByNavigation: settings.confirmTweetByNavigation,
+            confirmWaitSeconds: settings.confirmWaitSeconds,
           });
-        } else {
-          repliesStore.setReply(mention.tweetId, {
-            status: "error",
-            error: result.message ?? "Failed to send reply",
-          });
-          recordFailure(settings.failPauseMinutes); // Increment failure counter
+          if (result.success) {
+            repliesStore.markSent(mention.tweetId);
+            recordSuccess(); // Reset failure counter
+            sentCount++;
 
-          // Check if now paused and break loop
-          if (isPaused()) {
-            setStatus("rate-limited");
-            break;
+            // Save to conversation history
+            const cached = mentionsStore.getCachedTweet(mention.conversationId);
+            await useReplyHistoryStore.getState().addEntry({
+              tweetId: mention.tweetId,
+              repliedAt: Date.now(),
+              authorHandle: mention.authorHandle,
+              authorName: mention.authorName,
+              theirText: mention.text,
+              ourReply: reply.text,
+              parentTweetText: cached?.text,
+              mode: "MENTION",
+            });
+          } else {
+            repliesStore.setReply(mention.tweetId, {
+              status: "error",
+              error: result.message ?? "Failed to send reply",
+            });
+            recordFailure(settings.failPauseMinutes, result.isRateLimit); // Increment failure counter
+
+            // Check if now paused and break loop
+            if (isPaused()) {
+              setStatus("rate-limited");
+              break;
+            }
+          }
+
+          // Random delay between sends (skip after last)
+          if (i < sendableCount - 1) {
+            const delay =
+              randomBetween(settings.sendDelayMin, settings.sendDelayMax) * 60 * 1000;
+            setState((prev) => ({ ...prev, status: "send-delay", delayUntil: Date.now() + delay }));
+            await new Promise((r) => setTimeout(r, delay));
+            setState((prev) => ({ ...prev, status: "sending", delayUntil: null }));
           }
         }
-
-        // Random delay between sends (skip after last)
-        if (i < sendableCount - 1) {
-          const delay =
-            randomBetween(settings.sendDelayMin, settings.sendDelayMax) * 60 * 1000;
-          setState((prev) => ({ ...prev, status: "send-delay", delayUntil: Date.now() + delay }));
-          await new Promise((r) => setTimeout(r, delay));
-          setState((prev) => ({ ...prev, status: "sending", delayUntil: null }));
-        }
+      } finally {
+        setSendLock?.(false);
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -264,6 +302,9 @@ export function useAutoRun() {
       cycleCount: 0,
     }));
 
+    // Save state for crash recovery
+    await saveAutoRunState(true, undefined);
+
     // Load settings and history if not loaded
     const settingsStore = useSettingsStore.getState();
     if (!settingsStore.isLoaded) await settingsStore.loadSettings();
@@ -288,6 +329,9 @@ export function useAutoRun() {
       nextRunAt: null,
       delayUntil: null,
     }));
+
+    // Clear state for crash recovery
+    saveAutoRunState(false, undefined);
   }, []);
 
   // Cleanup on unmount
@@ -297,6 +341,18 @@ export function useAutoRun() {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
   }, []);
+
+  // Auto-resume on mount if was running before crash
+  useEffect(() => {
+    const checkAutoResume = async () => {
+      const savedState = await getAutoRunState();
+      if (savedState?.mentionsRunning) {
+        console.log("xBooster: Auto-resuming mentions auto-run after crash recovery");
+        start();
+      }
+    };
+    checkAutoResume();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return { ...state, start, stop };
 }

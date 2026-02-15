@@ -11,6 +11,26 @@ export default defineContentScript({
   cssInjectionMode: "ui",
 
   async main(ctx) {
+    // === HEARTBEAT RESPONDER ===
+    let isSendingActive = false;
+
+    chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+      if (message.action === "ping") {
+        sendResponse({ pong: true });
+        return false;
+      }
+
+      if (message.action === "check-send-lock") {
+        sendResponse({ isSending: isSendingActive });
+        return false;
+      }
+    });
+
+    // Export send-lock setter globally so auto-run hooks can update it
+    (window as any).__xbooster_setSendLock = (isActive: boolean) => {
+      isSendingActive = isActive;
+    };
+
     const ui = await createShadowRootUi(ctx, {
       name: "xbooster-sidebar",
       position: "overlay",

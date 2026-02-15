@@ -24,6 +24,14 @@ export interface XBoosterSettings {
   maxMentionAgeMinutes: number;
   /** Minutes to pause after 3 consecutive send failures */
   failPauseMinutes: number;
+  /** Navigate to posted tweet to confirm X processed it */
+  confirmTweetByNavigation: boolean;
+  /** How long to wait on the tweet page for confirmation (seconds) */
+  confirmWaitSeconds: number;
+  /** Skip mentions that already have at least 1 reply */
+  skipMentionsWithReplies: boolean;
+  /** Skip mentions/tweets that have no meaningful text (image/link only) */
+  skipNoCaption: boolean;
 }
 
 const DEFAULT_SETTINGS: XBoosterSettings = {
@@ -39,6 +47,10 @@ const DEFAULT_SETTINGS: XBoosterSettings = {
   repliedRetentionDays: 30,
   maxMentionAgeMinutes: 1440,
   failPauseMinutes: 60,
+  confirmTweetByNavigation: true,
+  confirmWaitSeconds: 3,
+  skipMentionsWithReplies: false,
+  skipNoCaption: false,
 };
 
 interface SettingsStore {
