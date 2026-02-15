@@ -1,4 +1,4 @@
-import { ExternalLink, List, Users } from "lucide-react";
+import { ExternalLink, List, Users, X } from "lucide-react";
 
 import { ReplyEditor } from "../_components/ReplyEditor";
 import { XLink } from "../_components/XLink";
@@ -11,6 +11,7 @@ interface TweetCardProps {
   onTextChange: (text: string) => void;
   onRegenerate: () => void;
   onSend: () => void;
+  onRemove?: () => void;
 }
 
 function relativeTime(timestamp: string): string {
@@ -38,9 +39,20 @@ export function TweetCard({
   onTextChange,
   onRegenerate,
   onSend,
+  onRemove,
 }: TweetCardProps) {
   return (
-    <div className="rounded-lg border p-3 shadow-sm">
+    <div className="relative rounded-lg border p-3 shadow-sm">
+      {/* Remove button */}
+      {onRemove && (
+        <button
+          onClick={onRemove}
+          className="absolute right-1.5 top-1.5 rounded-full p-0.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+          title="Remove from queue"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      )}
       {/* Author info row */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">

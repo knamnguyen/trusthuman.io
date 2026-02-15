@@ -13,6 +13,7 @@ import { Button } from "@sassy/ui/button";
 import { generateReply } from "../utils/ai-reply";
 import { postTweetViaDOM } from "../utils/dom-reply";
 import { navigateX } from "../utils/navigate-x";
+import { hasCaption } from "../utils/tweet-filters";
 import { getCommunityTweets, getListTweets } from "../utils/x-api";
 import { useCountdown, formatCountdown } from "../hooks/use-countdown";
 import { useEngageAutoRun } from "./hooks/use-engage-auto-run";
@@ -91,7 +92,11 @@ export function EngageTab() {
   };
 
   const filteredTweets = tweets.filter(
-    (t) => isTweetFresh(t.timestamp) && !isAlreadyReplied(t.tweetId),
+    (t) =>
+      isTweetFresh(t.timestamp) &&
+      !isAlreadyReplied(t.tweetId) &&
+      (!settings.skipTweetsWithReplies || t.replyCount === 0) &&
+      (!settings.skipNoCaption || hasCaption(t.text)),
   );
 
   // Count pending replies that can be sent
@@ -144,14 +149,17 @@ export function EngageTab() {
       const allTweets: EngageTweetData[] = [];
       const perSourceErrors: string[] = [];
 
+      // Overfetch to compensate for filtering (4x target, capped at 200)
+      const rawFetchCount = Math.min(currentSettings.fetchCount * 4, 200);
+
       for (const source of currentSources) {
         let result: { success: boolean; data?: unknown; message?: string };
         if (source.type === "list") {
-          result = await getListTweets(source.id, currentSettings.fetchCount);
+          result = await getListTweets(source.id, rawFetchCount);
         } else {
           result = await getCommunityTweets(
             source.id,
-            currentSettings.fetchCount,
+            rawFetchCount,
           );
         }
 
@@ -191,12 +199,14 @@ export function EngageTab() {
 
       setTweets(deduped);
 
-      // Auto-generate AI replies for actionable tweets (parallel)
+      // Auto-generate AI replies for actionable tweets (parallel, capped to target)
       const actionable = deduped.filter(
         (t) =>
           isFresh(t.timestamp) &&
-          !repliesState.isAlreadyReplied(t.tweetId),
-      );
+          !repliesState.isAlreadyReplied(t.tweetId) &&
+          (!currentSettings.skipTweetsWithReplies || t.replyCount === 0) &&
+          (!currentSettings.skipNoCaption || hasCaption(t.text)),
+      ).slice(0, currentSettings.fetchCount);
 
       await Promise.all(actionable.map((tweet) => handleGenerateReply(tweet)));
     } catch (err) {
@@ -223,7 +233,11 @@ export function EngageTab() {
       await new Promise((r) => setTimeout(r, 2000));
 
       // Use DOM manipulation to post reply (target first reply button for original tweets)
-      const result = await postTweetViaDOM(reply.text, "original");
+      const s = useEngageSettingsStore.getState().settings;
+      const result = await postTweetViaDOM(reply.text, "original", {
+        confirmByNavigation: s.confirmTweetByNavigation,
+        confirmWaitSeconds: s.confirmWaitSeconds,
+      });
       if (result.success) {
         markSent(tweet.tweetId);
       } else {
@@ -391,6 +405,7 @@ export function EngageTab() {
             onTextChange={(text) => updateReplyText(tweet.tweetId, text)}
             onRegenerate={() => handleGenerateReply(tweet)}
             onSend={() => handleSendReply(tweet)}
+            onRemove={() => markSent(tweet.tweetId)}
           />
         ))}
 

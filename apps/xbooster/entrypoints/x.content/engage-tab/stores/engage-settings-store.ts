@@ -27,6 +27,14 @@ export interface EngageSettings {
   maxTweetAgeMinutes: number;
   /** Minutes to pause after 3 consecutive send failures */
   failPauseMinutes: number;
+  /** Navigate to posted tweet to confirm X processed it */
+  confirmTweetByNavigation: boolean;
+  /** How long to wait on the tweet page for confirmation (seconds) */
+  confirmWaitSeconds: number;
+  /** Skip tweets that already have at least 1 reply */
+  skipTweetsWithReplies: boolean;
+  /** Skip tweets that have no meaningful text (image/link only) */
+  skipNoCaption: boolean;
 }
 
 const DEFAULT_ENGAGE_SETTINGS: EngageSettings = {
@@ -44,6 +52,10 @@ const DEFAULT_ENGAGE_SETTINGS: EngageSettings = {
   repliedRetentionDays: 30,
   maxTweetAgeMinutes: 1440,
   failPauseMinutes: 60,
+  confirmTweetByNavigation: true,
+  confirmWaitSeconds: 3,
+  skipTweetsWithReplies: false,
+  skipNoCaption: false,
 };
 
 interface EngageSettingsStore {

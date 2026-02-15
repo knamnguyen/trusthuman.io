@@ -145,47 +145,172 @@ async function buildHeaders(
 }
 
 /**
+ * Count non-cursor tweet entries from a single page response.
+ * Used to track actual tweet count for pagination loop termination.
+ */
+function countPageEntries(data: unknown): number {
+  try {
+    const paths = [
+      (data as any)?.data?.viewer_v2?.user_results?.result?.notification_timeline?.timeline?.instructions,
+      (data as any)?.data?.list?.tweets_timeline?.timeline?.instructions,
+      (data as any)?.data?.communityResults?.result?.ranked_community_timeline?.timeline?.instructions,
+    ];
+
+    for (const instructions of paths) {
+      if (!Array.isArray(instructions)) continue;
+      for (const inst of instructions) {
+        if (inst.type !== "TimelineAddEntries") continue;
+        const entries = inst.entries;
+        if (!Array.isArray(entries)) return 0;
+        return entries.filter((e: any) => !e.entryId?.startsWith("cursor-")).length;
+      }
+    }
+    return 0;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * Extract bottom cursor from X GraphQL timeline response.
+ * Works for NotificationsTimeline, ListLatestTweetsTimeline, and CommunityTweetsTimeline.
+ * Returns null if no cursor found (end of timeline).
+ */
+function extractCursor(data: unknown): string | null {
+  try {
+    // Try all known instruction paths
+    const paths = [
+      // NotificationsTimeline
+      (data as any)?.data?.viewer_v2?.user_results?.result?.notification_timeline?.timeline?.instructions,
+      // ListLatestTweetsTimeline
+      (data as any)?.data?.list?.tweets_timeline?.timeline?.instructions,
+      // CommunityTweetsTimeline
+      (data as any)?.data?.communityResults?.result?.ranked_community_timeline?.timeline?.instructions,
+    ];
+
+    for (const instructions of paths) {
+      if (!Array.isArray(instructions)) continue;
+      for (const inst of instructions) {
+        if (inst.type !== "TimelineAddEntries") continue;
+        const entries = inst.entries;
+        if (!Array.isArray(entries)) continue;
+        for (let i = entries.length - 1; i >= 0; i--) {
+          const entry = entries[i];
+          if (entry.entryId?.startsWith("cursor-bottom-") || entry.entryId?.startsWith("cursor-")) {
+            return entry.content?.value ?? null;
+          }
+        }
+      }
+    }
+
+    return null;
+  } catch (err) {
+    console.error("xBooster: extractCursor error:", err);
+    return null;
+  }
+}
+
+/**
  * Fetch mentions from X.com NotificationsTimeline
  */
-export async function fetchNotifications(count = 40): Promise<{
+export async function fetchNotifications(
+  count = 40,
+  abortSignal?: AbortSignal,
+): Promise<{
   success: boolean;
   data?: unknown;
   message?: string;
 }> {
   try {
     const queryId = await getQueryId("NotificationsTimeline");
+    let cursor: string | null = null;
+    const allData: unknown[] = [];
+    let totalEntries = 0;
 
-    const variables = {
-      timeline_type: "Mentions",
-      cursor: null,
-      count,
-    };
+    while (totalEntries < count) {
+      if (abortSignal?.aborted) {
+        console.log("xBooster: fetchNotifications aborted mid-fetch");
+        break;
+      }
 
-    const url = `/i/api/graphql/${queryId}/NotificationsTimeline?variables=${encodeURIComponent(
-      JSON.stringify(variables),
-    )}&features=${encodeURIComponent(JSON.stringify(FEATURES))}`;
+      const variables: Record<string, unknown> = {
+        timeline_type: "Mentions",
+        count: Math.min(40, count - totalEntries),
+      };
+      if (cursor) {
+        variables.cursor = cursor;
+      }
 
-    const headers = await buildHeaders(
-      "https://x.com/notifications",
-      "GET",
-      `/i/api/graphql/${queryId}/NotificationsTimeline`,
-    );
+      const url = `/i/api/graphql/${queryId}/NotificationsTimeline?variables=${encodeURIComponent(
+        JSON.stringify(variables),
+      )}&features=${encodeURIComponent(JSON.stringify(FEATURES))}`;
 
-    const res = await fetch(url, {
-      method: "GET",
-      credentials: "include",
-      headers,
-    });
+      const headers = await buildHeaders(
+        "https://x.com/notifications",
+        "GET",
+        `/i/api/graphql/${queryId}/NotificationsTimeline`,
+      );
 
-    if (!res.ok) {
-      const err = await res.text();
-      throw new Error(`HTTP ${res.status}: ${err}`);
+      const res = await fetch(url, {
+        method: "GET",
+        credentials: "include",
+        headers,
+      });
+
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(`HTTP ${res.status}: ${err}`);
+      }
+
+      const json = await res.json();
+      if (json.errors) throw new Error(JSON.stringify(json.errors));
+
+      const pageEntries = countPageEntries(json);
+      allData.push(json);
+      totalEntries += pageEntries;
+
+      const nextCursor = extractCursor(json);
+      if (!nextCursor || pageEntries === 0) {
+        console.log(`xBooster: fetchNotifications - No more pages (${allData.length} pages, ${totalEntries} entries)`);
+        break;
+      }
+
+      cursor = nextCursor;
+      console.log(`xBooster: fetchNotifications - Page ${allData.length}: +${pageEntries} entries (total: ${totalEntries}/${count})`);
     }
 
-    const json = await res.json();
-    if (json.errors) throw new Error(JSON.stringify(json.errors));
+    if (allData.length === 0) {
+      return { success: true, data: { data: null } };
+    }
 
-    return { success: true, data: json };
+    if (allData.length === 1) {
+      return { success: true, data: allData[0] };
+    }
+
+    // Merge multiple pages: combine instructions.entries arrays
+    const merged = JSON.parse(JSON.stringify(allData[0]));
+    const mergedInstructions = merged?.data?.viewer_v2?.user_results?.result?.notification_timeline?.timeline?.instructions;
+
+    if (Array.isArray(mergedInstructions)) {
+      const addEntriesIdx = mergedInstructions.findIndex((i: any) => i.type === "TimelineAddEntries");
+      if (addEntriesIdx !== -1) {
+        for (let i = 1; i < allData.length; i++) {
+          const pageInstructions = (allData[i] as any)?.data?.viewer_v2?.user_results?.result?.notification_timeline?.timeline?.instructions;
+          if (Array.isArray(pageInstructions)) {
+            const pageAddEntries = pageInstructions.find((inst: any) => inst.type === "TimelineAddEntries");
+            if (pageAddEntries?.entries) {
+              const nonCursorEntries = pageAddEntries.entries.filter(
+                (e: any) => !e.entryId?.startsWith("cursor-"),
+              );
+              mergedInstructions[addEntriesIdx].entries.push(...nonCursorEntries);
+            }
+          }
+        }
+      }
+    }
+
+    console.log(`xBooster: fetchNotifications - Merged ${allData.length} pages`);
+    return { success: true, data: merged };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("xBooster: fetchNotifications error:", message);
@@ -327,40 +452,98 @@ export async function postTweet(
 export async function getListTweets(
   listId: string,
   count = 20,
+  abortSignal?: AbortSignal,
 ): Promise<{ success: boolean; data?: unknown; message?: string }> {
   try {
     const queryId = await getQueryId("ListLatestTweetsTimeline");
+    let cursor: string | null = null;
+    const allData: unknown[] = [];
+    let totalEntries = 0;
 
-    const variables = {
-      listId,
-      count,
-    };
+    while (totalEntries < count) {
+      if (abortSignal?.aborted) {
+        console.log("xBooster: getListTweets aborted mid-fetch");
+        break;
+      }
 
-    const url = `/i/api/graphql/${queryId}/ListLatestTweetsTimeline?variables=${encodeURIComponent(
-      JSON.stringify(variables),
-    )}&features=${encodeURIComponent(JSON.stringify(FEATURES))}`;
+      const variables: Record<string, unknown> = {
+        listId,
+        count: Math.min(40, count - totalEntries),
+      };
+      if (cursor) {
+        variables.cursor = cursor;
+      }
 
-    const headers = await buildHeaders(
-      "https://x.com",
-      "GET",
-      `/i/api/graphql/${queryId}/ListLatestTweetsTimeline`,
-    );
+      const url = `/i/api/graphql/${queryId}/ListLatestTweetsTimeline?variables=${encodeURIComponent(
+        JSON.stringify(variables),
+      )}&features=${encodeURIComponent(JSON.stringify(FEATURES))}`;
 
-    const res = await fetch(url, {
-      method: "GET",
-      credentials: "include",
-      headers,
-    });
+      const headers = await buildHeaders(
+        "https://x.com",
+        "GET",
+        `/i/api/graphql/${queryId}/ListLatestTweetsTimeline`,
+      );
 
-    if (!res.ok) {
-      const err = await res.text();
-      throw new Error(`HTTP ${res.status}: ${err}`);
+      const res = await fetch(url, {
+        method: "GET",
+        credentials: "include",
+        headers,
+      });
+
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(`HTTP ${res.status}: ${err}`);
+      }
+
+      const json = await res.json();
+      if (json.errors) throw new Error(JSON.stringify(json.errors));
+
+      const pageEntries = countPageEntries(json);
+      allData.push(json);
+      totalEntries += pageEntries;
+
+      const nextCursor = extractCursor(json);
+      if (!nextCursor || pageEntries === 0) {
+        console.log(`xBooster: getListTweets - No more pages (${allData.length} pages, ${totalEntries} entries)`);
+        break;
+      }
+
+      cursor = nextCursor;
+      console.log(`xBooster: getListTweets - Page ${allData.length}: +${pageEntries} entries (total: ${totalEntries}/${count})`);
     }
 
-    const json = await res.json();
-    if (json.errors) throw new Error(JSON.stringify(json.errors));
+    if (allData.length === 0) {
+      return { success: true, data: { data: null } };
+    }
 
-    return { success: true, data: json };
+    if (allData.length === 1) {
+      return { success: true, data: allData[0] };
+    }
+
+    // Merge pages
+    const merged = JSON.parse(JSON.stringify(allData[0]));
+    const mergedInstructions = merged?.data?.list?.tweets_timeline?.timeline?.instructions;
+
+    if (Array.isArray(mergedInstructions)) {
+      const addEntriesIdx = mergedInstructions.findIndex((i: any) => i.type === "TimelineAddEntries");
+      if (addEntriesIdx !== -1) {
+        for (let i = 1; i < allData.length; i++) {
+          const pageInstructions = (allData[i] as any)?.data?.list?.tweets_timeline?.timeline?.instructions;
+          if (Array.isArray(pageInstructions)) {
+            const pageAddEntries = pageInstructions.find((inst: any) => inst.type === "TimelineAddEntries");
+            if (pageAddEntries?.entries) {
+              const nonCursorEntries = pageAddEntries.entries.filter(
+                (e: any) => !e.entryId?.startsWith("cursor-"),
+              );
+              mergedInstructions[addEntriesIdx].entries.push(...nonCursorEntries);
+            }
+          }
+        }
+      }
+    }
+
+    console.log(`xBooster: getListTweets - Merged ${allData.length} pages`);
+    return { success: true, data: merged };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("xBooster: getListTweets error:", message);
@@ -374,43 +557,101 @@ export async function getListTweets(
 export async function getCommunityTweets(
   communityId: string,
   count = 20,
+  abortSignal?: AbortSignal,
 ): Promise<{ success: boolean; data?: unknown; message?: string }> {
   try {
     const queryId = await getQueryId("CommunityTweetsTimeline");
+    let cursor: string | null = null;
+    const allData: unknown[] = [];
+    let totalEntries = 0;
 
-    const variables = {
-      communityId,
-      count,
-      displayLocation: "Community",
-      rankingMode: "Recency",
-      withCommunity: true,
-    };
+    while (totalEntries < count) {
+      if (abortSignal?.aborted) {
+        console.log("xBooster: getCommunityTweets aborted mid-fetch");
+        break;
+      }
 
-    const url = `/i/api/graphql/${queryId}/CommunityTweetsTimeline?variables=${encodeURIComponent(
-      JSON.stringify(variables),
-    )}&features=${encodeURIComponent(JSON.stringify(FEATURES))}`;
+      const variables: Record<string, unknown> = {
+        communityId,
+        count: Math.min(40, count - totalEntries),
+        displayLocation: "Community",
+        rankingMode: "Recency",
+        withCommunity: true,
+      };
+      if (cursor) {
+        variables.cursor = cursor;
+      }
 
-    const headers = await buildHeaders(
-      "https://x.com",
-      "GET",
-      `/i/api/graphql/${queryId}/CommunityTweetsTimeline`,
-    );
+      const url = `/i/api/graphql/${queryId}/CommunityTweetsTimeline?variables=${encodeURIComponent(
+        JSON.stringify(variables),
+      )}&features=${encodeURIComponent(JSON.stringify(FEATURES))}`;
 
-    const res = await fetch(url, {
-      method: "GET",
-      credentials: "include",
-      headers,
-    });
+      const headers = await buildHeaders(
+        "https://x.com",
+        "GET",
+        `/i/api/graphql/${queryId}/CommunityTweetsTimeline`,
+      );
 
-    if (!res.ok) {
-      const err = await res.text();
-      throw new Error(`HTTP ${res.status}: ${err}`);
+      const res = await fetch(url, {
+        method: "GET",
+        credentials: "include",
+        headers,
+      });
+
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(`HTTP ${res.status}: ${err}`);
+      }
+
+      const json = await res.json();
+      if (json.errors) throw new Error(JSON.stringify(json.errors));
+
+      const pageEntries = countPageEntries(json);
+      allData.push(json);
+      totalEntries += pageEntries;
+
+      const nextCursor = extractCursor(json);
+      if (!nextCursor || pageEntries === 0) {
+        console.log(`xBooster: getCommunityTweets - No more pages (${allData.length} pages, ${totalEntries} entries)`);
+        break;
+      }
+
+      cursor = nextCursor;
+      console.log(`xBooster: getCommunityTweets - Page ${allData.length}: +${pageEntries} entries (total: ${totalEntries}/${count})`);
     }
 
-    const json = await res.json();
-    if (json.errors) throw new Error(JSON.stringify(json.errors));
+    if (allData.length === 0) {
+      return { success: true, data: { data: null } };
+    }
 
-    return { success: true, data: json };
+    if (allData.length === 1) {
+      return { success: true, data: allData[0] };
+    }
+
+    // Merge pages
+    const merged = JSON.parse(JSON.stringify(allData[0]));
+    const mergedInstructions = merged?.data?.communityResults?.result?.ranked_community_timeline?.timeline?.instructions;
+
+    if (Array.isArray(mergedInstructions)) {
+      const addEntriesIdx = mergedInstructions.findIndex((i: any) => i.type === "TimelineAddEntries");
+      if (addEntriesIdx !== -1) {
+        for (let i = 1; i < allData.length; i++) {
+          const pageInstructions = (allData[i] as any)?.data?.communityResults?.result?.ranked_community_timeline?.timeline?.instructions;
+          if (Array.isArray(pageInstructions)) {
+            const pageAddEntries = pageInstructions.find((inst: any) => inst.type === "TimelineAddEntries");
+            if (pageAddEntries?.entries) {
+              const nonCursorEntries = pageAddEntries.entries.filter(
+                (e: any) => !e.entryId?.startsWith("cursor-"),
+              );
+              mergedInstructions[addEntriesIdx].entries.push(...nonCursorEntries);
+            }
+          }
+        }
+      }
+    }
+
+    console.log(`xBooster: getCommunityTweets - Merged ${allData.length} pages`);
+    return { success: true, data: merged };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("xBooster: getCommunityTweets error:", message);

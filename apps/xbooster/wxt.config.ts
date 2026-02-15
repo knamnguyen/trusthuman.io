@@ -26,7 +26,7 @@ export default defineConfig({
     name: "xBooster",
     description: "X/Twitter Engagement Automation",
     version: "0.1.0",
-    permissions: ["storage", "tabs", "cookies", "webRequest"],
+    permissions: ["storage", "tabs", "cookies", "webRequest", "alarms"],
     host_permissions: [
       "https://*.x.com/*",
       "https://x.com/*",

@@ -17,6 +17,7 @@ export interface EngageTweetData {
   authorAvatar: string;
   url: string;
   timestamp: string;
+  replyCount: number;
   sourceId: string;
   sourceType: "list" | "community";
 }
@@ -120,8 +121,9 @@ function parseSingleTweet(
     ? `https://x.com/${authorHandle}/status/${tweetId}`
     : `https://x.com/i/status/${tweetId}`;
 
-  // Extract timestamp
+  // Extract timestamp and reply count
   const timestamp = (legacy.created_at as string) ?? "";
+  const replyCount = (legacy.reply_count as number) ?? 0;
 
   return {
     tweetId,
@@ -131,6 +133,7 @@ function parseSingleTweet(
     authorAvatar,
     url,
     timestamp,
+    replyCount,
     sourceId,
     sourceType,
   };

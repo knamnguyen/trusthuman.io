@@ -1,4 +1,4 @@
-import { ExternalLink, MessageSquare } from "lucide-react";
+import { ExternalLink, MessageSquare, X } from "lucide-react";
 
 import type { MentionData, OriginalTweet } from "../stores/mentions-store";
 import type { ReplyState } from "../stores/replies-store";
@@ -12,6 +12,7 @@ interface MentionCardProps {
   onTextChange: (text: string) => void;
   onRegenerate: () => void;
   onSend: () => void;
+  onRemove?: () => void;
 }
 
 export function MentionCard({
@@ -21,11 +22,23 @@ export function MentionCard({
   onTextChange,
   onRegenerate,
   onSend,
+  onRemove,
 }: MentionCardProps) {
   const tweetUrl = `https://x.com/${mention.authorHandle}/status/${mention.tweetId}`;
 
   return (
-    <div className="rounded-lg border p-3 shadow-sm">
+    <div className="relative rounded-lg border p-3 shadow-sm">
+      {/* Remove button */}
+      {onRemove && (
+        <button
+          onClick={onRemove}
+          className="absolute right-1.5 top-1.5 rounded-full p-0.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+          title="Remove from queue"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      )}
+
       {/* Original tweet context */}
       {originalTweet && (
         <div className="mb-2 rounded-md bg-muted p-2">

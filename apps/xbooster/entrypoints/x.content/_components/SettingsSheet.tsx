@@ -211,9 +211,9 @@ function MentionsSettings({
       </SettingsSection>
 
       {/* Fetch Count */}
-      <SettingsSection title="Fetch Count">
+      <SettingsSection title="Target Tweets">
         <p className="text-xs text-muted-foreground">
-          How many notifications to fetch per API call
+          Target number of filtered tweets to process per fetch
         </p>
         <div className="mt-2 flex items-center gap-2">
           <input
@@ -339,6 +339,81 @@ function MentionsSettings({
           />
           <span className="text-xs text-muted-foreground">min</span>
         </div>
+      </SettingsSection>
+
+      {/* Filtering */}
+      <SettingsSection title="Filtering">
+        <label className="mt-1 flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={settings.skipMentionsWithReplies}
+            onChange={(e) =>
+              updateSettings({
+                skipMentionsWithReplies: e.target.checked,
+              })
+            }
+            className="h-4 w-4 rounded border-input"
+          />
+          <span className="text-xs">
+            Skip mentions that already have replies
+          </span>
+        </label>
+        <label className="mt-1 flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={settings.skipNoCaption}
+            onChange={(e) =>
+              updateSettings({
+                skipNoCaption: e.target.checked,
+              })
+            }
+            className="h-4 w-4 rounded border-input"
+          />
+          <span className="text-xs">
+            Skip tweets with no caption (image/link only)
+          </span>
+        </label>
+      </SettingsSection>
+
+      {/* Tweet Confirmation */}
+      <SettingsSection title="Tweet Confirmation">
+        <p className="text-xs text-muted-foreground">
+          Navigate to posted tweet after sending to confirm X processed it
+        </p>
+        <label className="mt-2 flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={settings.confirmTweetByNavigation}
+            onChange={(e) =>
+              updateSettings({
+                confirmTweetByNavigation: e.target.checked,
+              })
+            }
+            className="h-4 w-4 rounded border-input"
+          />
+          <span className="text-xs">
+            Click posted tweet to verify
+          </span>
+        </label>
+        {settings.confirmTweetByNavigation && (
+          <div className="mt-2 flex items-center gap-2">
+            <Label className="text-xs">Wait:</Label>
+            <input
+              type="number"
+              min="1"
+              max="30"
+              step="1"
+              value={settings.confirmWaitSeconds}
+              onChange={(e) =>
+                updateSettings({
+                  confirmWaitSeconds: parseInt(e.target.value) || 3,
+                })
+              }
+              className="h-8 w-16 rounded-md border border-input bg-background px-2 text-sm"
+            />
+            <span className="text-xs text-muted-foreground">sec</span>
+          </div>
+        )}
       </SettingsSection>
 
       {/* Auto-Prune */}
@@ -543,9 +618,9 @@ function EngageSettingsPanel({
       </SettingsSection>
 
       {/* Tweets Per Fetch */}
-      <SettingsSection title="Tweets Per Fetch">
+      <SettingsSection title="Target Tweets">
         <p className="text-xs text-muted-foreground">
-          How many tweets to request per source per API call
+          Target number of filtered tweets to process per source
         </p>
         <div className="mt-2 flex items-center gap-2">
           <input
@@ -671,6 +746,81 @@ function EngageSettingsPanel({
           />
           <span className="text-xs text-muted-foreground">min</span>
         </div>
+      </SettingsSection>
+
+      {/* Filtering */}
+      <SettingsSection title="Filtering">
+        <label className="mt-1 flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={settings.skipTweetsWithReplies}
+            onChange={(e) =>
+              updateSettings({
+                skipTweetsWithReplies: e.target.checked,
+              })
+            }
+            className="h-4 w-4 rounded border-input"
+          />
+          <span className="text-xs">
+            Skip tweets that already have replies
+          </span>
+        </label>
+        <label className="mt-1 flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={settings.skipNoCaption}
+            onChange={(e) =>
+              updateSettings({
+                skipNoCaption: e.target.checked,
+              })
+            }
+            className="h-4 w-4 rounded border-input"
+          />
+          <span className="text-xs">
+            Skip tweets with no caption (image/link only)
+          </span>
+        </label>
+      </SettingsSection>
+
+      {/* Tweet Confirmation */}
+      <SettingsSection title="Tweet Confirmation">
+        <p className="text-xs text-muted-foreground">
+          Navigate to posted tweet after sending to confirm X processed it
+        </p>
+        <label className="mt-2 flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={settings.confirmTweetByNavigation}
+            onChange={(e) =>
+              updateSettings({
+                confirmTweetByNavigation: e.target.checked,
+              })
+            }
+            className="h-4 w-4 rounded border-input"
+          />
+          <span className="text-xs">
+            Click posted tweet to verify
+          </span>
+        </label>
+        {settings.confirmTweetByNavigation && (
+          <div className="mt-2 flex items-center gap-2">
+            <Label className="text-xs">Wait:</Label>
+            <input
+              type="number"
+              min="1"
+              max="30"
+              step="1"
+              value={settings.confirmWaitSeconds}
+              onChange={(e) =>
+                updateSettings({
+                  confirmWaitSeconds: parseInt(e.target.value) || 3,
+                })
+              }
+              className="h-8 w-16 rounded-md border border-input bg-background px-2 text-sm"
+            />
+            <span className="text-xs text-muted-foreground">sec</span>
+          </div>
+        )}
       </SettingsSection>
 
       {/* History Cleanup */}

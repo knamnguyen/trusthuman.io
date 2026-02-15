@@ -1,3 +1,5 @@
+import { navigateX } from "./navigate-x";
+
 /**
  * Poll for an element to appear in the DOM.
  * @param selector - CSS selector to query
@@ -95,6 +97,60 @@ async function waitForModalClose(timeout: number = 10000): Promise<boolean> {
   });
 }
 
+type PostOutcome =
+  | { type: 'rate-limit'; message: string }
+  | { type: 'success-toast' }
+  | { type: 'modal-closed' }
+  | { type: 'timeout' };
+
+async function waitForPostOutcome(timeout: number = 10000): Promise<PostOutcome> {
+  const startTime = Date.now();
+  console.log(`xBooster: Waiting for post outcome (rate-limit / success-toast / modal-close) (timeout: ${timeout}ms)`);
+
+  await new Promise(r => setTimeout(r, 500)); // Initial delay
+
+  return new Promise((resolve) => {
+    const check = setInterval(() => {
+      // Check for rate limit warning
+      const allSpans = document.querySelectorAll('span');
+      for (const span of allSpans) {
+        const text = span.textContent ?? '';
+        if (text.includes('might be automated')) {
+          clearInterval(check);
+          const elapsed = Date.now() - startTime;
+          console.warn(`xBooster: RATE LIMIT detected after ${elapsed}ms: "${text}"`);
+          resolve({ type: 'rate-limit', message: text });
+          return;
+        }
+        if (text.includes('Your post was sent')) {
+          clearInterval(check);
+          const elapsed = Date.now() - startTime;
+          console.log(`xBooster: SUCCESS TOAST detected after ${elapsed}ms: "${text}"`);
+          resolve({ type: 'success-toast' });
+          return;
+        }
+      }
+
+      // Check for modal close
+      const modal = document.querySelector('[aria-labelledby="modal-header"]');
+      if (!modal) {
+        clearInterval(check);
+        const elapsed = Date.now() - startTime;
+        console.log(`xBooster: Modal closed after ${elapsed}ms (no toast detected)`);
+        resolve({ type: 'modal-closed' });
+        return;
+      }
+
+      // Timeout
+      if (Date.now() - startTime > timeout) {
+        clearInterval(check);
+        console.warn(`xBooster: Post outcome timeout after ${timeout}ms`);
+        resolve({ type: 'timeout' });
+      }
+    }, 300);
+  });
+}
+
 /**
  * Dismiss the reply modal if it's still open (e.g. after a failed attempt).
  * Clicks the close button or presses Escape.
@@ -149,7 +205,8 @@ async function dismissModal(): Promise<void> {
 async function attemptPostTweet(
   tweetText: string,
   target: "mention" | "original",
-): Promise<{ success: boolean; message?: string }> {
+  options?: { confirmByNavigation?: boolean; confirmWaitSeconds?: number },
+): Promise<{ success: boolean; message?: string; isRateLimit?: boolean }> {
   // Snapshot tweet count before submitting (for verification later)
   const tweetCountBefore = document.querySelectorAll('[data-testid="tweet"]').length;
   console.log(`xBooster: Tweet count before submit: ${tweetCountBefore}`);
@@ -231,14 +288,20 @@ async function attemptPostTweet(
   tweetBtn.click();
   console.log("xBooster: Step 4 PASSED - Clicked submit button");
 
-  // Step 5: Verify submission by waiting for modal to close
-  console.log("xBooster: Step 5 - Waiting for modal to close (timeout: 10s)...");
-  const modalClosed = await waitForModalClose(10000);
-  if (!modalClosed) {
-    console.error("xBooster: Step 5 FAILED - Modal did not close after 10s");
-    return { success: false, message: "Modal did not close - submission may have failed" };
+  // Step 5: Wait for post outcome (rate limit / success toast / modal close)
+  console.log("xBooster: Step 5 - Waiting for post outcome (timeout: 10s)...");
+  const outcome = await waitForPostOutcome(10000);
+
+  if (outcome.type === 'rate-limit') {
+    console.error(`xBooster: Step 5 FAILED - Rate limit detected: ${outcome.message}`);
+    return { success: false, message: "Rate limited: " + outcome.message, isRateLimit: true };
   }
-  console.log("xBooster: Step 5 PASSED - Modal closed");
+  if (outcome.type === 'timeout') {
+    console.error("xBooster: Step 5 FAILED - Timeout waiting for post outcome");
+    return { success: false, message: "Timeout - modal did not close and no toast detected" };
+  }
+  // 'success-toast' or 'modal-closed' both mean proceed
+  console.log(`xBooster: Step 5 PASSED - Outcome: ${outcome.type}`);
 
   // Step 6: Verify by matching submitted text against new tweet in DOM
   console.log("xBooster: Step 6 - Waiting 1s for DOM to update, then verifying tweet...");
@@ -263,6 +326,45 @@ async function attemptPostTweet(
     console.warn('xBooster: Step 6 WARN - Modal closed but tweet count unchanged (may still be loading)');
   }
 
+  // Step 7: Optional navigation confirmation (click new tweet to ensure X processed it)
+  console.log(`xBooster: Step 7 check - confirmByNavigation=${options?.confirmByNavigation}, tweetCountIncreased=${tweetsAfter.length > tweetCountBefore} (before=${tweetCountBefore}, after=${tweetsAfter.length})`);
+  if (options?.confirmByNavigation && tweetsAfter.length > tweetCountBefore) {
+    const newTweet = tweetsAfter[1];
+    console.log('xBooster: Step 7 - Navigation confirmation enabled, looking for tweet anchor...');
+
+    if (newTweet) {
+      // Try multiple selectors to find the tweet link
+      const tweetLink = newTweet.querySelector('a[href*="/status/"]') as HTMLAnchorElement | null;
+      console.log(`xBooster: Step 7 - Tweet element found: ${!!newTweet}`);
+      console.log(`xBooster: Step 7 - Looking for anchor with href containing "/status/"...`);
+
+      if (tweetLink) {
+        const href = tweetLink.getAttribute('href') ?? '';
+        const waitMs = (options?.confirmWaitSeconds ?? 3) * 1000;
+        console.log(`xBooster: Step 7 - Found tweet anchor: href="${href}"`);
+        console.log(`xBooster: Step 7 - Clicking tweet anchor to navigate...`);
+
+        tweetLink.click();
+
+        // Wait for tweet page to load (configurable duration)
+        console.log(`xBooster: Step 7 - Waiting ${waitMs}ms for tweet page to load...`);
+        await new Promise(r => setTimeout(r, waitMs));
+        console.log(`xBooster: Step 7 - Current URL after click: ${window.location.pathname}`);
+        console.log('xBooster: Step 7 PASSED - Navigation confirmation complete');
+      } else {
+        // Log all anchors in the tweet for debugging
+        const allAnchors = newTweet.querySelectorAll('a');
+        console.warn(`xBooster: Step 7 - No anchor with "/status/" found in new tweet. Found ${allAnchors.length} anchors:`);
+        allAnchors.forEach((a, i) => {
+          console.log(`xBooster: Step 7 - Anchor[${i}]: href="${a.getAttribute('href')}", text="${a.textContent?.substring(0, 50)}"`);
+        });
+        console.warn('xBooster: Step 7 SKIPPED - Could not find tweet link for navigation confirmation');
+      }
+    } else {
+      console.warn('xBooster: Step 7 SKIPPED - New tweet element not found in DOM');
+    }
+  }
+
   console.log('xBooster: ===== ATTEMPT SUCCEEDED =====');
   return { success: true };
 }
@@ -282,18 +384,19 @@ async function attemptPostTweet(
 export async function postTweetViaDOM(
   text: string,
   target: "mention" | "original" = "mention",
-): Promise<{ success: boolean; message?: string }> {
+  options?: { confirmByNavigation?: boolean; confirmWaitSeconds?: number },
+): Promise<{ success: boolean; message?: string; isRateLimit?: boolean }> {
   const tweetText = text.trim();
   if (!tweetText) return { success: false, message: "Empty tweet" };
 
   const MAX_ATTEMPTS = 3;
-  let lastResult: { success: boolean; message?: string } = { success: false, message: "No attempts made" };
+  let lastResult: { success: boolean; message?: string; isRateLimit?: boolean } = { success: false, message: "No attempts made" };
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     console.log(`xBooster: ========== Attempt ${attempt}/${MAX_ATTEMPTS} ==========`);
 
     try {
-      const result = await attemptPostTweet(tweetText, target);
+      const result = await attemptPostTweet(tweetText, target, options);
 
       if (result.success) {
         console.log(`xBooster: SUCCESS on attempt ${attempt}/${MAX_ATTEMPTS}`);
@@ -302,6 +405,12 @@ export async function postTweetViaDOM(
 
       lastResult = result;
       console.warn(`xBooster: FAILED attempt ${attempt}/${MAX_ATTEMPTS}: ${result.message}`);
+
+      // If rate limited, propagate immediately without retry
+      if (result.isRateLimit) {
+        console.error(`xBooster: Rate limit detected on attempt ${attempt}/${MAX_ATTEMPTS}, stopping retries`);
+        return lastResult;
+      }
 
       // If not the last attempt, dismiss any leftover modal and retry
       if (attempt < MAX_ATTEMPTS) {
