@@ -548,6 +548,21 @@ CREATE TABLE "LinkedInPostPreview" (
 );
 
 -- CreateTable
+CREATE TABLE "HumanVerification" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT,
+    "verified" BOOLEAN NOT NULL,
+    "confidence" DOUBLE PRECISION NOT NULL,
+    "faceCount" INTEGER NOT NULL,
+    "rawResponse" JSONB NOT NULL,
+    "actionType" TEXT NOT NULL DEFAULT 'linkedin_comment',
+    "actionUrl" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "HumanVerification_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "firstName" TEXT,
@@ -697,6 +712,12 @@ CREATE INDEX "LinkedInPostPreview_userId_idx" ON "LinkedInPostPreview"("userId")
 CREATE INDEX "LinkedInPostPreview_createdAt_idx" ON "LinkedInPostPreview"("createdAt");
 
 -- CreateIndex
+CREATE INDEX "HumanVerification_userId_idx" ON "HumanVerification"("userId");
+
+-- CreateIndex
+CREATE INDEX "HumanVerification_createdAt_idx" ON "HumanVerification"("createdAt");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
 
 -- CreateIndex
@@ -818,4 +839,7 @@ ALTER TABLE "CommentAnalysis" ADD CONSTRAINT "CommentAnalysis_userId_fkey" FOREI
 
 -- AddForeignKey
 ALTER TABLE "LinkedInPostPreview" ADD CONSTRAINT "LinkedInPostPreview_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "HumanVerification" ADD CONSTRAINT "HumanVerification_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 

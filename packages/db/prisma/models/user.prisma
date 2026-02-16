@@ -28,4 +28,7 @@ model User {
 
   // Weekly analytics email preferences
   emailPreferences UserEmailPreferences?
+
+  // Trust a Human verifications
+  humanVerifications HumanVerification[]
 }

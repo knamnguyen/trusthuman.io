@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Trust a Human - Camera Setup</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 480px; margin: 60px auto; padding: 0 20px; }
+      h1 { font-size: 1.5rem; }
+      #status { margin: 20px 0; padding: 12px; border-radius: 8px; }
+      .pending { background: #fef3c7; color: #92400e; }
+      .granted { background: #d1fae5; color: #065f46; }
+      .denied { background: #fee2e2; color: #991b1b; }
+      button { background: #16a34a; color: white; border: none; padding: 10px 24px; border-radius: 6px; font-size: 1rem; cursor: pointer; }
+      button:hover { background: #15803d; }
+      button:disabled { background: #9ca3af; cursor: not-allowed; }
+    </style>
+  </head>
+  <body>
+    <h1>Trust a Human - Camera Setup</h1>
+    <p>This extension needs camera access to verify you're human when posting comments.</p>
+    <p>Click the button below to grant camera permission. You only need to do this once.</p>
+    <button id="grant-btn">Grant Camera Access</button>
+    <div id="status" class="pending">Camera permission: not yet granted</div>
+    <script>
+      const btn = document.getElementById('grant-btn');
+      const status = document.getElementById('status');
+
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        btn.textContent = 'Requesting...';
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          stream.getTracks().forEach(t => t.stop());
+          status.className = 'granted';
+          status.textContent = 'Camera permission: granted! You can close this tab.';
+          btn.textContent = 'Done!';
+        } catch (err) {
+          status.className = 'denied';
+          status.textContent = 'Camera permission denied. Please allow camera access and try again.';
+          btn.disabled = false;
+          btn.textContent = 'Try Again';
+        }
+      });
+    </script>
+  </body>
+</html>

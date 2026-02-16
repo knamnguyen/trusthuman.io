@@ -20,6 +20,7 @@ import { stripeRouter } from "./stripe";
 import { targetListRouter } from "./target-list";
 import { commentAiDetectorRouter } from "./tools/comment-ai-detector";
 import { linkedInPreviewRouter } from "./tools/linkedin-preview";
+import { verificationRouter } from "./tools/verification";
 import { userRouter } from "./user";
 
 export const appRouter = createTRPCRouter({
@@ -45,6 +46,7 @@ export const appRouter = createTRPCRouter({
   achievements: achievementsRouter(),
   socialReferral: socialReferralRouter(),
   analytics: analyticsRouter(),
+  verification: verificationRouter(),
 });
 
 // export type definition of API
