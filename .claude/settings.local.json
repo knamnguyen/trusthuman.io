@@ -52,8 +52,7 @@
       "Bash(NODE_OPTIONS=\"--max-old-space-size=8192\" pnpm build:*)",
       "Bash(bash:*)",
       "Bash(/Users/knamnguyen/conductor/workspaces/engagekit-turborepo/valencia/process/scripts/merge-worktree.sh)",
-      "Bash(npm info:*)",
-      "Bash(npm search:*)"
+      "WebFetch(domain:bundlephobia.com)"
     ]
   }
 }

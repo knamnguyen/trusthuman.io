@@ -23,6 +23,7 @@
     "api:deploy": "./deploy.sh"
   },
   "dependencies": {
+    "@aws-sdk/client-rekognition": "^3.700.0",
     "@clerk/backend": "^2.29.1",
     "@clerk/nextjs": "^6.12.5",
     "@dbos-inc/dbos-sdk": "^4.5",
