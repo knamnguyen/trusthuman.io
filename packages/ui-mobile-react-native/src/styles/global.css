@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Neobrutalist theme from tweakcn - React Native compatible */
+@layer base {
+  :root {
+    /* Light mode */
+    --background: #f6f5ee;
+    --foreground: #000000;
+    --card: #fbf6e5;
+    --card-foreground: #000000;
+    --popover: #fbf6e5;
+    --popover-foreground: #000000;
+    --primary: #e5486c;
+    --primary-foreground: #ffffff;
+    --secondary: #308169;
+    --secondary-foreground: #ffffff;
+    --muted: #fbf6e5;
+    --muted-foreground: #7a7a7a;
+    --accent: #f9dcec;
+    --accent-foreground: #000000;
+    --destructive: #f96f70;
+    --destructive-foreground: #ffffff;
+    --border: #000000;
+    --input: #e4e4e4;
+    --ring: #000000;
+    --chart-1: #1b9aaa;
+    --chart-2: #308169;
+    --chart-3: #ffc63d;
+    --chart-4: #ed6b67;
+    --chart-5: #e5496d;
+    --sidebar: #f6f5ee;
+    --sidebar-foreground: #000000;
+    --sidebar-primary: #e5496d;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #f9a8d4;
+    --sidebar-accent-foreground: #000000;
+    --sidebar-border: #000000;
+    --sidebar-ring: #ffffff;
+    --radius: 0.4rem;
+  }
+
+  .dark:root {
+    /* Dark mode */
+    --background: #12242e;
+    --foreground: #f3e3ea;
+    --card: #1c2e38;
+    --card-foreground: #f3e3ea;
+    --popover: #1c2e38;
+    --popover-foreground: #f3e3ea;
+    --primary: #fbe2a7;
+    --primary-foreground: #12242e;
+    --secondary: #e4a2b1;
+    --secondary-foreground: #12242e;
+    --muted: #24272b;
+    --muted-foreground: #e4a2b1;
+    --accent: #c67b96;
+    --accent-foreground: #f3e3ea;
+    --destructive: #e35ea4;
+    --destructive-foreground: #12242e;
+    --border: #324859;
+    --input: #20333d;
+    --ring: #50afb6;
+    --chart-1: #50afb6;
+    --chart-2: #e4a2b1;
+    --chart-3: #c67b96;
+    --chart-4: #175c6c;
+    --chart-5: #24272b;
+    --sidebar: #101f28;
+    --sidebar-foreground: #f3f4f6;
+    --sidebar-primary: #ec4899;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #f9a8d4;
+    --sidebar-accent-foreground: #1f2937;
+    --sidebar-border: #374151;
+    --sidebar-ring: #ec4899;
+    --radius: 0.4rem;
+  }
+}
