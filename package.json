@@ -20,6 +20,7 @@
     "dev": "turbo watch dev --continue",
     "dev:next": "turbo watch dev -F @sassy/nextjs...",
     "dev:capacitor": "turbo watch dev -F @sassy/capacitor-demo...",
+    "dev:expo": "turbo watch dev -F @sassy/expo...",
     "format": "turbo run format --continue -- --cache --cache-location .cache/.prettiercache",
     "format:fix": "turbo run format --continue -- --write --cache --cache-location .cache/.prettiercache",
     "lint": "turbo run lint --continue -- --cache --cache-location .cache/.eslintcache",

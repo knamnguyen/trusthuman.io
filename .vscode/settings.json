@@ -29,5 +29,6 @@
   "workbench.colorTheme": "Cursor Dark",
   "[json]": {
     "editor.defaultFormatter": "vscode.json-language-features"
-  }
+  },
+  "RadonIDE.projectRoot": "${workspaceFolder}/apps/expo"
 }

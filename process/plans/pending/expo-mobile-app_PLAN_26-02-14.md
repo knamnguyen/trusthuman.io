@@ -1,8 +1,8 @@
 # Expo Mobile App with Clerk Authentication - Implementation Plan
 
-**Date:** 2026-02-14
+**Date:** 2026-02-15
 **Replaces:** `capacitor-demo-app_PLAN_26-01-26.md` (BLOCKED - Clerk incompatible with Capacitor WKWebView)
-**Status:** PLAN COMPLETE - AWAITING APPROVAL
+**Status:** PLAN UPDATED - AWAITING APPROVAL
 **Complexity:** COMPLEX
 
 ---
@@ -24,7 +24,7 @@ Create a production-ready Expo React Native mobile app in `/apps/expo` with Cler
 ### Primary Goals
 1. Working Expo app with Clerk authentication (Google OAuth)
 2. Token-based session persistence via `expo-secure-store` (survives app restart)
-3. NativeWind (Tailwind CSS for React Native) styling
+3. NativeWind (Tailwind CSS for React Native) styling with shared design system
 4. tRPC client connected to existing Bun API server
 5. iPhone device testing via Expo Dev Client
 6. Turborepo integration
@@ -38,6 +38,7 @@ Create a production-ready Expo React Native mobile app in `/apps/expo` with Cler
 - [ ] tRPC calls to existing API server work with Bearer token auth
 - [ ] NativeWind styles render correctly on device
 - [ ] Dev server runs alongside existing Next.js app
+- [ ] Colors match web app design system (Neobrutalist theme)
 
 ---
 
@@ -138,10 +139,60 @@ Create a production-ready Expo React Native mobile app in `/apps/expo` with Cler
 | OAuth Browser | expo-web-browser | (bundled) | System browser for OAuth |
 | Deep Linking | expo-linking | (bundled) | `engagekit://` scheme |
 | Styling | NativeWind v4 | latest | Tailwind CSS for React Native |
-| Tailwind | tailwindcss v3 | ^3.4.17 | Required by NativeWind v4 (NOT v4) |
+| Tailwind | tailwindcss v3 | ^3.4.17 | **Required by NativeWind v4 (NOT v4)** — matches WXT extension pattern |
+| UI Components | react-native-reusables | latest | shadcn/ui equivalent for React Native |
 | API Client | tRPC | ^11.0.0-rc.824 | From monorepo catalog |
 | Query | @tanstack/react-query | ^5.67.1 | From monorepo catalog |
 | Serialization | superjson | 2.2.2 | Matches server |
+| Validation | @sassy/validators | workspace:* | Shared Zod schemas |
+
+---
+
+## Design System Sharing Strategy
+
+### Tailwind v3 Pattern (Matches WXT Extension)
+
+**Prior Art:** The WXT extension (`apps/wxt-extension`) already uses Tailwind v3 separately because WXT is incompatible with Tailwind v4. This establishes a proven pattern:
+- Next.js → Tailwind v4
+- WXT Extension → Tailwind v3 (separate config)
+- Expo → Tailwind v3 (separate config, same pattern as WXT)
+
+**Key Insight:** NativeWind v4 (stable) requires Tailwind v3, which aligns perfectly with the existing WXT extension approach.
+
+### Color Token Sharing
+
+Both WXT extension and Expo will use the same CSS variable-based design tokens from `packages/ui/src/styles/theme.css`:
+
+**WXT Extension Pattern:** Uses `var(--primary)` directly in `tailwind.config.ts`
+**Expo Pattern:** Must use direct color values (NativeWind doesn't support CSS variables)
+
+**Color mapping** (from Neobrutalist theme):
+
+Light mode:
+- `--background: #f6f5ee`
+- `--foreground: #000000`
+- `--primary: #e5486c`
+- `--primary-foreground: #ffffff`
+- `--secondary: #308169`
+- `--secondary-foreground: #ffffff`
+- `--card: #fbf6e5`
+- `--card-foreground: #000000`
+- And 20+ more semantic tokens
+
+Dark mode:
+- `--background: #12242e`
+- `--foreground: #f3e3ea`
+- `--primary: #fbe2a7`
+- Plus all other dark variants
+
+### Component Library: react-native-reusables
+
+**What:** shadcn/ui equivalent for React Native (7.9k GitHub stars)
+**Why:** Same design philosophy as shadcn, built for NativeWind
+**Installation:** `npx @rnr/cli add button`
+**Clerk Auth:** Has pre-built components: `npx @rnr/cli add sign-in-form-clerk`
+
+This provides native components that visually match the web shadcn components.
 
 ---
 
@@ -179,6 +230,7 @@ cd expo
   "dependencies": {
     "@clerk/clerk-expo": "latest",
     "@sassy/api": "workspace:*",
+    "@sassy/validators": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "@trpc/client": "catalog:",
     "@trpc/tanstack-react-query": "catalog:",
@@ -207,8 +259,9 @@ cd expo
 ```
 
 **Key decisions:**
-- `tailwindcss@^3.4.17` — NativeWind v4 requires Tailwind v3, NOT v4
+- `tailwindcss@^3.4.17` — NativeWind v4 requires Tailwind v3, NOT v4 (matches WXT extension)
 - `@sassy/api: workspace:*` — type imports only (AppRouter type)
+- `@sassy/validators: workspace:*` — shared Zod schemas (confirmed reusable)
 - `main: "expo-router/entry"` — enables file-based routing
 
 #### Step 1.3: Configure `app.json`
@@ -248,52 +301,93 @@ cd expo
 
 **File:** `/apps/expo/tailwind.config.js`
 
+**Note:** Content paths do NOT include `packages/ui` because Expo won't import web components. Only includes local app files and react-native-reusables components (when installed).
+
 ```javascript
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
     "./app/**/*.{js,jsx,ts,tsx}",
     "./src/**/*.{js,jsx,ts,tsx}",
+    "./components/**/*.{js,jsx,ts,tsx}",
   ],
   presets: [require("nativewind/preset")],
-  darkMode: ["class"],
+  darkMode: "class",
   theme: {
     extend: {
       colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
+        // Light mode colors (from packages/ui/src/styles/theme.css)
+        border: "#000000",
+        input: "#e4e4e4",
+        ring: "#000000",
+        background: "#f6f5ee",
+        foreground: "#000000",
         primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
+          DEFAULT: "#e5486c",
+          foreground: "#ffffff",
         },
         secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
+          DEFAULT: "#308169",
+          foreground: "#ffffff",
         },
         destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
+          DEFAULT: "#f96f70",
+          foreground: "#ffffff",
         },
         muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
+          DEFAULT: "#fbf6e5",
+          foreground: "#7a7a7a",
         },
         accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
+          DEFAULT: "#f9dcec",
+          foreground: "#000000",
+        },
+        popover: {
+          DEFAULT: "#fbf6e5",
+          foreground: "#000000",
         },
         card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
+          DEFAULT: "#fbf6e5",
+          foreground: "#000000",
         },
+        sidebar: {
+          DEFAULT: "#f6f5ee",
+          foreground: "#000000",
+          primary: "#e5496d",
+          "primary-foreground": "#ffffff",
+          accent: "#f9a8d4",
+          "accent-foreground": "#000000",
+          border: "#000000",
+          ring: "#ffffff",
+        },
+        chart: {
+          "1": "#1b9aaa",
+          "2": "#308169",
+          "3": "#ffc63d",
+          "4": "#ed6b67",
+          "5": "#e5496d",
+        },
+      },
+      borderRadius: {
+        lg: "0.5rem",
+        md: "calc(0.5rem - 2px)",
+        sm: "calc(0.5rem - 4px)",
+      },
+      fontFamily: {
+        sans: ["Fira Sans", "ui-sans-serif", "sans-serif", "system-ui"],
+        serif: ["Artifika", "ui-serif", "serif"],
+        mono: ["JetBrains Mono", "ui-monospace", "monospace"],
       },
     },
   },
   plugins: [],
 };
 ```
+
+**Key differences from WXT:**
+- Direct color values instead of `var(--primary)` (NativeWind limitation)
+- No `boxShadow` config (React Native shadows work differently)
+- Content paths exclude `packages/ui` (no shared web components)
 
 #### Step 2.2: Babel Config
 
@@ -325,14 +419,91 @@ const config = getDefaultConfig(__dirname);
 module.exports = withNativeWind(config, { input: "./global.css" });
 ```
 
-#### Step 2.4: Global CSS
+#### Step 2.4: Global CSS with CSS Variables
 
 **File:** `/apps/expo/global.css`
+
+**Critical Update:** Must include actual CSS variable values so NativeWind can resolve semantic color names. These values match `packages/ui/src/styles/theme.css`.
 
 ```css
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light mode - Neobrutalist theme from tweakcn */
+    --background: #f6f5ee;
+    --foreground: #000000;
+    --card: #fbf6e5;
+    --card-foreground: #000000;
+    --popover: #fbf6e5;
+    --popover-foreground: #000000;
+    --primary: #e5486c;
+    --primary-foreground: #ffffff;
+    --secondary: #308169;
+    --secondary-foreground: #ffffff;
+    --muted: #fbf6e5;
+    --muted-foreground: #7a7a7a;
+    --accent: #f9dcec;
+    --accent-foreground: #000000;
+    --destructive: #f96f70;
+    --destructive-foreground: #ffffff;
+    --border: #000000;
+    --input: #e4e4e4;
+    --ring: #000000;
+    --chart-1: #1b9aaa;
+    --chart-2: #308169;
+    --chart-3: #ffc63d;
+    --chart-4: #ed6b67;
+    --chart-5: #e5496d;
+    --sidebar-background: #f6f5ee;
+    --sidebar-foreground: #000000;
+    --sidebar-primary: #e5496d;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #f9a8d4;
+    --sidebar-accent-foreground: #000000;
+    --sidebar-border: #000000;
+    --sidebar-ring: #ffffff;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    /* Dark mode */
+    --background: #12242e;
+    --foreground: #f3e3ea;
+    --card: #1c2e38;
+    --card-foreground: #f3e3ea;
+    --popover: #1c2e38;
+    --popover-foreground: #f3e3ea;
+    --primary: #fbe2a7;
+    --primary-foreground: #12242e;
+    --secondary: #e4a2b1;
+    --secondary-foreground: #12242e;
+    --muted: #24272b;
+    --muted-foreground: #e4a2b1;
+    --accent: #c67b96;
+    --accent-foreground: #f3e3ea;
+    --destructive: #e35ea4;
+    --destructive-foreground: #12242e;
+    --border: #324859;
+    --input: #20333d;
+    --ring: #50afb6;
+    --chart-1: #50afb6;
+    --chart-2: #e4a2b1;
+    --chart-3: #c67b96;
+    --chart-4: #175c6c;
+    --chart-5: #24272b;
+    --sidebar-background: #101f28;
+    --sidebar-foreground: #f3f4f6;
+    --sidebar-primary: #ec4899;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #f9a8d4;
+    --sidebar-accent-foreground: #1f2937;
+    --sidebar-border: #374151;
+    --sidebar-ring: #ec4899;
+  }
+}
 ```
 
 #### Step 2.5: NativeWind TypeScript Types
@@ -699,7 +870,7 @@ EXPO_PUBLIC_API_URL=http://localhost:8040
 
 The `pnpm-workspace.yaml` already includes `apps/*`, so the Expo app will be auto-discovered.
 
-**Note on `.npmrc`:** May need `node-linker=hoisted` for React Native/Metro compatibility with pnpm.
+**Note on `.npmrc`:** Root `.npmrc` already has `node-linker=hoisted` (confirmed in research), which ensures React Native/Metro compatibility with pnpm.
 
 ---
 
@@ -757,7 +928,7 @@ apps/expo/
 │   └── utils/
 │       ├── trpc.ts              # tRPC context
 │       └── trpc-provider.tsx    # tRPC + React Query provider
-├── global.css                   # Tailwind base imports
+├── global.css                   # Tailwind imports + CSS variables
 ├── app.json                     # Expo config (scheme, bundle ID)
 ├── babel.config.js              # Babel + NativeWind
 ├── metro.config.js              # Metro + NativeWind
@@ -779,10 +950,10 @@ apps/expo/
 |---------|-----------|-------|
 | `@sassy/api` | Type imports only | `import type { AppRouter }` — actual API runs on Bun server |
 | `@sassy/db` | No | Server-side only. All DB access via tRPC |
-| `@sassy/ui` | No | Web-only (Radix UI, shadcn). Build native components inline or use `react-native-reusables` |
+| `@sassy/ui` | No | Web-only (Radix UI, shadcn). Use `react-native-reusables` instead |
 | `@sassy/tsconfig` | Yes | Base config extends cleanly, add `jsx` and NativeWind types |
 | `@sassy/tailwind-config` | No | Uses Tailwind v4. Expo needs Tailwind v3 with NativeWind preset |
-| `@sassy/validators` | Yes | Zod schemas work cross-platform |
+| `@sassy/validators` | Yes | Zod schemas work cross-platform (confirmed reusable) |
 
 ---
 
@@ -791,16 +962,18 @@ apps/expo/
 ### 1. Tailwind Version Mismatch
 - **Issue:** NativeWind v4 requires Tailwind CSS v3; monorepo uses Tailwind v4
 - **Solution:** Expo app has its own `tailwindcss@^3.4.17` devDependency
-- **Impact:** Color theme duplicated from `tooling/tailwind/base.ts` into `tailwind.config.js`
+- **Impact:** Color theme duplicated from `packages/ui/src/styles/theme.css` into `tailwind.config.js` and `global.css`
+- **Prior Art:** WXT extension already uses this pattern (Tailwind v3 separate from Next.js Tailwind v4)
 
-### 2. No Shared UI Components
+### 2. Native UI Components via react-native-reusables
 - **Issue:** `@sassy/ui` is entirely web-based (Radix, shadcn)
-- **Solution:** Build React Native components directly in Expo app
-- **Impact:** UI effort not shared with web. Future: create `@sassy/ui-native`
+- **Solution:** Use `react-native-reusables` (shadcn/ui equivalent for React Native)
+- **Installation:** `npx @rnr/cli add button` (CLI-based component installation)
+- **Impact:** UI components not directly shared with web, but visually consistent. Future: create `@sassy/ui-native` if needed
 
 ### 3. Metro Bundler vs Turbo
 - **Issue:** Metro has its own module resolution, may conflict with pnpm symlinks
-- **Solution:** May need `node-linker=hoisted` in `.npmrc`
+- **Solution:** Root `.npmrc` already has `node-linker=hoisted` (confirmed)
 - **Impact:** Minimal — well-documented Expo monorepo pattern
 
 ### 4. `@sassy/api` Server Dependencies
@@ -815,10 +988,11 @@ apps/expo/
 | Risk | Likelihood | Impact | Mitigation |
 |------|-----------|--------|------------|
 | OAuth flow doesn't complete on device | Low | High | Clerk + Expo is officially supported; use `useOAuth` pattern exactly as documented |
-| NativeWind styles not rendering | Medium | Medium | Follow exact 4-file config (babel, metro, tailwind, global.css) |
-| Metro can't resolve monorepo packages | Low | Medium | SDK 52+ auto-detects; fallback: `node-linker=hoisted` |
+| NativeWind styles not rendering | Medium | Medium | Follow exact 4-file config (babel, metro, tailwind, global.css) with CSS variables |
+| Metro can't resolve monorepo packages | Low | Medium | SDK 52+ auto-detects; `.npmrc` already has `node-linker=hoisted` |
 | Token persistence fails on app restart | Low | High | Built-in `tokenCache` uses `expo-secure-store` (Keychain) — battle-tested |
 | tRPC calls fail from device | Low | Medium | Bun server already has CORS `*`; use device's network IP for API_URL |
+| Color theme mismatch with web | Medium | Low | CSS variables extracted from `packages/ui/src/styles/theme.css` — guaranteed match |
 
 ---
 
@@ -833,7 +1007,18 @@ The existing `/apps/capacitor-demo` should be:
 
 ## Approval Status
 
-**PLAN STATUS:** COMPLETE - READY FOR REVIEW
+**PLAN STATUS:** UPDATED - READY FOR REVIEW
+
+**Updates incorporated:**
+- ✅ Confirmed NativeWind v4 with Tailwind v3 matches WXT extension pattern
+- ✅ Added complete CSS variable values from `packages/ui/src/styles/theme.css`
+- ✅ Updated `global.css` with theme variables (light + dark mode)
+- ✅ Added `react-native-reusables` as recommended component library
+- ✅ Fixed content paths in `tailwind.config.js` (excludes `packages/ui`)
+- ✅ Confirmed `.npmrc` already has `node-linker=hoisted`
+- ✅ Added `@sassy/validators` to dependencies (confirmed reusable)
+- ✅ Updated date to 2026-02-15
+- ✅ Changed status to "PLAN UPDATED - AWAITING APPROVAL"
 
 Once approved, implementation follows these phases:
 1. Project initialization (Phase 1)
@@ -845,7 +1030,7 @@ Once approved, implementation follows these phases:
 7. Turborepo integration (Phase 7)
 8. Device testing (Phase 8)
 
-**Estimated Complexity:** Complex (new framework, monorepo integration)
+**Estimated Complexity:** Complex (new framework, monorepo integration, design system alignment)
 **Estimated Files:** ~15 new files, 2 modified
 **Critical Path:** NativeWind config → Clerk auth → tRPC integration → Device testing
 
@@ -859,7 +1044,9 @@ Once approved, implementation follows these phases:
 - [NativeWind Documentation](https://www.nativewind.dev/)
 - [Expo Router Documentation](https://docs.expo.dev/router/introduction/)
 - [Expo Monorepo Guide](https://docs.expo.dev/guides/monorepos/)
+- [react-native-reusables Documentation](https://github.com/mrzachnugent/react-native-reusables)
 
 ### Community Resources
 - [Clerk Expo Starter](https://github.com/clerk/clerk-expo-quickstart)
 - [Capacitor Blocker — Ionic Forum Thread](https://forum.ionicframework.com/t/ios-webview-redirects-to-safari-after-clerk-authentication-production-vs-development-issue/248720)
+- [react-native-reusables GitHub](https://github.com/mrzachnugent/react-native-reusables) (7.9k stars)
