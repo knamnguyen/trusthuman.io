@@ -74,19 +74,21 @@ const Button = React.forwardRef<
 
   // Skip shadow for ghost/link variants (matching web)
   const hasNeobrutalistShadow = variant !== "ghost" && variant !== "link";
+  // Smaller shadow for compact button sizes
+  const shadowOffset = size === "sm" || size === "icon" ? 1 : 2;
 
   return (
     <TextClassContext.Provider value={textClass}>
-      <View style={{ position: "relative" }}>
-        {/* Neobrutalist shadow - 2px offset (matching web) */}
+      <View style={{ position: "relative", opacity: disabled ? 0.5 : 1 }}>
+        {/* Neobrutalist shadow — scaled by button size */}
         {hasNeobrutalistShadow && (
           <View
             style={{
               position: "absolute",
-              top: 2,
-              left: 2,
-              right: -2,
-              bottom: -2,
+              top: shadowOffset,
+              left: shadowOffset,
+              right: -shadowOffset,
+              bottom: -shadowOffset,
               backgroundColor: "#000000",
               borderRadius: 6,
             }}
@@ -97,16 +99,15 @@ const Button = React.forwardRef<
         <Component
           className={cn(
             buttonVariants({ variant, size }),
-            disabled && "opacity-50",
             className,
           )}
           style={{
             transform: [
               {
-                translateX: hasNeobrutalistShadow && isPressed ? 2 : 0,
+                translateX: hasNeobrutalistShadow && isPressed ? shadowOffset : 0,
               },
               {
-                translateY: hasNeobrutalistShadow && isPressed ? 2 : 0,
+                translateY: hasNeobrutalistShadow && isPressed ? shadowOffset : 0,
               },
             ],
           }}
