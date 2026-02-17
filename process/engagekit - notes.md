@@ -1,3 +1,8 @@
+- comment flow mobile app approve
+- trusthuman.io
+- engagekit.io (content included)
+- flowser.ai
+
 [*] change color of card currently being previewed
 [*] scroll to card when highlighted selected in nav
 [*] verify comment submitted function
