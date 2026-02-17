@@ -41,13 +41,6 @@ export function TRPCReactProvider({ children }: { children: React.ReactNode }) {
               headers["x-account-id"] = accountId;
             }
 
-            // DEBUG: Remove after verifying
-            console.log("[tRPC Headers]", {
-              hasToken: !!token,
-              accountId: accountId ?? "none",
-              url: `${API_URL}/api/trpc`,
-            });
-
             return headers;
           },
         }),
