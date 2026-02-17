@@ -27,13 +27,13 @@ export default function SignInScreen() {
     setIsLoading(true);
     try {
       const { createdSessionId, setActive } = await startOAuthFlow({
-        redirectUrl: Linking.createURL("/dashboard", { scheme: "engagekit" }),
+        redirectUrl: Linking.createURL("/(app)", { scheme: "engagekit" }),
       });
 
       if (createdSessionId && setActive) {
         await setActive({ session: createdSessionId });
         // Force navigation after auth completes
-        router.replace("/dashboard");
+        router.replace("/(app)");
       }
     } catch (err) {
       console.error("OAuth error:", JSON.stringify(err, null, 2));

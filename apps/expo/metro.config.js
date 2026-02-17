@@ -1,19 +1,19 @@
-const path = require("node:path");
 const { getDefaultConfig } = require("expo/metro-config");
 const { withNativeWind } = require("nativewind/metro");
 
-const projectRoot = __dirname;
-const monorepoRoot = path.resolve(projectRoot, "../..");
+const config = getDefaultConfig(__dirname);
 
-const config = getDefaultConfig(projectRoot);
+// ─── Monorepo Resolution ────────────────────────────────────────────────
+// Since Expo SDK 52+, expo/metro-config automatically detects monorepo
+// setups (pnpm, yarn workspaces, npm workspaces) and configures
+// watchFolders, nodeModulesPaths, and extraNodeModules internally.
+//
+// DO NOT manually set these — it overrides Expo's auto-detection and
+// breaks module resolution for hoisted packages (e.g. lucide-react-native,
+// moti). See: https://docs.expo.dev/guides/monorepos/
+// ─────────────────────────────────────────────────────────────────────────
 
-// Ensure Expo app's node_modules is checked first
-config.resolver.nodeModulesPaths = [
-  path.resolve(projectRoot, "node_modules"),
-  path.resolve(monorepoRoot, "node_modules"),
-];
-
-// Block server-only packages from being bundled
+// Block server-only packages from being bundled into the React Native app
 config.resolver.blockList = [
   /packages\/db\/.*/,
   /packages\/stripe\/.*/,

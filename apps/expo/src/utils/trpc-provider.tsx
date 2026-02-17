@@ -5,6 +5,7 @@ import { useAuth } from "@clerk/clerk-expo";
 import SuperJSON from "superjson";
 import { TRPCProvider } from "./trpc";
 import type { AppRouter } from "@sassy/api";
+import { useAccountStore } from "../stores/account-store";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL!;
 
@@ -34,6 +35,12 @@ export function TRPCReactProvider({ children }: { children: React.ReactNode }) {
             if (token) {
               headers["Authorization"] = `Bearer ${token}`;
             }
+
+            const accountId = useAccountStore.getState().accountId;
+            if (accountId) {
+              headers["x-account-id"] = accountId;
+            }
+
             return headers;
           },
         }),

@@ -1,6 +1,9 @@
-import { Text, View } from "react-native";
-import { Redirect, Stack } from "expo-router";
+import { View } from "react-native";
+import { Redirect, Tabs } from "expo-router";
 import { useAuth } from "@clerk/clerk-expo";
+import { LayoutDashboard, UserRound } from "lucide-react-native";
+
+import { Text } from "@sassy/ui-mobile-react-native/text";
 
 export default function AppLayout() {
   const { isSignedIn, isLoaded } = useAuth();
@@ -17,5 +20,37 @@ export default function AppLayout() {
     return <Redirect href="/sign-in" />;
   }
 
-  return <Stack />;
+  return (
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: {
+          backgroundColor: "#f6f5ee",
+          borderTopWidth: 2,
+          borderTopColor: "#000000",
+        },
+        tabBarActiveTintColor: "#000000",
+        tabBarInactiveTintColor: "#888888",
+      }}
+    >
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: "Home",
+          tabBarIcon: ({ color, size }) => (
+            <LayoutDashboard color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Profile",
+          tabBarIcon: ({ color, size }) => (
+            <UserRound color={color} size={size} />
+          ),
+        }}
+      />
+    </Tabs>
+  );
 }
