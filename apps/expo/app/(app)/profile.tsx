@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import { View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useClerk, useUser, useOrganization } from "@clerk/clerk-expo";
 import type GorhomBottomSheet from "@gorhom/bottom-sheet";
 
@@ -18,7 +19,8 @@ export default function ProfileScreen() {
   const bottomSheetRef = useRef<GorhomBottomSheet>(null);
 
   return (
-    <View className="bg-background flex-1 p-6">
+    <SafeAreaView className="bg-background flex-1">
+    <View className="flex-1 p-6">
       <Card>
         <CardContent>
           <Text className="text-card-foreground mb-4 text-2xl font-bold">
@@ -72,5 +74,6 @@ export default function ProfileScreen() {
 
       <OrgAccountSwitcher ref={bottomSheetRef} />
     </View>
+    </SafeAreaView>
   );
 }

@@ -1,6 +1,9 @@
-import { Text, View } from "react-native";
+import { View } from "react-native";
 import { Redirect, Tabs } from "expo-router";
 import { useAuth } from "@clerk/clerk-expo";
+import { LayoutDashboard, UserRound } from "lucide-react-native";
+
+import { Text } from "@sassy/ui-mobile-react-native/text";
 
 export default function AppLayout() {
   const { isSignedIn, isLoaded } = useAuth();
@@ -34,14 +37,18 @@ export default function AppLayout() {
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: () => <Text style={{ fontSize: 20 }}>🏠</Text>,
+          tabBarIcon: ({ color, size }) => (
+            <LayoutDashboard color={color} size={size} />
+          ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: "Profile",
-          tabBarIcon: () => <Text style={{ fontSize: 20 }}>👤</Text>,
+          tabBarIcon: ({ color, size }) => (
+            <UserRound color={color} size={size} />
+          ),
         }}
       />
     </Tabs>
