@@ -27,6 +27,8 @@
     "@sassy/validators": "workspace:*",
     "@t3-oss/env-nextjs": "^0.12.0",
     "@tanstack/react-query": "catalog:",
+    "@tanstack/react-store": "^0.9.1",
+    "@tanstack/store": "^0.9.1",
     "@trpc/client": "catalog:",
     "@trpc/react-query": "^11.1.2",
     "@trpc/server": "catalog:",

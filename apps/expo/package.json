@@ -12,7 +12,9 @@
     "prebuild": "expo prebuild",
     "typecheck": "tsc --noEmit",
     "lint": "eslint",
-    "clean": "rm -rf .expo ios android node_modules"
+    "clean": "rm -rf .expo ios android node_modules",
+    "android": "expo run:android",
+    "ios": "expo run:ios"
   },
   "dependencies": {
     "@clerk/clerk-expo": "latest",
@@ -32,10 +34,12 @@
     "nativewind": "^4.1.0",
     "react": "19.1.0",
     "react-native": "0.81.5",
+    "react-native-gesture-handler": "^2.30.0",
     "react-native-reanimated": "~4.1.1",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",
-    "superjson": "2.2.2"
+    "superjson": "2.2.2",
+    "zustand": "^5.0.9"
   },
   "devDependencies": {
     "@sassy/tsconfig": "workspace:*",
