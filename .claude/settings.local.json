@@ -55,7 +55,16 @@
       "WebFetch(domain:bundlephobia.com)",
       "WebFetch(domain:stackoverflow.com)",
       "WebFetch(domain:docs.expo.dev)",
-      "Bash(ln:*)"
-    ]
+      "Bash(ln:*)",
+      "Read(//Users/knamnguyen/Documents/0-Programming/gifavatar/**)",
+      "Bash(cat /Users/knamnguyen/Documents/0-Programming/trusthuman/.env.example)",
+      "Bash(cat /Users/knamnguyen/Documents/0-Programming/trusthuman/.env.local.example)",
+      "Bash(cat /Users/knamnguyen/Documents/0-Programming/trusthuman/package.json)",
+      "Bash(cat /Users/knamnguyen/Documents/0-Programming/trusthuman/.env)",
+      "Bash(cat /Users/knamnguyen/Documents/0-Programming/trusthuman/turbo.json)",
+      "Read(//Users/knamnguyen/Documents/0-Programming/gifavatar/packages/api/**)",
+      "Read(//Users/knamnguyen/Documents/0-Programming/gifavatar/packages/db/**)"
+    ],
+    "defaultMode": "bypassPermissions"
   }
 }
