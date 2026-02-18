@@ -4,7 +4,7 @@
  */
 
 import type { WebhookEvent } from "@clerk/nextjs/server";
-import { db } from "@trusthuman/db";
+import { db } from "@sassy/db";
 
 export async function handleClerkWebhook(event: WebhookEvent) {
   const eventType = event.type;

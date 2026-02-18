@@ -1,21 +1,13 @@
 "use client";
 
-import { useMemo } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { OrganizationSwitcher, UserButton } from "@clerk/nextjs";
+import { UserButton } from "@clerk/nextjs";
 import {
-  ArrowLeftIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  GiftIcon,
-  HistoryIcon,
   LayoutDashboardIcon,
-  SearchIcon,
   SettingsIcon,
-  UserRoundIcon,
-  UsersIcon,
-  UsersRoundIcon,
+  UserIcon,
 } from "lucide-react";
 
 import { Button } from "@sassy/ui/button";
@@ -33,12 +25,6 @@ import {
 } from "@sassy/ui/sidebar";
 import { Switch } from "@sassy/ui/switch";
 
-import { AccountSwitcher } from "./account-switcher";
-
-/**
- * Toggle switch for hover-to-open setting.
- * Hidden when sidebar is collapsed (icon mode).
- */
 function HoverOpenToggle() {
   const { hoverOpen, setHoverOpen } = useSidebar();
 
@@ -60,10 +46,6 @@ function HoverOpenToggle() {
   );
 }
 
-/**
- * Toggle button on sidebar edge to expand/collapse.
- * Always visible - shows chevron direction based on state.
- */
 function SidebarToggleButton() {
   const { state, toggleSidebar } = useSidebar();
   const isExpanded = state === "expanded";
@@ -87,133 +69,46 @@ function SidebarToggleButton() {
   );
 }
 
+const navItems = [
+  {
+    title: "Dashboard",
+    url: "/dashboard",
+    icon: LayoutDashboardIcon,
+  },
+  {
+    title: "Profile",
+    url: "/profile",
+    icon: UserIcon,
+  },
+  {
+    title: "Settings",
+    url: "/settings",
+    icon: SettingsIcon,
+  },
+];
+
 export function DashboardSidebar() {
-  const params = useParams<{ orgSlug?: string; accountSlug?: string }>();
-  const { orgSlug, accountSlug } = params;
-
-  let prefix = `/${orgSlug}`;
-
-  if (accountSlug !== undefined) {
-    prefix += `/${accountSlug}`;
-  }
-
-  const sharedItems = useMemo(() => {
-    return [
-      {
-        title: "Accounts",
-        url: `${prefix}/accounts`,
-        icon: UserRoundIcon,
-      },
-      {
-        title: "Earn Premium",
-        url: `${prefix}/earn-premium`,
-        icon: GiftIcon,
-      },
-      {
-        title: "Subscription",
-        url: `${prefix}/settings`,
-        icon: SettingsIcon,
-      },
-    ];
-  }, [orgSlug, accountSlug, prefix]);
-
-  const accountItems = useMemo(() => {
-    let prefix = `/${orgSlug}`;
-
-    if (accountSlug !== undefined) {
-      prefix += `/${accountSlug}`;
-    }
-
-    const items = [];
-
-    if (accountSlug !== undefined) {
-      items.push();
-    }
-
-    return [
-      {
-        title: "Dashboard",
-        url: `${prefix}`,
-        icon: LayoutDashboardIcon,
-      },
-      {
-        title: "History",
-        url: `${prefix}/history`,
-        icon: HistoryIcon,
-      },
-      {
-        title: "Target List",
-        url: `${prefix}/target-list`,
-        icon: UsersRoundIcon,
-      },
-      {
-        title: "Discovery Sets",
-        url: `${prefix}/discovery-sets`,
-        icon: SearchIcon,
-      },
-      {
-        title: "Personas",
-        url: `${prefix}/personas`,
-        icon: UsersIcon,
-      },
-    ];
-  }, [orgSlug, accountSlug, prefix]);
-
   return (
     <Sidebar collapsible="icon" className="relative">
-      {/* Toggle button on sidebar edge */}
       <SidebarToggleButton />
 
-      {/* Organization Switcher - select which workspace/org to work in */}
-      <div className="flex flex-col border-b p-2 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:p-1">
-        <OrganizationSwitcher
-          hidePersonal={false}
-          afterCreateOrganizationUrl="/{slug}/accounts"
-          afterSelectOrganizationUrl="/{slug}/accounts"
-          afterSelectPersonalUrl="/{slug}/accounts"
-          appearance={{
-            elements: {
-              rootBox: "w-full group-data-[collapsible=icon]:w-auto",
-              organizationSwitcherTrigger:
-                "w-full justify-start group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:justify-center",
-              organizationSwitcherTriggerIcon:
-                "group-data-[collapsible=icon]:hidden",
-              organizationPreviewTextContainer:
-                "group-data-[collapsible=icon]:hidden",
-            },
-          }}
-        />
+      {/* Logo/Brand */}
+      <div className="flex items-center border-b p-4 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-2">
+        <Link href="/" className="flex items-center gap-2">
+          <span className="text-lg font-bold group-data-[collapsible=icon]:hidden">
+            TrustHuman
+          </span>
+          <span className="hidden text-lg font-bold group-data-[collapsible=icon]:block">
+            TH
+          </span>
+        </Link>
       </div>
 
-      {/* LinkedIn Account Switcher - select which LinkedIn account within the org */}
-      <AccountSwitcher />
-
       <SidebarContent>
-        {/* Account-level navigation */}
-        {accountSlug !== undefined && (
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {accountItems.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      <Link href={item.url}>
-                        <item.icon />
-                        <span className="font-medium">{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
-
-        {/* Shared navigation items */}
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {sharedItems.map((item) => (
+              {navItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <Link href={item.url}>
@@ -229,13 +124,8 @@ export function DashboardSidebar() {
       </SidebarContent>
 
       <SidebarFooter>
-        {/* Hover-to-open toggle setting */}
         <HoverOpenToggle />
-
-        {/* Separator - hidden when collapsed */}
         <div className="border-t group-data-[collapsible=icon]:hidden" />
-
-        {/* User profile */}
         <SidebarMenu className="mb-2 ml-0 group-data-[state=expanded]:ml-2">
           <SidebarMenuItem>
             <UserButton />

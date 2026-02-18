@@ -31,7 +31,6 @@ const handler = async (req: Request) => {
       // This allows Clerk to work properly with currentUser()
       return createTRPCContext({
         headers: req.headers,
-        req,
       });
     },
     onError({ error, path }) {

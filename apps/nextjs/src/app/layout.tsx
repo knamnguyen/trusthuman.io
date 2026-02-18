@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import Script from "next/script";
 import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
 import { SpeedInsights as VercelSpeedInsights } from "@vercel/speed-insights/next";
 
@@ -7,49 +6,27 @@ import { Toaster } from "@sassy/ui/toast";
 
 import "~/app/globals.css";
 
-declare global {
-  interface Window {
-    endorsely_referral?: string;
-  }
-}
-
 import { env } from "~/env";
 import { Providers } from "../lib/providers/providers";
-import { ConditionalScripts } from "./_components/conditional-scripts";
 
 export const metadata: Metadata = {
   metadataBase: new URL(
     env.VERCEL_ENV === "production"
-      ? "https://engagekit.io"
+      ? "https://trusthuman.io"
       : (process.env.NEXTJS_URL ??
         `http://localhost:${process.env.PORT ?? "3000"}`),
   ),
-  title: "EngageKit",
-  description: "The ultimate AI-powered LinkedIn engagement assistant",
+  title: "TrustHuman",
+  description: "Prove you're human with verified social engagement",
   openGraph: {
-    title: "EngageKit",
-    description: "The ultimate AI-powered LinkedIn engagement assistant",
-    url: "https://engagekit.co",
-    siteName: "EngageKit",
-    images: [
-      {
-        url: "/pictures/meta-link-preview.png",
-        width: 1200,
-        height: 630,
-        alt: "EngageKit preview image",
-      },
-    ],
+    title: "TrustHuman",
+    description: "Prove you're human with verified social engagement",
+    url: "https://trusthuman.io",
+    siteName: "TrustHuman",
   },
   twitter: {
     card: "summary_large_image",
-    site: "@engagekit",
     creator: "@knam_nguyen",
-    images: ["/pictures/meta-link-preview.png"],
-  },
-  icons: {
-    icon: "/engagekit-logo.svg",
-    shortcut: "/engagekit-logo.svg",
-    apple: "/engagekit-logo.svg",
   },
 };
 
@@ -63,38 +40,12 @@ export const viewport: Viewport = {
 export default function RootLayout(props: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      {/* tracking for Endoresely affiliate referral */}
-      <Script
-        async
-        src="https://assets.endorsely.com/endorsely.js"
-        data-endorsely="2fb18c3c-7198-4c86-b16b-714f8e177932"
-        strategy="afterInteractive"
-      />
-      {/* tracking for google analytics */}
-      {/* Load Google Analytics script asynchronously */}
-      <Script
-        src="https://www.googletagmanager.com/gtag/js?id=G-6V2N8LZDBF"
-        strategy="afterInteractive"
-      />
-      {/* Initialize and configure GA4 */}
-      <Script id="google-analytics" strategy="afterInteractive">
-        {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-6V2N8LZDBF', {
-              page_path: window.location.pathname,
-            });
-          `}
-      </Script>
       <body className="bg-background text-foreground min-h-full font-sans antialiased">
-        <ConditionalScripts />
         <Providers>
           {props.children}
           <Toaster />
           {env.VERCEL_ENV === "production" && <VercelAnalytics />}
           {env.VERCEL_ENV === "production" && <VercelSpeedInsights />}
-          {/* {env.VERCEL_ENV !== "production" && <Agentation />} */}
         </Providers>
       </body>
     </html>

@@ -18,7 +18,7 @@ const generatedDir = join(__dirname, "..", "generated");
 // Fix edge package.json
 const edgePackageJsonPath = join(generatedDir, "edge", "package.json");
 const edgePackageJson = JSON.parse(readFileSync(edgePackageJsonPath, "utf-8"));
-edgePackageJson.name = "@trusthuman/db-edge";
+edgePackageJson.name = "@sassy/db-edge";
 writeFileSync(
   edgePackageJsonPath,
   JSON.stringify(edgePackageJson, null, 2) + "\n",
@@ -27,12 +27,12 @@ writeFileSync(
 // Fix node package.json
 const nodePackageJsonPath = join(generatedDir, "node", "package.json");
 const nodePackageJson = JSON.parse(readFileSync(nodePackageJsonPath, "utf-8"));
-nodePackageJson.name = "@trusthuman/db-node";
+nodePackageJson.name = "@sassy/db-node";
 writeFileSync(
   nodePackageJsonPath,
   JSON.stringify(nodePackageJson, null, 2) + "\n",
 );
 
 console.log("✅ Fixed Prisma generated package names:");
-console.log("   - generated/edge/package.json → @trusthuman/db-edge");
-console.log("   - generated/node/package.json → @trusthuman/db-node");
+console.log("   - generated/edge/package.json → @sassy/db-edge");
+console.log("   - generated/node/package.json → @sassy/db-node");

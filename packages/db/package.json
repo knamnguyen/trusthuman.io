@@ -1,5 +1,5 @@
 {
-  "name": "@trusthuman/db",
+  "name": "@sassy/db",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -29,8 +29,8 @@
   },
   "dependencies": {
     "@prisma/client": "^6.8.2",
-    "@trusthuman/db-edge": "link:generated/edge",
-    "@trusthuman/db-node": "link:generated/node",
+    "@sassy/db-edge": "link:generated/edge",
+    "@sassy/db-node": "link:generated/node",
     "zod": "catalog:",
     "zod-prisma-types": "^3.2.4"
   },

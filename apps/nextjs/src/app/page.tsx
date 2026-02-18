@@ -1,83 +1,95 @@
-// import Script from "next/script"; // Commented out: Tally embed script
-import { FaqSection } from "./_components/landing/faq-section";
-import { FinalCTASection } from "./_components/landing/final-cta-section";
-import { FloatingCTA } from "./_components/landing/floating-cta";
-import { Footer } from "./_components/landing/footer";
-import { Header } from "./_components/landing/header";
-import { HeroSection } from "./_components/landing/hero-section";
-import { ContextEngineSection } from "./_components/landing/sections/context-engine-section";
-import { HowItWorksSection } from "./_components/landing/sections/how-it-works-section";
-import { KeyFeaturesGrid } from "./_components/landing/sections/key-features-grid";
-import { OpportunitySection } from "./_components/landing/sections/opportunity-section";
-import { PricingSection } from "./_components/landing/sections/pricing-section";
-import { ProblemSolutionSection } from "./_components/landing/sections/problem-solution-section";
-import { ReduceSlopSection } from "./_components/landing/sections/reduce-slop-section";
-import { SocialProofCarousel } from "./_components/landing/sections/social-proof-carousel";
-import { TargetPersonasSection } from "./_components/landing/sections/target-personas-section";
-import { TestimonialsSection } from "./_components/landing/testimonials-section";
+import Link from "next/link";
+import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 
 export default function HomePage() {
   return (
-    <div className="bg-card text-foreground overflow-x-hidden">
-      <Header />
+    <div className="bg-background text-foreground min-h-screen">
+      {/* Header */}
+      <header className="border-b">
+        <div className="container mx-auto flex h-16 items-center justify-between px-4">
+          <h1 className="text-xl font-bold">TrustHuman</h1>
+          <nav className="flex items-center gap-4">
+            <SignedOut>
+              <SignInButton mode="modal">
+                <button className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 py-2 text-sm font-medium">
+                  Sign In
+                </button>
+              </SignInButton>
+            </SignedOut>
+            <SignedIn>
+              <Link
+                href="/dashboard"
+                className="text-muted-foreground hover:text-foreground text-sm"
+              >
+                Dashboard
+              </Link>
+              <UserButton />
+            </SignedIn>
+          </nav>
+        </div>
+      </header>
 
-      {/* Affiliate Banner - sticky positioned right under the header */}
-      <div className="bg-secondary fixed top-18 z-40 w-full py-2">
-        <a
-          href="https://engagekit.endorsely.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block"
-        >
-          <div className="animate-bounce-light text-ld text-secondary-foreground text-center font-bold">
-            Early Affiliate Special: earn up to $1200 a year by referring
-            potential users for EngageKit
+      {/* Hero */}
+      <main className="container mx-auto px-4 py-24 text-center">
+        <h2 className="text-4xl font-bold tracking-tight sm:text-6xl">
+          Prove You're Human
+        </h2>
+        <p className="text-muted-foreground mx-auto mt-6 max-w-2xl text-lg">
+          TrustHuman verifies social engagement with face detection. Build your
+          public profile of verified human activity across LinkedIn and X.
+        </p>
+        <div className="mt-10 flex items-center justify-center gap-4">
+          <SignedOut>
+            <SignInButton mode="modal">
+              <button className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-6 py-3 text-lg font-medium">
+                Get Started
+              </button>
+            </SignInButton>
+          </SignedOut>
+          <SignedIn>
+            <Link
+              href="/dashboard"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-6 py-3 text-lg font-medium"
+            >
+              Go to Dashboard
+            </Link>
+          </SignedIn>
+        </div>
+
+        {/* Features */}
+        <div className="mt-24 grid gap-8 md:grid-cols-3">
+          <div className="rounded-lg border p-6 text-left">
+            <h3 className="text-lg font-semibold">Face Verification</h3>
+            <p className="text-muted-foreground mt-2 text-sm">
+              Capture a photo when you engage to prove a real human is behind
+              the keyboard.
+            </p>
           </div>
-        </a>
-      </div>
-
-      <main className="pt-24">
-        {/* Section 1: Hero */}
-        <HeroSection />
-
-        {/* Section 2: The Opportunity */}
-        <OpportunitySection />
-
-        {/* Section 2.5: Social Proof Carousel */}
-        <SocialProofCarousel />
-
-        {/* Section 3: Problem → Solution Bridge */}
-        <ProblemSolutionSection />
-
-        {/* Section 4: How It Works */}
-        <HowItWorksSection />
-
-        {/* Section 5: Context Engine (Star Feature) */}
-        <ContextEngineSection />
-
-        {/* Section 6: Key Features Grid */}
-        <KeyFeaturesGrid />
-
-        {/* Section 7: Who This Is For */}
-        <TargetPersonasSection />
-
-        {/* Section 8: Reduce Slop & Spam */}
-        <ReduceSlopSection />
-
-        {/* Section 9: Testimonials */}
-        <TestimonialsSection />
-
-        {/* Section 10: Pricing */}
-        <PricingSection />
-
-        {/* Section 11: FAQ */}
-        <FaqSection />
-
-        {/* Section 12: Final CTA */}
-        <FinalCTASection />
+          <div className="rounded-lg border p-6 text-left">
+            <h3 className="text-lg font-semibold">Public Profile</h3>
+            <p className="text-muted-foreground mt-2 text-sm">
+              Share your trusthuman.io/username profile to showcase your
+              verified engagement.
+            </p>
+          </div>
+          <div className="rounded-lg border p-6 text-left">
+            <h3 className="text-lg font-semibold">Streak & Stats</h3>
+            <p className="text-muted-foreground mt-2 text-sm">
+              Build your streak and track your verified human activity across
+              platforms.
+            </p>
+          </div>
+        </div>
       </main>
-      <Footer />
-      <FloatingCTA />
+
+      {/* Footer */}
+      <footer className="border-t py-8">
+        <div className="container mx-auto px-4 text-center">
+          <p className="text-muted-foreground text-sm">
+            © {new Date().getFullYear()} TrustHuman. All rights reserved.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }
