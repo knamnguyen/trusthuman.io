@@ -1,0 +1,46 @@
+// TrustProfile - Core identity with Human # and verification stats
+model TrustProfile {
+  id          String   @id @default(uuid())
+  humanNumber Int      @unique @default(autoincrement()) // Human #1, #2, etc.
+  userId      String   @unique
+  username    String   @unique // URL-safe: trusthuman.io/withkynam
+  displayName String?
+  bio         String?  @db.VarChar(280)
+  avatarUrl   String?
+
+  // Verification stats
+  totalVerifications Int       @default(0)
+  lastVerifiedAt     DateTime?
+
+  // Streak state (for viral growth features later)
+  currentStreak      Int       @default(0)
+  longestStreak      Int       @default(0)
+  streakFreezeTokens Int       @default(0) // max 7
+  lastStreakDate     DateTime?
+
+  // Referral (for viral growth features later)
+  referralCode  String  @unique // auto: "human-{humanNumber}"
+  referredById  String?
+  referralCount Int     @default(0)
+
+  // Settings
+  isPublic   Boolean @default(true)
+  cameraMode String  @default("capture_on_submit")
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user             User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  referredBy       TrustProfile?             @relation("Referrals", fields: [referredById], references: [id])
+  referrals        TrustProfile[]            @relation("Referrals")
+  verifications    HumanVerification[]
+  linkedinComments VerifiedLinkedInComment[]
+  xComments        VerifiedXComment[]
+  platformLinks    PlatformLink[]
+
+  @@index([userId])
+  @@index([username])
+  @@index([humanNumber])
+}

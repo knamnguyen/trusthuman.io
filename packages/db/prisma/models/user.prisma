@@ -1,34 +1,15 @@
+// User model - Synced from Clerk webhook
 model User {
-  id                  String   @id
-  firstName           String?
-  lastName            String?
-  username            String?  @unique
-  primaryEmailAddress String   @unique
-  imageUrl            String?
-  clerkUserProperties Json?
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  id        String   @id // Clerk user ID
+  email     String   @unique
+  firstName String?
+  lastName  String?
+  username  String?  @unique
+  imageUrl  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  linkedInAccounts        LinkedInAccount[]
-  organizationMemberships OrganizationMember[]
-  paidOrganizations       Organization[]       @relation("OrgPayer") // Orgs this user pays for
-
-  stripeCustomerId  String?            @unique
-  dailyAIcomments   Int                @default(0)
-  profileImportRuns ProfileImportRun[]
-
-  //not sure about these - should these be linkedin to linkedin-account table?
-  UserBrowserState UserBrowserState[]
-  AutoCommentRun   AutoCommentRun[]
-
-  //tools - keep attached to each user for now
-  linkedInPostPreviews LinkedInPostPreview[]
-  commentAnalyses      CommentAnalysis[]
-  AutoCommentConfig    AutoCommentConfig[]
-
-  // Weekly analytics email preferences
-  emailPreferences UserEmailPreferences?
-
-  // Trust a Human verifications
-  humanVerifications HumanVerification[]
+  // Relations
+  trustProfile  TrustProfile?
+  verifications HumanVerification[]
 }

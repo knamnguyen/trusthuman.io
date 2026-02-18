@@ -7,63 +7,14 @@
  * The pieces you will need to use are documented accordingly near the end
  */
 
-import { createClerkClient } from "@clerk/backend";
-import { Hyperbrowser } from "@hyperbrowser/sdk";
+import type { User } from "@clerk/nextjs/server";
+import { createClerkClient, verifyToken } from "@clerk/backend";
+import { currentUser } from "@clerk/nextjs/server";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
 
-import type { Prisma, PrismaClient } from "@sassy/db";
-import { db } from "@sassy/db";
-
-import type { BrowserSessionRegistry } from "./utils/browser-session/browser-session";
-import { getOrInsertUser } from "./router/account";
-import { AIService } from "./utils/ai-service/ai-service";
-import { browserJobs } from "./utils/browser-job";
-import { browserRegistry } from "./utils/browser-session/browser-session";
-import { env } from "./utils/env";
-
-/**
- * Auth Cache - prevents redundant auth checks for parallel requests
- *
- * When 6 parallel requests arrive with the same token:
- * - Request 1: cache miss → creates Promise, stores it, does auth work
- * - Requests 2-6: cache hit → await the same Promise
- * - Result: 1 auth check instead of 6
- *
- * TTL: 60 seconds - short enough to be safe, long enough for parallel requests
- */
-type AuthResult = Awaited<ReturnType<typeof getOrInsertUser>>;
-const authCache = new Map<string, Promise<AuthResult>>();
-const AUTH_CACHE_TTL_MS = 60_000;
-
-function getCachedAuth(
-  cacheKey: string,
-  authFn: () => Promise<AuthResult>,
-): Promise<AuthResult> {
-  // Check if we already have a pending or resolved promise
-  const existing = authCache.get(cacheKey);
-  if (existing) {
-    return existing;
-  }
-
-  // Create the promise and cache it IMMEDIATELY (before awaiting)
-  // This ensures parallel requests find the promise and wait for it
-  const promise = authFn();
-  authCache.set(cacheKey, promise);
-
-  // Clean up after TTL (whether success or failure)
-  void promise.finally(() => {
-    setTimeout(() => {
-      // Only delete if it's still the same promise (not replaced)
-      if (authCache.get(cacheKey) === promise) {
-        authCache.delete(cacheKey);
-      }
-    }, AUTH_CACHE_TTL_MS);
-  });
-
-  return promise;
-}
+import { db } from "@trusthuman/db";
 
 /**
  * 1. CONTEXT
@@ -78,46 +29,21 @@ function getCachedAuth(
  * @see https://trpc.io/docs/server/context
  */
 
-export type DbUser = Prisma.UserGetPayload<{
-  select: {
-    id: true;
-    dailyAIcomments: true;
-    firstName: true;
-    primaryEmailAddress: true;
-  };
-}>;
 export interface TRPCContext {
-  db: PrismaClient;
-  user?: DbUser;
+  db: typeof db;
+  user?: User;
   headers: Headers;
-  req: Request;
-  hyperbrowser: Hyperbrowser;
-  browserJobs: typeof browserJobs;
-  browserRegistry: BrowserSessionRegistry;
-  ai: AIService;
 }
 
-const hb = new Hyperbrowser({
-  apiKey: env.HYPERBROWSER_API_KEY,
-});
-
-const ai = new AIService(env.GOOGLE_GENAI_API_KEY);
-
-export const createTRPCContext = (opts: {
+export const createTRPCContext = async (opts: {
   headers: Headers;
-  req: Request;
-}): TRPCContext => {
+}): Promise<TRPCContext> => {
   const source = opts.headers.get("x-trpc-source");
-  console.log(">>> tRPC Request from", source ?? "nextjs");
+  console.log(">>> tRPC Request from", source || "nextjs");
 
   return {
     db,
-    req: opts.req,
     headers: opts.headers,
-    hyperbrowser: hb,
-    browserJobs,
-    browserRegistry,
-    ai,
     // Note: User will be added by the auth middleware when needed
   };
 };
@@ -139,70 +65,113 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
   }),
 });
 
-// Create Clerk client
-const clerkClient = createClerkClient({
-  secretKey: process.env.CLERK_SECRET_KEY,
-  publishableKey: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
-});
-
 /**
  * Clerk authentication middleware
- * Unified auth for both Next.js and Chrome extension requests using authenticateRequest()
- * Returns full Auth object with orgId from active organization
- * Uses auth cache (60s TTL) to deduplicate parallel DB queries
+ * This middleware handles authentication for both Next.js and Chrome extension requests
+ * - Next.js requests: Uses currentUser() from @clerk/nextjs/server
+ * - Chrome extension requests: Uses Backend SDK to verify Authorization header
  */
 const isAuthed = t.middleware(async ({ ctx, next }) => {
-  // Get account id from header (sent by Next.js AccountLayout or Chrome extension)
-  const activeAccountId = ctx.headers.get("x-account-id") ?? null;
+  const source = ctx.headers.get("x-trpc-source");
+  let user: User | null = null;
 
-  // Unified auth: authenticateRequest works for both NextJS and Chrome extension
-  // Returns full Auth object with orgId from active organization
-  const auth = await clerkClient.authenticateRequest(ctx.req);
-  const state = auth.toAuth();
+  if (source === "chrome-extension") {
+    // Handle Chrome extension authentication using Backend SDK
+    const authHeader = ctx.headers.get("authorization");
 
-  if (!state?.isAuthenticated) {
+    if (!authHeader?.startsWith("Bearer ")) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "Missing or invalid authorization header",
+      });
+    }
+
+    const token = authHeader.substring(7); // Remove "Bearer " prefix
+    console.log(
+      "Chrome extension token received - length:",
+      token.length,
+      "dots:",
+      token.split(".").length,
+    );
+
+    try {
+      // Create Clerk client
+      const clerkClient = createClerkClient({
+        secretKey: process.env.CLERK_SECRET_KEY,
+      });
+
+      // Check if this is a JWT (3 parts separated by dots) or a session ID
+      if (token.split(".").length === 3) {
+        // This is a JWT - use verifyToken
+        console.log("Attempting JWT verification...");
+        const verifiedToken = await verifyToken(token, {
+          secretKey: process.env.CLERK_SECRET_KEY,
+        });
+
+        if (verifiedToken.sub) {
+          user = await clerkClient.users.getUser(verifiedToken.sub);
+          console.log("Chrome extension JWT auth success for user:", user.id);
+        }
+      } else {
+        // This is likely a session ID - use Clerk client directly
+        console.log("Attempting session ID verification...");
+
+        try {
+          // Try to get session information using the token as a session ID
+          const session = await clerkClient.sessions.getSession(token);
+
+          if (session.userId) {
+            user = await clerkClient.users.getUser(session.userId);
+            console.log(
+              "Chrome extension session auth success for user:",
+              user.id,
+            );
+          }
+        } catch (sessionError: unknown) {
+          const errorMessage =
+            sessionError instanceof Error
+              ? sessionError.message
+              : String(sessionError);
+          console.log("Session verification failed:", errorMessage);
+
+          // If session lookup fails, try to verify as a JWT anyway (fallback)
+          console.log("Falling back to JWT verification...");
+          const verifiedToken = await verifyToken(token, {
+            secretKey: process.env.CLERK_SECRET_KEY,
+          });
+
+          if (verifiedToken.sub) {
+            user = await clerkClient.users.getUser(verifiedToken.sub);
+            console.log(
+              "Chrome extension fallback JWT auth success for user:",
+              user.id,
+            );
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Chrome extension auth error:", error);
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "Invalid session token",
+      });
+    }
+  } else {
+    // Handle Next.js authentication using currentUser()
+    user = await currentUser();
+  }
+
+  if (!user) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
       message: "Not authenticated",
     });
   }
 
-  // Construct activeOrg from Clerk state (no DB query needed)
-  const activeOrg = state.orgId
-    ? {
-        id: state.orgId,
-        slug: state.orgSlug ?? null,
-        role: state.orgRole ?? null,
-      }
-    : null;
-
-  // Use cached auth to avoid redundant DB queries for parallel requests
-  // Cache key: sessionId + orgId + accountId (covers all variations)
-  const cacheKey = `${state.sessionId}:${activeOrg?.id ?? "none"}:${activeAccountId ?? "none"}`;
-  const result = await getCachedAuth(cacheKey, () =>
-    getOrInsertUser(ctx.db, clerkClient, {
-      userId: state.userId,
-      activeAccountId,
-      activeOrgId: activeOrg?.id ?? null,
-    }),
-  );
-
-  // comment out for assumed access in dev environment
-  // Only check permission if an account is selected
-  if (result.activeAccount?.permitted === false) {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "Access to this account is forbidden",
-    });
-  }
-
   return next({
     ctx: {
-      ...ctx,
-      user: result.user,
-      activeAccount: result.activeAccount,
-      memberships: result.memberships,
-      activeOrg,
+      ...ctx, // Keep existing context with db and headers
+      user, // Add the user to the context
     },
   });
 });
@@ -243,72 +212,6 @@ export const publicProcedure = t.procedure;
  *
  * @see https://trpc.io/docs/procedures
  */
-export const protectedProcedure = t.procedure.use(isAuthed);
-
-/**
- * Organization procedure (Layer 2)
- *
- * Requires user to have an active organization selected in Clerk.
- * Use for org-level pages like /[orgSlug]/accounts where no account is required.
- *
- * @example organizationRouter: getCurrent: orgProcedure.query(...)
- */
-export const orgProcedure = protectedProcedure.use(({ ctx, next }) => {
-  if (!ctx.activeOrg) {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "No active organization selected",
-    });
-  }
-
-  // Use type assertion to narrow the type after runtime check
-  const activeOrg = ctx.activeOrg as {
-    id: string;
-    slug: string | null;
-    role: string | null;
-  };
-
-  console.log("Active org: ", activeOrg.slug);
-  console.log("Users membership: ", ctx.memberships);
-  const isMemberOrg = ctx.memberships.includes(activeOrg.id);
-  console.log("User is member of org: ", isMemberOrg);
-
-  return next({
-    ctx: {
-      ...ctx,
-      activeOrg,
-    },
-  });
-});
-
-/**
- * Account procedure (Layer 3)
- *
- * Requires both active organization AND active account.
- * Use for account-level pages like /[orgSlug]/[accountSlug]/... where account context is required.
- *
- * The x-account-id header is only sent when user is on account-level pages
- * (via Zustand store populated by AccountLayout's useEffect).
- *
- * @example accountRouter: update: accountProcedure.mutation(...)
- */
-export const accountProcedure = orgProcedure.use(({ ctx, next }) => {
-  if (!ctx.activeAccount) {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "No active account selected",
-    });
-  }
-
-  console.log("Active account is: ", ctx.activeAccount.profileUrl);
-  // Use type assertion to narrow the type after runtime check
-  const activeAccount = ctx.activeAccount as NonNullable<
-    typeof ctx.activeAccount
-  >;
-  return next({
-    ctx: {
-      ...ctx,
-      activeAccount,
-    },
-  });
-});
+export const protectedProcedure = t.procedure.use(
+  isAuthed,
+) as unknown as typeof t.procedure;

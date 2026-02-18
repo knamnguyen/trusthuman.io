@@ -1,6 +1,10 @@
 {
-  "name": "sassy",
+  "name": "trusthuman",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/knamnguyen/trusthuman.io.git"
+  },
   "engines": {
     "node": ">=22.11.0",
     "pnpm": ">=9.6.0"

@@ -1,4 +1,0 @@
-model ExtensionDeploymentMeta {
-  id        String   @id
-  createdAt DateTime @default(now())
-}

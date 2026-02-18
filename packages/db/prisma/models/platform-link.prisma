@@ -1,0 +1,23 @@
+// PlatformLink - Connect LinkedIn/X account (from extension)
+model PlatformLink {
+  id             String  @id @default(uuid())
+  trustProfileId String
+  platform       String // "linkedin" | "x"
+
+  // Profile info (scraped from DOM by extension)
+  profileUrl    String  // Full profile URL
+  profileHandle String? // @username (X) or slug (LinkedIn)
+  displayName   String? // Name shown on profile
+  avatarUrl     String? // Profile picture URL
+
+  // Verification
+  verified    Boolean  @default(true) // True if connected via extension (proves ownership)
+  connectedAt DateTime @default(now())
+
+  trustProfile TrustProfile @relation(fields: [trustProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([trustProfileId, platform]) // ONE account per platform per user
+  @@unique([platform, profileUrl]) // Each profile URL globally unique
+  @@index([trustProfileId])
+  @@index([platform, profileUrl])
+}
