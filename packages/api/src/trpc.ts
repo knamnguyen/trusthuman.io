@@ -212,6 +212,4 @@ export const publicProcedure = t.procedure;
  *
  * @see https://trpc.io/docs/procedures
  */
-export const protectedProcedure = t.procedure.use(
-  isAuthed,
-) as unknown as typeof t.procedure;
+export const protectedProcedure = t.procedure.use(isAuthed);
