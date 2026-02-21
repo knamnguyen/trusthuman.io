@@ -74,7 +74,7 @@ export function GhostCursor({
           width: 40,
           height: 40,
           borderRadius: "50%",
-          backgroundColor: "rgba(229, 72, 108, 0.2)", // primary color with opacity
+          backgroundColor: "rgba(76, 159, 65, 0.2)", // primary color with opacity
           animation: "ghost-cursor-pulse 0.8s ease-out infinite",
         }}
       />
@@ -88,8 +88,8 @@ export function GhostCursor({
           width: 16,
           height: 16,
           borderRadius: "50%",
-          backgroundColor: "#e5486c", // primary color
-          boxShadow: "0 0 12px 4px rgba(229, 72, 108, 0.4)",
+          backgroundColor: "#4c9f41", // primary color
+          boxShadow: "0 0 12px 4px rgba(76, 159, 65, 0.4)",
         }}
       />
       {/* Cursor pointer shape */}
@@ -109,7 +109,7 @@ export function GhostCursor({
         <path
           d="M4 4L10.5 20L13 13L20 10.5L4 4Z"
           fill="white"
-          stroke="#e5486c"
+          stroke="#4c9f41"
           strokeWidth="2"
           strokeLinejoin="round"
         />

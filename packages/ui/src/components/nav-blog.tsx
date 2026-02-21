@@ -155,7 +155,7 @@ function DefaultBlogLogo() {
         style={{ border: "none" }}
       />
       <span className="text-lg font-bold">
-        linkedin <span style={{ color: "#e5486c" }}>hero</span> blog
+        linkedin <span className="text-primary">hero</span> blog
       </span>
     </a>
   );

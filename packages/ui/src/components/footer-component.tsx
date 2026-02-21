@@ -82,7 +82,7 @@ export function FooterComponent({
   const DefaultLogo = () => (
     <div className="mb-4">
       <h2 className="text-xl font-bold sm:text-2xl">
-        linkedin <span style={{ color: "#e5486c" }}>hero</span> blog
+        linkedin <span className="text-primary">hero</span> blog
       </h2>
       <img
         src="https://engagekit-ghost-blog.vercel.app/media/engagekit-logo.svg"

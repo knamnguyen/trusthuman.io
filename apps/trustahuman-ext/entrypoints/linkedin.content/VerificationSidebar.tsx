@@ -16,8 +16,8 @@ function VerificationCard({ v }: { v: Verification }) {
     <div
       className={`rounded-lg border overflow-hidden ${
         v.verified
-          ? "border-green-200 bg-green-50"
-          : "border-yellow-200 bg-yellow-50"
+          ? "border-primary/30 bg-primary/5"
+          : "border-secondary/30 bg-secondary/5"
       }`}
     >
       {/* Photo with bounding box overlay */}
@@ -29,9 +29,10 @@ function VerificationCard({ v }: { v: Verification }) {
         />
         {v.boundingBox && (
           <div
-            className="absolute border-2 rounded"
+            className={`absolute border-2 rounded ${
+              v.verified ? "border-primary" : "border-secondary"
+            }`}
             style={{
-              borderColor: v.verified ? "#16a34a" : "#eab308",
               left: `${v.boundingBox.left * 100}%`,
               top: `${v.boundingBox.top * 100}%`,
               width: `${v.boundingBox.width * 100}%`,
@@ -52,7 +53,7 @@ function VerificationCard({ v }: { v: Verification }) {
         <div className="mt-1 flex items-center justify-between">
           <span
             className={`text-xs font-medium ${
-              v.verified ? "text-green-700" : "text-yellow-700"
+              v.verified ? "text-primary" : "text-secondary"
             }`}
           >
             {v.verified ? "Verified" : "Not verified"}
@@ -94,7 +95,7 @@ export function VerificationSidebar({ onClose }: VerificationSidebarProps) {
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <span
             className={`inline-block h-2 w-2 rounded-full ${
-              isRecording ? "bg-green-500 animate-pulse" : "bg-gray-300"
+              isRecording ? "bg-primary animate-pulse" : "bg-muted-foreground/30"
             }`}
           />
           {isRecording ? "Monitoring LinkedIn" : "Paused"}

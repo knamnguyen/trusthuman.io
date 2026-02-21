@@ -16,7 +16,7 @@ function ApplauseButton({ url }: { url: string }) {
     if (ref.current && !ref.current.querySelector("applause-button")) {
       const button = document.createElement("applause-button");
       button.setAttribute("url", url);
-      button.setAttribute("color", "#e5486c");
+      button.setAttribute("color", "#4c9f41");
       button.setAttribute("multiclap", "true");
       button.style.width = "58px";
       button.style.height = "58px";

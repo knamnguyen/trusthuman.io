@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 
+import { Button } from "@sassy/ui/button";
+
 export default function HomePage() {
   return (
     <div className="bg-background text-foreground min-h-screen">
@@ -11,9 +13,9 @@ export default function HomePage() {
           <nav className="flex items-center gap-4">
             <SignedOut>
               <SignInButton mode="modal">
-                <button className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 py-2 text-sm font-medium">
+                <Button variant="primary" size="sm">
                   Sign In
-                </button>
+                </Button>
               </SignInButton>
             </SignedOut>
             <SignedIn>
@@ -41,38 +43,35 @@ export default function HomePage() {
         <div className="mt-10 flex items-center justify-center gap-4">
           <SignedOut>
             <SignInButton mode="modal">
-              <button className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-6 py-3 text-lg font-medium">
+              <Button variant="primary" size="lg">
                 Get Started
-              </button>
+              </Button>
             </SignInButton>
           </SignedOut>
           <SignedIn>
-            <Link
-              href="/dashboard"
-              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-6 py-3 text-lg font-medium"
-            >
-              Go to Dashboard
-            </Link>
+            <Button variant="primary" size="lg" asChild>
+              <Link href="/dashboard">Go to Dashboard</Link>
+            </Button>
           </SignedIn>
         </div>
 
         {/* Features */}
         <div className="mt-24 grid gap-8 md:grid-cols-3">
-          <div className="rounded-lg border p-6 text-left">
+          <div className="rounded-lg border-2 border-border bg-card p-6 text-left shadow-sm">
             <h3 className="text-lg font-semibold">Face Verification</h3>
             <p className="text-muted-foreground mt-2 text-sm">
               Capture a photo when you engage to prove a real human is behind
               the keyboard.
             </p>
           </div>
-          <div className="rounded-lg border p-6 text-left">
+          <div className="rounded-lg border-2 border-border bg-card p-6 text-left shadow-sm">
             <h3 className="text-lg font-semibold">Public Profile</h3>
             <p className="text-muted-foreground mt-2 text-sm">
               Share your trusthuman.io/username profile to showcase your
               verified engagement.
             </p>
           </div>
-          <div className="rounded-lg border p-6 text-left">
+          <div className="rounded-lg border-2 border-border bg-card p-6 text-left shadow-sm">
             <h3 className="text-lg font-semibold">Streak & Stats</h3>
             <p className="text-muted-foreground mt-2 text-sm">
               Build your streak and track your verified human activity across
