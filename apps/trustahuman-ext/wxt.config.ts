@@ -26,7 +26,7 @@ export default defineConfig({
     permissions: ["offscreen", "storage"],
     host_permissions: [
       "https://*.linkedin.com/*",
-      "https://*.engagekit.io/*",
+      "https://*.trusthuman.io/*",
       "http://localhost/*",
     ],
     web_accessible_resources: [
