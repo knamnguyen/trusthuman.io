@@ -638,50 +638,22 @@ model PlatformLink {
     - Fix: Route import errors, missing components
     - Goal: Clean typecheck
 
-### Phase 5: Cloudflare Tunnel Setup (8 steps)
+### Phase 5: Cloudflare Tunnel Setup (8 steps) ✅ COMPLETE
 
-43. **Check cloudflared installation**
-    - Run: `cloudflared --version`
-    - If not installed: `brew install cloudflare/cloudflare/cloudflared`
+> **Status (Feb 21, 2026)**: Cloudflare tunnel already configured at `dev.trusthuman.io` → `localhost:3000`
 
-44. **Authenticate Cloudflare account (if needed)**
-    - Run: `cloudflared tunnel login`
-    - Select domain: `trusthuman.io`
-    - Verify: Certificate saved to `~/.cloudflared/`
-
-45. **Create tunnel**
-    - Run: `cloudflared tunnel create trusthuman-dev`
-    - Note: Save tunnel ID from output
-
-46. **Create tunnel configuration file**
-    - File: `~/.cloudflared/config-trusthuman.yml` (separate from engagekit)
-    - Content:
-      ```yaml
-      tunnel: <TUNNEL_ID>
-      credentials-file: /Users/knamnguyen/.cloudflared/<TUNNEL_ID>.json
-
-      ingress:
-        - hostname: api-dev.trusthuman.io
-          service: http://localhost:3000
-        - service: http_status:404
-      ```
-
-47. **Create DNS record**
-    - Run: `cloudflared tunnel route dns trusthuman-dev api-dev.trusthuman.io`
-    - Verify: DNS record created in Cloudflare dashboard
-
-48. **Test tunnel**
-    - Terminal 1: `pnpm dev` (starts Next.js on localhost:3000)
-    - Terminal 2: `cloudflared tunnel --config ~/.cloudflared/config-trusthuman.yml run trusthuman-dev`
-    - Test: Visit `https://api-dev.trusthuman.io`
-
-49. **Configure Clerk webhook endpoint**
+43. ✅ **Check cloudflared installation** — Already installed
+44. ✅ **Authenticate Cloudflare account** — Already authenticated
+45. ✅ **Create tunnel** — Tunnel exists
+46. ✅ **Create tunnel configuration file** — Configured for `dev.trusthuman.io`
+47. ✅ **Create DNS record** — `dev.trusthuman.io` → tunnel
+48. ✅ **Test tunnel** — Working, proxies `localhost:3000`
+49. **Configure Clerk webhook endpoint** — TODO
     - Clerk Dashboard → Webhooks → Create endpoint
-    - URL: `https://api-dev.trusthuman.io/api/webhooks/clerk`
+    - URL: `https://dev.trusthuman.io/api/webhooks/clerk`
     - Events: `user.created`, `user.updated`, `user.deleted`
     - Get webhook signing secret
-
-50. **Update .env with webhook secret**
+50. **Update .env with webhook secret** — TODO
     - Add: `CLERK_WEBHOOK_SECRET=whsec_...`
     - Verify: Webhook handler reads this secret
 
@@ -764,9 +736,9 @@ model PlatformLink {
 - [ ] Clean typecheck
 
 ### Cloudflare Tunnel
-- [ ] Tunnel 'trusthuman-dev' created
-- [ ] DNS: api-dev.trusthuman.io → tunnel
-- [ ] Tunnel proxies localhost:3000
+- [x] Tunnel created (dev.trusthuman.io)
+- [x] DNS: dev.trusthuman.io → tunnel
+- [x] Tunnel proxies localhost:3000
 - [ ] Clerk webhook configured to tunnel URL
 
 ### Development Environment
@@ -814,7 +786,7 @@ After all steps:
 
 - [ ] `pnpm typecheck` passes
 - [ ] `pnpm dev` starts successfully
-- [ ] User can sign up at api-dev.trusthuman.io via Clerk
+- [ ] User can sign up at dev.trusthuman.io via Clerk
 - [ ] Clerk webhook syncs user to Supabase (User table)
 - [ ] Database has TrustHuman schema (User, TrustProfile, HumanVerification, VerifiedLinkedInComment, VerifiedXComment, PlatformLink)
 - [ ] Database has NO EngageKit tables (Organization, LinkedInAccount, etc.)

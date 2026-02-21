@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useTheme } from "next-themes";
 import { Toaster as Sonner, toast } from "sonner";
 
@@ -40,6 +41,30 @@ interface ToasterSimpleProps {
 }
 
 /**
+ * Copy sonner styles from document head into the shadow root.
+ * Sonner injects styles into document.head which aren't available in shadow DOM.
+ */
+function copySonnerStylesToShadow(shadowContainer: HTMLElement | null) {
+  if (!shadowContainer) return;
+
+  // Find the shadow root
+  const shadowRoot = shadowContainer.getRootNode();
+  if (!(shadowRoot instanceof ShadowRoot)) return;
+
+  // Check if we already copied styles
+  if (shadowRoot.querySelector("[data-sonner-styles]")) return;
+
+  // Find and copy sonner styles from document head
+  document.head.querySelectorAll("style").forEach((styleEl) => {
+    if (styleEl.textContent?.includes("[data-sonner-toaster]")) {
+      const clonedStyle = styleEl.cloneNode(true) as HTMLStyleElement;
+      clonedStyle.setAttribute("data-sonner-styles", "true");
+      shadowRoot.appendChild(clonedStyle);
+    }
+  });
+}
+
+/**
  * Simple Toaster without next-themes dependency.
  * Accepts a container prop for shadow root support in extensions.
  */
@@ -47,6 +72,15 @@ const ToasterSimple = ({
   container,
   position = "bottom-right",
 }: ToasterSimpleProps) => {
+  // Copy sonner styles into shadow root on mount
+  useEffect(() => {
+    // Small delay to ensure sonner has injected its styles
+    const timer = setTimeout(() => {
+      copySonnerStylesToShadow(container);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [container]);
+
   return (
     <Sonner
       theme="light"

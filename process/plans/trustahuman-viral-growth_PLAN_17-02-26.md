@@ -46,7 +46,7 @@ The existing MVP (WXT Chrome extension) proves the technical concept: webcam cap
 2. **"Social Proof" Loop** (Spotify Wrapped model): Milestone events trigger designed-to-share cards
 3. **"Status Signal" Loop** (Blue Checkmark model): Extension overlay shows Trust Scores, creating FOMO
 
-**In-scope (12 features)**:
+**In-scope (11 features)**:
 1. Human Numbering System — Sequential permanent number on signup + first verification
 2. Public Profile Page — `trustahuman.com/u/username` with Trust Score, heatmap, activity feed
 3. Human Card — Beautiful shareable card generated on signup for social sharing
@@ -55,10 +55,10 @@ The existing MVP (WXT Chrome extension) proves the technical concept: webcam cap
 6. Sharing Rewards — Share card → earn streak freeze tokens
 7. Referral System — Two-sided rewards, tiered milestones, Trust Network
 8. Embeddable Badges — Shield/card/widget/markdown badge formats for external sites
-9. Camera Mode Toggle — "Capture on submit" vs "Camera always on" extension setting
-10. Monthly Trust Report — Auto-generated shareable stats summary
-11. **Rich Activity Capture** — Extension captures comment text + full post context (author, headline, URL) on LinkedIn AND X/Twitter, stored for web display
-12. **Extension Badge Overlay** — Extension injects Trust badges onto LinkedIn/X profiles and feeds of other verified humans (FOMO loop)
+9. Monthly Trust Report — Auto-generated shareable stats summary
+10. **Rich Activity Capture** — Extension captures comment text + full post context (author, headline, URL) on LinkedIn AND X/Twitter, stored for web display
+11. **Extension Badge Overlay** — Extension injects Trust badges onto LinkedIn/X profiles and feeds of other verified humans (FOMO loop)
+12. **Triss Mascot** — Friendly green seal companion providing contextual feedback during verification flow (see MVP plan for details)
 
 **Out-of-scope (V1)**:
 - Enterprise team verification product
@@ -87,10 +87,10 @@ The existing MVP (WXT Chrome extension) proves the technical concept: webcam cap
 
 **Test**: Cards render correctly at all platform dimensions. Badges are verifiable (click → profile). Referral tracking works end-to-end. Reward distribution is correct.
 
-### Phase Group 4: Engagement Loops (RFC-009 to RFC-010)
-**What happens**: Implement sharing rewards (share → streak freeze tokens). Build monthly Trust Report generation (Spotify Wrapped style). Add camera mode toggle to extension.
+### Phase Group 4: Engagement Loops (RFC-009)
+**What happens**: Implement sharing rewards (share → streak freeze tokens). Build monthly Trust Report generation (Spotify Wrapped style).
 
-**Test**: Sharing verification works (URL proof check). Monthly reports generate with accurate stats. Camera mode toggle persists and functions correctly.
+**Test**: Sharing verification works (URL proof check). Monthly reports generate with accurate stats.
 
 ### Phase Group 5: Activity Capture & Badge Overlay (RFC-012 to RFC-013)
 **What happens**: Build X/Twitter content script support alongside existing LinkedIn. Implement DOM scraping for rich activity capture (comment text + full post context). Build activity feed display on public profile. Implement PlatformLink system and badge overlay injection on LinkedIn/X profiles and feeds.
@@ -110,7 +110,7 @@ The existing MVP (WXT Chrome extension) proves the technical concept: webcam cap
 - Referral system incentivizes organic growth
 - Embeddable badges extend reach to personal websites, GitHub, email signatures
 - Monthly Trust Reports create periodic sharing waves
-- Camera mode toggle improves extension UX
+- Triss mascot provides friendly, contextual feedback during verification
 - Extension captures rich activity context from LinkedIn AND X/Twitter
 - Public profile shows replicated LinkedIn/X UI for each verified interaction
 - Badge overlay on LinkedIn/X profiles creates FOMO loop for non-users
@@ -733,7 +733,7 @@ model TrustProfile {
   // Settings
   isPublic            Boolean   @default(true)
   showOnLeaderboard   Boolean   @default(true)
-  cameraMode          String    @default("capture_on_submit") // "capture_on_submit" | "always_on"
+  // Note: Camera mode removed - using auto-capture only for less invasive UX
 
   // Timestamps
   createdAt           DateTime  @default(now())
@@ -989,7 +989,7 @@ model PlatformLink {
 
 **Auth**: `protectedProcedure`
 
-**Input**: `Partial<{ displayName, bio, avatarUrl, isPublic, showOnLeaderboard, cameraMode }>`
+**Input**: `Partial<{ displayName, bio, avatarUrl, isPublic, showOnLeaderboard }>`
 
 #### `trustProfile.computeTrustScore` (query)
 
@@ -1230,10 +1230,10 @@ Not applicable for V1. All data refreshes on page load. Future Phase 2 may add W
 ⏳ **RFC-007**: Embeddable Badges (PLANNED)
 ⏳ **RFC-008**: Referral System (PLANNED)
 ⏳ **RFC-009**: Sharing Rewards & Monthly Trust Report (PLANNED)
-⏳ **RFC-010**: Camera Mode Toggle (Extension) (PLANNED)
-⏳ **RFC-011**: Integration Testing & Polish (PLANNED)
-⏳ **RFC-012**: Rich Activity Capture & X/Twitter Support (PLANNED)
-⏳ **RFC-013**: Extension Badge Overlay (PLANNED)
+~~RFC-010: Camera Mode Toggle~~ — REMOVED (using auto-capture only for simpler, less invasive UX)
+⏳ **RFC-010**: Integration Testing & Polish (PLANNED) — renumbered from RFC-011
+⏳ **RFC-011**: Rich Activity Capture & X/Twitter Support (PLANNED) — renumbered from RFC-012
+⏳ **RFC-012**: Extension Badge Overlay (PLANNED) — renumbered from RFC-013
 
 **Immediate Next Steps**: RFC-001 — Database Schema & Migrations
 
@@ -1977,65 +1977,17 @@ Not applicable for V1. All data refreshes on page load. Future Phase 2 may add W
 
 **What's Functional Now**: Sharing rewards loop and monthly viral sharing waves
 
-**Ready For**: RFC-010 (Camera Mode Toggle)
+**Ready For**: RFC-010 (Integration Testing & Polish)
 
 ---
 
-### RFC-010: Camera Mode Toggle (Extension)
+### ~~RFC-010: Camera Mode Toggle~~ — REMOVED
 
-**Summary**: Add a camera mode setting to the extension: "Capture on submit" (default, current behavior — camera activates per comment) vs "Camera always on" (persistent stream, one macOS notification per session).
-
-**Dependencies**: None (can run in parallel with other RFCs)
-
-**Stage 1: Settings Store**
-1. Add `cameraMode` to extension's Zustand store or Chrome storage
-2. Default: `"capture_on_submit"`
-3. Persist across sessions via `chrome.storage.local`
-
-**Stage 2: Settings UI**
-1. Add settings section in extension sidebar
-2. Toggle between "Capture on submit" and "Camera always on"
-3. Description for each mode:
-   - Capture on submit: "Camera activates each time you submit a comment. More private, but macOS shows a notification each time."
-   - Camera always on: "Camera stays on while extension is active. Single notification per session. Camera indicator visible."
-
-**Stage 3: Persistent Stream Mode**
-1. When "always on" mode is selected:
-   - Create offscreen document on extension load (not per capture)
-   - Start `getUserMedia` stream and keep it alive
-   - On capture: take frame from existing stream (no new `getUserMedia` call)
-   - Destroy offscreen document only when mode changes or browser closes
-2. This eliminates repeated macOS "Reactions" notifications
-
-**Stage 4: Sync with TrustProfile**
-1. If user has a TrustProfile, sync `cameraMode` setting to server
-2. `trustProfile.updateSettings({ cameraMode })` mutation
-3. New devices pick up server-side preference
-
-**Post-Phase Testing**:
-- ✓ Setting persists across extension reload
-- ✓ "Capture on submit" mode works as current behavior
-- ✓ "Camera always on" mode keeps stream alive
-- ✓ Only 1 macOS notification in "always on" mode per session
-- ✓ Camera indicator visible when stream is active
-- ✓ Mode toggle UI is clear and accessible
-- ✓ Setting syncs to TrustProfile on server
-
-**Acceptance Criteria**:
-- [ ] Toggle UI in extension sidebar
-- [ ] Default mode is "Capture on submit"
-- [ ] "Camera always on" reduces macOS notifications to 1 per session
-- [ ] Stream properly cleaned up on mode change/browser close
-- [ ] Setting persists in Chrome storage
-- [ ] Setting syncs to server if TrustProfile exists
-
-**What's Functional Now**: Users can choose their preferred camera behavior
-
-**Ready For**: RFC-012 (Rich Activity Capture & X/Twitter Support)
+> **Decision (Feb 21, 2026)**: Camera mode toggle removed from scope. Using **auto-capture only** (single image on submit) for simpler, less invasive UX. This reduces complexity and feels more privacy-friendly than an "always on" option.
 
 ---
 
-### RFC-012: Rich Activity Capture & X/Twitter Support
+### RFC-010: Rich Activity Capture & X/Twitter Support (renumbered from RFC-012)
 
 **Summary**: Extend the extension to capture rich activity context (comment text + full post context) on both LinkedIn and X/Twitter. Build X/Twitter content scripts. Store VerifiedActivity server-side. Display activity feed on public profile page with replicated platform UI.
 
@@ -2124,15 +2076,15 @@ Not applicable for V1. All data refreshes on page load. Future Phase 2 may add W
 
 **What's Functional Now**: Extension captures rich activity on LinkedIn AND X/Twitter; profile shows verified interaction feed
 
-**Ready For**: RFC-013 (Extension Badge Overlay)
+**Ready For**: RFC-011 (Extension Badge Overlay)
 
 ---
 
-### RFC-013: Extension Badge Overlay
+### RFC-011: Extension Badge Overlay (renumbered from RFC-013)
 
 **Summary**: Implement badge injection on LinkedIn and X/Twitter profile pages and feeds. When a TrustAHuman extension user visits another verified human's LinkedIn/X profile, they see a Trust badge. Also show badges next to verified humans in feeds.
 
-**Dependencies**: RFC-001 (Database: PlatformLink model), RFC-004 (badge overlay router), RFC-012 (X/Twitter content scripts exist)
+**Dependencies**: RFC-001 (Database: PlatformLink model), RFC-004 (badge overlay router), RFC-010 (X/Twitter content scripts exist)
 
 **Stage 0: Pre-Phase Research**
 1. Analyze LinkedIn profile page DOM structure (where to inject badge)
@@ -2208,15 +2160,15 @@ Not applicable for V1. All data refreshes on page load. Future Phase 2 may add W
 
 **What's Functional Now**: Extension shows Trust badges on LinkedIn/X profiles and feeds — the core FOMO viral loop
 
-**Ready For**: RFC-011 (Integration Testing & Polish)
+**Ready For**: RFC-012 (Integration Testing & Polish)
 
 ---
 
-### RFC-011: Integration Testing & Polish
+### RFC-012: Integration Testing & Polish (renumbered from RFC-011)
 
 **Summary**: End-to-end testing of all features, performance optimization, responsive design audit, and launch preparation.
 
-**Dependencies**: RFC-001 through RFC-013
+**Dependencies**: RFC-001 through RFC-011
 
 **Stage 1: End-to-End Flow Testing**
 1. Test complete signup flow: Install extension → Verify face → Create TrustProfile → Get Human # → See welcome screen
@@ -2582,13 +2534,9 @@ Not applicable for V1. All data refreshes on page load. Future Phase 2 may add W
 - [ ] Build report card image generation
 - [ ] Build report page + share buttons
 
-**RFC-010: Camera Mode Toggle** (~2 hours)
-- [ ] Add settings to extension store
-- [ ] Build toggle UI
-- [ ] Implement persistent stream mode
-- [ ] Sync setting to server
+~~**RFC-010: Camera Mode Toggle**~~ — REMOVED (using auto-capture only)
 
-**RFC-012: Rich Activity Capture & X/Twitter Support** (~6 hours)
+**RFC-010: Rich Activity Capture & X/Twitter Support** (~6 hours)
 - [ ] Build shared scraping abstraction (ScrapedPostContext type)
 - [ ] Build LinkedIn DOM scraper (post author, text, avatar, headline)
 - [ ] Build X/Twitter DOM scraper (tweet author, text, avatar, handle)
@@ -2598,7 +2546,7 @@ Not applicable for V1. All data refreshes on page load. Future Phase 2 may add W
 - [ ] Build activity feed section on public profile page
 - [ ] Test graceful fallback when DOM scraping fails
 
-**RFC-013: Extension Badge Overlay** (~6 hours)
+**RFC-011: Extension Badge Overlay** (~6 hours)
 - [ ] Implement PlatformLink auto-detection from extension context
 - [ ] Build badge overlay content script for LinkedIn profile pages
 - [ ] Build badge overlay content script for X/Twitter profile pages
@@ -2608,7 +2556,7 @@ Not applicable for V1. All data refreshes on page load. Future Phase 2 may add W
 - [ ] Design badge UI (tier-colored shield + score)
 - [ ] Test on both LinkedIn and X/Twitter
 
-**RFC-011: Integration Testing & Polish** (~5 hours)
+**RFC-012: Integration Testing & Polish** (~5 hours)
 - [ ] End-to-end flow testing (including activity capture + badge overlay)
 - [ ] Performance optimization
 - [ ] Responsive design audit
@@ -2616,7 +2564,7 @@ Not applicable for V1. All data refreshes on page load. Future Phase 2 may add W
 - [ ] Security audit
 - [ ] Launch checklist
 
-**Total Estimated Time**: ~57 hours (8-9 working days)
+**Total Estimated Time**: ~55 hours (7-8 working days)
 
 ---
 

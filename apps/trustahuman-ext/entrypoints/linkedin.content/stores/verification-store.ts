@@ -7,11 +7,14 @@ export interface BoundingBox {
   top: number;
 }
 
+export type ActivityType = "linkedin_comment" | "linkedin_post" | "x_comment" | "x_post";
+export type Platform = "linkedin" | "x";
+
 export interface Verification {
   id: string;
   timestamp: Date;
-  action: "comment";
-  platform: "linkedin";
+  action: ActivityType;
+  platform: Platform;
   verified: boolean;
   confidence: number;
   faceCount: number;

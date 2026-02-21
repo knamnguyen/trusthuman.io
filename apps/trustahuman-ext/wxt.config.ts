@@ -29,6 +29,12 @@ export default defineConfig({
       "https://*.engagekit.io/*",
       "http://localhost/*",
     ],
+    web_accessible_resources: [
+      {
+        resources: ["trusthuman-logo.svg"],
+        matches: ["https://*.linkedin.com/*"],
+      },
+    ],
   },
 
   vite: () => ({

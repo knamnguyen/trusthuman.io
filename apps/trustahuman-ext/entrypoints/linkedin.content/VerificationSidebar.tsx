@@ -130,6 +130,7 @@ export function VerificationSidebar({ onClose }: VerificationSidebarProps) {
           </div>
         )}
       </div>
+
     </SheetContent>
   );
 }

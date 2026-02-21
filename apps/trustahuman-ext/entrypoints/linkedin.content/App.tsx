@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Sheet } from "@sassy/ui/sheet";
+import { ToasterSimple } from "@sassy/ui/toast";
 
 import { ToggleButton } from "./ToggleButton";
 import { VerificationSidebar } from "./VerificationSidebar";
@@ -17,6 +18,7 @@ export default function App({ shadowRoot }: AppProps) {
 
   useEffect(() => {
     setShadowRoot(shadowRoot);
+    console.log("TrustAHuman: App mounted, shadowRoot:", shadowRoot);
   }, [shadowRoot, setShadowRoot]);
 
   useEffect(() => {
@@ -30,6 +32,9 @@ export default function App({ shadowRoot }: AppProps) {
 
   return (
     <>
+      {/* Sonner toaster for Triss notifications - renders into shadow root */}
+      <ToasterSimple container={shadowRoot} position="bottom-center" />
+
       {showOpenButton && (
         <div className="fixed top-1/2 right-0 z-[9999] -translate-y-1/2">
           <ToggleButton isOpen={false} onToggle={() => setIsOpen(true)} />

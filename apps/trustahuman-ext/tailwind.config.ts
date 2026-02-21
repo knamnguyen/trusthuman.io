@@ -55,6 +55,20 @@ export default {
       fontFamily: {
         sans: "var(--font-sans)",
       },
+      keyframes: {
+        wiggle: {
+          "0%, 100%": { transform: "rotate(-5deg)" },
+          "50%": { transform: "rotate(5deg)" },
+        },
+        "wiggle-emoji": {
+          "0%, 100%": { transform: "rotate(-10deg) scale(1)" },
+          "50%": { transform: "rotate(10deg) scale(1.1)" },
+        },
+      },
+      animation: {
+        wiggle: "wiggle 0.5s ease-in-out infinite",
+        "wiggle-emoji": "wiggle-emoji 0.4s ease-in-out infinite",
+      },
       boxShadow: {
         "2xs": "var(--shadow-2xs)",
         xs: "var(--shadow-xs)",

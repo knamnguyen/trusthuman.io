@@ -1156,3 +1156,300 @@ Add to `dependencies`:
 3. **Base64 size**: 640x480 JPEG at 0.8 quality is ~30-50KB. Fine for tRPC.
 4. **No auth means no user tracking**: Results stored with `userId: null`. Acceptable for MVP testing.
 5. **Public endpoint**: `analyzePhoto` is unauthenticated. Acceptable for MVP. Lock down before production.
+
+---
+
+## Triss Mascot System
+
+**Added: Feb 21, 2026**
+
+Triss is a cute green seal mascot that provides friendly, contextual feedback during the verification flow. The mascot turns webcam verification from a potentially "surveillance-y" experience into a friendly companion interaction.
+
+### Why a Mascot?
+
+- **Personification reduces threat** - A character "looking at you" feels friendlier than "the system is watching"
+- **Transparency through narrative** - "I'm taking a photo... now I'm deleting it" makes the process visible
+- **Emotional reward** - Celebration on success creates positive association
+- **Seal = "seal of approval"** - Perfect metaphor for verification/trust
+
+### Triss States & Messages
+
+| State | Expression | Message |
+|-------|------------|---------|
+| `idle` | Curious, looking around | "Waiting for your next post or reply!" |
+| `typing` | Excited, leaning forward | "Ooh, you're writing something!" |
+| `submitted` | Happy clap with flippers | "Nice! You posted!" |
+| `capturing` | Eyes wide, slight wink | "Say hi! Quick pic to verify you're there" |
+| `verifying` | Eyes spinning/loading | "Checking if you're human..." |
+| `verified` | Big smile, flipper wave | "You're human! Badge earned!" |
+| `not_verified` | Confused, head tilt | "Hmm, couldn't see you. Try again?" |
+| `photo_deleted` | Satisfied nod | "Photo deleted! Your privacy is safe" |
+| `streak` | Party hat, bouncing | "7-day streak! You're on fire!" |
+
+### Triss Assets (Sprite Sheet)
+
+Assets provided as sprite sheet at `apps/trustahuman-ext/assets/triss-sprites.png`:
+
+```
+triss-idle         (base state)
+triss-typing       (leaning forward, interested)
+triss-submitted    (happy, flippers up)
+triss-capturing    (winking, camera icon nearby)
+triss-verifying    (eyes as loading spinners)
+triss-verified     (big smile, checkmark)
+triss-not-verified (confused, question mark)
+triss-deleted      (satisfied, sweeping motion)
+triss-streak       (party hat, confetti)
+```
+
+### Triss Component
+
+```typescript
+// apps/trustahuman-ext/entrypoints/linkedin.content/Triss.tsx
+
+type TrissState =
+  | "idle"
+  | "typing"
+  | "submitted"
+  | "capturing"
+  | "verifying"
+  | "verified"
+  | "not_verified"
+  | "photo_deleted"
+  | "streak";
+
+interface TrissProps {
+  state: TrissState;
+  message?: string;
+  streakCount?: number;
+}
+
+export function Triss({ state, message, streakCount }: TrissProps) {
+  const defaultMessages: Record<TrissState, string> = {
+    idle: "Waiting for your next post or reply!",
+    typing: "Ooh, you're writing something!",
+    submitted: "Nice! You posted!",
+    capturing: "Say hi! Quick pic to verify you're there",
+    verifying: "Checking if you're human...",
+    verified: "You're human! Badge earned!",
+    not_verified: "Hmm, couldn't see you. Try again?",
+    photo_deleted: "Photo deleted! Your privacy is safe",
+    streak: `${streakCount}-day streak! You're on fire!`,
+  };
+
+  return (
+    <div className="flex items-end gap-3 p-3 border-t border-border bg-card/50">
+      <TrissSpriteImage state={state} className="w-12 h-12" />
+      <div className="flex-1">
+        <p className="text-sm text-foreground">
+          {message ?? defaultMessages[state]}
+        </p>
+      </div>
+    </div>
+  );
+}
+```
+
+### State Flow Timeline
+
+```
+User starts typing in comment box
+    → [0ms] trissState = "typing"
+
+User clicks submit button
+    → [0ms] trissState = "submitted"
+    → [500ms] trissState = "capturing" (camera activates)
+
+Photo captured & sent to server
+    → [~800ms] trissState = "verifying"
+    → [~1500ms] trissState = "verified" OR "not_verified"
+
+Auto-transition
+    → [+2000ms] trissState = "photo_deleted"
+    → [+3000ms] trissState = "idle"
+```
+
+### Integration with Verification Store
+
+```typescript
+// verification-store.ts additions
+
+interface VerificationStore {
+  // ... existing fields ...
+
+  trissState: TrissState;
+  trissMessage: string | null;
+
+  setTrissState: (state: TrissState, message?: string) => void;
+
+  // Auto-transitions
+  transitionToPhotoDeleted: () => void; // Called 2s after verified/not_verified
+  transitionToIdle: () => void;         // Called 3s after photo_deleted
+}
+```
+
+### Files to Create for Triss
+
+| # | File | Purpose |
+|---|------|---------|
+| T1 | `apps/trustahuman-ext/assets/triss-sprites.png` | Sprite sheet with all Triss states |
+| T2 | `apps/trustahuman-ext/entrypoints/linkedin.content/Triss.tsx` | Triss component with sprite rendering |
+| T3 | `apps/trustahuman-ext/entrypoints/linkedin.content/TrissSpriteImage.tsx` | Sprite sheet image component |
+
+### VerificationSidebar Update
+
+Update `VerificationSidebar.tsx` to include Triss at the bottom:
+
+```tsx
+export function VerificationSidebar({ onClose }: VerificationSidebarProps) {
+  const { trissState, trissMessage } = useVerificationStore();
+
+  return (
+    <SheetContent side="right" className="flex flex-col">
+      {/* ... existing header and verification list ... */}
+
+      {/* Triss mascot at bottom */}
+      <Triss state={trissState} message={trissMessage} />
+    </SheetContent>
+  );
+}
+```
+
+---
+
+## Post Verification (Not Just Replies)
+
+**Added: Feb 21, 2026**
+
+MVP now covers both **replies/comments** AND **original posts** on LinkedIn and X.
+
+### Activity Types
+
+```typescript
+type ActivityType =
+  | "linkedin_comment"  // Reply to someone's post
+  | "linkedin_post"     // Original post by user
+  | "x_comment"         // Reply to someone's tweet
+  | "x_post";           // Original tweet by user
+```
+
+### Database Schema Additions
+
+Add two new models for post verification:
+
+```prisma
+// packages/db/prisma/models/verified-linkedin-post.prisma
+model VerifiedLinkedInPost {
+  id                String    @id @default(uuid())
+  trustProfileId    String
+
+  // User's post content
+  postText          String    @db.Text
+  postUrn           String?   // urn:li:share:xxx or urn:li:activity:xxx
+  postUrl           String?   // Full URL to the post
+
+  // Metadata
+  hasImage          Boolean   @default(false)
+  hasVideo          Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+
+  // Relations
+  trustProfile      TrustProfile       @relation(fields: [trustProfileId], references: [id], onDelete: Cascade)
+  verification      HumanVerification?
+
+  @@index([trustProfileId])
+  @@index([createdAt])
+}
+```
+
+```prisma
+// packages/db/prisma/models/verified-x-post.prisma
+model VerifiedXPost {
+  id                String    @id @default(uuid())
+  trustProfileId    String
+
+  // User's tweet content
+  tweetText         String    @db.Text
+  tweetId           String?
+  tweetUrl          String?
+
+  // Metadata
+  hasMedia          Boolean   @default(false)
+  isThread          Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+
+  // Relations
+  trustProfile      TrustProfile      @relation(fields: [trustProfileId], references: [id], onDelete: Cascade)
+  verification      HumanVerification?
+
+  @@index([trustProfileId])
+  @@index([createdAt])
+}
+```
+
+### HumanVerification Model Update
+
+Add links to post models:
+
+```prisma
+model HumanVerification {
+  // ... existing fields ...
+
+  activityType        String    // "linkedin_comment" | "linkedin_post" | "x_comment" | "x_post"
+
+  // Links to platform-specific activity (one of these will be set)
+  linkedinCommentId   String?   @unique
+  linkedinPostId      String?   @unique  // NEW
+  xCommentId          String?   @unique
+  xPostId             String?   @unique  // NEW
+
+  // Relations
+  linkedinComment     VerifiedLinkedInComment? @relation(fields: [linkedinCommentId], references: [id])
+  linkedinPost        VerifiedLinkedInPost?    @relation(fields: [linkedinPostId], references: [id])
+  xComment            VerifiedXComment?        @relation(fields: [xCommentId], references: [id])
+  xPost               VerifiedXPost?           @relation(fields: [xPostId], references: [id])
+}
+```
+
+### Extension Detection Updates
+
+Content script needs to detect both post and comment submit buttons:
+
+```typescript
+// LinkedIn selectors
+const LINKEDIN_SELECTORS = {
+  commentSubmit: [
+    'button[data-view-name="comment-post"]',
+    'form.comments-comment-box__form button[type="submit"]',
+  ],
+  postSubmit: [
+    'button.share-actions__primary-action',  // "Post" button in composer
+    'button[data-control-name="share.post"]',
+  ],
+};
+
+// X/Twitter selectors
+const X_SELECTORS = {
+  replySubmit: [
+    'button[data-testid="tweetButtonInline"]',  // Reply button
+  ],
+  postSubmit: [
+    'button[data-testid="tweetButton"]',  // Main tweet button
+  ],
+};
+```
+
+### Files to Create for Post Verification
+
+| # | File | Purpose |
+|---|------|---------|
+| P1 | `packages/db/prisma/models/verified-linkedin-post.prisma` | LinkedIn post model |
+| P2 | `packages/db/prisma/models/verified-x-post.prisma` | X post model |
+
+### Files to Modify
+
+| # | File | Change |
+|---|------|--------|
+| P3 | `packages/db/prisma/models/human-verification.prisma` | Add linkedinPostId, xPostId fields |
+| P4 | `packages/db/prisma/models/trust-profile.prisma` | Add linkedinPosts, xPosts relations |
+| P5 | `apps/trustahuman-ext/entrypoints/linkedin.content/index.tsx` | Add post submit detection |

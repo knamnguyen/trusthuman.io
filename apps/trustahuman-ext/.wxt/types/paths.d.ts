@@ -8,6 +8,8 @@ declare module "wxt/browser" {
     | "/content-scripts/linkedin.js"
     | "/offscreen.html"
     | "/setup.html"
+    | "/sprites/README.md"
+    | "/trusthuman-logo.svg"
   type HtmlPublicPath = Extract<PublicPath, `${string}.html`>
   export interface WxtRuntime {
     getURL(path: PublicPath): string;
