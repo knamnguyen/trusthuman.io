@@ -1,94 +1,42 @@
-import Link from "next/link";
-import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
-
-import { Button } from "@sassy/ui/button";
+import { ActivityFeedSection } from "./_components/landing/activity-feed-section";
+import { BadgeShowcaseSection } from "./_components/landing/badge-showcase-section";
+import { FinalCTASection } from "./_components/landing/final-cta-section";
+import { Footer } from "./_components/landing/footer";
+import { Header } from "./_components/landing/header";
+import { HeroSection } from "./_components/landing/hero-section";
+import { HowItWorksSection } from "./_components/landing/how-it-works-section";
+import { LeaderboardPreviewSection } from "./_components/landing/leaderboard-preview-section";
+import { VideoDemoSection } from "./_components/landing/video-demo-section";
 
 export default function HomePage() {
   return (
-    <div className="bg-background text-foreground min-h-screen">
-      {/* Header */}
-      <header className="border-b">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <h1 className="text-xl font-bold">TrustHuman</h1>
-          <nav className="flex items-center gap-4">
-            <SignedOut>
-              <SignInButton mode="modal">
-                <Button variant="primary" size="sm">
-                  Sign In
-                </Button>
-              </SignInButton>
-            </SignedOut>
-            <SignedIn>
-              <Link
-                href="/dashboard"
-                className="text-muted-foreground hover:text-foreground text-sm"
-              >
-                Dashboard
-              </Link>
-              <UserButton />
-            </SignedIn>
-          </nav>
-        </div>
-      </header>
+    <div className="bg-card text-foreground overflow-x-hidden">
+      <Header />
 
-      {/* Hero */}
-      <main className="container mx-auto px-4 py-24 text-center">
-        <h2 className="text-4xl font-bold tracking-tight sm:text-6xl">
-          Prove You're Human
-        </h2>
-        <p className="text-muted-foreground mx-auto mt-6 max-w-2xl text-lg">
-          TrustHuman verifies social engagement with face detection. Build your
-          public profile of verified human activity across LinkedIn and X.
-        </p>
-        <div className="mt-10 flex items-center justify-center gap-4">
-          <SignedOut>
-            <SignInButton mode="modal">
-              <Button variant="primary" size="lg">
-                Get Started
-              </Button>
-            </SignInButton>
-          </SignedOut>
-          <SignedIn>
-            <Button variant="primary" size="lg" asChild>
-              <Link href="/dashboard">Go to Dashboard</Link>
-            </Button>
-          </SignedIn>
-        </div>
+      <main>
+        {/* Section 1: Hero with live counter */}
+        <HeroSection />
 
-        {/* Features */}
-        <div className="mt-24 grid gap-8 md:grid-cols-3">
-          <div className="rounded-lg border-2 border-border bg-card p-6 text-left shadow-sm">
-            <h3 className="text-lg font-semibold">Face Verification</h3>
-            <p className="text-muted-foreground mt-2 text-sm">
-              Capture a photo when you engage to prove a real human is behind
-              the keyboard.
-            </p>
-          </div>
-          <div className="rounded-lg border-2 border-border bg-card p-6 text-left shadow-sm">
-            <h3 className="text-lg font-semibold">Public Profile</h3>
-            <p className="text-muted-foreground mt-2 text-sm">
-              Share your trusthuman.io/username profile to showcase your
-              verified engagement.
-            </p>
-          </div>
-          <div className="rounded-lg border-2 border-border bg-card p-6 text-left shadow-sm">
-            <h3 className="text-lg font-semibold">Streak & Stats</h3>
-            <p className="text-muted-foreground mt-2 text-sm">
-              Build your streak and track your verified human activity across
-              platforms.
-            </p>
-          </div>
-        </div>
+        {/* Section 2: Full Video Demo */}
+        <VideoDemoSection />
+
+        {/* Section 3: How It Works (step cards with video previews) */}
+        <HowItWorksSection />
+
+        {/* Section 4: Badge Showcase (LinkedIn, X, TrustHuman profile) */}
+        <BadgeShowcaseSection />
+
+        {/* Section 5: Live Activity Feed */}
+        <ActivityFeedSection />
+
+        {/* Section 6: Leaderboard Preview */}
+        <LeaderboardPreviewSection />
+
+        {/* Section 7: Final CTA */}
+        <FinalCTASection />
       </main>
 
-      {/* Footer */}
-      <footer className="border-t py-8">
-        <div className="container mx-auto px-4 text-center">
-          <p className="text-muted-foreground text-sm">
-            © {new Date().getFullYear()} TrustHuman. All rights reserved.
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

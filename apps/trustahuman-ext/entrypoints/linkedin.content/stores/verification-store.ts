@@ -1,16 +1,9 @@
 import { create } from "zustand";
 
-export interface BoundingBox {
-  width: number;
-  height: number;
-  left: number;
-  top: number;
-}
+export type ActivityType = "linkedin_comment" | "linkedin_post" | "x_reply" | "x_post" | "facebook_comment" | "threads_comment" | "reddit_comment" | "ph_comment" | "github_comment" | "hn_comment";
+export type Platform = "linkedin" | "x" | "facebook" | "threads" | "reddit" | "ph" | "github" | "hn";
 
-export type ActivityType = "linkedin_comment" | "linkedin_post" | "x_comment" | "x_post";
-export type Platform = "linkedin" | "x";
-
-export interface Verification {
+export interface VerifiedActivity {
   id: string;
   timestamp: Date;
   action: ActivityType;
@@ -18,14 +11,25 @@ export interface Verification {
   verified: boolean;
   confidence: number;
   faceCount: number;
-  photoBase64: string;
-  boundingBox: BoundingBox | null;
+
+  // Standardized activity data (for all platforms)
+  commentText?: string;
+  commentUrl?: string; // Direct URL to the comment (optional)
+  parentUrl?: string; // Link to parent post (fallback if no commentUrl)
+  parentAuthorName?: string;
+  parentAuthorAvatarUrl?: string;
+  parentTextSnippet?: string;
+
+  // Note: photoBase64 is NOT stored - photo is deleted after verification for privacy
 }
 
+// Backwards compatibility alias
+export type VerifiedComment = VerifiedActivity;
+
 interface VerificationStore {
-  verifications: Verification[];
+  verifications: VerifiedActivity[];
   isRecording: boolean;
-  addVerification: (v: Verification) => void;
+  addVerification: (v: VerifiedActivity) => void;
   setRecording: (r: boolean) => void;
 }
 

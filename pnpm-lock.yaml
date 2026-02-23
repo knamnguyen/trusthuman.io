@@ -247,6 +247,9 @@ importers:
       '@sassy/api':
         specifier: workspace:^
         version: link:../../packages/api
+      '@sassy/linkedin-automation':
+        specifier: workspace:*
+        version: link:../../packages/linkedin-automation
       '@sassy/ui':
         specifier: workspace:*
         version: link:../../packages/ui

@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Create user in database
-        await db.user.upsert({
+        const user = await db.user.upsert({
           where: { id: userId },
           update: {
             email: primaryEmail,
@@ -65,6 +65,32 @@ export async function POST(req: NextRequest) {
             imageUrl: data.image_url,
           },
         });
+
+        // Also create TrustProfile at signup so user can visit their profile page
+        // Username comes from Clerk (set during signup)
+        const clerkUsername = data.username;
+        if (clerkUsername) {
+          // Check if username is available, append number if not
+          let profileUsername = clerkUsername;
+          let counter = 1;
+          while (await db.trustProfile.findUnique({ where: { username: profileUsername } })) {
+            profileUsername = `${clerkUsername}${counter}`;
+            counter++;
+          }
+
+          await db.trustProfile.upsert({
+            where: { userId: userId },
+            update: {}, // No update needed if exists
+            create: {
+              userId: userId,
+              username: profileUsername,
+              displayName: data.first_name || clerkUsername,
+              avatarUrl: data.image_url,
+            },
+          });
+
+          console.log(`✅ TrustProfile created: ${profileUsername}`);
+        }
 
         console.log(`✅ User created: ${userId}`);
         break;

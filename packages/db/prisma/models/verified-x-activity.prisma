@@ -1,0 +1,30 @@
+// VerifiedXActivity - X/Twitter reply verified with human check
+model VerifiedXActivity {
+  id             String @id @default(uuid())
+  trustProfileId String
+
+  // User's comment/reply
+  commentText String  @db.Text
+  commentUrl  String? // Direct link to user's reply (optional)
+
+  // Parent tweet context
+  parentUrl             String? // Link to parent tweet (fallback if no commentUrl)
+  parentAuthorName      String
+  parentAuthorAvatarUrl String
+  parentTextSnippet     String  @db.Text
+
+  // Verification link
+  verificationId String @unique
+
+  // Timestamps
+  activityAt DateTime // When the reply was posted
+  createdAt  DateTime @default(now())
+
+  // Relations
+  trustProfile TrustProfile      @relation(fields: [trustProfileId], references: [id], onDelete: Cascade)
+  verification HumanVerification @relation(fields: [verificationId], references: [id])
+
+  @@index([trustProfileId])
+  @@index([createdAt])
+  @@index([activityAt])
+}

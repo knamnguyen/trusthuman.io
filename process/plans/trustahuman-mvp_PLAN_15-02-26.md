@@ -1,14 +1,181 @@
-# Trust a Human - MVP Plan (Sidebar UI, No Auth)
+# Trust a Human - MVP Plan (Streamlined)
 
-**Date**: February 15, 2026
+**Date**: February 15, 2026 (Updated: February 22, 2026)
 **Complexity**: SIMPLE (one session)
-**Status**: PLANNED
+**Status**: IN PROGRESS
+
+---
+
+## Phase Completion Rules
+
+**IMPORTANT: A phase is NOT complete until:**
+
+1. **Integration Test** - Does it work with other pieces end-to-end?
+2. **Manual Test** - Can user actually perform the action?
+3. **Database Check** - Is data saved correctly? Query and verify.
+4. **Error Handling** - What happens when it fails? Is it graceful?
+5. **User Confirmation** - User visually confirms it works (screenshot/video)
+
+**"Code exists" ≠ "Feature works"**
+
+After each phase, document:
+- What was tested manually
+- What data was verified in DB
+- Any errors encountered and how they were fixed
+- User confirmation of working feature
+
+---
+
+## Progress Summary
+
+| Phase | Description | Status | Notes |
+|-------|-------------|--------|-------|
+| 1 | Database Schema | ✅ DONE | Schema pushed, verified working |
+| 2 | API - Core Verification | ✅ DONE | Rekognition + submitActivity working |
+| 3 | Extension Scaffold | ✅ DONE | UI renders in Shadow DOM |
+| 4 | Background + Offscreen | ✅ DONE | Camera capture working |
+| 5 | LinkedIn Enhancements | ✅ DONE | Profile + post scraping working |
+| 5.5 | Extension Authentication | ✅ DONE | Clerk auth + tRPC working |
+| 5.9 | E2E Verification Flow Test | ✅ DONE | Full flow verified |
+| 6 | Landing Page + Onboarding | ✅ DONE | Full landing page + profile + leaderboard |
+| 7 | Profile Page | ✅ DONE | Merged into Phase 6 |
+| 8 | Leaderboard | ✅ DONE | Merged into Phase 6 |
+| 9A | TrustBadge Component | ✅ DONE | Shared UI component in packages/ui |
+| **9B** | **Badge Injection** | **NEXT** | **Inject badge on LinkedIn/X profiles** |
+| 10 | X/Twitter Support | PENDING | Same flow for X platform |
+| 11 | Loops Email Integration | PENDING | Onboarding + reminder emails |
+| 12 | Polish & Testing | PENDING | Final UX polish |
+
+### Phase 5.9: E2E Verification Flow Test ✅ COMPLETED
+
+**All tests passed (Feb 22, 2026):**
+1. [x] Camera capture works (offscreen document → base64)
+2. [x] AWS Rekognition analyzes photo correctly (90%+ confidence)
+3. [x] ProfileDetector detects correct LinkedIn profile (via ProfileStore on page load)
+4. [x] PostScraper captures comment text and post context (V2 DOM selectors)
+5. [x] `submitActivity` API saves to database
+6. [x] TrustProfile created with humanNumber
+7. [x] PlatformLink created for LinkedIn
+8. [x] VerifiedLinkedInComment saved with commentUrl + commentUrn
+9. [x] Streak calculation works
+10. [x] Triss toast shows correct feedback
+
+**Key fixes during E2E testing:**
+- Fixed foreign key constraint: User record must be created before TrustProfile
+- Fixed ProfileDetector: Now uses ProfileStore pattern (fetch on page load, not on submit)
+- Fixed PostScraper author name extraction: Excludes badge text like "Premium Profile"
+- Added comment URL extraction: Captures before/after submission to find new comment URL
+- Enhanced VerificationCard: Shows post preview or author headline as fallback
+- Sidebar width: Matched wxt-extension (40vw, min 490px)
+
+### Phase 6: Landing Page + Onboarding ✅ COMPLETED (Feb 22, 2026)
+
+**Implemented EngageKit-style landing page with TrustHuman branding:**
+
+**Files created:**
+- `apps/nextjs/src/app/_components/landing/landing-content.ts` - Centralized content
+- `apps/nextjs/src/app/_components/landing/header.tsx` - Fixed header with nav
+- `apps/nextjs/src/app/_components/landing/footer.tsx` - Footer with links
+- `apps/nextjs/src/app/_components/landing/hero-section.tsx` - Hero with live human counter
+- `apps/nextjs/src/app/_components/landing/video-demo-section.tsx` - YouTube embed
+- `apps/nextjs/src/app/_components/landing/how-it-works-section.tsx` - 4-step flow
+- `apps/nextjs/src/app/_components/landing/step-card.tsx` - Step cards with video preview
+- `apps/nextjs/src/app/_components/landing/badge-showcase-section.tsx` - Badge previews
+- `apps/nextjs/src/app/_components/landing/activity-feed-section.tsx` - Live activity
+- `apps/nextjs/src/app/_components/landing/activity-card.tsx` - Activity card component
+- `apps/nextjs/src/app/_components/landing/leaderboard-preview-section.tsx` - Top 10
+- `apps/nextjs/src/app/_components/landing/final-cta-section.tsx` - Final CTA
+- `apps/nextjs/src/app/_components/extension-install-toast.tsx` - Global install prompt
+- `apps/nextjs/src/app/[username]/page.tsx` - Public profile page
+- `apps/nextjs/src/app/leaderboard/page.tsx` - Full leaderboard
+- `apps/trustahuman-ext/entrypoints/trusthuman.content/index.ts` - Extension marker
+
+**API endpoints added:**
+- `trustProfile.getStats` - Returns totalHumans, totalVerifications
+- `trustProfile.getRecentActivity` - Latest verified comments across users
+
+**Landing page sections:**
+1. Hero with live counter + "Get Your Human #" CTA
+2. Full video demo (YouTube embed)
+3. How it works (4 steps with video previews)
+4. Badge showcase (LinkedIn, X, TrustHuman profile previews)
+5. Live activity feed (recent verified comments)
+6. Leaderboard preview (top 10)
+7. Final CTA
+
+**Extension detection:**
+- Content script injects `data-trusthuman-ext="installed"` on trusthuman.io
+- Website shows install toast if extension not detected
+- Toast dismissible for 24 hours
+- **Tested and working** (Feb 22, 2026)
+
+**Profile page features:**
+- Human # badge
+- Stats (rank, total verified, current streak, best streak)
+- Platform links (LinkedIn, X)
+- Recent verified activity
+- Owner CTAs to open LinkedIn/X
 
 ---
 
 ## Overview
 
-WXT Chrome extension in `apps/trustahuman-ext/` with a React sidebar UI (same pattern as xbooster). Detects LinkedIn comment submit clicks, captures a webcam photo via offscreen document, sends base64 to server via tRPC `publicProcedure`, calls AWS Rekognition DetectFaces, stores result, returns verified/not + confidence. Sidebar shows verification history in real time. Comment is never blocked.
+WXT Chrome extension in `apps/trustahuman-ext/` with:
+- React sidebar UI in Shadow DOM
+- Clerk authentication via background worker
+- LinkedIn/X profile detection and comment scraping
+- Webcam capture via offscreen document
+- AWS Rekognition for face detection
+- Full verification flow with streaks
+
+---
+
+## User Onboarding Flow (Web-First)
+
+**Strategy**: Sign up on web first → Install extension later
+
+### Why Web-First?
+1. **Email capture early** - Get their email before they bounce
+2. **Lower friction first step** - Signing up is easier than installing extension
+3. **Reminder capability** - Can email "install the extension to start verifying!"
+4. **Clerk session exists** - Extension auth "just works" via cookie sync
+5. **Commitment escalation** - Small commitment (signup) → bigger commitment (install)
+
+### Onboarding Flow
+
+```
+1. Land on trusthuman.io
+   └── Hero: "Prove You're Human. Get Your Badge."
+   └── CTA: "Get Your Human #" → Sign up (Clerk)
+
+2. Sign up with Clerk (Google/Email)
+   └── Account created
+   └── TrustProfile created with username
+
+3. Pick username
+   └── "Choose your profile URL: trusthuman.io/[username]"
+   └── Validates uniqueness
+
+4. Install Extension Prompt
+   └── "Install the Chrome extension to start verifying"
+   └── Link to Chrome Web Store
+   └── "I'll remind you later" → Triggers Loops email sequence
+
+5. Extension Installed
+   └── Detects existing Clerk session
+   └── Ready to verify on LinkedIn/X
+
+6. First Verification
+   └── Human # assigned
+   └── Profile page live at trusthuman.io/[username]
+   └── Can share badge
+```
+
+### Email Sequence (via Loops)
+- **Day 0**: "Welcome to TrustHuman! Install the extension to get verified"
+- **Day 1**: "You're 1 step away from your Human # badge"
+- **Day 3**: "Don't let the bots win - verify your humanity today"
+- **Day 7**: "Last chance: Your Human # is waiting"
 
 ---
 
@@ -18,1438 +185,501 @@ WXT Chrome extension in `apps/trustahuman-ext/` with a React sidebar UI (same pa
 Content Script (linkedin.com) — React sidebar in Shadow DOM
     | 1. MutationObserver detects submit button
     | 2. Click listener fires (capture phase)
-    | 3. Send "capturePhoto" to background
+    | 3. Scrape comment context + user profile
     v
 Background Service Worker
-    | 4. Create offscreen document (if not exists)
-    | 5. Send "startCapture" to offscreen
+    | 4. Clerk auth (getToken, getAuthStatus)
+    | 5. Create offscreen document for camera
     v
 Offscreen Document
     | 6. getUserMedia -> canvas -> base64 JPEG
-    | 7. Return base64 to background
-    v
-Background Service Worker
-    | 8. Return base64 to content script
     v
 Content Script
-    | 9. Call verification.analyzePhoto tRPC mutation (async)
+    | 7. Call submitActivity tRPC (if authenticated)
+    |    OR analyzePhoto (if not authenticated)
     v
-Server (tRPC publicProcedure)
-    | 10. Decode base64, call Rekognition DetectFaces
-    | 11. Store in HumanVerification table
-    | 12. Return { verified, confidence, faceCount }
+Server (tRPC)
+    | 8. Decode base64, call Rekognition DetectFaces
+    | 9. Create/update TrustProfile + PlatformLink
+    | 10. Store verification + activity records
+    | 11. Calculate streak
+    | 12. Return { verified, confidence, humanNumber, streak }
     v
 Content Script
-    | 13. Add result to verification-store -> sidebar auto-updates
+    | 13. Show Triss toast feedback
+    | 14. Add result to verification-store
 ```
 
 ---
 
-## Extension File Structure
+## Remaining Phases
 
-```
-apps/trustahuman-ext/
-  package.json
-  tsconfig.json
-  wxt.config.ts
-  tailwind.config.ts
-  postcss.config.mjs
-  assets/
-    globals.css
-  lib/
-    trpc-client.ts
-  entrypoints/
-    background/
-      index.ts
-    offscreen.html
-    offscreen.ts
-    linkedin.content/
-      index.tsx
-      App.tsx
-      ToggleButton.tsx
-      VerificationSidebar.tsx
-      stores/
-        sidebar-store.ts
-        shadow-root-store.ts
-        verification-store.ts
-```
+### Phase 6: Landing Page + Onboarding
 
----
+Create landing page and web-first signup flow.
 
-## Files to Create (Extension) -- 14 files
+**Files to create:**
+1. `apps/nextjs/src/app/page.tsx` - Landing page with hero + CTA
+2. `apps/nextjs/src/app/onboarding/page.tsx` - Username picker after signup
+3. `apps/nextjs/src/app/onboarding/install/page.tsx` - Extension install prompt
 
-| # | File | Purpose |
-|---|------|---------|
-| 1 | `apps/trustahuman-ext/package.json` | Deps: wxt, react, radix (via @sassy/ui), tailwind, zustand, lucide-react, trpc |
-| 2 | `apps/trustahuman-ext/tsconfig.json` | TypeScript config, extends monorepo base |
-| 3 | `apps/trustahuman-ext/wxt.config.ts` | WXT config with React module, Tailwind/PostCSS in Vite, port +4 |
-| 4 | `apps/trustahuman-ext/tailwind.config.ts` | Tailwind config (same pattern as xbooster) |
-| 5 | `apps/trustahuman-ext/postcss.config.mjs` | PostCSS: tailwindcss, postcss-rem-to-pixel, autoprefixer |
-| 6 | `apps/trustahuman-ext/assets/globals.css` | Tailwind directives + shadow DOM `:host` CSS vars |
-| 7 | `apps/trustahuman-ext/lib/trpc-client.ts` | Standalone vanilla tRPC client (no auth, no React) |
-| 8 | `apps/trustahuman-ext/entrypoints/background/index.ts` | Message listener for capturePhoto only |
-| 9 | `apps/trustahuman-ext/entrypoints/offscreen.html` | Offscreen document HTML |
-| 10 | `apps/trustahuman-ext/entrypoints/offscreen.ts` | getUserMedia capture logic |
-| 11 | `apps/trustahuman-ext/entrypoints/linkedin.content/stores/sidebar-store.ts` | isOpen state (zustand) |
-| 12 | `apps/trustahuman-ext/entrypoints/linkedin.content/stores/shadow-root-store.ts` | Shadow DOM ref (zustand) |
-| 13 | `apps/trustahuman-ext/entrypoints/linkedin.content/stores/verification-store.ts` | Verification list + recording state (zustand) |
-| 14 | `apps/trustahuman-ext/entrypoints/linkedin.content/ToggleButton.tsx` | Chevron button for sidebar toggle |
-| 15 | `apps/trustahuman-ext/entrypoints/linkedin.content/VerificationSidebar.tsx` | Sidebar content: header + verification list |
-| 16 | `apps/trustahuman-ext/entrypoints/linkedin.content/App.tsx` | Toggle button + Sheet container |
-| 17 | `apps/trustahuman-ext/entrypoints/linkedin.content/index.tsx` | Content script entry: createShadowRootUi + verification detection logic |
+**Features:**
+- Hero section with value prop
+- "Get Your Human #" CTA → Clerk sign up
+- Post-signup username picker
+- Extension install prompt with Chrome Web Store link
+- "Remind me later" option (triggers Loops)
 
-## Files to Create (Shared Packages) -- 2 files
+**Testing after Phase 6:**
+```bash
+# Visit landing page
+open http://localhost:3000
 
-| # | File | Purpose |
-|---|------|---------|
-| 18 | `packages/db/prisma/models/tools/verification.prisma` | HumanVerification model (userId optional) |
-| 19 | `packages/api/src/router/tools/verification.ts` | Rekognition tRPC router (publicProcedure) |
-
-## Files to Modify -- 3 files
-
-| # | File | Change |
-|---|------|--------|
-| 20 | `packages/db/prisma/models/user.prisma` | Add `humanVerifications HumanVerification[]` relation |
-| 21 | `packages/api/src/router/root.ts` | Register `verificationRouter` |
-| 22 | `packages/api/package.json` | Add `@aws-sdk/client-rekognition` |
-
-**Total: 22 files** (19 create + 3 modify)
-
----
-
-## Detailed Specifications
-
-### 1. `apps/trustahuman-ext/package.json`
-
-```json
-{
-  "name": "@sassy/trustahuman-ext",
-  "description": "Trust a Human - LinkedIn Comment Verification (MVP)",
-  "private": true,
-  "version": "0.1.0",
-  "type": "module",
-  "scripts": {
-    "dev": "pnpm with-env wxt",
-    "with-env": "dotenv -e ../../.env --",
-    "with-env:prod": "dotenv -e ../../.env.prod --",
-    "build": "pnpm with-env:prod wxt build",
-    "zip": "wxt zip",
-    "compile": "tsc --noEmit",
-    "postinstall": "wxt prepare",
-    "clean": "git clean -xdf .cache .turbo .output dist node_modules"
-  },
-  "dependencies": {
-    "@sassy/api": "workspace:^",
-    "@sassy/ui": "workspace:*",
-    "@trpc/client": "catalog:",
-    "clsx": "^2.1.1",
-    "lucide-react": "^0.511.0",
-    "react": "catalog:react19",
-    "react-dom": "catalog:react19",
-    "superjson": "catalog:",
-    "tailwind-merge": "^2.6.0",
-    "zustand": "^5.0.9"
-  },
-  "devDependencies": {
-    "@sassy/tsconfig": "workspace:*",
-    "@types/chrome": "^0.0.323",
-    "@types/react": "catalog:react19",
-    "@types/react-dom": "catalog:react19",
-    "@wxt-dev/module-react": "^1.1.2",
-    "autoprefixer": "^10.4.21",
-    "dotenv-cli": "^8.0.0",
-    "postcss": "^8.5.6",
-    "postcss-rem-to-pixel": "^4.1.2",
-    "tailwindcss": "^3.4.17",
-    "tailwindcss-animate": "^1.0.7",
-    "typescript": "catalog:",
-    "vite-tsconfig-paths": "^5.1.4",
-    "wxt": "^0.19.29"
-  }
-}
+# Expected:
+# - See hero with "Get Your Human #" CTA
+# - Click CTA → Clerk sign up modal
+# - After signup → redirect to username picker
+# - After username → redirect to install prompt
 ```
 
 ---
 
-### 2. `apps/trustahuman-ext/tsconfig.json`
+### Phase 7: Profile Page (Web App)
 
-```json
-{
-  "extends": "../../tooling/typescript/base.json",
-  "compilerOptions": {
-    "target": "esnext",
-    "types": ["vite/client", "node", "chrome"],
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "noEmit": true,
-    "jsx": "react-jsx",
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./*"]
-    }
-  },
-  "include": [
-    "entrypoints",
-    "lib",
-    "*.ts",
-    ".wxt/wxt.d.ts"
-  ]
-}
+Create public profile page at `trusthuman.io/[username]`
+
+**Files to create:**
+1. `apps/nextjs/src/app/[username]/page.tsx` - Profile page
+2. `apps/nextjs/src/app/[username]/layout.tsx` - Profile layout
+
+**Features:**
+- Display Human # badge
+- Show verification stats (total, streak, longest streak)
+- List connected platforms (LinkedIn, X)
+- Recent verified activity
+- If owner: inline editing for connected accounts
+- Share button for social proof
+
+**Testing after Phase 7:**
+```bash
+# Visit profile page
+open http://localhost:3000/withkynam
+
+# Expected:
+# - See Human # badge
+# - See verification stats
+# - See connected platforms
+# - If logged in as owner: see edit buttons
 ```
 
 ---
 
-### 3. `apps/trustahuman-ext/wxt.config.ts`
+### Phase 8: Leaderboard
 
-Port offset `+4` (wxt-extension uses +2, xbooster uses +3). Inline PostCSS config in Vite matching xbooster pattern (tailwindcss + postcss-rem-to-pixel + autoprefixer).
+Create leaderboard at `trusthuman.io/leaderboard`
 
-```typescript
-import tsconfigPaths from "vite-tsconfig-paths";
-import { defineConfig } from "wxt";
+**Files to create:**
+1. `apps/nextjs/src/app/leaderboard/page.tsx` - Leaderboard page
 
-const basePort = parseInt(process.env.PORT || "3000");
-const wxtPort = basePort + 4;
+**Features:**
+- Top 100 humans by totalVerifications
+- Show rank, Human #, username, avatar
+- Link to profile pages
+- Pagination
 
-export default defineConfig({
-  extensionApi: "chrome",
-  modules: ["@wxt-dev/module-react"],
-  outDir: "dist",
+**Testing after Phase 8:**
+```bash
+# Visit leaderboard
+open http://localhost:3000/leaderboard
 
-  runner: {
-    disabled: true,
-  },
-
-  dev: {
-    server: {
-      port: wxtPort,
-    },
-  },
-
-  manifest: {
-    name: "Trust a Human",
-    description: "Verify you are human when commenting on LinkedIn",
-    version: "0.1.0",
-    permissions: ["offscreen", "storage"],
-    host_permissions: [
-      "https://*.linkedin.com/*",
-      "http://localhost/*",
-    ],
-  },
-
-  vite: () => ({
-    plugins: [tsconfigPaths()],
-    css: {
-      postcss: {
-        plugins: [
-          require("tailwindcss"),
-          require("postcss-rem-to-pixel")({
-            rootValue: 16,
-            propList: ["*"],
-            selectorBlackList: [],
-          }),
-          require("autoprefixer"),
-        ],
-      },
-    },
-    esbuild: {
-      charset: "ascii",
-    },
-  }),
-});
+# Expected:
+# - See ranked list of users
+# - Click user to go to profile
 ```
 
 ---
 
-### 4. `apps/trustahuman-ext/tailwind.config.ts`
+### Phase 9: TrustBadge Component + Badge Overlay
 
-Same as xbooster. Content paths scan entrypoints and @sassy/ui.
+**Split into two parts:**
 
-```typescript
-import type { Config } from "tailwindcss";
-import animate from "tailwindcss-animate";
+#### Phase 9A: TrustBadge Component (Shared UI) ← CURRENT
 
-export default {
-  darkMode: "class",
-  content: [
-    "./entrypoints/**/*.{html,ts,tsx}",
-    "../../packages/ui/src/**/*.{ts,tsx}",
-  ],
-  theme: {
-    extend: {
-      colors: {
-        border: "var(--border)",
-        input: "var(--input)",
-        ring: "var(--ring)",
-        background: "var(--background)",
-        foreground: "var(--foreground)",
-        primary: {
-          DEFAULT: "var(--primary)",
-          foreground: "var(--primary-foreground)",
-        },
-        secondary: {
-          DEFAULT: "var(--secondary)",
-          foreground: "var(--secondary-foreground)",
-        },
-        destructive: {
-          DEFAULT: "var(--destructive)",
-          foreground: "var(--destructive-foreground)",
-        },
-        muted: {
-          DEFAULT: "var(--muted)",
-          foreground: "var(--muted-foreground)",
-        },
-        accent: {
-          DEFAULT: "var(--accent)",
-          foreground: "var(--accent-foreground)",
-        },
-        popover: {
-          DEFAULT: "var(--popover)",
-          foreground: "var(--popover-foreground)",
-        },
-        card: {
-          DEFAULT: "var(--card)",
-          foreground: "var(--card-foreground)",
-        },
-      },
-      borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
-      },
-      borderColor: {
-        DEFAULT: "var(--border)",
-      },
-      fontFamily: {
-        sans: "var(--font-sans)",
-      },
-      boxShadow: {
-        "2xs": "var(--shadow-2xs)",
-        xs: "var(--shadow-xs)",
-        sm: "var(--shadow-sm)",
-        DEFAULT: "var(--shadow)",
-        md: "var(--shadow-md)",
-        lg: "var(--shadow-lg)",
-        xl: "var(--shadow-xl)",
-        "2xl": "var(--shadow-2xl)",
-      },
-    },
-  },
-  plugins: [animate],
-} satisfies Config;
+Create reusable badge component in `packages/ui` for use in web app and extension.
+
+**Design specs:**
+- Colors: green `#469d3e`, background `#fbf6e5`, accent `#ffb74a`
+- Shows: Triss logo, human number (ordinal: "14th"), total verified count
+- Variants: `full` (with "real human on" text), `compact` (minimal)
+- Clickable → links to `trusthuman.io/[username]`
+
+**Files to create:**
+1. `packages/ui/src/components/trust-badge.tsx` - Badge component
+2. `packages/ui/src/assets/triss-logo.tsx` - Triss SVG as React component
+
+**Integration:**
+- Use in `apps/nextjs/src/app/[username]/page.tsx` profile page
+- Later: Use in extension for LinkedIn/X badge overlay
+
+**Testing:**
+```bash
+# Visit http://localhost:3000/trusthuman
+# Expected: See TrustBadge with Human #2, verified count
+```
+
+#### Phase 9B: LinkedIn/X Badge Injection (Later)
+
+Inject TrustBadge into LinkedIn/X profiles when viewing other users.
+
+**Files to create:**
+1. `apps/trustahuman-ext/entrypoints/linkedin.content/BadgeOverlay.tsx` - Badge wrapper
+2. `apps/trustahuman-ext/entrypoints/linkedin.content/ProfileBadgeInjector.ts` - DOM injection
+
+**Features:**
+- Batch lookup profiles on page via `batchLookup` API
+- Database index on `PlatformLink.profileUrl` for fast lookup
+- Client-side caching in extension for instant rendering
+- Inject badge next to verified profiles
+- Click badge to view profile on trusthuman.io
+
+**Testing:**
+```bash
+# Load extension in Chrome
+# Visit LinkedIn profile of someone who has verified
+# Expected: See TrustBadge near their name
 ```
 
 ---
 
-### 5. `apps/trustahuman-ext/postcss.config.mjs`
+### Phase 10: X/Twitter Support
 
-Same as xbooster.
+Add X platform support (same verification flow).
 
-```javascript
-export default {
-  plugins: {
-    tailwindcss: {},
-    "postcss-rem-to-pixel": {
-      rootValue: 16,
-      propList: ["*"],
-      selectorBlackList: [],
-    },
-    autoprefixer: {},
-  },
-};
+**Files to create:**
+1. `apps/trustahuman-ext/entrypoints/x.content/index.tsx` - X content script
+2. `apps/trustahuman-ext/entrypoints/x.content/ProfileDetector.ts` - X profile detection
+3. `apps/trustahuman-ext/entrypoints/x.content/PostScraper.ts` - X post scraping
+
+**Features:**
+- Detect X profile from DOM
+- Scrape tweet/reply context
+- Same verification flow as LinkedIn
+- Badge overlay on X profiles
+
+**Testing after Phase 10:**
+```bash
+# Load extension in Chrome
+# Visit x.com
+# Post a reply
+# Expected: Same Triss flow as LinkedIn
 ```
 
 ---
 
-### 6. `apps/trustahuman-ext/assets/globals.css`
+### Phase 11: Loops Email Integration
 
-Same shadow DOM approach as xbooster, but with Trust a Human brand colors (green/trust theme instead of xBooster blue).
+Set up transactional and marketing emails via Loops.
 
-```css
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+**Setup:**
+1. Create Loops account at loops.so
+2. Add API key to environment variables
+3. Create email templates
 
-@layer base {
-  :host,
-  :host *,
-  :host *::before,
-  :host *::after {
-    box-sizing: border-box;
-    border-width: 0;
-    border-style: solid;
-  }
+**Email Triggers:**
+| Event | Email | Timing |
+|-------|-------|--------|
+| User signs up | Welcome + install extension | Immediate |
+| No extension after 1 day | Reminder #1 | Day 1 |
+| No extension after 3 days | Reminder #2 | Day 3 |
+| No extension after 7 days | Final reminder | Day 7 |
+| First verification | Congrats + share prompt | Immediate |
+| Streak milestone (7, 30, 100) | Streak celebration | Immediate |
+| Streak broken | Re-engagement | Next day |
 
-  :host {
-    font-size: 16px;
-    line-height: 1.5;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
+**Files to create:**
+1. `packages/api/src/lib/loops.ts` - Loops client wrapper
+2. `packages/api/src/router/email.ts` - Email trigger endpoints
 
-  :host {
-    --background: #ffffff;
-    --foreground: #0a0a0a;
-    --card: #ffffff;
-    --card-foreground: #0a0a0a;
-    --popover: #ffffff;
-    --popover-foreground: #0a0a0a;
-    --primary: #16a34a;
-    --primary-foreground: #ffffff;
-    --secondary: #f5f5f4;
-    --secondary-foreground: #0a0a0a;
-    --muted: #f5f5f4;
-    --muted-foreground: #737373;
-    --accent: #f0fdf4;
-    --accent-foreground: #0a0a0a;
-    --destructive: #ef4444;
-    --destructive-foreground: #ffffff;
-    --border: #e5e5e5;
-    --input: #e5e5e5;
-    --ring: #16a34a;
-    --radius: 8px;
-    --font-sans: system-ui, -apple-system, sans-serif;
-    --shadow-2xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-    --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
-  }
-
-  :host,
-  :host * {
-    border-color: var(--border);
-  }
-
-  :host {
-    color: var(--foreground);
-    display: block;
-  }
-
-  :host * {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
-  }
-
-  :host *::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-
-  :host *::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  :host *::-webkit-scrollbar-thumb {
-    background-color: rgba(0, 0, 0, 0.1);
-    border-radius: 3px;
-  }
-
-  :host *::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(0, 0, 0, 0.2);
-  }
-}
+**Environment Variables:**
+```env
+LOOPS_API_KEY=...
 ```
 
-Note: No `background-color` on `:host` (unlike xbooster) since this overlays LinkedIn. The sidebar's SheetContent has its own background.
-
----
-
-### 7. `apps/trustahuman-ext/lib/trpc-client.ts`
-
-Standalone vanilla tRPC client. No auth headers, no React.
-
-```typescript
-import { createTRPCClient, httpBatchLink } from "@trpc/client";
-import superjson from "superjson";
-import type { AppRouter } from "@sassy/api";
-
-const API_URL = import.meta.env.VITE_APP_URL || "http://localhost:3000";
-
-export const trpc = createTRPCClient<AppRouter>({
-  links: [
-    httpBatchLink({
-      url: `${API_URL}/api/trpc`,
-      transformer: superjson,
-    }),
-  ],
-});
+**Testing after Phase 11:**
+```bash
+# Sign up new user
+# Check Loops dashboard for contact created
+# Check email received
+# Wait 1 day (or trigger manually) → Reminder email
 ```
 
 ---
 
-### 8. `apps/trustahuman-ext/entrypoints/background/index.ts`
+### Phase 12: Polish & Testing
 
-Minimal background worker. Only handles `capturePhoto` messages. Same as previous plan.
+Final UX polish and comprehensive testing.
 
-```typescript
-export default defineBackground(() => {
-  console.log("TrustAHuman - Background loaded");
+**Tasks:**
+1. Test full auth flow (sign in, sign out, re-auth)
+2. Test streak calculation across days
+3. Test profile editing
+4. Test badge overlay accuracy
+5. Test X platform flow
+6. Test email sequences
+7. Performance optimization
+8. Error handling improvements
+9. Mobile responsiveness for web pages
 
-  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.action === "capturePhoto") {
-      handleCapturePhoto().then(sendResponse).catch((err) => {
-        console.error("capturePhoto error:", err);
-        sendResponse({ base64: null });
-      });
-      return true; // async response
-    }
-
-    if (message.action === "captureResult") {
-      return false;
-    }
-  });
-
-  async function handleCapturePhoto(): Promise<{ base64: string | null }> {
-    const hasDoc = await chrome.offscreen.hasDocument();
-    if (!hasDoc) {
-      await chrome.offscreen.createDocument({
-        url: "offscreen.html",
-        reasons: [chrome.offscreen.Reason.USER_MEDIA],
-        justification: "Capture webcam for human verification",
-      });
-    }
-
-    const base64 = await new Promise<string | null>((resolve) => {
-      const timeout = setTimeout(() => resolve(null), 10000);
-
-      const listener = (msg: any) => {
-        if (msg.action === "captureResult") {
-          clearTimeout(timeout);
-          chrome.runtime.onMessage.removeListener(listener);
-          resolve(msg.base64 ?? null);
-        }
-      };
-      chrome.runtime.onMessage.addListener(listener);
-
-      chrome.runtime.sendMessage({ action: "startCapture" });
-    });
-
-    try {
-      await chrome.offscreen.closeDocument();
-    } catch { /* already closed */ }
-
-    return { base64 };
-  }
-});
+**Testing after Phase 12:**
+```bash
+# Full E2E test checklist:
+# [ ] Land on homepage → Sign up
+# [ ] Pick username
+# [ ] Install extension prompt
+# [ ] Install extension
+# [ ] Go to LinkedIn
+# [ ] Verify on LinkedIn
+# [ ] See Human # assigned
+# [ ] Check profile page
+# [ ] Check leaderboard
+# [ ] See badge on verified profiles
+# [ ] Sign out and verify still shows toast (public flow)
+# [ ] Repeat on X
+# [ ] Check emails received
 ```
 
 ---
 
-### 9. `apps/trustahuman-ext/entrypoints/offscreen.html`
+## Completed Phase Details
 
-```html
-<!doctype html>
-<html>
-  <head><title>TrustAHuman Offscreen</title></head>
-  <body>
-    <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
-    <script type="module" src="./offscreen.ts"></script>
-  </body>
-</html>
+### Phase 1: Database Schema (COMPLETED)
+
+**Changes made:**
+- `trust-profile.prisma`: Simplified (removed V2 features like bio, streakFreeze, referrals)
+- `platform-link.prisma`: Added autoDetected, renamed connectedAt→linkedAt
+- `human-verification.prisma`: Removed userId, reversed FK direction
+- `verified-linkedin-comment.prisma`: Added verificationId FK
+
+**Testing completed:**
+```bash
+pnpm db:generate  # Generated Prisma client
+pnpm db:push      # Pushed to Supabase
 ```
 
 ---
 
-### 10. `apps/trustahuman-ext/entrypoints/offscreen.ts`
+### Phase 2: API - Core Verification (COMPLETED)
 
-```typescript
-chrome.runtime.onMessage.addListener((message) => {
-  if (message.action === "startCapture") {
-    capturePhoto();
-    return true;
-  }
-});
+**Endpoints created:**
+- `verification.analyzePhoto` - Public, no auth required
+- `verification.submitActivity` - Protected, full flow with profile creation
+- `trustProfile.getByUsername` - Public, with isOwner flag
+- `trustProfile.getLeaderboard` - Public, paginated
+- `platformLink.batchLookup` - Public, up to 50 profiles
 
-async function capturePhoto() {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { width: 640, height: 480, facingMode: "user" },
-    });
+**Testing completed:**
+```bash
+# Test analyzePhoto (public)
+curl -X POST http://localhost:3000/api/trpc/verification.analyzePhoto \
+  -H "Content-Type: application/json" \
+  -d '{"json":{"photoBase64":"..."}}'
 
-    const video = document.createElement("video");
-    video.srcObject = stream;
-    video.muted = true;
-    await video.play();
-
-    // Wait 500ms for camera warmup
-    await new Promise((r) => setTimeout(r, 500));
-
-    const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-    const ctx = canvas.getContext("2d")!;
-    ctx.drawImage(video, 0, 0, 640, 480);
-
-    const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
-    const base64 = dataUrl.replace("data:image/jpeg;base64,", "");
-
-    stream.getTracks().forEach((t) => t.stop());
-
-    chrome.runtime.sendMessage({ action: "captureResult", base64 });
-  } catch (err) {
-    console.error("Camera capture failed:", err);
-    chrome.runtime.sendMessage({ action: "captureResult", base64: null });
-  }
-}
+# Test getLeaderboard
+curl http://localhost:3000/api/trpc/trustProfile.getLeaderboard
 ```
 
 ---
 
-### 11. `apps/trustahuman-ext/entrypoints/linkedin.content/stores/sidebar-store.ts`
+### Phase 5: LinkedIn Enhancements (COMPLETED)
 
-```typescript
-import { create } from "zustand";
+**Files created:**
+- `ProfileDetector.ts` - Detects logged-in LinkedIn profile
+- `PostScraper.ts` - Scrapes post/comment context
 
-interface SidebarStore {
-  isOpen: boolean;
-  setIsOpen: (isOpen: boolean) => void;
-}
+**Features:**
+- Auto-detect user profile URL and handle
+- Capture comment text and post context
+- Pass to submitActivity API
 
-export const useSidebarStore = create<SidebarStore>((set) => ({
-  isOpen: false,
-  setIsOpen: (isOpen) => set({ isOpen }),
-}));
+---
+
+### Phase 5.5: Extension Authentication (COMPLETED)
+
+**Files created:**
+- `lib/get-sync-host-url.ts` - Clerk sync host + API URL for dev/prod
+- `lib/auth-service.ts` - Content script auth interface
+- `lib/auth-store.ts` - Zustand auth state
+- `entrypoints/linkedin.content/SignInOverlay.tsx` - Auth overlay for sidebar
+- `entrypoints/popup/index.html` - Popup HTML
+- `entrypoints/popup/main.tsx` - Popup entry
+- `entrypoints/popup/App.tsx` - Popup UI (LinkedIn/X detection + sidebar toggle)
+
+**Files updated:**
+- `entrypoints/background/index.ts` - Full Clerk integration
+- `lib/trpc-client.ts` - Uses authService.getToken() + getApiUrl()
+- `entrypoints/linkedin.content/index.tsx` - Init auth store + sidebar listener
+- `entrypoints/linkedin.content/VerificationSidebar.tsx` - Shows SignInOverlay when not authenticated
+- `entrypoints/linkedin.content/stores/sidebar-store.ts` - OPEN_SIDEBAR message listener
+- `wxt.config.ts` - Added alarms, cookies permissions
+- `apps/nextjs/src/app/extension-auth/page.tsx` - TrustHuman branding
+
+**Key Features:**
+- SignInOverlay covers sidebar when not authenticated
+- Popup detects LinkedIn/X and shows appropriate actions
+- "Go to LinkedIn" / "Go to X" buttons when on other sites
+- "Open Sidebar" button sends message to content script
+- tRPC uses `VITE_NGROK_URL` for content script CORS (can't use localhost)
+
+**Auth Flow:**
+```
+Content Script → chrome.runtime.sendMessage("getToken")
+    ↓
+Background Worker → Clerk client → getToken()
+    ↓
+Content Script → tRPC headers: Authorization: Bearer <token>
+    ↓
+Server → Clerk middleware → ctx.user
+```
+
+**Testing:**
+```bash
+# Build extension
+pnpm build  # In apps/trustahuman-ext
+
+# Load in Chrome
+1. Go to chrome://extensions
+2. Enable Developer mode
+3. Load unpacked from apps/trustahuman-ext/dist/chrome-mv3
+
+# Test popup
+1. Click extension icon on any page
+2. If not on LinkedIn/X: See "Go to LinkedIn" / "Go to X" buttons
+3. Click to navigate
+
+# Test sidebar + auth overlay
+1. Go to LinkedIn
+2. Click extension icon → "Open Sidebar"
+3. Should see SignInOverlay with "Sign In to TrustHuman" button
+4. Click sign in → opens extension-auth page
+5. Sign in with Clerk
+6. Return to LinkedIn, click "Refresh" or reopen sidebar
+7. Should see sidebar content without overlay
+
+# Test verification
+1. Post a comment on LinkedIn
+2. Should call submitActivity (check console)
+3. Should see Triss toast feedback
 ```
 
 ---
 
-### 12. `apps/trustahuman-ext/entrypoints/linkedin.content/stores/shadow-root-store.ts`
+## Environment Variables Required
 
-```typescript
-import { create } from "zustand";
+```env
+# Clerk
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_...
+CLERK_SECRET_KEY=sk_...
 
-interface ShadowRootStore {
-  shadowRoot: HTMLElement | null;
-  setShadowRoot: (el: HTMLElement | null) => void;
-}
+# Extension
+VITE_CLERK_PUBLISHABLE_KEY=pk_...
+VITE_NGROK_URL=https://dev.trusthuman.io  # Required for content script API calls
 
-export const useShadowRootStore = create<ShadowRootStore>((set) => ({
-  shadowRoot: null,
-  setShadowRoot: (shadowRoot) => set({ shadowRoot }),
-}));
+# AWS Rekognition
+AWS_REGION=us-west-2
+AWS_ACCESS_KEY_ID=...
+AWS_SECRET_ACCESS_KEY=...
+
+# Database
+DATABASE_URL=postgresql://...
+
+# Loops (Phase 11)
+LOOPS_API_KEY=...
 ```
-
----
-
-### 13. `apps/trustahuman-ext/entrypoints/linkedin.content/stores/verification-store.ts`
-
-```typescript
-import { create } from "zustand";
-
-export interface Verification {
-  id: string;
-  timestamp: Date;
-  action: "comment";
-  platform: "linkedin";
-  verified: boolean;
-  confidence: number;
-  faceCount: number;
-}
-
-interface VerificationStore {
-  verifications: Verification[];
-  isRecording: boolean;
-  addVerification: (v: Verification) => void;
-  setRecording: (r: boolean) => void;
-}
-
-export const useVerificationStore = create<VerificationStore>((set) => ({
-  verifications: [],
-  isRecording: true,
-  addVerification: (v) =>
-    set((state) => ({
-      verifications: [v, ...state.verifications],
-    })),
-  setRecording: (isRecording) => set({ isRecording }),
-}));
-```
-
----
-
-### 14. `apps/trustahuman-ext/entrypoints/linkedin.content/ToggleButton.tsx`
-
-Same pattern as xbooster ToggleButton. Uses `@sassy/ui/button` and lucide-react chevrons.
-
-```typescript
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "@sassy/ui/button";
-
-interface ToggleButtonProps {
-  isOpen: boolean;
-  onToggle: () => void;
-}
-
-export function ToggleButton({ isOpen, onToggle }: ToggleButtonProps) {
-  return (
-    <Button
-      onClick={onToggle}
-      variant="primary"
-      size="icon"
-      className="z-10"
-      aria-label={isOpen ? "Close sidebar" : "Open sidebar"}
-      title={isOpen ? "Close Trust a Human" : "Open Trust a Human"}
-    >
-      {isOpen ? (
-        <ChevronRight className="h-4 w-4" />
-      ) : (
-        <ChevronLeft className="h-4 w-4" />
-      )}
-    </Button>
-  );
-}
-```
-
----
-
-### 15. `apps/trustahuman-ext/entrypoints/linkedin.content/VerificationSidebar.tsx`
-
-The sidebar content. Shows header with recording indicator, and a scrollable list of verification cards.
-
-```typescript
-import { ShieldCheck } from "lucide-react";
-import { SheetContent, SheetHeader, SheetTitle } from "@sassy/ui/sheet";
-
-import { ToggleButton } from "./ToggleButton";
-import { useShadowRootStore } from "./stores/shadow-root-store";
-import { useVerificationStore } from "./stores/verification-store";
-
-interface VerificationSidebarProps {
-  onClose: () => void;
-}
-
-export function VerificationSidebar({ onClose }: VerificationSidebarProps) {
-  const shadowRoot = useShadowRootStore((s) => s.shadowRoot);
-  const { verifications, isRecording } = useVerificationStore();
-
-  return (
-    <SheetContent
-      side="right"
-      className="z-[9999] w-[340px] min-w-[340px] gap-0"
-      portalContainer={shadowRoot}
-    >
-      {/* Close button */}
-      <div className="absolute top-1/2 left-0 -translate-x-full -translate-y-1/2">
-        <ToggleButton isOpen={true} onToggle={onClose} />
-      </div>
-
-      <SheetHeader>
-        <SheetTitle className="flex items-center gap-2 text-base">
-          <ShieldCheck className="h-4 w-4 text-primary" />
-          Trust a Human
-        </SheetTitle>
-        {/* Recording indicator */}
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span
-            className={`inline-block h-2 w-2 rounded-full ${
-              isRecording ? "bg-green-500 animate-pulse" : "bg-gray-300"
-            }`}
-          />
-          {isRecording ? "Monitoring LinkedIn" : "Paused"}
-        </div>
-      </SheetHeader>
-
-      {/* Verification list */}
-      <div className="flex-1 overflow-y-auto p-4">
-        {verifications.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center mt-8">
-            No verifications yet. Post a comment on LinkedIn to trigger a check.
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {verifications.map((v) => (
-              <div
-                key={v.id}
-                className={`rounded-lg border p-3 ${
-                  v.verified
-                    ? "border-green-200 bg-green-50"
-                    : "border-yellow-200 bg-yellow-50"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium capitalize">
-                    {v.action}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {v.timestamp.toLocaleTimeString()}
-                  </span>
-                </div>
-                <div className="mt-1 flex items-center justify-between">
-                  <span
-                    className={`text-xs font-medium ${
-                      v.verified ? "text-green-700" : "text-yellow-700"
-                    }`}
-                  >
-                    {v.verified ? "Verified" : "Not verified"}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {Math.round(v.confidence)}% confidence
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </SheetContent>
-  );
-}
-```
-
----
-
-### 16. `apps/trustahuman-ext/entrypoints/linkedin.content/App.tsx`
-
-Same pattern as xbooster App.tsx. Toggle button on right edge, Sheet for sidebar.
-
-```typescript
-import { useEffect, useState } from "react";
-import { Sheet } from "@sassy/ui/sheet";
-
-import { ToggleButton } from "./ToggleButton";
-import { VerificationSidebar } from "./VerificationSidebar";
-import { useShadowRootStore } from "./stores/shadow-root-store";
-import { useSidebarStore } from "./stores/sidebar-store";
-
-interface AppProps {
-  shadowRoot: HTMLElement;
-}
-
-export default function App({ shadowRoot }: AppProps) {
-  const { isOpen, setIsOpen } = useSidebarStore();
-  const setShadowRoot = useShadowRootStore((s) => s.setShadowRoot);
-  const [showOpenButton, setShowOpenButton] = useState(true);
-
-  useEffect(() => {
-    setShadowRoot(shadowRoot);
-  }, [shadowRoot, setShadowRoot]);
-
-  useEffect(() => {
-    if (isOpen) {
-      setShowOpenButton(false);
-    } else {
-      const timer = setTimeout(() => setShowOpenButton(true), 300);
-      return () => clearTimeout(timer);
-    }
-  }, [isOpen]);
-
-  return (
-    <>
-      {showOpenButton && (
-        <div className="fixed top-1/2 right-0 z-[9999] -translate-y-1/2">
-          <ToggleButton isOpen={false} onToggle={() => setIsOpen(true)} />
-        </div>
-      )}
-
-      <Sheet open={isOpen} onOpenChange={setIsOpen}>
-        <VerificationSidebar onClose={() => setIsOpen(false)} />
-      </Sheet>
-    </>
-  );
-}
-```
-
----
-
-### 17. `apps/trustahuman-ext/entrypoints/linkedin.content/index.tsx`
-
-Content script entry point. Creates Shadow DOM UI (same as xbooster) AND runs verification detection logic (MutationObserver + click listeners).
-
-```typescript
-import ReactDOM from "react-dom/client";
-import { trpc } from "@/lib/trpc-client";
-import { useVerificationStore } from "./stores/verification-store";
-import App from "./App";
-import "../../assets/globals.css";
-
-export default defineContentScript({
-  matches: ["https://*.linkedin.com/*"],
-  cssInjectionMode: "ui",
-
-  async main(ctx) {
-    // === SHADOW ROOT UI ===
-    const ui = await createShadowRootUi(ctx, {
-      name: "trustahuman-sidebar",
-      position: "overlay",
-      anchor: "body",
-      onMount: (container) => {
-        const appEl = document.createElement("div");
-        appEl.id = "trustahuman-root";
-        container.append(appEl);
-
-        const root = ReactDOM.createRoot(appEl);
-        root.render(<App shadowRoot={container} />);
-        return root;
-      },
-      onRemove: (root) => {
-        root?.unmount();
-      },
-    });
-
-    ui.mount();
-
-    // === VERIFICATION DETECTION LOGIC ===
-    const instrumented = new WeakSet<HTMLElement>();
-
-    const selectors = [
-      'button[data-view-name="comment-post"]',
-      'form.comments-comment-box__form button[type="submit"]',
-    ];
-
-    function instrumentButton(btn: HTMLElement) {
-      if (instrumented.has(btn)) return;
-      instrumented.add(btn);
-
-      btn.addEventListener(
-        "click",
-        () => {
-          handleVerification().catch(console.error);
-        },
-        { capture: true },
-      );
-    }
-
-    async function handleVerification() {
-      // 1. Capture photo via background
-      const response = await chrome.runtime.sendMessage({
-        action: "capturePhoto",
-      });
-      if (!response?.base64) return; // camera denied or failed
-
-      // 2. Call tRPC (async, don't block comment)
-      try {
-        const result = await trpc.verification.analyzePhoto.mutate({
-          photoBase64: response.base64,
-        });
-
-        // 3. Add to verification store -> sidebar auto-updates
-        useVerificationStore.getState().addVerification({
-          id: crypto.randomUUID(),
-          timestamp: new Date(),
-          action: "comment",
-          platform: "linkedin",
-          verified: result.verified,
-          confidence: result.confidence,
-          faceCount: result.faceCount,
-        });
-      } catch (err) {
-        console.error("TrustAHuman: verification failed", err);
-      }
-    }
-
-    function scanForButtons(root: Element | Document = document) {
-      for (const sel of selectors) {
-        root.querySelectorAll<HTMLElement>(sel).forEach(instrumentButton);
-      }
-    }
-
-    scanForButtons();
-
-    const observer = new MutationObserver(() => scanForButtons());
-    observer.observe(document.body, { childList: true, subtree: true });
-
-    console.log("TrustAHuman: Content script loaded");
-  },
-});
-```
-
----
-
-### 18. `packages/db/prisma/models/tools/verification.prisma`
-
-Same as previous plan. `userId` optional.
-
-```prisma
-model HumanVerification {
-  id          String   @id @default(uuid())
-  userId      String?
-  verified    Boolean
-  confidence  Float
-  faceCount   Int
-  rawResponse Json
-  actionType  String   @default("linkedin_comment")
-  actionUrl   String?
-  createdAt   DateTime @default(now())
-
-  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([createdAt])
-}
-```
-
----
-
-### 19. `packages/api/src/router/tools/verification.ts`
-
-Same as previous plan. Uses `publicProcedure`.
-
-```typescript
-import { RekognitionClient, DetectFacesCommand } from "@aws-sdk/client-rekognition";
-import { z } from "zod";
-import { db } from "@sassy/db";
-import { createTRPCRouter, publicProcedure } from "../../trpc";
-
-const rekognition = new RekognitionClient({
-  region: process.env.AWS_REGION || "us-west-2",
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
-  },
-});
-
-export const verificationRouter = () =>
-  createTRPCRouter({
-    analyzePhoto: publicProcedure
-      .input(z.object({
-        photoBase64: z.string(),
-        userId: z.string().optional(),
-      }))
-      .mutation(async ({ input }) => {
-        const buffer = Buffer.from(input.photoBase64, "base64");
-
-        const response = await rekognition.send(
-          new DetectFacesCommand({
-            Image: { Bytes: buffer },
-            Attributes: ["DEFAULT"],
-          })
-        );
-
-        const faces = response.FaceDetails ?? [];
-        const faceCount = faces.length;
-        const confidence = faces[0]?.Confidence ?? 0;
-        const verified = faceCount === 1 && confidence >= 90;
-
-        await db.humanVerification.create({
-          data: {
-            userId: input.userId ?? null,
-            verified,
-            confidence,
-            faceCount,
-            rawResponse: response as any,
-            actionType: "linkedin_comment",
-          },
-        });
-
-        return { verified, confidence, faceCount };
-      }),
-  });
-```
-
----
-
-### 20. `packages/db/prisma/models/user.prisma` (MODIFY)
-
-Add after the `commentAnalyses CommentAnalysis[]` line:
-
-```prisma
-humanVerifications HumanVerification[]
-```
-
----
-
-### 21. `packages/api/src/router/root.ts` (MODIFY)
-
-Add import:
-```typescript
-import { verificationRouter } from "./tools/verification";
-```
-
-Add to `createTRPCRouter({...})`:
-```typescript
-verification: verificationRouter(),
-```
-
----
-
-### 22. `packages/api/package.json` (MODIFY)
-
-Add to `dependencies`:
-```json
-"@aws-sdk/client-rekognition": "^3.700.0"
-```
-
----
-
-## Implementation Steps
-
-### Phase 1: Database + API
-
-1. Create `packages/db/prisma/models/tools/verification.prisma` with HumanVerification model
-2. Add `humanVerifications HumanVerification[]` to User model in `packages/db/prisma/models/user.prisma`
-3. Run `pnpm db:generate` then `pnpm db:push`
-4. Add `@aws-sdk/client-rekognition` to `packages/api/package.json` and run `pnpm install`
-5. Create `packages/api/src/router/tools/verification.ts` with `analyzePhoto` publicProcedure
-6. Register `verificationRouter` in `packages/api/src/router/root.ts`
-
-### Phase 2: Extension Scaffold
-
-7. Create `apps/trustahuman-ext/package.json` (React, Radix via @sassy/ui, Tailwind, Zustand, lucide-react, tRPC)
-8. Create `apps/trustahuman-ext/tsconfig.json`
-9. Create `apps/trustahuman-ext/wxt.config.ts` (React module, Tailwind/PostCSS in Vite, port +4)
-10. Create `apps/trustahuman-ext/tailwind.config.ts`
-11. Create `apps/trustahuman-ext/postcss.config.mjs`
-12. Create `apps/trustahuman-ext/assets/globals.css` (shadow DOM `:host` CSS vars, green theme)
-13. Create `apps/trustahuman-ext/lib/trpc-client.ts` (vanilla, no auth)
-
-### Phase 3: Background + Offscreen
-
-14. Create `apps/trustahuman-ext/entrypoints/background/index.ts` (capturePhoto message handler)
-15. Create `apps/trustahuman-ext/entrypoints/offscreen.html`
-16. Create `apps/trustahuman-ext/entrypoints/offscreen.ts` (getUserMedia capture)
-
-### Phase 4: Sidebar UI
-
-17. Create `apps/trustahuman-ext/entrypoints/linkedin.content/stores/sidebar-store.ts`
-18. Create `apps/trustahuman-ext/entrypoints/linkedin.content/stores/shadow-root-store.ts`
-19. Create `apps/trustahuman-ext/entrypoints/linkedin.content/stores/verification-store.ts`
-20. Create `apps/trustahuman-ext/entrypoints/linkedin.content/ToggleButton.tsx`
-21. Create `apps/trustahuman-ext/entrypoints/linkedin.content/VerificationSidebar.tsx`
-22. Create `apps/trustahuman-ext/entrypoints/linkedin.content/App.tsx`
-23. Create `apps/trustahuman-ext/entrypoints/linkedin.content/index.tsx` (content script entry + verification detection)
-
-### Phase 5: Build + Test
-
-24. Run `pnpm install` from monorepo root
-25. Run `pnpm --filter @sassy/trustahuman-ext dev` to verify WXT builds
-26. Load extension in Chrome, navigate to LinkedIn, test sidebar opens/closes and comment verification works
 
 ---
 
 ## Acceptance Criteria
 
-- [ ] `apps/trustahuman-ext/` builds with zero Clerk/auth dependencies
-- [ ] Extension loads in Chrome without errors
-- [ ] Toggle button visible on right edge of LinkedIn
-- [ ] Clicking toggle opens sidebar with "Trust a Human" header
-- [ ] Sidebar shows recording indicator (green pulsing dot)
-- [ ] Sidebar shows "No verifications yet" when empty
-- [ ] Clicking LinkedIn comment submit triggers webcam capture (async, never blocks)
-- [ ] After verification completes, new card appears in sidebar with timestamp, action, verified/not, confidence %
-- [ ] Server calls Rekognition DetectFaces and stores result with `userId: null`
-- [ ] Camera denial does not break comment flow or sidebar
-- [ ] Both extensions (EngageKit + TrustAHuman) coexist without port conflict (wxt-ext:+2, xbooster:+3, trustahuman:+4)
+### MVP Complete When:
+
+- [x] Extension builds without errors
+- [x] Extension loads in Chrome
+- [x] Popup shows LinkedIn/X navigation
+- [x] Toggle button visible on LinkedIn
+- [x] Sidebar opens with Triss mascot
+- [x] SignInOverlay shows when not authenticated
+- [x] Comment submit triggers camera capture
+- [x] Face detection works via Rekognition
+- [x] Clerk auth works (sign in, get token)
+- [x] submitActivity creates TrustProfile + PlatformLink
+- [x] Streak calculation works
+- [x] Landing page with signup CTA
+- [x] Extension install prompt (global toast)
+- [x] Profile page shows user stats
+- [x] Leaderboard shows top users
+- [x] Extension detection works (DOM marker)
+- [ ] Badge overlay shows on verified profiles
+- [ ] X platform support works
+- [ ] Loops email integration
 
 ---
 
 ## Dependencies
 
-- `@aws-sdk/client-rekognition` (new, server-side only)
-- `@sassy/ui` (existing, provides Sheet, Button, SheetContent, SheetHeader, SheetTitle)
-- Existing AWS credentials (`AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`)
-- Existing tRPC server at `VITE_APP_URL/api/trpc`
-- Same `.env` file (loaded via `dotenv-cli`)
-
-## Risks
-
-1. **Camera permission**: Browser prompts once for the extension origin. If denied, silently skip.
-2. **Offscreen document lifecycle**: Only one per extension. Handle create/destroy properly.
-3. **Base64 size**: 640x480 JPEG at 0.8 quality is ~30-50KB. Fine for tRPC.
-4. **No auth means no user tracking**: Results stored with `userId: null`. Acceptable for MVP testing.
-5. **Public endpoint**: `analyzePhoto` is unauthenticated. Acceptable for MVP. Lock down before production.
+- `@aws-sdk/client-rekognition` (server)
+- `@clerk/chrome-extension` (extension)
+- `@clerk/nextjs` (web app)
+- `@sassy/ui` (shared components)
+- Supabase (database)
+- AWS credentials
+- Loops (email)
 
 ---
 
-## Triss Mascot System
-
-**Added: Feb 21, 2026**
-
-Triss is a cute green seal mascot that provides friendly, contextual feedback during the verification flow. The mascot turns webcam verification from a potentially "surveillance-y" experience into a friendly companion interaction.
-
-### Why a Mascot?
-
-- **Personification reduces threat** - A character "looking at you" feels friendlier than "the system is watching"
-- **Transparency through narrative** - "I'm taking a photo... now I'm deleting it" makes the process visible
-- **Emotional reward** - Celebration on success creates positive association
-- **Seal = "seal of approval"** - Perfect metaphor for verification/trust
-
-### Triss States & Messages
-
-| State | Expression | Message |
-|-------|------------|---------|
-| `idle` | Curious, looking around | "Waiting for your next post or reply!" |
-| `typing` | Excited, leaning forward | "Ooh, you're writing something!" |
-| `submitted` | Happy clap with flippers | "Nice! You posted!" |
-| `capturing` | Eyes wide, slight wink | "Say hi! Quick pic to verify you're there" |
-| `verifying` | Eyes spinning/loading | "Checking if you're human..." |
-| `verified` | Big smile, flipper wave | "You're human! Badge earned!" |
-| `not_verified` | Confused, head tilt | "Hmm, couldn't see you. Try again?" |
-| `photo_deleted` | Satisfied nod | "Photo deleted! Your privacy is safe" |
-| `streak` | Party hat, bouncing | "7-day streak! You're on fire!" |
-
-### Triss Assets (Sprite Sheet)
-
-Assets provided as sprite sheet at `apps/trustahuman-ext/assets/triss-sprites.png`:
+## File Structure (Extension)
 
 ```
-triss-idle         (base state)
-triss-typing       (leaning forward, interested)
-triss-submitted    (happy, flippers up)
-triss-capturing    (winking, camera icon nearby)
-triss-verifying    (eyes as loading spinners)
-triss-verified     (big smile, checkmark)
-triss-not-verified (confused, question mark)
-triss-deleted      (satisfied, sweeping motion)
-triss-streak       (party hat, confetti)
-```
-
-### Triss Component
-
-```typescript
-// apps/trustahuman-ext/entrypoints/linkedin.content/Triss.tsx
-
-type TrissState =
-  | "idle"
-  | "typing"
-  | "submitted"
-  | "capturing"
-  | "verifying"
-  | "verified"
-  | "not_verified"
-  | "photo_deleted"
-  | "streak";
-
-interface TrissProps {
-  state: TrissState;
-  message?: string;
-  streakCount?: number;
-}
-
-export function Triss({ state, message, streakCount }: TrissProps) {
-  const defaultMessages: Record<TrissState, string> = {
-    idle: "Waiting for your next post or reply!",
-    typing: "Ooh, you're writing something!",
-    submitted: "Nice! You posted!",
-    capturing: "Say hi! Quick pic to verify you're there",
-    verifying: "Checking if you're human...",
-    verified: "You're human! Badge earned!",
-    not_verified: "Hmm, couldn't see you. Try again?",
-    photo_deleted: "Photo deleted! Your privacy is safe",
-    streak: `${streakCount}-day streak! You're on fire!`,
-  };
-
-  return (
-    <div className="flex items-end gap-3 p-3 border-t border-border bg-card/50">
-      <TrissSpriteImage state={state} className="w-12 h-12" />
-      <div className="flex-1">
-        <p className="text-sm text-foreground">
-          {message ?? defaultMessages[state]}
-        </p>
-      </div>
-    </div>
-  );
-}
-```
-
-### State Flow Timeline
-
-```
-User starts typing in comment box
-    → [0ms] trissState = "typing"
-
-User clicks submit button
-    → [0ms] trissState = "submitted"
-    → [500ms] trissState = "capturing" (camera activates)
-
-Photo captured & sent to server
-    → [~800ms] trissState = "verifying"
-    → [~1500ms] trissState = "verified" OR "not_verified"
-
-Auto-transition
-    → [+2000ms] trissState = "photo_deleted"
-    → [+3000ms] trissState = "idle"
-```
-
-### Integration with Verification Store
-
-```typescript
-// verification-store.ts additions
-
-interface VerificationStore {
-  // ... existing fields ...
-
-  trissState: TrissState;
-  trissMessage: string | null;
-
-  setTrissState: (state: TrissState, message?: string) => void;
-
-  // Auto-transitions
-  transitionToPhotoDeleted: () => void; // Called 2s after verified/not_verified
-  transitionToIdle: () => void;         // Called 3s after photo_deleted
-}
-```
-
-### Files to Create for Triss
-
-| # | File | Purpose |
-|---|------|---------|
-| T1 | `apps/trustahuman-ext/assets/triss-sprites.png` | Sprite sheet with all Triss states |
-| T2 | `apps/trustahuman-ext/entrypoints/linkedin.content/Triss.tsx` | Triss component with sprite rendering |
-| T3 | `apps/trustahuman-ext/entrypoints/linkedin.content/TrissSpriteImage.tsx` | Sprite sheet image component |
-
-### VerificationSidebar Update
-
-Update `VerificationSidebar.tsx` to include Triss at the bottom:
-
-```tsx
-export function VerificationSidebar({ onClose }: VerificationSidebarProps) {
-  const { trissState, trissMessage } = useVerificationStore();
-
-  return (
-    <SheetContent side="right" className="flex flex-col">
-      {/* ... existing header and verification list ... */}
-
-      {/* Triss mascot at bottom */}
-      <Triss state={trissState} message={trissMessage} />
-    </SheetContent>
-  );
-}
+apps/trustahuman-ext/
+├── assets/
+│   └── globals.css
+├── entrypoints/
+│   ├── background/
+│   │   └── index.ts              # Clerk + message router
+│   ├── popup/
+│   │   ├── index.html            # Popup HTML
+│   │   ├── main.tsx              # Popup entry
+│   │   └── App.tsx               # Popup UI
+│   ├── linkedin.content/
+│   │   ├── index.tsx             # Content script entry
+│   │   ├── App.tsx               # Main React app
+│   │   ├── VerificationSidebar.tsx
+│   │   ├── SignInOverlay.tsx     # Auth overlay
+│   │   ├── ProfileDetector.ts    # Detect logged-in user
+│   │   ├── PostScraper.ts        # Scrape comment context
+│   │   └── stores/
+│   │       ├── verification-store.ts
+│   │       ├── sidebar-store.ts  # + OPEN_SIDEBAR listener
+│   │       └── shadow-root-store.ts
+│   ├── offscreen.html
+│   └── offscreen.ts              # Camera capture
+├── lib/
+│   ├── auth-service.ts           # Content script auth
+│   ├── auth-store.ts             # Zustand auth state
+│   ├── get-sync-host-url.ts      # Clerk sync host + API URL
+│   └── trpc-client.ts            # tRPC with auth
+├── wxt.config.ts
+├── tailwind.config.ts
+└── package.json
 ```
 
 ---
 
-## Post Verification (Not Just Replies)
+## Next Steps
 
-**Added: Feb 21, 2026**
-
-MVP now covers both **replies/comments** AND **original posts** on LinkedIn and X.
-
-### Activity Types
-
-```typescript
-type ActivityType =
-  | "linkedin_comment"  // Reply to someone's post
-  | "linkedin_post"     // Original post by user
-  | "x_comment"         // Reply to someone's tweet
-  | "x_post";           // Original tweet by user
-```
-
-### Database Schema Additions
-
-Add two new models for post verification:
-
-```prisma
-// packages/db/prisma/models/verified-linkedin-post.prisma
-model VerifiedLinkedInPost {
-  id                String    @id @default(uuid())
-  trustProfileId    String
-
-  // User's post content
-  postText          String    @db.Text
-  postUrn           String?   // urn:li:share:xxx or urn:li:activity:xxx
-  postUrl           String?   // Full URL to the post
-
-  // Metadata
-  hasImage          Boolean   @default(false)
-  hasVideo          Boolean   @default(false)
-  createdAt         DateTime  @default(now())
-
-  // Relations
-  trustProfile      TrustProfile       @relation(fields: [trustProfileId], references: [id], onDelete: Cascade)
-  verification      HumanVerification?
-
-  @@index([trustProfileId])
-  @@index([createdAt])
-}
-```
-
-```prisma
-// packages/db/prisma/models/verified-x-post.prisma
-model VerifiedXPost {
-  id                String    @id @default(uuid())
-  trustProfileId    String
-
-  // User's tweet content
-  tweetText         String    @db.Text
-  tweetId           String?
-  tweetUrl          String?
-
-  // Metadata
-  hasMedia          Boolean   @default(false)
-  isThread          Boolean   @default(false)
-  createdAt         DateTime  @default(now())
-
-  // Relations
-  trustProfile      TrustProfile      @relation(fields: [trustProfileId], references: [id], onDelete: Cascade)
-  verification      HumanVerification?
-
-  @@index([trustProfileId])
-  @@index([createdAt])
-}
-```
-
-### HumanVerification Model Update
-
-Add links to post models:
-
-```prisma
-model HumanVerification {
-  // ... existing fields ...
-
-  activityType        String    // "linkedin_comment" | "linkedin_post" | "x_comment" | "x_post"
-
-  // Links to platform-specific activity (one of these will be set)
-  linkedinCommentId   String?   @unique
-  linkedinPostId      String?   @unique  // NEW
-  xCommentId          String?   @unique
-  xPostId             String?   @unique  // NEW
-
-  // Relations
-  linkedinComment     VerifiedLinkedInComment? @relation(fields: [linkedinCommentId], references: [id])
-  linkedinPost        VerifiedLinkedInPost?    @relation(fields: [linkedinPostId], references: [id])
-  xComment            VerifiedXComment?        @relation(fields: [xCommentId], references: [id])
-  xPost               VerifiedXPost?           @relation(fields: [xPostId], references: [id])
-}
-```
-
-### Extension Detection Updates
-
-Content script needs to detect both post and comment submit buttons:
-
-```typescript
-// LinkedIn selectors
-const LINKEDIN_SELECTORS = {
-  commentSubmit: [
-    'button[data-view-name="comment-post"]',
-    'form.comments-comment-box__form button[type="submit"]',
-  ],
-  postSubmit: [
-    'button.share-actions__primary-action',  // "Post" button in composer
-    'button[data-control-name="share.post"]',
-  ],
-};
-
-// X/Twitter selectors
-const X_SELECTORS = {
-  replySubmit: [
-    'button[data-testid="tweetButtonInline"]',  // Reply button
-  ],
-  postSubmit: [
-    'button[data-testid="tweetButton"]',  // Main tweet button
-  ],
-};
-```
-
-### Files to Create for Post Verification
-
-| # | File | Purpose |
-|---|------|---------|
-| P1 | `packages/db/prisma/models/verified-linkedin-post.prisma` | LinkedIn post model |
-| P2 | `packages/db/prisma/models/verified-x-post.prisma` | X post model |
-
-### Files to Modify
-
-| # | File | Change |
-|---|------|--------|
-| P3 | `packages/db/prisma/models/human-verification.prisma` | Add linkedinPostId, xPostId fields |
-| P4 | `packages/db/prisma/models/trust-profile.prisma` | Add linkedinPosts, xPosts relations |
-| P5 | `apps/trustahuman-ext/entrypoints/linkedin.content/index.tsx` | Add post submit detection |
+1. ~~**Phase 6**: Landing page + onboarding flow~~ ✅ DONE
+2. ~~**Phase 7**: Profile page~~ ✅ DONE (merged into Phase 6)
+3. ~~**Phase 8**: Leaderboard~~ ✅ DONE (merged into Phase 6)
+4. **Phase 9**: Badge overlay for verified profiles ← **NEXT**
+5. **Phase 10**: X/Twitter support
+6. **Phase 11**: Loops email integration
+7. **Phase 12**: Final polish and testing

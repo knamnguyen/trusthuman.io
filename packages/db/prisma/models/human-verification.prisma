@@ -1,33 +1,32 @@
-// HumanVerification - Core verification record
+// HumanVerification - Core verification record (face detection result)
 model HumanVerification {
-  id             String  @id @default(uuid())
-  userId         String? // Optional for MVP (no auth initially)
-  trustProfileId String?
+  id             String @id @default(uuid())
+  trustProfileId String
 
   // Verification result
   verified    Boolean
   confidence  Float
   faceCount   Int
   rawResponse Json? // AWS Rekognition response
-  photoS3Key  String? // S3 key if photo stored
 
-  // Activity type (for routing to correct table)
-  activityType String // "linkedin_comment" | "x_comment" | future types
-
-  // Links to platform-specific activity (one of these will be set)
-  linkedinCommentId String? @unique
-  xCommentId        String? @unique
+  // Activity type (for knowing which relation to check)
+  activityType String // "linkedin" | "x" | "facebook" | "threads" | "reddit" | "ph" | "github" | "hn"
 
   createdAt DateTime @default(now())
 
   // Relations
-  user            User?                     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  trustProfile    TrustProfile?             @relation(fields: [trustProfileId], references: [id], onDelete: Cascade)
-  linkedinComment VerifiedLinkedInComment?  @relation(fields: [linkedinCommentId], references: [id])
-  xComment        VerifiedXComment?         @relation(fields: [xCommentId], references: [id])
+  trustProfile TrustProfile @relation(fields: [trustProfileId], references: [id], onDelete: Cascade)
 
-  @@index([userId])
+  // Platform activities (one-to-one, only one will be populated based on activityType)
+  linkedinActivity VerifiedLinkedInActivity?
+  xActivity        VerifiedXActivity?
+  facebookActivity VerifiedFacebookActivity?
+  threadsActivity  VerifiedThreadsActivity?
+  redditActivity   VerifiedRedditActivity?
+  phActivity       VerifiedPHActivity?
+  githubActivity   VerifiedGitHubActivity?
+  hnActivity       VerifiedHNActivity?
+
   @@index([trustProfileId])
-  @@index([activityType])
   @@index([createdAt])
 }

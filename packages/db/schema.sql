@@ -7,16 +7,12 @@ CREATE EXTENSION IF NOT EXISTS "vector";
 -- CreateTable
 CREATE TABLE "HumanVerification" (
     "id" TEXT NOT NULL,
-    "userId" TEXT,
-    "trustProfileId" TEXT,
+    "trustProfileId" TEXT NOT NULL,
     "verified" BOOLEAN NOT NULL,
     "confidence" DOUBLE PRECISION NOT NULL,
     "faceCount" INTEGER NOT NULL,
     "rawResponse" JSONB,
-    "photoS3Key" TEXT,
     "activityType" TEXT NOT NULL,
-    "linkedinCommentId" TEXT,
-    "xCommentId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "HumanVerification_pkey" PRIMARY KEY ("id")
@@ -28,11 +24,12 @@ CREATE TABLE "PlatformLink" (
     "trustProfileId" TEXT NOT NULL,
     "platform" TEXT NOT NULL,
     "profileUrl" TEXT NOT NULL,
-    "profileHandle" TEXT,
+    "profileHandle" TEXT NOT NULL,
     "displayName" TEXT,
     "avatarUrl" TEXT,
-    "verified" BOOLEAN NOT NULL DEFAULT true,
-    "connectedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "autoDetected" BOOLEAN NOT NULL DEFAULT true,
+    "linkedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "PlatformLink_pkey" PRIMARY KEY ("id")
 );
@@ -44,19 +41,16 @@ CREATE TABLE "TrustProfile" (
     "userId" TEXT NOT NULL,
     "username" TEXT NOT NULL,
     "displayName" TEXT,
-    "bio" VARCHAR(280),
     "avatarUrl" TEXT,
+    "bio" VARCHAR(160),
     "totalVerifications" INTEGER NOT NULL DEFAULT 0,
-    "lastVerifiedAt" TIMESTAMP(3),
     "currentStreak" INTEGER NOT NULL DEFAULT 0,
     "longestStreak" INTEGER NOT NULL DEFAULT 0,
-    "streakFreezeTokens" INTEGER NOT NULL DEFAULT 0,
+    "lastVerifiedAt" TIMESTAMP(3),
     "lastStreakDate" TIMESTAMP(3),
-    "referralCode" TEXT NOT NULL,
-    "referredById" TEXT,
-    "referralCount" INTEGER NOT NULL DEFAULT 0,
     "isPublic" BOOLEAN NOT NULL DEFAULT true,
-    "cameraMode" TEXT NOT NULL DEFAULT 'capture_on_submit',
+    "defaultLayout" TEXT NOT NULL DEFAULT 'horizontal',
+    "badgeImageStyle" TEXT NOT NULL DEFAULT 'logo',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -78,71 +72,149 @@ CREATE TABLE "User" (
 );
 
 -- CreateTable
-CREATE TABLE "VerifiedLinkedInComment" (
+CREATE TABLE "VerifiedFacebookActivity" (
     "id" TEXT NOT NULL,
     "trustProfileId" TEXT NOT NULL,
     "commentText" TEXT NOT NULL,
-    "commentUrn" TEXT,
-    "postUrl" TEXT NOT NULL,
-    "postUrn" TEXT,
-    "postAuthorName" TEXT,
-    "postAuthorProfileUrl" TEXT,
-    "postAuthorUrn" TEXT,
-    "postAuthorAvatarUrl" TEXT,
-    "postAuthorHeadline" TEXT,
-    "postTextSnippet" VARCHAR(500),
-    "postImageUrl" TEXT,
-    "scrapedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "commentUrl" TEXT,
+    "parentUrl" TEXT,
+    "parentAuthorName" TEXT NOT NULL,
+    "parentAuthorAvatarUrl" TEXT NOT NULL,
+    "parentTextSnippet" TEXT NOT NULL,
+    "verificationId" TEXT NOT NULL,
+    "activityAt" TIMESTAMP(3) NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "VerifiedLinkedInComment_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "VerifiedFacebookActivity_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "VerifiedXComment" (
+CREATE TABLE "VerifiedGitHubActivity" (
     "id" TEXT NOT NULL,
     "trustProfileId" TEXT NOT NULL,
-    "replyText" TEXT NOT NULL,
-    "replyTweetId" TEXT,
-    "tweetUrl" TEXT NOT NULL,
-    "tweetId" TEXT,
-    "conversationId" TEXT,
-    "tweetAuthorName" TEXT,
-    "tweetAuthorHandle" TEXT,
-    "tweetAuthorProfileUrl" TEXT,
-    "tweetAuthorAvatarUrl" TEXT,
-    "tweetAuthorBio" VARCHAR(280),
-    "tweetTextSnippet" VARCHAR(500),
-    "tweetImageUrl" TEXT,
-    "scrapedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "commentText" TEXT NOT NULL,
+    "commentUrl" TEXT,
+    "parentUrl" TEXT,
+    "parentAuthorName" TEXT NOT NULL,
+    "parentAuthorAvatarUrl" TEXT NOT NULL,
+    "parentTextSnippet" TEXT NOT NULL,
+    "verificationId" TEXT NOT NULL,
+    "activityAt" TIMESTAMP(3) NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "VerifiedXComment_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "VerifiedGitHubActivity_pkey" PRIMARY KEY ("id")
 );
 
--- CreateIndex
-CREATE UNIQUE INDEX "HumanVerification_linkedinCommentId_key" ON "HumanVerification"("linkedinCommentId");
+-- CreateTable
+CREATE TABLE "VerifiedHNActivity" (
+    "id" TEXT NOT NULL,
+    "trustProfileId" TEXT NOT NULL,
+    "commentText" TEXT NOT NULL,
+    "commentUrl" TEXT,
+    "parentUrl" TEXT,
+    "parentAuthorName" TEXT NOT NULL,
+    "parentAuthorAvatarUrl" TEXT NOT NULL,
+    "parentTextSnippet" TEXT NOT NULL,
+    "verificationId" TEXT NOT NULL,
+    "activityAt" TIMESTAMP(3) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
--- CreateIndex
-CREATE UNIQUE INDEX "HumanVerification_xCommentId_key" ON "HumanVerification"("xCommentId");
+    CONSTRAINT "VerifiedHNActivity_pkey" PRIMARY KEY ("id")
+);
 
--- CreateIndex
-CREATE INDEX "HumanVerification_userId_idx" ON "HumanVerification"("userId");
+-- CreateTable
+CREATE TABLE "VerifiedLinkedInActivity" (
+    "id" TEXT NOT NULL,
+    "trustProfileId" TEXT NOT NULL,
+    "commentText" TEXT NOT NULL,
+    "commentUrl" TEXT,
+    "parentUrl" TEXT,
+    "parentAuthorName" TEXT NOT NULL,
+    "parentAuthorAvatarUrl" TEXT NOT NULL,
+    "parentTextSnippet" TEXT NOT NULL,
+    "verificationId" TEXT NOT NULL,
+    "activityAt" TIMESTAMP(3) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "VerifiedLinkedInActivity_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "VerifiedPHActivity" (
+    "id" TEXT NOT NULL,
+    "trustProfileId" TEXT NOT NULL,
+    "commentText" TEXT NOT NULL,
+    "commentUrl" TEXT,
+    "parentUrl" TEXT,
+    "parentAuthorName" TEXT NOT NULL,
+    "parentAuthorAvatarUrl" TEXT NOT NULL,
+    "parentTextSnippet" TEXT NOT NULL,
+    "verificationId" TEXT NOT NULL,
+    "activityAt" TIMESTAMP(3) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "VerifiedPHActivity_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "VerifiedRedditActivity" (
+    "id" TEXT NOT NULL,
+    "trustProfileId" TEXT NOT NULL,
+    "commentText" TEXT NOT NULL,
+    "commentUrl" TEXT,
+    "parentUrl" TEXT,
+    "parentAuthorName" TEXT NOT NULL,
+    "parentAuthorAvatarUrl" TEXT NOT NULL,
+    "parentTextSnippet" TEXT NOT NULL,
+    "verificationId" TEXT NOT NULL,
+    "activityAt" TIMESTAMP(3) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "VerifiedRedditActivity_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "VerifiedThreadsActivity" (
+    "id" TEXT NOT NULL,
+    "trustProfileId" TEXT NOT NULL,
+    "commentText" TEXT NOT NULL,
+    "commentUrl" TEXT,
+    "parentUrl" TEXT,
+    "parentAuthorName" TEXT NOT NULL,
+    "parentAuthorAvatarUrl" TEXT NOT NULL,
+    "parentTextSnippet" TEXT NOT NULL,
+    "verificationId" TEXT NOT NULL,
+    "activityAt" TIMESTAMP(3) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "VerifiedThreadsActivity_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "VerifiedXActivity" (
+    "id" TEXT NOT NULL,
+    "trustProfileId" TEXT NOT NULL,
+    "commentText" TEXT NOT NULL,
+    "commentUrl" TEXT,
+    "parentUrl" TEXT,
+    "parentAuthorName" TEXT NOT NULL,
+    "parentAuthorAvatarUrl" TEXT NOT NULL,
+    "parentTextSnippet" TEXT NOT NULL,
+    "verificationId" TEXT NOT NULL,
+    "activityAt" TIMESTAMP(3) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "VerifiedXActivity_pkey" PRIMARY KEY ("id")
+);
 
 -- CreateIndex
 CREATE INDEX "HumanVerification_trustProfileId_idx" ON "HumanVerification"("trustProfileId");
 
 -- CreateIndex
-CREATE INDEX "HumanVerification_activityType_idx" ON "HumanVerification"("activityType");
-
--- CreateIndex
 CREATE INDEX "HumanVerification_createdAt_idx" ON "HumanVerification"("createdAt");
 
 -- CreateIndex
-CREATE INDEX "PlatformLink_trustProfileId_idx" ON "PlatformLink"("trustProfileId");
-
--- CreateIndex
-CREATE INDEX "PlatformLink_platform_profileUrl_idx" ON "PlatformLink"("platform", "profileUrl");
+CREATE INDEX "PlatformLink_platform_profileHandle_idx" ON "PlatformLink"("platform", "profileHandle");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "PlatformLink_trustProfileId_platform_key" ON "PlatformLink"("trustProfileId", "platform");
@@ -160,9 +232,6 @@ CREATE UNIQUE INDEX "TrustProfile_userId_key" ON "TrustProfile"("userId");
 CREATE UNIQUE INDEX "TrustProfile_username_key" ON "TrustProfile"("username");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "TrustProfile_referralCode_key" ON "TrustProfile"("referralCode");
-
--- CreateIndex
 CREATE INDEX "TrustProfile_userId_idx" ON "TrustProfile"("userId");
 
 -- CreateIndex
@@ -172,43 +241,112 @@ CREATE INDEX "TrustProfile_username_idx" ON "TrustProfile"("username");
 CREATE INDEX "TrustProfile_humanNumber_idx" ON "TrustProfile"("humanNumber");
 
 -- CreateIndex
+CREATE INDEX "TrustProfile_totalVerifications_idx" ON "TrustProfile"("totalVerifications");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
 
 -- CreateIndex
-CREATE INDEX "VerifiedLinkedInComment_trustProfileId_idx" ON "VerifiedLinkedInComment"("trustProfileId");
+CREATE UNIQUE INDEX "VerifiedFacebookActivity_verificationId_key" ON "VerifiedFacebookActivity"("verificationId");
 
 -- CreateIndex
-CREATE INDEX "VerifiedLinkedInComment_postUrn_idx" ON "VerifiedLinkedInComment"("postUrn");
+CREATE INDEX "VerifiedFacebookActivity_trustProfileId_idx" ON "VerifiedFacebookActivity"("trustProfileId");
 
 -- CreateIndex
-CREATE INDEX "VerifiedLinkedInComment_createdAt_idx" ON "VerifiedLinkedInComment"("createdAt");
+CREATE INDEX "VerifiedFacebookActivity_createdAt_idx" ON "VerifiedFacebookActivity"("createdAt");
 
 -- CreateIndex
-CREATE INDEX "VerifiedXComment_trustProfileId_idx" ON "VerifiedXComment"("trustProfileId");
+CREATE INDEX "VerifiedFacebookActivity_activityAt_idx" ON "VerifiedFacebookActivity"("activityAt");
 
 -- CreateIndex
-CREATE INDEX "VerifiedXComment_tweetId_idx" ON "VerifiedXComment"("tweetId");
+CREATE UNIQUE INDEX "VerifiedGitHubActivity_verificationId_key" ON "VerifiedGitHubActivity"("verificationId");
 
 -- CreateIndex
-CREATE INDEX "VerifiedXComment_conversationId_idx" ON "VerifiedXComment"("conversationId");
+CREATE INDEX "VerifiedGitHubActivity_trustProfileId_idx" ON "VerifiedGitHubActivity"("trustProfileId");
 
 -- CreateIndex
-CREATE INDEX "VerifiedXComment_createdAt_idx" ON "VerifiedXComment"("createdAt");
+CREATE INDEX "VerifiedGitHubActivity_createdAt_idx" ON "VerifiedGitHubActivity"("createdAt");
 
--- AddForeignKey
-ALTER TABLE "HumanVerification" ADD CONSTRAINT "HumanVerification_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- CreateIndex
+CREATE INDEX "VerifiedGitHubActivity_activityAt_idx" ON "VerifiedGitHubActivity"("activityAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "VerifiedHNActivity_verificationId_key" ON "VerifiedHNActivity"("verificationId");
+
+-- CreateIndex
+CREATE INDEX "VerifiedHNActivity_trustProfileId_idx" ON "VerifiedHNActivity"("trustProfileId");
+
+-- CreateIndex
+CREATE INDEX "VerifiedHNActivity_createdAt_idx" ON "VerifiedHNActivity"("createdAt");
+
+-- CreateIndex
+CREATE INDEX "VerifiedHNActivity_activityAt_idx" ON "VerifiedHNActivity"("activityAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "VerifiedLinkedInActivity_verificationId_key" ON "VerifiedLinkedInActivity"("verificationId");
+
+-- CreateIndex
+CREATE INDEX "VerifiedLinkedInActivity_trustProfileId_idx" ON "VerifiedLinkedInActivity"("trustProfileId");
+
+-- CreateIndex
+CREATE INDEX "VerifiedLinkedInActivity_createdAt_idx" ON "VerifiedLinkedInActivity"("createdAt");
+
+-- CreateIndex
+CREATE INDEX "VerifiedLinkedInActivity_activityAt_idx" ON "VerifiedLinkedInActivity"("activityAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "VerifiedPHActivity_verificationId_key" ON "VerifiedPHActivity"("verificationId");
+
+-- CreateIndex
+CREATE INDEX "VerifiedPHActivity_trustProfileId_idx" ON "VerifiedPHActivity"("trustProfileId");
+
+-- CreateIndex
+CREATE INDEX "VerifiedPHActivity_createdAt_idx" ON "VerifiedPHActivity"("createdAt");
+
+-- CreateIndex
+CREATE INDEX "VerifiedPHActivity_activityAt_idx" ON "VerifiedPHActivity"("activityAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "VerifiedRedditActivity_verificationId_key" ON "VerifiedRedditActivity"("verificationId");
+
+-- CreateIndex
+CREATE INDEX "VerifiedRedditActivity_trustProfileId_idx" ON "VerifiedRedditActivity"("trustProfileId");
+
+-- CreateIndex
+CREATE INDEX "VerifiedRedditActivity_createdAt_idx" ON "VerifiedRedditActivity"("createdAt");
+
+-- CreateIndex
+CREATE INDEX "VerifiedRedditActivity_activityAt_idx" ON "VerifiedRedditActivity"("activityAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "VerifiedThreadsActivity_verificationId_key" ON "VerifiedThreadsActivity"("verificationId");
+
+-- CreateIndex
+CREATE INDEX "VerifiedThreadsActivity_trustProfileId_idx" ON "VerifiedThreadsActivity"("trustProfileId");
+
+-- CreateIndex
+CREATE INDEX "VerifiedThreadsActivity_createdAt_idx" ON "VerifiedThreadsActivity"("createdAt");
+
+-- CreateIndex
+CREATE INDEX "VerifiedThreadsActivity_activityAt_idx" ON "VerifiedThreadsActivity"("activityAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "VerifiedXActivity_verificationId_key" ON "VerifiedXActivity"("verificationId");
+
+-- CreateIndex
+CREATE INDEX "VerifiedXActivity_trustProfileId_idx" ON "VerifiedXActivity"("trustProfileId");
+
+-- CreateIndex
+CREATE INDEX "VerifiedXActivity_createdAt_idx" ON "VerifiedXActivity"("createdAt");
+
+-- CreateIndex
+CREATE INDEX "VerifiedXActivity_activityAt_idx" ON "VerifiedXActivity"("activityAt");
 
 -- AddForeignKey
 ALTER TABLE "HumanVerification" ADD CONSTRAINT "HumanVerification_trustProfileId_fkey" FOREIGN KEY ("trustProfileId") REFERENCES "TrustProfile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "HumanVerification" ADD CONSTRAINT "HumanVerification_linkedinCommentId_fkey" FOREIGN KEY ("linkedinCommentId") REFERENCES "VerifiedLinkedInComment"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "HumanVerification" ADD CONSTRAINT "HumanVerification_xCommentId_fkey" FOREIGN KEY ("xCommentId") REFERENCES "VerifiedXComment"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "PlatformLink" ADD CONSTRAINT "PlatformLink_trustProfileId_fkey" FOREIGN KEY ("trustProfileId") REFERENCES "TrustProfile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -217,11 +355,50 @@ ALTER TABLE "PlatformLink" ADD CONSTRAINT "PlatformLink_trustProfileId_fkey" FOR
 ALTER TABLE "TrustProfile" ADD CONSTRAINT "TrustProfile_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "TrustProfile" ADD CONSTRAINT "TrustProfile_referredById_fkey" FOREIGN KEY ("referredById") REFERENCES "TrustProfile"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "VerifiedFacebookActivity" ADD CONSTRAINT "VerifiedFacebookActivity_trustProfileId_fkey" FOREIGN KEY ("trustProfileId") REFERENCES "TrustProfile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "VerifiedLinkedInComment" ADD CONSTRAINT "VerifiedLinkedInComment_trustProfileId_fkey" FOREIGN KEY ("trustProfileId") REFERENCES "TrustProfile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "VerifiedFacebookActivity" ADD CONSTRAINT "VerifiedFacebookActivity_verificationId_fkey" FOREIGN KEY ("verificationId") REFERENCES "HumanVerification"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "VerifiedXComment" ADD CONSTRAINT "VerifiedXComment_trustProfileId_fkey" FOREIGN KEY ("trustProfileId") REFERENCES "TrustProfile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "VerifiedGitHubActivity" ADD CONSTRAINT "VerifiedGitHubActivity_trustProfileId_fkey" FOREIGN KEY ("trustProfileId") REFERENCES "TrustProfile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "VerifiedGitHubActivity" ADD CONSTRAINT "VerifiedGitHubActivity_verificationId_fkey" FOREIGN KEY ("verificationId") REFERENCES "HumanVerification"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "VerifiedHNActivity" ADD CONSTRAINT "VerifiedHNActivity_trustProfileId_fkey" FOREIGN KEY ("trustProfileId") REFERENCES "TrustProfile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "VerifiedHNActivity" ADD CONSTRAINT "VerifiedHNActivity_verificationId_fkey" FOREIGN KEY ("verificationId") REFERENCES "HumanVerification"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "VerifiedLinkedInActivity" ADD CONSTRAINT "VerifiedLinkedInActivity_trustProfileId_fkey" FOREIGN KEY ("trustProfileId") REFERENCES "TrustProfile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "VerifiedLinkedInActivity" ADD CONSTRAINT "VerifiedLinkedInActivity_verificationId_fkey" FOREIGN KEY ("verificationId") REFERENCES "HumanVerification"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "VerifiedPHActivity" ADD CONSTRAINT "VerifiedPHActivity_trustProfileId_fkey" FOREIGN KEY ("trustProfileId") REFERENCES "TrustProfile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "VerifiedPHActivity" ADD CONSTRAINT "VerifiedPHActivity_verificationId_fkey" FOREIGN KEY ("verificationId") REFERENCES "HumanVerification"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "VerifiedRedditActivity" ADD CONSTRAINT "VerifiedRedditActivity_trustProfileId_fkey" FOREIGN KEY ("trustProfileId") REFERENCES "TrustProfile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "VerifiedRedditActivity" ADD CONSTRAINT "VerifiedRedditActivity_verificationId_fkey" FOREIGN KEY ("verificationId") REFERENCES "HumanVerification"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "VerifiedThreadsActivity" ADD CONSTRAINT "VerifiedThreadsActivity_trustProfileId_fkey" FOREIGN KEY ("trustProfileId") REFERENCES "TrustProfile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "VerifiedThreadsActivity" ADD CONSTRAINT "VerifiedThreadsActivity_verificationId_fkey" FOREIGN KEY ("verificationId") REFERENCES "HumanVerification"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "VerifiedXActivity" ADD CONSTRAINT "VerifiedXActivity_trustProfileId_fkey" FOREIGN KEY ("trustProfileId") REFERENCES "TrustProfile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "VerifiedXActivity" ADD CONSTRAINT "VerifiedXActivity_verificationId_fkey" FOREIGN KEY ("verificationId") REFERENCES "HumanVerification"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 

@@ -10,6 +10,5 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Relations
-  trustProfile  TrustProfile?
-  verifications HumanVerification[]
+  trustProfile TrustProfile?
 }

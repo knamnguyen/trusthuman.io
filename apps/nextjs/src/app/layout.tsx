@@ -8,6 +8,7 @@ import "~/app/globals.css";
 
 import { env } from "~/env";
 import { Providers } from "../lib/providers/providers";
+import { ExtensionInstallToast } from "./_components/extension-install-toast";
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -44,6 +45,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
         <Providers>
           {props.children}
           <Toaster />
+          <ExtensionInstallToast />
           {env.VERCEL_ENV === "production" && <VercelAnalytics />}
           {env.VERCEL_ENV === "production" && <VercelSpeedInsights />}
         </Providers>

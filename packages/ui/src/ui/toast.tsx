@@ -44,7 +44,7 @@ interface ToasterSimpleProps {
  * Copy sonner styles from document head into the shadow root.
  * Sonner injects styles into document.head which aren't available in shadow DOM.
  */
-function copySonnerStylesToShadow(shadowContainer: HTMLElement | null) {
+function copySonnerStylesToShadow(shadowContainer: HTMLElement | null | undefined) {
   if (!shadowContainer) return;
 
   // Find the shadow root

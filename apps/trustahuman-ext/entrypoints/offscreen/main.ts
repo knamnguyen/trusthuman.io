@@ -1,3 +1,8 @@
+/**
+ * Offscreen document for webcam capture
+ * This runs in an offscreen context with access to getUserMedia
+ */
+
 console.log("TrustAHuman Offscreen: script loaded");
 
 chrome.runtime.onMessage.addListener((message) => {
@@ -6,7 +11,39 @@ chrome.runtime.onMessage.addListener((message) => {
     capturePhoto();
     return true;
   }
+  if (message.action === "requestCameraPermission") {
+    requestCameraPermission();
+    return true;
+  }
 });
+
+/**
+ * Request camera permission on first install
+ * Just gets the stream briefly to trigger permission prompt, then closes it
+ */
+async function requestCameraPermission() {
+  try {
+    console.log("TrustAHuman Offscreen: requesting camera permission");
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { width: 640, height: 480, facingMode: "user" },
+    });
+    console.log("TrustAHuman Offscreen: camera permission granted");
+
+    // Immediately stop the stream - we just wanted the permission
+    stream.getTracks().forEach((t) => t.stop());
+
+    // Close the offscreen document
+    setTimeout(() => {
+      window.close();
+    }, 500);
+  } catch (err) {
+    console.error("TrustAHuman Offscreen: Camera permission denied:", err);
+    // Close anyway
+    setTimeout(() => {
+      window.close();
+    }, 500);
+  }
+}
 
 async function capturePhoto() {
   try {

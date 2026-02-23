@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
+
 import { Sheet } from "@sassy/ui/sheet";
 import { ToasterSimple } from "@sassy/ui/toast";
 
-import { ToggleButton } from "./ToggleButton";
-import { VerificationSidebar } from "./VerificationSidebar";
 import { useShadowRootStore } from "./stores/shadow-root-store";
 import { useSidebarStore } from "./stores/sidebar-store";
+import { ToggleButton } from "./ToggleButton";
+import { VerificationSidebar } from "./VerificationSidebar";
 
 interface AppProps {
   shadowRoot: HTMLElement;

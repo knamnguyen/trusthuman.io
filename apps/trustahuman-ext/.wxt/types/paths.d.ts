@@ -5,10 +5,21 @@ declare module "wxt/browser" {
   export type PublicPath =
     | "/"
     | "/background.js"
+    | "/content-scripts/facebook.js"
     | "/content-scripts/linkedin.js"
+    | "/content-scripts/threads.js"
+    | "/content-scripts/trusthuman.js"
+    | "/content-scripts/x.js"
+    | "/icon128.png"
+    | "/icon16.png"
+    | "/icon19.png"
+    | "/icon32.png"
+    | "/icon38.png"
+    | "/icon48.png"
     | "/offscreen.html"
+    | "/popup.html"
     | "/setup.html"
-    | "/sprites/README.md"
+    | "/trusthuman-logo.png"
     | "/trusthuman-logo.svg"
   type HtmlPublicPath = Extract<PublicPath, `${string}.html`>
   export interface WxtRuntime {

@@ -11,7 +11,8 @@ export type TrissState =
   | "verified"
   | "not_verified"
   | "photo_deleted"
-  | "streak";
+  | "streak"
+  | "camera_needed";
 
 interface TrissToastConfig {
   message: string;
@@ -65,15 +66,24 @@ export const TRISS_TOAST_CONFIG: Record<TrissState, TrissToastConfig> = {
     emoji: "🔥",
     duration: 5000,
   },
+  camera_needed: {
+    message: "Camera access needed to verify",
+    emoji: "📷",
+    duration: 0, // Persistent until user acts
+  },
 };
 
 interface TrissToastContentProps {
   message: string;
   emoji: string;
   logoUrl?: string;
+  actionButton?: {
+    label: string;
+    onClick: () => void;
+  };
 }
 
-function TrissToastContent({ message, emoji, logoUrl }: TrissToastContentProps) {
+function TrissToastContent({ message, emoji, logoUrl, actionButton }: TrissToastContentProps) {
   return (
     <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-3">
       {logoUrl ? (
@@ -85,7 +95,17 @@ function TrissToastContent({ message, emoji, logoUrl }: TrissToastContentProps) 
       ) : (
         <div className="h-10 w-10 flex-shrink-0 animate-wiggle rounded-full bg-primary" />
       )}
-      <p className="flex-1 text-sm text-foreground">{message}</p>
+      <div className="flex-1">
+        <p className="text-sm text-foreground">{message}</p>
+        {actionButton && (
+          <button
+            onClick={actionButton.onClick}
+            className="mt-1.5 rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            {actionButton.label}
+          </button>
+        )}
+      </div>
       <span className="flex-shrink-0 text-xl animate-wiggle-emoji">{emoji}</span>
     </div>
   );
@@ -112,7 +132,7 @@ export function setTrissLogoUrl(url: string): void {
 export function showTrissToast(
   state: TrissState,
   customMessage?: string,
-  streakCount?: number
+  streakCountOrAction?: number | { label: string; onClick: () => void }
 ): void {
   if (currentToastId !== undefined) {
     toast.dismiss(currentToastId);
@@ -121,12 +141,16 @@ export function showTrissToast(
   const config = TRISS_TOAST_CONFIG[state];
   let message = customMessage ?? config.message;
 
-  if (state === "streak" && streakCount) {
-    message = `${streakCount}-${message}`;
+  // Handle streak count for backward compatibility
+  if (state === "streak" && typeof streakCountOrAction === "number") {
+    message = `${streakCountOrAction}-${message}`;
   }
 
+  // Handle action button
+  const actionButton = typeof streakCountOrAction === "object" ? streakCountOrAction : undefined;
+
   currentToastId = toast.custom(
-    () => <TrissToastContent message={message} emoji={config.emoji} logoUrl={trissLogoUrl} />,
+    () => <TrissToastContent message={message} emoji={config.emoji} logoUrl={trissLogoUrl} actionButton={actionButton} />,
     {
       duration: config.duration === 0 ? Infinity : config.duration,
       unstyled: true,

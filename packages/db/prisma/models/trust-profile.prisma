@@ -5,42 +5,41 @@ model TrustProfile {
   userId      String   @unique
   username    String   @unique // URL-safe: trusthuman.io/withkynam
   displayName String?
-  bio         String?  @db.VarChar(280)
   avatarUrl   String?
+  bio         String?  @db.VarChar(160) // Short bio for profile (like Twitter)
 
   // Verification stats
   totalVerifications Int       @default(0)
-  lastVerifiedAt     DateTime?
-
-  // Streak state (for viral growth features later)
   currentStreak      Int       @default(0)
   longestStreak      Int       @default(0)
-  streakFreezeTokens Int       @default(0) // max 7
-  lastStreakDate     DateTime?
-
-  // Referral (for viral growth features later)
-  referralCode  String  @unique // auto: "human-{humanNumber}"
-  referredById  String?
-  referralCount Int     @default(0)
+  lastVerifiedAt     DateTime?
+  lastStreakDate     DateTime? // Last date streak was updated (for cron)
 
   // Settings
-  isPublic   Boolean @default(true)
-  cameraMode String  @default("capture_on_submit")
+  isPublic         Boolean @default(true)
+  defaultLayout    String  @default("horizontal") // "horizontal" or "vertical"
+  badgeImageStyle  String  @default("logo") // "logo" or "avatar" - left image on badge
 
   // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relations
-  user             User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  referredBy       TrustProfile?             @relation("Referrals", fields: [referredById], references: [id])
-  referrals        TrustProfile[]            @relation("Referrals")
-  verifications    HumanVerification[]
-  linkedinComments VerifiedLinkedInComment[]
-  xComments        VerifiedXComment[]
-  platformLinks    PlatformLink[]
+  user              User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platformLinks     PlatformLink[]
+  verifications     HumanVerification[]
+  // Platform activities (standardized schema)
+  linkedinActivity  VerifiedLinkedInActivity[]
+  xActivity         VerifiedXActivity[]
+  facebookActivity  VerifiedFacebookActivity[]
+  threadsActivity   VerifiedThreadsActivity[]
+  redditActivity    VerifiedRedditActivity[]
+  phActivity        VerifiedPHActivity[]
+  githubActivity    VerifiedGitHubActivity[]
+  hnActivity        VerifiedHNActivity[]
 
   @@index([userId])
   @@index([username])
   @@index([humanNumber])
+  @@index([totalVerifications]) // For leaderboard queries
 }

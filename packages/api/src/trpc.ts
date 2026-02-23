@@ -196,13 +196,73 @@ export const createCallerFactory = t.createCallerFactory;
 export const createTRPCRouter = t.router;
 
 /**
+ * Optional auth middleware
+ * This middleware attempts to authenticate the user but doesn't throw an error if not logged in.
+ * Useful for public endpoints that show different data based on login state (e.g., isOwner check)
+ */
+const optionalAuth = t.middleware(async ({ ctx, next }) => {
+  const source = ctx.headers.get("x-trpc-source");
+  let user: User | null = null;
+
+  try {
+    if (source === "chrome-extension") {
+      // Handle Chrome extension authentication
+      const authHeader = ctx.headers.get("authorization");
+
+      if (authHeader?.startsWith("Bearer ")) {
+        const token = authHeader.substring(7);
+        const clerkClient = createClerkClient({
+          secretKey: process.env.CLERK_SECRET_KEY,
+        });
+
+        if (token.split(".").length === 3) {
+          const verifiedToken = await verifyToken(token, {
+            secretKey: process.env.CLERK_SECRET_KEY,
+          });
+          if (verifiedToken.sub) {
+            user = await clerkClient.users.getUser(verifiedToken.sub);
+          }
+        } else {
+          try {
+            const session = await clerkClient.sessions.getSession(token);
+            if (session.userId) {
+              user = await clerkClient.users.getUser(session.userId);
+            }
+          } catch {
+            // Session lookup failed, try JWT
+            const verifiedToken = await verifyToken(token, {
+              secretKey: process.env.CLERK_SECRET_KEY,
+            });
+            if (verifiedToken.sub) {
+              user = await clerkClient.users.getUser(verifiedToken.sub);
+            }
+          }
+        }
+      }
+    } else {
+      // Handle Next.js authentication
+      user = await currentUser();
+    }
+  } catch {
+    // Auth failed - continue without user (this is optional auth)
+  }
+
+  return next({
+    ctx: {
+      ...ctx,
+      user: user ?? undefined,
+    },
+  });
+});
+
+/**
  * Public (unauthed) procedure
  *
  * This is the base piece you use to build new queries and mutations on your
  * tRPC API. It does not guarantee that a user querying is authorized, but you
  * can still access user session data if they are logged in
  */
-export const publicProcedure = t.procedure;
+export const publicProcedure = t.procedure.use(optionalAuth);
 
 /**
  * Protected (authenticated) procedure

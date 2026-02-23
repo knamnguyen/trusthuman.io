@@ -2,7 +2,7 @@
 
 **Date**: February 21, 2026
 **Complexity**: COMPLEX (Multi-phase with pre-research)
-**Status**: PLANNED
+**Status**: IN PROGRESS
 
 ---
 
@@ -26,10 +26,9 @@ Streamlined MVP for TrustHuman - a human verification system for social media. U
 7. **Badge Overlay** - Inject badges on LinkedIn/X profiles + X hover cards
 
 ### Web App
-1. **Personal Page** - `/u/[username]` with activity history cards + links to original posts
-2. **Leaderboard** - Simple table: rank, username, verified count
-3. **Basic Stats Display** - Verified badge + 3 metrics (total verified, streak, rank)
-4. **Settings** - Change linked LinkedIn/X accounts
+1. **Personal Page** - `/[username]` (direct like linktree) with activity history cards + links to original posts
+2. **Leaderboard** - `/leaderboard` simple table: rank, username, verified count
+3. **Inline Edit Mode** - If viewing own profile while logged in, show edit controls for platform links (no separate settings page)
 
 ---
 
@@ -58,819 +57,384 @@ Streamlined MVP for TrustHuman - a human verification system for social media. U
 
 ---
 
-## Architecture
+## Database Schema - Standardized Activity Model
 
-```
-Extension (WXT Chrome MV3)
-├── Content Scripts
-│   ├── linkedin.content/ (already exists)
-│   │   ├── Reply detection + comment capture
-│   │   ├── Auto-detect logged-in profile
-│   │   ├── Badge overlay injection on profiles
-│   │   └── Sidebar UI (mini profile)
-│   └── x.content/ (new)
-│       ├── Reply detection + tweet capture
-│       ├── Auto-detect logged-in profile
-│       ├── Badge overlay on profiles + hover cards
-│       └── Sidebar UI (mini profile)
-├── Background Worker
-│   └── Camera capture via offscreen document
-└── Offscreen Document
-    └── getUserMedia → canvas → base64
+### Phase 16.5: Schema Standardization ✅ COMPLETE
 
-Web App (Next.js on Vercel)
-├── Public Routes
-│   ├── /u/[username] - Personal profile page
-│   └── /leaderboard - Global rankings
-├── Protected Routes
-│   ├── /dashboard - Own stats
-│   └── /settings - Account + platform links
-└── API (tRPC)
-    ├── verification.analyzePhoto
-    ├── verification.submitActivity
-    ├── profile.getByUsername
-    ├── profile.getLeaderboard
-    ├── platformLink.autoLink
-    ├── platformLink.update
-    └── platformLink.batchLookup (for badge overlay)
-```
-
----
-
-## Database Schema
-
-### User (Synced from Clerk)
+All platform activities now use a **standardized schema** for easy extension:
 
 ```prisma
-model User {
-  id            String    @id  // Clerk user ID
-  email         String    @unique
-  firstName     String?
-  lastName      String?
-  imageUrl      String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+// Example: VerifiedLinkedInActivity (all 8 platforms follow same structure)
+model VerifiedLinkedInActivity {
+  id             String @id @default(uuid())
+  trustProfileId String
 
-  trustProfile  TrustProfile?
-}
-```
+  // User's comment (standardized)
+  commentText String  @db.Text
+  commentUrl  String? // Direct link to user's comment (optional)
 
-### TrustProfile (Core Identity)
+  // Parent context (standardized)
+  parentUrl             String? // Link to parent post (fallback if no commentUrl)
+  parentAuthorName      String  // REQUIRED
+  parentAuthorAvatarUrl String  // REQUIRED
+  parentTextSnippet     String  @db.Text  // REQUIRED
 
-```prisma
-model TrustProfile {
-  id                  String    @id @default(uuid())
-  humanNumber         Int       @unique @default(autoincrement())  // Human #1, #2...
-  userId              String    @unique
-  username            String    @unique  // URL-safe for /u/username
-  displayName         String?
-  avatarUrl           String?
+  // Verification link
+  verificationId String @unique
 
-  // Stats
-  totalVerifications  Int       @default(0)
-  currentStreak       Int       @default(0)
-  longestStreak       Int       @default(0)
-  lastVerifiedAt      DateTime?
-  lastStreakDate      DateTime?  // Last date streak was updated
-
-  // Settings
-  isPublic            Boolean   @default(true)
-
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  // Timestamps
+  activityAt DateTime // When the comment was posted
+  createdAt  DateTime @default(now())
 
   // Relations
-  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  platformLinks       PlatformLink[]
-  linkedinComments    VerifiedLinkedInComment[]
-  xReplies            VerifiedXReply[]
-  verifications       HumanVerification[]
-
-  @@index([username])
-  @@index([humanNumber])
-  @@index([totalVerifications])
-}
-```
-
-### PlatformLink (Auto-detected + Overridable)
-
-```prisma
-model PlatformLink {
-  id              String    @id @default(uuid())
-  trustProfileId  String
-  platform        String    // "linkedin" | "x"
-
-  // Profile info (scraped from DOM)
-  profileUrl      String    // Canonical URL (linkedin.com/in/xxx or x.com/xxx)
-  profileHandle   String    // @username or /in/slug
-  displayName     String?
-  avatarUrl       String?
-
-  // Metadata
-  autoDetected    Boolean   @default(true)  // Was this auto-captured?
-  linkedAt        DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  trustProfile    TrustProfile @relation(fields: [trustProfileId], references: [id], onDelete: Cascade)
-
-  @@unique([trustProfileId, platform])  // One link per platform per user
-  @@unique([platform, profileUrl])      // Each profile globally unique
-  @@index([platform, profileHandle])    // For badge lookup
-}
-```
-
-### VerifiedLinkedInComment
-
-```prisma
-model VerifiedLinkedInComment {
-  id                  String    @id @default(uuid())
-  trustProfileId      String
-
-  // User's comment
-  commentText         String    @db.Text
-
-  // Post being replied to (scraped)
-  postUrl             String
-  postAuthorName      String?
-  postAuthorProfileUrl String?
-  postAuthorAvatarUrl String?
-  postAuthorHeadline  String?
-  postTextSnippet     String?   @db.VarChar(500)
-
-  // Verification link
-  verificationId      String?   @unique
-
-  createdAt           DateTime  @default(now())
-
-  trustProfile        TrustProfile       @relation(fields: [trustProfileId], references: [id], onDelete: Cascade)
-  verification        HumanVerification? @relation(fields: [verificationId], references: [id])
+  trustProfile TrustProfile      @relation(fields: [trustProfileId], references: [id], onDelete: Cascade)
+  verification HumanVerification @relation(fields: [verificationId], references: [id])
 
   @@index([trustProfileId])
   @@index([createdAt])
+  @@index([activityAt])
 }
 ```
 
-### VerifiedXReply
-
-```prisma
-model VerifiedXReply {
-  id                  String    @id @default(uuid())
-  trustProfileId      String
-
-  // User's reply
-  replyText           String    @db.Text
-
-  // Tweet being replied to (scraped)
-  tweetUrl            String
-  tweetAuthorName     String?
-  tweetAuthorHandle   String?
-  tweetAuthorProfileUrl String?
-  tweetAuthorAvatarUrl String?
-  tweetTextSnippet    String?   @db.VarChar(500)
-
-  // Verification link
-  verificationId      String?   @unique
-
-  createdAt           DateTime  @default(now())
-
-  trustProfile        TrustProfile       @relation(fields: [trustProfileId], references: [id], onDelete: Cascade)
-  verification        HumanVerification? @relation(fields: [verificationId], references: [id])
-
-  @@index([trustProfileId])
-  @@index([createdAt])
-}
-```
-
-### HumanVerification
-
-```prisma
-model HumanVerification {
-  id              String    @id @default(uuid())
-  trustProfileId  String
-
-  // Result
-  verified        Boolean
-  confidence      Float
-  faceCount       Int
-  rawResponse     Json?
-
-  // Activity type
-  activityType    String    // "linkedin_comment" | "x_reply"
-
-  createdAt       DateTime  @default(now())
-
-  trustProfile    TrustProfile @relation(fields: [trustProfileId], references: [id], onDelete: Cascade)
-
-  // Reverse relations (one of these will be set)
-  linkedinComment VerifiedLinkedInComment?
-  xReply          VerifiedXReply?
-
-  @@index([trustProfileId])
-  @@index([createdAt])
-}
-```
-
----
-
-## User Flows
-
-### Flow 1: First-Time User (LinkedIn)
-
-```
-1. User installs extension
-   → Extension requests camera permission (auto-prompt or via sidebar button)
-
-2. User navigates to LinkedIn, logs in
-
-3. User writes a comment and clicks submit
-   → Extension detects submit button click
-   → Shows "submitted" toast (Triss)
-
-4. Extension captures:
-   a. User's logged-in profile (from DOM nav/header)
-      - profileUrl: linkedin.com/in/johndoe
-      - displayName: "John Doe"
-      - avatarUrl: profile pic
-   b. Comment text
-   c. Post context (author, headline, URL, snippet)
-   d. Webcam photo (silent, no preview)
-
-5. Extension calls tRPC: verification.submitActivity
-   Input: {
-     photoBase64,
-     platform: "linkedin",
-     userProfile: { profileUrl, displayName, avatarUrl },
-     comment: { text, postUrl, postAuthor... }
-   }
-
-6. Server:
-   a. Runs face detection (AWS Rekognition)
-   b. Creates User (if new, from Clerk session)
-   c. Creates TrustProfile (humanNumber auto-assigned)
-   d. Creates PlatformLink (autoDetected: true)
-   e. Creates VerifiedLinkedInComment
-   f. Creates HumanVerification (linked to comment)
-   g. Updates TrustProfile stats (totalVerifications++, streak)
-   h. Returns: { verified, humanNumber, isFirstVerification }
-
-7. Extension shows toast:
-   - If first: "Welcome Human #42! You're verified!"
-   - If repeat: "Verified! Streak: 5 days"
-
-8. Sidebar updates to show new activity card
-```
-
-### Flow 2: Returning User (Different LinkedIn Account)
-
-```
-1. User logs into different LinkedIn account
-
-2. User writes a comment and clicks submit
-
-3. Extension detects logged-in profile differs from stored PlatformLink
-   → Shows prompt: "You're logged in as @newuser but linked to @olduser. Update?"
-
-4a. User clicks "Update":
-    → Extension calls platformLink.update
-    → New profile linked, old one unlinked
-    → Verification proceeds
-
-4b. User clicks "Keep current":
-    → Verification still proceeds (activity recorded)
-    → PlatformLink not updated
-    → Badge will show on old account (user's choice)
-```
-
-### Flow 3: Badge Overlay (Viewing Other Users)
-
-```
-1. Extension user navigates to linkedin.com/in/someone
-
-2. Content script detects profile page load
-   → Extracts profile URL: linkedin.com/in/someone
-
-3. Extension calls: platformLink.batchLookup
-   Input: { platform: "linkedin", profileUrls: ["linkedin.com/in/someone"] }
-   Returns: [{ profileUrl, trustProfile: { humanNumber, totalVerifications, streak } }]
-
-4. If match found:
-   → Inject badge next to profile name
-   → Badge shows: "✓ Human #42 | 147 verified | 12-day streak"
-
-5. If no match:
-   → No badge injected (user not verified)
-```
-
-### Flow 4: X Hover Card Badge
-
-```
-1. Extension user hovers over @username on X
-
-2. X shows native hover card (profile preview)
-
-3. Content script detects hover card appeared
-   → MutationObserver watching for hover card DOM element
-   → Extracts @handle from hover card
-
-4. Extension calls: platformLink.batchLookup (cached from recent lookups)
-   → Or uses local cache if recently fetched
-
-5. If match found:
-   → Inject mini badge into hover card
-   → Shows: "✓ #42"
-
-6. Hover card dismissed → badge removed with it
-```
-
-### Flow 5: View Personal Profile (Web)
-
-```
-1. Anyone navigates to trusthuman.io/u/johndoe
-
-2. Server fetches TrustProfile by username
-   → Includes: humanNumber, stats, recent activities
-
-3. Page renders:
-   ┌────────────────────────────────────────┐
-   │  [Avatar]  John Doe                    │
-   │  Human #42                             │
-   │  ✓ 147 verified | 🔥 12-day streak     │
-   │  Rank #23 on leaderboard               │
-   ├────────────────────────────────────────┤
-   │  Recent Verified Activity              │
-   │  ┌──────────────────────────────────┐  │
-   │  │ Replied to Jane Smith's post     │  │
-   │  │ "Great insights on AI trends..." │  │
-   │  │ [View on LinkedIn →]             │  │
-   │  │ Verified Feb 21, 2026            │  │
-   │  └──────────────────────────────────┘  │
-   │  ┌──────────────────────────────────┐  │
-   │  │ Replied to @elonmusk             │  │
-   │  │ "Totally agree with this..."     │  │
-   │  │ [View on X →]                    │  │
-   │  │ Verified Feb 20, 2026            │  │
-   │  └──────────────────────────────────┘  │
-   └────────────────────────────────────────┘
-```
-
-### Flow 6: Leaderboard
-
-```
-1. Anyone navigates to trusthuman.io/leaderboard
-
-2. Server fetches top 100 by totalVerifications
-
-3. Page renders:
-   ┌─────┬──────────────┬──────────┬────────┐
-   │ #   │ Human        │ Verified │ Streak │
-   ├─────┼──────────────┼──────────┼────────┤
-   │ 1   │ Human #7     │ 1,247    │ 45     │
-   │ 2   │ Human #12    │ 982      │ 30     │
-   │ 3   │ Human #42    │ 847      │ 12     │
-   │ ... │ ...          │ ...      │ ...    │
-   └─────┴──────────────┴──────────┴────────┘
-```
-
----
-
-## API Surface (tRPC)
-
-### verification router
-
-```typescript
-verification.submitActivity
-  Input: {
-    photoBase64: string
-    platform: "linkedin" | "x"
-    userProfile: {
-      profileUrl: string
-      profileHandle: string
-      displayName?: string
-      avatarUrl?: string
-    }
-    activity: {
-      // For linkedin_comment
-      commentText?: string
-      postUrl?: string
-      postAuthorName?: string
-      postAuthorProfileUrl?: string
-      postAuthorAvatarUrl?: string
-      postAuthorHeadline?: string
-      postTextSnippet?: string
-      // For x_reply
-      replyText?: string
-      tweetUrl?: string
-      tweetAuthorName?: string
-      tweetAuthorHandle?: string
-      tweetAuthorProfileUrl?: string
-      tweetAuthorAvatarUrl?: string
-      tweetTextSnippet?: string
-    }
-  }
-  Output: {
-    verified: boolean
-    confidence: number
-    humanNumber: number
-    isFirstVerification: boolean
-    totalVerifications: number
-    currentStreak: number
-  }
-  Auth: protectedProcedure (Clerk session required)
-```
-
-### profile router
-
-```typescript
-profile.getByUsername
-  Input: { username: string }
-  Output: {
-    humanNumber: number
-    displayName?: string
-    avatarUrl?: string
-    totalVerifications: number
-    currentStreak: number
-    longestStreak: number
-    rank: number
-    recentActivities: Activity[]  // Last 20
-  }
-  Auth: publicProcedure
-
-profile.getLeaderboard
-  Input: { limit?: number, offset?: number }
-  Output: {
-    users: {
-      rank: number
-      humanNumber: number
-      username: string
-      displayName?: string
-      avatarUrl?: string
-      totalVerifications: number
-      currentStreak: number
-    }[]
-    total: number
-  }
-  Auth: publicProcedure
-
-profile.getMyStats
-  Input: {}
-  Output: {
-    humanNumber: number
-    totalVerifications: number
-    currentStreak: number
-    longestStreak: number
-    rank: number
-    linkedPlatforms: { platform: string, handle: string }[]
-  }
-  Auth: protectedProcedure
-```
-
-### platformLink router
-
-```typescript
-platformLink.autoLink
-  Input: {
-    platform: "linkedin" | "x"
-    profileUrl: string
-    profileHandle: string
-    displayName?: string
-    avatarUrl?: string
-  }
-  Output: { success: boolean, isUpdate: boolean }
-  Auth: protectedProcedure
-  Notes: Called on first verification or when user confirms update
-
-platformLink.update
-  Input: {
-    platform: "linkedin" | "x"
-    profileUrl: string
-    profileHandle: string
-    displayName?: string
-    avatarUrl?: string
-  }
-  Output: { success: boolean }
-  Auth: protectedProcedure
-
-platformLink.batchLookup
-  Input: {
-    platform: "linkedin" | "x"
-    profileUrls: string[]  // Max 50
-  }
-  Output: {
-    results: {
-      profileUrl: string
-      found: boolean
-      trustProfile?: {
-        humanNumber: number
-        username: string
-        totalVerifications: number
-        currentStreak: number
-      }
-    }[]
-  }
-  Auth: publicProcedure (rate limited)
-  Notes: For badge overlay - batch to reduce API calls
-```
+**Platforms with standardized models**:
+- ✅ `VerifiedLinkedInActivity`
+- ✅ `VerifiedXActivity`
+- ✅ `VerifiedFacebookActivity`
+- ✅ `VerifiedThreadsActivity`
+- ✅ `VerifiedRedditActivity`
+- ✅ `VerifiedPHActivity` (Product Hunt)
+- ✅ `VerifiedGitHubActivity`
+- ✅ `VerifiedHNActivity` (Hacker News)
+
+**Key Design Decisions**:
+1. **Per-platform tables** - Easier to query, filter, and extend
+2. **Standardized field names** - `commentText`, `parentAuthorName`, `parentTextSnippet`
+3. **Parent context always captures main post** - Even for nested replies, we capture the original post/tweet/comment being replied to, not intermediate replies
+4. **Required fields** - `parentAuthorName`, `parentAuthorAvatarUrl`, `parentTextSnippet` are required (with fallbacks to empty string if unavailable)
+5. **Optional URLs** - `commentUrl` (direct link to comment) and `parentUrl` (link to parent post) are optional
 
 ---
 
 ## Implementation Phases
 
-### Phase 1: Database Schema
-**Pre-research**: Review existing schema, check Prisma patterns
-**Work**:
-- Delete old EngageKit models (if any remaining)
-- Create fresh models: User, TrustProfile, PlatformLink, VerifiedLinkedInComment, VerifiedXReply, HumanVerification
-- Run migrations
-**Test**: Schema applies, relations work, humanNumber auto-increments
+### Phase 1-15: Core MVP ✅ COMPLETE
+See previous sections for details on:
+- Database schema setup
+- API verification flow
+- LinkedIn content script
+- X content script
+- Web app profile/leaderboard pages
+- Sidebar mini profile
+- Check Human tab
+- Post-signup onboarding
 
-### Phase 2: API - Core Verification
-**Pre-research**: Review existing verification.analyzePhoto, understand Rekognition flow
-**Work**:
-- Refactor verification router to handle full activity submission
-- Add streak calculation logic
-- Add TrustProfile creation on first verification
-- Add PlatformLink auto-creation
-**Test**: Submit activity → creates all records → returns correct stats
-
-### Phase 3: API - Profile & Leaderboard
-**Pre-research**: Review Next.js SSR patterns for public pages
-**Work**:
-- Create profile router (getByUsername, getLeaderboard, getMyStats)
-- Add rank calculation (simple: ORDER BY totalVerifications DESC)
-**Test**: Fetch profile by username, fetch leaderboard, ranks are correct
-
-### Phase 4: API - Platform Link & Badge Lookup
-**Pre-research**: Design efficient batch lookup query
-**Work**:
-- Create platformLink router (autoLink, update, batchLookup)
-- Add rate limiting to batchLookup
-- Add caching layer (optional, can add later)
-**Test**: Batch lookup returns correct matches, handles missing profiles
-
-### Phase 5: Extension - LinkedIn Enhancements
-**Pre-research**: Review current content script, identify DOM selectors for profile detection
-**Work**:
-- Add logged-in profile detection (scrape from nav/header)
-- Add post context scraping (author, headline, snippet)
-- Update submitActivity call with full payload
-- Add account mismatch detection + prompt
-**Test**: First verification creates PlatformLink, subsequent ones work, mismatch prompts
-
-### Phase 6: Extension - LinkedIn Badge Overlay
-**Pre-research**: Identify DOM injection points for LinkedIn profiles
-**Work**:
-- Add MutationObserver for profile page detection
-- Call batchLookup on profile view
-- Inject badge HTML/CSS next to profile name
-- Handle profile page navigation (SPA)
-**Test**: Visit verified user's profile → badge appears, visit non-verified → no badge
-
-### Phase 7: Extension - X Content Script
-**Pre-research**: Study X DOM structure for replies, profiles, hover cards
-**Work**:
-- Create x.content/ entrypoint (similar to linkedin.content/)
-- Reply detection + submit button instrumentation
-- Logged-in profile detection
-- Tweet context scraping
-**Test**: Reply on X → verification flow works, activity saved
-
-### Phase 8: Extension - X Badge Overlay
-**Pre-research**: Identify X profile page + hover card DOM structure
-**Work**:
-- Profile page badge injection
-- Hover card badge injection (MutationObserver for hover card appearance)
-- Batch lookup with caching (hover cards appear/disappear rapidly)
-**Test**: Visit X profile → badge, hover over verified user → mini badge in hover card
-
-### Phase 9: Extension - Sidebar Mini Profile
-**Pre-research**: Review current sidebar, design activity card component
-**Work**:
-- Replace current sidebar content with mini profile view
-- Activity cards showing recent verifications
-- Stats display (verified count, streak, rank)
-- Link to full web profile
-- Camera permission button (backup)
-**Test**: Sidebar shows own stats + recent activities, updates after verification
-
-### Phase 10: Web App - Public Profile Page
-**Pre-research**: Review Next.js App Router patterns, SSR for OG tags
-**Work**:
-- Create /u/[username]/page.tsx (server component)
-- Fetch TrustProfile + recent activities
-- Render profile card + activity list
-- Add OG meta tags for link previews
-**Test**: Visit /u/username → renders profile, link preview works on LinkedIn/X
-
-### Phase 11: Web App - Leaderboard Page
-**Pre-research**: Review pagination patterns
-**Work**:
-- Create /leaderboard/page.tsx
-- Fetch top users with pagination
-- Render table with rank, human#, stats
-**Test**: Leaderboard loads, pagination works, ranks are accurate
-
-### Phase 12: Web App - Dashboard & Settings
-**Pre-research**: Review Clerk integration for protected routes
-**Work**:
-- Create /dashboard/page.tsx (own stats)
-- Create /settings/page.tsx (manage platform links)
-- Add manual platform link update UI
-**Test**: Dashboard shows own stats, can update platform links
-
-### Phase 13: Streak Cron Job
-**Pre-research**: Review Vercel Cron setup
-**Work**:
-- Create daily cron job (midnight UTC)
-- For each active profile: check if verified today
-- If no verification: break streak (currentStreak = 0)
-- Update lastStreakDate
-**Test**: Miss a day → streak resets, verify daily → streak increments
-
-### Phase 14: Polish & Testing
-**Work**:
-- End-to-end testing all flows
-- Error handling improvements
-- Loading states
-- Mobile responsive (web app)
-- Performance optimization (badge lookup caching)
-**Test**: All flows work reliably, no crashes, reasonable performance
+### Phase 16: Schema Standardization ✅ COMPLETE
+**Status**: Done
+**Work completed**:
+1. Created 8 standardized Prisma activity models
+2. Updated `verification.ts` API with standardized input schema
+3. Updated `trust-profile.ts` API to query/merge all platforms
+4. Updated `platform-link.ts` API with new field names
+5. Updated LinkedIn content script to use standardized fields
+6. Updated X content script to use standardized fields
+7. Updated verification-store.ts with standardized Activity type
+8. Updated CheckHumanTab and VerificationSidebar components
 
 ---
 
-## DOM Selectors (Research Required)
+### Phase 17: Verify LinkedIn & X Still Work ✅ COMPLETE
 
-### LinkedIn (Phase 5-6)
-```
-Logged-in profile detection:
-- TBD: Nav bar profile link, or profile dropdown
+**Goal**: Before adding new platforms, verify the standardized schema works correctly with existing LinkedIn and X content scripts.
 
-Comment submit button:
-- Already have: 'button[data-view-name="comment-post"]'
+**Testing Results**:
 
-Post context:
-- Author name: TBD
-- Author profile URL: TBD
-- Author avatar: TBD
-- Author headline: TBD
-- Post text: TBD
+#### LinkedIn Testing: ✅ PASSED
+- [x] Comment on main post (feed) - V2 DOM works
+- [x] Comment on single post page (`/posts/...`) - V1 DOM works
+- [x] Reply to another comment (nested reply) - works
+- [x] Comment URL extraction - works for both V1 and V2 DOM
 
-Profile page badge injection point:
-- TBD: Next to profile name in header
-```
+#### X/Twitter Testing: ✅ PASSED
+- [x] Reply to tweet (single tweet page)
+- [x] Reply from home feed
+- [x] Success toast URL extraction
+- [x] Toast shows activity count
 
-### X/Twitter (Phase 7-8)
-```
-Logged-in profile detection:
-- TBD: Sidebar profile link with @handle
+**Fixes Applied During Testing**:
+1. Added V1 DOM selectors for LinkedIn single post pages (`/posts/...`)
+2. Fixed author name parsing (removed "Verified Profile 3rd+" junk text)
+3. Added `comment-reply-post` button selector for reply-to-comment
+4. Fixed V1 comment URL extraction (search `.comments-comments-list` container)
+5. Changed toast message from "Streak: X days" to "X activities"
 
-Reply submit button:
-- 'button[data-testid="tweetButtonInline"]'
+---
 
-Tweet context:
-- Author name: TBD
-- Author handle: TBD
-- Author avatar: TBD
-- Tweet text: TBD
+### Phase 18: Account Verification System 📋 TODO
 
-Profile page badge injection point:
-- TBD: Next to display name
+**Goal**: Implement proper account verification to ensure platform links are legitimate.
 
-Hover card badge injection:
-- TBD: Hover card container, next to name
-```
+**Current Problem**:
+- Auto-detection scrapes logged-in profile from DOM
+- User could potentially fake this by manipulating DOM
+- Need to verify the user actually owns the claimed social account
+
+**Options**:
+1. **OAuth verification** (Best, but complex):
+   - LinkedIn/X OAuth to verify account ownership
+   - Most secure, but requires app approval process
+
+2. **Code verification** (Simpler):
+   - User posts a unique code on their profile/bio
+   - Extension verifies code matches
+   - Temporary, can be removed after verification
+
+3. **Activity pattern verification** (Current implicit):
+   - First verification on a platform auto-links
+   - Subsequent verifications must match
+   - Less secure but simple
+
+**Implementation Plan**: TBD based on user testing feedback
+
+---
+
+### Phase 19: Facebook Content Script ✅ COMPLETE
+
+**Pre-requisite**: Phase 17 (LinkedIn/X verification) complete ✅
+
+**Work Completed**:
+1. **DOM Selectors** (February 23, 2026):
+   - Comment input box: `[data-lexical-editor="true"][aria-label^="Comment as"]`, `[data-lexical-editor="true"][aria-label^="Reply to"]`
+   - Comment submit button: `div[role="button"][aria-label="Comment"]:not([aria-disabled="true"])`
+   - Post author name: `h3 a[role="link"] span`, `strong span`
+   - Post author avatar: SVG `image[preserveAspectRatio="xMidYMid slice"]` with `xlink:href`
+   - Post text: `span[dir="auto"]` content
+
+2. **Profile Detection**: ✅ Complete
+   - Parse `<script data-sjs>` tags with `"snippet": "You"`
+   - Extracts: `name`, `profileUrl`, `avatarUrl`
+
+3. **Content Script Updates**: ✅ Complete
+   - PostScraper.ts selectors filled in
+   - extractCommentText handles Lexical editor `<p>` elements
+   - extractPostAuthorAvatar handles SVG `xlink:href` attributes
+   - Toast message updated to show activities count
+   - Local verification store tracking added
+
+4. **Testing**: ✅ PASSED (February 23, 2026)
+   - [x] Comment on Facebook news feed post (inline)
+   - [x] Reply on focused modal post
+   - [x] Profile detection works
+   - [x] Toast flow works correctly
+   - [x] Post URL extraction fixed (handles photo albums, group photos)
+
+5. **Web App Updates**: ✅ Complete
+   - [x] Added Facebook tab to profile page platform filters
+   - [x] Fixed activity cards to use standardized schema fields
+   - [x] Added Facebook icon and badge styling (#1877f2 blue)
+   - [x] Fixed filter logic for all platform types
+
+**Notes**:
+- Facebook keyboard submit is Enter (not Ctrl+Enter like LinkedIn/X)
+- Facebook comments don't have direct URLs, use post URL with photo `set=pcb.{postId}` extraction
+- Facebook uses Lexical editor (not TipTap/Quill like LinkedIn)
+
+---
+
+### Phase 20: Threads Content Script ⏸️ DEFERRED
+
+**Pre-requisite**: Phase 19 (Facebook) complete ✅
+
+**Status**: Code written but deferred for later. Focus is on LinkedIn, X, and Facebook for now.
+
+**Work Completed** (February 23, 2026):
+1. [x] Created `threads.content/` folder structure
+2. [x] `ThreadsProfileDetector.ts` - extracts user from `BarcelonaSharedData.viewer` JSON
+3. [x] `ThreadsReplyScraper.ts` - scrapes reply context with modal/inline support
+4. [x] `stores/profile-store.ts` - Zustand store for Threads profile
+5. [x] `index.tsx` - Main content script with verification flow
+6. [x] Submit button detection (modal "Post" button vs inline rotated arrow)
+7. [x] Toast URL extraction (`a[href*="/post/"]` inside "Posted" toast)
+8. [x] Ctrl+Enter keyboard shortcut support
+
+**Not in manifest** - Threads URLs not added to `wxt.config.ts` to keep extension focused on core platforms.
+
+---
+
+### Phase 21: Reddit Content Script ⏸️ DEFERRED
+
+**Pre-requisite**: Phase 19 (Facebook) complete ✅
+
+**Status**: Deferred. Focus is on LinkedIn, X, and Facebook for MVP.
+
+**Work**:
+1. Create `reddit.content/` folder structure
+2. Handle multiple Reddit UIs (old, new, sh)
+3. DOM inspection for selectors
+4. Profile detection
+
+---
+
+### Phase 22: Product Hunt Content Script 📋 TODO
+
+**Pre-requisite**: Phase 21 complete
+
+---
+
+### Phase 23: GitHub Content Script 📋 TODO
+
+**Pre-requisite**: Phase 22 complete
+
+**Special considerations**:
+- Multiple comment contexts: Issues, PRs, Discussions, PR Reviews
+- May want to capture repo/issue context
+
+---
+
+### Phase 24: Hacker News Content Script 📋 TODO
+
+**Pre-requisite**: Phase 23 complete
+
+**Notes**:
+- Simple HTML structure (easiest platform)
+- Stable selectors unlikely to change
+
+---
+
+## Platform Roadmap Summary
+
+| Phase | Platform | Status | Priority |
+|-------|----------|--------|----------|
+| 5-10 | LinkedIn | ✅ Complete | Core |
+| 7 | X/Twitter | ✅ Complete | Core |
+| 16 | Schema Standardization | ✅ Complete | Core |
+| 17 | LinkedIn/X Verification Testing | ✅ Complete | Core |
+| 18 | Account Verification System | 📋 TODO | Core |
+| 19 | Facebook | ✅ Complete | Core |
+| 20 | Threads | ⏸️ Deferred | Tier 2 |
+| 21 | Reddit | ⏸️ Deferred | Tier 2 |
+| 22 | Product Hunt | ⏸️ Deferred | Tier 2 |
+| 23 | GitHub | ⏸️ Deferred | Tier 2 |
+| 24 | Hacker News | ⏸️ Deferred | Tier 2 |
 
 ---
 
 ## Success Criteria
 
 ### MVP Launch Ready When:
-- [ ] First-time user can verify on LinkedIn → gets Human #
-- [ ] First-time user can verify on X → gets Human #
-- [ ] Streak tracks correctly (increments daily, resets on miss)
-- [ ] Badge appears on verified users' LinkedIn profiles
-- [ ] Badge appears on verified users' X profiles + hover cards
-- [ ] Personal profile page shows activity history
-- [ ] Leaderboard shows top verified users
-- [ ] Platform links auto-detected and can be updated
-- [ ] Sidebar shows mini profile with stats
+- [x] First-time user can verify on LinkedIn → gets Human #
+- [x] First-time user can verify on X → gets Human #
+- [x] Streak tracks correctly
+- [x] Personal profile page shows activity history
+- [x] Leaderboard shows top verified users
+- [x] Platform links auto-detected and can be updated
+- [x] Sidebar shows mini profile with stats
+- [x] Post-signup onboarding flow
+- [x] Mobile responsive layouts
+- [x] LinkedIn/X verification still works after schema changes (Phase 17)
 
-### Metrics to Track:
-- Total verified users (Human # count)
-- Daily active verifiers
-- Average streak length
-- Badge impressions (how often badges are seen)
-- Profile page views
-- Leaderboard views
+### V1.1 - Platform Expansion:
+- [ ] Account verification system (Phase 18)
+- [x] Facebook verification works (Phase 19)
+- [ ] Threads verification works (Phase 20) - DEFERRED
 
----
-
-## Risks & Mitigations
-
-| Risk | Mitigation |
-|------|------------|
-| LinkedIn/X DOM changes break selectors | Use multiple fallback selectors, monitor for breakage |
-| Badge overlay feels spammy | Subtle design, only show on profile pages (not feeds) |
-| batchLookup API abuse | Rate limiting, require extension auth token |
-| Camera permission denied | Clear onboarding, sidebar backup button |
-| Streak too punishing (no freeze) | Monitor user feedback, can add freeze tokens in V2 |
-| Profile scraping fails | Graceful fallback to basic capture, retry logic |
-
----
-
-## File Structure (Final)
-
-```
-apps/trustahuman-ext/
-├── entrypoints/
-│   ├── background/
-│   │   └── index.ts
-│   ├── offscreen.html
-│   ├── offscreen.ts
-│   ├── linkedin.content/
-│   │   ├── index.tsx
-│   │   ├── App.tsx
-│   │   ├── ToggleButton.tsx
-│   │   ├── Sidebar.tsx (mini profile)
-│   │   ├── ActivityCard.tsx
-│   │   ├── BadgeOverlay.tsx
-│   │   ├── ProfileDetector.ts
-│   │   ├── PostScraper.ts
-│   │   └── stores/
-│   │       ├── sidebar-store.ts
-│   │       ├── profile-store.ts
-│   │       └── shadow-root-store.ts
-│   └── x.content/
-│       ├── index.tsx
-│       ├── App.tsx
-│       ├── ToggleButton.tsx
-│       ├── Sidebar.tsx
-│       ├── ActivityCard.tsx
-│       ├── BadgeOverlay.tsx
-│       ├── HoverCardBadge.tsx
-│       ├── ProfileDetector.ts
-│       ├── TweetScraper.ts
-│       └── stores/
-│           └── (shared with linkedin via imports)
-├── lib/
-│   ├── trpc-client.ts
-│   └── badge-cache.ts
-└── assets/
-    └── globals.css
-
-apps/nextjs/
-├── src/app/
-│   ├── (public)/
-│   │   ├── u/[username]/
-│   │   │   └── page.tsx
-│   │   └── leaderboard/
-│   │       └── page.tsx
-│   ├── (dashboard)/
-│   │   ├── dashboard/
-│   │   │   └── page.tsx
-│   │   └── settings/
-│   │       └── page.tsx
-│   └── api/
-│       ├── trpc/[trpc]/
-│       │   └── route.ts
-│       └── cron/
-│           └── streak/
-│               └── route.ts
-
-packages/api/
-├── src/
-│   ├── router/
-│   │   ├── root.ts
-│   │   ├── verification.ts
-│   │   ├── profile.ts
-│   │   └── platformLink.ts
-│   └── trpc.ts
-
-packages/db/
-├── prisma/
-│   ├── schema.prisma
-│   └── models/
-│       ├── user.prisma
-│       ├── trust-profile.prisma
-│       ├── platform-link.prisma
-│       ├── verified-linkedin-comment.prisma
-│       ├── verified-x-reply.prisma
-│       └── human-verification.prisma
-```
+### V1.2 - Full Platform Support:
+- [ ] Reddit verification works (Phase 21) - DEFERRED
+- [ ] Product Hunt verification works (Phase 22) - DEFERRED
+- [ ] GitHub verification works (Phase 23) - DEFERRED
+- [ ] Hacker News verification works (Phase 24) - DEFERRED
 
 ---
 
 ## Next Steps
 
-Say **"Begin Phase 1"** to start with database schema setup.
+**Current**: Phase 18 - Account Verification System
 
-Each phase will follow:
-1. Pre-research (read existing code, identify patterns)
-2. Detailed plan (exact files, changes)
-3. User approval
-4. Implementation
-5. Testing
-6. Phase sign-off
+Phases 17 (LinkedIn/X testing) and 19 (Facebook) are complete. Core MVP platforms are done:
+- ✅ LinkedIn
+- ✅ X/Twitter
+- ✅ Facebook
+
+**Next Priority Items**:
+
+1. **Phase 18: Account Verification System** - Ensure platform links are legitimate
+   - Options: OAuth, code verification, or activity pattern verification
+   - Prevents users from claiming accounts they don't own
+
+2. **Landing Page Updates**:
+   - Replace placeholder avatars with real verified user photos
+   - Replace video placeholder with actual demo video
+   - Add Chrome Web Store install button once published
+
+3. **Polish & Launch Prep**:
+   - [ ] End-to-end testing on all 3 platforms
+   - [ ] Extension store listing preparation
+   - [ ] Production deployment verification
+
+**Deferred to V1.1+**:
+- Threads, Reddit, Product Hunt, GitHub, Hacker News content scripts
 
 ---
 
-**Plan Status**: READY FOR EXECUTION
+## Landing Page Updates (Feb 23, 2026)
+
+### Completed:
+- [x] Hero section redesigned with 2-column layout
+  - Left: Headline, username claim input, trust badges
+  - Right: 3D tilting video card with hover interaction
+- [x] Created `AvatarBubbleGrid` component with physics-like bubble hover effect
+  - Hovered avatar scales up and stays in place
+  - Adjacent avatars smoothly push away to make room
+  - Smooth spring animation with cubic-bezier easing
+- [x] Moved avatar grid to video demo section (section 2)
+- [x] Added stats counter below avatars ("X verified humans and counting...")
+- [x] Reduced hero section top padding for tighter layout
+- [x] Fixed fonts to use theme's Fira Sans consistently
+- [x] Removed shadows from non-button elements (input, avatars)
+
+### TODO - Landing Page:
+- [ ] Replace placeholder avatars with real verified user photos from database
+- [ ] Replace video placeholder with actual demo video
+- [ ] Add Chrome Web Store install button/link once extension is published
+
+---
+
+**Plan Status**: ✅ COMPLETE - Core MVP features done (LinkedIn, X, Facebook)
+
+---
+
+## Plan Completion Summary (February 23, 2026)
+
+### What Was Built:
+- ✅ LinkedIn comment detection (V1 + V2 DOM, nested replies)
+- ✅ X/Twitter reply detection (feed + single tweet)
+- ✅ Facebook comment detection (feed + modal, Lexical editor)
+- ✅ Triss toast notification system (all states)
+- ✅ Silent webcam capture via offscreen document
+- ✅ AWS Rekognition face detection
+- ✅ Auto platform linking from DOM
+- ✅ Streak tracking (current + longest)
+- ✅ Profile page with heatmap, stats, activity feed
+- ✅ Leaderboard with pagination
+- ✅ Profile settings sidebar (display name, bio, layout, badge style)
+- ✅ Check Human tab with auto-detect + manual lookup
+- ✅ SPA navigation detection (History API interception)
+- ✅ Extension popup with auth check + platform buttons
+- ✅ Clerk auth integration (web + extension sync)
+- ✅ Clerk webhook (user + profile creation)
+- ✅ Welcome/onboarding flows (web + extension)
+- ✅ Landing page (hero, video demo, how it works, activity feed, leaderboard preview)
+- ✅ Badge overlay for LinkedIn profiles
+- ✅ Camera permission on install + camera_needed toast
+- ✅ WXT config with consistent extension ID
+
+### Deferred to V1.1+:
+- Account verification system (Phase 18)
+- Threads, Reddit, Product Hunt, GitHub, Hacker News content scripts
+
+### Next Steps:
+See **trusthuman-production-launch_PLAN_23-02-26.md** for production deployment tasks:
+- Production Supabase database
+- Clerk production setup
+- Loops welcome email integration
+- Chrome Web Store submission
+- Demo video

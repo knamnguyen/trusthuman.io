@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@sassy/api": "workspace:^",
+    "@sassy/linkedin-automation": "workspace:*",
     "@sassy/ui": "workspace:*",
     "@trpc/client": "catalog:",
     "clsx": "^2.1.1",

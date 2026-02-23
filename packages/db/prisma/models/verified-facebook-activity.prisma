@@ -1,0 +1,30 @@
+// VerifiedFacebookActivity - Facebook comment verified with human check
+model VerifiedFacebookActivity {
+  id             String @id @default(uuid())
+  trustProfileId String
+
+  // User's comment
+  commentText String  @db.Text
+  commentUrl  String? // Direct link to user's comment (optional)
+
+  // Parent post context
+  parentUrl             String? // Link to parent post (fallback if no commentUrl)
+  parentAuthorName      String
+  parentAuthorAvatarUrl String
+  parentTextSnippet     String  @db.Text
+
+  // Verification link
+  verificationId String @unique
+
+  // Timestamps
+  activityAt DateTime // When the comment was posted
+  createdAt  DateTime @default(now())
+
+  // Relations
+  trustProfile TrustProfile      @relation(fields: [trustProfileId], references: [id], onDelete: Cascade)
+  verification HumanVerification @relation(fields: [verificationId], references: [id])
+
+  @@index([trustProfileId])
+  @@index([createdAt])
+  @@index([activityAt])
+}

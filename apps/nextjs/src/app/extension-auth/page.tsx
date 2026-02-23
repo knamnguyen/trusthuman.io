@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import {
   SignedIn,
   SignedOut,
@@ -8,7 +9,7 @@ import {
   SignUpButton,
   useUser,
 } from "@clerk/nextjs";
-import { ArrowLeft, CheckCircle, Chrome } from "lucide-react";
+import { Loader2, Shield } from "lucide-react";
 
 import { Button } from "@sassy/ui/button";
 import {
@@ -21,14 +22,16 @@ import {
 
 export default function ExtensionAuthPage() {
   const { isSignedIn, user } = useUser();
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const router = useRouter();
   const signInButtonRef = useRef<HTMLButtonElement>(null);
 
+  // Redirect to profile page after sign in
   useEffect(() => {
-    if (isSignedIn && user) {
-      setShowSuccessMessage(true);
+    if (isSignedIn && user?.username) {
+      // Redirect to profile page with fromExtension param (skips install modal)
+      router.push(`/${user.username}?fromExtension=true`);
     }
-  }, [isSignedIn, user]);
+  }, [isSignedIn, user?.username, router]);
 
   // Auto-trigger sign-in modal when page loads
   useEffect(() => {
@@ -41,20 +44,16 @@ export default function ExtensionAuthPage() {
     }
   }, [isSignedIn]);
 
-  const handleReturnToExtension = () => {
-    window.close();
-  };
-
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="text-center">
-          <Chrome className="mx-auto h-12 w-12 text-blue-600" />
+          <Shield className="mx-auto h-12 w-12 text-primary" />
           <CardTitle className="mt-4 text-2xl font-bold">
-            Connect to EngageKit
+            Connect to TrustHuman
           </CardTitle>
           <CardDescription>
-            Sign in to link your Chrome extension and start engaging.
+            Sign in to verify your humanity and earn your Human # badge.
           </CardDescription>
         </CardHeader>
 
@@ -80,31 +79,12 @@ export default function ExtensionAuthPage() {
           </SignedOut>
 
           <SignedIn>
-            {showSuccessMessage ? (
-              <div className="flex flex-col items-center space-y-4 text-center">
-                <CheckCircle className="h-16 w-16 text-green-500" />
-                <div className="space-y-1">
-                  <h3 className="text-xl font-semibold">
-                    Successfully Connected!
-                  </h3>
-                  <p className="text-muted-foreground">
-                    Welcome, boss {user?.firstName}! Your extension is ready.
-                    <br />
-                    Please pin the extension and open the popup to get started!
-                  </p>
-                </div>
-                <Button onClick={handleReturnToExtension} className="w-full">
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Close this window
-                </Button>
-              </div>
-            ) : (
-              <div className="text-center">
-                <p className="text-muted-foreground">
-                  Connecting your extension...
-                </p>
-              </div>
-            )}
+            <div className="flex flex-col items-center space-y-4 text-center">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="text-muted-foreground">
+                Redirecting to your profile...
+              </p>
+            </div>
           </SignedIn>
         </CardContent>
       </Card>
