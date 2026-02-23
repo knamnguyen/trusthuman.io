@@ -208,9 +208,9 @@ export function HeroSection() {
             {/* Headline */}
             <div className="space-y-4">
               <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-                Show that you are a{" "}
-                <span className="text-primary">real human</span> on social media
-                and <span className="text-primary">save the internet</span>
+                Be a <span className="text-primary">real human</span> on social
+                media and{" "}
+                <span className="text-primary">save the internet</span>
               </h1>
 
               {/* Feature bullet points - 2x2 grid */}
