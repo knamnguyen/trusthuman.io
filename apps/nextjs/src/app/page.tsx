@@ -10,7 +10,7 @@ import { VideoDemoSection } from "./_components/landing/video-demo-section";
 
 export default function HomePage() {
   return (
-    <div className="bg-card text-foreground overflow-x-hidden">
+    <div className="bg-card text-foreground">
       <Header />
 
       <main>
