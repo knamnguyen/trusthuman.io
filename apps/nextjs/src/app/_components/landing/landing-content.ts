@@ -1,8 +1,9 @@
 // apps/nextjs/src/app/_components/landing/landing-content.ts
 // Single source of truth for all landing page content
 
-// Use absolute URL for better mobile video support (like EngageKit)
-const ASSET_BASE = process.env.NEXT_PUBLIC_APP_URL ?? "https://trusthuman.io";
+// Use relative paths - works in both dev and production
+// Absolute URLs can cause issues if NEXT_PUBLIC_APP_URL isn't set or videos aren't deployed
+const ASSET_BASE = "";
 
 export const MESSAGING = {
   hero: {
