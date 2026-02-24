@@ -72,6 +72,13 @@ const config = {
 
   async redirects() {
     return [
+      // Redirect www to non-www to avoid CORS issues
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'www.trusthuman.io' }],
+        destination: 'https://trusthuman.io/:path*',
+        permanent: true,
+      },
       {
         source: '/blog/:slug*',
         destination: 'https://blog.engagekit.io/:slug*',
