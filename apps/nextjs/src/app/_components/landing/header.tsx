@@ -65,14 +65,17 @@ export function Header() {
             </SignedOut>
 
             <SignedIn>
-              {myProfile?.username && (
-                <Link href={`/${myProfile.username}`}>
-                  <Button variant="primary" size="sm" className="text-xs sm:text-sm">
-                    <span className="hidden sm:inline">View My Profile</span>
-                    <span className="sm:hidden">Profile</span>
-                  </Button>
-                </Link>
-              )}
+              {/* Always show a CTA button when signed in */}
+              <Link href={myProfile?.username ? `/${myProfile.username}` : "/welcome"}>
+                <Button variant="primary" size="sm" className="text-xs sm:text-sm">
+                  <span className="hidden sm:inline">
+                    {myProfile?.username ? "View My Profile" : "Complete Profile"}
+                  </span>
+                  <span className="sm:hidden">
+                    {myProfile?.username ? "Profile" : "Setup"}
+                  </span>
+                </Button>
+              </Link>
               <UserButton
                 afterSignOutUrl="/"
                 appearance={{

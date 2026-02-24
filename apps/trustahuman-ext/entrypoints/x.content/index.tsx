@@ -151,7 +151,8 @@ export default defineContentScript({
 
     // === REPLY SUBMISSION DETECTION ===
     const instrumentedButtons = new WeakSet<HTMLElement>();
-    const submitButtonSelector = '[data-testid="tweetButton"]';
+    // Modal reply uses "tweetButton", inline reply uses "tweetButtonInline"
+    const submitButtonSelector = '[data-testid="tweetButton"], [data-testid="tweetButtonInline"]';
 
     // Track pending verifications to avoid duplicates
     let pendingVerification = false;

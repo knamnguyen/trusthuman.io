@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { SignInButton, useAuth } from "@clerk/nextjs";
 import { useQuery } from "@tanstack/react-query";
 
@@ -10,6 +11,7 @@ import { useTRPC } from "~/trpc/react";
 import { MESSAGING } from "./landing-content";
 
 export function FinalCTASection() {
+  const router = useRouter();
   const { isSignedIn } = useAuth();
   const trpc = useTRPC();
 
@@ -18,6 +20,14 @@ export function FinalCTASection() {
     ...trpc.trustProfile.getMyProfile.queryOptions(),
     enabled: isSignedIn,
   });
+
+  const handleClick = () => {
+    if (myProfile?.username) {
+      router.push(`/${myProfile.username}`);
+    } else {
+      router.push("/welcome");
+    }
+  };
 
   return (
     <section className="bg-primary text-primary-foreground py-20 md:py-32">
@@ -29,16 +39,15 @@ export function FinalCTASection() {
           {MESSAGING.finalCTA.subheadline}
         </p>
 
-        {isSignedIn && myProfile?.username ? (
-          <Link href={`/${myProfile.username}`}>
-            <Button
-              size="lg"
-              variant="secondary"
-              className="text-lg font-semibold"
-            >
-              View My Profile
-            </Button>
-          </Link>
+        {isSignedIn ? (
+          <Button
+            size="lg"
+            variant="secondary"
+            className="text-lg font-semibold"
+            onClick={handleClick}
+          >
+            {myProfile?.username ? "View My Profile" : "Complete Your Profile"}
+          </Button>
         ) : (
           <SignInButton mode="modal" forceRedirectUrl="/welcome">
             <Button

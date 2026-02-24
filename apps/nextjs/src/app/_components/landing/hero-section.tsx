@@ -191,11 +191,13 @@ export function HeroSection() {
   });
 
   const handleClaimClick = () => {
-    if (isSignedIn && myProfile?.username) {
+    if (myProfile?.username) {
       // Navigate to their profile page
       router.push(`/${myProfile.username}`);
+    } else {
+      // User is signed in but doesn't have profile/username yet - go to welcome
+      router.push("/welcome");
     }
-    // If not signed in, the SignInButton wrapper handles it
   };
 
   return (
@@ -247,16 +249,18 @@ export function HeroSection() {
             <div className="flex w-full flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
               {/* Wrapper to make button and badge same width on mobile */}
               <div className="w-full max-w-xs sm:w-auto sm:max-w-none">
-                {isSignedIn && myProfile?.username ? (
+                {isSignedIn ? (
+                  // User is signed in - show profile link or welcome link
                   <Button
                     variant="primary"
                     className="h-auto w-full gap-2 rounded-xl px-5 py-2.5 text-base font-bold"
                     onClick={handleClaimClick}
                   >
-                    View your profile
+                    {myProfile?.username ? "View your profile" : "Complete your profile"}
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 ) : (
+                  // User is NOT signed in - show sign in button
                   <SignInButton mode="modal" forceRedirectUrl="/welcome">
                     <Button
                       variant="primary"
