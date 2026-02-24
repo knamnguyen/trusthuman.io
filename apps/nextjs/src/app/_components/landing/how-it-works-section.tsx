@@ -90,13 +90,13 @@ function TiltingVideoCard({ videoPath, youtubeEmbedUrl }: TiltingVideoCardProps)
     </div>
   );
 
-  // YouTube embed with scaled iframe to crop black bars
+  // YouTube embed - 4:3 aspect ratio (less wide than 16:9), hide all UI
   const renderYouTubeEmbed = () => (
-    <div className="relative aspect-video w-full overflow-hidden bg-slate-900">
+    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl">
       <iframe
         src={youtubeEmbedUrl}
         title="TrustHuman step demo"
-        className="absolute -left-[20%] -top-[20%] h-[140%] w-[140%]"
+        className="absolute inset-0 h-full w-full"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen={false}
         style={{ border: 0, pointerEvents: "none" }}
@@ -106,6 +106,7 @@ function TiltingVideoCard({ videoPath, youtubeEmbedUrl }: TiltingVideoCardProps)
   );
 
   // Native video with autoplay, loop, muted, playsInline + YouTube thumbnail as poster
+  // Video displays at natural size, rounded corners, block display to remove gap
   const renderVideo = () => (
     <video
       key={videoPath}
@@ -115,7 +116,7 @@ function TiltingVideoCard({ videoPath, youtubeEmbedUrl }: TiltingVideoCardProps)
       playsInline
       poster={thumbnailUrl ?? undefined}
       aria-label="TrustHuman step demo video"
-      className="h-full w-full object-cover"
+      className="block w-full rounded-xl"
       onError={handleVideoError}
     >
       <source src={videoPath} type="video/mp4" />
@@ -137,19 +138,16 @@ function TiltingVideoCard({ videoPath, youtubeEmbedUrl }: TiltingVideoCardProps)
   return (
     <div
       ref={cardRef}
-      className="relative w-full overflow-hidden rounded-xl border shadow-xl transition-transform duration-200 ease-out [transform:scale(1.05)_perspective(1040px)_rotateY(0deg)_rotateX(5deg)_rotate(0deg)]"
+      className="relative w-full rounded-xl border shadow-xl transition-transform duration-200 ease-out sm:[transform:scale(1.05)_perspective(1040px)_rotateY(0deg)_rotateX(5deg)_rotate(0deg)]"
       style={{
-        // Layer hover transform on top of the base CSS transform
-        transform: hoverTransform.rotateX !== 0 || hoverTransform.rotateY !== 0
-          ? `scale(1.05) perspective(1040px) rotateY(${baseRotateY + hoverTransform.rotateY}deg) rotateX(${baseRotateX + hoverTransform.rotateX}deg) rotate(0deg)`
-          : undefined,
+        // Hover transform only applies on desktop (CSS handles base transform)
+        transform: undefined,
       }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
     >
-      <div className="relative aspect-video bg-slate-900">
-        {renderMedia()}
-      </div>
+      {/* Let video determine its natural height - no fixed aspect ratio */}
+      {renderMedia()}
     </div>
   );
 }
@@ -167,7 +165,7 @@ export function HowItWorksSection() {
   }));
 
   return (
-    <section className="bg-card overflow-hidden py-20 md:py-28">
+    <section className="bg-card py-20 md:py-28">
       <div className="container mx-auto max-w-5xl px-4">
         {/* Header */}
         <div className="mb-12 text-center">
@@ -188,10 +186,13 @@ export function HowItWorksSection() {
         />
 
         {/* Video Card - Changes based on active step */}
-        <TiltingVideoCard
-          videoPath={steps[activeStep]?.videoPath ?? ""}
-          youtubeEmbedUrl={steps[activeStep]?.youtubeEmbedUrl}
-        />
+        {/* Centered at 80% width, padding at bottom for tilt/shadow visibility */}
+        <div className="mx-auto w-[80%] pb-4">
+          <TiltingVideoCard
+            videoPath={steps[activeStep]?.videoPath ?? ""}
+            youtubeEmbedUrl={steps[activeStep]?.youtubeEmbedUrl}
+          />
+        </div>
       </div>
     </section>
   );

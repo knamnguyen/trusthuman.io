@@ -24,9 +24,8 @@ export const MESSAGING = {
       "Watch how easy it is to verify your humanity in under 3 minutes",
     // Full flow demo video for hero section
     videoPath: `${ASSET_BASE}/videos/trusthuman-full-demo.mp4`,
-    // YouTube fallback with autoplay params (TODO: Replace with actual YouTube URL once recorded)
-    // Thumbnail auto-extracted from YouTube video ID
-    youtubeEmbedUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1&loop=1&playlist=dQw4w9WgXcQ&controls=0&modestbranding=1&rel=0&showinfo=0&disablekb=1",
+    // YouTube fallback with autoplay params
+    youtubeEmbedUrl: "https://www.youtube.com/embed/Cy4vVp9YVPM?autoplay=1&mute=1&loop=1&playlist=Cy4vVp9YVPM&controls=0&modestbranding=1&rel=0&showinfo=0&disablekb=1",
   },
 
   howItWorks: {
@@ -35,36 +34,35 @@ export const MESSAGING = {
     steps: [
       {
         number: 1,
-        title: "Install the Chrome Extension",
+        title: "Engage on Social Media",
         description:
-          "One-click install from the Chrome Web Store. Triss, your verification companion, will guide you through setup.",
-        videoPath: `${ASSET_BASE}/videos/step-1-install.mp4`,
-        // TODO: Replace with actual YouTube URL once recorded (thumbnail auto-extracted from video ID)
-        youtubeEmbedUrl: "",
+          "Comment, like, and engage on LinkedIn, X, or Facebook as you normally would. Triss watches for your activity.",
+        videoPath: `${ASSET_BASE}/videos/step-1-engage.mp4`,
+        youtubeEmbedUrl: "https://www.youtube.com/embed/dqjEz6XcmZ8?autoplay=1&mute=1&loop=1&playlist=dqjEz6XcmZ8&controls=0&modestbranding=1&rel=0&showinfo=0&disablekb=1&iv_load_policy=3&fs=0&playsinline=1",
       },
       {
         number: 2,
-        title: "Comment on LinkedIn or X",
+        title: "Verify with Webcam",
         description:
-          "Engage authentically on posts. When you click submit, Triss detects your activity and prepares for verification.",
-        videoPath: `${ASSET_BASE}/videos/step-2-comment.mp4`,
-        youtubeEmbedUrl: "",
+          "Quick selfie verification confirms you're human. Photo deleted instantly - we never store your images.",
+        videoPath: `${ASSET_BASE}/videos/step-2-verify.mp4`,
+        youtubeEmbedUrl: "https://www.youtube.com/embed/1JznLLdDZCs?autoplay=1&mute=1&loop=1&playlist=1JznLLdDZCs&controls=0&modestbranding=1&rel=0&showinfo=0&disablekb=1&iv_load_policy=3&fs=0&playsinline=1",
       },
       {
         number: 3,
-        title: "Quick Selfie Verification",
+        title: "Build Your Profile",
         description:
-          "Snap a quick selfie. Our AI confirms you're a real human (not a bot). Your photo is deleted immediately after verification.",
-        videoPath: `${ASSET_BASE}/videos/step-3-verify.mp4`,
-        youtubeEmbedUrl: "",
+          "Every verified action adds to your public profile. Show off your real human engagement history.",
+        videoPath: `${ASSET_BASE}/videos/step-3-profile.mp4`,
+        youtubeEmbedUrl: "https://www.youtube.com/embed/5mbRZM5uHbw?autoplay=1&mute=1&loop=1&playlist=5mbRZM5uHbw&controls=0&modestbranding=1&rel=0&showinfo=0&disablekb=1&iv_load_policy=3&fs=0&playsinline=1",
       },
       {
         number: 4,
-        title: "Earn Your Human Badge",
+        title: "Compete & Customize",
         description:
-          "Get your unique Human # and public profile at trusthuman.io/username. Build your streak and climb the leaderboard.",
-        videoPath: `${ASSET_BASE}/videos/step-4-badge.mp4`,
-        youtubeEmbedUrl: "",
+          "Customize your profile, build streaks, and compete with friends on the leaderboard.",
+        videoPath: `${ASSET_BASE}/videos/step-4-compete.mp4`,
+        youtubeEmbedUrl: "https://www.youtube.com/embed/8fkY2T_LamM?autoplay=1&mute=1&loop=1&playlist=8fkY2T_LamM&controls=0&modestbranding=1&rel=0&showinfo=0&disablekb=1&iv_load_policy=3&fs=0&playsinline=1",
       },
     ],
   },
@@ -125,10 +123,10 @@ export const ASSETS = {
   },
   videos: {
     fullDemo: `${ASSET_BASE}/videos/trusthuman-full-demo.mp4`,
-    step1Install: `${ASSET_BASE}/videos/step-1-install.mp4`,
-    step2Comment: `${ASSET_BASE}/videos/step-2-comment.mp4`,
-    step3Verify: `${ASSET_BASE}/videos/step-3-verify.mp4`,
-    step4Badge: `${ASSET_BASE}/videos/step-4-badge.mp4`,
+    step1Engage: `${ASSET_BASE}/videos/step-1-engage.mp4`,
+    step2Verify: `${ASSET_BASE}/videos/step-2-verify.mp4`,
+    step3Profile: `${ASSET_BASE}/videos/step-3-profile.mp4`,
+    step4Compete: `${ASSET_BASE}/videos/step-4-compete.mp4`,
   },
   chromeWebStoreUrl: "https://chromewebstore.google.com/detail/trusthuman/TODO", // TODO: Update once published
 };

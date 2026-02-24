@@ -78,7 +78,13 @@ export function AccordionTabs({
 
   return (
     <div
-      className={cn("flex h-40 gap-2", className)}
+      className={cn(
+        // Mobile: horizontal scroll with snap
+        "flex gap-2 overflow-x-auto pb-2 sm:overflow-visible sm:pb-0",
+        // Desktop: fixed height
+        "sm:h-40",
+        className
+      )}
       onMouseLeave={handleContainerLeave}
     >
       {tabs.map((tab) => {
@@ -89,8 +95,11 @@ export function AccordionTabs({
           <motion.div
             key={tab.id}
             onMouseEnter={() => handleTabHover(tab.id)}
+            onClick={() => handleTabHover(tab.id)}
             className={cn(
               "group relative cursor-pointer overflow-hidden rounded-xl border p-4",
+              // Mobile: fixed width cards for horizontal scroll
+              "min-w-[140px] flex-shrink-0 sm:min-w-0 sm:flex-shrink",
               isActive
                 ? "border-primary bg-primary/10"
                 : "border-transparent bg-muted/30 hover:bg-muted/50"
@@ -120,10 +129,12 @@ export function AccordionTabs({
               <Icon className="h-5 w-5" />
             </motion.div>
 
-            {/* Title - always visible */}
+            {/* Title - always visible, truncated on mobile */}
             <motion.h3
               className={cn(
-                "font-semibold whitespace-nowrap",
+                "font-semibold",
+                // Mobile: allow wrapping, Desktop: nowrap
+                "text-sm sm:text-base sm:whitespace-nowrap",
                 isActive ? "text-primary" : "text-foreground"
               )}
               animate={{
@@ -134,10 +145,10 @@ export function AccordionTabs({
               {isActive ? tab.title : tab.title.split(" ").slice(0, 2).join(" ")}
             </motion.h3>
 
-            {/* Description - fades in/out */}
+            {/* Description - fades in/out, hidden on mobile */}
             {tab.description && (
               <motion.p
-                className="text-muted-foreground mt-1 text-sm"
+                className="text-muted-foreground mt-1 hidden text-sm sm:block"
                 animate={{
                   opacity: isActive ? 1 : 0,
                 }}

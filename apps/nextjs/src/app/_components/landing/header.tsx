@@ -21,38 +21,45 @@ export function Header() {
 
   return (
     <header className="bg-card/80 sticky top-0 z-50 w-full backdrop-blur-sm">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+      <div className="container mx-auto flex h-14 items-center justify-between px-4 sm:h-16">
+        {/* Logo - hide text on very small screens */}
         <Link href="/" className="flex items-center gap-2">
           <Image
             src="/trusthuman-logo.svg"
             alt="TrustHuman"
             width={32}
             height={32}
-            className="h-8 w-8"
+            className="h-7 w-7 sm:h-8 sm:w-8"
           />
-          <span className="text-xl font-bold"><span className="text-primary">Trust</span>Human</span>
+          <span className="text-lg font-bold sm:text-xl">
+            <span className="text-primary">Trust</span>Human
+          </span>
         </Link>
 
-        <nav className="flex items-center gap-4">
+        {/* Nav - compact on mobile */}
+        <nav className="flex items-center gap-2 sm:gap-4">
+          {/* Hide "Leaderboard" text on mobile, show icon or hide completely */}
           <Link
             href="/leaderboard"
-            className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors"
+            className="text-muted-foreground hover:text-foreground hidden text-sm font-medium transition-colors sm:block"
           >
             Leaderboard
           </Link>
 
           {/* Show CTA while Clerk is loading to prevent layout shift */}
           <ClerkLoading>
-            <Button variant="primary" size="sm">
-              Claim Your Human Status
+            <Button variant="primary" size="sm" className="text-xs sm:text-sm">
+              <span className="hidden sm:inline">Claim Your Human Status</span>
+              <span className="sm:hidden">Join</span>
             </Button>
           </ClerkLoading>
 
           <ClerkLoaded>
             <SignedOut>
               <SignInButton mode="modal" forceRedirectUrl="/welcome">
-                <Button variant="primary" size="sm">
-                  Claim Your Human Status
+                <Button variant="primary" size="sm" className="text-xs sm:text-sm">
+                  <span className="hidden sm:inline">Claim Your Human Status</span>
+                  <span className="sm:hidden">Join</span>
                 </Button>
               </SignInButton>
             </SignedOut>
@@ -60,8 +67,9 @@ export function Header() {
             <SignedIn>
               {myProfile?.username && (
                 <Link href={`/${myProfile.username}`}>
-                  <Button variant="primary" size="sm">
-                    View My Profile
+                  <Button variant="primary" size="sm" className="text-xs sm:text-sm">
+                    <span className="hidden sm:inline">View My Profile</span>
+                    <span className="sm:hidden">Profile</span>
                   </Button>
                 </Link>
               )}
@@ -69,7 +77,7 @@ export function Header() {
                 afterSignOutUrl="/"
                 appearance={{
                   elements: {
-                    avatarBox: "h-8 w-8",
+                    avatarBox: "h-7 w-7 sm:h-8 sm:w-8",
                   },
                 }}
               />

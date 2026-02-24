@@ -379,13 +379,14 @@ export function VideoDemoSection() {
       <div className="container mx-auto max-w-4xl px-4">
         {/* Dynamic Section Title - Smooth transitions */}
         <div className="mb-10 text-center">
-          <div className="relative h-[3em] sm:h-[2.5em]">
+          {/* Container needs enough height for 2 lines on mobile, 1 line on desktop */}
+          <div className="relative mb-2 h-[4.5rem] sm:h-[3.5rem]">
             <AnimatePresence mode="wait">
               {PLATFORMS.map((platform) => (
                 hoveredPlatform === platform.key && (
                   <motion.h2
                     key={platform.key}
-                    className="text-foreground absolute inset-0 text-4xl font-bold tracking-tight sm:text-5xl"
+                    className="text-foreground absolute inset-x-0 top-0 text-2xl font-bold tracking-tight sm:text-4xl md:text-5xl"
                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -10, scale: 0.95 }}
@@ -393,13 +394,13 @@ export function VideoDemoSection() {
                   >
                     There are{" "}
                     <span className="text-primary">{BOT_NUMBERS[platform.key]}</span> bots on{" "}
-                    <span className="text-primary">{platform.name}</span>.
+                    <span className="text-primary">{platform.name}</span>
                   </motion.h2>
                 )
               ))}
             </AnimatePresence>
           </div>
-          <h2 className="text-foreground text-4xl font-bold tracking-tight sm:text-5xl">
+          <h2 className="text-foreground text-2xl font-bold tracking-tight sm:text-4xl md:text-5xl">
             Show you are a human on
           </h2>
         </div>
@@ -435,12 +436,22 @@ export function VideoDemoSection() {
         )}
 
         {/* Avatar Bubble Grid - Real users + mock fallbacks */}
-        <div className="mb-12 flex justify-center">
+        {/* Hidden on mobile, shown on tablet+ */}
+        <div className="mb-12 hidden justify-center sm:flex">
           <AvatarBubbleGrid
             avatars={avatars}
             columns={10}
             avatarSize={52}
             gap={14}
+          />
+        </div>
+        {/* Mobile: Simple 6-column grid without hover effects */}
+        <div className="mb-12 flex justify-center sm:hidden">
+          <AvatarBubbleGrid
+            avatars={avatars.slice(0, 24)}
+            columns={6}
+            avatarSize={44}
+            gap={8}
           />
         </div>
 

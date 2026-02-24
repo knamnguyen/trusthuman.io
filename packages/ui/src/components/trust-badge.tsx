@@ -101,8 +101,8 @@ export function TrustBadge({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       className={cn(
-        // Base styles
-        "inline-flex items-center gap-4 rounded-2xl border-2 border-[#1a1a1a] px-4 py-1",
+        // Base styles - use flex instead of inline-flex to support w-full
+        "flex items-center gap-4 rounded-2xl border-2 border-[#1a1a1a] px-4 py-1",
         // Background
         "bg-[#fbf6e5]",
         // Hover state if clickable (no shadow)

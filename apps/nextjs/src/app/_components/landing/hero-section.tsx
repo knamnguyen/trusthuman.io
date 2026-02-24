@@ -53,12 +53,14 @@ function TiltingVideoCard({
     : null;
 
   // Static CSS transform classes (exactly like EngageKit step-card)
+  // On mobile: no scale/tilt to avoid overflow issues
+  // On desktop: full 3D effect
   const baseTransformClass = {
     right:
-      "[transform:scale(1.1)_perspective(1040px)_rotateY(-11deg)_rotateX(2deg)_rotate(2deg)]",
-    left: "[transform:scale(1.1)_perspective(1040px)_rotateY(11deg)_rotateX(2deg)_rotate(-2deg)]",
+      "lg:[transform:scale(1.1)_perspective(1040px)_rotateY(-11deg)_rotateX(2deg)_rotate(2deg)]",
+    left: "lg:[transform:scale(1.1)_perspective(1040px)_rotateY(11deg)_rotateX(2deg)_rotate(-2deg)]",
     center:
-      "[transform:scale(1.05)_perspective(1040px)_rotateY(0deg)_rotateX(5deg)_rotate(0deg)]",
+      "lg:[transform:scale(1.05)_perspective(1040px)_rotateY(0deg)_rotateX(5deg)_rotate(0deg)]",
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -160,11 +162,9 @@ function TiltingVideoCard({
       ref={cardRef}
       className={`relative w-full max-w-lg overflow-hidden rounded-xl border shadow-xl transition-transform duration-200 ease-out ${baseTransformClass[position]}`}
       style={{
-        // Layer hover transform on top of the base CSS transform
-        transform:
-          hoverTransform.rotateX !== 0 || hoverTransform.rotateY !== 0
-            ? `scale(1.1) perspective(1040px) rotateY(${position === "right" ? -11 + hoverTransform.rotateY : position === "left" ? 11 + hoverTransform.rotateY : hoverTransform.rotateY}deg) rotateX(${(position === "center" ? 5 : 2) + hoverTransform.rotateX}deg) rotate(${position === "right" ? 2 : position === "left" ? -2 : 0}deg)`
-            : undefined,
+        // Layer hover transform on top of the base CSS transform (desktop only via CSS class)
+        // This inline style only applies when hovering, and the base transform is handled by CSS classes
+        transform: undefined, // Let CSS classes handle transforms for responsive behavior
       }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
@@ -199,14 +199,14 @@ export function HeroSection() {
   };
 
   return (
-    <section className="bg-card w-full pt-20">
+    <section className="bg-card w-full pt-16 sm:pt-20">
       <div className="container mx-auto max-w-6xl px-6 py-8 sm:py-12">
         <div className="grid items-center gap-8 lg:grid-cols-[1fr_1fr] lg:gap-12">
-          {/* Left Column */}
-          <div className="flex flex-col gap-8">
+          {/* Left Column - centered on mobile */}
+          <div className="flex flex-col items-center gap-6 text-center sm:gap-8 lg:items-start lg:text-left">
             {/* Badge */}
             {stats && (
-              <div className="flex">
+              <div className="flex justify-center lg:justify-start">
                 <div className="bg-primary/10 text-primary rounded-full px-4 py-1.5 text-sm font-semibold">
                   {stats.totalHumans > 0
                     ? `${stats.totalHumans.toLocaleString()} verified humans`
@@ -217,13 +217,13 @@ export function HeroSection() {
 
             {/* Headline */}
             <div className="space-y-4">
-              <h1 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
+              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl lg:text-5xl">
                 Be a <span className="text-primary">real human</span> on social
                 media, <span className="text-primary">save the internet</span>
               </h1>
 
-              {/* Feature bullet points - 2x2 grid */}
-              <div className="text-muted-foreground grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+              {/* Feature bullet points - 2x2 grid, centered on mobile */}
+              <div className="text-muted-foreground mx-auto grid w-fit grid-cols-2 gap-x-4 gap-y-2 text-xs sm:text-sm lg:mx-0">
                 <div className="flex items-center gap-2">
                   <span>📸</span>
                   <span>Quick selfie verification</span>
@@ -243,38 +243,44 @@ export function HeroSection() {
               </div>
             </div>
 
-            {/* CTA Button + Badge */}
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
-              {isSignedIn && myProfile?.username ? (
-                <Button
-                  variant="primary"
-                  className="h-auto gap-2 rounded-xl px-5 py-2.5 text-base font-bold"
-                  onClick={handleClaimClick}
-                >
-                  View your profile
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              ) : (
-                <SignInButton mode="modal" forceRedirectUrl="/welcome">
+            {/* CTA Button + Badge - stacked and centered on mobile, same width */}
+            <div className="flex w-full flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
+              {/* Wrapper to make button and badge same width on mobile */}
+              <div className="w-full max-w-xs sm:w-auto sm:max-w-none">
+                {isSignedIn && myProfile?.username ? (
                   <Button
                     variant="primary"
-                    className="h-auto gap-2 rounded-xl px-5 py-2.5 text-base font-bold"
+                    className="h-auto w-full gap-2 rounded-xl px-5 py-2.5 text-base font-bold"
+                    onClick={handleClaimClick}
                   >
-                    Claim your human status
+                    View your profile
                     <ArrowRight className="h-4 w-4" />
                   </Button>
-                </SignInButton>
-              )}
+                ) : (
+                  <SignInButton mode="modal" forceRedirectUrl="/welcome">
+                    <Button
+                      variant="primary"
+                      className="h-auto w-full gap-2 rounded-xl px-5 py-2.5 text-base font-bold"
+                    >
+                      Claim your human status
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </SignInButton>
+                )}
+              </div>
 
-              {/* Badge Preview with tilt effect */}
-              <TrustBadge
-                humanNumber={stats?.totalHumans ? stats.totalHumans + 1 : 1}
-                totalVerified={0}
-                username={myProfile?.username || "you"}
-                variant="full"
-                logoUrl="/trusthuman-logo.svg"
-                tiltEffect
-              />
+              {/* Badge Preview with tilt effect - wrapper for consistent width */}
+              <div className="w-full max-w-xs sm:w-auto sm:max-w-none">
+                <TrustBadge
+                  humanNumber={stats?.totalHumans ? stats.totalHumans + 1 : 1}
+                  totalVerified={0}
+                  username={myProfile?.username || "you"}
+                  variant="full"
+                  logoUrl="/trusthuman-logo.svg"
+                  tiltEffect
+                  className="w-full justify-center"
+                />
+              </div>
             </div>
           </div>
 
