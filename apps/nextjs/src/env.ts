@@ -17,12 +17,12 @@ export const env = createEnv({
     DATABASE_URL: z.string().url(),
     DIRECT_URL: z.string().url(),
     CLERK_WEBHOOK_SECRET: z.string(),
-    GOOGLE_GENAI_API_KEY: z.string(),
-    CRON_SECRET: z.string(),
-    STRIPE_SECRET_KEY: z.string(),
-    STRIPE_WEBHOOK_SECRET: z.string(),
-    LOOPS_API_KEY: z.string(),
-    VITE_APP_URL: z.string().url(),
+    GOOGLE_GENAI_API_KEY: z.string().optional(),
+    CRON_SECRET: z.string().optional(),
+    STRIPE_SECRET_KEY: z.string().optional(),
+    STRIPE_WEBHOOK_SECRET: z.string().optional(),
+    LOOPS_API_KEY: z.string().optional(),
+    VITE_APP_URL: z.string().url().optional(),
   },
 
   /**
