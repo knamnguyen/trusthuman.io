@@ -247,6 +247,9 @@ importers:
 
   apps/trustahuman-ext:
     dependencies:
+      '@clerk/chrome-extension':
+        specifier: ^2.5.2
+        version: 2.5.2(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@sassy/api':
         specifier: workspace:^
         version: link:../../packages/api
