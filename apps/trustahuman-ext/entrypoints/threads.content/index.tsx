@@ -118,7 +118,10 @@ export default defineContentScript({
       console.log("TrustAHuman Threads: Instrumented reply box", element);
       element.addEventListener("input", handleTypingStart);
       element.addEventListener("keydown", (e: KeyboardEvent) => {
-        handleTypingStart();
+        // Don't trigger typing toast for Enter or meta keys (submit shortcuts)
+        if (e.key !== "Enter" && !e.metaKey && !e.ctrlKey) {
+          handleTypingStart();
+        }
 
         // Detect Ctrl+Enter or Cmd+Enter to submit
         if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {

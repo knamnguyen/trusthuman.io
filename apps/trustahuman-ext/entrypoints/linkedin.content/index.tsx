@@ -155,7 +155,12 @@ export default defineContentScript({
       console.log("TrustAHuman: Instrumented comment box", element);
 
       element.addEventListener("input", handleTypingStart);
-      element.addEventListener("keydown", handleTypingStart);
+      element.addEventListener("keydown", (e) => {
+        // Don't trigger typing toast for Enter or meta keys (submit shortcuts)
+        if (e.key !== "Enter" && !e.metaKey && !e.ctrlKey) {
+          handleTypingStart();
+        }
+      });
       element.addEventListener("focus", () => {
         console.log("TrustAHuman: Comment box focused");
       });

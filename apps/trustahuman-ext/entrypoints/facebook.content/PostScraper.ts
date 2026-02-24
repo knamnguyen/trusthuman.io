@@ -37,8 +37,6 @@ const SELECTORS = {
   commentInput: [
     '[data-lexical-editor="true"][aria-label^="Comment as"]',
     '[data-lexical-editor="true"][aria-label^="Reply to"]',
-    '[data-lexical-editor="true"][role="textbox"]',
-    '[contenteditable="true"][role="textbox"]',
   ] as string[],
 
   // Comment submit button - has aria-label="Comment" and role="button"

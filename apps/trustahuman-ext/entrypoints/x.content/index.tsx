@@ -129,7 +129,10 @@ export default defineContentScript({
 
       element.addEventListener("input", handleTypingStart);
       element.addEventListener("keydown", (e) => {
-        handleTypingStart();
+        // Don't trigger typing toast for Enter or meta keys (submit shortcuts)
+        if (e.key !== "Enter" && !e.metaKey && !e.ctrlKey) {
+          handleTypingStart();
+        }
 
         // Check for Ctrl+Enter (Windows/Linux) or Cmd+Enter (Mac) to trigger verification
         if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {

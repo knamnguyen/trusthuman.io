@@ -1,6 +1,9 @@
 // apps/nextjs/src/app/_components/landing/landing-content.ts
 // Single source of truth for all landing page content
 
+// Use absolute URL for better mobile video support (like EngageKit)
+const ASSET_BASE = process.env.NEXT_PUBLIC_APP_URL ?? "https://trusthuman.io";
+
 export const MESSAGING = {
   hero: {
     headline: "Prove You're Human. Get Your Badge.",
@@ -19,8 +22,11 @@ export const MESSAGING = {
     headline: "See TrustHuman in Action",
     subheadline:
       "Watch how easy it is to verify your humanity in under 3 minutes",
-    // TODO: Replace with actual YouTube URL once recorded
-    youtubeUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+    // Full flow demo video for hero section
+    videoPath: `${ASSET_BASE}/videos/trusthuman-full-demo.mp4`,
+    // YouTube fallback with autoplay params (TODO: Replace with actual YouTube URL once recorded)
+    // Thumbnail auto-extracted from YouTube video ID
+    youtubeEmbedUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1&loop=1&playlist=dQw4w9WgXcQ&controls=0&modestbranding=1&rel=0&showinfo=0&disablekb=1",
   },
 
   howItWorks: {
@@ -32,8 +38,8 @@ export const MESSAGING = {
         title: "Install the Chrome Extension",
         description:
           "One-click install from the Chrome Web Store. Triss, your verification companion, will guide you through setup.",
-        // TODO: Replace with actual video URLs
-        videoPath: "/videos/step-1-install.mp4",
+        videoPath: `${ASSET_BASE}/videos/step-1-install.mp4`,
+        // TODO: Replace with actual YouTube URL once recorded (thumbnail auto-extracted from video ID)
         youtubeEmbedUrl: "",
       },
       {
@@ -41,7 +47,7 @@ export const MESSAGING = {
         title: "Comment on LinkedIn or X",
         description:
           "Engage authentically on posts. When you click submit, Triss detects your activity and prepares for verification.",
-        videoPath: "/videos/step-2-comment.mp4",
+        videoPath: `${ASSET_BASE}/videos/step-2-comment.mp4`,
         youtubeEmbedUrl: "",
       },
       {
@@ -49,7 +55,7 @@ export const MESSAGING = {
         title: "Quick Selfie Verification",
         description:
           "Snap a quick selfie. Our AI confirms you're a real human (not a bot). Your photo is deleted immediately after verification.",
-        videoPath: "/videos/step-3-verify.mp4",
+        videoPath: `${ASSET_BASE}/videos/step-3-verify.mp4`,
         youtubeEmbedUrl: "",
       },
       {
@@ -57,7 +63,7 @@ export const MESSAGING = {
         title: "Earn Your Human Badge",
         description:
           "Get your unique Human # and public profile at trusthuman.io/username. Build your streak and climb the leaderboard.",
-        videoPath: "/videos/step-4-badge.mp4",
+        videoPath: `${ASSET_BASE}/videos/step-4-badge.mp4`,
         youtubeEmbedUrl: "",
       },
     ],
@@ -116,6 +122,13 @@ export const ASSETS = {
   logos: {
     triss: "/trusthuman-logo.svg",
     trissAnimated: "/triss-blink.gif", // TODO: Create animated version
+  },
+  videos: {
+    fullDemo: `${ASSET_BASE}/videos/trusthuman-full-demo.mp4`,
+    step1Install: `${ASSET_BASE}/videos/step-1-install.mp4`,
+    step2Comment: `${ASSET_BASE}/videos/step-2-comment.mp4`,
+    step3Verify: `${ASSET_BASE}/videos/step-3-verify.mp4`,
+    step4Badge: `${ASSET_BASE}/videos/step-4-badge.mp4`,
   },
   chromeWebStoreUrl: "https://chromewebstore.google.com/detail/trusthuman/TODO", // TODO: Update once published
 };

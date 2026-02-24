@@ -39,9 +39,9 @@ async function detectFaces(photoBase64: string): Promise<{
   const faceCount = faces.length;
   const confidence = faces[0]?.Confidence ?? 0;
 
-  // Verified = at least 1 face with confidence >= 90%
+  // Verified = at least 1 face with confidence >= 70%
   // We allow multiple faces (e.g., someone in background) as long as there's a human
-  const verified = faceCount >= 1 && confidence >= 90;
+  const verified = faceCount >= 1 && confidence >= 70;
 
   const boundingBox = faces[0]?.BoundingBox
     ? {

@@ -51,19 +51,32 @@ const BOT_NUMBERS: Record<string, string> = {
   facebook: "2B+",
 };
 
-// Platform Logo Row with bubble hover effect
+// Platform Logo Row with bubble hover effect and auto-cycle
 interface PlatformLogoRowProps {
   platforms: typeof PLATFORMS;
   platformStats: Record<string, number> | undefined;
   onHover: (key: string | null) => void;
+  /** Enable auto-cycling through platforms (default: true) */
+  autoCycle?: boolean;
+  /** Interval in ms between cycles (default: 3000) */
+  cycleInterval?: number;
 }
 
-function PlatformLogoRow({ platforms, platformStats, onHover }: PlatformLogoRowProps) {
+function PlatformLogoRow({
+  platforms,
+  platformStats,
+  onHover,
+  autoCycle = true,
+  cycleInterval = 3000,
+}: PlatformLogoRowProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const logoRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [logoCenters, setLogoCenters] = useState<{ x: number; y: number }[]>([]);
   const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
   const [closestIndex, setClosestIndex] = useState<number | null>(null);
+  const [isUserHovering, setIsUserHovering] = useState(false);
+  const [autoCycleIndex, setAutoCycleIndex] = useState(0);
+  const cycleIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const logoSize = 64; // h-16 w-16
   const gap = 48; // gap between logos
@@ -93,6 +106,49 @@ function PlatformLogoRow({ platforms, platformStats, onHover }: PlatformLogoRowP
       clearTimeout(timer);
     };
   }, [platforms.length]);
+
+  // Auto-cycle through platforms - only updates local state
+  useEffect(() => {
+    if (!autoCycle || isUserHovering || platforms.length <= 1) {
+      if (cycleIntervalRef.current) {
+        clearInterval(cycleIntervalRef.current);
+        cycleIntervalRef.current = null;
+      }
+      return;
+    }
+
+    // Set initial state
+    setClosestIndex(autoCycleIndex);
+
+    cycleIntervalRef.current = setInterval(() => {
+      setAutoCycleIndex((prev) => {
+        const nextIndex = (prev + 1) % platforms.length;
+        setClosestIndex(nextIndex);
+        return nextIndex;
+      });
+    }, cycleInterval);
+
+    return () => {
+      if (cycleIntervalRef.current) {
+        clearInterval(cycleIntervalRef.current);
+        cycleIntervalRef.current = null;
+      }
+    };
+  }, [autoCycle, isUserHovering, platforms.length, cycleInterval, autoCycleIndex]);
+
+  // Sync closestIndex to parent - separate effect to avoid setState during render
+  useEffect(() => {
+    if (!isUserHovering && closestIndex !== null) {
+      const platform = platforms[closestIndex];
+      if (platform) {
+        onHover(platform.key);
+      }
+    }
+  }, [closestIndex, isUserHovering, platforms, onHover]);
+
+  const handleMouseEnter = useCallback(() => {
+    setIsUserHovering(true);
+  }, []);
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
@@ -125,11 +181,9 @@ function PlatformLogoRow({ platforms, platformStats, onHover }: PlatformLogoRowP
   );
 
   const handleMouseLeave = useCallback(() => {
-    setMousePos(null);
-    setClosestIndex(null);
-    // Reset to first platform (LinkedIn) instead of null to keep dynamic text
-    onHover("linkedin");
-  }, [onHover]);
+    setIsUserHovering(false);
+    // Don't reset - let auto-cycle take over smoothly
+  }, []);
 
   // Calculate animation values for each logo
   const getLogoAnimateProps = useCallback(
@@ -198,6 +252,7 @@ function PlatformLogoRow({ platforms, platformStats, onHover }: PlatformLogoRowP
     <div
       ref={containerRef}
       className="flex w-full items-center justify-between px-4"
+      onMouseEnter={handleMouseEnter}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
     >
@@ -320,17 +375,17 @@ export function VideoDemoSection() {
     : null;
 
   return (
-    <section id="claim-section" className="bg-muted/30 py-16 md:py-24">
+    <section id="claim-section" className="bg-muted/30 py-20 md:py-28">
       <div className="container mx-auto max-w-4xl px-4">
         {/* Dynamic Section Title - Smooth transitions */}
         <div className="mb-10 text-center">
-          <div className="relative h-[2.5em] sm:h-[2em]">
+          <div className="relative h-[3em] sm:h-[2.5em]">
             <AnimatePresence mode="wait">
               {PLATFORMS.map((platform) => (
                 hoveredPlatform === platform.key && (
                   <motion.h2
                     key={platform.key}
-                    className="text-foreground absolute inset-0 text-3xl font-bold tracking-tight sm:text-4xl"
+                    className="text-foreground absolute inset-0 text-4xl font-bold tracking-tight sm:text-5xl"
                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -10, scale: 0.95 }}
@@ -344,7 +399,7 @@ export function VideoDemoSection() {
               ))}
             </AnimatePresence>
           </div>
-          <h2 className="text-foreground text-3xl font-bold tracking-tight sm:text-4xl">
+          <h2 className="text-foreground text-4xl font-bold tracking-tight sm:text-5xl">
             Show you are a human on
           </h2>
         </div>

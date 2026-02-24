@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
 
@@ -18,6 +18,10 @@ interface AccordionTabsProps {
   defaultActiveId?: string | number;
   onTabChange?: (id: string | number) => void;
   className?: string;
+  /** Auto-cycle through tabs when true (default: true) */
+  autoCycle?: boolean;
+  /** Interval in ms between auto-cycles (default: 4000) */
+  cycleInterval?: number;
 }
 
 export function AccordionTabs({
@@ -25,16 +29,58 @@ export function AccordionTabs({
   defaultActiveId,
   onTabChange,
   className,
+  autoCycle = true,
+  cycleInterval = 4000,
 }: AccordionTabsProps) {
   const [activeId, setActiveId] = useState(defaultActiveId ?? tabs[0]?.id);
+  const [isPaused, setIsPaused] = useState(false);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Auto-cycle logic
+  const cycleToNext = useCallback(() => {
+    const currentIndex = tabs.findIndex((tab) => tab.id === activeId);
+    const nextIndex = (currentIndex + 1) % tabs.length;
+    const nextId = tabs[nextIndex]?.id;
+    if (nextId !== undefined) {
+      setActiveId(nextId);
+      onTabChange?.(nextId);
+    }
+  }, [activeId, tabs, onTabChange]);
+
+  useEffect(() => {
+    if (!autoCycle || isPaused || tabs.length <= 1) {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      return;
+    }
+
+    intervalRef.current = setInterval(cycleToNext, cycleInterval);
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [autoCycle, isPaused, cycleInterval, cycleToNext, tabs.length]);
 
   const handleTabHover = (id: string | number) => {
+    setIsPaused(true);
     setActiveId(id);
     onTabChange?.(id);
   };
 
+  const handleContainerLeave = () => {
+    setIsPaused(false);
+  };
+
   return (
-    <div className={cn("flex h-40 gap-2", className)}>
+    <div
+      className={cn("flex h-40 gap-2", className)}
+      onMouseLeave={handleContainerLeave}
+    >
       {tabs.map((tab) => {
         const isActive = activeId === tab.id;
         const Icon = tab.icon;

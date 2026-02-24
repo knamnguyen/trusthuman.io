@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { Download, MessageSquare, Camera, Award } from "lucide-react";
 
 import { AccordionTabs, type AccordionTab } from "@sassy/ui/components/accordion-tabs";
@@ -10,98 +9,148 @@ import { MESSAGING } from "./landing-content";
 
 const STEP_ICONS = [Download, MessageSquare, Camera, Award] as const;
 
-function TiltingVideoCard({ videoPath, title }: { videoPath: string; title: string }) {
+// Extract YouTube video ID from embed URL
+function getYouTubeVideoId(embedUrl: string): string | null {
+  const match = embedUrl.match(/youtube\.com\/embed\/([^?]+)/);
+  return match?.[1] ?? null;
+}
+
+// Get YouTube thumbnail URL from video ID
+function getYouTubeThumbnail(videoId: string): string {
+  return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+}
+
+// Tilting video card with 3-level fallback: MP4 → YouTube → YouTube thumbnail (center position)
+interface TiltingVideoCardProps {
+  videoPath: string;
+  youtubeEmbedUrl?: string;
+}
+
+function TiltingVideoCard({ videoPath, youtubeEmbedUrl }: TiltingVideoCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
+  const [hoverTransform, setHoverTransform] = useState({ rotateX: 0, rotateY: 0 });
+  const [videoFailed, setVideoFailed] = useState(false);
+  const [youtubeFailed, setYoutubeFailed] = useState(false);
 
-  // Motion values for mouse position
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
+  // Extract video ID for thumbnail fallback
+  const youtubeVideoId = youtubeEmbedUrl ? getYouTubeVideoId(youtubeEmbedUrl) : null;
+  const thumbnailUrl = youtubeVideoId ? getYouTubeThumbnail(youtubeVideoId) : null;
 
-  // Spring config for smooth animation
-  const springConfig = { stiffness: 300, damping: 30, mass: 0.5 };
-
-  // Transform mouse position to rotation with spring
-  const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [10, -10]), springConfig);
-  const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-10, 10]), springConfig);
-  const scale = useSpring(1, springConfig);
+  // Base transform for center position
+  const baseRotateX = 5;
+  const baseRotateY = 0;
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!cardRef.current) return;
 
     const rect = cardRef.current.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width - 0.5;
-    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
 
-    mouseX.set(x);
-    mouseY.set(y);
-  };
+    // Normalized position from -1 to 1
+    const normalizedX = (e.clientX - centerX) / (rect.width / 2);
+    const normalizedY = (e.clientY - centerY) / (rect.height / 2);
 
-  const handleMouseEnter = () => {
-    scale.set(1.01);
+    // Subtle hover adjustment - pulls hovered area toward viewer
+    setHoverTransform({
+      rotateY: -normalizedX * 8,
+      rotateX: normalizedY * 6,
+    });
   };
 
   const handleMouseLeave = () => {
-    mouseX.set(0);
-    mouseY.set(0);
-    scale.set(1);
+    setHoverTransform({ rotateX: 0, rotateY: 0 });
+  };
+
+  const handleVideoError = () => {
+    console.log("Video failed to load, falling back to YouTube");
+    setVideoFailed(true);
+  };
+
+  const handleYouTubeError = () => {
+    console.log("YouTube failed to load, falling back to thumbnail");
+    setYoutubeFailed(true);
+  };
+
+  // YouTube thumbnail fallback image
+  const renderThumbnail = () => (
+    <div className="relative aspect-video w-full overflow-hidden bg-slate-900">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={thumbnailUrl || "/trusthuman-logo.png"}
+        alt="TrustHuman Step Demo Preview"
+        className="h-full w-full object-cover"
+      />
+      {/* Play button overlay */}
+      <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/90 shadow-lg">
+          <div className="ml-1 h-0 w-0 border-y-8 border-l-12 border-y-transparent border-l-slate-900" />
+        </div>
+      </div>
+    </div>
+  );
+
+  // YouTube embed with scaled iframe to crop black bars
+  const renderYouTubeEmbed = () => (
+    <div className="relative aspect-video w-full overflow-hidden bg-slate-900">
+      <iframe
+        src={youtubeEmbedUrl}
+        title="TrustHuman step demo"
+        className="absolute -left-[20%] -top-[20%] h-[140%] w-[140%]"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen={false}
+        style={{ border: 0, pointerEvents: "none" }}
+        onError={handleYouTubeError}
+      />
+    </div>
+  );
+
+  // Native video with autoplay, loop, muted, playsInline + YouTube thumbnail as poster
+  const renderVideo = () => (
+    <video
+      key={videoPath}
+      autoPlay
+      loop
+      muted
+      playsInline
+      poster={thumbnailUrl ?? undefined}
+      aria-label="TrustHuman step demo video"
+      className="h-full w-full object-cover"
+      onError={handleVideoError}
+    >
+      <source src={videoPath} type="video/mp4" />
+      Your browser does not support the video tag.
+    </video>
+  );
+
+  // 3-level fallback: Video → YouTube → YouTube Thumbnail
+  const renderMedia = () => {
+    if (videoFailed) {
+      if (youtubeEmbedUrl && !youtubeFailed) {
+        return renderYouTubeEmbed();
+      }
+      return renderThumbnail();
+    }
+    return renderVideo();
   };
 
   return (
-    <motion.div
+    <div
       ref={cardRef}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      className="relative w-full cursor-pointer"
+      className="relative w-full overflow-hidden rounded-xl border shadow-xl transition-transform duration-200 ease-out [transform:scale(1.05)_perspective(1040px)_rotateY(0deg)_rotateX(5deg)_rotate(0deg)]"
       style={{
-        rotateX,
-        rotateY,
-        scale,
-        transformStyle: "preserve-3d",
-        perspective: 1000,
+        // Layer hover transform on top of the base CSS transform
+        transform: hoverTransform.rotateX !== 0 || hoverTransform.rotateY !== 0
+          ? `scale(1.05) perspective(1040px) rotateY(${baseRotateY + hoverTransform.rotateY}deg) rotateX(${baseRotateX + hoverTransform.rotateX}deg) rotate(0deg)`
+          : undefined,
       }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
     >
-      {/* Glowing border effect */}
-      <div
-        className="from-primary/30 via-primary/50 to-primary/30 absolute -inset-1 rounded-2xl bg-gradient-to-r opacity-75 blur-sm"
-        style={{
-          transform: "translateZ(-10px)",
-        }}
-      />
-
-      {/* Main video card */}
-      <div
-        className="border-border bg-card relative overflow-hidden rounded-2xl border shadow-2xl"
-        style={{
-          transform: "translateZ(0px)",
-        }}
-      >
-        <div className="relative aspect-video bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-          {/* Video placeholder - will be replaced with actual video */}
-          <video
-            key={videoPath}
-            src={videoPath}
-            className="absolute inset-0 h-full w-full object-cover"
-            autoPlay
-            loop
-            muted
-            playsInline
-          />
-          {/* Fallback overlay if video doesn't load */}
-          <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-            <p className="text-lg font-medium text-white/80">{title}</p>
-          </div>
-        </div>
+      <div className="relative aspect-video bg-slate-900">
+        {renderMedia()}
       </div>
-
-      {/* 3D shadow effect */}
-      <div
-        className="bg-primary/10 absolute inset-4 -z-10 rounded-2xl blur-2xl"
-        style={{
-          transform: "translateZ(-30px) translateY(20px)",
-        }}
-      />
-    </motion.div>
+    </div>
   );
 }
 
@@ -118,11 +167,11 @@ export function HowItWorksSection() {
   }));
 
   return (
-    <section className="bg-card overflow-hidden py-16 md:py-24">
+    <section className="bg-card overflow-hidden py-20 md:py-28">
       <div className="container mx-auto max-w-5xl px-4">
         {/* Header */}
         <div className="mb-12 text-center">
-          <h2 className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl">
+          <h2 className="mb-4 text-4xl font-bold tracking-tight sm:text-5xl">
             {MESSAGING.howItWorks.headline}
           </h2>
           <p className="text-muted-foreground text-lg">
@@ -140,8 +189,8 @@ export function HowItWorksSection() {
 
         {/* Video Card - Changes based on active step */}
         <TiltingVideoCard
-          videoPath={steps[activeStep]?.videoPath ?? "/videos/step-1-install.mp4"}
-          title={steps[activeStep]?.title ?? "Install the Chrome Extension"}
+          videoPath={steps[activeStep]?.videoPath ?? ""}
+          youtubeEmbedUrl={steps[activeStep]?.youtubeEmbedUrl}
         />
       </div>
     </section>

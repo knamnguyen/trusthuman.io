@@ -1,31 +1,34 @@
 import { useEffect } from "react";
 import {
-  Camera,
-  ExternalLink,
-  ShieldCheck,
-  CheckCircle2,
-  XCircle,
-  Search,
   Award,
+  Camera,
+  CheckCircle2,
+  ExternalLink,
   Flame,
-  Trophy,
   Loader2,
+  Search,
+  ShieldCheck,
+  Trophy,
+  XCircle,
 } from "lucide-react";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@sassy/ui/avatar";
 import { Badge } from "@sassy/ui/badge";
 import { Button } from "@sassy/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@sassy/ui/card";
-import { SheetContent, SheetHeader } from "@sassy/ui/sheet";
 import { ExpandableTabs } from "@sassy/ui/expandable-tabs";
+import { SheetContent, SheetHeader } from "@sassy/ui/sheet";
 
+import type { Activity } from "./stores/my-profile-store";
+import type { SidebarTab } from "./stores/sidebar-store";
 import { useAuthStore } from "../../lib/auth-store";
-import { SignInOverlay } from "./SignInOverlay";
-import { ToggleButton } from "./ToggleButton";
 import { CheckHumanTab } from "./CheckHumanTab";
+import { SignInOverlay } from "./SignInOverlay";
 import { useCheckHumanStore } from "./stores/check-human-store";
-import { useMyProfileStore, type Activity } from "./stores/my-profile-store";
+import { useMyProfileStore } from "./stores/my-profile-store";
 import { useShadowRootStore } from "./stores/shadow-root-store";
-import { useSidebarStore, SIDEBAR_TABS, type SidebarTab } from "./stores/sidebar-store";
+import { SIDEBAR_TABS, useSidebarStore } from "./stores/sidebar-store";
+import { ToggleButton } from "./ToggleButton";
 
 // Tab configuration for ExpandableTabs
 const tabs = [
@@ -54,7 +57,10 @@ function ActivityCard({ activity }: { activity: Activity }) {
     hn: { label: "HN", bgClass: "bg-[#ff6600] text-white" },
   };
 
-  const platform = platformConfig[activity.type] || { label: activity.type, bgClass: "bg-gray-500 text-white" };
+  const platform = platformConfig[activity.type] || {
+    label: activity.type,
+    bgClass: "bg-gray-500 text-white",
+  };
 
   // Get initials for avatar fallback
   const getInitials = (name: string | undefined | null): string => {
@@ -67,7 +73,10 @@ function ActivityCard({ activity }: { activity: Activity }) {
   };
 
   // Truncate text for preview
-  const truncate = (text: string | undefined | null, maxLength: number): string => {
+  const truncate = (
+    text: string | undefined | null,
+    maxLength: number,
+  ): string => {
     if (!text) return "";
     return text.length > maxLength ? text.slice(0, maxLength) + "..." : text;
   };
@@ -85,17 +94,24 @@ function ActivityCard({ activity }: { activity: Activity }) {
   };
 
   return (
-    <Card className={`relative ${activity.verified ? "ring-1 ring-primary/30" : "ring-1 ring-destructive/30"}`}>
+    <Card
+      className={`relative ${activity.verified ? "ring-primary/30 ring-1" : "ring-destructive/30 ring-1"}`}
+    >
       <CardContent className="flex flex-col gap-2 p-3">
         {/* Platform indicator + Author Header */}
         <div className="flex items-center gap-2">
           {/* Platform badge */}
-          <div className={`shrink-0 rounded px-1.5 py-0.5 text-[9px] font-medium ${platform.bgClass}`}>
+          <div
+            className={`shrink-0 rounded px-1.5 py-0.5 text-[9px] font-medium ${platform.bgClass}`}
+          >
             {platform.label}
           </div>
 
           <Avatar className="h-6 w-6 shrink-0">
-            <AvatarImage src={activity.parentAuthorAvatarUrl || undefined} alt={activity.parentAuthorName} />
+            <AvatarImage
+              src={activity.parentAuthorAvatarUrl || undefined}
+              alt={activity.parentAuthorName}
+            />
             <AvatarFallback className="text-[10px]">
               {getInitials(activity.parentAuthorName)}
             </AvatarFallback>
@@ -118,7 +134,7 @@ function ActivityCard({ activity }: { activity: Activity }) {
 
         {/* User's comment text */}
         {activity.commentText && (
-          <div className="bg-muted/30 rounded-md border p-2 text-sm line-clamp-3">
+          <div className="bg-muted/30 line-clamp-3 rounded-md border p-2 text-sm">
             {activity.commentText}
           </div>
         )}
@@ -128,12 +144,12 @@ function ActivityCard({ activity }: { activity: Activity }) {
           {/* Verification status + date */}
           <div className="flex items-center gap-2 text-xs">
             {activity.verified ? (
-              <div className="flex items-center gap-1 text-primary">
+              <div className="text-primary flex items-center gap-1">
                 <CheckCircle2 className="h-3 w-3" />
                 <span className="font-medium">Verified</span>
               </div>
             ) : (
-              <div className="flex items-center gap-1 text-destructive">
+              <div className="text-destructive flex items-center gap-1">
                 <XCircle className="h-3 w-3" />
                 <span className="font-medium">Failed</span>
               </div>
@@ -173,7 +189,9 @@ function VerifyTabContent() {
     if (!name) return "?";
     const parts = name.split(" ");
     if (parts.length === 1) return parts[0]?.charAt(0).toUpperCase() || "?";
-    return ((parts[0]?.charAt(0) || "") + (parts[parts.length - 1]?.charAt(0) || "")).toUpperCase();
+    return (
+      (parts[0]?.charAt(0) || "") + (parts[parts.length - 1]?.charAt(0) || "")
+    ).toUpperCase();
   };
 
   function handleGrantCamera() {
@@ -183,11 +201,12 @@ function VerifyTabContent() {
   // Not signed in
   if (!isSignedIn) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-        <ShieldCheck className="h-12 w-12 text-muted-foreground mb-4" />
-        <h3 className="font-semibold mb-2">Sign in to verify</h3>
-        <p className="text-sm text-muted-foreground">
-          Sign in to start verifying your comments and building your trust profile.
+      <div className="flex flex-col items-center justify-center px-4 py-12 text-center">
+        <ShieldCheck className="text-muted-foreground mb-4 h-12 w-12" />
+        <h3 className="mb-2 font-semibold">Sign in to verify</h3>
+        <p className="text-muted-foreground text-sm">
+          Sign in to start verifying your comments and building your trust
+          profile.
         </p>
       </div>
     );
@@ -197,8 +216,8 @@ function VerifyTabContent() {
   if (isLoading && !profile) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        <p className="text-sm text-muted-foreground mt-3">Loading profile...</p>
+        <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
+        <p className="text-muted-foreground mt-3 text-sm">Loading profile...</p>
       </div>
     );
   }
@@ -206,10 +225,10 @@ function VerifyTabContent() {
   // Error
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-        <XCircle className="h-12 w-12 text-destructive mb-4" />
-        <h3 className="font-semibold mb-2">Failed to load profile</h3>
-        <p className="text-sm text-muted-foreground">{error}</p>
+      <div className="flex flex-col items-center justify-center px-4 py-12 text-center">
+        <XCircle className="text-destructive mb-4 h-12 w-12" />
+        <h3 className="mb-2 font-semibold">Failed to load profile</h3>
+        <p className="text-muted-foreground text-sm">{error}</p>
       </div>
     );
   }
@@ -217,7 +236,7 @@ function VerifyTabContent() {
   // No profile yet (first-time user)
   if (!profile) {
     return (
-      <div className="flex flex-col p-4 gap-4">
+      <div className="flex flex-col gap-4 p-4">
         {/* Camera permission banner */}
         <Button
           onClick={handleGrantCamera}
@@ -231,19 +250,23 @@ function VerifyTabContent() {
 
         <Card className="border-dashed">
           <CardContent className="py-8 text-center">
-            <ShieldCheck className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="font-semibold mb-2">Get Your Human Number</h3>
-            <p className="text-sm text-muted-foreground">
-              Post a comment on LinkedIn or X to complete your first verification
-              and get your unique Human number!
+            <ShieldCheck className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
+            <h3 className="mb-2 font-semibold">Get Your Human Number</h3>
+            <p className="text-muted-foreground text-sm">
+              Post a comment on LinkedIn or X to complete your first
+              verification and get your unique Human number!
             </p>
           </CardContent>
         </Card>
 
         {/* Recording indicator */}
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span className="inline-block h-2 w-2 rounded-full bg-primary animate-pulse" />
-          Monitoring {window.location.hostname.includes("x.com") || window.location.hostname.includes("twitter.com") ? "X" : "LinkedIn"}
+        <div className="text-muted-foreground flex items-center gap-2 text-xs">
+          <span className="bg-primary inline-block h-2 w-2 animate-pulse rounded-full" />
+          Monitoring{" "}
+          {window.location.hostname.includes("x.com") ||
+          window.location.hostname.includes("twitter.com")
+            ? "X"
+            : "LinkedIn"}
         </div>
       </div>
     );
@@ -251,54 +274,65 @@ function VerifyTabContent() {
 
   // Profile loaded - show full profile like trusthuman.io/username
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex h-full flex-col">
       {/* Profile Header Card */}
-      <Card className="mx-4 mt-3 border-primary/30">
-        <CardHeader className="pb-2 pt-3 px-3">
+      <Card className="border-primary/30 mx-4 mt-3">
+        <CardHeader className="px-3 pt-3 pb-2">
           <div className="flex items-center gap-3">
             <Avatar className="h-12 w-12">
               <AvatarImage src={profile.avatarUrl || undefined} />
-              <AvatarFallback>{getInitials(profile.displayName)}</AvatarFallback>
+              <AvatarFallback>
+                {getInitials(profile.displayName)}
+              </AvatarFallback>
             </Avatar>
-            <div className="flex-1 min-w-0">
+            <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <h3 className="font-semibold truncate">
+                <h3 className="truncate font-semibold">
                   {profile.displayName || profile.username}
                 </h3>
-                <Badge variant="default" className="shrink-0 text-[10px] px-1.5 py-0">
-                  <ShieldCheck className="h-2.5 w-2.5 mr-0.5" />
+                <Badge
+                  variant="default"
+                  className="shrink-0 px-1.5 py-0 text-[10px]"
+                >
+                  <ShieldCheck className="mr-0.5 h-2.5 w-2.5" />
                   Human
                 </Badge>
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 #{profile.humanNumber} • Rank #{profile.rank}
               </p>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="pt-0 pb-3 px-3">
+        <CardContent className="px-3 pt-0 pb-3">
           {/* Stats Row */}
           <div className="grid grid-cols-3 gap-2 text-center">
             <div className="bg-muted/50 rounded-lg p-1.5">
               <div className="flex items-center justify-center gap-1">
-                <Award className="h-3.5 w-3.5 text-primary" />
-                <span className="font-bold text-sm">{profile.totalVerifications}</span>
+                <Award className="text-primary h-3.5 w-3.5" />
+                <span className="text-sm font-bold">
+                  {profile.totalVerifications}
+                </span>
               </div>
-              <p className="text-[9px] text-muted-foreground">Verified</p>
+              <p className="text-muted-foreground text-[9px]">Verified</p>
             </div>
             <div className="bg-muted/50 rounded-lg p-1.5">
               <div className="flex items-center justify-center gap-1">
                 <Flame className="h-3.5 w-3.5 text-orange-500" />
-                <span className="font-bold text-sm">{profile.currentStreak}</span>
+                <span className="text-sm font-bold">
+                  {profile.currentStreak}
+                </span>
               </div>
-              <p className="text-[9px] text-muted-foreground">Streak</p>
+              <p className="text-muted-foreground text-[9px]">Streak</p>
             </div>
             <div className="bg-muted/50 rounded-lg p-1.5">
               <div className="flex items-center justify-center gap-1">
                 <Trophy className="h-3.5 w-3.5 text-yellow-500" />
-                <span className="font-bold text-sm">{profile.longestStreak}</span>
+                <span className="text-sm font-bold">
+                  {profile.longestStreak}
+                </span>
               </div>
-              <p className="text-[9px] text-muted-foreground">Best</p>
+              <p className="text-muted-foreground text-[9px]">Best</p>
             </div>
           </div>
 
@@ -306,9 +340,10 @@ function VerifyTabContent() {
           <Button
             variant="ghost"
             size="sm"
-            className="w-full mt-2 gap-1.5 h-7 text-xs"
+            className="mt-2 h-7 w-full gap-1.5 text-xs"
             onClick={() => {
-              const baseUrl = import.meta.env.VITE_SYNC_HOST_URL || "https://trusthuman.io";
+              const baseUrl =
+                import.meta.env.VITE_SYNC_HOST_URL || "https://trusthuman.io";
               window.open(`${baseUrl}/${profile.username}`, "_blank");
             }}
           >
@@ -319,10 +354,14 @@ function VerifyTabContent() {
       </Card>
 
       {/* Camera + Recording Status */}
-      <div className="px-4 pt-3 flex items-center justify-between">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span className="inline-block h-2 w-2 rounded-full bg-primary animate-pulse" />
-          Monitoring {window.location.hostname.includes("x.com") || window.location.hostname.includes("twitter.com") ? "X" : "LinkedIn"}
+      <div className="flex items-center justify-between px-4 pt-3">
+        <div className="text-muted-foreground flex items-center gap-2 text-xs">
+          <span className="bg-primary inline-block h-2 w-2 animate-pulse rounded-full" />
+          Monitoring{" "}
+          {window.location.hostname.includes("x.com") ||
+          window.location.hostname.includes("twitter.com")
+            ? "X"
+            : "LinkedIn"}
         </div>
         <Button
           onClick={handleGrantCamera}
@@ -345,7 +384,7 @@ function VerifyTabContent() {
         {profile.recentActivities.length === 0 ? (
           <Card className="border-dashed">
             <CardContent className="py-6 text-center">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 No verifications yet. Post a comment to get started!
               </p>
             </CardContent>
@@ -386,7 +425,7 @@ export function VerificationSidebar({ onClose }: VerificationSidebarProps) {
       // Min width: min-w-[490px] = minimum 490px
       // Z-index: z-[9999] = stacking order
       // To adjust: change these values
-      className="z-[9999] w-[40vw] min-w-[490px] gap-0 flex flex-col"
+      className="z-[9999] flex w-[30vw] min-w-[350px] flex-col gap-0"
       portalContainer={shadowRoot}
     >
       {/* ============ TOGGLE BUTTON POSITION ============ */}
@@ -410,7 +449,7 @@ export function VerificationSidebar({ onClose }: VerificationSidebarProps) {
       </SheetHeader>
 
       {/* Tab Content */}
-      <div className="flex-1 overflow-y-auto flex flex-col">
+      <div className="flex flex-1 flex-col overflow-y-auto">
         {selectedTab === SIDEBAR_TABS.VERIFY && <VerifyTabContent />}
         {selectedTab === SIDEBAR_TABS.CHECK && <CheckHumanTab />}
       </div>

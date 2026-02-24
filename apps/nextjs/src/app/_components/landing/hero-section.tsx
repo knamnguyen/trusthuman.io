@@ -1,165 +1,164 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { SignInButton, useAuth } from "@clerk/nextjs";
 import { useQuery } from "@tanstack/react-query";
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
-import { ArrowRight, Play } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 import { Button } from "@sassy/ui/button";
 import { TrustBadge } from "@sassy/ui/components/trust-badge";
 
 import { useTRPC } from "~/trpc/react";
+import { MESSAGING } from "./landing-content";
 
-function TiltingVideoCard() {
+// Extract YouTube video ID from embed URL
+function getYouTubeVideoId(embedUrl: string): string | null {
+  const match = embedUrl.match(/youtube\.com\/embed\/([^?]+)/);
+  return match?.[1] ?? null;
+}
+
+// Get YouTube thumbnail URL from video ID
+function getYouTubeThumbnail(videoId: string): string {
+  return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+}
+
+// Tilting video card - static CSS transform like EngageKit + subtle hover enhancement
+// 3-level fallback: MP4 video → YouTube embed → YouTube thumbnail image
+interface TiltingVideoCardProps {
+  position?: "left" | "right" | "center";
+  videoPath: string;
+  youtubeEmbedUrl?: string;
+}
+
+function TiltingVideoCard({ position = "right", videoPath, youtubeEmbedUrl }: TiltingVideoCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
+  const [hoverTransform, setHoverTransform] = useState({ rotateX: 0, rotateY: 0 });
+  const [videoFailed, setVideoFailed] = useState(false);
+  const [youtubeFailed, setYoutubeFailed] = useState(false);
 
-  // Motion values for mouse position
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
+  // Extract video ID for thumbnail fallback
+  const youtubeVideoId = youtubeEmbedUrl ? getYouTubeVideoId(youtubeEmbedUrl) : null;
+  const thumbnailUrl = youtubeVideoId ? getYouTubeThumbnail(youtubeVideoId) : null;
 
-  // Spring config for smooth animation
-  const springConfig = { stiffness: 300, damping: 30, mass: 0.5 };
-
-  // Transform mouse position to rotation with spring
-  const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [15, -15]), springConfig);
-  const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-15, 15]), springConfig);
-  const scale = useSpring(1, springConfig);
+  // Static CSS transform classes (exactly like EngageKit step-card)
+  const baseTransformClass = {
+    right: "[transform:scale(1.1)_perspective(1040px)_rotateY(-11deg)_rotateX(2deg)_rotate(2deg)]",
+    left: "[transform:scale(1.1)_perspective(1040px)_rotateY(11deg)_rotateX(2deg)_rotate(-2deg)]",
+    center: "[transform:scale(1.05)_perspective(1040px)_rotateY(0deg)_rotateX(5deg)_rotate(0deg)]",
+  };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!cardRef.current) return;
 
     const rect = cardRef.current.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width - 0.5;
-    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
 
-    mouseX.set(x);
-    mouseY.set(y);
-  };
+    // Normalized position from -1 to 1
+    const normalizedX = (e.clientX - centerX) / (rect.width / 2);
+    const normalizedY = (e.clientY - centerY) / (rect.height / 2);
 
-  const handleMouseEnter = () => {
-    scale.set(1.02);
+    // Subtle hover adjustment - pulls hovered area toward viewer
+    setHoverTransform({
+      rotateY: -normalizedX * 8,
+      rotateX: normalizedY * 6,
+    });
   };
 
   const handleMouseLeave = () => {
-    mouseX.set(0);
-    mouseY.set(0);
-    scale.set(1);
+    setHoverTransform({ rotateX: 0, rotateY: 0 });
+  };
+
+  const handleVideoError = () => {
+    console.log("Video failed to load, falling back to YouTube");
+    setVideoFailed(true);
+  };
+
+  const handleYouTubeError = () => {
+    console.log("YouTube failed to load, falling back to thumbnail");
+    setYoutubeFailed(true);
+  };
+
+  // YouTube thumbnail fallback image (auto-generated from video ID)
+  const renderThumbnail = () => (
+    <div className="relative aspect-video w-full overflow-hidden bg-slate-900">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={thumbnailUrl || "/trusthuman-logo.png"}
+        alt="TrustHuman Demo Preview"
+        className="h-full w-full object-cover"
+      />
+      {/* Play button overlay to indicate it's a video */}
+      <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/90 shadow-lg">
+          <div className="ml-1 h-0 w-0 border-y-8 border-l-12 border-y-transparent border-l-slate-900" />
+        </div>
+      </div>
+    </div>
+  );
+
+  // YouTube embed with scaled iframe to crop black bars (like EngageKit)
+  const renderYouTubeEmbed = () => (
+    <div className="relative aspect-video w-full overflow-hidden bg-slate-900">
+      <iframe
+        src={youtubeEmbedUrl}
+        title="TrustHuman Demo"
+        className="absolute -left-[20%] -top-[20%] h-[140%] w-[140%]"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen={false}
+        style={{ border: 0, pointerEvents: "none" }}
+        onError={handleYouTubeError}
+      />
+    </div>
+  );
+
+  // Native video with autoplay, loop, muted (required for autoplay), playsInline
+  // Uses poster attribute to show YouTube thumbnail while video loads
+  const renderVideo = () => (
+    <video
+      autoPlay
+      loop
+      muted
+      playsInline
+      poster={thumbnailUrl ?? undefined}
+      aria-label="TrustHuman demo video"
+      className="h-full w-full object-cover"
+      onError={handleVideoError}
+    >
+      <source src={videoPath} type="video/mp4" />
+      Your browser does not support the video tag.
+    </video>
+  );
+
+  // 3-level fallback: Video → YouTube → YouTube Thumbnail
+  const renderMedia = () => {
+    if (videoFailed) {
+      if (youtubeEmbedUrl && !youtubeFailed) {
+        return renderYouTubeEmbed();
+      }
+      return renderThumbnail();
+    }
+    return renderVideo();
   };
 
   return (
-    <motion.div
+    <div
       ref={cardRef}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      className="relative w-full max-w-2xl cursor-pointer"
+      className={`relative w-full max-w-2xl overflow-hidden rounded-xl border shadow-xl transition-transform duration-200 ease-out ${baseTransformClass[position]}`}
       style={{
-        rotateX,
-        rotateY,
-        scale,
-        transformStyle: "preserve-3d",
-        perspective: 1000,
+        // Layer hover transform on top of the base CSS transform
+        transform: hoverTransform.rotateX !== 0 || hoverTransform.rotateY !== 0
+          ? `scale(1.1) perspective(1040px) rotateY(${position === "right" ? -11 + hoverTransform.rotateY : position === "left" ? 11 + hoverTransform.rotateY : hoverTransform.rotateY}deg) rotateX(${(position === "center" ? 5 : 2) + hoverTransform.rotateX}deg) rotate(${position === "right" ? 2 : position === "left" ? -2 : 0}deg)`
+          : undefined,
       }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
     >
-      {/* Glowing border effect */}
-      <div
-        className="from-primary/50 via-primary to-primary/50 absolute -inset-1 rounded-2xl bg-gradient-to-r opacity-75 blur-sm"
-        style={{
-          transform: "translateZ(-10px)",
-        }}
-      />
-
-      {/* Main card */}
-      <div
-        className="border-border bg-card relative overflow-hidden rounded-2xl border shadow-2xl"
-        style={{
-          transform: "translateZ(0px)",
-        }}
-      >
-        {/* Video placeholder - dark theme like the metrics screenshot */}
-        <div className="relative aspect-video bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-          {/* Mockup content - similar to metrics dashboard */}
-          <div className="absolute inset-0 p-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="bg-primary h-3 w-3 rounded-full" />
-                <span className="text-sm font-medium text-white">
-                  TrustHuman Demo
-                </span>
-              </div>
-              <div className="flex gap-1">
-                <div className="h-2 w-8 rounded bg-slate-700" />
-                <div className="h-2 w-8 rounded bg-slate-700" />
-                <div className="bg-primary/50 h-2 w-8 rounded" />
-              </div>
-            </div>
-
-            {/* Content area */}
-            <div className="mt-6 space-y-4">
-              {/* Stats row */}
-              <div className="flex gap-4">
-                <div className="flex-1 rounded-lg bg-slate-800/50 p-3">
-                  <div className="text-xs text-slate-400">Verified Humans</div>
-                  <div className="text-primary mt-1 text-2xl font-bold">
-                    1,247
-                  </div>
-                </div>
-                <div className="flex-1 rounded-lg bg-slate-800/50 p-3">
-                  <div className="text-xs text-slate-400">Comments</div>
-                  <div className="mt-1 text-2xl font-bold text-white">
-                    12.4K
-                  </div>
-                </div>
-              </div>
-
-              {/* Chart placeholder */}
-              <div className="rounded-lg bg-slate-800/30 p-3">
-                <div className="flex h-16 items-end gap-1">
-                  {[40, 65, 45, 80, 55, 90, 70, 85, 60, 95].map((height, i) => (
-                    <div
-                      key={i}
-                      className="from-primary/50 to-primary flex-1 rounded-t bg-gradient-to-t"
-                      style={{ height: `${height}%` }}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Play button overlay */}
-          <div className="absolute inset-0 flex items-center justify-center bg-black/20 transition-opacity hover:bg-black/10">
-            <div className="bg-primary/90 text-primary-foreground flex h-16 w-16 items-center justify-center rounded-full shadow-lg transition-transform hover:scale-110">
-              <Play className="ml-1 h-6 w-6" fill="currentColor" />
-            </div>
-          </div>
-        </div>
-
-        {/* Caption bar */}
-        <div className="border-border bg-card border-t px-4 py-3">
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground text-sm">
-              Watch the 2-minute demo
-            </span>
-            <div className="text-muted-foreground flex items-center gap-2 text-xs">
-              <span className="bg-primary flex h-2 w-2 animate-pulse rounded-full" />
-              Live Preview
-            </div>
-          </div>
-        </div>
+      <div className="relative aspect-video bg-slate-900">
+        {renderMedia()}
       </div>
-
-      {/* 3D shadow effect */}
-      <div
-        className="bg-primary/20 absolute inset-4 -z-10 rounded-2xl blur-2xl"
-        style={{
-          transform: "translateZ(-30px) translateY(20px)",
-        }}
-      />
-    </motion.div>
+    </div>
   );
 }
 
@@ -270,7 +269,10 @@ export function HeroSection() {
 
           {/* Right Column - 3D Tilting Video */}
           <div className="flex items-center justify-center lg:justify-end">
-            <TiltingVideoCard />
+            <TiltingVideoCard
+              videoPath={MESSAGING.videoDemo.videoPath}
+              youtubeEmbedUrl={MESSAGING.videoDemo.youtubeEmbedUrl}
+            />
           </div>
         </div>
       </div>
