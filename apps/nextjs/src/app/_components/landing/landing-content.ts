@@ -129,5 +129,5 @@ export const ASSETS = {
     step3Profile: `${ASSET_BASE}/videos/step-3-profile.mp4`,
     step4Compete: `${ASSET_BASE}/videos/step-4-compete.mp4`,
   },
-  chromeWebStoreUrl: "https://chromewebstore.google.com/detail/trusthuman/TODO", // TODO: Update once published
+  chromeWebStoreUrl: "https://chromewebstore.google.com/detail/trusthuman/fgoghbbgplmlpjccglfbaccokbklhnal"
 };
