@@ -176,8 +176,11 @@ function TiltingVideoCard({
 
 export function HeroSection() {
   const router = useRouter();
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, isLoaded } = useAuth();
   const trpc = useTRPC();
+
+  // Debug logging
+  console.log("[HeroSection] Auth state:", { isSignedIn, isLoaded });
 
   const { data: stats } = useQuery({
     ...trpc.trustProfile.getStats.queryOptions(),
@@ -191,11 +194,14 @@ export function HeroSection() {
   });
 
   const handleClaimClick = () => {
+    console.log("[HeroSection] handleClaimClick called, myProfile:", myProfile);
     if (myProfile?.username) {
       // Navigate to their profile page
+      console.log("[HeroSection] Navigating to profile:", myProfile.username);
       router.push(`/${myProfile.username}`);
     } else {
       // User is signed in but doesn't have profile/username yet - go to welcome
+      console.log("[HeroSection] Navigating to /welcome");
       router.push("/welcome");
     }
   };
@@ -249,6 +255,10 @@ export function HeroSection() {
             <div className="flex w-full flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
               {/* Wrapper to make button and badge same width on mobile */}
               <div className="w-full max-w-xs sm:w-auto sm:max-w-none">
+                {(() => {
+                  console.log("[HeroSection] Rendering CTA, isSignedIn:", isSignedIn);
+                  return null;
+                })()}
                 {isSignedIn ? (
                   // User is signed in - show profile link or welcome link
                   <Button
@@ -265,6 +275,7 @@ export function HeroSection() {
                     <Button
                       variant="primary"
                       className="h-auto w-full gap-2 rounded-xl px-5 py-2.5 text-base font-bold"
+                      onClick={() => console.log("[HeroSection] SignInButton clicked")}
                     >
                       Claim your human status
                       <ArrowRight className="h-4 w-4" />

@@ -12,8 +12,11 @@ import { MESSAGING } from "./landing-content";
 
 export function FinalCTASection() {
   const router = useRouter();
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, isLoaded } = useAuth();
   const trpc = useTRPC();
+
+  // Debug logging
+  console.log("[FinalCTASection] Auth state:", { isSignedIn, isLoaded });
 
   // Get current user's profile if signed in
   const { data: myProfile } = useQuery({
@@ -22,9 +25,12 @@ export function FinalCTASection() {
   });
 
   const handleClick = () => {
+    console.log("[FinalCTASection] handleClick called, myProfile:", myProfile);
     if (myProfile?.username) {
+      console.log("[FinalCTASection] Navigating to profile:", myProfile.username);
       router.push(`/${myProfile.username}`);
     } else {
+      console.log("[FinalCTASection] Navigating to /welcome");
       router.push("/welcome");
     }
   };
@@ -39,6 +45,10 @@ export function FinalCTASection() {
           {MESSAGING.finalCTA.subheadline}
         </p>
 
+        {(() => {
+          console.log("[FinalCTASection] Rendering CTA, isSignedIn:", isSignedIn);
+          return null;
+        })()}
         {isSignedIn ? (
           <Button
             size="lg"
@@ -54,6 +64,7 @@ export function FinalCTASection() {
               size="lg"
               variant="secondary"
               className="text-lg font-semibold"
+              onClick={() => console.log("[FinalCTASection] SignInButton clicked")}
             >
               {MESSAGING.finalCTA.primaryCTA}
             </Button>

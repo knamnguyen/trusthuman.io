@@ -10,8 +10,11 @@ import { Button } from "@sassy/ui/button";
 import { useTRPC } from "~/trpc/react";
 
 export function Header() {
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, isLoaded } = useAuth();
   const trpc = useTRPC();
+
+  // Debug logging
+  console.log("[Header] Auth state:", { isSignedIn, isLoaded });
 
   // Get current user's profile if signed in
   const { data: myProfile } = useQuery({
@@ -55,9 +58,22 @@ export function Header() {
           </ClerkLoading>
 
           <ClerkLoaded>
+            {(() => {
+              console.log("[Header] ClerkLoaded, rendering SignedOut/SignedIn");
+              return null;
+            })()}
             <SignedOut>
+              {(() => {
+                console.log("[Header] SignedOut block rendered");
+                return null;
+              })()}
               <SignInButton mode="modal" forceRedirectUrl="/welcome">
-                <Button variant="primary" size="sm" className="text-xs sm:text-sm">
+                <Button
+                  variant="primary"
+                  size="sm"
+                  className="text-xs sm:text-sm"
+                  onClick={() => console.log("[Header] SignInButton clicked")}
+                >
                   <span className="hidden sm:inline">Claim Your Human Status</span>
                   <span className="sm:hidden">Join</span>
                 </Button>
@@ -65,6 +81,10 @@ export function Header() {
             </SignedOut>
 
             <SignedIn>
+              {(() => {
+                console.log("[Header] SignedIn block rendered, myProfile:", myProfile?.username);
+                return null;
+              })()}
               {/* Always show a CTA button when signed in */}
               <Link href={myProfile?.username ? `/${myProfile.username}` : "/welcome"}>
                 <Button variant="primary" size="sm" className="text-xs sm:text-sm">
