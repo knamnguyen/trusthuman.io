@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { Download, MessageSquare, Camera, Award } from "lucide-react";
 
 import { AccordionTabs, type AccordionTab } from "@sassy/ui/components/accordion-tabs";
@@ -11,51 +12,53 @@ const STEP_ICONS = [Download, MessageSquare, Camera, Award] as const;
 
 function TiltingVideoCard({ videoPath, title }: { videoPath: string; title: string }) {
   const cardRef = useRef<HTMLDivElement>(null);
-  const [transform, setTransform] = useState(
-    "perspective(1000px) rotateX(0deg) rotateY(0deg)"
-  );
-  const [isHovering, setIsHovering] = useState(false);
+
+  // Motion values for mouse position
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  // Spring config for smooth animation
+  const springConfig = { stiffness: 300, damping: 30, mass: 0.5 };
+
+  // Transform mouse position to rotation with spring
+  const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [10, -10]), springConfig);
+  const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-10, 10]), springConfig);
+  const scale = useSpring(1, springConfig);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!cardRef.current) return;
 
     const rect = cardRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
 
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
-
-    const rotateX = ((y - centerY) / centerY) * 10;
-    const rotateY = ((x - centerX) / centerX) * -10;
-
-    setTransform(
-      `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.01)`
-    );
+    mouseX.set(x);
+    mouseY.set(y);
   };
 
   const handleMouseEnter = () => {
-    setIsHovering(true);
+    scale.set(1.01);
   };
 
   const handleMouseLeave = () => {
-    setIsHovering(false);
-    setTransform("perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1)");
+    mouseX.set(0);
+    mouseY.set(0);
+    scale.set(1);
   };
 
   return (
-    <div
+    <motion.div
       ref={cardRef}
       onMouseMove={handleMouseMove}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       className="relative w-full cursor-pointer"
       style={{
-        transform,
-        transition: isHovering
-          ? "transform 0.1s ease-out"
-          : "transform 0.3s ease-out",
+        rotateX,
+        rotateY,
+        scale,
         transformStyle: "preserve-3d",
+        perspective: 1000,
       }}
     >
       {/* Glowing border effect */}
@@ -98,7 +101,7 @@ function TiltingVideoCard({ videoPath, title }: { videoPath: string; title: stri
           transform: "translateZ(-30px) translateY(20px)",
         }}
       />
-    </div>
+    </motion.div>
   );
 }
 

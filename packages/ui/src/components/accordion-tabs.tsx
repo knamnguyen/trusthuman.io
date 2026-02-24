@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
 
 import { cn } from "../utils";
@@ -39,58 +40,81 @@ export function AccordionTabs({
         const Icon = tab.icon;
 
         return (
-          <div
+          <motion.div
             key={tab.id}
             onMouseEnter={() => handleTabHover(tab.id)}
             className={cn(
-              "group relative cursor-pointer overflow-hidden rounded-xl border p-4 transition-all duration-500 ease-out",
+              "group relative cursor-pointer overflow-hidden rounded-xl border p-4",
               isActive
-                ? "border-primary bg-primary/10 flex-[3]"
-                : "border-transparent bg-muted/30 hover:bg-muted/50 flex-1"
+                ? "border-primary bg-primary/10"
+                : "border-transparent bg-muted/30 hover:bg-muted/50"
             )}
+            animate={{
+              flex: isActive ? 3 : 1,
+            }}
+            transition={{
+              type: "spring",
+              stiffness: 300,
+              damping: 30,
+            }}
           >
             {/* Icon */}
-            <div
+            <motion.div
               className={cn(
-                "mb-3 flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors duration-300",
+                "mb-3 flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
                 isActive
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted text-muted-foreground group-hover:bg-primary/20 group-hover:text-primary"
               )}
+              animate={{
+                backgroundColor: isActive ? "var(--primary)" : "var(--muted)",
+              }}
+              transition={{ duration: 0.2 }}
             >
               <Icon className="h-5 w-5" />
-            </div>
+            </motion.div>
 
             {/* Title - always visible */}
-            <h3
+            <motion.h3
               className={cn(
-                "font-semibold transition-colors duration-300 whitespace-nowrap",
+                "font-semibold whitespace-nowrap",
                 isActive ? "text-primary" : "text-foreground"
               )}
+              animate={{
+                color: isActive ? "var(--primary)" : "var(--foreground)",
+              }}
+              transition={{ duration: 0.2 }}
             >
               {isActive ? tab.title : tab.title.split(" ").slice(0, 2).join(" ")}
-            </h3>
+            </motion.h3>
 
-            {/* Description - fades in/out without affecting height */}
+            {/* Description - fades in/out */}
             {tab.description && (
-              <p
-                className={cn(
-                  "text-muted-foreground mt-1 text-sm transition-opacity duration-300",
-                  isActive ? "opacity-100" : "opacity-0"
-                )}
+              <motion.p
+                className="text-muted-foreground mt-1 text-sm"
+                animate={{
+                  opacity: isActive ? 1 : 0,
+                }}
+                transition={{ duration: 0.2 }}
               >
                 {tab.description}
-              </p>
+              </motion.p>
             )}
 
             {/* Active indicator bar */}
-            <div
-              className={cn(
-                "absolute bottom-0 left-1/2 h-1 -translate-x-1/2 rounded-full transition-all duration-300",
-                isActive ? "bg-primary w-12" : "w-0"
-              )}
+            <motion.div
+              className="bg-primary absolute bottom-0 left-1/2 h-1 rounded-full"
+              animate={{
+                width: isActive ? 48 : 0,
+                x: "-50%",
+              }}
+              transition={{
+                type: "spring",
+                stiffness: 300,
+                damping: 30,
+              }}
             />
-          </div>
+          </motion.div>
         );
       })}
     </div>

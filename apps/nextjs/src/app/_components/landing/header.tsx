@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { SignInButton, SignedIn, SignedOut, UserButton, useAuth } from "@clerk/nextjs";
+import { SignInButton, SignedIn, SignedOut, UserButton, useAuth, ClerkLoaded, ClerkLoading } from "@clerk/nextjs";
 import { useQuery } from "@tanstack/react-query";
 
 import { Button } from "@sassy/ui/button";
@@ -41,31 +41,40 @@ export function Header() {
             Leaderboard
           </Link>
 
-          <SignedOut>
-            <SignInButton mode="modal" forceRedirectUrl="/welcome">
-              <Button variant="primary" size="sm">
-                Claim Your Human Status
-              </Button>
-            </SignInButton>
-          </SignedOut>
+          {/* Show CTA while Clerk is loading to prevent layout shift */}
+          <ClerkLoading>
+            <Button variant="primary" size="sm">
+              Claim Your Human Status
+            </Button>
+          </ClerkLoading>
 
-          <SignedIn>
-            {myProfile?.username && (
-              <Link href={`/${myProfile.username}`}>
+          <ClerkLoaded>
+            <SignedOut>
+              <SignInButton mode="modal" forceRedirectUrl="/welcome">
                 <Button variant="primary" size="sm">
-                  View My Profile
+                  Claim Your Human Status
                 </Button>
-              </Link>
-            )}
-            <UserButton
-              afterSignOutUrl="/"
-              appearance={{
-                elements: {
-                  avatarBox: "h-8 w-8",
-                },
-              }}
-            />
-          </SignedIn>
+              </SignInButton>
+            </SignedOut>
+
+            <SignedIn>
+              {myProfile?.username && (
+                <Link href={`/${myProfile.username}`}>
+                  <Button variant="primary" size="sm">
+                    View My Profile
+                  </Button>
+                </Link>
+              )}
+              <UserButton
+                afterSignOutUrl="/"
+                appearance={{
+                  elements: {
+                    avatarBox: "h-8 w-8",
+                  },
+                }}
+              />
+            </SignedIn>
+          </ClerkLoaded>
         </nav>
       </div>
     </header>

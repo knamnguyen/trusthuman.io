@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import { motion } from "framer-motion";
 
 interface Avatar {
   src: string;
@@ -89,14 +90,16 @@ export function AvatarBubbleGrid({
     setClosestIndex(null);
   }, []);
 
-  // Calculate transform for each avatar based on mouse distance
-  const getAvatarStyle = useCallback(
+  // Calculate animation values for each avatar
+  const getAvatarAnimateProps = useCallback(
     (index: number) => {
       const baseOpacity = 0.75;
 
       if (!mousePos || avatarCenters.length === 0) {
         return {
-          transform: "scale(1) translate(0px, 0px)",
+          scale: 1,
+          x: 0,
+          y: 0,
           opacity: baseOpacity,
           zIndex: 1,
         };
@@ -105,7 +108,9 @@ export function AvatarBubbleGrid({
       const center = avatarCenters[index];
       if (!center) {
         return {
-          transform: "scale(1) translate(0px, 0px)",
+          scale: 1,
+          x: 0,
+          y: 0,
           opacity: baseOpacity,
           zIndex: 1,
         };
@@ -114,19 +119,22 @@ export function AvatarBubbleGrid({
       // If this is the closest (hovered) avatar - scale up, don't move
       if (index === closestIndex) {
         return {
-          transform: "scale(1.45) translate(0px, 0px)",
+          scale: 1.45,
+          x: 0,
+          y: 0,
           opacity: 1,
           zIndex: 50,
         };
       }
 
-      // For other avatars, calculate distance from the HOVERED avatar (not cursor)
-      // This creates the "make room" effect
+      // For other avatars, calculate distance from the HOVERED avatar
       const hoveredCenter = closestIndex !== null ? avatarCenters[closestIndex] : mousePos;
 
       if (!hoveredCenter) {
         return {
-          transform: "scale(1) translate(0px, 0px)",
+          scale: 1,
+          x: 0,
+          y: 0,
           opacity: baseOpacity,
           zIndex: 1,
         };
@@ -136,14 +144,15 @@ export function AvatarBubbleGrid({
       const dy = center.y - hoveredCenter.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
 
-      // Effect radius - how far the ripple effect reaches
-      const innerRadius = avatarSize + gap; // Direct neighbors
-      const outerRadius = (avatarSize + gap) * 2.8; // Extended effect
+      // Effect radius
+      const innerRadius = avatarSize + gap;
+      const outerRadius = (avatarSize + gap) * 2.8;
 
       if (distance > outerRadius) {
-        // Outside effect range - subtle fade
         return {
-          transform: "scale(1) translate(0px, 0px)",
+          scale: 1,
+          x: 0,
+          y: 0,
           opacity: baseOpacity * 0.9,
           zIndex: 1,
         };
@@ -151,39 +160,31 @@ export function AvatarBubbleGrid({
 
       // Normalize distance for smooth falloff
       const normalizedDist = Math.max(0, distance / outerRadius);
-
-      // Easing function for smooth falloff (ease-out cubic)
       const easedFalloff = 1 - Math.pow(normalizedDist, 2);
 
       // Push direction - away from hovered avatar
       const angle = Math.atan2(dy, dx);
 
-      // Push strength - stronger for closer avatars, with smooth falloff
-      // Inner ring pushes more, outer ring pushes less
+      // Push strength
       let pushStrength = 0;
-
       if (distance < innerRadius) {
-        // Direct neighbors - strong push
         pushStrength = easedFalloff * (avatarSize * 0.35);
       } else {
-        // Extended range - gentler push with smoother falloff
         pushStrength = easedFalloff * (avatarSize * 0.2);
       }
 
       const translateX = Math.cos(angle) * pushStrength;
       const translateY = Math.sin(angle) * pushStrength;
 
-      // Scale - slight scale up for nearby avatars (bubble cluster effect)
+      // Scale and opacity
       const scale = 1 + easedFalloff * 0.15;
-
-      // Opacity - fade based on distance from effect
       const opacity = baseOpacity + easedFalloff * 0.25;
-
-      // Z-index based on proximity
       const zIndex = Math.round(10 + easedFalloff * 20);
 
       return {
-        transform: `scale(${scale}) translate(${translateX}px, ${translateY}px)`,
+        scale,
+        x: translateX,
+        y: translateY,
         opacity,
         zIndex,
       };
@@ -204,7 +205,7 @@ export function AvatarBubbleGrid({
         onMouseLeave={handleMouseLeave}
       >
         {avatars.map((avatar, index) => {
-          const style = getAvatarStyle(index);
+          const animateProps = getAvatarAnimateProps(index);
 
           return (
             <div
@@ -216,16 +217,18 @@ export function AvatarBubbleGrid({
                 height: avatarSize,
               }}
             >
-              <div
+              <motion.div
                 className="absolute rounded-full overflow-hidden border-2 border-background cursor-pointer"
                 style={{
                   width: avatarSize,
                   height: avatarSize,
-                  transform: style.transform,
-                  zIndex: style.zIndex,
-                  opacity: style.opacity,
-                  transition: "transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease-out",
-                  willChange: "transform, opacity",
+                }}
+                animate={animateProps}
+                transition={{
+                  type: "spring",
+                  stiffness: 400,
+                  damping: 25,
+                  mass: 0.8,
                 }}
               >
                 {avatar.href ? (
@@ -254,7 +257,7 @@ export function AvatarBubbleGrid({
                     className="h-full w-full object-cover"
                   />
                 )}
-              </div>
+              </motion.div>
             </div>
           );
         })}

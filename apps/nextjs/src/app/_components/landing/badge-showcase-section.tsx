@@ -74,7 +74,7 @@ function MarqueeRow({ users, direction = "left", speed = 30, isSignedIn, myUsern
           // Alternate between Triss logo and user avatar
           const useAvatar = index % 2 === 1;
           const avatarUrl = useAvatar
-            ? user.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`
+            ? user.avatarUrl || `https://api.dicebear.com/9.x/notionists/svg?seed=${user.username}`
             : undefined;
 
           // Real users get direct links, mock users trigger auth flow
@@ -169,7 +169,7 @@ export function BadgeShowcaseSection() {
       username: mock.username,
       humanNumber: mock.humanNumber,
       totalVerified: mock.totalVerified,
-      avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${mock.seed}`,
+      avatarUrl: `https://api.dicebear.com/9.x/notionists/svg?seed=${mock.seed}`,
       isMock: true,
     }));
 

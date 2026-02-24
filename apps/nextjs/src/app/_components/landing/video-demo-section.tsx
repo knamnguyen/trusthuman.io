@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { SignInButton, useAuth } from "@clerk/nextjs";
 import { useQuery } from "@tanstack/react-query";
+import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 
 import { Button } from "@sassy/ui/button";
@@ -114,40 +115,28 @@ function PlatformLogoRow({ platforms, platformStats, onHover }: PlatformLogoRowP
     onHover("linkedin");
   }, [onHover]);
 
-  // Calculate transform for each logo based on mouse distance
-  const getLogoStyle = useCallback(
+  // Calculate animation values for each logo
+  const getLogoAnimateProps = useCallback(
     (index: number) => {
       if (!mousePos || logoCenters.length === 0) {
-        return {
-          transform: "scale(1) translate(0px, 0px)",
-          opacity: 1,
-        };
+        return { scale: 1, x: 0, y: 0, opacity: 1 };
       }
 
       const center = logoCenters[index];
       if (!center) {
-        return {
-          transform: "scale(1) translate(0px, 0px)",
-          opacity: 1,
-        };
+        return { scale: 1, x: 0, y: 0, opacity: 1 };
       }
 
       // If this is the closest (hovered) logo - scale up, don't move
       if (index === closestIndex) {
-        return {
-          transform: "scale(1.4) translate(0px, 0px)",
-          opacity: 1,
-        };
+        return { scale: 1.4, x: 0, y: 0, opacity: 1 };
       }
 
       // For other logos, calculate distance from the HOVERED logo
       const hoveredCenter = closestIndex !== null ? logoCenters[closestIndex] : mousePos;
 
       if (!hoveredCenter) {
-        return {
-          transform: "scale(1) translate(0px, 0px)",
-          opacity: 1,
-        };
+        return { scale: 1, x: 0, y: 0, opacity: 1 };
       }
 
       const dx = center.x - hoveredCenter.x;
@@ -159,10 +148,7 @@ function PlatformLogoRow({ platforms, platformStats, onHover }: PlatformLogoRowP
       const outerRadius = (logoSize + gap) * 2.5;
 
       if (distance > outerRadius) {
-        return {
-          transform: "scale(1) translate(0px, 0px)",
-          opacity: 0.5,
-        };
+        return { scale: 1, x: 0, y: 0, opacity: 0.5 };
       }
 
       // Normalize distance for smooth falloff
@@ -187,10 +173,7 @@ function PlatformLogoRow({ platforms, platformStats, onHover }: PlatformLogoRowP
       const scale = 1 + easedFalloff * 0.1;
       const opacity = 0.5 + easedFalloff * 0.5;
 
-      return {
-        transform: `scale(${scale}) translate(${translateX}px, ${translateY}px)`,
-        opacity,
-      };
+      return { scale, x: translateX, y: translateY, opacity };
     },
     [mousePos, logoCenters, closestIndex, logoSize, gap]
   );
@@ -204,7 +187,7 @@ function PlatformLogoRow({ platforms, platformStats, onHover }: PlatformLogoRowP
     >
       {platforms.map((platform, index) => {
         const count = platformStats?.[platform.key] ?? 0;
-        const style = getLogoStyle(index);
+        const animateProps = getLogoAnimateProps(index);
 
         return (
           <div
@@ -214,13 +197,13 @@ function PlatformLogoRow({ platforms, platformStats, onHover }: PlatformLogoRowP
             }}
             className="flex flex-col items-center gap-3"
           >
-            <div
-              style={{
-                transform: style.transform,
-                opacity: style.opacity,
-                transition:
-                  "transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease-out",
-                willChange: "transform, opacity",
+            <motion.div
+              animate={animateProps}
+              transition={{
+                type: "spring",
+                stiffness: 400,
+                damping: 25,
+                mass: 0.8,
               }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -232,13 +215,14 @@ function PlatformLogoRow({ platforms, platformStats, onHover }: PlatformLogoRowP
                   e.currentTarget.style.display = "none";
                 }}
               />
-            </div>
-            <span
-              className="text-lg font-bold text-primary transition-opacity duration-200"
-              style={{ opacity: style.opacity }}
+            </motion.div>
+            <motion.span
+              className="text-lg font-bold text-primary"
+              animate={{ opacity: animateProps.opacity }}
+              transition={{ duration: 0.2 }}
             >
               {count.toLocaleString()}
-            </span>
+            </motion.span>
           </div>
         );
       })}
@@ -319,23 +303,24 @@ export function VideoDemoSection() {
         {/* Dynamic Section Title - Smooth transitions */}
         <div className="mb-10 text-center">
           <div className="relative h-[2.5em] sm:h-[2em]">
-            {PLATFORMS.map((platform) => (
-              <h2
-                key={platform.key}
-                className="text-foreground absolute inset-0 text-3xl font-bold tracking-tight transition-all duration-300 ease-out sm:text-4xl"
-                style={{
-                  opacity: hoveredPlatform === platform.key ? 1 : 0,
-                  transform: hoveredPlatform === platform.key
-                    ? "translateY(0) scale(1)"
-                    : "translateY(10px) scale(0.95)",
-                  pointerEvents: hoveredPlatform === platform.key ? "auto" : "none",
-                }}
-              >
-                There are{" "}
-                <span className="text-primary">{BOT_NUMBERS[platform.key]}</span> bots on{" "}
-                <span className="text-primary">{platform.name}</span>.
-              </h2>
-            ))}
+            <AnimatePresence mode="wait">
+              {PLATFORMS.map((platform) => (
+                hoveredPlatform === platform.key && (
+                  <motion.h2
+                    key={platform.key}
+                    className="text-foreground absolute inset-0 text-3xl font-bold tracking-tight sm:text-4xl"
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
+                  >
+                    There are{" "}
+                    <span className="text-primary">{BOT_NUMBERS[platform.key]}</span> bots on{" "}
+                    <span className="text-primary">{platform.name}</span>.
+                  </motion.h2>
+                )
+              ))}
+            </AnimatePresence>
           </div>
           <h2 className="text-foreground text-3xl font-bold tracking-tight sm:text-4xl">
             Show you are a human on
