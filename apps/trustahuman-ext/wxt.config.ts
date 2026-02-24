@@ -58,7 +58,8 @@ export default defineConfig({
       "https://*.facebook.com/*",
       // Production domains for Clerk syncHost
       "https://trusthuman.io/*",
-      "https://*.trusthuman.io/*",
+      "https://accounts.trusthuman.io/*",
+      "https://clerk.trusthuman.io/*",
       // Clerk dev domains
       "https://*.clerk.accounts.dev/*",
       "https://*.clerk.dev/*",
@@ -67,7 +68,7 @@ export default defineConfig({
     ],
     content_security_policy: {
       extension_pages:
-        "script-src 'self'; object-src 'self'; connect-src 'self' http://localhost:* ws://localhost:* https://*.posthog.com https://*.clerk.accounts.dev https://trusthuman.io https://*.trusthuman.io;",
+        "script-src 'self'; object-src 'self'; connect-src 'self' http://localhost:* ws://localhost:* https://*.posthog.com https://*.clerk.accounts.dev https://accounts.trusthuman.io https://clerk.trusthuman.io;",
     },
     web_accessible_resources: [
       {
