@@ -13,6 +13,9 @@ if (typeof window !== "undefined") {
   console.log("[Providers] NEXT_PUBLIC_CLERK_DOMAIN:", process.env.NEXT_PUBLIC_CLERK_DOMAIN);
 }
 
+// Extension ID from Chrome Web Store
+const EXTENSION_ID = "fgoghbbgplmlpjccglfbaccokbklhnal";
+
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider attribute="class" forcedTheme="light" defaultTheme="light">
@@ -20,6 +23,7 @@ export function Providers({ children }: { children: ReactNode }) {
         <ClerkProvider
           afterSignOutUrl="/"
           publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+          allowedRedirectOrigins={[`chrome-extension://${EXTENSION_ID}`]}
         >
           {children}
         </ClerkProvider>
