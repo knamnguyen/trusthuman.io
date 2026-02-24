@@ -152,13 +152,14 @@ function MarqueeRow({ users, direction = "left", speed = 30, isSignedIn, myUsern
 }
 
 export function BadgeShowcaseSection() {
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, isLoaded } = useAuth();
   const trpc = useTRPC();
 
   // Get current user's profile if signed in
+  // Must check isLoaded && isSignedIn to avoid firing query before Clerk initializes
   const { data: myProfile } = useQuery({
     ...trpc.trustProfile.getMyProfile.queryOptions(),
-    enabled: isSignedIn,
+    enabled: isLoaded && isSignedIn === true,
   });
 
   // Get leaderboard for real users

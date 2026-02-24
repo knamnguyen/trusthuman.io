@@ -303,7 +303,7 @@ function PlatformLogoRow({
 
 export function VideoDemoSection() {
   const router = useRouter();
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, isLoaded } = useAuth();
   const trpc = useTRPC();
   const [username, setUsername] = useState("");
   // Default to first platform (LinkedIn) to always show dynamic text
@@ -321,9 +321,10 @@ export function VideoDemoSection() {
   });
 
   // Get current user's profile if signed in
+  // Must check isLoaded && isSignedIn to avoid firing query before Clerk initializes
   const { data: myProfile } = useQuery({
     ...trpc.trustProfile.getMyProfile.queryOptions(),
-    enabled: isSignedIn,
+    enabled: isLoaded && isSignedIn === true,
   });
 
   // Get leaderboard for real users

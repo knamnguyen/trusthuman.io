@@ -59,9 +59,10 @@ export default function LeaderboardPage() {
   const [currentPage, setCurrentPage] = useState(0);
 
   // Get logged-in user's profile for "jump to me" feature
+  // Must check isUserLoaded && clerkUser to avoid firing query before Clerk initializes
   const { data: myProfile } = useQuery({
     ...trpc.trustProfile.getMyProfile.queryOptions(),
-    enabled: !!clerkUser,
+    enabled: isUserLoaded && !!clerkUser,
   });
 
   // Get leaderboard data with pagination

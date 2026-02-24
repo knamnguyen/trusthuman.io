@@ -188,9 +188,10 @@ export function HeroSection() {
   });
 
   // Get current user's profile if signed in
+  // Must check isLoaded && isSignedIn to avoid firing query before Clerk initializes
   const { data: myProfile } = useQuery({
     ...trpc.trustProfile.getMyProfile.queryOptions(),
-    enabled: isSignedIn,
+    enabled: isLoaded && isSignedIn === true,
   });
 
   const handleClaimClick = () => {
