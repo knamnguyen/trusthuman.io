@@ -8,6 +8,9 @@ import { HowItWorksSection } from "./_components/landing/how-it-works-section";
 import { LeaderboardPreviewSection } from "./_components/landing/leaderboard-preview-section";
 import { VideoDemoSection } from "./_components/landing/video-demo-section";
 
+// Force dynamic rendering to ensure client components hydrate properly
+export const dynamic = "force-dynamic";
+
 export default function HomePage() {
   return (
     <div className="bg-card text-foreground">
