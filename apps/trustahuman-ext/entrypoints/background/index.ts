@@ -12,6 +12,9 @@ import { createClerkClient } from "@clerk/chrome-extension/background";
 
 import { getSyncHostUrl, getWebAppUrl } from "../../lib/get-sync-host-url";
 
+export default defineBackground(() => {
+  console.log("TrustAHuman - Background loaded");
+
   /**
    * On first install, request camera permission
    */
