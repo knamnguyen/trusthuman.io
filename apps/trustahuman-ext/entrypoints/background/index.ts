@@ -6,14 +6,30 @@
  * - Handle auth-related messages from content scripts
  * - Handle webcam capture via offscreen document
  * - Monitor auth state changes and notify content scripts
+ * - Automatically inject auth tokens into API requests via getClientCookies()
  */
 
-import { createClerkClient } from "@clerk/chrome-extension/background";
+import { createClerkClient, getClientCookies } from "@clerk/chrome-extension/background";
 
-import { getSyncHostUrl, getWebAppUrl } from "../../lib/get-sync-host-url";
+import { getSyncHostUrl, getWebAppUrl, getApiUrl } from "../../lib/get-sync-host-url";
 
 export default defineBackground(() => {
   console.log("TrustAHuman - Background loaded");
+
+  /**
+   * Set up automatic auth token injection for API requests
+   * This intercepts fetch requests to permitted origins and adds Authorization header
+   * See: https://clerk.com/docs/references/chrome-extension/add-react-router#make-authenticated-requests-with-clerk-s-session-token
+   */
+  const apiUrl = getApiUrl();
+  const PERMITTED_ORIGINS = [apiUrl];
+  const MATCH_PATTERNS = PERMITTED_ORIGINS.map((origin) => `${origin}/*`);
+
+  console.log("TrustAHuman BG: Setting up getClientCookies for:", MATCH_PATTERNS);
+
+  getClientCookies({
+    urls: MATCH_PATTERNS,
+  });
 
   /**
    * On first install, request camera permission
