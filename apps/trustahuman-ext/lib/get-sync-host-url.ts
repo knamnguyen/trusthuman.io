@@ -9,13 +9,17 @@
 const PROD_URL = "https://trusthuman.io";
 const DEV_URL = "https://dev.trusthuman.io";
 
+// Clerk proxy domain for cookie syncing (must match Clerk DNS CNAME setup)
+const PROD_SYNC_HOST = "https://clerk.trusthuman.io";
+
 /**
  * Returns the sync host URL for Clerk authentication.
- * This is the domain where Clerk sets cookies.
+ * This MUST be the Clerk proxy domain (clerk.trusthuman.io), NOT the main app domain.
+ * The Clerk proxy domain is where Clerk sets auth cookies that can be shared with extensions.
  */
 export function getSyncHostUrl(): string {
   if (import.meta.env.MODE === "production") {
-    return PROD_URL;
+    return PROD_SYNC_HOST;
   }
   // In dev, sync with the public dev URL (ngrok/cloudflare tunnel)
   return import.meta.env.VITE_NGROK_URL ?? DEV_URL;
