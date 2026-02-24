@@ -1,3 +1,5 @@
+"use client";
+
 import { ActivityFeedSection } from "./_components/landing/activity-feed-section";
 import { BadgeShowcaseSection } from "./_components/landing/badge-showcase-section";
 import { FinalCTASection } from "./_components/landing/final-cta-section";
@@ -7,9 +9,6 @@ import { HeroSection } from "./_components/landing/hero-section";
 import { HowItWorksSection } from "./_components/landing/how-it-works-section";
 import { LeaderboardPreviewSection } from "./_components/landing/leaderboard-preview-section";
 import { VideoDemoSection } from "./_components/landing/video-demo-section";
-
-// Force dynamic rendering to ensure client components hydrate properly
-export const dynamic = "force-dynamic";
 
 export default function HomePage() {
   return (
