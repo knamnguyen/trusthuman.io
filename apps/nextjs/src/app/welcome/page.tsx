@@ -32,9 +32,13 @@ function generateUsername(user: { username?: string | null; firstName?: string |
  * has created their TrustProfile by creating it on-demand if needed.
  */
 export default async function WelcomePage() {
+  console.log("[WelcomePage] Starting...");
+
   const user = await currentUser();
+  console.log("[WelcomePage] currentUser:", user ? { id: user.id, username: user.username, firstName: user.firstName } : "null");
 
   if (!user) {
+    console.log("[WelcomePage] No user, redirecting to /");
     redirect("/");
   }
 
@@ -43,9 +47,11 @@ export default async function WelcomePage() {
     where: { userId: user.id },
     select: { username: true },
   });
+  console.log("[WelcomePage] Existing trustProfile:", trustProfile);
 
   // If no profile exists yet (webhook race condition), create one now
   if (!trustProfile) {
+    console.log("[WelcomePage] No profile found, creating one...");
     const baseUsername = generateUsername(user);
 
     // Ensure username is unique by adding suffix if needed
@@ -61,25 +67,37 @@ export default async function WelcomePage() {
     const humanNumber = count + 1;
 
     // Create the profile
-    trustProfile = await db.trustProfile.create({
-      data: {
-        userId: user.id,
-        username,
-        displayName: user.firstName
-          ? `${user.firstName}${user.lastName ? ` ${user.lastName}` : ""}`
-          : username,
-        avatarUrl: user.imageUrl,
-        humanNumber,
-      },
-      select: { username: true },
-    });
+    try {
+      trustProfile = await db.trustProfile.create({
+        data: {
+          userId: user.id,
+          username,
+          displayName: user.firstName
+            ? `${user.firstName}${user.lastName ? ` ${user.lastName}` : ""}`
+            : username,
+          avatarUrl: user.imageUrl,
+          humanNumber,
+        },
+        select: { username: true },
+      });
+      console.log("[WelcomePage] Created new profile:", trustProfile);
+    } catch (error) {
+      console.error("[WelcomePage] Error creating profile:", error);
+      // Profile might have been created by webhook in the meantime, try fetching again
+      trustProfile = await db.trustProfile.findUnique({
+        where: { userId: user.id },
+        select: { username: true },
+      });
+      console.log("[WelcomePage] Re-fetched profile after error:", trustProfile);
+    }
   }
 
   if (trustProfile?.username) {
-    // Redirect to their profile page with a query param to show install modal
+    console.log("[WelcomePage] Redirecting to profile:", trustProfile.username);
     redirect(`/${trustProfile.username}?welcome=true`);
   }
 
   // This should never happen now, but just in case
+  console.log("[WelcomePage] No profile username, redirecting to /");
   redirect("/");
 }
