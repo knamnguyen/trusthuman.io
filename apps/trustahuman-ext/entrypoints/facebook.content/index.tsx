@@ -117,13 +117,60 @@ export default defineContentScript({
       }, 2000);
     }
 
+    function getCommentText(element: HTMLElement): string {
+      // Extract text from Lexical editor
+      const paragraphs = element.querySelectorAll("p");
+      if (paragraphs.length > 0) {
+        const text = Array.from(paragraphs)
+          .map((p) => p.textContent?.trim() || "")
+          .filter(Boolean)
+          .join("\n");
+        if (text) return text;
+      }
+      // Fallback to innerText
+      return element.innerText?.trim() || element.textContent?.trim() || "";
+    }
+
+    // Track last known text per element (Facebook clears text before keydown fires)
+    const lastKnownText = new WeakMap<HTMLElement, string>();
+
     function instrumentCommentBox(element: HTMLElement) {
       if (element.dataset.trustahuman === "instrumented") return;
       element.dataset.trustahuman = "instrumented";
 
       console.log("TrustAHuman FB: Instrumented comment box", element);
-      element.addEventListener("input", handleTypingStart);
-      element.addEventListener("keydown", handleTypingStart);
+
+      // Track text on input events (before Facebook clears it)
+      element.addEventListener("input", () => {
+        handleTypingStart();
+        const text = getCommentText(element);
+        if (text.length > 0) {
+          lastKnownText.set(element, text);
+        }
+      });
+
+      element.addEventListener("keydown", (e) => {
+        // Detect bare Enter key (Facebook's submit shortcut)
+        if (e.key === "Enter" && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+          // Use last known text since Facebook clears input before keydown
+          const text = lastKnownText.get(element) || "";
+          console.log("TrustAHuman FB: Enter pressed, lastKnownText:", text);
+
+          if (text.length > 0) {
+            console.log("TrustAHuman FB: Enter key detected with content, triggering verification");
+            lastKnownText.delete(element); // Clear after use
+
+            // Find submit button and trigger verification
+            const submitContainer = document.querySelector<HTMLElement>("#focused-state-composer-submit");
+            if (submitContainer) {
+              setLastSubmitButton(submitContainer);
+              handleVerification(submitContainer, text).catch(console.error);
+            } else {
+              console.warn("TrustAHuman FB: Enter pressed but no submit button found");
+            }
+          }
+        }
+      });
     }
 
     function scanForCommentBoxes(root: Element | Document = document) {
@@ -186,7 +233,7 @@ export default defineContentScript({
     // Facebook's Ctrl+Enter behavior is inconsistent and causes issues.
     // Users must click the submit button to trigger verification.
 
-    async function handleVerification(submitButton: HTMLElement) {
+    async function handleVerification(submitButton: HTMLElement, preCapuredCommentText?: string) {
       // Guard against duplicate calls
       if (pendingVerification) {
         console.log("TrustAHuman FB: Verification already pending, skipping");
@@ -205,6 +252,11 @@ export default defineContentScript({
         // Scrape context BEFORE showing toast (DOM may change after submission)
         const commentContext = scrapeCommentContext(submitButton);
         const userProfile = useProfileStore.getState().profile;
+
+        // Use pre-captured text if provided (Enter key detection captures before Facebook clears)
+        if (preCapuredCommentText) {
+          commentContext.commentText = preCapuredCommentText;
+        }
 
         console.log("TrustAHuman FB: Comment context", commentContext);
         console.log("TrustAHuman FB: User profile", userProfile);

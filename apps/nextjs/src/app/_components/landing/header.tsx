@@ -30,7 +30,7 @@ export function Header() {
             height={32}
             className="h-8 w-8"
           />
-          <span className="text-xl font-bold">TrustHuman</span>
+          <span className="text-xl font-bold"><span className="text-primary">Trust</span>Human</span>
         </Link>
 
         <nav className="flex items-center gap-4">

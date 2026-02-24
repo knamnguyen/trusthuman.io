@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { SignInButton, useAuth } from "@clerk/nextjs";
 import { useQuery } from "@tanstack/react-query";
@@ -31,21 +31,34 @@ interface TiltingVideoCardProps {
   youtubeEmbedUrl?: string;
 }
 
-function TiltingVideoCard({ position = "right", videoPath, youtubeEmbedUrl }: TiltingVideoCardProps) {
+function TiltingVideoCard({
+  position = "right",
+  videoPath,
+  youtubeEmbedUrl,
+}: TiltingVideoCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
-  const [hoverTransform, setHoverTransform] = useState({ rotateX: 0, rotateY: 0 });
+  const [hoverTransform, setHoverTransform] = useState({
+    rotateX: 0,
+    rotateY: 0,
+  });
   const [videoFailed, setVideoFailed] = useState(false);
   const [youtubeFailed, setYoutubeFailed] = useState(false);
 
   // Extract video ID for thumbnail fallback
-  const youtubeVideoId = youtubeEmbedUrl ? getYouTubeVideoId(youtubeEmbedUrl) : null;
-  const thumbnailUrl = youtubeVideoId ? getYouTubeThumbnail(youtubeVideoId) : null;
+  const youtubeVideoId = youtubeEmbedUrl
+    ? getYouTubeVideoId(youtubeEmbedUrl)
+    : null;
+  const thumbnailUrl = youtubeVideoId
+    ? getYouTubeThumbnail(youtubeVideoId)
+    : null;
 
   // Static CSS transform classes (exactly like EngageKit step-card)
   const baseTransformClass = {
-    right: "[transform:scale(1.1)_perspective(1040px)_rotateY(-11deg)_rotateX(2deg)_rotate(2deg)]",
+    right:
+      "[transform:scale(1.1)_perspective(1040px)_rotateY(-11deg)_rotateX(2deg)_rotate(2deg)]",
     left: "[transform:scale(1.1)_perspective(1040px)_rotateY(11deg)_rotateX(2deg)_rotate(-2deg)]",
-    center: "[transform:scale(1.05)_perspective(1040px)_rotateY(0deg)_rotateX(5deg)_rotate(0deg)]",
+    center:
+      "[transform:scale(1.05)_perspective(1040px)_rotateY(0deg)_rotateX(5deg)_rotate(0deg)]",
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -104,7 +117,7 @@ function TiltingVideoCard({ position = "right", videoPath, youtubeEmbedUrl }: Ti
       <iframe
         src={youtubeEmbedUrl}
         title="TrustHuman Demo"
-        className="absolute -left-[20%] -top-[20%] h-[140%] w-[140%]"
+        className="absolute -top-[20%] -left-[20%] h-[140%] w-[140%]"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen={false}
         style={{ border: 0, pointerEvents: "none" }}
@@ -145,19 +158,18 @@ function TiltingVideoCard({ position = "right", videoPath, youtubeEmbedUrl }: Ti
   return (
     <div
       ref={cardRef}
-      className={`relative w-full max-w-2xl overflow-hidden rounded-xl border shadow-xl transition-transform duration-200 ease-out ${baseTransformClass[position]}`}
+      className={`relative w-full max-w-lg overflow-hidden rounded-xl border shadow-xl transition-transform duration-200 ease-out ${baseTransformClass[position]}`}
       style={{
         // Layer hover transform on top of the base CSS transform
-        transform: hoverTransform.rotateX !== 0 || hoverTransform.rotateY !== 0
-          ? `scale(1.1) perspective(1040px) rotateY(${position === "right" ? -11 + hoverTransform.rotateY : position === "left" ? 11 + hoverTransform.rotateY : hoverTransform.rotateY}deg) rotateX(${(position === "center" ? 5 : 2) + hoverTransform.rotateX}deg) rotate(${position === "right" ? 2 : position === "left" ? -2 : 0}deg)`
-          : undefined,
+        transform:
+          hoverTransform.rotateX !== 0 || hoverTransform.rotateY !== 0
+            ? `scale(1.1) perspective(1040px) rotateY(${position === "right" ? -11 + hoverTransform.rotateY : position === "left" ? 11 + hoverTransform.rotateY : hoverTransform.rotateY}deg) rotateX(${(position === "center" ? 5 : 2) + hoverTransform.rotateX}deg) rotate(${position === "right" ? 2 : position === "left" ? -2 : 0}deg)`
+            : undefined,
       }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
     >
-      <div className="relative aspect-video bg-slate-900">
-        {renderMedia()}
-      </div>
+      <div className="relative aspect-video bg-slate-900">{renderMedia()}</div>
     </div>
   );
 }
@@ -188,8 +200,8 @@ export function HeroSection() {
 
   return (
     <section className="bg-card w-full pt-20">
-      <div className="container py-8 sm:py-12">
-        <div className="grid items-center gap-12 lg:grid-cols-[1fr_1.3fr] lg:gap-12">
+      <div className="container mx-auto max-w-6xl px-6 py-8 sm:py-12">
+        <div className="grid items-center gap-8 lg:grid-cols-[1fr_1fr] lg:gap-12">
           {/* Left Column */}
           <div className="flex flex-col gap-8">
             {/* Badge */}
@@ -205,14 +217,13 @@ export function HeroSection() {
 
             {/* Headline */}
             <div className="space-y-4">
-              <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+              <h1 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
                 Be a <span className="text-primary">real human</span> on social
-                media and{" "}
-                <span className="text-primary">save the internet</span>
+                media, <span className="text-primary">save the internet</span>
               </h1>
 
               {/* Feature bullet points - 2x2 grid */}
-              <div className="text-muted-foreground grid grid-cols-2 gap-x-6 gap-y-2 text-base">
+              <div className="text-muted-foreground grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                 <div className="flex items-center gap-2">
                   <span>📸</span>
                   <span>Quick selfie verification</span>
@@ -233,24 +244,24 @@ export function HeroSection() {
             </div>
 
             {/* CTA Button + Badge */}
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-stretch">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
               {isSignedIn && myProfile?.username ? (
                 <Button
                   variant="primary"
-                  className="h-auto gap-2 rounded-2xl px-6 py-3 text-lg font-bold"
+                  className="h-auto gap-2 rounded-xl px-5 py-2.5 text-base font-bold"
                   onClick={handleClaimClick}
                 >
                   View your profile
-                  <ArrowRight className="h-5 w-5" />
+                  <ArrowRight className="h-4 w-4" />
                 </Button>
               ) : (
                 <SignInButton mode="modal" forceRedirectUrl="/welcome">
                   <Button
                     variant="primary"
-                    className="h-auto gap-2 rounded-2xl px-6 py-3 text-lg font-bold"
+                    className="h-auto gap-2 rounded-xl px-5 py-2.5 text-base font-bold"
                   >
                     Claim your human status
-                    <ArrowRight className="h-5 w-5" />
+                    <ArrowRight className="h-4 w-4" />
                   </Button>
                 </SignInButton>
               )}
