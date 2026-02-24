@@ -28,6 +28,22 @@ const MOCK_AVATAR_SEEDS = [
   "Finn", "Gem", "Haven", "Iris", "Jade", "Kai", "Lark", "Mars",
 ];
 
+// Vibrant pastel background colors for notionists avatars
+const AVATAR_BG_COLORS = [
+  "b6e3f4", // light blue
+  "c0aede", // lavender
+  "d1d4f9", // periwinkle
+  "ffd5dc", // pink
+  "ffdfbf", // peach
+  "ffeaa7", // yellow
+  "dfe6e9", // light gray
+  "a8e6cf", // mint
+  "fdcb6e", // golden
+  "fab1a0", // coral
+  "74b9ff", // sky blue
+  "a29bfe", // purple
+];
+
 // Fake bot numbers for each platform (for marketing effect)
 const BOT_NUMBERS: Record<string, string> = {
   linkedin: "500M+",
@@ -274,20 +290,26 @@ export function VideoDemoSection() {
     const totalNeeded = 40;
 
     // Map real users to avatar format
-    const realAvatars = realUsers.map((user) => ({
-      src: user.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`,
-      alt: user.displayName || user.username,
-      href: `/${user.username}`,
-      isMock: false,
-    }));
+    const realAvatars = realUsers.map((user, index) => {
+      const bgColor = AVATAR_BG_COLORS[index % AVATAR_BG_COLORS.length];
+      return {
+        src: user.avatarUrl || `https://api.dicebear.com/9.x/notionists/svg?seed=${user.username}&backgroundColor=${bgColor}`,
+        alt: user.displayName || user.username,
+        href: `/${user.username}`,
+        isMock: false,
+      };
+    });
 
     // Fill remaining with mock avatars
     const mockCount = Math.max(0, totalNeeded - realAvatars.length);
-    const mockAvatars = MOCK_AVATAR_SEEDS.slice(0, mockCount).map((seed) => ({
-      src: `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`,
-      alt: `Join TrustHuman`,
-      isMock: true,
-    }));
+    const mockAvatars = MOCK_AVATAR_SEEDS.slice(0, mockCount).map((seed, index) => {
+      const bgColor = AVATAR_BG_COLORS[(realAvatars.length + index) % AVATAR_BG_COLORS.length];
+      return {
+        src: `https://api.dicebear.com/9.x/notionists/svg?seed=${seed}&backgroundColor=${bgColor}`,
+        alt: `Join TrustHuman`,
+        isMock: true,
+      };
+    });
 
     return [...realAvatars, ...mockAvatars];
   }, [leaderboardData?.users]);

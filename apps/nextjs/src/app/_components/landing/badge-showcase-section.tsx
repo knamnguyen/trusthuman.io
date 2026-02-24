@@ -10,6 +10,22 @@ import { TrustBadge } from "@sassy/ui/components/trust-badge";
 import { useTRPC } from "~/trpc/react";
 import { MESSAGING } from "./landing-content";
 
+// Vibrant pastel background colors for notionists avatars
+const AVATAR_BG_COLORS = [
+  "b6e3f4", // light blue
+  "c0aede", // lavender
+  "d1d4f9", // periwinkle
+  "ffd5dc", // pink
+  "ffdfbf", // peach
+  "ffeaa7", // yellow
+  "dfe6e9", // light gray
+  "a8e6cf", // mint
+  "fdcb6e", // golden
+  "fab1a0", // coral
+  "74b9ff", // sky blue
+  "a29bfe", // purple
+];
+
 // Mock users for fallback when not enough real users
 const MOCK_USERS = [
   { username: "sarahchen", humanNumber: 42, totalVerified: 156, seed: "Sarah" },
@@ -73,8 +89,9 @@ function MarqueeRow({ users, direction = "left", speed = 30, isSignedIn, myUsern
         {items.map((user, index) => {
           // Alternate between Triss logo and user avatar
           const useAvatar = index % 2 === 1;
+          const bgColor = AVATAR_BG_COLORS[index % AVATAR_BG_COLORS.length];
           const avatarUrl = useAvatar
-            ? user.avatarUrl || `https://api.dicebear.com/9.x/notionists/svg?seed=${user.username}`
+            ? user.avatarUrl || `https://api.dicebear.com/9.x/notionists/svg?seed=${user.username}&backgroundColor=${bgColor}`
             : undefined;
 
           // Real users get direct links, mock users trigger auth flow
@@ -165,13 +182,16 @@ export function BadgeShowcaseSection() {
 
     // Fill remaining with mock users
     const mockCount = Math.max(0, totalNeeded - realBadgeUsers.length);
-    const mockBadgeUsers: BadgeUser[] = MOCK_USERS.slice(0, mockCount).map((mock) => ({
-      username: mock.username,
-      humanNumber: mock.humanNumber,
-      totalVerified: mock.totalVerified,
-      avatarUrl: `https://api.dicebear.com/9.x/notionists/svg?seed=${mock.seed}`,
-      isMock: true,
-    }));
+    const mockBadgeUsers: BadgeUser[] = MOCK_USERS.slice(0, mockCount).map((mock, index) => {
+      const bgColor = AVATAR_BG_COLORS[(realBadgeUsers.length + index) % AVATAR_BG_COLORS.length];
+      return {
+        username: mock.username,
+        humanNumber: mock.humanNumber,
+        totalVerified: mock.totalVerified,
+        avatarUrl: `https://api.dicebear.com/9.x/notionists/svg?seed=${mock.seed}&backgroundColor=${bgColor}`,
+        isMock: true,
+      };
+    });
 
     return [...realBadgeUsers, ...mockBadgeUsers];
   }, [leaderboardData?.users]);
