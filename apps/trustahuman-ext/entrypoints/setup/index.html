@@ -1,6 +1,8 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Trust a Human - Camera Setup</title>
     <style>
       body { font-family: system-ui, sans-serif; max-width: 480px; margin: 60px auto; padding: 0 20px; }
@@ -20,26 +22,6 @@
     <p>Click the button below to grant camera permission. You only need to do this once.</p>
     <button id="grant-btn">Grant Camera Access</button>
     <div id="status" class="pending">Camera permission: not yet granted</div>
-    <script>
-      const btn = document.getElementById('grant-btn');
-      const status = document.getElementById('status');
-
-      btn.addEventListener('click', async () => {
-        btn.disabled = true;
-        btn.textContent = 'Requesting...';
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-          stream.getTracks().forEach(t => t.stop());
-          status.className = 'granted';
-          status.textContent = 'Camera permission: granted! You can close this tab.';
-          btn.textContent = 'Done!';
-        } catch (err) {
-          status.className = 'denied';
-          status.textContent = 'Camera permission denied. Please allow camera access and try again.';
-          btn.disabled = false;
-          btn.textContent = 'Try Again';
-        }
-      });
-    </script>
+    <script type="module" src="./main.ts"></script>
   </body>
 </html>

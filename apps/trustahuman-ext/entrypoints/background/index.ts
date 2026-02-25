@@ -16,31 +16,37 @@ export default defineBackground(() => {
   console.log("TrustAHuman - Background loaded");
 
   /**
-   * On first install, request camera permission
+   * On first install, check auth status and route accordingly:
+   * - If already signed in (via web app) → open camera setup page
+   * - If not signed in → open sign-in page
    */
   chrome.runtime.onInstalled.addListener(async (details) => {
     if (details.reason === "install") {
-      console.log("TrustAHuman BG: First install detected, requesting camera permission");
+      console.log("TrustAHuman BG: First install detected, checking auth status");
 
-      // Small delay to ensure extension is fully loaded
+      // Small delay to ensure extension and Clerk client are fully loaded
       setTimeout(async () => {
         try {
-          // Create offscreen document to trigger camera permission request
-          const hasDoc = await chrome.offscreen.hasDocument();
-          if (!hasDoc) {
-            await chrome.offscreen.createDocument({
-              url: "offscreen.html",
-              reasons: [chrome.offscreen.Reason.USER_MEDIA],
-              justification: "Request camera permission for human verification",
-            });
+          const clerk = await getClerkClient();
+          const isSignedIn = !!clerk.session;
+
+          console.log("TrustAHuman BG: First install auth check:", { isSignedIn });
+
+          if (isSignedIn) {
+            // User already signed in via web app, go straight to camera setup
+            console.log("TrustAHuman BG: User already signed in, opening camera setup");
+            chrome.tabs.create({ url: chrome.runtime.getURL("setup.html") });
+          } else {
+            // User not signed in, open sign-in page
+            console.log("TrustAHuman BG: User not signed in, opening sign-in page");
+            const webAppUrl = getWebAppUrl();
+            chrome.tabs.create({ url: `${webAppUrl}/extension-auth` });
           }
-
-          // Send message to offscreen to request camera
-          chrome.runtime.sendMessage({ action: "requestCameraPermission" });
-
-          console.log("TrustAHuman BG: Camera permission request sent");
         } catch (err) {
-          console.error("TrustAHuman BG: Failed to request camera permission:", err);
+          console.error("TrustAHuman BG: Error checking auth on install:", err);
+          // Default to sign-in page on error
+          const webAppUrl = getWebAppUrl();
+          chrome.tabs.create({ url: `${webAppUrl}/extension-auth` });
         }
       }, 1000);
     }

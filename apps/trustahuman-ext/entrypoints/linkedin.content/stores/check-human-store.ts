@@ -206,28 +206,11 @@ export function initCheckHumanStore() {
 
   // Inject script into page context to intercept pushState/replaceState
   // Content scripts run in isolated world, so we need to inject into main world
+  // MV3 requires using external script files instead of inline scripts
   const script = document.createElement("script");
-  script.textContent = `
-    (function() {
-      if (window.__trustHumanNavWatcher) return;
-      window.__trustHumanNavWatcher = true;
-
-      const originalPushState = history.pushState;
-      const originalReplaceState = history.replaceState;
-
-      history.pushState = function(...args) {
-        originalPushState.apply(this, args);
-        window.dispatchEvent(new CustomEvent('trusthuman:urlchange'));
-      };
-
-      history.replaceState = function(...args) {
-        originalReplaceState.apply(this, args);
-        window.dispatchEvent(new CustomEvent('trusthuman:urlchange'));
-      };
-    })();
-  `;
+  script.src = chrome.runtime.getURL("page-context.js");
   document.documentElement.appendChild(script);
-  script.remove();
+  script.onload = () => script.remove();
 
   // Listen for our custom event from the injected script
   window.addEventListener("trusthuman:urlchange", () => {

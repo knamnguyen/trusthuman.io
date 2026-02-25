@@ -17,6 +17,7 @@ declare module "wxt/browser" {
     | "/icon38.png"
     | "/icon48.png"
     | "/offscreen.html"
+    | "/page-context.js"
     | "/popup.html"
     | "/setup.html"
     | "/trusthuman-logo.png"

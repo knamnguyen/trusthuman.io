@@ -2,7 +2,7 @@ import ReactDOM from "react-dom/client";
 
 import { showTrissToast, hideTrissToast, setTrissLogoUrl } from "@sassy/ui/components/triss-toast";
 import { trpc } from "@/lib/trpc-client";
-import { useAuthStore, initAuthStoreListener } from "@/lib/auth-store";
+import { useAuthStore, initAuthStoreListener, fetchAuthStatusWithRetry } from "@/lib/auth-store";
 
 import App from "./App";
 import { initSidebarListener } from "./stores/sidebar-store";
@@ -48,7 +48,8 @@ export default defineContentScript({
 
     // Initialize auth store and listener
     initAuthStoreListener();
-    useAuthStore.getState().fetchAuthStatus();
+    // Use retry logic since Clerk cookie sync may take a moment
+    fetchAuthStatusWithRetry();
 
     // Initialize sidebar listener for popup communication
     initSidebarListener();

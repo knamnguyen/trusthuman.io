@@ -121,6 +121,23 @@ export async function POST(req: NextRequest) {
           },
         });
 
+        // Also update TrustProfile if it exists (sync displayName and avatarUrl)
+        const existingProfile = await db.trustProfile.findUnique({
+          where: { userId: userId },
+        });
+
+        if (existingProfile) {
+          await db.trustProfile.update({
+            where: { userId: userId },
+            data: {
+              displayName: data.first_name || existingProfile.displayName,
+              avatarUrl: data.image_url || existingProfile.avatarUrl,
+              // Note: We don't auto-update username to avoid breaking profile URLs
+            },
+          });
+          console.log(`✅ TrustProfile updated for user: ${userId}`);
+        }
+
         console.log(`✅ User updated: ${userId}`);
         break;
       }

@@ -75,6 +75,7 @@ export default defineConfig({
         resources: [
           "trusthuman-logo.png",
           "trusthuman-logo.svg",
+          "page-context.js",
         ],
         matches: [
           "https://*.linkedin.com/*",
