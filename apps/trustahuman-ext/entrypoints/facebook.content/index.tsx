@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { showTrissToast, hideTrissToast, setTrissLogoUrl } from "@sassy/ui/components/triss-toast";
 import { trpc } from "@/lib/trpc-client";
 import { useAuthStore, initAuthStoreListener, fetchAuthStatusWithRetry } from "@/lib/auth-store";
+import { executeVerification, type VerificationResult } from "@/lib/verification-flow";
 
 import App from "./App";
 import { initSidebarListener } from "./stores/sidebar-store";
@@ -272,108 +273,39 @@ export default defineContentScript({
         showTrissToast("submitted");
         await sleep(1500);
 
-        // Show "capturing" toast
-        showTrissToast("capturing");
-
-        // Capture photo via background
-        const response = await chrome.runtime.sendMessage({
-          action: "capturePhoto",
-        });
-
-        if (!response?.base64) {
-          console.warn("TrustAHuman FB: No base64 returned, camera denied or failed");
-          showTrissToast("camera_needed", "Camera access needed to verify you're human", {
-            label: "Grant Camera Access",
-            onClick: () => {
-              chrome.runtime.sendMessage({ action: "openSetup" });
-              hideTrissToast();
-            },
-          });
-          return;
-        }
-
-        // Show "verifying" toast
-        showTrissToast("verifying");
-
-        const { isSignedIn } = useAuthStore.getState();
-
-        if (!isSignedIn || !userProfile || !commentContext) {
-          // Fall back to local-only verification
-          console.log("TrustAHuman FB: Not authenticated, using local verification");
-          try {
-            const result = await trpc.verification.analyzePhoto.mutate({
-              photoBase64: response.base64,
-            });
-
-            if (result.verified) {
-              showTrissToast("verified", "Verified! Sign in to track your stats.");
-            } else {
-              showTrissToast("not_verified");
-            }
-
-            // Add to local store (standardized schema)
-            useVerificationStore.getState().addVerification({
-              id: crypto.randomUUID(),
-              timestamp: new Date(),
-              action: "facebook_comment",
-              platform: "facebook",
-              verified: result.verified,
-              confidence: result.confidence,
-              faceCount: result.faceCount,
-              commentText: commentContext?.commentText || "",
-              commentUrl: undefined, // Facebook comments don't have direct URLs
-              parentUrl: commentContext?.post.postUrl || undefined,
-              parentAuthorName: commentContext?.post.postAuthorName || "Facebook User",
-              parentAuthorAvatarUrl: commentContext?.post.postAuthorAvatarUrl || "",
-              parentTextSnippet: commentContext?.post.postTextSnippet || "",
-            });
-          } catch (err) {
-            console.error("TrustAHuman FB: analyzePhoto failed", err);
-            showTrissToast("not_verified", "Verification failed. Try again.");
-          }
-        } else {
-          // Full verification with submitActivity
-          try {
-            console.log("TrustAHuman FB: Calling submitActivity");
-            const result = await trpc.verification.submitActivity.mutate({
-              photoBase64: response.base64,
-              platform: "facebook",
-              userProfile: {
-                profileUrl: userProfile.profileUrl,
-                profileHandle: userProfile.profileHandle,
-                displayName: userProfile.displayName ?? undefined,
-                avatarUrl: userProfile.avatarUrl ?? undefined,
-              },
-              activity: {
-                commentText: commentContext.commentText,
-                parentUrl: commentContext.post.postUrl ?? undefined,
-                parentAuthorName: commentContext.post.postAuthorName || "Facebook User",
-                parentAuthorAvatarUrl: commentContext.post.postAuthorAvatarUrl || "",
-                parentTextSnippet: commentContext.post.postTextSnippet || "",
-              },
-            });
-
-            if (result.verified) {
-              if (result.isFirstVerification) {
-                showTrissToast("verified", `Welcome Human #${result.humanNumber}! You're verified!`);
-              } else {
-                showTrissToast("verified", `Verified! ${result.totalVerifications} activities`);
-              }
-            } else {
-              showTrissToast("not_verified");
-            }
-
-            // Add to local store (standardized schema)
-            useVerificationStore.getState().addVerification({
-              id: crypto.randomUUID(),
-              timestamp: new Date(),
-              action: "facebook_comment",
-              platform: "facebook",
-              verified: result.verified,
-              confidence: result.confidence,
-              faceCount: 1,
+        // Use shared verification flow (handles camera vs biometric based on preferences)
+        await executeVerification(
+          {
+            platform: "facebook",
+            userProfile: userProfile ? {
+              profileUrl: userProfile.profileUrl,
+              profileHandle: userProfile.profileHandle,
+              displayName: userProfile.displayName ?? undefined,
+              avatarUrl: userProfile.avatarUrl ?? undefined,
+            } : null,
+            commentContext: {
               commentText: commentContext.commentText,
               commentUrl: undefined, // Facebook comments don't have direct URLs
+              post: {
+                postUrl: commentContext.post.postUrl ?? undefined,
+                postAuthorName: commentContext.post.postAuthorName || "Facebook User",
+                postAuthorAvatarUrl: commentContext.post.postAuthorAvatarUrl || "",
+                postTextSnippet: commentContext.post.postTextSnippet || "",
+              },
+            },
+          },
+          (result: VerificationResult) => {
+            // Add to local store
+            useVerificationStore.getState().addVerification({
+              id: crypto.randomUUID(),
+              timestamp: new Date(),
+              action: "facebook_comment",
+              platform: "facebook",
+              verified: result.verified,
+              confidence: result.confidence ?? 0,
+              faceCount: 1,
+              commentText: commentContext.commentText,
+              commentUrl: undefined,
               parentUrl: commentContext.post.postUrl || undefined,
               parentAuthorName: commentContext.post.postAuthorName || "Facebook User",
               parentAuthorAvatarUrl: commentContext.post.postAuthorAvatarUrl || "",
@@ -384,26 +316,9 @@ export default defineContentScript({
             if (result.verified) {
               refetchMyProfile();
             }
-          } catch (err: any) {
-            console.error("TrustAHuman FB: submitActivity failed", err);
-
-            if (err?.message?.includes("UNAUTHORIZED")) {
-              showTrissToast("not_verified", "Please sign in to verify.");
-            } else if (err?.message?.includes("already linked")) {
-              showTrissToast("not_verified", "This profile is linked to another account.");
-            } else {
-              showTrissToast("not_verified", "Verification failed. Try again.");
-            }
           }
-        }
+        );
 
-        // Show photo_deleted toast
-        await sleep(3000);
-        showTrissToast("photo_deleted");
-
-        // Hide toast
-        await sleep(3000);
-        hideTrissToast();
         console.log("TrustAHuman FB: Flow complete");
       } finally {
         pendingVerification = false;

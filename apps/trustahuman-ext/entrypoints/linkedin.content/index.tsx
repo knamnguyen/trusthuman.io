@@ -1,8 +1,8 @@
 import ReactDOM from "react-dom/client";
 
 import { showTrissToast, hideTrissToast, setTrissLogoUrl } from "@sassy/ui/components/triss-toast";
-import { trpc } from "@/lib/trpc-client";
 import { useAuthStore, initAuthStoreListener, fetchAuthStatusWithRetry } from "@/lib/auth-store";
+import { executeVerification, type VerificationResult } from "@/lib/verification-flow";
 
 import App from "./App";
 import { useVerificationStore } from "./stores/verification-store";
@@ -341,6 +341,130 @@ export default defineContentScript({
 
       // Wait a moment for the submitted toast to be visible
       await sleep(1500);
+
+      // 1.75. Check if biometric credential exists - if so, use biometric flow
+      const credentialId = await getBiometricCredential();
+
+      if (credentialId) {
+        // === BIOMETRIC FLOW ===
+        console.log("TrustAHuman: Biometric credential found, using biometric verification");
+
+        // Show biometric prompt toast (no countdown - WebAuthn has its own timeout)
+        showTrissToast("biometric_prompt", "Touch ID to verify you're human...");
+
+        // Attempt biometric verification via background service worker
+        // (WebAuthn doesn't work in content scripts, needs offscreen document)
+        const credentialIdArray = Array.from(new Uint8Array(credentialId));
+        const biometricResult = await chrome.runtime.sendMessage({
+          action: "verifyBiometric",
+          credentialId: credentialIdArray,
+          timeoutMs: 15000, // 15s timeout for the actual WebAuthn call
+        }) as { success: boolean; error?: string };
+
+        console.log("TrustAHuman: Biometric result:", biometricResult);
+
+        if (!biometricResult.success) {
+          // Handle errors: user canceled, hardware failure, etc.
+          if (biometricResult.error === "canceled") {
+            showTrissToast("not_verified", "Verification canceled.");
+          } else {
+            showTrissToast("not_verified", "Biometric failed. Try again.");
+          }
+          return;
+        }
+
+        // Success - show verifying toast
+        console.log("TrustAHuman: Biometric verified successfully");
+        showTrissToast("verifying");
+
+        // Check authentication
+        const { isSignedIn } = useAuthStore.getState();
+        const newCommentInfo = await commentUrlPromise;
+
+        if (!isSignedIn || !userProfile || !commentContext) {
+          // Biometric can't work without auth (no analyzePhoto equivalent)
+          showTrissToast("not_verified", "Please sign in to use biometric verification.");
+          return;
+        }
+
+        // Call submitActivity with verificationMethod: "biometric"
+        try {
+          console.log("TrustAHuman: Calling submitActivity with biometric verification");
+          const result = await trpc.verification.submitActivity.mutate({
+            verificationMethod: "biometric",
+            platform: "linkedin",
+            userProfile: {
+              profileUrl: userProfile.profileUrl,
+              profileHandle: userProfile.profileHandle,
+              displayName: userProfile.displayName,
+              avatarUrl: userProfile.avatarUrl,
+            },
+            activity: {
+              commentText: commentContext.commentText,
+              commentUrl: newCommentInfo?.url,
+              parentUrl: commentContext.post.postUrl,
+              parentAuthorName: commentContext.post.postAuthorName || "LinkedIn User",
+              parentAuthorAvatarUrl: commentContext.post.postAuthorAvatarUrl || "",
+              parentTextSnippet: commentContext.post.postTextSnippet || "",
+            },
+          });
+          console.log("TrustAHuman: submitActivity result (biometric)", result);
+
+          if (result.verified) {
+            if (result.isFirstVerification) {
+              showTrissToast("verified", `Welcome Human #${result.humanNumber}! You're verified!`);
+            } else {
+              showTrissToast("verified", `Verified! ${result.totalVerifications} activities`);
+            }
+          } else {
+            showTrissToast("not_verified");
+          }
+
+          // Add to local store (no photo for biometric)
+          useVerificationStore.getState().addVerification({
+            id: crypto.randomUUID(),
+            timestamp: new Date(),
+            action: "linkedin_comment",
+            platform: "linkedin",
+            verified: result.verified,
+            confidence: 100, // Biometric always 100% confidence
+            faceCount: 1,
+            // Include comment data for card display (standardized schema)
+            commentText: commentContext.commentText,
+            commentUrl: newCommentInfo?.url,
+            parentUrl: commentContext.post.postUrl,
+            parentAuthorName: commentContext.post.postAuthorName || "LinkedIn User",
+            parentAuthorAvatarUrl: commentContext.post.postAuthorAvatarUrl || "",
+            parentTextSnippet: commentContext.post.postTextSnippet || "",
+          });
+
+          // Refetch profile to update stats in sidebar
+          if (result.verified) {
+            refetchMyProfile();
+          }
+
+        } catch (err: any) {
+          console.error("TrustAHuman: submitActivity failed (biometric)", err);
+
+          // Handle specific errors
+          if (err?.message?.includes("UNAUTHORIZED")) {
+            showTrissToast("not_verified", "Please sign in to verify.");
+          } else if (err?.message?.includes("already linked")) {
+            showTrissToast("not_verified", "This profile is linked to another account.");
+          } else {
+            showTrissToast("not_verified", "Verification failed. Try again.");
+          }
+        }
+
+        // Wait and hide toast (no photo_deleted toast for biometric)
+        await sleep(3000);
+        hideTrissToast();
+        console.log("TrustAHuman: Biometric flow complete");
+        return; // Exit early - biometric flow complete
+      }
+
+      // === CAMERA FLOW (existing flow continues below) ===
+      console.log("TrustAHuman: No biometric credential, using camera verification");
 
       // 2. Show "capturing" toast
       console.log("TrustAHuman: Showing capturing toast");

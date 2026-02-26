@@ -12,6 +12,9 @@ model HumanVerification {
   // Activity type (for knowing which relation to check)
   activityType String // "linkedin" | "x" | "facebook" | "threads" | "reddit" | "ph" | "github" | "hn"
 
+  // Verification method used
+  verificationMethod String @default("camera") // "camera" | "biometric"
+
   createdAt DateTime @default(now())
 
   // Relations

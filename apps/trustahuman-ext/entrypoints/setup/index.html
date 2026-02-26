@@ -3,25 +3,61 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Trust a Human - Camera Setup</title>
+    <title>TrustHuman - Verification Setup</title>
     <style>
-      body { font-family: system-ui, sans-serif; max-width: 480px; margin: 60px auto; padding: 0 20px; }
-      h1 { font-size: 1.5rem; }
-      #status { margin: 20px 0; padding: 12px; border-radius: 8px; }
+      body { font-family: system-ui, sans-serif; max-width: 520px; margin: 40px auto; padding: 0 20px; color: #1f2937; }
+      h1 { font-size: 1.5rem; margin-bottom: 8px; }
+      .subtitle { color: #6b7280; margin-bottom: 32px; }
+      .section { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+      .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+      .section-icon { font-size: 1.5rem; }
+      .section-title { font-size: 1.1rem; font-weight: 600; margin: 0; }
+      .section-desc { color: #6b7280; font-size: 0.9rem; margin: 0 0 16px 0; }
+      #status, #biometric-status { margin: 12px 0 0 0; padding: 10px 14px; border-radius: 8px; font-size: 0.9rem; }
       .pending { background: #fef3c7; color: #92400e; }
       .granted { background: #d1fae5; color: #065f46; }
       .denied { background: #fee2e2; color: #991b1b; }
-      button { background: #16a34a; color: white; border: none; padding: 10px 24px; border-radius: 6px; font-size: 1rem; cursor: pointer; }
+      button { background: #16a34a; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-size: 0.95rem; cursor: pointer; font-weight: 500; }
       button:hover { background: #15803d; }
       button:disabled { background: #9ca3af; cursor: not-allowed; }
+      .privacy-note { display: flex; align-items: flex-start; gap: 8px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px; margin-top: 24px; font-size: 0.85rem; color: #1e40af; }
+      .privacy-note span { font-size: 1.1rem; }
     </style>
   </head>
   <body>
-    <h1>Trust a Human - Camera Setup</h1>
-    <p>This extension needs camera access to verify you're human when posting comments.</p>
-    <p>Click the button below to grant camera permission. You only need to do this once.</p>
-    <button id="grant-btn">Grant Camera Access</button>
-    <div id="status" class="pending">Camera permission: not yet granted</div>
+    <h1>TrustHuman - Verification Setup</h1>
+    <p class="subtitle">Choose how you want to verify you're human when posting comments.</p>
+
+    <!-- Camera Section -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-icon">📷</span>
+        <h2 class="section-title">Selfie Verification</h2>
+      </div>
+      <p class="section-desc">Quick selfie to verify you're human. Photo is analyzed and immediately deleted.</p>
+      <button id="grant-btn">Enable Camera Access</button>
+      <div id="status" class="pending">Not enabled yet</div>
+    </div>
+
+    <!-- Biometric Section -->
+    <div id="biometric-section" class="section" style="display: none;">
+      <div class="section-header">
+        <span class="section-icon">🔐</span>
+        <h2 class="section-title">Touch ID / Windows Hello</h2>
+      </div>
+      <p class="section-desc">Faster verification using your fingerprint or face. Your biometric data never leaves your device.</p>
+      <button id="biometric-btn">Enable Biometric</button>
+      <div id="biometric-status" class="pending">Not enabled yet</div>
+    </div>
+
+    <!-- Privacy Note -->
+    <div class="privacy-note">
+      <span>🔒</span>
+      <div>
+        <strong>Privacy First:</strong> Selfies are deleted immediately after verification. Biometric data stays on your device and is never uploaded.
+      </div>
+    </div>
+
     <script type="module" src="./main.ts"></script>
   </body>
 </html>

@@ -1,9 +1,11 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Award,
   Camera,
+  Check,
   CheckCircle2,
   ExternalLink,
+  Fingerprint,
   Flame,
   Loader2,
   Search,
@@ -11,6 +13,9 @@ import {
   Trophy,
   XCircle,
 } from "lucide-react";
+
+import { getBiometricCredential } from "../../lib/biometric-auth";
+import { getVerificationPreferences, setVerificationPreferences } from "../../lib/verification-flow";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@sassy/ui/avatar";
 import { Badge } from "@sassy/ui/badge";
@@ -178,6 +183,124 @@ function ActivityCard({ activity }: { activity: Activity }) {
 }
 
 /**
+ * Setup Buttons - Two clear buttons showing camera and biometric status with preference checkboxes
+ */
+function SetupButtons() {
+  const [cameraEnabled, setCameraEnabled] = useState<boolean | null>(null);
+  const [biometricEnabled, setBiometricEnabled] = useState<boolean | null>(null);
+  const [useSelfie, setUseSelfie] = useState(true);
+  const [useBiometric, setUseBiometric] = useState(true);
+
+  useEffect(() => {
+    // Check camera permission
+    navigator.permissions.query({ name: "camera" as PermissionName }).then((result) => {
+      setCameraEnabled(result.state === "granted");
+    }).catch(() => {
+      setCameraEnabled(false);
+    });
+
+    // Check biometric credential
+    getBiometricCredential().then((credential) => {
+      setBiometricEnabled(credential !== null);
+    });
+
+    // Load preferences
+    getVerificationPreferences().then((prefs) => {
+      setUseSelfie(prefs.useSelfie);
+      setUseBiometric(prefs.useBiometric);
+    });
+  }, []);
+
+  function handleSetup() {
+    chrome.runtime.sendMessage({ action: "openSetup" });
+  }
+
+  async function handleToggleSelfie() {
+    const newValue = !useSelfie;
+    // Don't allow disabling both
+    if (!newValue && !useBiometric) return;
+    setUseSelfie(newValue);
+    await setVerificationPreferences({ useSelfie: newValue, useBiometric });
+  }
+
+  async function handleToggleBiometric() {
+    const newValue = !useBiometric;
+    // Don't allow disabling both
+    if (!newValue && !useSelfie) return;
+    setUseBiometric(newValue);
+    await setVerificationPreferences({ useSelfie, useBiometric: newValue });
+  }
+
+  // Full version - two separate rows with checkbox + button
+  return (
+    <div className="flex flex-col gap-2">
+      {/* Selfie Row */}
+      <div className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          checked={useSelfie}
+          onChange={handleToggleSelfie}
+          disabled={useSelfie && !useBiometric} // Can't uncheck if it's the only one
+          className="h-4 w-4 rounded border-gray-300 accent-green-500"
+          title={useSelfie && !useBiometric ? "At least one method required" : "Use selfie for verification"}
+        />
+        <Button
+          onClick={handleSetup}
+          variant="outline"
+          size="sm"
+          className={`flex-1 justify-between ${cameraEnabled ? "border-green-500/50 bg-green-500/5" : ""}`}
+        >
+          <div className="flex items-center gap-2">
+            <Camera className="h-4 w-4" />
+            <span>Selfie Verification</span>
+          </div>
+          {cameraEnabled ? (
+            <Badge variant="default" className="bg-green-500 text-xs">Ready</Badge>
+          ) : (
+            <Badge variant="secondary" className="text-xs">Set Up</Badge>
+          )}
+        </Button>
+      </div>
+
+      {/* Biometric Row */}
+      <div className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          checked={useBiometric}
+          onChange={handleToggleBiometric}
+          disabled={useBiometric && !useSelfie} // Can't uncheck if it's the only one
+          className="h-4 w-4 rounded border-gray-300 accent-green-500"
+          title={useBiometric && !useSelfie ? "At least one method required" : "Use biometric for verification"}
+        />
+        <Button
+          onClick={handleSetup}
+          variant="outline"
+          size="sm"
+          className={`flex-1 justify-between ${biometricEnabled ? "border-green-500/50 bg-green-500/5" : ""}`}
+        >
+          <div className="flex items-center gap-2">
+            <Fingerprint className="h-4 w-4" />
+            <span>Touch ID / Biometric</span>
+          </div>
+          {biometricEnabled ? (
+            <Badge variant="default" className="bg-green-500 text-xs">Ready</Badge>
+          ) : (
+            <Badge variant="secondary" className="text-xs">Set Up</Badge>
+          )}
+        </Button>
+      </div>
+
+      {/* Priority note */}
+      {useSelfie && useBiometric && (
+        <p className="text-muted-foreground text-[10px] px-6">
+          When both enabled, selfie is used first (more reliable)
+        </p>
+      )}
+    </div>
+  );
+}
+
+/**
  * Verify Tab Content - shows user's full profile mirroring trusthuman.io/username
  */
 function VerifyTabContent() {
@@ -193,10 +316,6 @@ function VerifyTabContent() {
       (parts[0]?.charAt(0) || "") + (parts[parts.length - 1]?.charAt(0) || "")
     ).toUpperCase();
   };
-
-  function handleGrantCamera() {
-    chrome.runtime.sendMessage({ action: "openSetup" });
-  }
 
   // Not signed in
   if (!isSignedIn) {
@@ -237,16 +356,8 @@ function VerifyTabContent() {
   if (!profile) {
     return (
       <div className="flex flex-col gap-4 p-4">
-        {/* Camera permission banner */}
-        <Button
-          onClick={handleGrantCamera}
-          variant="outline"
-          className="w-full gap-2"
-          size="sm"
-        >
-          <Camera className="h-4 w-4" />
-          Grant Camera Access
-        </Button>
+        {/* Verification setup buttons */}
+        <SetupButtons />
 
         <Card className="border-dashed">
           <CardContent className="py-8 text-center">
@@ -353,8 +464,8 @@ function VerifyTabContent() {
         </CardContent>
       </Card>
 
-      {/* Camera + Recording Status */}
-      <div className="flex items-center justify-between px-4 pt-3">
+      {/* Recording Status */}
+      <div className="px-4 pt-3">
         <div className="text-muted-foreground flex items-center gap-2 text-xs">
           <span className="bg-primary inline-block h-2 w-2 animate-pulse rounded-full" />
           Monitoring{" "}
@@ -363,15 +474,11 @@ function VerifyTabContent() {
             ? "X"
             : "LinkedIn"}
         </div>
-        <Button
-          onClick={handleGrantCamera}
-          variant="ghost"
-          size="sm"
-          className="h-7 gap-1.5 text-xs"
-        >
-          <Camera className="h-3 w-3" />
-          Camera
-        </Button>
+      </div>
+
+      {/* Verification Setup Buttons */}
+      <div className="px-4 pt-3">
+        <SetupButtons />
       </div>
 
       {/* Recent Activity Header */}

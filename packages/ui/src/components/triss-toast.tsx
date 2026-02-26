@@ -12,7 +12,8 @@ export type TrissState =
   | "not_verified"
   | "photo_deleted"
   | "streak"
-  | "camera_needed";
+  | "camera_needed"
+  | "biometric_prompt";
 
 interface TrissToastConfig {
   message: string;
@@ -71,6 +72,11 @@ export const TRISS_TOAST_CONFIG: Record<TrissState, TrissToastConfig> = {
     emoji: "📷",
     duration: 0, // Persistent until user acts
   },
+  biometric_prompt: {
+    message: "Touch ID to verify",
+    emoji: "🔐",
+    duration: 0, // Will be updated dynamically with countdown
+  },
 };
 
 interface TrissToastContentProps {
@@ -117,6 +123,9 @@ let currentToastId: string | number | undefined;
 // Store logo URL for use in toasts
 let trissLogoUrl: string | undefined;
 
+// Track countdown interval for cleanup
+let countdownIntervalId: ReturnType<typeof setInterval> | undefined;
+
 /**
  * Set the Triss logo URL for toast notifications.
  * Call this once on app init with the URL to your logo.
@@ -132,8 +141,11 @@ export function setTrissLogoUrl(url: string): void {
 export function showTrissToast(
   state: TrissState,
   customMessage?: string,
-  streakCountOrAction?: number | { label: string; onClick: () => void }
+  streakCountOrActionOrCountdown?: number | { label: string; onClick: () => void } | { countdown: { seconds: number; onTimeout: () => void } }
 ): void {
+  // Clear any existing countdown
+  clearTrissToastCountdown();
+
   if (currentToastId !== undefined) {
     toast.dismiss(currentToastId);
   }
@@ -142,12 +154,23 @@ export function showTrissToast(
   let message = customMessage ?? config.message;
 
   // Handle streak count for backward compatibility
-  if (state === "streak" && typeof streakCountOrAction === "number") {
-    message = `${streakCountOrAction}-${message}`;
+  if (state === "streak" && typeof streakCountOrActionOrCountdown === "number") {
+    message = `${streakCountOrActionOrCountdown}-${message}`;
   }
 
-  // Handle action button
-  const actionButton = typeof streakCountOrAction === "object" ? streakCountOrAction : undefined;
+  // Handle action button (check if it has label/onClick)
+  const actionButton = (
+    streakCountOrActionOrCountdown &&
+    typeof streakCountOrActionOrCountdown === "object" &&
+    "label" in streakCountOrActionOrCountdown
+  ) ? streakCountOrActionOrCountdown : undefined;
+
+  // Handle countdown timer
+  const countdown = (
+    streakCountOrActionOrCountdown &&
+    typeof streakCountOrActionOrCountdown === "object" &&
+    "countdown" in streakCountOrActionOrCountdown
+  ) ? streakCountOrActionOrCountdown.countdown : undefined;
 
   currentToastId = toast.custom(
     () => <TrissToastContent message={message} emoji={config.emoji} logoUrl={trissLogoUrl} actionButton={actionButton} />,
@@ -156,12 +179,53 @@ export function showTrissToast(
       unstyled: true,
     }
   );
+
+  // Start countdown if provided
+  if (countdown) {
+    let remainingSeconds = countdown.seconds;
+
+    countdownIntervalId = setInterval(() => {
+      remainingSeconds--;
+
+      if (remainingSeconds <= 0) {
+        clearTrissToastCountdown();
+        countdown.onTimeout();
+        return;
+      }
+
+      // Update toast with countdown
+      const updatedMessage = `${customMessage ?? config.message} ⏱️ ${remainingSeconds}s`;
+
+      if (currentToastId !== undefined) {
+        toast.dismiss(currentToastId);
+      }
+
+      currentToastId = toast.custom(
+        () => <TrissToastContent message={updatedMessage} emoji={config.emoji} logoUrl={trissLogoUrl} actionButton={actionButton} />,
+        {
+          duration: Infinity,
+          unstyled: true,
+        }
+      );
+    }, 1000);
+  }
+}
+
+/**
+ * Clear countdown timer (cleanup utility)
+ */
+export function clearTrissToastCountdown(): void {
+  if (countdownIntervalId !== undefined) {
+    clearInterval(countdownIntervalId);
+    countdownIntervalId = undefined;
+  }
 }
 
 /**
  * Hide the current Triss toast.
  */
 export function hideTrissToast(): void {
+  clearTrissToastCountdown();
   if (currentToastId !== undefined) {
     toast.dismiss(currentToastId);
     currentToastId = undefined;

@@ -122,6 +122,24 @@ export default defineBackground(() => {
       return false;
     }
 
+    if (message.action === "verifyBiometric") {
+      handleVerifyBiometric(message.credentialId, message.timeoutMs)
+        .then((result) => {
+          console.log("TrustAHuman BG: verifyBiometric result:", result);
+          sendResponse(result);
+        })
+        .catch((err) => {
+          console.error("TrustAHuman BG: verifyBiometric error:", err);
+          sendResponse({ success: false, error: "unknown" });
+        });
+      return true; // async response
+    }
+
+    if (message.action === "biometricResult") {
+      console.log("TrustAHuman BG: biometricResult received:", message.success);
+      return false;
+    }
+
     return false;
   });
 
@@ -303,6 +321,74 @@ export default defineBackground(() => {
       console.log("TrustAHuman BG: Periodic auth check:", { isSignedIn: !!clerk.session });
     }
   });
+
+  /**
+   * Handle biometric verification via offscreen document
+   */
+  async function handleVerifyBiometric(
+    credentialIdArray: number[],
+    timeoutMs: number = 10000
+  ): Promise<{ success: boolean; error?: string }> {
+    console.log("TrustAHuman BG: handleVerifyBiometric started");
+
+    // Check if we already have an offscreen document (camera might have one open)
+    const hasDoc = await chrome.offscreen.hasDocument();
+    console.log("TrustAHuman BG: hasDocument (biometric):", hasDoc);
+
+    if (hasDoc) {
+      // Close existing document first
+      try {
+        await chrome.offscreen.closeDocument();
+        console.log("TrustAHuman BG: closed existing offscreen document");
+      } catch {
+        /* ignore */
+      }
+    }
+
+    // Create offscreen document for biometric
+    // Note: Using DOM_SCRAPING as the reason since there's no specific WebAuthn reason
+    // The document just needs to be able to call navigator.credentials API
+    console.log("TrustAHuman BG: creating biometric offscreen document");
+    await chrome.offscreen.createDocument({
+      url: "offscreen-biometric.html",
+      reasons: [chrome.offscreen.Reason.DOM_SCRAPING],
+      justification: "WebAuthn biometric verification for human verification",
+    });
+    console.log("TrustAHuman BG: biometric offscreen document created");
+
+    const result = await new Promise<{ success: boolean; error?: string }>((resolve) => {
+      const timeout = setTimeout(() => {
+        console.warn("TrustAHuman BG: biometric verification timed out after", timeoutMs + 2000, "ms");
+        resolve({ success: false, error: "timeout" });
+      }, timeoutMs + 2000); // Extra 2s buffer for overhead
+
+      const listener = (msg: any) => {
+        if (msg.action === "biometricResult") {
+          console.log("TrustAHuman BG: biometricResult listener fired:", msg.success);
+          clearTimeout(timeout);
+          chrome.runtime.onMessage.removeListener(listener);
+          resolve({ success: msg.success, error: msg.error });
+        }
+      };
+      chrome.runtime.onMessage.addListener(listener);
+
+      console.log("TrustAHuman BG: sending verifyBiometric to offscreen");
+      chrome.runtime.sendMessage({
+        action: "verifyBiometric",
+        credentialId: credentialIdArray,
+        timeoutMs,
+      });
+    });
+
+    try {
+      await chrome.offscreen.closeDocument();
+      console.log("TrustAHuman BG: biometric offscreen document closed");
+    } catch {
+      /* already closed */
+    }
+
+    return result;
+  }
 
   console.log("TrustAHuman BG: Initialized with syncHost:", syncHost);
 });

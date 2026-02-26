@@ -16,6 +16,7 @@ declare module "wxt/browser" {
     | "/icon32.png"
     | "/icon38.png"
     | "/icon48.png"
+    | "/offscreen-biometric.html"
     | "/offscreen.html"
     | "/page-context.js"
     | "/popup.html"

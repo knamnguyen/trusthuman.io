@@ -193,49 +193,112 @@ export const verificationRouter = createTRPCRouter({
   submitActivity: protectedProcedure
     .input(
       z.object({
-        photoBase64: z.string(),
+        verificationMethod: z.enum(["camera", "biometric"]).default("camera"),
+        photoBase64: z.string().optional(), // Required only for camera
         platform: platformSchema,
         userProfile: userProfileSchema,
         activity: activitySchema,
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      // Validate photoBase64 based on verification method
+      if (input.verificationMethod === "camera" && !input.photoBase64) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "photoBase64 required for camera verification",
+        });
+      }
+      if (input.verificationMethod === "biometric" && input.photoBase64) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "photoBase64 must not be provided for biometric verification",
+        });
+      }
       const primaryEmail = ctx.user.emailAddresses?.[0]?.emailAddress || `${ctx.user.id}@trusthuman.io`;
 
-      // OPTIMIZATION: Run AWS Rekognition AND DB lookups in PARALLEL
-      // This saves ~2-3 seconds by not waiting for Rekognition before DB queries
-      const [faceDetectionResult, user, trustProfile, conflictingLink] = await Promise.all([
-        // 1. AWS Rekognition face detection (slowest - 2-4s)
-        detectFaces(input.photoBase64),
+      // Branch on verification method
+      let faceDetectionResult;
+      let user;
+      let trustProfile;
+      let conflictingLink;
 
-        // 2. Get or create user (runs in parallel with Rekognition)
-        ctx.db.user.upsert({
-          where: { id: ctx.user.id },
-          update: {}, // No update needed if exists
-          create: {
-            id: ctx.user.id,
-            email: primaryEmail,
-            firstName: ctx.user.firstName,
-            lastName: ctx.user.lastName,
-            imageUrl: ctx.user.imageUrl,
-          },
-        }),
+      if (input.verificationMethod === "camera") {
+        // CAMERA FLOW: Run AWS Rekognition AND DB lookups in PARALLEL
+        // This saves ~2-3 seconds by not waiting for Rekognition before DB queries
+        [faceDetectionResult, user, trustProfile, conflictingLink] = await Promise.all([
+          // 1. AWS Rekognition face detection (slowest - 2-4s)
+          detectFaces(input.photoBase64!),
 
-        // 3. Get trust profile (runs in parallel)
-        ctx.db.trustProfile.findUnique({
-          where: { userId: ctx.user.id },
-        }),
-
-        // 4. Check for conflicting platform link (runs in parallel)
-        ctx.db.platformLink.findUnique({
-          where: {
-            platform_profileUrl: {
-              platform: input.platform,
-              profileUrl: input.userProfile.profileUrl,
+          // 2. Get or create user (runs in parallel with Rekognition)
+          ctx.db.user.upsert({
+            where: { id: ctx.user.id },
+            update: {}, // No update needed if exists
+            create: {
+              id: ctx.user.id,
+              email: primaryEmail,
+              firstName: ctx.user.firstName,
+              lastName: ctx.user.lastName,
+              imageUrl: ctx.user.imageUrl,
             },
-          },
-        }),
-      ]);
+          }),
+
+          // 3. Get trust profile (runs in parallel)
+          ctx.db.trustProfile.findUnique({
+            where: { userId: ctx.user.id },
+          }),
+
+          // 4. Check for conflicting platform link (runs in parallel)
+          ctx.db.platformLink.findUnique({
+            where: {
+              platform_profileUrl: {
+                platform: input.platform,
+                profileUrl: input.userProfile.profileUrl,
+              },
+            },
+          }),
+        ]);
+      } else {
+        // BIOMETRIC FLOW: Skip AWS Rekognition, trust OS verification
+        // DB lookups only (no parallel face detection)
+        [user, trustProfile, conflictingLink] = await Promise.all([
+          // 1. Get or create user
+          ctx.db.user.upsert({
+            where: { id: ctx.user.id },
+            update: {}, // No update needed if exists
+            create: {
+              id: ctx.user.id,
+              email: primaryEmail,
+              firstName: ctx.user.firstName,
+              lastName: ctx.user.lastName,
+              imageUrl: ctx.user.imageUrl,
+            },
+          }),
+
+          // 2. Get trust profile
+          ctx.db.trustProfile.findUnique({
+            where: { userId: ctx.user.id },
+          }),
+
+          // 3. Check for conflicting platform link
+          ctx.db.platformLink.findUnique({
+            where: {
+              platform_profileUrl: {
+                platform: input.platform,
+                profileUrl: input.userProfile.profileUrl,
+              },
+            },
+          }),
+        ]);
+
+        // Biometric always verified (OS guarantees real fingerprint)
+        faceDetectionResult = {
+          verified: true,
+          confidence: 100, // OS-level verification
+          faceCount: 1, // Implicit human presence
+          boundingBox: null,
+          rawResponse: { method: "biometric", timestamp: new Date() },
+        };
+      }
 
       // Check for platform link conflict before proceeding
       // Only throw if the link belongs to a different user
@@ -291,6 +354,7 @@ export const verificationRouter = createTRPCRouter({
           faceCount: faceDetectionResult.faceCount,
           rawResponse: faceDetectionResult.rawResponse as any,
           activityType: input.platform,
+          verificationMethod: input.verificationMethod,
         },
       });
 

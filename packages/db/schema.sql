@@ -13,6 +13,7 @@ CREATE TABLE "HumanVerification" (
     "faceCount" INTEGER NOT NULL,
     "rawResponse" JSONB,
     "activityType" TEXT NOT NULL,
+    "verificationMethod" TEXT NOT NULL DEFAULT 'camera',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "HumanVerification_pkey" PRIMARY KEY ("id")

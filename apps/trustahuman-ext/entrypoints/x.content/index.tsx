@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { showTrissToast, hideTrissToast, setTrissLogoUrl } from "@sassy/ui/components/triss-toast";
 import { trpc } from "@/lib/trpc-client";
 import { useAuthStore, initAuthStoreListener, fetchAuthStatusWithRetry } from "@/lib/auth-store";
+import { executeVerification, type VerificationResult } from "@/lib/verification-flow";
 
 import App from "../linkedin.content/App"; // Reuse same sidebar UI
 import { useVerificationStore } from "../linkedin.content/stores/verification-store";
@@ -253,113 +254,36 @@ export default defineContentScript({
           return;
         }
 
-        // 3. Show "capturing" toast
-        console.log("TrustAHuman X: Showing capturing toast");
-        showTrissToast("capturing");
-
-        // 4. Capture photo via background
-        console.log("TrustAHuman X: Sending capturePhoto to background");
-        const response = await chrome.runtime.sendMessage({
-          action: "capturePhoto",
-        });
-        console.log("TrustAHuman X: capturePhoto response", response);
-
-        if (!response?.base64) {
-          console.warn("TrustAHuman X: No base64 returned, camera denied or failed");
-          showTrissToast("camera_needed", "Camera access needed to verify you're human", {
-            label: "Grant Camera Access",
-            onClick: () => {
-              chrome.runtime.sendMessage({ action: "openSetup" });
-              hideTrissToast();
-            },
-          });
-          return;
-        }
-
-        // 5. Show "verifying" toast
-        console.log("TrustAHuman X: Showing verifying toast");
-        showTrissToast("verifying");
-
-        // 6. Check authentication and submit
-        const { isSignedIn } = useAuthStore.getState();
-
-        if (!isSignedIn || !userProfile) {
-          // Local-only verification
-          console.log("TrustAHuman X: Not authenticated, using local verification");
-          try {
-            const result = await trpc.verification.analyzePhoto.mutate({
-              photoBase64: response.base64,
-            });
-            console.log("TrustAHuman X: analyzePhoto result", result);
-
-            if (result.verified) {
-              showTrissToast("verified", "Verified! Sign in to track your stats.");
-            } else {
-              showTrissToast("not_verified");
-            }
-
-            // Add to local store (standardized schema)
-            useVerificationStore.getState().addVerification({
-              id: crypto.randomUUID(),
-              timestamp: new Date(),
-              action: "x_reply",
-              platform: "x",
-              verified: result.verified,
-              confidence: result.confidence,
-              faceCount: result.faceCount,
+        // Use shared verification flow (handles camera vs biometric based on preferences)
+        await executeVerification(
+          {
+            platform: "x",
+            userProfile: userProfile ? {
+              profileUrl: userProfile.profileUrl,
+              profileHandle: userProfile.profileHandle,
+              displayName: userProfile.displayName,
+              avatarUrl: userProfile.avatarUrl,
+            } : null,
+            commentContext: {
               commentText: replyContext.replyText,
               commentUrl: toastResult.replyUrl,
-              parentUrl: replyContext.tweetAuthorHandle ? `https://x.com/${replyContext.tweetAuthorHandle}` : undefined,
-              parentAuthorName: replyContext.tweetAuthorName || "X User",
-              parentAuthorAvatarUrl: replyContext.tweetAuthorAvatarUrl || "",
-              parentTextSnippet: replyContext.tweetTextSnippet || "",
-            });
-          } catch (err) {
-            console.error("TrustAHuman X: analyzePhoto failed", err);
-            showTrissToast("not_verified", "Verification failed. Try again.");
-          }
-        } else {
-          // Full verification with submitActivity
-          try {
-            console.log("TrustAHuman X: Calling submitActivity");
-            const result = await trpc.verification.submitActivity.mutate({
-              photoBase64: response.base64,
-              platform: "x",
-              userProfile: {
-                profileUrl: userProfile.profileUrl,
-                profileHandle: userProfile.profileHandle,
-                displayName: userProfile.displayName,
-                avatarUrl: userProfile.avatarUrl,
+              post: {
+                postUrl: replyContext.tweetAuthorHandle ? `https://x.com/${replyContext.tweetAuthorHandle}` : undefined,
+                postAuthorName: replyContext.tweetAuthorName || "X User",
+                postAuthorAvatarUrl: replyContext.tweetAuthorAvatarUrl || "",
+                postTextSnippet: replyContext.tweetTextSnippet || "",
               },
-              activity: {
-                commentText: replyContext.replyText,
-                commentUrl: toastResult.replyUrl,
-                parentUrl: replyContext.tweetAuthorHandle ? `https://x.com/${replyContext.tweetAuthorHandle}` : undefined,
-                parentAuthorName: replyContext.tweetAuthorName || "X User",
-                parentAuthorAvatarUrl: replyContext.tweetAuthorAvatarUrl || "",
-                parentTextSnippet: replyContext.tweetTextSnippet || "",
-              },
-            });
-            console.log("TrustAHuman X: submitActivity result", result);
-
-            if (result.verified) {
-              if (result.isFirstVerification) {
-                showTrissToast("verified", `Welcome Human #${result.humanNumber}! You're verified!`);
-              } else {
-                showTrissToast("verified", `Verified! ${result.totalVerifications} activities`);
-              }
-            } else {
-              showTrissToast("not_verified");
-            }
-
-            // Add to local store (standardized schema)
+            },
+          },
+          (result: VerificationResult) => {
+            // Add to local store
             useVerificationStore.getState().addVerification({
               id: crypto.randomUUID(),
               timestamp: new Date(),
               action: "x_reply",
               platform: "x",
               verified: result.verified,
-              confidence: result.confidence,
+              confidence: result.confidence ?? 0,
               faceCount: 1,
               commentText: replyContext.replyText,
               commentUrl: toastResult.replyUrl,
@@ -369,32 +293,14 @@ export default defineContentScript({
               parentTextSnippet: replyContext.tweetTextSnippet || "",
             });
 
-            // Refetch profile to update stats in sidebar
+            // Refetch profile to update stats
             if (result.verified) {
               refetchMyProfile();
             }
-          } catch (err: any) {
-            console.error("TrustAHuman X: submitActivity failed", err);
-
-            if (err?.message?.includes("UNAUTHORIZED")) {
-              showTrissToast("not_verified", "Please sign in to verify.");
-            } else if (err?.message?.includes("already linked")) {
-              showTrissToast("not_verified", "This profile is linked to another account.");
-            } else {
-              showTrissToast("not_verified", "Verification failed. Try again.");
-            }
           }
-        }
+        );
 
-        // 7. Photo deleted confirmation
-        await sleep(3000);
-        console.log("TrustAHuman X: Showing photo_deleted toast");
-        showTrissToast("photo_deleted");
-
-        // 8. Hide toast
-        await sleep(3000);
-        hideTrissToast();
-        console.log("TrustAHuman X: Flow complete, toast hidden");
+        console.log("TrustAHuman X: Flow complete");
       } finally {
         pendingVerification = false;
       }
